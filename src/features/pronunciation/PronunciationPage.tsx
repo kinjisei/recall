@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { supabase } from '../../lib/supabase'
+import { logActivity } from '../../lib/activity'
 import {
   speak,
   listen,
@@ -51,6 +52,7 @@ export function PronunciationPage() {
       const { transcript } = await listen()
       setHeard(transcript)
       setScore(scorePronunciation(current, transcript))
+      void logActivity('pronunciation')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Ошибка')
     } finally {

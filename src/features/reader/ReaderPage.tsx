@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { addCard } from '../../lib/cards'
+import { logActivity } from '../../lib/activity'
 import { lookup, type DictionaryResult } from '../../lib/dictionary'
 import { sampleTexts, type SampleText } from './sampleTexts'
 import type { CEFRLevel } from '../../types'
@@ -132,6 +133,7 @@ function WordSheet({ word, onClose }: { word: string; onClose: () => void }) {
         audio_url: result?.audio_url,
         source: 'reader',
       })
+      void logActivity('reader')
       setAdded(true)
     } catch (e) {
       setAddError(e instanceof Error ? e.message : 'Не удалось добавить слово')

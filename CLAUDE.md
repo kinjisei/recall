@@ -32,14 +32,18 @@ VS Code (есть доступ к файлам и терминалу) — поэ
 ## Структура
 ```
 src/
-  lib/        supabase.ts, cards.ts (addCard), fsrs.ts, dictionary.ts, speech.ts*, gemini.ts*
+  lib/        supabase.ts, cards.ts (addCard), fsrs.ts, dictionary.ts, speech.ts,
+              gemini.ts (клиент /api/gemini), activity.ts (стрик)
   types/      index.ts — все общие типы
   context/    AuthContext.tsx
   components/ Button, Card, Layout, BottomNav, ProtectedRoute
-  features/   dashboard, flashcards, reader, pronunciation, conversation, writing*
-api/          gemini.ts*  (Vercel serverless, Фаза 4)
-(* — ещё не созданы на текущий момент)
+  features/   dashboard, flashcards, reader, pronunciation,
+              conversation (внутри — режимы Чат и Письмо)
+api/          gemini.ts (Vercel serverless), _core.ts (общий вызов Gemini)
+vercel.json   SPA-rewrite для деплоя (не перекрывает /api/*)
 ```
+Локальный dev-эндпоинт /api/gemini живёт в vite.config.ts (Vercel CLI не нужен);
+ключ — строка `GEMINI_API_KEY=...` в `.env.local` (БЕЗ префикса VITE_).
 Нижняя навигация: Главная / Колода / Ввод / Речь / Диалог.
 
 ## Как запустить
@@ -57,11 +61,12 @@ npm run build    # проверка типов (tsc -b) + сборка
 - ✅ Фича 2 «Ввод» — чтение текстов, тап по слову → словарь → в колоду (`features/reader`, `lib/dictionary.ts`, `sampleTexts.ts`)
 - ✅ Фича 3 «Речь» — шэдоуинг: озвучка + распознавание + оценка в % (`features/pronunciation`, `lib/speech.ts`). Только Chrome/Edge, нужен микрофон.
 
-Дальше по плану (Фаза 2):
-- ⬜ **Фича 4 «AI»** — Gemini-прокси `api/gemini.ts` + `lib/gemini.ts`; диалог и проверка письма внутри вкладки «Диалог» (`features/conversation`, режимы Chat/Письмо). Локальный тест AI потребует `vercel dev` или dev-прокси — настроить при сборке.
+Собрано, ждёт ручного теста пользователя (2026-07-02):
+- 🔶 **Фича 4 «AI»** — Gemini-прокси + чат и проверка письма во вкладке «Диалог». Живой вызов Gemini через dev-эндпоинт проверен (ответ с исправлением ошибки пришёл).
+- 🔶 **Фаза 3, ядро** — `lib/activity.ts` (стрик, «сделано сегодня», день в местном времени), запись активности из всех 4 фич, живой дашборд (стрик, счётчик карточек к повторению, бейджи «✓ сделано»).
 
 Дальше (позже):
-- Фаза 3 — дневная сессия, стрик, дашборд, деплой на Vercel, иконки PWA.
+- Фаза 3, остаток — деплой на Vercel (env `GEMINI_API_KEY`), иконки PWA.
 - Фаза 4 — режим «Преподаватель» (роли, назначение колод, прогресс учениц).
 
 ## Правила

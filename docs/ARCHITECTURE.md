@@ -49,6 +49,7 @@ recall-app/
       speech.ts               <- Web Speech API: TTS+STT (Worker 3)
       gemini.ts               <- вызов нашего /api/gemini (Worker 4)
       cards.ts                <- addCard(), общий хелпер (Foundation, стаб)
+      activity.ts             <- activity_log: стрик и «сделано сегодня» (Фаза 3)
     types/
       index.ts                <- ВСЕ общие TS-типы (Foundation)
     components/               <- общие UI (Button, Card, Layout, Nav) (Foundation)
@@ -57,8 +58,7 @@ recall-app/
       flashcards/             <- блок «Колода» (Worker 1)
       reader/                 <- блок «Ввод» (Worker 2)
       pronunciation/          <- блок «Произношение» (Worker 3)
-      conversation/           <- AI-диалог (Worker 4)
-      writing/                <- проверка письма AI (Worker 4)
+      conversation/           <- AI-диалог + проверка письма, режимы Чат/Письмо (Worker 4)
   .env.local                  <- VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
 ```
 
@@ -186,7 +186,13 @@ scorePronunciation(target: string, spoken: string):
   { percent: number; words: { word: string; ok: boolean }[] }
 
 // lib/gemini.ts  (Worker 4) — зовёт НАШ /api/gemini, не Google напрямую
-chat(messages: {role:string;content:string}[], opts?): Promise<string>
+chat(messages: ChatTurn[], opts?: { system?: string }): Promise<string>
+  // ChatTurn = { role: 'user'|'assistant'|'system'; content: string } (src/types)
+
+// lib/activity.ts  (Фаза 3) — стрик и статистика, день в МЕСТНОМ времени
+logActivity(type: ActivityType, itemsDone?, durationSec?): Promise<void>  // не бросает ошибок
+getStreak(): Promise<number>                    // дней подряд (вчерашняя серия ещё жива)
+getTodayTypes(): Promise<Set<ActivityType>>     // какие занятия сделаны сегодня
 ```
 
 ## 8. Дизайн (минимум для согласованности)
@@ -210,6 +216,6 @@ chat(messages: {role:string;content:string}[], opts?): Promise<string>
   тап по слову → словарь → кнопка «в колоду» (зовёт `addCard`).
 - **Worker 3 — Произношение:** `features/pronunciation/*`, `lib/speech.ts`.
   Шэдоуинг: озвучка фразы → пользователь повторяет → распознавание → сравнение.
-- **Worker 4 — AI:** `api/gemini.ts` (прокси), `lib/gemini.ts`, `features/conversation/*`,
-  `features/writing/*`. Диалог с уровневым промптом + проверка письма (фидбек).
+- **Worker 4 — AI:** `api/gemini.ts` (прокси), `lib/gemini.ts`, `features/conversation/*`
+  (режимы Чат и Письмо внутри одной вкладки). Диалог с уровневым промптом + проверка письма.
 ```

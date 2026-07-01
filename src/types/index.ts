@@ -16,6 +16,14 @@ export type ReviewStateName = 'new' | 'learning' | 'review' | 'relearning'
 
 export type ContentType = 'reading' | 'listening'
 
+/** Тип занятия для activity_log (стрик и статистика). */
+export type ActivityType =
+  | 'flashcards'
+  | 'reader'
+  | 'pronunciation'
+  | 'conversation'
+  | 'writing'
+
 export interface Profile {
   id: string
   display_name: string | null

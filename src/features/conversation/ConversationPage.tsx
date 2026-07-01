@@ -3,6 +3,7 @@ import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { supabase } from '../../lib/supabase'
 import { chat } from '../../lib/gemini'
+import { logActivity } from '../../lib/activity'
 import { useAuth } from '../../context/AuthContext'
 import type { CEFRLevel, ChatTurn } from '../../types'
 
@@ -134,6 +135,7 @@ function ChatSection({ level }: { level: CEFRLevel }) {
         system: chatSystemPrompt(level),
       })
       setMsgs([...history, { role: 'assistant', content: reply }])
+      void logActivity('conversation')
       void persist([
         { role: 'user', content: text },
         { role: 'assistant', content: reply },
@@ -256,6 +258,7 @@ function WritingSection({ level }: { level: CEFRLevel }) {
         system: writingSystemPrompt(level),
       })
       setFeedback(fb)
+      void logActivity('writing')
       if (user) {
         const { error: wErr } = await supabase.from('writing_submissions').insert({
           user_id: user.id,

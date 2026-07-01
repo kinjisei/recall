@@ -3,6 +3,7 @@ import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { addCard } from '../../lib/cards'
 import { getDueCards, reviewCard, type DueCard } from '../../lib/fsrs'
+import { logActivity } from '../../lib/activity'
 import type { Rating } from '../../types'
 
 const ratingButtons: { rating: Rating; label: string; className: string }[] = [
@@ -46,6 +47,7 @@ export function FlashcardsPage() {
     if (!current) return
     try {
       await reviewCard(current.card, current.state, rating)
+      void logActivity('flashcards')
       setReviewedCount((c) => c + 1)
       setRevealed(false)
       setIndex((i) => i + 1)
