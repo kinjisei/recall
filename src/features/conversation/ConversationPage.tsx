@@ -260,12 +260,13 @@ function WritingSection({ level }: { level: CEFRLevel }) {
       setFeedback(fb)
       void logActivity('writing')
       if (user) {
-        const { error: wErr } = await supabase.from('writing_submissions').insert({
-          user_id: user.id,
-          text: body,
-          feedback: { text: fb, level },
-        })
-        if (wErr) console.warn('Не удалось сохранить проверку:', wErr)
+        // сохраняем в фоне: кнопка не должна ждать записи в базу
+        void supabase
+          .from('writing_submissions')
+          .insert({ user_id: user.id, text: body, feedback: { text: fb, level } })
+          .then(({ error: wErr }) => {
+            if (wErr) console.warn('Не удалось сохранить проверку:', wErr)
+          })
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Ошибка AI')
