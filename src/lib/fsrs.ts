@@ -76,36 +76,43 @@ async function requireUserId(): Promise<string> {
 
 /**
  * Карточки, которые пора повторить: новые (без расписания) + те, у которых due <= сейчас.
- * Отсортированы: сначала самые «просроченные».
+ * Фильтрация — на сервере Supabase, чтобы не выкачивать всю колоду целиком.
+ * Порядок: сначала новые, затем по просроченности (самые старые due — первыми).
  */
 export async function getDueCards(limit = 50): Promise<DueCard[]> {
   const userId = await requireUserId()
+  const nowIso = new Date().toISOString()
 
-  // RLS уже ограничивает выборку только нашими данными.
-  const [{ data: cards, error: cErr }, { data: states, error: sErr }] =
-    await Promise.all([
-      supabase.from('cards').select('*'),
-      supabase.from('review_states').select('*').eq('user_id', userId),
-    ])
-  if (cErr) throw cErr
-  if (sErr) throw sErr
+  const [newRes, dueRes] = await Promise.all([
+    // Новые: карточки без записи в review_states (анти-джойн через is null).
+    // RLS показывает только наши review_states, поэтому «новизна» считается лично для нас.
+    supabase
+      .from('cards')
+      .select('*, review_states(id)')
+      .is('review_states', null)
+      .order('created_at', { ascending: true })
+      .limit(limit),
+    // Просроченные: расписание подошло (due <= сейчас).
+    supabase
+      .from('review_states')
+      .select('*, cards(*)')
+      .eq('user_id', userId)
+      .lte('due', nowIso)
+      .order('due', { ascending: true })
+      .limit(limit),
+  ])
+  if (newRes.error) throw newRes.error
+  if (dueRes.error) throw dueRes.error
 
-  const byCard = new Map<string, ReviewState>()
-  for (const s of (states ?? []) as ReviewState[]) byCard.set(s.card_id, s)
-
-  const now = Date.now()
   const due: DueCard[] = []
-  for (const card of (cards ?? []) as Card[]) {
-    const state = byCard.get(card.id) ?? null
-    const isDue = !state || new Date(state.due).getTime() <= now
-    if (isDue) due.push({ card, state })
+  for (const row of newRes.data ?? []) {
+    const { review_states: _rs, ...card } = row as Card & { review_states: unknown }
+    due.push({ card: card as Card, state: null })
   }
-
-  due.sort((a, b) => {
-    const da = a.state ? new Date(a.state.due).getTime() : 0
-    const db = b.state ? new Date(b.state.due).getTime() : 0
-    return da - db
-  })
+  for (const row of dueRes.data ?? []) {
+    const { cards: card, ...state } = row as ReviewState & { cards: Card | null }
+    if (card) due.push({ card, state: state as ReviewState })
+  }
 
   return due.slice(0, limit)
 }

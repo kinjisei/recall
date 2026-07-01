@@ -131,6 +131,8 @@ content_items(
 )
 
 -- лог активности (стрик и статистика)
+-- уникальный индекс (user_id, day, type): одна строка на день и тип занятия,
+-- Фаза 3 делает upsert с инкрементом items_done/duration_sec
 activity_log(
   id uuid pk default gen_random_uuid(),
   user_id uuid references profiles(id),
@@ -138,7 +140,8 @@ activity_log(
   type text,                      -- 'flashcards'|'reader'|'pronunciation'|'conversation'|'writing'
   items_done int default 0,
   duration_sec int default 0,
-  created_at timestamptz default now()
+  created_at timestamptz default now(),
+  unique(user_id, day, type)
 )
 
 -- AI-диалоги
@@ -156,23 +159,31 @@ writing_submissions(id uuid pk default gen_random_uuid(), user_id uuid reference
 плюс `CEFRLevel = 'A2'|'B1'|'B2'|'C1'|'C2'` и `Rating = 'again'|'hard'|'good'|'easy'`.
 
 ## 7. Ключевые общие контракты (сигнатуры — не менять)
+> Обновлено 2026-07-02: приведено к реализованному и протестированному коду Фич 1–3.
+
 ```ts
-// lib/cards.ts  (Foundation создаёт стаб, Worker 1 дорабатывает review_states)
+// lib/cards.ts  (Foundation + Worker 1)
+getDefaultDeck(): Promise<Deck>   // первая колода пользователя (создаётся триггером при регистрации)
 addCard(input: { front: string; back?: string; example?: string;
-  ipa?: string; audio_url?: string; deckId: string;
+  ipa?: string; audio_url?: string; deckId?: string;   // без deckId — в колоду по умолчанию
   source?: 'manual'|'reader'|'ai' }): Promise<Card>
 
 // lib/fsrs.ts  (Worker 1)
-schedule(state: ReviewState, rating: Rating, now?: Date): ReviewState
-getDueCards(userId: string): Promise<{ card: Card; state: ReviewState }[]>
+interface DueCard { card: Card; state: ReviewState | null }   // state=null — новая карточка
+getDueCards(limit?: number): Promise<DueCard[]>   // новые + просроченные (для текущего пользователя)
+reviewCard(card: Card, existing: ReviewState | null, rating: Rating): Promise<void>
+  // записывает оценку в review_states (upsert) и вычисляет следующий показ по FSRS
 
 // lib/dictionary.ts  (Worker 2)
-lookup(word: string): Promise<{ definition?: string; example?: string;
+lookup(word: string): Promise<{ word: string; definition?: string; example?: string;
   ipa?: string; audio_url?: string } | null>
 
 // lib/speech.ts  (Worker 3)
 speak(text: string, opts?: { rate?: number; voice?: string }): void
 listen(): Promise<{ transcript: string; confidence: number }>  // одно распознавание
+isRecognitionSupported(): boolean   // STT есть только в Chrome/Edge
+scorePronunciation(target: string, spoken: string):
+  { percent: number; words: { word: string; ok: boolean }[] }
 
 // lib/gemini.ts  (Worker 4) — зовёт НАШ /api/gemini, не Google напрямую
 chat(messages: {role:string;content:string}[], opts?): Promise<string>

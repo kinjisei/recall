@@ -71,6 +71,11 @@ create table if not exists public.activity_log (
   created_at timestamptz default now()
 );
 
+-- Для стрика (Фаза 3): одна строка на пользователя+день+тип занятия,
+-- чтобы можно было делать upsert с инкрементом счётчиков.
+create unique index if not exists activity_log_user_day_type_uidx
+  on public.activity_log (user_id, day, type);
+
 create table if not exists public.conversations (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references public.profiles(id) on delete cascade,
