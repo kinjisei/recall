@@ -80,6 +80,12 @@ export interface ActivityLog {
   created_at: string
 }
 
+/** Реплика для AI-чата (то, что летит в /api/gemini; не таблица БД). */
+export interface ChatTurn {
+  role: 'user' | 'assistant' | 'system'
+  content: string
+}
+
 export interface Conversation {
   id: string
   user_id: string
