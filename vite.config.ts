@@ -71,17 +71,26 @@ export default defineConfig(({ mode }) => {
       geminiDevEndpoint(env.GEMINI_API_KEY, env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL),
       VitePWA({
         registerType: 'autoUpdate',
+        includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
         manifest: {
           name: 'Recall — английский',
           short_name: 'Recall',
+          lang: 'ru',
           description: 'Учим и поддерживаем английский язык',
           theme_color: '#0ea5e9',
           background_color: '#0b1220',
           display: 'standalone',
           start_url: '/',
-          // Иконки добавим позже (Фаза 3). Без них установка PWA пока невозможна,
-          // но в браузере и в dev-режиме приложение работает полностью.
-          icons: [],
+          icons: [
+            { src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' },
+            { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png' },
+            {
+              src: '/pwa-maskable-512x512.png',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'maskable',
+            },
+          ],
         },
       }),
     ],
