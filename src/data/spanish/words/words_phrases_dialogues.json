@@ -1,0 +1,882 @@
+{
+  "topics": [
+    {
+      "id": 9001,
+      "name": "Фразы из диалогов · A1",
+      "level": "A1",
+      "icon": "forum"
+    },
+    {
+      "id": 9002,
+      "name": "Фразы из диалогов · A2",
+      "level": "A2",
+      "icon": "forum"
+    },
+    {
+      "id": 9003,
+      "name": "Фразы из диалогов · B1",
+      "level": "B1",
+      "icon": "forum"
+    },
+    {
+      "id": 9004,
+      "name": "Фразы из диалогов · B2",
+      "level": "B2",
+      "icon": "forum"
+    }
+  ],
+  "words": [
+    {
+      "spanish": "Buenas tardes, ¿mesa para cuántos?",
+      "russian": "Добрый день, столик на сколько человек?",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Para dos, por favor.",
+      "russian": "На двоих, пожалуйста.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Perfecto, síganme. Aquí tienen la carta.",
+      "russian": "Отлично, идите за мной. Вот меню.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Gracias. ¿Qué nos recomienda?",
+      "russian": "Спасибо. Что вы нам посоветуете?",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "El pescado del día está muy bueno.",
+      "russian": "Рыба дня очень хороша.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Estupendo. Yo quiero el pescado y una ensalada.",
+      "russian": "Замечательно. Я хочу рыбу и салат.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "¿Y para beber?",
+      "russian": "А что будете пить?",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Una botella de agua y una copa de vino tinto.",
+      "russian": "Бутылку воды и бокал красного вина.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Muy bien. Enseguida se lo traigo.",
+      "russian": "Очень хорошо. Сейчас всё принесу.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "La cuenta, por favor.",
+      "russian": "Счёт, пожалуйста.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Buenos días, ¿en qué puedo ayudarle?",
+      "russian": "Доброе утро, чем могу вам помочь?",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Tengo una reserva a nombre de García.",
+      "russian": "У меня бронь на имя Гарсия.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Un momento, por favor… Sí, una habitación doble para tres noches.",
+      "russian": "Минуту, пожалуйста… Да, двухместный номер на три ночи.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Exacto. ¿El desayuno está incluido?",
+      "russian": "Именно. Завтрак включён?",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Sí, de siete a diez en el restaurante de la planta baja.",
+      "russian": "Да, с семи до десяти в ресторане на первом этаже.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Perfecto. ¿A qué hora hay que dejar la habitación?",
+      "russian": "Отлично. Во сколько нужно освободить номер?",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "A las doce del mediodía. Aquí tiene su llave, habitación 305.",
+      "russian": "В полдень. Вот ваш ключ, номер 305.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Muchas gracias. ¿Hay wifi en las habitaciones?",
+      "russian": "Большое спасибо. В номерах есть вайфай?",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Sí, la contraseña está en la tarjeta.",
+      "russian": "Да, пароль на карточке.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Genial, gracias.",
+      "russian": "Здорово, спасибо.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Buenos días, su pasaporte y su billete, por favor.",
+      "russian": "Доброе утро, ваш паспорт и билет, пожалуйста.",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "Aquí tiene. Viajo a Barcelona.",
+      "russian": "Вот, пожалуйста. Я лечу в Барселону.",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "¿Cuántas maletas va a facturar?",
+      "russian": "Сколько чемоданов вы будете сдавать в багаж?",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "Solo una. Esta la llevo como equipaje de mano.",
+      "russian": "Только один. Этот возьму как ручную кладь.",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "De acuerdo. ¿Prefiere ventanilla o pasillo?",
+      "russian": "Хорошо. Предпочитаете место у окна или у прохода?",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "Ventanilla, por favor.",
+      "russian": "У окна, пожалуйста.",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "Aquí tiene su tarjeta de embarque. La puerta es la B12.",
+      "russian": "Вот ваш посадочный талон. Выход B12.",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "¿A qué hora empieza el embarque?",
+      "russian": "Во сколько начинается посадка?",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "A las diez y media. No olvide pasar el control de seguridad.",
+      "russian": "В десять тридцать. Не забудьте пройти контроль безопасности.",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "Muchas gracias. ¡Buen día!",
+      "russian": "Большое спасибо. Хорошего дня!",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "Buenos días, ¿qué le pasa?",
+      "russian": "Доброе утро, что вас беспокоит?",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "No me encuentro bien. Me duele mucho la garganta.",
+      "russian": "Мне нездоровится. У меня сильно болит горло.",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "¿Desde cuándo se siente así?",
+      "russian": "С какого времени вы так себя чувствуете?",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "Desde hace tres días. También tengo fiebre.",
+      "russian": "Уже три дня. Ещё у меня температура.",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "Vamos a ver. Abra la boca, por favor.",
+      "russian": "Давайте посмотрим. Откройте рот, пожалуйста.",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "¿Es algo grave?",
+      "russian": "Это что-то серьёзное?",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "No se preocupe, es una infección leve.",
+      "russian": "Не волнуйтесь, это лёгкая инфекция.",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "Le voy a recetar un antibiótico. Tómelo cada ocho horas.",
+      "russian": "Я выпишу вам антибиотик. Принимайте его каждые восемь часов.",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "De acuerdo. ¿Tengo que volver?",
+      "russian": "Хорошо. Мне нужно прийти снова?",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "Solo si no mejora en una semana. Que se mejore.",
+      "russian": "Только если не станет лучше через неделю. Выздоравливайте.",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "Hola, ¿busca algo en concreto?",
+      "russian": "Здравствуйте, ищете что-то конкретное?",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Sí, busco una camisa azul.",
+      "russian": "Да, ищу синюю рубашку.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "¿Qué talla usa?",
+      "russian": "Какой у вас размер?",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "La mediana, normalmente.",
+      "russian": "Обычно средний.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Tenemos esta. ¿Quiere probársela?",
+      "russian": "У нас есть вот эта. Хотите примерить?",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Sí. ¿Dónde está el probador?",
+      "russian": "Да. Где примерочная?",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Al fondo a la derecha.",
+      "russian": "В глубине справа.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Me queda bien. ¿Cuánto cuesta?",
+      "russian": "Мне подходит. Сколько стоит?",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Veinticinco euros. Está de oferta.",
+      "russian": "Двадцать пять евро. Она со скидкой.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Perfecto, me la llevo. ¿Puedo pagar con tarjeta?",
+      "russian": "Отлично, беру. Можно оплатить картой?",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Claro, por aquí.",
+      "russian": "Конечно, сюда.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "¡Hola! Creo que no nos conocemos. Me llamo Ana.",
+      "russian": "Привет! Кажется, мы не знакомы. Меня зовут Ана.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Encantado, Ana. Yo soy Luis.",
+      "russian": "Очень приятно, Ана. Я Луис.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "¿De dónde eres, Luis?",
+      "russian": "Откуда ты, Луис?",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Soy de México, pero vivo en Madrid. ¿Y tú?",
+      "russian": "Я из Мексики, но живу в Мадриде. А ты?",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Yo soy española, de Sevilla. ¿A qué te dedicas?",
+      "russian": "Я испанка, из Севильи. Чем ты занимаешься?",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Soy ingeniero. ¿Y tú?",
+      "russian": "Я инженер. А ты?",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Trabajo como profesora de inglés.",
+      "russian": "Я работаю учительницей английского.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "¡Qué interesante! ¿Hablas otros idiomas?",
+      "russian": "Как интересно! Ты говоришь на других языках?",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Sí, también un poco de francés. Bueno, encantada de conocerte.",
+      "russian": "Да, ещё немного по-французски. Что ж, приятно познакомиться.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Igualmente. ¡Hasta pronto!",
+      "russian": "Взаимно. До скорого!",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "¡Hola! ¿Qué desea?",
+      "russian": "Здравствуйте! Что желаете?",
+      "level": "A1",
+      "topic_id": 9001
+    },
+    {
+      "spanish": "Un café con leche, por favor.",
+      "russian": "Кофе с молоком, пожалуйста.",
+      "level": "A1",
+      "topic_id": 9001
+    },
+    {
+      "spanish": "¿Algo más?",
+      "russian": "Что-нибудь ещё?",
+      "level": "A1",
+      "topic_id": 9001
+    },
+    {
+      "spanish": "Sí, un cruasán. ¿Cuánto es?",
+      "russian": "Да, круассан. Сколько с меня?",
+      "level": "A1",
+      "topic_id": 9001
+    },
+    {
+      "spanish": "Son cuatro euros.",
+      "russian": "Четыре евро.",
+      "level": "A1",
+      "topic_id": 9001
+    },
+    {
+      "spanish": "Aquí tiene.",
+      "russian": "Вот, пожалуйста.",
+      "level": "A1",
+      "topic_id": 9001
+    },
+    {
+      "spanish": "Gracias. ¿Para tomar aquí o para llevar?",
+      "russian": "Спасибо. Здесь или с собой?",
+      "level": "A1",
+      "topic_id": 9001
+    },
+    {
+      "spanish": "Para llevar, por favor.",
+      "russian": "С собой, пожалуйста.",
+      "level": "A1",
+      "topic_id": 9001
+    },
+    {
+      "spanish": "Aquí tiene su café. ¡Que tenga un buen día!",
+      "russian": "Вот ваш кофе. Хорошего дня!",
+      "level": "A1",
+      "topic_id": 9001
+    },
+    {
+      "spanish": "Igualmente, ¡adiós!",
+      "russian": "Взаимно, до свидания!",
+      "level": "A1",
+      "topic_id": 9001
+    },
+    {
+      "spanish": "Perdone, ¿cómo llego a la Plaza Mayor?",
+      "russian": "Извините, как пройти к Пласа-Майор?",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Siga todo recto por esta calle.",
+      "russian": "Идите прямо по этой улице.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "¿Está lejos?",
+      "russian": "Это далеко?",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "No, a unos diez minutos a pie.",
+      "russian": "Нет, минут десять пешком.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "¿Y después?",
+      "russian": "А потом?",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Gire a la izquierda en el semáforo y verá la plaza.",
+      "russian": "Поверните налево у светофора — и увидите площадь.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "¿Puedo ir en metro?",
+      "russian": "Можно доехать на метро?",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Sí, pero no vale la pena. Andando es más rápido.",
+      "russian": "Да, но не стоит. Пешком быстрее.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Muchas gracias por su ayuda.",
+      "russian": "Большое спасибо за помощь.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "De nada. ¡Buen viaje!",
+      "russian": "Не за что. Счастливо!",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "¡Buenos días! ¿Qué le pongo?",
+      "russian": "Доброе утро! Что вам положить?",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Un kilo de tomates, por favor.",
+      "russian": "Килограмм помидоров, пожалуйста.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "¿Algo más? Las fresas están muy frescas hoy.",
+      "russian": "Что-то ещё? Клубника сегодня очень свежая.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Vale, medio kilo de fresas también.",
+      "russian": "Хорошо, ещё полкило клубники.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "¿Le gustan los aguacates? Están de oferta.",
+      "russian": "Любите авокадо? Они по акции.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "No, gracias. ¿Cuánto es todo?",
+      "russian": "Нет, спасибо. Сколько за всё?",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Son seis euros con cincuenta.",
+      "russian": "Шесть евро пятьдесят.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "¿Acepta tarjeta?",
+      "russian": "Карту принимаете?",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Solo efectivo, lo siento.",
+      "russian": "Только наличные, извините.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "No pasa nada, aquí tiene.",
+      "russian": "Ничего страшного, вот, пожалуйста.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Buenas tardes, ¿en qué puedo ayudarle?",
+      "russian": "Добрый день, чем могу помочь?",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Necesito algo para el dolor de cabeza.",
+      "russian": "Мне нужно что-нибудь от головной боли.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "¿Tiene alguna alergia?",
+      "russian": "У вас есть аллергия?",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "No, ninguna.",
+      "russian": "Нет, никакой.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Le recomiendo estas pastillas. Tome una cada ocho horas.",
+      "russian": "Рекомендую эти таблетки. Принимайте по одной каждые восемь часов.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "¿Las puedo tomar con el estómago vacío?",
+      "russian": "Можно принимать их на пустой желудок?",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Mejor después de comer.",
+      "russian": "Лучше после еды.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "De acuerdo. ¿Cuánto cuestan?",
+      "russian": "Хорошо. Сколько они стоят?",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Tres euros con veinte.",
+      "russian": "Три евро двадцать.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Perfecto, me las llevo.",
+      "russian": "Отлично, беру.",
+      "level": "A2",
+      "topic_id": 9002
+    },
+    {
+      "spanish": "Clínica San Rafael, buenos días.",
+      "russian": "Клиника Сан-Рафаэль, доброе утро.",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "Buenos días. Quería pedir cita con el doctor Márquez.",
+      "russian": "Доброе утро. Я хотел бы записаться на приём к доктору Маркесу.",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "¿Es usted paciente de la clínica?",
+      "russian": "Вы пациент нашей клиники?",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "Sí, estuve el año pasado.",
+      "russian": "Да, я был у вас в прошлом году.",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "¿Me dice su nombre completo, por favor?",
+      "russian": "Назовите, пожалуйста, ваше полное имя.",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "Andrés López García.",
+      "russian": "Андрес Лопес Гарсия.",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "Le puedo ofrecer el jueves a las cuatro y media.",
+      "russian": "Могу предложить четверг в половине пятого.",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "¿No tendría algo por la mañana?",
+      "russian": "А утром ничего нет?",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "Sí, el viernes a las nueve.",
+      "russian": "Есть, пятница в девять.",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "Perfecto, el viernes entonces. Gracias.",
+      "russian": "Отлично, тогда в пятницу. Спасибо.",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "Anotado. Recuerde traer su tarjeta sanitaria.",
+      "russian": "Записала. Не забудьте взять вашу медицинскую карточку.",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "¿Qué tipo de piso está buscando?",
+      "russian": "Какую квартиру вы ищете?",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "Uno de dos habitaciones, si es posible con balcón.",
+      "russian": "Двухкомнатную, желательно с балконом.",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "Tengo uno en el centro por ochocientos euros al mes.",
+      "russian": "Есть одна в центре за восемьсот евро в месяц.",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "¿Los gastos están incluidos?",
+      "russian": "Коммунальные включены?",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "El agua sí, pero la luz y el gas se pagan aparte.",
+      "russian": "Вода — да, но свет и газ оплачиваются отдельно.",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "¿Se admiten mascotas? Tengo un gato.",
+      "russian": "Животные разрешены? У меня кот.",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "Sí, no hay problema.",
+      "russian": "Да, без проблем.",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "¿Cuándo podría verlo?",
+      "russian": "Когда можно посмотреть?",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "Mañana por la tarde, si le viene bien.",
+      "russian": "Завтра во второй половине дня, если вам удобно.",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "Me viene perfecto. Hasta mañana.",
+      "russian": "Мне отлично подходит. До завтра.",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "Disculpe, mi maleta no ha salido en la cinta.",
+      "russian": "Извините, мой чемодан не выехал на ленту.",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "¿Me enseña su tarjeta de embarque y el resguardo del equipaje?",
+      "russian": "Покажите ваш посадочный талон и багажную квитанцию.",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "Aquí tiene. Vengo del vuelo de Roma.",
+      "russian": "Вот. Я с рейса из Рима.",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "Un momento… Su maleta se quedó en Roma. Llegará esta noche.",
+      "russian": "Минутку… Ваш чемодан остался в Риме. Он прилетит сегодня вечером.",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "¿Y qué hago yo ahora sin mis cosas?",
+      "russian": "И что мне теперь делать без моих вещей?",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "Se la enviaremos a su hotel mañana por la mañana.",
+      "russian": "Мы доставим его в ваш отель завтра утром.",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "¿Puedo pedir una compensación?",
+      "russian": "Могу я попросить компенсацию?",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "Sí, rellene este formulario, por favor.",
+      "russian": "Да, заполните, пожалуйста, этот бланк.",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "De acuerdo. ¿Necesita algo más?",
+      "russian": "Хорошо. Вам нужно что-то ещё?",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "No, eso es todo. Disculpe las molestias.",
+      "russian": "Нет, это всё. Приносим извинения за неудобства.",
+      "level": "B1",
+      "topic_id": 9003
+    },
+    {
+      "spanish": "Cuénteme, ¿por qué le interesa este puesto?",
+      "russian": "Расскажите, почему вас интересует эта должность?",
+      "level": "B2",
+      "topic_id": 9004
+    },
+    {
+      "spanish": "Llevo cinco años trabajando en ventas y busco nuevos retos.",
+      "russian": "Я пять лет работаю в продажах и ищу новые вызовы.",
+      "level": "B2",
+      "topic_id": 9004
+    },
+    {
+      "spanish": "¿Qué considera que es su punto fuerte?",
+      "russian": "Что вы считаете своей сильной стороной?",
+      "level": "B2",
+      "topic_id": 9004
+    },
+    {
+      "spanish": "Se me da bien negociar y no me rindo fácilmente.",
+      "russian": "Мне хорошо даются переговоры, и я легко не сдаюсь.",
+      "level": "B2",
+      "topic_id": 9004
+    },
+    {
+      "spanish": "¿Estaría dispuesto a viajar por trabajo?",
+      "russian": "Вы были бы готовы ездить в командировки?",
+      "level": "B2",
+      "topic_id": 9004
+    },
+    {
+      "spanish": "Sí, siempre que no sea más de una semana al mes.",
+      "russian": "Да, при условии, что не больше недели в месяц.",
+      "level": "B2",
+      "topic_id": 9004
+    },
+    {
+      "spanish": "¿Qué expectativas salariales tiene?",
+      "russian": "Каковы ваши зарплатные ожидания?",
+      "level": "B2",
+      "topic_id": 9004
+    },
+    {
+      "spanish": "Unos treinta mil al año, aunque es negociable.",
+      "russian": "Около тридцати тысяч в год, но это обсуждаемо.",
+      "level": "B2",
+      "topic_id": 9004
+    },
+    {
+      "spanish": "Muy bien. Le llamaremos la semana que viene.",
+      "russian": "Очень хорошо. Мы позвоним вам на следующей неделе.",
+      "level": "B2",
+      "topic_id": 9004
+    },
+    {
+      "spanish": "Gracias por su tiempo. Quedo a la espera.",
+      "russian": "Спасибо за уделённое время. Буду ждать.",
+      "level": "B2",
+      "topic_id": 9004
+    }
+  ]
+}

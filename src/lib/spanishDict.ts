@@ -1,18 +1,30 @@
 // ============================================================================
 // Испанский словарь для «Ввода»: перевод слова на русский.
 // Порядок поиска:
-//   1) локальные паки слов (src/data/spanish) — офлайн и мгновенно;
+//   1) локальные паки слов (все ~4668 слов, src/data/spanish/words) — офлайн;
 //   2) Gemini через наш /api/gemini — для слов вне паков.
 // (Free Dictionary API надёжно работает только для английского.)
+//
+// Полный словарь грузится ЛЕНИВО (динамический import) и кэшируется —
+// его ~1.4 МБ не тянутся в стартовый бандл.
 // ============================================================================
 import { chat } from './gemini'
-import { spanishWords } from '../data/spanish'
+import type { SpanishWord } from '../types'
 
 export interface SpanishLookupResult {
   word: string
   translation?: string
   example?: string
   exampleRu?: string
+}
+
+// Кэш загруженного словаря (промис, чтобы не грузить дважды).
+let wordsPromise: Promise<SpanishWord[]> | null = null
+function loadWords(): Promise<SpanishWord[]> {
+  if (!wordsPromise) {
+    wordsPromise = import('../data/spanish/words').then((m) => m.allWords)
+  }
+  return wordsPromise
 }
 
 /** Убирает пунктуацию/регистр, оставляя испанские буквы. */
@@ -29,11 +41,12 @@ function stripArticle(s: string): string {
 }
 
 /** Поиск в локальных паках (точное слово или совпадение без артикля). */
-function lookupLocal(word: string): SpanishLookupResult | null {
+async function lookupLocal(word: string): Promise<SpanishLookupResult | null> {
   const target = cleanWord(word)
   if (!target) return null
 
-  for (const w of spanishWords) {
+  const words = await loadWords()
+  for (const w of words) {
     const entry = w.spanish.toLowerCase()
     if (entry === target || stripArticle(entry) === target) {
       return {
@@ -85,5 +98,5 @@ async function lookupAi(word: string): Promise<SpanishLookupResult | null> {
  * null — если слово не найдено нигде (его всё равно можно добавить в колоду).
  */
 export async function lookupSpanish(word: string): Promise<SpanishLookupResult | null> {
-  return lookupLocal(word) ?? (await lookupAi(word))
+  return (await lookupLocal(word)) ?? (await lookupAi(word))
 }
