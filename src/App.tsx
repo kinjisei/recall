@@ -12,6 +12,7 @@ import { ConversationPage } from './features/conversation/ConversationPage'
 import { GrammarPage } from './features/grammar/GrammarPage'
 import { PracticePage } from './features/practice/PracticePage'
 import { PlacementTest } from './features/onboarding/PlacementTest'
+import { TeacherPage } from './features/teacher/TeacherPage'
 
 export default function App() {
   return (
@@ -35,6 +36,7 @@ export default function App() {
               <Route path="/grammar" element={<GrammarPage />} />
               <Route path="/practice" element={<PracticePage />} />
               <Route path="/placement" element={<PlacementTest />} />
+              <Route path="/teacher" element={<TeacherPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

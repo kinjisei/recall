@@ -218,3 +218,121 @@ where not exists (
 
 -- Готово. Таблицы созданы, защита включена, новые пользователи получают
 -- профиль и две колоды (en + es); существующим добавлена испанская колода.
+
+-- ============================================================================
+-- ФАЗА 4: режим «Преподаватель». Блок idempotent — можно запускать повторно.
+-- ============================================================================
+
+-- Код-приглашение преподавателя (ученица вводит его на Главной)
+alter table public.profiles add column if not exists invite_code text unique;
+
+-- Связь преподаватель — ученица
+create table if not exists public.teacher_students (
+  id uuid primary key default gen_random_uuid(),
+  teacher_id uuid not null references public.profiles(id) on delete cascade,
+  student_id uuid not null references public.profiles(id) on delete cascade,
+  created_at timestamptz default now(),
+  unique (teacher_id, student_id),
+  check (teacher_id <> student_id)
+);
+
+-- Назначение колоды ученице (ученица видит карточки, расписание у неё своё)
+create table if not exists public.deck_assignments (
+  id uuid primary key default gen_random_uuid(),
+  deck_id uuid not null references public.decks(id) on delete cascade,
+  student_id uuid not null references public.profiles(id) on delete cascade,
+  created_at timestamptz default now(),
+  unique (deck_id, student_id)
+);
+
+alter table public.teacher_students enable row level security;
+alter table public.deck_assignments enable row level security;
+
+-- Хелперы security definer: политики decks<->deck_assignments ссылаются друг
+-- на друга; без обхода RLS внутри подзапроса Postgres падает с
+-- «infinite recursion detected in policy».
+create or replace function public.deck_assigned_to(d_id uuid, s_id uuid)
+returns boolean language sql security definer set search_path = public as
+$$ select exists (select 1 from deck_assignments
+                  where deck_id = d_id and student_id = s_id) $$;
+
+create or replace function public.deck_owned_by(d_id uuid, u_id uuid)
+returns boolean language sql security definer set search_path = public as
+$$ select exists (select 1 from decks where id = d_id and owner_id = u_id) $$;
+
+create or replace function public.is_student_of(t_id uuid, s_id uuid)
+returns boolean language sql security definer set search_path = public as
+$$ select exists (select 1 from teacher_students
+                  where teacher_id = t_id and student_id = s_id) $$;
+
+-- Связи: видят и разрывают обе стороны; создаёт только функция join_teacher
+drop policy if exists "see own links" on public.teacher_students;
+create policy "see own links" on public.teacher_students
+  for select using (auth.uid() in (teacher_id, student_id));
+drop policy if exists "unlink" on public.teacher_students;
+create policy "unlink" on public.teacher_students
+  for delete using (auth.uid() in (teacher_id, student_id));
+
+-- Назначения: преподаватель управляет назначениями СВОИХ колод СВОИМ ученицам
+drop policy if exists "teacher manages assignments" on public.deck_assignments;
+create policy "teacher manages assignments" on public.deck_assignments
+  for all using (public.deck_owned_by(deck_id, auth.uid()))
+  with check (
+    public.deck_owned_by(deck_id, auth.uid())
+    and public.is_student_of(auth.uid(), student_id)
+  );
+drop policy if exists "student sees assignments" on public.deck_assignments;
+create policy "student sees assignments" on public.deck_assignments
+  for select using (auth.uid() = student_id);
+
+-- Ученице видны назначенные колоды и их карточки (только чтение)
+drop policy if exists "assigned decks readable" on public.decks;
+create policy "assigned decks readable" on public.decks
+  for select using (public.deck_assigned_to(id, auth.uid()));
+drop policy if exists "assigned cards readable" on public.cards;
+create policy "assigned cards readable" on public.cards
+  for select using (public.deck_assigned_to(deck_id, auth.uid()));
+
+-- Преподавателю видны профили и активность привязанных учениц;
+-- ученице — профиль её преподавателя (для имени)
+drop policy if exists "linked profiles visible" on public.profiles;
+create policy "linked profiles visible" on public.profiles
+  for select using (
+    exists (select 1 from public.teacher_students ts
+            where (ts.teacher_id = auth.uid() and ts.student_id = profiles.id)
+               or (ts.student_id = auth.uid() and ts.teacher_id = profiles.id))
+  );
+drop policy if exists "teacher reads student activity" on public.activity_log;
+create policy "teacher reads student activity" on public.activity_log
+  for select using (
+    exists (select 1 from public.teacher_students ts
+            where ts.student_id = activity_log.user_id
+              and ts.teacher_id = auth.uid())
+  );
+
+-- Привязка по коду: security definer — ищет преподавателя по коду в обход RLS
+create or replace function public.join_teacher(code text)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  t_id uuid;
+  t_name text;
+begin
+  select id, coalesce(display_name, 'Преподаватель') into t_id, t_name
+    from profiles
+   where invite_code = upper(trim(code)) and role = 'teacher';
+  if t_id is null then
+    raise exception 'Код не найден. Проверь код у преподавателя.';
+  end if;
+  if t_id = auth.uid() then
+    raise exception 'Нельзя привязать саму себя.';
+  end if;
+  insert into teacher_students (teacher_id, student_id)
+  values (t_id, auth.uid())
+  on conflict (teacher_id, student_id) do nothing;
+  return t_name;
+end;
+$$;

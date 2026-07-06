@@ -21,6 +21,7 @@ import {
   IconChevronRight,
   IconSparkles,
 } from '../../components/icons'
+import { TeacherBlock } from '../teacher/TeacherBlock'
 import type { ActivityType, Profile } from '../../types'
 
 type Tone = 'sky' | 'violet' | 'rose' | 'amber' | 'emerald' | 'cyan'
@@ -181,6 +182,8 @@ export function DashboardPage() {
           })}
         </div>
       </section>
+
+      <TeacherBlock profile={profile} />
     </div>
   )
 }

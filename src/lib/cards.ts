@@ -24,7 +24,11 @@ export async function getDefaultDeck(lang: AppLang = 'en'): Promise<Deck> {
   return data as Deck
 }
 
-/** id всех колод пользователя на данном языке (для фильтрации карточек). */
+/**
+ * id всех ДОСТУПНЫХ колод данного языка (для фильтрации карточек).
+ * Без фильтра по владельцу: RLS отдаёт свои колоды + назначенные
+ * преподавателем (Фаза 4) — так задания попадают в очередь ученицы.
+ */
 export async function getDeckIds(lang: AppLang): Promise<string[]> {
   const {
     data: { user },
@@ -34,7 +38,6 @@ export async function getDeckIds(lang: AppLang): Promise<string[]> {
   const { data, error } = await supabase
     .from('decks')
     .select('id')
-    .eq('owner_id', user.id)
     .eq('lang', lang)
 
   if (error) throw error

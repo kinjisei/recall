@@ -180,6 +180,18 @@ messages(id uuid pk default gen_random_uuid(), conversation_id uuid references c
 
 -- проверка письма
 writing_submissions(id uuid pk default gen_random_uuid(), user_id uuid references profiles(id), prompt text, text text, feedback jsonb, created_at timestamptz default now())
+
+-- Фаза 4: режим «Преподаватель»
+-- profiles.invite_code text unique — код-приглашение преподавателя
+teacher_students(id uuid pk, teacher_id uuid -> profiles, student_id uuid -> profiles,
+  created_at, unique(teacher_id, student_id))   -- связь создаёт RPC join_teacher(code)
+deck_assignments(id uuid pk, deck_id uuid -> decks, student_id uuid -> profiles,
+  created_at, unique(deck_id, student_id))
+-- RLS: ученице назначенные колоды/карточки видны только на чтение; расписание
+-- (review_states) у каждой своё. Преподавателю видны профиль и activity_log
+-- привязанных учениц. Политики decks<->deck_assignments используют функции
+-- security definer (deck_assigned_to, deck_owned_by, is_student_of) — иначе
+-- взаимные ссылки политик дают «infinite recursion detected in policy».
 ```
 
 ## 6. Общие TypeScript-типы (`src/types/index.ts`)
@@ -197,7 +209,7 @@ writing_submissions(id uuid pk default gen_random_uuid(), user_id uuid reference
 ```ts
 // lib/cards.ts  (Foundation + Worker 1)
 getDefaultDeck(lang?: AppLang): Promise<Deck>  // колода языка (обе создаются триггером)
-getDeckIds(lang: AppLang): Promise<string[]>   // id всех колод пользователя на языке
+getDeckIds(lang: AppLang): Promise<string[]>   // id доступных колод языка (свои + назначенные)
 addCard(input: { front: string; back?: string; example?: string;
   ipa?: string; audio_url?: string; deckId?: string;   // без deckId — в колоду по умолчанию
   lang?: AppLang;                                      // язык колоды по умолчанию (без deckId)
@@ -238,6 +250,14 @@ chat(messages: ChatTurn[], opts?: { system?: string }): Promise<string>
 logActivity(type: ActivityType, itemsDone?, durationSec?): Promise<void>  // не бросает ошибок
 getStreak(): Promise<number>                    // дней подряд (вчерашняя серия ещё жива)
 getTodayTypes(): Promise<Set<ActivityType>>     // какие занятия сделаны сегодня
+
+// lib/teacher.ts  (Фаза 4) — режим «Преподаватель»
+getOrCreateInviteCode(): Promise<string>        // код-приглашение (6 символов)
+joinTeacher(code: string): Promise<string>      // ученица вводит код → имя преподавателя
+getMyTeachers(): Promise<Profile[]>
+getMyStudents(): Promise<StudentInfo[]>         // профиль + стрик + неделя + назначенные колоды
+getMyDecks(): Promise<Deck[]>
+assignDeck(deckId, studentId) / unassignDeck(deckId, studentId): Promise<void>
 ```
 
 ## 8. Дизайн (минимум для согласованности)
