@@ -1,0 +1,554 @@
+[
+  {
+    "id": 1,
+    "title": "В ресторане",
+    "level": "A2",
+    "lines": [
+      { "speaker": "Camarero", "es": "Buenas tardes, ¿mesa para cuántos?", "ru": "Добрый день, столик на сколько человек?" },
+      { "speaker": "Cliente", "es": "Para dos, por favor.", "ru": "На двоих, пожалуйста." },
+      { "speaker": "Camarero", "es": "Perfecto, síganme. Aquí tienen la carta.", "ru": "Отлично, идите за мной. Вот меню." },
+      { "speaker": "Cliente", "es": "Gracias. ¿Qué nos recomienda?", "ru": "Спасибо. Что вы нам посоветуете?" },
+      { "speaker": "Camarero", "es": "El pescado del día está muy bueno.", "ru": "Рыба дня очень хороша." },
+      { "speaker": "Cliente", "es": "Estupendo. Yo quiero el pescado y una ensalada.", "ru": "Замечательно. Я хочу рыбу и салат." },
+      { "speaker": "Camarero", "es": "¿Y para beber?", "ru": "А что будете пить?" },
+      { "speaker": "Cliente", "es": "Una botella de agua y una copa de vino tinto.", "ru": "Бутылку воды и бокал красного вина." },
+      { "speaker": "Camarero", "es": "Muy bien. Enseguida se lo traigo.", "ru": "Очень хорошо. Сейчас всё принесу." },
+      { "speaker": "Cliente", "es": "La cuenta, por favor.", "ru": "Счёт, пожалуйста." }
+    ],
+    "questions": [
+      { "q": "Что посоветовал официант?", "options": ["Рыбу дня", "Мясо на гриле", "Паэлью"], "answer": 0 },
+      { "q": "Что клиент заказал из напитков?", "options": ["Кофе и сок", "Воду и красное вино", "Пиво"], "answer": 1 },
+      { "q": "Что означает «La cuenta, por favor»?", "options": ["Меню, пожалуйста", "Ещё воды, пожалуйста", "Счёт, пожалуйста"], "answer": 2 }
+    ]
+  },
+  {
+    "id": 2,
+    "title": "В отеле",
+    "level": "A2",
+    "lines": [
+      { "speaker": "Recepcionista", "es": "Buenos días, ¿en qué puedo ayudarle?", "ru": "Доброе утро, чем могу вам помочь?" },
+      { "speaker": "Cliente", "es": "Tengo una reserva a nombre de García.", "ru": "У меня бронь на имя Гарсия." },
+      { "speaker": "Recepcionista", "es": "Un momento, por favor… Sí, una habitación doble para tres noches.", "ru": "Минуту, пожалуйста… Да, двухместный номер на три ночи." },
+      { "speaker": "Cliente", "es": "Exacto. ¿El desayuno está incluido?", "ru": "Именно. Завтрак включён?" },
+      { "speaker": "Recepcionista", "es": "Sí, de siete a diez en el restaurante de la planta baja.", "ru": "Да, с семи до десяти в ресторане на первом этаже." },
+      { "speaker": "Cliente", "es": "Perfecto. ¿A qué hora hay que dejar la habitación?", "ru": "Отлично. Во сколько нужно освободить номер?" },
+      { "speaker": "Recepcionista", "es": "A las doce del mediodía. Aquí tiene su llave, habitación 305.", "ru": "В полдень. Вот ваш ключ, номер 305." },
+      { "speaker": "Cliente", "es": "Muchas gracias. ¿Hay wifi en las habitaciones?", "ru": "Большое спасибо. В номерах есть вайфай?" },
+      { "speaker": "Recepcionista", "es": "Sí, la contraseña está en la tarjeta.", "ru": "Да, пароль на карточке." },
+      { "speaker": "Cliente", "es": "Genial, gracias.", "ru": "Здорово, спасибо." }
+    ],
+    "questions": [
+      { "q": "На сколько ночей забронирован номер?", "options": ["На две", "На три", "На пять"], "answer": 1 },
+      { "q": "В какое время подают завтрак?", "options": ["С семи до десяти", "С восьми до одиннадцати", "С шести до девяти"], "answer": 0 },
+      { "q": "Что означает «dejar la habitación»?", "options": ["Убрать номер", "Поменять номер", "Освободить номер"], "answer": 2 }
+    ]
+  },
+  {
+    "id": 3,
+    "title": "В аэропорту",
+    "level": "B1",
+    "lines": [
+      { "speaker": "Agente", "es": "Buenos días, su pasaporte y su billete, por favor.", "ru": "Доброе утро, ваш паспорт и билет, пожалуйста." },
+      { "speaker": "Pasajero", "es": "Aquí tiene. Viajo a Barcelona.", "ru": "Вот, пожалуйста. Я лечу в Барселону." },
+      { "speaker": "Agente", "es": "¿Cuántas maletas va a facturar?", "ru": "Сколько чемоданов вы будете сдавать в багаж?" },
+      { "speaker": "Pasajero", "es": "Solo una. Esta la llevo como equipaje de mano.", "ru": "Только один. Этот возьму как ручную кладь." },
+      { "speaker": "Agente", "es": "De acuerdo. ¿Prefiere ventanilla o pasillo?", "ru": "Хорошо. Предпочитаете место у окна или у прохода?" },
+      { "speaker": "Pasajero", "es": "Ventanilla, por favor.", "ru": "У окна, пожалуйста." },
+      { "speaker": "Agente", "es": "Aquí tiene su tarjeta de embarque. La puerta es la B12.", "ru": "Вот ваш посадочный талон. Выход B12." },
+      { "speaker": "Pasajero", "es": "¿A qué hora empieza el embarque?", "ru": "Во сколько начинается посадка?" },
+      { "speaker": "Agente", "es": "A las diez y media. No olvide pasar el control de seguridad.", "ru": "В десять тридцать. Не забудьте пройти контроль безопасности." },
+      { "speaker": "Pasajero", "es": "Muchas gracias. ¡Buen día!", "ru": "Большое спасибо. Хорошего дня!" }
+    ],
+    "questions": [
+      { "q": "Сколько чемоданов пассажир сдаёт в багаж?", "options": ["Один", "Два", "Ни одного"], "answer": 0 },
+      { "q": "Какое место выбрал пассажир?", "options": ["У прохода", "У окна", "Посередине"], "answer": 1 },
+      { "q": "Что такое «tarjeta de embarque»?", "options": ["Банковская карта", "Багажная бирка", "Посадочный талон"], "answer": 2 }
+    ]
+  },
+  {
+    "id": 4,
+    "title": "У врача",
+    "level": "B1",
+    "lines": [
+      { "speaker": "Médica", "es": "Buenos días, ¿qué le pasa?", "ru": "Доброе утро, что вас беспокоит?" },
+      { "speaker": "Paciente", "es": "No me encuentro bien. Me duele mucho la garganta.", "ru": "Мне нездоровится. У меня сильно болит горло." },
+      { "speaker": "Médica", "es": "¿Desde cuándo se siente así?", "ru": "С какого времени вы так себя чувствуете?" },
+      { "speaker": "Paciente", "es": "Desde hace tres días. También tengo fiebre.", "ru": "Уже три дня. Ещё у меня температура." },
+      { "speaker": "Médica", "es": "Vamos a ver. Abra la boca, por favor.", "ru": "Давайте посмотрим. Откройте рот, пожалуйста." },
+      { "speaker": "Paciente", "es": "¿Es algo grave?", "ru": "Это что-то серьёзное?" },
+      { "speaker": "Médica", "es": "No se preocupe, es una infección leve.", "ru": "Не волнуйтесь, это лёгкая инфекция." },
+      { "speaker": "Médica", "es": "Le voy a recetar un antibiótico. Tómelo cada ocho horas.", "ru": "Я выпишу вам антибиотик. Принимайте его каждые восемь часов." },
+      { "speaker": "Paciente", "es": "De acuerdo. ¿Tengo que volver?", "ru": "Хорошо. Мне нужно прийти снова?" },
+      { "speaker": "Médica", "es": "Solo si no mejora en una semana. Que se mejore.", "ru": "Только если не станет лучше через неделю. Выздоравливайте." }
+    ],
+    "questions": [
+      { "q": "Что болит у пациента?", "options": ["Голова", "Горло", "Спина"], "answer": 1 },
+      { "q": "Как часто нужно принимать антибиотик?", "options": ["Каждые восемь часов", "Каждые двенадцать часов", "Один раз в день"], "answer": 0 },
+      { "q": "Что означает «¡Que se mejore!»?", "options": ["Приходите ещё", "Берегите себя", "Выздоравливайте"], "answer": 2 }
+    ]
+  },
+  {
+    "id": 5,
+    "title": "Покупки",
+    "level": "A2",
+    "lines": [
+      { "speaker": "Dependiente", "es": "Hola, ¿busca algo en concreto?", "ru": "Здравствуйте, ищете что-то конкретное?" },
+      { "speaker": "Cliente", "es": "Sí, busco una camisa azul.", "ru": "Да, ищу синюю рубашку." },
+      { "speaker": "Dependiente", "es": "¿Qué talla usa?", "ru": "Какой у вас размер?" },
+      { "speaker": "Cliente", "es": "La mediana, normalmente.", "ru": "Обычно средний." },
+      { "speaker": "Dependiente", "es": "Tenemos esta. ¿Quiere probársela?", "ru": "У нас есть вот эта. Хотите примерить?" },
+      { "speaker": "Cliente", "es": "Sí. ¿Dónde está el probador?", "ru": "Да. Где примерочная?" },
+      { "speaker": "Dependiente", "es": "Al fondo a la derecha.", "ru": "В глубине справа." },
+      { "speaker": "Cliente", "es": "Me queda bien. ¿Cuánto cuesta?", "ru": "Мне подходит. Сколько стоит?" },
+      { "speaker": "Dependiente", "es": "Veinticinco euros. Está de oferta.", "ru": "Двадцать пять евро. Она со скидкой." },
+      { "speaker": "Cliente", "es": "Perfecto, me la llevo. ¿Puedo pagar con tarjeta?", "ru": "Отлично, беру. Можно оплатить картой?" },
+      { "speaker": "Dependiente", "es": "Claro, por aquí.", "ru": "Конечно, сюда." }
+    ],
+    "questions": [
+      { "q": "Что ищет клиент?", "options": ["Чёрные брюки", "Синюю рубашку", "Куртку"], "answer": 1 },
+      { "q": "Сколько стоит рубашка?", "options": ["Пятнадцать евро", "Тридцать пять евро", "Двадцать пять евро"], "answer": 2 },
+      { "q": "Что означает «Me la llevo»?", "options": ["Я беру её", "Мне не подходит", "Я подумаю"], "answer": 0 }
+    ]
+  },
+  {
+    "id": 6,
+    "title": "Знакомство",
+    "level": "A2",
+    "lines": [
+      { "speaker": "Ana", "es": "¡Hola! Creo que no nos conocemos. Me llamo Ana.", "ru": "Привет! Кажется, мы не знакомы. Меня зовут Ана." },
+      { "speaker": "Luis", "es": "Encantado, Ana. Yo soy Luis.", "ru": "Очень приятно, Ана. Я Луис." },
+      { "speaker": "Ana", "es": "¿De dónde eres, Luis?", "ru": "Откуда ты, Луис?" },
+      { "speaker": "Luis", "es": "Soy de México, pero vivo en Madrid. ¿Y tú?", "ru": "Я из Мексики, но живу в Мадриде. А ты?" },
+      { "speaker": "Ana", "es": "Yo soy española, de Sevilla. ¿A qué te dedicas?", "ru": "Я испанка, из Севильи. Чем ты занимаешься?" },
+      { "speaker": "Luis", "es": "Soy ingeniero. ¿Y tú?", "ru": "Я инженер. А ты?" },
+      { "speaker": "Ana", "es": "Trabajo como profesora de inglés.", "ru": "Я работаю учительницей английского." },
+      { "speaker": "Luis", "es": "¡Qué interesante! ¿Hablas otros idiomas?", "ru": "Как интересно! Ты говоришь на других языках?" },
+      { "speaker": "Ana", "es": "Sí, también un poco de francés. Bueno, encantada de conocerte.", "ru": "Да, ещё немного по-французски. Что ж, приятно познакомиться." },
+      { "speaker": "Luis", "es": "Igualmente. ¡Hasta pronto!", "ru": "Взаимно. До скорого!" }
+    ],
+    "questions": [
+      { "q": "Откуда Луис родом?", "options": ["Из Мадрида", "Из Мексики", "Из Севильи"], "answer": 1 },
+      { "q": "Кем работает Ана?", "options": ["Учительницей английского", "Инженером", "Врачом"], "answer": 0 },
+      { "q": "Что означает «Igualmente»?", "options": ["Извините", "До завтра", "Взаимно"], "answer": 2 }
+    ]
+  },
+  {
+    "id": 7,
+    "title": "В кафе",
+    "level": "A1",
+    "lines": [
+      { "speaker": "Camarero", "es": "¡Hola! ¿Qué desea?", "ru": "Здравствуйте! Что желаете?" },
+      { "speaker": "Cliente", "es": "Un café con leche, por favor.", "ru": "Кофе с молоком, пожалуйста." },
+      { "speaker": "Camarero", "es": "¿Algo más?", "ru": "Что-нибудь ещё?" },
+      { "speaker": "Cliente", "es": "Sí, un cruasán. ¿Cuánto es?", "ru": "Да, круассан. Сколько с меня?" },
+      { "speaker": "Camarero", "es": "Son cuatro euros.", "ru": "Четыре евро." },
+      { "speaker": "Cliente", "es": "Aquí tiene.", "ru": "Вот, пожалуйста." },
+      { "speaker": "Camarero", "es": "Gracias. ¿Para tomar aquí o para llevar?", "ru": "Спасибо. Здесь или с собой?" },
+      { "speaker": "Cliente", "es": "Para llevar, por favor.", "ru": "С собой, пожалуйста." },
+      { "speaker": "Camarero", "es": "Aquí tiene su café. ¡Que tenga un buen día!", "ru": "Вот ваш кофе. Хорошего дня!" },
+      { "speaker": "Cliente", "es": "Igualmente, ¡adiós!", "ru": "Взаимно, до свидания!" }
+    ],
+    "questions": [
+      { "q": "Что заказал клиент?", "options": ["Кофе с молоком и круассан", "Чай и тост", "Сок и бутерброд"], "answer": 0 },
+      { "q": "Сколько стоит заказ?", "options": ["Три евро", "Четыре евро", "Пять евро"], "answer": 1 },
+      { "q": "Что означает «para llevar»?", "options": ["Здесь, в кафе", "Побыстрее", "С собой"], "answer": 2 }
+    ]
+  },
+  {
+    "id": 8,
+    "title": "Как пройти?",
+    "level": "A2",
+    "lines": [
+      { "speaker": "Turista", "es": "Perdone, ¿cómo llego a la Plaza Mayor?", "ru": "Извините, как пройти к Пласа-Майор?" },
+      { "speaker": "Vecino", "es": "Siga todo recto por esta calle.", "ru": "Идите прямо по этой улице." },
+      { "speaker": "Turista", "es": "¿Está lejos?", "ru": "Это далеко?" },
+      { "speaker": "Vecino", "es": "No, a unos diez minutos a pie.", "ru": "Нет, минут десять пешком." },
+      { "speaker": "Turista", "es": "¿Y después?", "ru": "А потом?" },
+      { "speaker": "Vecino", "es": "Gire a la izquierda en el semáforo y verá la plaza.", "ru": "Поверните налево у светофора — и увидите площадь." },
+      { "speaker": "Turista", "es": "¿Puedo ir en metro?", "ru": "Можно доехать на метро?" },
+      { "speaker": "Vecino", "es": "Sí, pero no vale la pena. Andando es más rápido.", "ru": "Да, но не стоит. Пешком быстрее." },
+      { "speaker": "Turista", "es": "Muchas gracias por su ayuda.", "ru": "Большое спасибо за помощь." },
+      { "speaker": "Vecino", "es": "De nada. ¡Buen viaje!", "ru": "Не за что. Счастливо!" }
+    ],
+    "questions": [
+      { "q": "Сколько идти до площади пешком?", "options": ["Около десяти минут", "Полчаса", "Пять минут"], "answer": 0 },
+      { "q": "Где нужно повернуть налево?", "options": ["На перекрёстке", "У светофора", "У площади"], "answer": 1 },
+      { "q": "Что означает «siga todo recto»?", "options": ["Вернитесь назад", "Поверните направо", "Идите прямо"], "answer": 2 }
+    ]
+  },
+  {
+    "id": 9,
+    "title": "На рынке",
+    "level": "A2",
+    "lines": [
+      { "speaker": "Vendedora", "es": "¡Buenos días! ¿Qué le pongo?", "ru": "Доброе утро! Что вам положить?" },
+      { "speaker": "Cliente", "es": "Un kilo de tomates, por favor.", "ru": "Килограмм помидоров, пожалуйста." },
+      { "speaker": "Vendedora", "es": "¿Algo más? Las fresas están muy frescas hoy.", "ru": "Что-то ещё? Клубника сегодня очень свежая." },
+      { "speaker": "Cliente", "es": "Vale, medio kilo de fresas también.", "ru": "Хорошо, ещё полкило клубники." },
+      { "speaker": "Vendedora", "es": "¿Le gustan los aguacates? Están de oferta.", "ru": "Любите авокадо? Они по акции." },
+      { "speaker": "Cliente", "es": "No, gracias. ¿Cuánto es todo?", "ru": "Нет, спасибо. Сколько за всё?" },
+      { "speaker": "Vendedora", "es": "Son seis euros con cincuenta.", "ru": "Шесть евро пятьдесят." },
+      { "speaker": "Cliente", "es": "¿Acepta tarjeta?", "ru": "Карту принимаете?" },
+      { "speaker": "Vendedora", "es": "Solo efectivo, lo siento.", "ru": "Только наличные, извините." },
+      { "speaker": "Cliente", "es": "No pasa nada, aquí tiene.", "ru": "Ничего страшного, вот, пожалуйста." }
+    ],
+    "questions": [
+      { "q": "Что купил клиент?", "options": ["Помидоры и авокадо", "Помидоры и клубнику", "Только клубнику"], "answer": 1 },
+      { "q": "Как можно оплатить покупку?", "options": ["Только наличными", "Картой", "Переводом"], "answer": 0 },
+      { "q": "Что означает «están de oferta»?", "options": ["Они закончились", "Они очень свежие", "Они по акции"], "answer": 2 }
+    ]
+  },
+  {
+    "id": 10,
+    "title": "В аптеке",
+    "level": "A2",
+    "lines": [
+      { "speaker": "Farmacéutico", "es": "Buenas tardes, ¿en qué puedo ayudarle?", "ru": "Добрый день, чем могу помочь?" },
+      { "speaker": "Cliente", "es": "Necesito algo para el dolor de cabeza.", "ru": "Мне нужно что-нибудь от головной боли." },
+      { "speaker": "Farmacéutico", "es": "¿Tiene alguna alergia?", "ru": "У вас есть аллергия?" },
+      { "speaker": "Cliente", "es": "No, ninguna.", "ru": "Нет, никакой." },
+      { "speaker": "Farmacéutico", "es": "Le recomiendo estas pastillas. Tome una cada ocho horas.", "ru": "Рекомендую эти таблетки. Принимайте по одной каждые восемь часов." },
+      { "speaker": "Cliente", "es": "¿Las puedo tomar con el estómago vacío?", "ru": "Можно принимать их на пустой желудок?" },
+      { "speaker": "Farmacéutico", "es": "Mejor después de comer.", "ru": "Лучше после еды." },
+      { "speaker": "Cliente", "es": "De acuerdo. ¿Cuánto cuestan?", "ru": "Хорошо. Сколько они стоят?" },
+      { "speaker": "Farmacéutico", "es": "Tres euros con veinte.", "ru": "Три евро двадцать." },
+      { "speaker": "Cliente", "es": "Perfecto, me las llevo.", "ru": "Отлично, беру." }
+    ],
+    "questions": [
+      { "q": "Что беспокоит клиента?", "options": ["Головная боль", "Боль в горле", "Температура"], "answer": 0 },
+      { "q": "Как принимать таблетки?", "options": ["По две утром", "По одной каждые восемь часов, после еды", "Одну на ночь, натощак"], "answer": 1 },
+      { "q": "Что означает «el estómago vacío»?", "options": ["Больной желудок", "Полный желудок", "Пустой желудок"], "answer": 2 }
+    ]
+  },
+  {
+    "id": 11,
+    "title": "Запись к врачу по телефону",
+    "level": "B1",
+    "lines": [
+      { "speaker": "Recepcionista", "es": "Clínica San Rafael, buenos días.", "ru": "Клиника Сан-Рафаэль, доброе утро." },
+      { "speaker": "Paciente", "es": "Buenos días. Quería pedir cita con el doctor Márquez.", "ru": "Доброе утро. Я хотел бы записаться на приём к доктору Маркесу." },
+      { "speaker": "Recepcionista", "es": "¿Es usted paciente de la clínica?", "ru": "Вы пациент нашей клиники?" },
+      { "speaker": "Paciente", "es": "Sí, estuve el año pasado.", "ru": "Да, я был у вас в прошлом году." },
+      { "speaker": "Recepcionista", "es": "¿Me dice su nombre completo, por favor?", "ru": "Назовите, пожалуйста, ваше полное имя." },
+      { "speaker": "Paciente", "es": "Andrés López García.", "ru": "Андрес Лопес Гарсия." },
+      { "speaker": "Recepcionista", "es": "Le puedo ofrecer el jueves a las cuatro y media.", "ru": "Могу предложить четверг в половине пятого." },
+      { "speaker": "Paciente", "es": "¿No tendría algo por la mañana?", "ru": "А утром ничего нет?" },
+      { "speaker": "Recepcionista", "es": "Sí, el viernes a las nueve.", "ru": "Есть, пятница в девять." },
+      { "speaker": "Paciente", "es": "Perfecto, el viernes entonces. Gracias.", "ru": "Отлично, тогда в пятницу. Спасибо." },
+      { "speaker": "Recepcionista", "es": "Anotado. Recuerde traer su tarjeta sanitaria.", "ru": "Записала. Не забудьте взять вашу медицинскую карточку." }
+    ],
+    "questions": [
+      { "q": "Зачем звонит пациент?", "options": ["Отменить приём", "Записаться на приём", "Узнать результаты анализов"], "answer": 1 },
+      { "q": "Какое время выбрал пациент?", "options": ["Пятница в девять утра", "Четверг в половине пятого", "Понедельник в полдень"], "answer": 0 },
+      { "q": "Что нужно принести с собой?", "options": ["Паспорт", "Результаты анализов", "Медицинскую карточку"], "answer": 2 }
+    ]
+  },
+  {
+    "id": 12,
+    "title": "Аренда квартиры",
+    "level": "B1",
+    "lines": [
+      { "speaker": "Agente", "es": "¿Qué tipo de piso está buscando?", "ru": "Какую квартиру вы ищете?" },
+      { "speaker": "Cliente", "es": "Uno de dos habitaciones, si es posible con balcón.", "ru": "Двухкомнатную, желательно с балконом." },
+      { "speaker": "Agente", "es": "Tengo uno en el centro por ochocientos euros al mes.", "ru": "Есть одна в центре за восемьсот евро в месяц." },
+      { "speaker": "Cliente", "es": "¿Los gastos están incluidos?", "ru": "Коммунальные включены?" },
+      { "speaker": "Agente", "es": "El agua sí, pero la luz y el gas se pagan aparte.", "ru": "Вода — да, но свет и газ оплачиваются отдельно." },
+      { "speaker": "Cliente", "es": "¿Se admiten mascotas? Tengo un gato.", "ru": "Животные разрешены? У меня кот." },
+      { "speaker": "Agente", "es": "Sí, no hay problema.", "ru": "Да, без проблем." },
+      { "speaker": "Cliente", "es": "¿Cuándo podría verlo?", "ru": "Когда можно посмотреть?" },
+      { "speaker": "Agente", "es": "Mañana por la tarde, si le viene bien.", "ru": "Завтра во второй половине дня, если вам удобно." },
+      { "speaker": "Cliente", "es": "Me viene perfecto. Hasta mañana.", "ru": "Мне отлично подходит. До завтра." }
+    ],
+    "questions": [
+      { "q": "Какую квартиру ищет клиент?", "options": ["Двухкомнатную с балконом", "Студию в центре", "Трёхкомнатную с гаражом"], "answer": 0 },
+      { "q": "Что оплачивается отдельно?", "options": ["Вода", "Свет и газ", "Интернет"], "answer": 1 },
+      { "q": "Что означает «¿Se admiten mascotas?»", "options": ["Есть ли мебель?", "Разрешён ли ремонт?", "Можно ли с животными?"], "answer": 2 }
+    ]
+  },
+  {
+    "id": 13,
+    "title": "Потерянный багаж",
+    "level": "B1",
+    "lines": [
+      { "speaker": "Pasajera", "es": "Disculpe, mi maleta no ha salido en la cinta.", "ru": "Извините, мой чемодан не выехал на ленту." },
+      { "speaker": "Empleado", "es": "¿Me enseña su tarjeta de embarque y el resguardo del equipaje?", "ru": "Покажите ваш посадочный талон и багажную квитанцию." },
+      { "speaker": "Pasajera", "es": "Aquí tiene. Vengo del vuelo de Roma.", "ru": "Вот. Я с рейса из Рима." },
+      { "speaker": "Empleado", "es": "Un momento… Su maleta se quedó en Roma. Llegará esta noche.", "ru": "Минутку… Ваш чемодан остался в Риме. Он прилетит сегодня вечером." },
+      { "speaker": "Pasajera", "es": "¿Y qué hago yo ahora sin mis cosas?", "ru": "И что мне теперь делать без моих вещей?" },
+      { "speaker": "Empleado", "es": "Se la enviaremos a su hotel mañana por la mañana.", "ru": "Мы доставим его в ваш отель завтра утром." },
+      { "speaker": "Pasajera", "es": "¿Puedo pedir una compensación?", "ru": "Могу я попросить компенсацию?" },
+      { "speaker": "Empleado", "es": "Sí, rellene este formulario, por favor.", "ru": "Да, заполните, пожалуйста, этот бланк." },
+      { "speaker": "Pasajera", "es": "De acuerdo. ¿Necesita algo más?", "ru": "Хорошо. Вам нужно что-то ещё?" },
+      { "speaker": "Empleado", "es": "No, eso es todo. Disculpe las molestias.", "ru": "Нет, это всё. Приносим извинения за неудобства." }
+    ],
+    "questions": [
+      { "q": "Что случилось с чемоданом?", "options": ["Его украли", "Он остался в Риме", "Он улетел в другой город"], "answer": 1 },
+      { "q": "Когда чемодан доставят в отель?", "options": ["Завтра утром", "Сегодня вечером", "Через три дня"], "answer": 0 },
+      { "q": "Что означает «rellene este formulario»?", "options": ["Подпишите договор", "Оплатите сбор", "Заполните этот бланк"], "answer": 2 }
+    ]
+  },
+  {
+    "id": 14,
+    "title": "Собеседование",
+    "level": "B2",
+    "lines": [
+      { "speaker": "Entrevistadora", "es": "Cuénteme, ¿por qué le interesa este puesto?", "ru": "Расскажите, почему вас интересует эта должность?" },
+      { "speaker": "Candidato", "es": "Llevo cinco años trabajando en ventas y busco nuevos retos.", "ru": "Я пять лет работаю в продажах и ищу новые вызовы." },
+      { "speaker": "Entrevistadora", "es": "¿Qué considera que es su punto fuerte?", "ru": "Что вы считаете своей сильной стороной?" },
+      { "speaker": "Candidato", "es": "Se me da bien negociar y no me rindo fácilmente.", "ru": "Мне хорошо даются переговоры, и я легко не сдаюсь." },
+      { "speaker": "Entrevistadora", "es": "¿Estaría dispuesto a viajar por trabajo?", "ru": "Вы были бы готовы ездить в командировки?" },
+      { "speaker": "Candidato", "es": "Sí, siempre que no sea más de una semana al mes.", "ru": "Да, при условии, что не больше недели в месяц." },
+      { "speaker": "Entrevistadora", "es": "¿Qué expectativas salariales tiene?", "ru": "Каковы ваши зарплатные ожидания?" },
+      { "speaker": "Candidato", "es": "Unos treinta mil al año, aunque es negociable.", "ru": "Около тридцати тысяч в год, но это обсуждаемо." },
+      { "speaker": "Entrevistadora", "es": "Muy bien. Le llamaremos la semana que viene.", "ru": "Очень хорошо. Мы позвоним вам на следующей неделе." },
+      { "speaker": "Candidato", "es": "Gracias por su tiempo. Quedo a la espera.", "ru": "Спасибо за уделённое время. Буду ждать." }
+    ],
+    "questions": [
+      { "q": "Сколько лет кандидат работает в продажах?", "options": ["Три года", "Пять лет", "Десять лет"], "answer": 1 },
+      { "q": "На каких условиях кандидат готов ездить в командировки?", "options": ["Не больше недели в месяц", "Только по Испании", "Без ограничений"], "answer": 0 },
+      { "q": "Что означает «Quedo a la espera»?", "options": ["Я откажусь", "Я подумаю", "Буду ждать ответа"], "answer": 2 }
+    ]
+  },
+  {
+    "id": 15,
+    "title": "В такси",
+    "level": "A1",
+    "lines": [
+      { "speaker": "Cliente", "es": "¡Buenos días! ¿Está libre?", "ru": "Доброе утро! Свободны?" },
+      { "speaker": "Taxista", "es": "Sí, suba. ¿Adónde va?", "ru": "Да, садитесь. Куда едете?" },
+      { "speaker": "Cliente", "es": "Al centro, a la calle Mayor, por favor.", "ru": "В центр, на улицу Майор, пожалуйста." },
+      { "speaker": "Taxista", "es": "Muy bien. ¿Tiene prisa?", "ru": "Хорошо. Вы торопитесь?" },
+      { "speaker": "Cliente", "es": "Un poco. ¿Cuánto tiempo se tarda?", "ru": "Немного. Сколько времени займёт дорога?" },
+      { "speaker": "Taxista", "es": "Unos quince minutos si no hay tráfico.", "ru": "Минут пятнадцать, если нет пробок." },
+      { "speaker": "Cliente", "es": "Perfecto. ¿Cuánto va a costar?", "ru": "Отлично. Сколько это будет стоить?" },
+      { "speaker": "Taxista", "es": "Unos diez euros.", "ru": "Около десяти евро." },
+      { "speaker": "Cliente", "es": "Pare aquí, por favor. Quédese con el cambio.", "ru": "Остановите здесь, пожалуйста. Сдачу оставьте себе." },
+      { "speaker": "Taxista", "es": "¡Gracias! ¡Que tenga un buen día!", "ru": "Спасибо! Хорошего дня!" }
+    ],
+    "questions": [
+      { "q": "Куда едет клиент?", "options": ["В центр, на улицу Майор", "В аэропорт", "На вокзал"], "answer": 0 },
+      { "q": "Сколько займёт дорога без пробок?", "options": ["Пять минут", "Пятнадцать минут", "Полчаса"], "answer": 1 },
+      { "q": "Что означает «Quédese con el cambio»?", "options": ["Подождите меня здесь", "Дайте мне сдачу", "Оставьте сдачу себе"], "answer": 2 }
+    ]
+  },
+  {
+    "id": 16,
+    "title": "В продуктовом магазине",
+    "level": "A1",
+    "lines": [
+      { "speaker": "Dependienta", "es": "Hola, ¿qué necesita?", "ru": "Здравствуйте, что вам нужно?" },
+      { "speaker": "Cliente", "es": "Necesito leche, huevos y pan.", "ru": "Мне нужны молоко, яйца и хлеб." },
+      { "speaker": "Dependienta", "es": "La leche está allí, al fondo.", "ru": "Молоко там, в глубине." },
+      { "speaker": "Cliente", "es": "Gracias. ¿Tienen queso manchego?", "ru": "Спасибо. У вас есть сыр манчего?" },
+      { "speaker": "Dependienta", "es": "Sí, ¿cuánto le pongo?", "ru": "Да, сколько вам положить?" },
+      { "speaker": "Cliente", "es": "Doscientos gramos, por favor.", "ru": "Двести граммов, пожалуйста." },
+      { "speaker": "Dependienta", "es": "¿Algo más?", "ru": "Что-нибудь ещё?" },
+      { "speaker": "Cliente", "es": "No, nada más. ¿Cuánto es?", "ru": "Нет, больше ничего. Сколько с меня?" },
+      { "speaker": "Dependienta", "es": "Son ocho euros con noventa.", "ru": "Восемь евро девяносто." },
+      { "speaker": "Cliente", "es": "Aquí tiene. Gracias, ¡hasta luego!", "ru": "Вот, пожалуйста. Спасибо, до свидания!" }
+    ],
+    "questions": [
+      { "q": "Что нужно клиенту?", "options": ["Молоко, яйца и хлеб", "Фрукты и овощи", "Рыба и мясо"], "answer": 0 },
+      { "q": "Сколько сыра попросил клиент?", "options": ["Полкило", "Двести граммов", "Один кусок"], "answer": 1 },
+      { "q": "Что означает «nada más»?", "options": ["Ещё немного", "Слишком дорого", "Больше ничего"], "answer": 2 }
+    ]
+  },
+  {
+    "id": 17,
+    "title": "Погода и планы",
+    "level": "A2",
+    "lines": [
+      { "speaker": "Marta", "es": "¿Has visto el tiempo para mañana?", "ru": "Ты видел прогноз на завтра?" },
+      { "speaker": "Pablo", "es": "Sí, dicen que va a llover todo el día.", "ru": "Да, говорят, весь день будет дождь." },
+      { "speaker": "Marta", "es": "¡Qué pena! Queríamos ir a la playa.", "ru": "Как жаль! Мы хотели поехать на пляж." },
+      { "speaker": "Pablo", "es": "Podemos ir el sábado. Hará sol y calor.", "ru": "Можем поехать в субботу. Будет солнечно и жарко." },
+      { "speaker": "Marta", "es": "¿Cuántos grados va a hacer?", "ru": "Сколько градусов будет?" },
+      { "speaker": "Pablo", "es": "Unos veintiocho. Un día perfecto.", "ru": "Около двадцати восьми. Идеальный день." },
+      { "speaker": "Marta", "es": "Genial. ¿Y si mañana vamos al museo?", "ru": "Отлично. А если завтра пойдём в музей?" },
+      { "speaker": "Pablo", "es": "Buena idea. Los jueves la entrada es gratis.", "ru": "Хорошая идея. По четвергам вход бесплатный." },
+      { "speaker": "Marta", "es": "Pues decidido: mañana museo, el sábado playa.", "ru": "Ну, решено: завтра музей, в субботу пляж." },
+      { "speaker": "Pablo", "es": "¡Perfecto! Llevaré el paraguas por si acaso.", "ru": "Отлично! Возьму зонт на всякий случай." }
+    ],
+    "questions": [
+      { "q": "Какая погода будет завтра?", "options": ["Солнечно и жарко", "Дождь весь день", "Снег"], "answer": 1 },
+      { "q": "Когда друзья поедут на пляж?", "options": ["В субботу", "Завтра", "В четверг"], "answer": 0 },
+      { "q": "Что означает «por si acaso»?", "options": ["Как обычно", "Наверняка", "На всякий случай"], "answer": 2 }
+    ]
+  },
+  {
+    "id": 18,
+    "title": "Звонок другу",
+    "level": "A2",
+    "lines": [
+      { "speaker": "Lucía", "es": "¿Sí? ¿Quién es?", "ru": "Да? Кто это?" },
+      { "speaker": "Diego", "es": "Hola, Lucía, soy Diego. ¿Te pillo en mal momento?", "ru": "Привет, Лусия, это Диего. Я не вовремя?" },
+      { "speaker": "Lucía", "es": "No, tranquilo. Estaba viendo la tele.", "ru": "Нет, всё нормально. Я смотрела телевизор." },
+      { "speaker": "Diego", "es": "¿Te apetece cenar fuera esta noche?", "ru": "Хочешь поужинать где-нибудь сегодня вечером?" },
+      { "speaker": "Lucía", "es": "Me encantaría. ¿Dónde quedamos?", "ru": "С удовольствием. Где встретимся?" },
+      { "speaker": "Diego", "es": "En la plaza, a las ocho. Conozco un sitio nuevo.", "ru": "На площади, в восемь. Я знаю одно новое место." },
+      { "speaker": "Lucía", "es": "¿Cómo es? ¿Comida española?", "ru": "Какое оно? Испанская кухня?" },
+      { "speaker": "Diego", "es": "Mexicana. Dicen que los tacos están buenísimos.", "ru": "Мексиканская. Говорят, тако там очень вкусные." },
+      { "speaker": "Lucía", "es": "Vale, me apunto. ¡Hasta luego!", "ru": "Ладно, я в деле. До встречи!" },
+      { "speaker": "Diego", "es": "¡Nos vemos!", "ru": "Увидимся!" }
+    ],
+    "questions": [
+      { "q": "Что делала Лусия, когда позвонил Диего?", "options": ["Готовила ужин", "Смотрела телевизор", "Спала"], "answer": 1 },
+      { "q": "Где и во сколько они встретятся?", "options": ["На площади в восемь", "В ресторане в девять", "У Лусии в семь"], "answer": 0 },
+      { "q": "Что означает «me apunto»?", "options": ["Я запишу", "Я подумаю", "Я в деле, присоединяюсь"], "answer": 2 }
+    ]
+  },
+  {
+    "id": 19,
+    "title": "В банке",
+    "level": "A2",
+    "lines": [
+      { "speaker": "Empleado", "es": "Buenos días, dígame.", "ru": "Доброе утро, слушаю вас." },
+      { "speaker": "Cliente", "es": "Quiero abrir una cuenta, por favor.", "ru": "Я хочу открыть счёт, пожалуйста." },
+      { "speaker": "Empleado", "es": "¿Es usted residente en España?", "ru": "Вы резидент Испании?" },
+      { "speaker": "Cliente", "es": "Sí, aquí tiene mi tarjeta de residencia.", "ru": "Да, вот моя карта резидента." },
+      { "speaker": "Empleado", "es": "Necesito también su pasaporte y un justificante de domicilio.", "ru": "Мне также нужны ваш паспорт и подтверждение адреса." },
+      { "speaker": "Cliente", "es": "Aquí está todo. ¿La cuenta tiene comisiones?", "ru": "Вот всё. У счёта есть комиссии?" },
+      { "speaker": "Empleado", "es": "No, si recibe su nómina aquí, es gratuita.", "ru": "Нет, если сюда приходит ваша зарплата — бесплатно." },
+      { "speaker": "Cliente", "es": "Estupendo. ¿Cuándo recibiré la tarjeta?", "ru": "Замечательно. Когда я получу карту?" },
+      { "speaker": "Empleado", "es": "En una semana, por correo.", "ru": "Через неделю, по почте." },
+      { "speaker": "Cliente", "es": "Muchas gracias por su ayuda.", "ru": "Большое спасибо за помощь." }
+    ],
+    "questions": [
+      { "q": "Зачем клиент пришёл в банк?", "options": ["Открыть счёт", "Взять кредит", "Обменять деньги"], "answer": 0 },
+      { "q": "Когда счёт будет бесплатным?", "options": ["Всегда", "Если на него приходит зарплата", "Первый год"], "answer": 1 },
+      { "q": "Что такое «justificante de domicilio»?", "options": ["Водительские права", "Справка о доходах", "Подтверждение адреса"], "answer": 2 }
+    ]
+  },
+  {
+    "id": 20,
+    "title": "У парикмахера",
+    "level": "A2",
+    "lines": [
+      { "speaker": "Peluquera", "es": "Hola, ¿tiene cita?", "ru": "Здравствуйте, вы записаны?" },
+      { "speaker": "Cliente", "es": "Sí, a las cinco, a nombre de Andrés.", "ru": "Да, на пять, на имя Андрес." },
+      { "speaker": "Peluquera", "es": "Perfecto, siéntese. ¿Qué le hacemos hoy?", "ru": "Отлично, садитесь. Что будем делать сегодня?" },
+      { "speaker": "Cliente", "es": "Un corte, por favor. No muy corto.", "ru": "Стрижку, пожалуйста. Не слишком коротко." },
+      { "speaker": "Peluquera", "es": "¿Le lavo el pelo primero?", "ru": "Сначала помыть вам голову?" },
+      { "speaker": "Cliente", "es": "Sí, por favor.", "ru": "Да, пожалуйста." },
+      { "speaker": "Peluquera", "es": "¿Cómo quiere el flequillo?", "ru": "Как вам чёлку?" },
+      { "speaker": "Cliente", "es": "Un poco más corto que ahora.", "ru": "Немного короче, чем сейчас." },
+      { "speaker": "Peluquera", "es": "Listo. ¿Qué le parece?", "ru": "Готово. Как вам?" },
+      { "speaker": "Cliente", "es": "Me encanta. ¿Cuánto le debo?", "ru": "Мне очень нравится. Сколько я вам должен?" }
+    ],
+    "questions": [
+      { "q": "На какое время записан клиент?", "options": ["На пять", "На три", "На семь"], "answer": 0 },
+      { "q": "Какую стрижку хочет клиент?", "options": ["Очень коротко", "Не слишком коротко", "Только чёлку"], "answer": 1 },
+      { "q": "Что означает «¿Cuánto le debo?»", "options": ["Сколько это длится?", "Когда прийти снова?", "Сколько я вам должен?"], "answer": 2 }
+    ]
+  },
+  {
+    "id": 21,
+    "title": "Возврат товара",
+    "level": "B1",
+    "lines": [
+      { "speaker": "Cliente", "es": "Buenas, quería devolver esta chaqueta.", "ru": "Здравствуйте, я хотел бы вернуть эту куртку." },
+      { "speaker": "Dependiente", "es": "¿Hay algún problema con ella?", "ru": "С ней что-то не так?" },
+      { "speaker": "Cliente", "es": "Me queda pequeña y además tiene un defecto en la cremallera.", "ru": "Она мне мала, и к тому же у неё дефект молнии." },
+      { "speaker": "Dependiente", "es": "¿Tiene el tique de compra?", "ru": "У вас есть чек?" },
+      { "speaker": "Cliente", "es": "Sí, la compré hace cinco días. Aquí lo tiene.", "ru": "Да, я купил её пять дней назад. Вот он." },
+      { "speaker": "Dependiente", "es": "¿Prefiere un cambio o el reembolso?", "ru": "Вы предпочитаете обмен или возврат денег?" },
+      { "speaker": "Cliente", "es": "El reembolso, por favor. Pagué con tarjeta.", "ru": "Возврат денег, пожалуйста. Я платил картой." },
+      { "speaker": "Dependiente", "es": "De acuerdo. El dinero llegará en tres días laborables.", "ru": "Хорошо. Деньги придут в течение трёх рабочих дней." },
+      { "speaker": "Cliente", "es": "¿Necesita algo más de mí?", "ru": "От меня нужно что-то ещё?" },
+      { "speaker": "Dependiente", "es": "Solo una firma aquí. Disculpe las molestias.", "ru": "Только подпись вот здесь. Извините за неудобства." }
+    ],
+    "questions": [
+      { "q": "Почему клиент возвращает куртку?", "options": ["Она мала и с дефектом", "Не понравился цвет", "Нашёл дешевле"], "answer": 0 },
+      { "q": "Что выбрал клиент?", "options": ["Обмен на другую", "Возврат денег", "Ремонт молнии"], "answer": 1 },
+      { "q": "Что означает «días laborables»?", "options": ["Выходные дни", "Праздничные дни", "Рабочие дни"], "answer": 2 }
+    ]
+  },
+  {
+    "id": 22,
+    "title": "Прокат автомобиля",
+    "level": "B1",
+    "lines": [
+      { "speaker": "Agente", "es": "Bienvenido. ¿Tiene una reserva?", "ru": "Добро пожаловать. У вас есть бронь?" },
+      { "speaker": "Cliente", "es": "Sí, reservé un coche pequeño para el fin de semana.", "ru": "Да, я забронировал небольшую машину на выходные." },
+      { "speaker": "Agente", "es": "¿Me permite su carné de conducir y una tarjeta de crédito?", "ru": "Можно ваши водительские права и кредитную карту?" },
+      { "speaker": "Cliente", "es": "Claro. ¿El seguro está incluido en el precio?", "ru": "Конечно. Страховка включена в цену?" },
+      { "speaker": "Agente", "es": "El básico sí. Por diez euros más al día tiene cobertura total.", "ru": "Базовая — да. За десять евро в день доплаты — полное покрытие." },
+      { "speaker": "Cliente", "es": "Vale, prefiero la cobertura total, por si acaso.", "ru": "Хорошо, предпочту полное покрытие, на всякий случай." },
+      { "speaker": "Agente", "es": "¿Devolverá el coche con el depósito lleno?", "ru": "Вернёте машину с полным баком?" },
+      { "speaker": "Cliente", "es": "Sí. ¿Dónde está la gasolinera más cercana?", "ru": "Да. Где ближайшая заправка?" },
+      { "speaker": "Agente", "es": "A dos calles de aquí. Aquí tiene las llaves, plaza 14.", "ru": "В двух кварталах отсюда. Вот ключи, место 14." },
+      { "speaker": "Cliente", "es": "Perfecto, muchas gracias.", "ru": "Отлично, большое спасибо." }
+    ],
+    "questions": [
+      { "q": "На какой срок забронирована машина?", "options": ["На выходные", "На неделю", "На один день"], "answer": 0 },
+      { "q": "Сколько стоит полное страховое покрытие?", "options": ["Включено в цену", "Десять евро в день", "Пятьдесят евро"], "answer": 1 },
+      { "q": "Что означает «con el depósito lleno»?", "options": ["С чистым салоном", "Без царапин", "С полным баком"], "answer": 2 }
+    ]
+  },
+  {
+    "id": 23,
+    "title": "Разговор о фильме",
+    "level": "B1",
+    "lines": [
+      { "speaker": "Elena", "es": "¿Viste la película que te recomendé?", "ru": "Ты посмотрел фильм, который я тебе советовала?" },
+      { "speaker": "Marcos", "es": "Sí, la vi anoche. Me impresionó mucho.", "ru": "Да, посмотрел вчера вечером. Она меня очень впечатлила." },
+      { "speaker": "Elena", "es": "¿Verdad? El final no me lo esperaba para nada.", "ru": "Правда? Такого финала я совсем не ожидала." },
+      { "speaker": "Marcos", "es": "Yo tampoco. Aunque la primera parte me pareció un poco lenta.", "ru": "Я тоже. Хотя первая часть показалась мне немного затянутой." },
+      { "speaker": "Elena", "es": "Puede ser, pero las actuaciones son increíbles.", "ru": "Может быть, но актёрская игра невероятная." },
+      { "speaker": "Marcos", "es": "Sobre todo la protagonista. Dicen que le van a dar un premio.", "ru": "Особенно главная героиня. Говорят, ей дадут премию." },
+      { "speaker": "Elena", "es": "Se lo merece. ¿Qué vemos la próxima vez?", "ru": "Она это заслуживает. Что смотрим в следующий раз?" },
+      { "speaker": "Marcos", "es": "Hay un estreno el viernes, una comedia argentina.", "ru": "В пятницу премьера, аргентинская комедия." },
+      { "speaker": "Elena", "es": "Me apetece algo ligero. ¡Vamos!", "ru": "Хочется чего-то лёгкого. Идём!" },
+      { "speaker": "Marcos", "es": "Compro las entradas hoy mismo.", "ru": "Куплю билеты сегодня же." }
+    ],
+    "questions": [
+      { "q": "Как Маркосу фильм?", "options": ["Впечатлил, но начало затянуто", "Совсем не понравился", "Он его не досмотрел"], "answer": 0 },
+      { "q": "Что друзья посмотрят в следующий раз?", "options": ["Драму", "Аргентинскую комедию", "Документальный фильм"], "answer": 1 },
+      { "q": "Что означает «Se lo merece»?", "options": ["Ей повезло", "Она сомневается", "Она это заслуживает"], "answer": 2 }
+    ]
+  },
+  {
+    "id": 24,
+    "title": "Жалоба в отеле",
+    "level": "B2",
+    "lines": [
+      { "speaker": "Cliente", "es": "Disculpe, quisiera presentar una queja.", "ru": "Извините, я хотел бы подать жалобу." },
+      { "speaker": "Recepcionista", "es": "Lo siento mucho. Cuénteme qué ha pasado.", "ru": "Мне очень жаль. Расскажите, что случилось." },
+      { "speaker": "Cliente", "es": "El aire acondicionado no funciona y hay mucho ruido por las obras.", "ru": "Кондиционер не работает, и очень шумно из-за ремонтных работ." },
+      { "speaker": "Recepcionista", "es": "Le pido disculpas. Enviaré a un técnico ahora mismo.", "ru": "Приношу извинения. Немедленно отправлю техника." },
+      { "speaker": "Cliente", "es": "Preferiría que me cambiaran de habitación.", "ru": "Я бы предпочёл, чтобы мне поменяли номер." },
+      { "speaker": "Recepcionista", "es": "Déjeme comprobar... Puedo ofrecerle una habitación en la última planta, más tranquila.", "ru": "Дайте проверю... Могу предложить номер на последнем этаже, потише." },
+      { "speaker": "Cliente", "es": "¿Y no supondría un coste adicional?", "ru": "И это не потребует доплаты?" },
+      { "speaker": "Recepcionista", "es": "En absoluto. Además, le ofrecemos el desayuno gratis por las molestias.", "ru": "Совершенно нет. Кроме того, предлагаем вам бесплатный завтрак за неудобства." },
+      { "speaker": "Cliente", "es": "Se lo agradezco. Espero que esta vez todo esté en orden.", "ru": "Благодарю вас. Надеюсь, на этот раз всё будет в порядке." },
+      { "speaker": "Recepcionista", "es": "Le aseguro que así será. Un botones subirá su equipaje.", "ru": "Уверяю вас, так и будет. Носильщик поднимет ваш багаж." }
+    ],
+    "questions": [
+      { "q": "На что жалуется гость?", "options": ["Кондиционер и шум от работ", "Грязный номер", "Плохой завтрак"], "answer": 0 },
+      { "q": "Что отель предложил за неудобства?", "options": ["Скидку на проживание", "Бесплатный завтрак", "Бесплатную парковку"], "answer": 1 },
+      { "q": "Почему в «Preferiría que me cambiaran» глагол в форме cambiaran?", "options": ["Это будущее время", "Это повелительное наклонение", "После preferiría que нужен imperfecto de subjuntivo"], "answer": 2 }
+    ]
+  },
+  {
+    "id": 25,
+    "title": "Экология и привычки",
+    "level": "B2",
+    "lines": [
+      { "speaker": "Carla", "es": "¿Sabías que van a prohibir las bolsas de plástico en el barrio?", "ru": "Ты знал, что в районе собираются запретить пластиковые пакеты?" },
+      { "speaker": "Javier", "es": "Ya era hora. La cantidad de residuos que generamos es una barbaridad.", "ru": "Давно пора. Количество отходов, которое мы производим, — это ужас." },
+      { "speaker": "Carla", "es": "Yo he empezado a llevar mis propias bolsas de tela.", "ru": "Я начала носить свои тканевые сумки." },
+      { "speaker": "Javier", "es": "Nosotros intentamos reciclar todo: vidrio, papel, orgánico...", "ru": "Мы стараемся всё сортировать: стекло, бумагу, органику..." },
+      { "speaker": "Carla", "es": "Lo difícil es reducir el consumo, no solo reciclar.", "ru": "Сложно сократить потребление, а не только сортировать." },
+      { "speaker": "Javier", "es": "Tienes razón. Compro menos ropa y arreglo la que tengo.", "ru": "Ты права. Я покупаю меньше одежды и чиню ту, что есть." },
+      { "speaker": "Carla", "es": "Si todos hicieran lo mismo, otro gallo cantaría.", "ru": "Если бы все делали так же, всё было бы иначе." },
+      { "speaker": "Javier", "es": "Poco a poco. Al menos la gente ya es más consciente.", "ru": "Постепенно. По крайней мере, люди уже более сознательны." },
+      { "speaker": "Carla", "es": "Eso sí. Hace diez años nadie hablaba de esto.", "ru": "Это точно. Десять лет назад об этом никто не говорил." },
+      { "speaker": "Javier", "es": "Esperemos que no sea demasiado tarde.", "ru": "Будем надеяться, что ещё не слишком поздно." }
+    ],
+    "questions": [
+      { "q": "Что собираются запретить в районе?", "options": ["Пластиковые пакеты", "Старые машины", "Курение на улице"], "answer": 0 },
+      { "q": "Что делает Хавьер для экологии?", "options": ["Ездит на велосипеде", "Сортирует отходы и чинит одежду", "Сажает деревья"], "answer": 1 },
+      { "q": "Что означает «Ya era hora»?", "options": ["Уже поздно", "Который час", "Давно пора"], "answer": 2 }
+    ]
+  }
+]

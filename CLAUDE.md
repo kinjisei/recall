@@ -4,11 +4,18 @@
 > Он даёт полный контекст, чтобы продолжить работу без потери нити.
 
 ## Что это
-**Recall** — PWA для изучения и поддержания английского языка.
-- Пользователь (владелец): был B2, сейчас ~B1, цель — восстановить.
-- Его девушка: уровень C1, цель — не терять навык.
+**Recall** — PWA для изучения **двух языков: английского и испанского**
+(переключатель EN/ES в шапке; язык хранится в localStorage `recall.lang`).
+- Пользователь (владелец): англ. был B2, сейчас ~B1, цель — восстановить; испанский — с нуля.
+- Его девушка: англ. C1, цель — не терять навык.
 - Будущее (Фаза 4): режим «Преподаватель» — девушка учит своих учениц через приложение.
 - Условие: всё на **бесплатных** тарифах.
+
+2026-07-07: в Recall влит контент Flutter-приложения `d:\projects\spanish`
+(паки слов A1/A2 по темам, 40 текстов, 25 диалогов, 105 фраз для произношения —
+JSON в `src/data/spanish/`). Flutter-код не переносился, приложение spanish
+осталось нетронутым. Не перенесено (кандидаты на потом): грамматика,
+спряжения глаголов, тренажёр окончаний, placement-тест, большой CSV на 2637 слов.
 
 ## Язык общения
 Отвечай пользователю **по-русски**. Он новичок в программировании, готов
@@ -20,8 +27,9 @@ VS Code (есть доступ к файлам и терминалу) — поэ
 - Frontend: **Vite + React 19 + TypeScript + Tailwind v4** (`@tailwindcss/vite`), PWA (`vite-plugin-pwa`)
 - Бэкенд/данные/вход: **Supabase** (Postgres + Auth + RLS). URL: `https://qyvkyyjqqqirmdliddsn.supabase.co`
 - AI: **Gemini Flash** (free tier) через **Vercel serverless** `/api/gemini` (ключ прячется на сервере)
-- Озвучка/распознавание: **Web Speech API** (браузер, бесплатно)
-- Словарь: **Free Dictionary API** (`dictionaryapi.dev`, без ключа)
+- Озвучка/распознавание: **Web Speech API** (браузер, бесплатно; en-US и es-ES)
+- Словарь EN: **Free Dictionary API** (`dictionaryapi.dev`, без ключа)
+- Словарь ES: локальные паки слов → fallback на Gemini (`lib/spanishDict.ts`)
 - Интервальное повторение: **ts-fsrs** (алгоритм FSRS)
 - Хостинг: **Vercel**
 
@@ -32,13 +40,17 @@ VS Code (есть доступ к файлам и терминалу) — поэ
 ## Структура
 ```
 src/
-  lib/        supabase.ts, cards.ts (addCard), fsrs.ts, dictionary.ts, speech.ts,
+  lib/        supabase.ts, cards.ts (addCard, getDefaultDeck(lang), addCardsBulk),
+              fsrs.ts (getDueCards(limit, lang)), dictionary.ts (EN),
+              spanishDict.ts (ES: паки → Gemini), speech.ts (en-US/es-ES),
               gemini.ts (клиент /api/gemini), activity.ts (стрик)
-  types/      index.ts — все общие типы
-  context/    AuthContext.tsx
-  components/ Button, Card, Layout, BottomNav, ProtectedRoute
-  features/   dashboard, flashcards, reader, pronunciation,
-              conversation (внутри — режимы Чат и Письмо)
+  types/      index.ts — все общие типы (+ AppLang, Spanish*)
+  context/    AuthContext.tsx, LanguageContext.tsx (EN/ES)
+  data/       spanish/ — контент из приложения spanish (JSON + index.ts)
+  components/ Button, Card, Layout (шапка с EN/ES), BottomNav, ProtectedRoute
+  features/   dashboard, flashcards (+PacksSheet — паки исп. слов),
+              reader (+SpanishReader — исп. тексты и диалоги), pronunciation,
+              conversation (внутри — режимы Чат и Письмо, промпты EN/ES)
 api/          gemini.ts (Vercel serverless), _core.ts (общий вызов Gemini)
 vercel.json   SPA-rewrite для деплоя (не перекрывает /api/*)
 ```
@@ -66,9 +78,19 @@ npm run build    # проверка типов (tsc -b) + сборка
 - 🔶 **Фаза 3, ядро** — `lib/activity.ts` (стрик, «сделано сегодня», день в местном времени), запись активности из всех 4 фич, живой дашборд (стрик, счётчик карточек к повторению, бейджи «✓ сделано»).
 - 🔶 **Иконки PWA** — сгенерированы в `public/` (192/512/maskable + favicon.svg + apple-touch-icon), прописаны в манифесте; установка приложения теперь возможна.
 
+Собрано, ждёт ручного теста пользователя (2026-07-07):
+- 🔶 **Мультиязычность EN/ES** — объединение с приложением spanish. Переключатель
+  в шапке; у колод появился `lang`; все 4 фичи работают на обоих языках; паки
+  испанских слов A1/A2 («📦 Паки» в Колоде), исп. тексты и диалоги в «Вводе»,
+  исп. фразы в «Речи», исп. промпты в «Диалоге».
+  ⚠️ **Перед тестом обязательно повторно выполнить `docs/schema.sql` в Supabase**
+  (SQL Editor → вставить весь файл → Run): добавляет `decks.lang` и испанскую
+  колоду каждому пользователю. Без этого сломается и английский режим.
+
 Дальше (позже):
 - Фаза 3, остаток — деплой на Vercel (env `GEMINI_API_KEY`; `vercel.json` уже готов).
 - Фаза 4 — режим «Преподаватель» (роли, назначение колод, прогресс учениц).
+- Перенос остального из spanish: грамматика, спряжения, тренажёр окончаний, placement-тест.
 
 ## Правила
 - Не ломать контракты из `docs/ARCHITECTURE.md`. Импортировать типы из `src/types`.

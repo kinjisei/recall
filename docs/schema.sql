@@ -21,8 +21,15 @@ create table if not exists public.decks (
   title text not null,
   description text,
   is_shared boolean default false,
+  lang text not null default 'en',
   created_at timestamptz default now()
 );
+
+-- Мультиязычность (объединение с испанским приложением, 2026-07-07):
+-- у колоды появился язык. Для баз, созданных до этого, добавляем колонку.
+alter table public.decks add column if not exists lang text not null default 'en';
+alter table public.decks drop constraint if exists decks_lang_check;
+alter table public.decks add constraint decks_lang_check check (lang in ('en','es'));
 
 create table if not exists public.cards (
   id uuid primary key default gen_random_uuid(),
@@ -170,7 +177,8 @@ drop policy if exists "own writing" on public.writing_submissions;
 create policy "own writing" on public.writing_submissions
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
--- ---------- ТРИГГЕР: при регистрации создаём профиль + колоду по умолчанию ----------
+-- ---------- ТРИГГЕР: при регистрации создаём профиль + колоды по умолчанию ----------
+-- Две колоды: английская и испанская (по одной на язык).
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -185,8 +193,10 @@ begin
   )
   on conflict (id) do nothing;
 
-  insert into public.decks (owner_id, title, description)
-  values (new.id, 'Мои слова', 'Слова из чтения и добавленные вручную');
+  insert into public.decks (owner_id, title, description, lang)
+  values
+    (new.id, 'Мои слова',    'Английские слова из чтения и добавленные вручную', 'en'),
+    (new.id, 'Mis palabras', 'Испанские слова из паков, чтения и добавленные вручную', 'es');
 
   return new;
 end;
@@ -197,4 +207,14 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
--- Готово. Таблицы созданы, защита включена, новые пользователи получают профиль и колоду.
+-- ---------- ДОЗАПОЛНЕНИЕ: испанская колода для уже существующих пользователей ----------
+-- (idempotent: пропускает тех, у кого испанская колода уже есть)
+insert into public.decks (owner_id, title, description, lang)
+select p.id, 'Mis palabras', 'Испанские слова из паков, чтения и добавленные вручную', 'es'
+from public.profiles p
+where not exists (
+  select 1 from public.decks d where d.owner_id = p.id and d.lang = 'es'
+);
+
+-- Готово. Таблицы созданы, защита включена, новые пользователи получают
+-- профиль и две колоды (en + es); существующим добавлена испанская колода.

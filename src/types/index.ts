@@ -3,7 +3,10 @@
 // Все воркеры импортируют типы ОТСЮДА и не плодят свои дубликаты.
 // ============================================================================
 
-export type CEFRLevel = 'A2' | 'B1' | 'B2' | 'C1' | 'C2'
+export type CEFRLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2'
+
+/** Язык изучения. Приложение объединяет английский и испанский. */
+export type AppLang = 'en' | 'es'
 
 /** Оценка ответа на карточку (для FSRS). */
 export type Rating = 'again' | 'hard' | 'good' | 'easy'
@@ -39,6 +42,7 @@ export interface Deck {
   title: string
   description: string | null
   is_shared: boolean
+  lang: AppLang
   created_at: string
 }
 
@@ -106,6 +110,55 @@ export interface Message {
   role: 'user' | 'assistant' | 'system'
   content: string
   created_at: string
+}
+
+// ---------------------------------------------------------------------------
+// Испанский контент (перенесён из приложения spanish; лежит в src/data/spanish).
+// Это встроенные данные, не таблицы БД.
+// ---------------------------------------------------------------------------
+
+/** Тема пака слов («Семья», «Еда» …). */
+export interface SpanishTopic {
+  id: number
+  name: string
+  level: string
+  icon: string
+}
+
+/** Слово из пака: испанский + русский + пример. */
+export interface SpanishWord {
+  spanish: string
+  russian: string
+  example_es?: string
+  example_ru?: string
+  level: string
+  topic_id: number
+  frequency_rank?: number
+}
+
+/** Текст для чтения с переводом по абзацам. */
+export interface SpanishReading {
+  id: number
+  title: string
+  titleRu: string
+  level: string
+  paragraphs: { es: string; ru: string }[]
+}
+
+/** Диалог (сценка) с репликами и переводом. */
+export interface SpanishDialogue {
+  id: number
+  title: string
+  level: string
+  lines: { speaker: string; es: string; ru: string }[]
+}
+
+/** Фраза для тренировки произношения (рус → исп). */
+export interface SpanishSentence {
+  id: number
+  level: string
+  ru: string
+  es: string
 }
 
 export interface WritingSubmission {

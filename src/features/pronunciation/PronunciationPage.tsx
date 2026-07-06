@@ -2,7 +2,10 @@ import { useEffect, useState } from 'react'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { supabase } from '../../lib/supabase'
+import { getDeckIds } from '../../lib/cards'
 import { logActivity } from '../../lib/activity'
+import { useLanguage } from '../../context/LanguageContext'
+import { spanishSentences } from '../../data/spanish'
 import {
   speak,
   listen,
@@ -11,7 +14,7 @@ import {
   type PronunciationScore,
 } from '../../lib/speech'
 
-const fallbackPhrases = [
+const fallbackPhrasesEn = [
   'The weather is really lovely today.',
   'Could you tell me how to get to the station?',
   "I've been learning English for several years.",
@@ -19,39 +22,66 @@ const fallbackPhrases = [
   'Practising a little every day leads to real progress.',
 ]
 
+/** Фраза для тренировки; hint — русский перевод (есть у испанских). */
+interface Phrase {
+  text: string
+  hint?: string
+}
+
 export function PronunciationPage() {
+  const { lang } = useLanguage()
   const supported = isRecognitionSupported()
-  const [phrases, setPhrases] = useState<string[]>(fallbackPhrases)
+  const [phrases, setPhrases] = useState<Phrase[]>([])
   const [index, setIndex] = useState(0)
   const [listening, setListening] = useState(false)
   const [heard, setHeard] = useState<string | null>(null)
   const [score, setScore] = useState<PronunciationScore | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  // Берём фразы из карточек пользователя (пример или само слово), иначе — встроенные.
+  // Испанский: встроенные фразы (рус → исп).
+  // Английский: фразы из карточек пользователя, иначе — встроенные.
   useEffect(() => {
-    supabase
-      .from('cards')
-      .select('front, example')
-      .then(({ data }) => {
+    setIndex(0)
+    setHeard(null)
+    setScore(null)
+    setError(null)
+
+    if (lang === 'es') {
+      setPhrases(spanishSentences.map((s) => ({ text: s.es, hint: s.ru })))
+      return
+    }
+
+    setPhrases(fallbackPhrasesEn.map((text) => ({ text })))
+    void (async () => {
+      try {
+        const ids = await getDeckIds('en')
+        if (ids.length === 0) return
+        const { data } = await supabase
+          .from('cards')
+          .select('front, example')
+          .in('deck_id', ids)
         const fromCards = (data ?? [])
           .map((c) => (c.example && c.example.trim() ? c.example : c.front))
           .filter((p): p is string => Boolean(p && /\s/.test(p))) // только фразы (с пробелом)
-        if (fromCards.length > 0) setPhrases(fromCards)
-      })
-  }, [])
+        if (fromCards.length > 0) setPhrases(fromCards.map((text) => ({ text })))
+      } catch {
+        /* остаёмся на встроенных фразах */
+      }
+    })()
+  }, [lang])
 
   const current = phrases[index]
 
   const onListen = async () => {
+    if (!current) return
     setError(null)
     setHeard(null)
     setScore(null)
     setListening(true)
     try {
-      const { transcript } = await listen()
+      const { transcript } = await listen(lang)
       setHeard(transcript)
-      setScore(scorePronunciation(current, transcript))
+      setScore(scorePronunciation(current.text, transcript))
       void logActivity('pronunciation')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Ошибка')
@@ -64,7 +94,16 @@ export function PronunciationPage() {
     setHeard(null)
     setScore(null)
     setError(null)
-    setIndex((i) => (i + 1) % phrases.length)
+    setIndex((i) => (i + 1) % Math.max(phrases.length, 1))
+  }
+
+  if (!current) {
+    return (
+      <div className="flex flex-col gap-4">
+        <h1 className="text-2xl font-bold">🎙 Речь</h1>
+        <p className="text-slate-500">Загрузка…</p>
+      </div>
+    )
   }
 
   return (
@@ -100,16 +139,19 @@ export function PronunciationPage() {
               </span>
             ))
           ) : (
-            <span>{current}</span>
+            <span>{current.text}</span>
           )}
         </p>
+        {current.hint && !score && (
+          <p className="mt-2 text-sm text-slate-400">{current.hint}</p>
+        )}
       </Card>
 
       <div className="flex gap-3">
         <Button
           variant="secondary"
           className="flex-1"
-          onClick={() => speak(current)}
+          onClick={() => speak(current.text, { lang })}
         >
           🔊 Слушать
         </Button>

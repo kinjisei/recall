@@ -2,12 +2,19 @@
 // Речь — Web Speech API (браузер, бесплатно, без сервера).
 //   speak()  — озвучить текст (TTS, работает в большинстве браузеров)
 //   listen() — распознать речь пользователя (STT, только Chrome/Edge)
+// Поддерживает английский (en-US) и испанский (es-ES).
 // Контракт: docs/ARCHITECTURE.md §7.
 // ============================================================================
+import type { AppLang } from '../types'
 
 export interface ListenResult {
   transcript: string
   confidence: number
+}
+
+/** BCP-47-код языка речи для Web Speech API. */
+export function speechLang(lang: AppLang): string {
+  return lang === 'es' ? 'es-ES' : 'en-US'
 }
 
 // --- Озвучка (Text-to-Speech) ---
@@ -22,23 +29,35 @@ if (typeof window !== 'undefined' && window.speechSynthesis) {
   window.speechSynthesis.onvoiceschanged = loadVoices
 }
 
-/** Список доступных английских голосов (для выбора в UI при желании). */
-export function getEnglishVoices(): SpeechSynthesisVoice[] {
+/** Список доступных голосов языка ('en' | 'es'). */
+export function getVoices(lang: AppLang = 'en'): SpeechSynthesisVoice[] {
   if (cachedVoices.length === 0) loadVoices()
-  return cachedVoices.filter((v) => v.lang.toLowerCase().startsWith('en'))
+  const prefix = lang === 'es' ? 'es' : 'en'
+  return cachedVoices.filter((v) => v.lang.toLowerCase().startsWith(prefix))
 }
 
-/** Озвучить текст на английском. */
-export function speak(text: string, opts?: { rate?: number; voice?: string }): void {
+/** Список доступных английских голосов (обратная совместимость). */
+export function getEnglishVoices(): SpeechSynthesisVoice[] {
+  return getVoices('en')
+}
+
+/** Озвучить текст. По умолчанию английский; opts.lang = 'es' — испанский. */
+export function speak(
+  text: string,
+  opts?: { rate?: number; voice?: string; lang?: AppLang },
+): void {
   if (typeof window === 'undefined' || !window.speechSynthesis) return
+  const lang = opts?.lang ?? 'en'
+  const bcp = speechLang(lang)
+
   const u = new SpeechSynthesisUtterance(text)
-  u.lang = 'en-US'
+  u.lang = bcp
   u.rate = opts?.rate ?? 1
 
-  const voices = getEnglishVoices()
+  const voices = getVoices(lang)
   const chosen =
     (opts?.voice && voices.find((v) => v.name === opts.voice)) ||
-    voices.find((v) => v.lang.toLowerCase() === 'en-us') ||
+    voices.find((v) => v.lang.toLowerCase() === bcp.toLowerCase()) ||
     voices[0]
   if (chosen) u.voice = chosen
 
@@ -61,9 +80,10 @@ export function isRecognitionSupported(): boolean {
 
 /**
  * Слушает один фрагмент речи и возвращает распознанный текст.
+ * lang — язык распознавания ('en' | 'es'), по умолчанию английский.
  * Отклоняется, если браузер не поддерживает распознавание или ничего не услышал.
  */
-export function listen(): Promise<ListenResult> {
+export function listen(lang: AppLang = 'en'): Promise<ListenResult> {
   return new Promise((resolve, reject) => {
     const Ctor = getRecognitionCtor()
     if (!Ctor) {
@@ -74,7 +94,7 @@ export function listen(): Promise<ListenResult> {
     }
 
     const recognition = new Ctor()
-    recognition.lang = 'en-US'
+    recognition.lang = speechLang(lang)
     recognition.interimResults = false
     recognition.maxAlternatives = 1
     recognition.continuous = false
@@ -117,10 +137,18 @@ export function listen(): Promise<ListenResult> {
 
 // --- Сравнение произнесённого с целевой фразой ---
 
+/**
+ * Разбивает фразу на слова: любые буквы (включая á, ñ, ü) и цифры.
+ * Диакритику убираем (NFD + вырезание комбинирующих знаков U+0300–U+036F),
+ * чтобы «cómo» и «como» считались одним словом — распознавание не всегда
+ * расставляет ударения так же, как исходный текст.
+ */
 function normalizeWords(s: string): string[] {
   return s
     .toLowerCase()
-    .replace(/[^a-z0-9'\s]/g, '')
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^\p{L}\p{N}'\s]/gu, '')
     .split(/\s+/)
     .filter(Boolean)
 }

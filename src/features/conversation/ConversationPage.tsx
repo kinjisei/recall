@@ -5,7 +5,8 @@ import { supabase } from '../../lib/supabase'
 import { chat } from '../../lib/gemini'
 import { logActivity } from '../../lib/activity'
 import { useAuth } from '../../context/AuthContext'
-import type { CEFRLevel, ChatTurn } from '../../types'
+import { useLanguage } from '../../context/LanguageContext'
+import type { AppLang, CEFRLevel, ChatTurn } from '../../types'
 
 type Mode = 'chat' | 'writing'
 
@@ -16,10 +17,12 @@ const modes: { id: Mode; label: string }[] = [
 
 export function ConversationPage() {
   const { user } = useAuth()
+  const { lang } = useLanguage()
   const [mode, setMode] = useState<Mode>('chat')
-  const [level, setLevel] = useState<CEFRLevel>('B1')
+  const [profileLevel, setProfileLevel] = useState<CEFRLevel>('B1')
 
   // Уровень из профиля — от него зависят промпты (B1 проще, C1 богаче).
+  // Профильный уровень описывает английский; испанский пока считаем A1–A2.
   useEffect(() => {
     if (!user) return
     supabase
@@ -28,15 +31,19 @@ export function ConversationPage() {
       .eq('id', user.id)
       .single()
       .then(({ data }) => {
-        if (data?.level) setLevel(data.level as CEFRLevel)
+        if (data?.level) setProfileLevel(data.level as CEFRLevel)
       })
   }, [user])
+
+  const level: CEFRLevel = lang === 'es' ? 'A1' : profileLevel
 
   return (
     <div className="flex flex-col gap-4">
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">💬 Диалог</h1>
-        <span className="text-sm text-slate-400">уровень {level}</span>
+        <span className="text-sm text-slate-400">
+          {lang === 'es' ? 'испанский · A1–A2' : `уровень ${level}`}
+        </span>
       </header>
 
       <div className="flex gap-2">
@@ -55,7 +62,12 @@ export function ConversationPage() {
         ))}
       </div>
 
-      {mode === 'chat' ? <ChatSection level={level} /> : <WritingSection level={level} />}
+      {/* key={lang}: при смене языка начинаем чат/проверку заново */}
+      {mode === 'chat' ? (
+        <ChatSection key={lang} level={level} lang={lang} />
+      ) : (
+        <WritingSection key={lang} level={level} lang={lang} />
+      )}
     </div>
   )
 }
@@ -64,7 +76,20 @@ export function ConversationPage() {
 // Режим «Чат» — AI-собеседник. Переписка сохраняется в conversations/messages.
 // ---------------------------------------------------------------------------
 
-function chatSystemPrompt(level: CEFRLevel): string {
+function chatSystemPrompt(level: CEFRLevel, lang: AppLang): string {
+  if (lang === 'es') {
+    return [
+      'You are a friendly Spanish conversation partner in the language-learning app "Recall".',
+      'The learner is a native Russian speaker and a BEGINNER in Spanish (CEFR A1-A2).',
+      'Use very simple Spanish: short sentences, present tense mostly, common everyday words.',
+      'Keep every reply short: 2-3 sentences, and end with a simple question to keep the conversation going.',
+      'If the learner makes a noticeable mistake, start your reply with a separate line like:',
+      '✏️ corrected phrase — короткое объяснение ошибки по-русски',
+      'and then continue the conversation normally.',
+      'If the learner asks to explain something, explain in Russian.',
+      'Plain text only, no markdown formatting.',
+    ].join(' ')
+  }
   const levelHint =
     level === 'C1' || level === 'C2'
       ? 'Use rich, natural, idiomatic English and occasionally introduce advanced vocabulary.'
@@ -82,7 +107,7 @@ function chatSystemPrompt(level: CEFRLevel): string {
   ].join(' ')
 }
 
-function ChatSection({ level }: { level: CEFRLevel }) {
+function ChatSection({ level, lang }: { level: CEFRLevel; lang: AppLang }) {
   const { user } = useAuth()
   const [msgs, setMsgs] = useState<ChatTurn[]>([])
   const [input, setInput] = useState('')
@@ -132,7 +157,7 @@ function ChatSection({ level }: { level: CEFRLevel }) {
     try {
       // отправляем только последние 20 реплик — экономим бесплатные токены
       const reply = await chat(history.slice(-20), {
-        system: chatSystemPrompt(level),
+        system: chatSystemPrompt(level, lang),
       })
       setMsgs([...history, { role: 'assistant', content: reply }])
       void logActivity('conversation')
@@ -161,11 +186,14 @@ function ChatSection({ level }: { level: CEFRLevel }) {
       {msgs.length === 0 && (
         <Card>
           <p className="text-slate-600 dark:text-slate-300">
-            Напиши что-нибудь по-английски — AI ответит, поддержит разговор и
-            поправит ошибки (строкой с ✏️).
+            {lang === 'es'
+              ? 'Напиши что-нибудь по-испански — AI ответит просто, поддержит разговор и поправит ошибки (строкой с ✏️).'
+              : 'Напиши что-нибудь по-английски — AI ответит, поддержит разговор и поправит ошибки (строкой с ✏️).'}
           </p>
           <p className="mt-2 text-sm text-slate-400">
-            Например: «Hi! I want to talk about travelling.»
+            {lang === 'es'
+              ? 'Например: «¡Hola! Me llamo Iván. ¿Cómo estás?»'
+              : 'Например: «Hi! I want to talk about travelling.»'}
           </p>
         </Card>
       )}
@@ -196,7 +224,7 @@ function ChatSection({ level }: { level: CEFRLevel }) {
       <form onSubmit={send} className="flex gap-2">
         <input
           className="min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-4 py-3 text-base outline-none focus:border-sky-500 dark:border-slate-600 dark:bg-slate-900"
-          placeholder="Write in English…"
+          placeholder={lang === 'es' ? 'Escribe en español…' : 'Write in English…'}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           disabled={busy}
@@ -219,10 +247,16 @@ function ChatSection({ level }: { level: CEFRLevel }) {
 // Режим «Письмо» — проверка текста. Результат сохраняется в writing_submissions.
 // ---------------------------------------------------------------------------
 
-function writingSystemPrompt(level: CEFRLevel): string {
+function writingSystemPrompt(level: CEFRLevel, lang: AppLang): string {
+  const subject = lang === 'es' ? 'испанского' : 'английского'
+  const textLang = lang === 'es' ? 'испанском' : 'английском'
+  const levelNote =
+    lang === 'es'
+      ? 'Ученик — носитель русского, начинающий (A1–A2). Он пришлёт текст на испанском.'
+      : `Ученик — носитель русского, уровень ${level}. Он пришлёт текст на английском.`
   return [
-    'Ты — доброжелательный преподаватель английского.',
-    `Ученик — носитель русского, уровень ${level}. Он пришлёт текст на английском.`,
+    `Ты — доброжелательный преподаватель ${subject}.`,
+    levelNote,
     'Ответь по-русски, без markdown-разметки, строго по разделам:',
     '',
     'ОШИБКИ',
@@ -230,7 +264,7 @@ function writingSystemPrompt(level: CEFRLevel): string {
     'Если ошибок нет — напиши «Ошибок не нашёл 🎉».',
     '',
     'УЛУЧШЕННАЯ ВЕРСИЯ',
-    'тот же текст на естественном английском (чуть выше уровня ученика).',
+    `тот же текст на естественном ${textLang} (чуть выше уровня ученика).`,
     '',
     'СОВЕТ',
     '1-2 предложения: что подтянуть в первую очередь.',
@@ -240,7 +274,7 @@ function writingSystemPrompt(level: CEFRLevel): string {
   ].join('\n')
 }
 
-function WritingSection({ level }: { level: CEFRLevel }) {
+function WritingSection({ level, lang }: { level: CEFRLevel; lang: AppLang }) {
   const { user } = useAuth()
   const [text, setText] = useState('')
   const [feedback, setFeedback] = useState<string | null>(null)
@@ -255,7 +289,7 @@ function WritingSection({ level }: { level: CEFRLevel }) {
     setFeedback(null)
     try {
       const fb = await chat([{ role: 'user', content: body }], {
-        system: writingSystemPrompt(level),
+        system: writingSystemPrompt(level, lang),
       })
       setFeedback(fb)
       void logActivity('writing')
@@ -263,7 +297,7 @@ function WritingSection({ level }: { level: CEFRLevel }) {
         // сохраняем в фоне: кнопка не должна ждать записи в базу
         void supabase
           .from('writing_submissions')
-          .insert({ user_id: user.id, text: body, feedback: { text: fb, level } })
+          .insert({ user_id: user.id, text: body, feedback: { text: fb, level, lang } })
           .then(({ error: wErr }) => {
             if (wErr) console.warn('Не удалось сохранить проверку:', wErr)
           })
@@ -279,14 +313,19 @@ function WritingSection({ level }: { level: CEFRLevel }) {
     <div className="flex flex-col gap-3">
       <Card>
         <p className="text-slate-600 dark:text-slate-300">
-          Напиши несколько предложений по-английски — AI разберёт ошибки,
-          предложит улучшенную версию и даст совет.
+          {lang === 'es'
+            ? 'Напиши несколько предложений по-испански — AI разберёт ошибки, предложит улучшенную версию и даст совет.'
+            : 'Напиши несколько предложений по-английски — AI разберёт ошибки, предложит улучшенную версию и даст совет.'}
         </p>
       </Card>
 
       <textarea
         className="min-h-[140px] w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base leading-relaxed outline-none focus:border-sky-500 dark:border-slate-600 dark:bg-slate-900"
-        placeholder="Yesterday I go to the shop and buyed some apples…"
+        placeholder={
+          lang === 'es'
+            ? 'Hola. Me gusta mucho la música española…'
+            : 'Yesterday I go to the shop and buyed some apples…'
+        }
         value={text}
         onChange={(e) => setText(e.target.value)}
         disabled={busy}

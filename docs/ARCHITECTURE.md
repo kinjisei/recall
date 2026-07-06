@@ -5,10 +5,16 @@
 > схеме базы и сигнатурам функций. Не изобретать свои названия.
 
 ## 1. Что это
-PWA-приложение для изучения/поддержания английского. Сейчас — для 2 пользователей
-(B1 и C1). Позже — режим «Преподаватель» (учитель назначает колоды ученицам).
+PWA-приложение для изучения/поддержания **двух языков: английского и испанского**.
+Сейчас — для 2 пользователей (англ. B1 и C1; испанский — с нуля, A1–A2).
+Позже — режим «Преподаватель» (учитель назначает колоды ученицам).
 
-Язык интерфейса: русский. Контент: английский.
+Язык интерфейса: русский. Контент: английский и испанский; язык выбирается
+переключателем EN/ES в шапке (LanguageContext, localStorage `recall.lang`).
+
+> Обновлено 2026-07-07: в Recall влит контент и функциональность
+> Flutter-приложения `d:\projects\spanish` (паки слов A1/A2, тексты, диалоги,
+> фразы для произношения). Flutter-код не переносился — только данные и логика.
 
 ## 2. Научная основа (почему так)
 - **FSRS** (интервальное повторение) — карточки.
@@ -45,20 +51,27 @@ recall-app/
     lib/
       supabase.ts             <- клиент Supabase (Foundation)
       fsrs.ts                 <- обёртка над ts-fsrs (Worker 1)
-      dictionary.ts           <- Free Dictionary API (Worker 2)
-      speech.ts               <- Web Speech API: TTS+STT (Worker 3)
+      dictionary.ts           <- Free Dictionary API, только EN (Worker 2)
+      spanishDict.ts          <- перевод исп. слов: локальные паки -> Gemini
+      speech.ts               <- Web Speech API: TTS+STT, en-US/es-ES (Worker 3)
       gemini.ts               <- вызов нашего /api/gemini (Worker 4)
-      cards.ts                <- addCard(), общий хелпер (Foundation, стаб)
+      cards.ts                <- addCard(), getDefaultDeck(lang), addCardsBulk()
       activity.ts             <- activity_log: стрик и «сделано сегодня» (Фаза 3)
     types/
       index.ts                <- ВСЕ общие TS-типы (Foundation)
-    components/               <- общие UI (Button, Card, Layout, Nav) (Foundation)
+    context/
+      AuthContext.tsx         <- вход/выход
+      LanguageContext.tsx     <- язык изучения EN/ES (localStorage recall.lang)
+    data/
+      spanish/                <- контент из приложения spanish (JSON + index.ts):
+                                 words_a1/a2 (паки), readings, dialogues, sentences
+    components/               <- общие UI (Button, Card, Layout c шапкой EN/ES, Nav)
     features/
       dashboard/              <- главный экран, стрик, дневная сессия (Foundation+Worker4)
-      flashcards/             <- блок «Колода» (Worker 1)
-      reader/                 <- блок «Ввод» (Worker 2)
-      pronunciation/          <- блок «Произношение» (Worker 3)
-      conversation/           <- AI-диалог + проверка письма, режимы Чат/Письмо (Worker 4)
+      flashcards/             <- блок «Колода» + PacksSheet (паки исп. слов)
+      reader/                 <- блок «Ввод»: EN тексты; ES тексты+диалоги (SpanishReader)
+      pronunciation/          <- блок «Произношение», обе речи
+      conversation/           <- AI-диалог + проверка письма, EN/ES промпты
   .env.local                  <- VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
 ```
 
@@ -80,21 +93,24 @@ profiles(
   created_at timestamptz default now()
 )
 
--- колода карточек
+-- колода карточек. lang: 'en'|'es' — язык колоды (мультиязычность, 2026-07-07).
+-- При регистрации триггер создаёт ДВЕ колоды: «Мои слова» (en) и «Mis palabras» (es).
 decks(
   id uuid pk default gen_random_uuid(),
   owner_id uuid references profiles(id),
   title text not null,
   description text,
   is_shared boolean default false,
+  lang text not null default 'en' check (lang in ('en','es')),
   created_at timestamptz default now()
 )
 
--- карточка (слово/фраза). Контент общий, расписание — отдельно (review_states)
+-- карточка (слово/фраза). Контент общий, расписание — отдельно (review_states).
+-- Язык карточки определяется колодой (decks.lang).
 cards(
   id uuid pk default gen_random_uuid(),
   deck_id uuid references decks(id) on delete cascade,
-  front text not null,            -- слово/фраза EN
+  front text not null,            -- слово/фраза EN или ES
   back text,                      -- перевод/определение
   example text,                   -- пример в контексте
   ipa text,                       -- транскрипция
@@ -156,34 +172,49 @@ writing_submissions(id uuid pk default gen_random_uuid(), user_id uuid reference
 Создаёт Foundation. Должны точно отражать таблицы выше. Воркеры импортируют отсюда,
 свои дубликаты не плодят. Минимум:
 `Profile, Deck, Card, ReviewState, ContentItem, ActivityLog, Conversation, Message, WritingSubmission`,
-плюс `CEFRLevel = 'A2'|'B1'|'B2'|'C1'|'C2'` и `Rating = 'again'|'hard'|'good'|'easy'`.
+плюс `CEFRLevel = 'A1'|'A2'|'B1'|'B2'|'C1'|'C2'`, `Rating = 'again'|'hard'|'good'|'easy'`
+и `AppLang = 'en'|'es'` (язык изучения).
+Испанский контент: `SpanishTopic, SpanishWord, SpanishReading, SpanishDialogue, SpanishSentence`.
 
 ## 7. Ключевые общие контракты (сигнатуры — не менять)
-> Обновлено 2026-07-02: приведено к реализованному и протестированному коду Фич 1–3.
+> Обновлено 2026-07-07: мультиязычность (EN/ES). Параметры lang необязательные,
+> по умолчанию 'en' — старые вызовы работают без изменений.
 
 ```ts
 // lib/cards.ts  (Foundation + Worker 1)
-getDefaultDeck(): Promise<Deck>   // первая колода пользователя (создаётся триггером при регистрации)
+getDefaultDeck(lang?: AppLang): Promise<Deck>  // колода языка (обе создаются триггером)
+getDeckIds(lang: AppLang): Promise<string[]>   // id всех колод пользователя на языке
 addCard(input: { front: string; back?: string; example?: string;
   ipa?: string; audio_url?: string; deckId?: string;   // без deckId — в колоду по умолчанию
+  lang?: AppLang;                                      // язык колоды по умолчанию (без deckId)
   source?: 'manual'|'reader'|'ai' }): Promise<Card>
+addCardsBulk(deckId: string, cards: { front; back?; example? }[]): Promise<number>
+  // массовое добавление (паки слов); пропускает дубликаты по front, возвращает добавленное
 
 // lib/fsrs.ts  (Worker 1)
 interface DueCard { card: Card; state: ReviewState | null }   // state=null — новая карточка
-getDueCards(limit?: number): Promise<DueCard[]>   // новые + просроченные (для текущего пользователя)
+getDueCards(limit?: number, lang?: AppLang): Promise<DueCard[]>
+  // новые + просроченные; lang — только карточки колод этого языка
 reviewCard(card: Card, existing: ReviewState | null, rating: Rating): Promise<void>
   // записывает оценку в review_states (upsert) и вычисляет следующий показ по FSRS
 
-// lib/dictionary.ts  (Worker 2)
+// lib/dictionary.ts  (Worker 2) — только английский
 lookup(word: string): Promise<{ word: string; definition?: string; example?: string;
   ipa?: string; audio_url?: string } | null>
 
+// lib/spanishDict.ts — испанский словарь: локальные паки → Gemini
+lookupSpanish(word: string): Promise<{ word: string; translation?: string;
+  example?: string; exampleRu?: string } | null>
+
 // lib/speech.ts  (Worker 3)
-speak(text: string, opts?: { rate?: number; voice?: string }): void
-listen(): Promise<{ transcript: string; confidence: number }>  // одно распознавание
+speak(text: string, opts?: { rate?: number; voice?: string; lang?: AppLang }): void
+listen(lang?: AppLang): Promise<{ transcript: string; confidence: number }>  // одно распознавание
 isRecognitionSupported(): boolean   // STT есть только в Chrome/Edge
+speechLang(lang: AppLang): string   // 'en' -> 'en-US', 'es' -> 'es-ES'
+getVoices(lang?: AppLang): SpeechSynthesisVoice[]
 scorePronunciation(target: string, spoken: string):
   { percent: number; words: { word: string; ok: boolean }[] }
+  // испанская диакритика нормализуется: «cómo» == «como»
 
 // lib/gemini.ts  (Worker 4) — зовёт НАШ /api/gemini, не Google напрямую
 chat(messages: ChatTurn[], opts?: { system?: string }): Promise<string>

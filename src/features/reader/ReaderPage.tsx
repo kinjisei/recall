@@ -4,12 +4,21 @@ import { Button } from '../../components/Button'
 import { addCard } from '../../lib/cards'
 import { logActivity } from '../../lib/activity'
 import { lookup, type DictionaryResult } from '../../lib/dictionary'
+import { useLanguage } from '../../context/LanguageContext'
+import { SpanishReaderPage } from './SpanishReader'
 import { sampleTexts, type SampleText } from './sampleTexts'
 import type { CEFRLevel } from '../../types'
 
 const levels: CEFRLevel[] = ['B1', 'C1']
 
+/** «Ввод»: английский — тексты + словарь; испанский — свой раздел. */
 export function ReaderPage() {
+  const { lang } = useLanguage()
+  if (lang === 'es') return <SpanishReaderPage />
+  return <EnglishReaderPage />
+}
+
+function EnglishReaderPage() {
   const [level, setLevel] = useState<CEFRLevel>('B1')
   const [active, setActive] = useState<SampleText | null>(null)
 

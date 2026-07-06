@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import { LanguageProvider } from './context/LanguageContext'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { Layout } from './components/Layout'
 import { LoginPage } from './features/auth/LoginPage'
@@ -12,25 +13,27 @@ import { ConversationPage } from './features/conversation/ConversationPage'
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
-            <Route path="/" element={<DashboardPage />} />
-            <Route path="/flashcards" element={<FlashcardsPage />} />
-            <Route path="/reader" element={<ReaderPage />} />
-            <Route path="/pronunciation" element={<PronunciationPage />} />
-            <Route path="/conversation" element={<ConversationPage />} />
-          </Route>
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
+      <LanguageProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route
+              element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="/" element={<DashboardPage />} />
+              <Route path="/flashcards" element={<FlashcardsPage />} />
+              <Route path="/reader" element={<ReaderPage />} />
+              <Route path="/pronunciation" element={<PronunciationPage />} />
+              <Route path="/conversation" element={<ConversationPage />} />
+            </Route>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </LanguageProvider>
     </AuthProvider>
   )
 }

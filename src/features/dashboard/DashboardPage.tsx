@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { useLanguage } from '../../context/LanguageContext'
 import { supabase } from '../../lib/supabase'
 import { getStreak, getTodayTypes } from '../../lib/activity'
 import { getDueCards } from '../../lib/fsrs'
@@ -23,6 +24,7 @@ const sessionBlocks: {
 
 export function DashboardPage() {
   const { user, signOut } = useAuth()
+  const { lang } = useLanguage()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [streak, setStreak] = useState<number>(0)
   const [doneToday, setDoneToday] = useState<Set<ActivityType>>(new Set())
@@ -38,8 +40,14 @@ export function DashboardPage() {
       .then(({ data }) => setProfile(data as Profile | null))
     getStreak().then(setStreak).catch(() => {})
     getTodayTypes().then(setDoneToday).catch(() => {})
-    getDueCards(99).then((d) => setDueCount(d.length)).catch(() => {})
   }, [user])
+
+  // Счётчик «к повторению» — по колодам выбранного языка.
+  useEffect(() => {
+    if (!user) return
+    setDueCount(null)
+    getDueCards(99, lang).then((d) => setDueCount(d.length)).catch(() => {})
+  }, [user, lang])
 
   const name = profile?.display_name || user?.email?.split('@')[0] || 'друг'
   const didSomethingToday = doneToday.size > 0
@@ -63,7 +71,9 @@ export function DashboardPage() {
         <div>
           <h1 className="text-2xl font-bold">Привет, {name}! 👋</h1>
           <p className="text-slate-500 dark:text-slate-400">
-            Уровень: {profile?.level ?? '—'} · готов к сегодняшней практике?
+            {lang === 'es'
+              ? 'Испанский · A1–A2 · готов к сегодняшней практике?'
+              : `Английский · ${profile?.level ?? '—'} · готов к сегодняшней практике?`}
           </p>
         </div>
         <Button variant="ghost" onClick={signOut} className="px-3 py-2 text-sm">

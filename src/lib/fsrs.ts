@@ -14,7 +14,8 @@ import {
   type Grade,
 } from 'ts-fsrs'
 import { supabase } from './supabase'
-import type { Card, ReviewState, ReviewStateName, Rating } from '../types'
+import { getDeckIds } from './cards'
+import type { AppLang, Card, ReviewState, ReviewStateName, Rating } from '../types'
 
 const scheduler = fsrs(generatorParameters({ enable_fuzz: true }))
 
@@ -78,28 +79,39 @@ async function requireUserId(): Promise<string> {
  * Карточки, которые пора повторить: новые (без расписания) + те, у которых due <= сейчас.
  * Фильтрация — на сервере Supabase, чтобы не выкачивать всю колоду целиком.
  * Порядок: сначала новые, затем по просроченности (самые старые due — первыми).
+ * lang — показывать только карточки колод этого языка (en/es).
  */
-export async function getDueCards(limit = 50): Promise<DueCard[]> {
+export async function getDueCards(limit = 50, lang?: AppLang): Promise<DueCard[]> {
   const userId = await requireUserId()
   const nowIso = new Date().toISOString()
+
+  // Колоды выбранного языка; без языка — все колоды пользователя (как раньше).
+  const deckIds = lang ? await getDeckIds(lang) : null
+  if (deckIds && deckIds.length === 0) return []
+
+  let newQuery = supabase
+    .from('cards')
+    .select('*, review_states(id)')
+    .is('review_states', null)
+    .order('created_at', { ascending: true })
+    .limit(limit)
+  if (deckIds) newQuery = newQuery.in('deck_id', deckIds)
+
+  let dueQuery = supabase
+    .from('review_states')
+    .select('*, cards!inner(*)')
+    .eq('user_id', userId)
+    .lte('due', nowIso)
+    .order('due', { ascending: true })
+    .limit(limit)
+  if (deckIds) dueQuery = dueQuery.in('cards.deck_id', deckIds)
 
   const [newRes, dueRes] = await Promise.all([
     // Новые: карточки без записи в review_states (анти-джойн через is null).
     // RLS показывает только наши review_states, поэтому «новизна» считается лично для нас.
-    supabase
-      .from('cards')
-      .select('*, review_states(id)')
-      .is('review_states', null)
-      .order('created_at', { ascending: true })
-      .limit(limit),
+    newQuery,
     // Просроченные: расписание подошло (due <= сейчас).
-    supabase
-      .from('review_states')
-      .select('*, cards(*)')
-      .eq('user_id', userId)
-      .lte('due', nowIso)
-      .order('due', { ascending: true })
-      .limit(limit),
+    dueQuery,
   ])
   if (newRes.error) throw newRes.error
   if (dueRes.error) throw dueRes.error

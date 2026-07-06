@@ -1,0 +1,2214 @@
+[
+  {
+    "id": 1,
+    "title": "Mi familia y yo",
+    "titleRu": "Моя семья и я",
+    "level": "A1",
+    "paragraphs": [
+      {
+        "es": "Me llamo Andrés y tengo veinte años. Vivo en Valencia con mi familia. Mi familia no es muy grande: mi madre, mi padre, mi hermana y yo.",
+        "ru": "Меня зовут Андрес, мне двадцать лет. Я живу в Валенсии со своей семьёй. Моя семья не очень большая: мама, папа, сестра и я."
+      },
+      {
+        "es": "Mi madre se llama Carmen y es profesora. Trabaja en una escuela cerca de casa. Mi padre se llama Luis y es cocinero. Cocina muy bien: su paella es famosa en todo el barrio.",
+        "ru": "Мою маму зовут Кармен, она учительница. Она работает в школе рядом с домом. Моего папу зовут Луис, он повар. Он очень хорошо готовит: его паэлья знаменита на весь район."
+      },
+      {
+        "es": "Mi hermana Lucía tiene quince años y estudia en el instituto. Le gusta la música y toca la guitarra. Por la noche cenamos juntos y hablamos de nuestro día. Estoy muy contento con mi familia.",
+        "ru": "Моей сестре Лусии пятнадцать лет, она учится в школе. Ей нравится музыка, и она играет на гитаре. Вечером мы ужинаем вместе и разговариваем о прошедшем дне. Я очень доволен своей семьёй."
+      }
+    ],
+    "glossary": [
+      { "es": "tener ... años", "ru": "быть в возрасте ... лет" },
+      { "es": "el cocinero", "ru": "повар" },
+      { "es": "el barrio", "ru": "район" },
+      { "es": "el instituto", "ru": "школа (средняя)" },
+      { "es": "tocar la guitarra", "ru": "играть на гитаре" },
+      { "es": "cenar", "ru": "ужинать" },
+      { "es": "juntos", "ru": "вместе" }
+    ],
+    "questions": [
+      {
+        "q": "Кем работает мама Андреса?",
+        "options": ["Поваром", "Учительницей", "Музыкантом"],
+        "answer": 1
+      },
+      {
+        "q": "Какое блюдо отца знаменито на весь район?",
+        "options": ["Паэлья", "Тортилья", "Гаспачо"],
+        "answer": 0
+      },
+      {
+        "q": "Что семья делает по вечерам?",
+        "options": ["Смотрит телевизор", "Играет на гитаре", "Ужинает вместе и разговаривает"],
+        "answer": 2
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "title": "Un día normal",
+    "titleRu": "Обычный день",
+    "level": "A1",
+    "paragraphs": [
+      {
+        "es": "Todos los días me levanto a las siete de la mañana. Me ducho, desayuno café con tostadas y salgo de casa a las ocho.",
+        "ru": "Каждый день я встаю в семь утра. Принимаю душ, завтракаю кофе с тостами и выхожу из дома в восемь."
+      },
+      {
+        "es": "Trabajo en una oficina en el centro. Voy al trabajo en metro porque es rápido y barato. Trabajo de nueve a cinco, y a las dos como con mis compañeros en un bar pequeño.",
+        "ru": "Я работаю в офисе в центре. Езжу на работу на метро, потому что это быстро и дёшево. Работаю с девяти до пяти, а в два обедаю с коллегами в маленьком баре."
+      },
+      {
+        "es": "Por la tarde voy al gimnasio o doy un paseo por el parque. Ceno a las nueve, veo una serie y me acuesto a las once y media. Mi vida es tranquila, pero me gusta.",
+        "ru": "Вечером я иду в спортзал или гуляю по парку. Ужинаю в девять, смотрю сериал и ложусь спать в половине двенадцатого. Моя жизнь спокойная, но она мне нравится."
+      }
+    ],
+    "glossary": [
+      { "es": "levantarse", "ru": "вставать" },
+      { "es": "ducharse", "ru": "принимать душ" },
+      { "es": "las tostadas", "ru": "тосты" },
+      { "es": "barato", "ru": "дешёвый" },
+      { "es": "los compañeros", "ru": "коллеги" },
+      { "es": "dar un paseo", "ru": "прогуляться" },
+      { "es": "acostarse", "ru": "ложиться спать" }
+    ],
+    "questions": [
+      {
+        "q": "Во сколько он встаёт?",
+        "options": ["В семь утра", "В восемь утра", "В девять утра"],
+        "answer": 0
+      },
+      {
+        "q": "Почему он ездит на метро?",
+        "options": ["У него нет машины", "Это быстро и дёшево", "Метро рядом с домом"],
+        "answer": 1
+      },
+      {
+        "q": "Что он делает после ужина?",
+        "options": ["Идёт в спортзал", "Гуляет в парке", "Смотрит сериал"],
+        "answer": 2
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "title": "Mi casa",
+    "titleRu": "Мой дом",
+    "level": "A1",
+    "paragraphs": [
+      {
+        "es": "Vivo en un piso pequeño en el tercer piso de un edificio antiguo. El piso tiene dos habitaciones, un salón, una cocina y un baño.",
+        "ru": "Я живу в маленькой квартире на третьем этаже старого здания. В квартире две комнаты, гостиная, кухня и ванная."
+      },
+      {
+        "es": "Mi lugar favorito es el salón porque tiene una ventana grande con vista a la calle. Allí leo, escucho música y veo la televisión. En la cocina hay una mesa de madera donde desayuno cada mañana.",
+        "ru": "Моё любимое место — гостиная, потому что там большое окно с видом на улицу. Там я читаю, слушаю музыку и смотрю телевизор. На кухне стоит деревянный стол, за которым я завтракаю каждое утро."
+      },
+      {
+        "es": "No tenemos jardín, pero hay una terraza con muchas plantas. En verano ceno en la terraza con mis amigos. Mi casa no es grande, pero es muy cómoda.",
+        "ru": "У нас нет сада, но есть терраса с множеством растений. Летом я ужинаю на террасе с друзьями. Мой дом небольшой, но очень уютный."
+      }
+    ],
+    "glossary": [
+      { "es": "el piso", "ru": "квартира; этаж" },
+      { "es": "el edificio", "ru": "здание" },
+      { "es": "la habitación", "ru": "комната" },
+      { "es": "el salón", "ru": "гостиная" },
+      { "es": "la vista", "ru": "вид" },
+      { "es": "la madera", "ru": "дерево (материал)" },
+      { "es": "la terraza", "ru": "терраса" },
+      { "es": "cómodo", "ru": "удобный, уютный" }
+    ],
+    "questions": [
+      {
+        "q": "Сколько комнат (спален) в квартире?",
+        "options": ["Одна", "Две", "Три"],
+        "answer": 1
+      },
+      {
+        "q": "Почему гостиная — любимое место?",
+        "options": ["Там большое окно с видом на улицу", "Там большой телевизор", "Там много растений"],
+        "answer": 0
+      },
+      {
+        "q": "Где он ужинает летом?",
+        "options": ["На кухне", "В гостиной", "На террасе"],
+        "answer": 2
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "title": "En el mercado",
+    "titleRu": "На рынке",
+    "level": "A1",
+    "paragraphs": [
+      {
+        "es": "Los sábados por la mañana voy al mercado con mi abuela. El mercado está en la plaza, cerca de la iglesia.",
+        "ru": "По субботам утром я хожу на рынок с бабушкой. Рынок находится на площади, рядом с церковью."
+      },
+      {
+        "es": "Primero compramos fruta y verdura: tomates, naranjas, manzanas y un kilo de patatas. Después vamos a la pescadería. Mi abuela siempre pregunta: «¿Está fresco el pescado?». El pescadero responde: «¡Fresquísimo, señora!».",
+        "ru": "Сначала мы покупаем фрукты и овощи: помидоры, апельсины, яблоки и килограмм картошки. Потом идём в рыбную лавку. Бабушка всегда спрашивает: «Рыба свежая?». Продавец отвечает: «Свежайшая, сеньора!»."
+      },
+      {
+        "es": "Al final tomamos un café en el bar de la esquina. Mi abuela conoce a todo el mundo y habla con todos. Para mí, el mercado es el mejor plan del sábado.",
+        "ru": "В конце мы пьём кофе в баре на углу. Бабушка знает всех и со всеми разговаривает. Для меня рынок — лучший план на субботу."
+      }
+    ],
+    "glossary": [
+      { "es": "el mercado", "ru": "рынок" },
+      { "es": "la plaza", "ru": "площадь" },
+      { "es": "la verdura", "ru": "овощи" },
+      { "es": "la pescadería", "ru": "рыбная лавка" },
+      { "es": "fresco", "ru": "свежий" },
+      { "es": "la esquina", "ru": "угол (улицы)" },
+      { "es": "conocer", "ru": "знать, быть знакомым" }
+    ],
+    "questions": [
+      {
+        "q": "Когда они ходят на рынок?",
+        "options": ["По воскресеньям", "По субботам утром", "Каждый день"],
+        "answer": 1
+      },
+      {
+        "q": "Что бабушка всегда спрашивает у продавца рыбы?",
+        "options": ["Свежая ли рыба", "Сколько стоит рыба", "Откуда привезли рыбу"],
+        "answer": 0
+      },
+      {
+        "q": "Чем заканчивается поход на рынок?",
+        "options": ["Покупкой хлеба", "Возвращением домой", "Кофе в баре на углу"],
+        "answer": 2
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "title": "Mi mejor amiga",
+    "titleRu": "Моя лучшая подруга",
+    "level": "A1",
+    "paragraphs": [
+      {
+        "es": "Mi mejor amiga se llama Sara. Nos conocemos desde el colegio. Sara es alta, tiene el pelo castaño y los ojos verdes.",
+        "ru": "Мою лучшую подругу зовут Сара. Мы знакомы со школы. Сара высокая, у неё каштановые волосы и зелёные глаза."
+      },
+      {
+        "es": "Sara es muy simpática y un poco loca: siempre tiene ideas divertidas. Estudia medicina porque quiere ser médica. Estudia mucho, pero siempre tiene tiempo para sus amigos.",
+        "ru": "Сара очень милая и немного сумасшедшая: у неё всегда весёлые идеи. Она изучает медицину, потому что хочет стать врачом. Она много учится, но у неё всегда есть время для друзей."
+      },
+      {
+        "es": "Los domingos montamos en bicicleta o vemos películas en su casa. Puedo hablar con ella de todo. Un buen amigo es un tesoro, y Sara es mi tesoro.",
+        "ru": "По воскресеньям мы катаемся на велосипеде или смотрим фильмы у неё дома. Я могу говорить с ней обо всём. Хороший друг — это сокровище, и Сара — моё сокровище."
+      }
+    ],
+    "glossary": [
+      { "es": "conocerse", "ru": "быть знакомыми" },
+      { "es": "el pelo castaño", "ru": "каштановые волосы" },
+      { "es": "simpático", "ru": "приятный, милый" },
+      { "es": "divertido", "ru": "весёлый, забавный" },
+      { "es": "la medicina", "ru": "медицина" },
+      { "es": "montar en bicicleta", "ru": "кататься на велосипеде" },
+      { "es": "el tesoro", "ru": "сокровище" }
+    ],
+    "questions": [
+      {
+        "q": "Какого цвета глаза у Сары?",
+        "options": ["Зелёные", "Карие", "Голубые"],
+        "answer": 0
+      },
+      {
+        "q": "Кем хочет стать Сара?",
+        "options": ["Учительницей", "Врачом", "Актрисой"],
+        "answer": 1
+      },
+      {
+        "q": "Что подруги делают по воскресеньям?",
+        "options": ["Учатся вместе", "Ходят на рынок", "Катаются на велосипеде или смотрят фильмы"],
+        "answer": 2
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "title": "El fin de semana",
+    "titleRu": "Выходные",
+    "level": "A1",
+    "paragraphs": [
+      {
+        "es": "¡Por fin es viernes! Me encantan los fines de semana. El sábado por la mañana duermo hasta las diez. Después limpio un poco la casa y pongo la lavadora.",
+        "ru": "Наконец-то пятница! Обожаю выходные. В субботу утром я сплю до десяти. Потом немного убираю дом и запускаю стиральную машину."
+      },
+      {
+        "es": "El sábado por la tarde quedo con mis amigos. A veces vamos al cine, a veces jugamos al fútbol en el parque. Por la noche cenamos en una pizzería barata cerca de mi casa.",
+        "ru": "В субботу днём я встречаюсь с друзьями. Иногда мы ходим в кино, иногда играем в футбол в парке. Вечером ужинаем в недорогой пиццерии рядом с моим домом."
+      },
+      {
+        "es": "El domingo es más tranquilo: leo, cocino algo rico y preparo las cosas para la semana. El domingo por la noche estoy un poco triste porque el lunes hay que trabajar.",
+        "ru": "Воскресенье спокойнее: я читаю, готовлю что-нибудь вкусное и собираю вещи на неделю. В воскресенье вечером мне немного грустно, потому что в понедельник нужно работать."
+      }
+    ],
+    "glossary": [
+      { "es": "por fin", "ru": "наконец-то" },
+      { "es": "limpiar", "ru": "убирать" },
+      { "es": "la lavadora", "ru": "стиральная машина" },
+      { "es": "quedar con", "ru": "договориться о встрече с" },
+      { "es": "a veces", "ru": "иногда" },
+      { "es": "rico", "ru": "вкусный" },
+      { "es": "hay que", "ru": "нужно, приходится" }
+    ],
+    "questions": [
+      {
+        "q": "До скольки он спит в субботу?",
+        "options": ["До девяти", "До десяти", "До одиннадцати"],
+        "answer": 1
+      },
+      {
+        "q": "Где друзья ужинают в субботу?",
+        "options": ["В недорогой пиццерии", "Дома", "В дорогом ресторане"],
+        "answer": 0
+      },
+      {
+        "q": "Почему ему немного грустно в воскресенье вечером?",
+        "options": ["Друзья уезжают", "Заканчивается любимый сериал", "В понедельник нужно работать"],
+        "answer": 2
+      }
+    ]
+  },
+  {
+    "id": 7,
+    "title": "Mis últimas vacaciones",
+    "titleRu": "Мой последний отпуск",
+    "level": "A2",
+    "paragraphs": [
+      {
+        "es": "El verano pasado fui de vacaciones a Andalucía con mi novia. Pasamos tres días en Sevilla y cuatro en Granada. Fue un viaje inolvidable.",
+        "ru": "Прошлым летом я ездил в отпуск в Андалусию со своей девушкой. Мы провели три дня в Севилье и четыре в Гранаде. Это была незабываемая поездка."
+      },
+      {
+        "es": "En Sevilla visitamos la catedral y subimos a la Giralda. Hacía muchísimo calor, casi cuarenta grados, así que por la tarde descansábamos en el hotel y salíamos de noche. Una noche vimos un espectáculo de flamenco: me encantó.",
+        "ru": "В Севилье мы посетили собор и поднялись на Хиральду. Было ужасно жарко, почти сорок градусов, так что днём мы отдыхали в отеле, а выходили ночью. Однажды вечером мы посмотрели представление фламенко: мне очень понравилось."
+      },
+      {
+        "es": "En Granada conocimos la Alhambra, un palacio árabe precioso. Compré las entradas dos meses antes porque siempre hay mucha gente. El último día probamos las mejores tapas del viaje en un bar del Albaicín.",
+        "ru": "В Гранаде мы увидели Альгамбру — прекрасный арабский дворец. Я купил билеты за два месяца, потому что там всегда много людей. В последний день мы попробовали лучшие тапас за всю поездку в баре района Альбайсин."
+      },
+      {
+        "es": "Volvimos a casa cansados pero muy felices. El año que viene queremos visitar el norte de España.",
+        "ru": "Мы вернулись домой уставшие, но очень счастливые. В следующем году мы хотим посетить север Испании."
+      }
+    ],
+    "glossary": [
+      { "es": "inolvidable", "ru": "незабываемый" },
+      { "es": "subir a", "ru": "подняться на" },
+      { "es": "así que", "ru": "так что" },
+      { "es": "el espectáculo", "ru": "представление" },
+      { "es": "el palacio", "ru": "дворец" },
+      { "es": "la entrada", "ru": "входной билет" },
+      { "es": "probar", "ru": "пробовать" },
+      { "es": "cansado", "ru": "уставший" }
+    ],
+    "questions": [
+      {
+        "q": "Сколько дней они провели в Севилье?",
+        "options": ["Три", "Четыре", "Семь"],
+        "answer": 0
+      },
+      {
+        "q": "Почему днём они отдыхали в отеле?",
+        "options": ["Они устали от дороги", "Было очень жарко", "Всё было закрыто"],
+        "answer": 1
+      },
+      {
+        "q": "Почему билеты в Альгамбру он купил за два месяца?",
+        "options": ["Так дешевле", "Их продают только заранее", "Там всегда много людей"],
+        "answer": 2
+      },
+      {
+        "q": "Какие у них планы на следующий год?",
+        "options": ["Посетить север Испании", "Вернуться в Гранаду", "Поехать за границу"],
+        "answer": 0
+      }
+    ]
+  },
+  {
+    "id": 8,
+    "title": "La siesta española",
+    "titleRu": "Испанская сиеста",
+    "level": "A2",
+    "paragraphs": [
+      {
+        "es": "Mucha gente piensa que todos los españoles duermen la siesta cada día. La verdad es un poco diferente: en las ciudades grandes casi nadie tiene tiempo para dormir después de comer.",
+        "ru": "Многие думают, что все испанцы спят сиесту каждый день. Правда немного другая: в больших городах почти ни у кого нет времени спать после обеда."
+      },
+      {
+        "es": "La siesta nació en los pueblos, donde en verano hace un calor terrible a mediodía. Los trabajadores del campo descansaban durante las horas más calurosas y volvían al trabajo por la tarde.",
+        "ru": "Сиеста зародилась в деревнях, где летом в полдень стоит ужасная жара. Сельские работники отдыхали в самые жаркие часы и возвращались к работе вечером."
+      },
+      {
+        "es": "Hoy los médicos dicen que una siesta corta, de veinte o treinta minutos, es buena para la salud: mejora la memoria y reduce el estrés. Pero una siesta larga puede ser mala, porque después es difícil dormir por la noche.",
+        "ru": "Сегодня врачи говорят, что короткая сиеста, минут двадцать–тридцать, полезна для здоровья: она улучшает память и снижает стресс. Но долгая сиеста может быть вредной, потому что после неё трудно заснуть ночью."
+      },
+      {
+        "es": "Así que la famosa siesta española existe, pero es más pequeña de lo que muchos turistas imaginan.",
+        "ru": "Так что знаменитая испанская сиеста существует, но она скромнее, чем представляют себе многие туристы."
+      }
+    ],
+    "glossary": [
+      { "es": "la verdad", "ru": "правда" },
+      { "es": "nacer", "ru": "родиться, зародиться" },
+      { "es": "el pueblo", "ru": "деревня, посёлок" },
+      { "es": "el campo", "ru": "поле, сельская местность" },
+      { "es": "caluroso", "ru": "жаркий" },
+      { "es": "la salud", "ru": "здоровье" },
+      { "es": "mejorar", "ru": "улучшать" },
+      { "es": "reducir", "ru": "снижать" }
+    ],
+    "questions": [
+      {
+        "q": "Все ли испанцы спят сиесту каждый день?",
+        "options": ["Да, все без исключения", "В больших городах почти никто", "Только по выходным"],
+        "answer": 1
+      },
+      {
+        "q": "Где зародилась сиеста?",
+        "options": ["В деревнях", "В больших городах", "На побережье"],
+        "answer": 0
+      },
+      {
+        "q": "Какая сиеста полезна, по мнению врачей?",
+        "options": ["Два часа", "Любая", "Двадцать–тридцать минут"],
+        "answer": 2
+      },
+      {
+        "q": "Чем плоха длинная сиеста?",
+        "options": ["После неё трудно уснуть ночью", "От неё болит голова", "Она портит аппетит"],
+        "answer": 0
+      }
+    ]
+  },
+  {
+    "id": 9,
+    "title": "Un correo a un amigo",
+    "titleRu": "Письмо другу",
+    "level": "A2",
+    "paragraphs": [
+      {
+        "es": "¡Hola, Marcos! ¿Qué tal todo? Te escribo porque tengo una gran noticia: ¡he encontrado trabajo en Barcelona! Empiezo el mes que viene, el día tres.",
+        "ru": "Привет, Маркос! Как дела? Пишу тебе, потому что у меня отличная новость: я нашёл работу в Барселоне! Начинаю в следующем месяце, третьего числа."
+      },
+      {
+        "es": "Voy a trabajar en una empresa de diseño, cerca de la Sagrada Familia. Estoy buscando piso, pero es difícil: todo es muy caro. De momento voy a vivir con mi prima Elena.",
+        "ru": "Я буду работать в дизайнерской компании, недалеко от Саграда Фамилии. Ищу квартиру, но это трудно: всё очень дорого. Пока поживу у своей двоюродной сестры Элены."
+      },
+      {
+        "es": "¿Por qué no vienes a visitarme en octubre? Podemos ir a la playa si hace buen tiempo, y quiero enseñarte el barrio Gótico. Además, conozco un restaurante donde hacen la mejor fideuá de la ciudad.",
+        "ru": "Почему бы тебе не приехать ко мне в гости в октябре? Если будет хорошая погода, сходим на пляж, и я хочу показать тебе Готический квартал. К тому же я знаю ресторан, где готовят лучшую фидеуа в городе."
+      },
+      {
+        "es": "Escríbeme pronto y dime qué te parece. ¡Un abrazo fuerte!",
+        "ru": "Напиши мне поскорее и скажи, как тебе идея. Крепко обнимаю!"
+      }
+    ],
+    "glossary": [
+      { "es": "la noticia", "ru": "новость" },
+      { "es": "la empresa", "ru": "компания, фирма" },
+      { "es": "el diseño", "ru": "дизайн" },
+      { "es": "de momento", "ru": "пока что" },
+      { "es": "enseñar", "ru": "показывать; учить" },
+      { "es": "además", "ru": "кроме того" },
+      { "es": "el abrazo", "ru": "объятие" },
+      { "es": "¿qué te parece?", "ru": "как тебе (идея)?" }
+    ],
+    "questions": [
+      {
+        "q": "Какая новость у автора письма?",
+        "options": ["Он женится", "Он нашёл работу в Барселоне", "Он купил квартиру"],
+        "answer": 1
+      },
+      {
+        "q": "Где он будет жить в первое время?",
+        "options": ["У двоюродной сестры", "В отеле", "В съёмной квартире"],
+        "answer": 0
+      },
+      {
+        "q": "Где находится его новая компания?",
+        "options": ["В Готическом квартале", "У моря", "Рядом с Саграда Фамилией"],
+        "answer": 2
+      },
+      {
+        "q": "Что он предлагает Маркосу?",
+        "options": ["Приехать в гости в октябре", "Найти ему работу", "Снять квартиру вместе"],
+        "answer": 0
+      }
+    ]
+  },
+  {
+    "id": 10,
+    "title": "Las tapas",
+    "titleRu": "Тапас",
+    "level": "A2",
+    "paragraphs": [
+      {
+        "es": "Las tapas son pequeñas porciones de comida que se sirven en los bares de España. Pueden ser aceitunas, queso, jamón, tortilla o mil cosas más.",
+        "ru": "Тапас — это маленькие порции еды, которые подают в барах Испании. Это могут быть оливки, сыр, хамон, тортилья и тысяча других вещей."
+      },
+      {
+        "es": "Hay varias historias sobre su origen. La más famosa dice que antes se ponía un trozo de pan o de jamón encima del vaso de vino para «tapar» el vaso y protegerlo de las moscas. De ahí viene el nombre «tapa».",
+        "ru": "Есть несколько версий их происхождения. Самая известная гласит, что раньше кусок хлеба или хамона клали сверху на бокал вина, чтобы «накрыть» его и защитить от мух. Отсюда и название «тапа» (крышка)."
+      },
+      {
+        "es": "Ir de tapas no es solo comer: es una forma de vida social. La gente va de bar en bar, prueba algo pequeño en cada uno y charla con los amigos durante horas.",
+        "ru": "«Ир де тапас» — это не просто еда, это форма общественной жизни. Люди ходят из бара в бар, пробуют что-то маленькое в каждом и часами болтают с друзьями."
+      },
+      {
+        "es": "En algunas ciudades, como Granada o León, la tapa es gratis cuando pides una bebida. ¡Por eso los estudiantes las adoran!",
+        "ru": "В некоторых городах, например в Гранаде или Леоне, тапа бесплатна, когда заказываешь напиток. Поэтому студенты их обожают!"
+      }
+    ],
+    "glossary": [
+      { "es": "la porción", "ru": "порция" },
+      { "es": "la aceituna", "ru": "оливка" },
+      { "es": "el trozo", "ru": "кусок" },
+      { "es": "tapar", "ru": "накрывать" },
+      { "es": "la mosca", "ru": "муха" },
+      { "es": "ir de tapas", "ru": "ходить по барам, пробуя тапас" },
+      { "es": "charlar", "ru": "болтать" },
+      { "es": "gratis", "ru": "бесплатно" }
+    ],
+    "questions": [
+      {
+        "q": "Что такое тапас?",
+        "options": ["Маленькие порции еды в барах", "Сорт вина", "Испанский танец"],
+        "answer": 0
+      },
+      {
+        "q": "Откуда, по известной версии, пошло название «тапа»?",
+        "options": ["От имени повара", "От слова «накрывать» бокал", "От названия города"],
+        "answer": 1
+      },
+      {
+        "q": "Что значит «ir de tapas»?",
+        "options": ["Готовить тапас дома", "Заказывать доставку", "Ходить из бара в бар и пробовать закуски"],
+        "answer": 2
+      },
+      {
+        "q": "В каких городах тапа бесплатна к напитку?",
+        "options": ["В Гранаде и Леоне", "В Мадриде и Барселоне", "В Севилье и Валенсии"],
+        "answer": 0
+      }
+    ]
+  },
+  {
+    "id": 11,
+    "title": "Mi ciudad ha cambiado",
+    "titleRu": "Мой город изменился",
+    "level": "A2",
+    "paragraphs": [
+      {
+        "es": "Nací en una ciudad pequeña del norte. Este año he vuelto después de diez años fuera, y casi no la reconozco.",
+        "ru": "Я родился в маленьком городе на севере. В этом году я вернулся после десяти лет отсутствия и почти не узнаю его."
+      },
+      {
+        "es": "Antes había una fábrica enorme al lado del río; ahora hay un parque con carril bici. La vieja estación de tren se ha convertido en una biblioteca moderna. Han abierto cafés nuevos en la plaza mayor, y los turistas hacen fotos donde antes solo había tiendas cerradas.",
+        "ru": "Раньше у реки была огромная фабрика; теперь там парк с велодорожкой. Старый железнодорожный вокзал превратился в современную библиотеку. На главной площади открылись новые кафе, и туристы фотографируют там, где раньше были только закрытые магазины."
+      },
+      {
+        "es": "Algunas cosas no han cambiado: la panadería de la señora Pilar sigue en la misma esquina, y el pan huele igual que en mi infancia.",
+        "ru": "Кое-что не изменилось: булочная сеньоры Пилар всё на том же углу, и хлеб пахнет так же, как в моём детстве."
+      },
+      {
+        "es": "Me alegro de ver mi ciudad tan viva, aunque a veces echo de menos la ciudad tranquila de mis recuerdos.",
+        "ru": "Я рад видеть свой город таким живым, хотя иногда скучаю по тихому городу из моих воспоминаний."
+      }
+    ],
+    "glossary": [
+      { "es": "reconocer", "ru": "узнавать" },
+      { "es": "la fábrica", "ru": "фабрика" },
+      { "es": "el carril bici", "ru": "велодорожка" },
+      { "es": "convertirse en", "ru": "превратиться в" },
+      { "es": "oler", "ru": "пахнуть" },
+      { "es": "la infancia", "ru": "детство" },
+      { "es": "alegrarse de", "ru": "радоваться (чему-л.)" },
+      { "es": "echar de menos", "ru": "скучать по" }
+    ],
+    "questions": [
+      {
+        "q": "Сколько лет автор не был в родном городе?",
+        "options": ["Пять", "Десять", "Двадцать"],
+        "answer": 1
+      },
+      {
+        "q": "Что теперь на месте фабрики?",
+        "options": ["Парк с велодорожкой", "Торговый центр", "Новый вокзал"],
+        "answer": 0
+      },
+      {
+        "q": "Во что превратился старый вокзал?",
+        "options": ["В музей", "В кафе", "В современную библиотеку"],
+        "answer": 2
+      },
+      {
+        "q": "Что осталось прежним?",
+        "options": ["Булочная сеньоры Пилар", "Магазины на площади", "Фабрика у реки"],
+        "answer": 0
+      }
+    ]
+  },
+  {
+    "id": 12,
+    "title": "El Rastro de Madrid",
+    "titleRu": "Эль Растро в Мадриде",
+    "level": "A2",
+    "paragraphs": [
+      {
+        "es": "El Rastro es el mercado al aire libre más famoso de Madrid. Abre todos los domingos por la mañana en el barrio de La Latina.",
+        "ru": "Эль Растро — самый известный рынок под открытым небом в Мадриде. Он работает каждое воскресенье утром в районе Ла Латина."
+      },
+      {
+        "es": "En sus calles puedes encontrar de todo: ropa, discos antiguos, libros usados, muebles, cuadros y objetos curiosos que no existen en ninguna tienda normal.",
+        "ru": "На его улицах можно найти что угодно: одежду, старые пластинки, подержанные книги, мебель, картины и любопытные вещицы, которых нет ни в одном обычном магазине."
+      },
+      {
+        "es": "El truco más importante es regatear. Si un vendedor pide veinte euros, ofrece diez y probablemente pagarás quince. También es importante llegar temprano: los mejores objetos desaparecen antes de las once.",
+        "ru": "Самая важная хитрость — торговаться. Если продавец просит двадцать евро, предложи десять — и, скорее всего, заплатишь пятнадцать. Ещё важно приходить рано: лучшие вещи исчезают до одиннадцати."
+      },
+      {
+        "es": "Después del mercado, la tradición es tomar el aperitivo en una terraza de La Latina. Un domingo perfecto a la madrileña.",
+        "ru": "После рынка по традиции — аперитив на террасе в Ла Латине. Идеальное воскресенье по-мадридски."
+      }
+    ],
+    "glossary": [
+      { "es": "al aire libre", "ru": "под открытым небом" },
+      { "es": "los muebles", "ru": "мебель" },
+      { "es": "el cuadro", "ru": "картина" },
+      { "es": "regatear", "ru": "торговаться" },
+      { "es": "el vendedor", "ru": "продавец" },
+      { "es": "ofrecer", "ru": "предлагать" },
+      { "es": "desaparecer", "ru": "исчезать" },
+      { "es": "el aperitivo", "ru": "аперитив" }
+    ],
+    "questions": [
+      {
+        "q": "Когда работает Эль Растро?",
+        "options": ["Каждый день", "По субботам вечером", "По воскресеньям утром"],
+        "answer": 2
+      },
+      {
+        "q": "Какая «хитрость» самая важная на этом рынке?",
+        "options": ["Торговаться", "Платить картой", "Говорить по-английски"],
+        "answer": 0
+      },
+      {
+        "q": "Почему стоит приходить рано?",
+        "options": ["Утром всё дешевле", "Лучшие вещи быстро разбирают", "После обеда рынок закрыт"],
+        "answer": 1
+      },
+      {
+        "q": "Какова традиция после рынка?",
+        "options": ["Сиеста", "Поход в музей", "Аперитив на террасе"],
+        "answer": 2
+      }
+    ]
+  },
+  {
+    "id": 13,
+    "title": "El Camino de Santiago",
+    "titleRu": "Путь Сантьяго",
+    "level": "B1",
+    "paragraphs": [
+      {
+        "es": "Cada año, más de trescientas mil personas de todo el mundo recorren el Camino de Santiago. Algunos lo hacen por motivos religiosos; otros buscan aventura, naturaleza o simplemente tiempo para pensar.",
+        "ru": "Каждый год более трёхсот тысяч человек со всего мира проходят Путь Сантьяго. Одни делают это по религиозным мотивам, другие ищут приключений, природы или просто времени подумать."
+      },
+      {
+        "es": "El Camino no es una sola ruta, sino una red de caminos que atraviesan España y terminan en Santiago de Compostela, donde según la tradición está enterrado el apóstol Santiago. La ruta más popular, el Camino Francés, empieza en los Pirineos y tiene casi ochocientos kilómetros.",
+        "ru": "Камино — это не один маршрут, а сеть дорог, которые пересекают Испанию и заканчиваются в Сантьяго-де-Компостела, где, по преданию, похоронен апостол Иаков. Самый популярный маршрут, Французский путь, начинается в Пиренеях и тянется почти восемьсот километров."
+      },
+      {
+        "es": "Los peregrinos duermen en albergues baratos, caminan entre veinte y treinta kilómetros al día y sellan su credencial en cada etapa. Quien camina al menos los últimos cien kilómetros recibe la «Compostela», el certificado oficial del peregrino.",
+        "ru": "Паломники ночуют в недорогих приютах, проходят от двадцати до тридцати километров в день и ставят печать в свой «паспорт паломника» на каждом этапе. Тот, кто прошёл хотя бы последние сто километров, получает «Компостелу» — официальный сертификат паломника."
+      },
+      {
+        "es": "Muchos dicen que el Camino cambia la vida. Quizá sea una exageración, pero pocas experiencias permiten desconectar del móvil, conocer a gente de todo el mundo y descubrir que se necesita muy poco para ser feliz.",
+        "ru": "Многие говорят, что Камино меняет жизнь. Возможно, это преувеличение, но мало какой опыт позволяет отключиться от телефона, познакомиться с людьми со всего мира и обнаружить, что для счастья нужно совсем немного."
+      }
+    ],
+    "glossary": [
+      { "es": "recorrer", "ru": "проходить, преодолевать" },
+      { "es": "la red", "ru": "сеть" },
+      { "es": "atravesar", "ru": "пересекать" },
+      { "es": "enterrado", "ru": "похороненный" },
+      { "es": "el peregrino", "ru": "паломник" },
+      { "es": "el albergue", "ru": "приют, хостел" },
+      { "es": "sellar", "ru": "ставить печать" },
+      { "es": "la etapa", "ru": "этап" },
+      { "es": "desconectar", "ru": "отключиться" }
+    ],
+    "questions": [
+      {
+        "q": "Сколько человек проходят Камино каждый год?",
+        "options": ["Около тридцати тысяч", "Более трёхсот тысяч", "Более миллиона"],
+        "answer": 1
+      },
+      {
+        "q": "Что представляет собой Камино на самом деле?",
+        "options": ["Сеть маршрутов через Испанию", "Одну-единственную дорогу", "Кольцевой маршрут вокруг Мадрида"],
+        "answer": 0
+      },
+      {
+        "q": "Сколько километров в день обычно проходят паломники?",
+        "options": ["Пять–десять", "Пятьдесят–шестьдесят", "Двадцать–тридцать"],
+        "answer": 2
+      },
+      {
+        "q": "Что нужно, чтобы получить «Компостелу»?",
+        "options": ["Пройти минимум последние сто километров", "Пройти весь путь целиком", "Заплатить взнос"],
+        "answer": 0
+      }
+    ]
+  },
+  {
+    "id": 14,
+    "title": "La Tomatina: una guerra de tomates",
+    "titleRu": "Томатина: томатная война",
+    "level": "B1",
+    "paragraphs": [
+      {
+        "es": "El último miércoles de agosto, el pueblo valenciano de Buñol se convierte en el escenario de la batalla más extraña del mundo: la Tomatina, una guerra en la que las únicas armas son tomates maduros.",
+        "ru": "В последнюю среду августа валенсийский городок Буньоль превращается в арену самой странной битвы в мире: Томатины — войны, в которой единственное оружие — спелые помидоры."
+      },
+      {
+        "es": "Todo empezó en 1945, cuando unos jóvenes se pelearon durante un desfile y empezaron a lanzarse tomates de un puesto de verduras. Al año siguiente repitieron la «batalla» por diversión, y la tradición quedó para siempre.",
+        "ru": "Всё началось в 1945 году, когда несколько молодых людей подрались во время парада и начали кидаться помидорами с овощного прилавка. На следующий год они повторили «битву» ради веселья, и традиция закрепилась навсегда."
+      },
+      {
+        "es": "Hoy participan unas veinte mil personas y se lanzan más de cien toneladas de tomates en solo una hora. Hay reglas claras: hay que aplastar el tomate antes de lanzarlo para no hacer daño, y está prohibido romper camisetas.",
+        "ru": "Сегодня участвуют около двадцати тысяч человек, и всего за час бросается более ста тонн помидоров. Есть чёткие правила: помидор нужно раздавить перед броском, чтобы никому не навредить, и запрещено рвать футболки."
+      },
+      {
+        "es": "¿Y después? Los bomberos limpian las calles con mangueras, y curiosamente el ácido del tomate deja el pueblo más limpio que antes. Los participantes, eso sí, necesitan una buena ducha.",
+        "ru": "А потом? Пожарные моют улицы из шлангов, и, что любопытно, томатная кислота оставляет городок чище, чем он был. А вот участникам точно нужен хороший душ."
+      }
+    ],
+    "glossary": [
+      { "es": "el escenario", "ru": "сцена, место действия" },
+      { "es": "el arma", "ru": "оружие" },
+      { "es": "maduro", "ru": "спелый; зрелый" },
+      { "es": "pelearse", "ru": "подраться, поссориться" },
+      { "es": "el desfile", "ru": "парад, шествие" },
+      { "es": "lanzar", "ru": "бросать" },
+      { "es": "aplastar", "ru": "раздавить" },
+      { "es": "hacer daño", "ru": "причинить вред" },
+      { "es": "el bombero", "ru": "пожарный" },
+      { "es": "la manguera", "ru": "шланг" }
+    ],
+    "questions": [
+      {
+        "q": "Когда проходит Томатина?",
+        "options": ["В последнюю среду августа", "Первого мая", "В первое воскресенье лета"],
+        "answer": 0
+      },
+      {
+        "q": "Как зародился праздник?",
+        "options": ["По указу мэра", "С драки молодёжи на параде в 1945 году", "Из древнего религиозного обряда"],
+        "answer": 1
+      },
+      {
+        "q": "Зачем нужно раздавить помидор перед броском?",
+        "options": ["Чтобы бросить дальше", "Так требует эстетика праздника", "Чтобы никому не навредить"],
+        "answer": 2
+      },
+      {
+        "q": "Что происходит с улицами после битвы?",
+        "options": ["Томатная кислота делает их чище", "Они остаются грязными неделю", "Их перекрашивают заново"],
+        "answer": 0
+      }
+    ]
+  },
+  {
+    "id": 15,
+    "title": "¿Por qué aprendemos idiomas?",
+    "titleRu": "Зачем мы учим языки?",
+    "level": "B1",
+    "paragraphs": [
+      {
+        "es": "Hay quien aprende idiomas por trabajo, hay quien lo hace por amor y hay quien simplemente disfruta del proceso. Sea cual sea el motivo, la ciencia confirma que aprender una lengua extranjera es uno de los mejores ejercicios para el cerebro.",
+        "ru": "Кто-то учит языки ради работы, кто-то — ради любви, а кто-то просто наслаждается процессом. Каким бы ни был мотив, наука подтверждает: изучение иностранного языка — одна из лучших тренировок для мозга."
+      },
+      {
+        "es": "Varios estudios muestran que las personas bilingües toman decisiones de forma más racional y que su memoria funciona mejor. Además, hablar otro idioma puede retrasar la aparición de enfermedades como el alzhéimer.",
+        "ru": "Многие исследования показывают, что двуязычные люди принимают решения более рационально и что их память работает лучше. Кроме того, владение другим языком может отсрочить появление таких болезней, как альцгеймер."
+      },
+      {
+        "es": "Pero los beneficios no son solo médicos. Cada idioma es una forma distinta de ver el mundo: el español, por ejemplo, tiene dos verbos para «быть» — ser y estar —, y esa diferencia obliga a pensar en qué es permanente y qué es temporal.",
+        "ru": "Но польза не только медицинская. Каждый язык — это особый способ видеть мир: в испанском, например, есть два глагола «быть» — ser и estar, и эта разница заставляет задумываться, что постоянно, а что временно."
+      },
+      {
+        "es": "Lo más importante es la constancia. Es mejor estudiar quince minutos cada día que tres horas un domingo. Y no hay que tener miedo a los errores: quien no se equivoca, no aprende.",
+        "ru": "Самое важное — постоянство. Лучше заниматься пятнадцать минут каждый день, чем три часа в воскресенье. И не нужно бояться ошибок: кто не ошибается, тот не учится."
+      }
+    ],
+    "glossary": [
+      { "es": "disfrutar de", "ru": "наслаждаться" },
+      { "es": "sea cual sea", "ru": "каким бы ни был" },
+      { "es": "el cerebro", "ru": "мозг" },
+      { "es": "bilingüe", "ru": "двуязычный" },
+      { "es": "retrasar", "ru": "отсрочить, задержать" },
+      { "es": "la enfermedad", "ru": "болезнь" },
+      { "es": "obligar a", "ru": "заставлять, обязывать" },
+      { "es": "la constancia", "ru": "постоянство" },
+      { "es": "equivocarse", "ru": "ошибаться" }
+    ],
+    "questions": [
+      {
+        "q": "Что наука говорит об изучении языков?",
+        "options": ["Это одна из лучших тренировок мозга", "После тридцати это бесполезно", "Оно перегружает память"],
+        "answer": 0
+      },
+      {
+        "q": "Что может отсрочить владение вторым языком?",
+        "options": ["Усталость", "Болезни вроде альцгеймера", "Старение кожи"],
+        "answer": 1
+      },
+      {
+        "q": "Чем, по тексту, интересен испанский язык?",
+        "options": ["В нём нет глагола «быть»", "Это самый быстрый язык в мире", "В нём два глагола «быть»"],
+        "answer": 2
+      },
+      {
+        "q": "Что важнее всего при изучении языка?",
+        "options": ["Постоянство", "Врождённый талант", "Дорогие курсы"],
+        "answer": 0
+      }
+    ]
+  },
+  {
+    "id": 16,
+    "title": "El mate: más que una bebida",
+    "titleRu": "Мате: больше, чем напиток",
+    "level": "B1",
+    "paragraphs": [
+      {
+        "es": "En Argentina, Uruguay y Paraguay hay una bebida que es mucho más que una bebida: el mate. Se prepara con hojas secas de yerba mate y agua caliente, y se bebe con una pajita metálica llamada bombilla.",
+        "ru": "В Аргентине, Уругвае и Парагвае есть напиток, который гораздо больше, чем просто напиток: мате. Его готовят из сухих листьев йерба мате и горячей воды и пьют через металлическую трубочку — бомбилью."
+      },
+      {
+        "es": "Lo esencial del mate no es su sabor amargo, sino el ritual. El mate se comparte: una persona, el cebador, prepara la bebida y la pasa al resto del grupo. Todos beben de la misma calabaza, uno por uno, en círculo.",
+        "ru": "Главное в мате — не его горький вкус, а ритуал. Мате пьют вместе: один человек, «себадор», готовит напиток и передаёт его остальным. Все пьют из одного сосуда-калебаса, по очереди, по кругу."
+      },
+      {
+        "es": "Hay reglas no escritas que todo extranjero debería conocer. Decir «gracias» significa que no quieres más. Mover la bombilla es de mala educación. Y nunca hay que tener prisa: el mate se toma con calma.",
+        "ru": "Есть неписаные правила, которые стоит знать каждому иностранцу. Сказать «спасибо» означает, что больше не хочешь. Двигать бомбилью — невежливо. И никогда нельзя спешить: мате пьют не торопясь."
+      },
+      {
+        "es": "Para los argentinos, ofrecer un mate es ofrecer amistad. Por eso, si alguien te pasa un mate, acéptalo: te están abriendo la puerta de su casa.",
+        "ru": "Для аргентинцев предложить мате — значит предложить дружбу. Поэтому, если кто-то передаёт тебе мате, прими его: тебе открывают дверь своего дома."
+      }
+    ],
+    "glossary": [
+      { "es": "la hoja", "ru": "лист" },
+      { "es": "la pajita", "ru": "трубочка, соломинка" },
+      { "es": "amargo", "ru": "горький" },
+      { "es": "compartir", "ru": "делить(ся)" },
+      { "es": "la calabaza", "ru": "тыква; сосуд-калебас" },
+      { "es": "de mala educación", "ru": "невежливо" },
+      { "es": "tener prisa", "ru": "спешить" },
+      { "es": "la amistad", "ru": "дружба" }
+    ],
+    "questions": [
+      {
+        "q": "Через что пьют мате?",
+        "options": ["Из обычной чашки", "Через металлическую трубочку — бомбилью", "Через тростниковую соломинку"],
+        "answer": 1
+      },
+      {
+        "q": "Что в мате самое главное, по тексту?",
+        "options": ["Ритуал совместного питья", "Его горький вкус", "Польза для здоровья"],
+        "answer": 0
+      },
+      {
+        "q": "Что означает «спасибо», когда тебе передают мате?",
+        "options": ["«Очень вкусно»", "«Передай следующему»", "«Больше не хочу»"],
+        "answer": 2
+      },
+      {
+        "q": "Что значит предложить мате аргентинцу?",
+        "options": ["Предложить дружбу", "Попросить об услуге", "Вежливо попрощаться"],
+        "answer": 0
+      }
+    ]
+  },
+  {
+    "id": 17,
+    "title": "Trabajar desde casa",
+    "titleRu": "Работа из дома",
+    "level": "B1",
+    "paragraphs": [
+      {
+        "es": "Antes de la pandemia, trabajar desde casa era un privilegio de pocos. Hoy millones de personas lo hacen a diario, y el debate sigue abierto: ¿es mejor el teletrabajo o la oficina?",
+        "ru": "До пандемии работа из дома была привилегией немногих. Сегодня миллионы людей делают это ежедневно, и спор остаётся открытым: что лучше — удалёнка или офис?"
+      },
+      {
+        "es": "Los defensores del teletrabajo destacan la libertad: sin atascos, sin madrugones innecesarios, con más tiempo para la familia. Muchos aseguran que en casa se concentran mejor porque nadie los interrumpe cada cinco minutos.",
+        "ru": "Сторонники удалённой работы подчёркивают свободу: без пробок, без ненужных ранних подъёмов, с большим количеством времени для семьи. Многие уверяют, что дома концентрируются лучше, потому что никто не отвлекает их каждые пять минут."
+      },
+      {
+        "es": "Los críticos responden que trabajar en pijama tiene un precio. Es fácil trabajar demasiado cuando la oficina está en el salón, y la falta de contacto humano puede provocar soledad. Además, las ideas suelen nacer en conversaciones espontáneas junto a la máquina de café.",
+        "ru": "Критики отвечают, что у работы в пижаме есть своя цена. Легко переработать, когда офис находится в гостиной, а нехватка человеческого контакта может привести к одиночеству. К тому же идеи обычно рождаются в спонтанных разговорах у кофемашины."
+      },
+      {
+        "es": "Quizá la solución esté en el término medio: el modelo híbrido, unos días en casa y otros en la oficina. Como casi siempre, el equilibrio parece más sano que los extremos.",
+        "ru": "Возможно, решение — в золотой середине: гибридная модель, несколько дней дома и несколько в офисе. Как почти всегда, равновесие выглядит здоровее крайностей."
+      }
+    ],
+    "glossary": [
+      { "es": "a diario", "ru": "ежедневно" },
+      { "es": "el atasco", "ru": "пробка (дорожная)" },
+      { "es": "el madrugón", "ru": "очень ранний подъём" },
+      { "es": "asegurar", "ru": "уверять, утверждать" },
+      { "es": "interrumpir", "ru": "перебивать, отвлекать" },
+      { "es": "la soledad", "ru": "одиночество" },
+      { "es": "el término medio", "ru": "золотая середина" },
+      { "es": "el equilibrio", "ru": "равновесие" }
+    ],
+    "questions": [
+      {
+        "q": "Что подчёркивают сторонники удалённой работы?",
+        "options": ["Более высокую зарплату", "Свободу и время для семьи", "Быстрый карьерный рост"],
+        "answer": 1
+      },
+      {
+        "q": "Какие риски называют критики?",
+        "options": ["Переработки и одиночество", "Медленный интернет", "Проблемы со спиной"],
+        "answer": 0
+      },
+      {
+        "q": "Где, по тексту, часто рождаются идеи?",
+        "options": ["На официальных совещаниях", "В отчётах", "В спонтанных разговорах у кофемашины"],
+        "answer": 2
+      },
+      {
+        "q": "Какое решение предлагается в конце?",
+        "options": ["Гибридная модель", "Только офис", "Только работа из дома"],
+        "answer": 0
+      }
+    ]
+  },
+  {
+    "id": 18,
+    "title": "El Día de los Muertos",
+    "titleRu": "День мёртвых",
+    "level": "B1",
+    "paragraphs": [
+      {
+        "es": "A primera vista puede parecer extraño: en México, la muerte se celebra con flores, música y comida. El Día de los Muertos, el uno y el dos de noviembre, es una de las fiestas más importantes y alegres del país.",
+        "ru": "На первый взгляд это может показаться странным: в Мексике смерть празднуют с цветами, музыкой и едой. День мёртвых, первого и второго ноября, — один из самых важных и радостных праздников страны."
+      },
+      {
+        "es": "Según la tradición, esos días las almas de los difuntos vuelven a visitar a sus familias. Para recibirlas, la gente construye altares en casa con fotos, velas, pan de muerto y flores de cempasúchil, cuyo color naranja ilumina el camino de las almas.",
+        "ru": "По традиции, в эти дни души умерших возвращаются навестить свои семьи. Чтобы встретить их, люди строят дома алтари с фотографиями, свечами, «хлебом мёртвых» и цветами бархатцев, чей оранжевый цвет освещает душам дорогу."
+      },
+      {
+        "es": "Los cementerios se llenan de familias que limpian las tumbas, cantan y cenan junto a sus seres queridos. No es una noche de miedo, sino de reencuentro: se recuerda a los muertos contando sus historias y sus chistes favoritos.",
+        "ru": "Кладбища наполняются семьями, которые приводят в порядок могилы, поют и ужинают рядом со своими близкими. Это ночь не страха, а новой встречи: умерших вспоминают, рассказывая их истории и любимые шутки."
+      },
+      {
+        "es": "En 2008, la UNESCO declaró esta fiesta Patrimonio Cultural de la Humanidad. Quien la vive una vez entiende su mensaje profundo: nadie muere del todo mientras alguien lo recuerde.",
+        "ru": "В 2008 году ЮНЕСКО объявила этот праздник культурным наследием человечества. Кто однажды его пережил, понимает его глубокий смысл: никто не умирает до конца, пока кто-то его помнит."
+      }
+    ],
+    "glossary": [
+      { "es": "la muerte", "ru": "смерть" },
+      { "es": "el alma", "ru": "душа" },
+      { "es": "el difunto", "ru": "покойный" },
+      { "es": "la vela", "ru": "свеча" },
+      { "es": "el cementerio", "ru": "кладбище" },
+      { "es": "la tumba", "ru": "могила" },
+      { "es": "el ser querido", "ru": "близкий человек" },
+      { "es": "el reencuentro", "ru": "новая встреча" },
+      { "es": "el chiste", "ru": "шутка, анекдот" },
+      { "es": "el patrimonio", "ru": "наследие" }
+    ],
+    "questions": [
+      {
+        "q": "Когда отмечают День мёртвых?",
+        "options": ["Первого–второго ноября", "Тридцать первого октября", "Первого мая"],
+        "answer": 0
+      },
+      {
+        "q": "Зачем в домах строят алтари?",
+        "options": ["Для украшения дома", "Чтобы встретить души умерших", "Для туристов"],
+        "answer": 1
+      },
+      {
+        "q": "Какая атмосфера царит на кладбищах в эти дни?",
+        "options": ["Страх и тишина", "Официальные церемонии", "Радостная встреча семей"],
+        "answer": 2
+      },
+      {
+        "q": "В чём главный смысл праздника?",
+        "options": ["Никто не умирает до конца, пока его помнят", "Смерти нужно бояться", "Жизнь слишком коротка"],
+        "answer": 0
+      }
+    ]
+  },
+  {
+    "id": 19,
+    "title": "El español en el mundo",
+    "titleRu": "Испанский в мире",
+    "level": "B2",
+    "paragraphs": [
+      {
+        "es": "Con casi quinientos millones de hablantes nativos, el español es la segunda lengua materna más hablada del planeta, solo por detrás del chino mandarín. Si sumamos a quienes lo estudian o lo hablan como segunda lengua, la cifra se acerca a los seiscientos millones.",
+        "ru": "Почти с пятьюстами миллионами носителей испанский — второй по распространённости родной язык на планете, уступающий только китайскому. Если прибавить тех, кто его изучает или говорит на нём как на втором языке, цифра приближается к шестистам миллионам."
+      },
+      {
+        "es": "Aunque solemos asociar el español con España, la realidad demográfica es contundente: nueve de cada diez hispanohablantes viven en América. México es el país con más hablantes, y Estados Unidos, donde el español avanza imparable, podría convertirse en unas décadas en el segundo país hispanohablante del mundo.",
+        "ru": "Хотя мы привыкли ассоциировать испанский с Испанией, демографическая реальность неоспорима: девять из десяти испаноговорящих живут в Америке. Мексика — страна с наибольшим числом носителей, а США, где испанский неудержимо набирает силу, через несколько десятилетий могут стать второй испаноязычной страной мира."
+      },
+      {
+        "es": "No existe, sin embargo, un español único. Un argentino dice «vos tenés» donde un español dice «tú tienes»; en México un autobús es un camión y en Cuba, una guagua. Lejos de ser un problema, esta diversidad es la prueba de que la lengua está viva. Las academias de los veintitrés países hispanohablantes colaboran para que, pese a las diferencias, todos sigamos entendiéndonos.",
+        "ru": "Однако единого испанского не существует. Аргентинец говорит «vos tenés» там, где испанец скажет «tú tienes»; в Мексике автобус называют «camión», а на Кубе — «guagua». Это разнообразие — вовсе не проблема, а доказательство того, что язык жив. Академии двадцати трёх испаноязычных стран сотрудничают, чтобы, несмотря на различия, мы все продолжали понимать друг друга."
+      },
+      {
+        "es": "Para quien lo estudia, el español ofrece una ventaja evidente: con un solo idioma se abren las puertas de más de veinte países, cada uno con su acento, su literatura y su manera propia de nombrar el mundo.",
+        "ru": "Тому, кто его изучает, испанский даёт очевидное преимущество: один язык открывает двери более чем двадцати стран, у каждой из которых свой акцент, своя литература и свой собственный способ называть мир."
+      }
+    ],
+    "glossary": [
+      { "es": "el hablante", "ru": "говорящий, носитель" },
+      { "es": "la cifra", "ru": "цифра, число" },
+      { "es": "contundente", "ru": "убедительный, неоспоримый" },
+      { "es": "imparable", "ru": "неудержимый" },
+      { "es": "la década", "ru": "десятилетие" },
+      { "es": "la diversidad", "ru": "разнообразие" },
+      { "es": "pese a", "ru": "несмотря на" },
+      { "es": "la ventaja", "ru": "преимущество" },
+      { "es": "nombrar", "ru": "называть" }
+    ],
+    "questions": [
+      {
+        "q": "Какое место занимает испанский по числу носителей?",
+        "options": ["Первое в мире", "Второе после китайского", "Третье после английского"],
+        "answer": 1
+      },
+      {
+        "q": "Где живёт большинство испаноговорящих?",
+        "options": ["В Америке", "В Испании", "В Европе"],
+        "answer": 0
+      },
+      {
+        "q": "Как текст оценивает разнообразие вариантов испанского?",
+        "options": ["Это серьёзная проблема", "Оно постепенно исчезает", "Это доказательство живого языка"],
+        "answer": 2
+      },
+      {
+        "q": "Что означает слово «guagua» на Кубе?",
+        "options": ["Автобус", "Собаку", "Ребёнка"],
+        "answer": 0
+      },
+      {
+        "q": "Какое преимущество даёт испанский изучающему?",
+        "options": ["Самую простую грамматику в мире", "Двери более чем двадцати стран", "Гарантированную работу в ЕС"],
+        "answer": 1
+      }
+    ]
+  },
+  {
+    "id": 20,
+    "title": "Gaudí y la Sagrada Familia",
+    "titleRu": "Гауди и Саграда Фамилия",
+    "level": "B2",
+    "paragraphs": [
+      {
+        "es": "Pocas obras arquitectónicas despiertan tanta fascinación como la Sagrada Familia de Barcelona. Iniciada en 1882, sigue en construcción casi un siglo y medio después, algo insólito en la era del hormigón rápido y los plazos ajustados.",
+        "ru": "Немногие архитектурные творения вызывают такое восхищение, как Саграда Фамилия в Барселоне. Начатая в 1882 году, она строится до сих пор, почти полтора века спустя, — нечто небывалое в эпоху быстрого бетона и жёстких сроков."
+      },
+      {
+        "es": "Antoni Gaudí dedicó al templo los últimos cuarenta y tres años de su vida, y los doce finales en exclusiva. Cuando le preguntaban por la lentitud de las obras, respondía con ironía serena: «Mi cliente no tiene prisa». Murió en 1926, atropellado por un tranvía, y fue enterrado en la cripta del templo inacabado.",
+        "ru": "Антони Гауди посвятил храму последние сорок три года своей жизни, а финальные двенадцать — целиком. Когда его спрашивали о медлительности стройки, он отвечал со спокойной иронией: «Мой заказчик не торопится». Он погиб в 1926 году, сбитый трамваем, и был похоронен в крипте недостроенного храма."
+      },
+      {
+        "es": "El genio de Gaudí consistió en mirar la naturaleza como maestra. Las columnas del interior se ramifican como árboles, la luz atraviesa las vidrieras creando un bosque de colores, y apenas hay una línea recta en todo el edificio porque, decía, en la naturaleza tampoco las hay.",
+        "ru": "Гений Гауди состоял в том, чтобы видеть в природе учителя. Колонны внутри ветвятся, как деревья, свет проходит сквозь витражи, создавая лес красок, и во всём здании почти нет ни одной прямой линии, потому что, как он говорил, в природе их тоже нет."
+      },
+      {
+        "es": "Hoy la Sagrada Familia es el monumento más visitado de España. Las obras, financiadas exclusivamente con donativos y entradas, avanzan hacia su final. Cuando se coloque la última piedra, se cerrará uno de los proyectos más largos y hermosos de la historia de la arquitectura.",
+        "ru": "Сегодня Саграда Фамилия — самый посещаемый памятник Испании. Работы, финансируемые исключительно за счёт пожертвований и билетов, движутся к завершению. Когда будет уложен последний камень, закроется один из самых долгих и прекрасных проектов в истории архитектуры."
+      }
+    ],
+    "glossary": [
+      { "es": "la obra", "ru": "произведение; стройка" },
+      { "es": "insólito", "ru": "необычный, небывалый" },
+      { "es": "el hormigón", "ru": "бетон" },
+      { "es": "el plazo", "ru": "срок" },
+      { "es": "atropellar", "ru": "сбить (транспортом)" },
+      { "es": "inacabado", "ru": "незаконченный" },
+      { "es": "ramificarse", "ru": "ветвиться" },
+      { "es": "la vidriera", "ru": "витраж" },
+      { "es": "recto", "ru": "прямой" },
+      { "es": "el donativo", "ru": "пожертвование" }
+    ],
+    "questions": [
+      {
+        "q": "Когда началось строительство Саграда Фамилии?",
+        "options": ["В 1882 году", "В 1926 году", "В 1950 году"],
+        "answer": 0
+      },
+      {
+        "q": "Что отвечал Гауди на вопросы о медленной стройке?",
+        "options": ["«Не хватает денег»", "«Мой заказчик не торопится»", "«Скоро закончим»"],
+        "answer": 1
+      },
+      {
+        "q": "Кто был «учителем» Гауди?",
+        "options": ["Итальянские мастера", "Античная архитектура", "Природа"],
+        "answer": 2
+      },
+      {
+        "q": "Почему в здании почти нет прямых линий?",
+        "options": ["В природе их тоже нет", "Так было дешевле", "Это ошибка строителей"],
+        "answer": 0
+      },
+      {
+        "q": "На какие средства строится храм?",
+        "options": ["Государственный бюджет", "Пожертвования и билеты", "Фонды Евросоюза"],
+        "answer": 1
+      }
+    ]
+  },
+  {
+    "id": 21,
+    "title": "La sobremesa",
+    "titleRu": "Собремеса",
+    "level": "B2",
+    "paragraphs": [
+      {
+        "es": "Hay palabras que resumen toda una cultura. En español existe «sobremesa»: el tiempo que se pasa charlando en la mesa después de comer, cuando ya no queda comida pero nadie quiere levantarse. La mayoría de los idiomas ni siquiera tiene un término para nombrarlo.",
+        "ru": "Есть слова, в которых умещается целая культура. В испанском существует «собремеса»: время, которое проводят за разговором у стола после еды, когда еды уже не осталось, но никто не хочет вставать. В большинстве языков даже нет термина, чтобы это назвать."
+      },
+      {
+        "es": "La sobremesa puede durar veinte minutos o toda la tarde. Se habla de política, de la familia, de recuerdos; se pide otro café y quizá un licor; se arregla el mundo entre bromas. Para un español, terminar de comer y marcharse inmediatamente resulta casi ofensivo: la comida es una excusa, lo importante es la conversación.",
+        "ru": "Собремеса может длиться двадцать минут или весь вечер. Говорят о политике, о семье, о воспоминаниях; заказывают ещё кофе и, может быть, ликёр; «решают мировые проблемы» вперемешку с шутками. Для испанца доесть и сразу уйти — почти оскорбление: еда лишь повод, главное — разговор."
+      },
+      {
+        "es": "Los antropólogos ven en esta costumbre una herencia mediterránea: el clima invita a alargar las comidas, y la cultura del domingo familiar hizo el resto. Sea cual sea el origen, la sobremesa cumple una función social insustituible: es el momento en que las familias realmente se cuentan la vida.",
+        "ru": "Антропологи видят в этом обычае средиземноморское наследие: климат располагает растягивать трапезы, а культура семейного воскресенья довершила остальное. Каким бы ни было происхождение, собремеса выполняет незаменимую социальную функцию: это момент, когда семьи по-настоящему рассказывают друг другу о своей жизни."
+      },
+      {
+        "es": "En tiempos de prisa y pantallas, la sobremesa resiste como un pequeño acto de rebeldía. Quizá por eso conviene defenderla: pocas cosas son tan baratas y dan tanto como una hora de conversación sin mirar el reloj.",
+        "ru": "Во времена спешки и экранов собремеса держится как маленький акт бунтарства. Может быть, поэтому её стоит защищать: мало что стоит так дёшево и даёт так много, как час разговора без взгляда на часы."
+      }
+    ],
+    "glossary": [
+      { "es": "resumir", "ru": "обобщать, вмещать" },
+      { "es": "ni siquiera", "ru": "даже не" },
+      { "es": "arreglar el mundo", "ru": "«решать мировые проблемы» (за беседой)" },
+      { "es": "la broma", "ru": "шутка" },
+      { "es": "ofensivo", "ru": "обидный, оскорбительный" },
+      { "es": "la herencia", "ru": "наследие" },
+      { "es": "alargar", "ru": "удлинять, растягивать" },
+      { "es": "insustituible", "ru": "незаменимый" },
+      { "es": "la rebeldía", "ru": "бунтарство" }
+    ],
+    "questions": [
+      {
+        "q": "Что такое «собремеса»?",
+        "options": ["Разговор за столом после еды", "Десерт после обеда", "Послеобеденный сон"],
+        "answer": 0
+      },
+      {
+        "q": "Как испанцы воспринимают немедленный уход после еды?",
+        "options": ["Как норму", "Почти как оскорбление", "Как признак занятости"],
+        "answer": 1
+      },
+      {
+        "q": "Какое наследие видят в этой традиции антропологи?",
+        "options": ["Арабское", "Американское", "Средиземноморское"],
+        "answer": 2
+      },
+      {
+        "q": "В чём социальная функция собремесы?",
+        "options": ["Семьи по-настоящему делятся жизнью", "Экономия на развлечениях", "Деловые переговоры"],
+        "answer": 0
+      },
+      {
+        "q": "Чем является собремеса в эпоху спешки, по автору?",
+        "options": ["Пережитком прошлого", "Маленьким актом бунтарства", "Модным трендом"],
+        "answer": 1
+      }
+    ]
+  },
+  {
+    "id": 22,
+    "title": "García Márquez y el realismo mágico",
+    "titleRu": "Гарсиа Маркес и магический реализм",
+    "level": "B2",
+    "paragraphs": [
+      {
+        "es": "Cuando en 1967 se publicó «Cien años de soledad», pocos imaginaban que aquella novela sobre un pueblo llamado Macondo cambiaría la literatura en español para siempre. Su autor, el colombiano Gabriel García Márquez, recibiría el Premio Nobel quince años más tarde.",
+        "ru": "Когда в 1967 году вышел роман «Сто лет одиночества», мало кто мог представить, что эта книга о городке под названием Макондо навсегда изменит литературу на испанском языке. Её автор, колумбиец Габриэль Гарсиа Маркес, получит Нобелевскую премию пятнадцать лет спустя."
+      },
+      {
+        "es": "La novela narra la historia de siete generaciones de la familia Buendía en un mundo donde lo imposible ocurre con naturalidad: una joven sube al cielo mientras tiende las sábanas, llueve durante cuatro años seguidos y los muertos conversan con los vivos. A este estilo se le llamó realismo mágico.",
+        "ru": "Роман рассказывает историю семи поколений семьи Буэндиа в мире, где невозможное происходит естественно: девушка возносится на небо, развешивая простыни, дождь идёт четыре года подряд, а мёртвые беседуют с живыми. Этот стиль назвали магическим реализмом."
+      },
+      {
+        "es": "García Márquez insistía en que no inventaba nada: simplemente contaba la realidad de América Latina tal como la había escuchado de niño en casa de sus abuelos, donde las historias fantásticas se narraban con la misma seriedad que las noticias del periódico.",
+        "ru": "Гарсиа Маркес настаивал, что ничего не выдумывает: он просто рассказывал реальность Латинской Америки такой, какой слышал её в детстве в доме бабушки и дедушки, где фантастические истории излагались с той же серьёзностью, что и газетные новости."
+      },
+      {
+        "es": "Más de medio siglo después, Macondo sigue siendo un espejo en el que América Latina se reconoce, y la novela, traducida a casi cincuenta lenguas, se lee en todo el mundo. Pocas obras demuestran mejor que la literatura puede ser, a la vez, profundamente local y universal.",
+        "ru": "Спустя более полувека Макондо остаётся зеркалом, в котором узнаёт себя Латинская Америка, а роман, переведённый почти на пятьдесят языков, читают по всему миру. Немногие произведения лучше доказывают, что литература может быть одновременно глубоко местной и универсальной."
+      }
+    ],
+    "glossary": [
+      { "es": "la novela", "ru": "роман" },
+      { "es": "narrar", "ru": "повествовать" },
+      { "es": "tender las sábanas", "ru": "развешивать простыни" },
+      { "es": "seguido", "ru": "подряд" },
+      { "es": "insistir en", "ru": "настаивать на" },
+      { "es": "de niño", "ru": "в детстве" },
+      { "es": "la seriedad", "ru": "серьёзность" },
+      { "es": "el espejo", "ru": "зеркало" },
+      { "es": "reconocerse", "ru": "узнавать себя" },
+      { "es": "a la vez", "ru": "одновременно" }
+    ],
+    "questions": [
+      {
+        "q": "Когда был опубликован роман «Сто лет одиночества»?",
+        "options": ["В 1982 году", "В 1967 году", "В 1950 году"],
+        "answer": 1
+      },
+      {
+        "q": "Как называется стиль, где невозможное происходит естественно?",
+        "options": ["Магический реализм", "Сюрреализм", "Романтизм"],
+        "answer": 0
+      },
+      {
+        "q": "Откуда, по словам писателя, он брал свои сюжеты?",
+        "options": ["Из снов", "Из газетных архивов", "Из рассказов в доме бабушки и дедушки"],
+        "answer": 2
+      },
+      {
+        "q": "Чем остаётся Макондо для Латинской Америки?",
+        "options": ["Зеркалом, в котором она узнаёт себя", "Затерянным городом инков", "Туристическим маршрутом"],
+        "answer": 0
+      },
+      {
+        "q": "На сколько языков переведён роман?",
+        "options": ["На десять", "Почти на пятьдесят", "Более чем на двести"],
+        "answer": 1
+      }
+    ]
+  },
+  {
+    "id": 23,
+    "title": "Las lenguas de España",
+    "titleRu": "Языки Испании",
+    "level": "B2",
+    "paragraphs": [
+      {
+        "es": "Quien viaja por España descubre pronto que el español no es la única lengua del país. En Cataluña las calles hablan catalán; en el País Vasco, euskera; en Galicia, gallego. La Constitución de 1978 las reconoce como lenguas cooficiales en sus territorios.",
+        "ru": "Путешествуя по Испании, быстро обнаруживаешь, что испанский — не единственный язык страны. В Каталонии улицы говорят по-каталански, в Стране Басков — на эускера, в Галисии — по-галисийски. Конституция 1978 года признаёт их коофициальными языками на их территориях."
+      },
+      {
+        "es": "Cada una tiene su historia. El catalán y el gallego, como el castellano, nacieron del latín, y el gallego comparte raíces con el portugués. El euskera, en cambio, es un enigma: no pertenece a ninguna familia lingüística conocida y es anterior a la llegada de los romanos. Es, probablemente, la lengua viva más antigua de Europa.",
+        "ru": "У каждого своя история. Каталанский и галисийский, как и кастильский, произошли от латыни, причём галисийский делит корни с португальским. А вот эускера — загадка: он не принадлежит ни к одной известной языковой семье и древнее прихода римлян. Вероятно, это самый древний живой язык Европы."
+      },
+      {
+        "es": "Durante la dictadura de Franco, estas lenguas fueron apartadas de la vida pública, y varias generaciones crecieron sin poder estudiarlas. Con la democracia llegó la recuperación: hoy se enseñan en las escuelas, tienen televisión propia y una literatura floreciente.",
+        "ru": "Во время диктатуры Франко эти языки были вытеснены из общественной жизни, и несколько поколений выросло без возможности их изучать. С демократией пришло восстановление: сегодня их преподают в школах, у них есть собственное телевидение и процветающая литература."
+      },
+      {
+        "es": "Para el visitante, este mosaico puede resultar confuso, pero es una riqueza enorme. Un consejo práctico: aprender a decir «gracias» en la lengua local — «gràcies», «eskerrik asko», «grazas» — abre más puertas que cualquier guía turística.",
+        "ru": "Для гостя эта мозаика может показаться запутанной, но это огромное богатство. Практический совет: научиться говорить «спасибо» на местном языке — «gràcies», «eskerrik asko», «grazas» — открывает больше дверей, чем любой путеводитель."
+      }
+    ],
+    "glossary": [
+      { "es": "cooficial", "ru": "коофициальный" },
+      { "es": "la raíz", "ru": "корень" },
+      { "es": "pertenecer a", "ru": "принадлежать к" },
+      { "es": "el enigma", "ru": "загадка" },
+      { "es": "la dictadura", "ru": "диктатура" },
+      { "es": "apartar", "ru": "отстранять, вытеснять" },
+      { "es": "la recuperación", "ru": "восстановление" },
+      { "es": "floreciente", "ru": "процветающий" },
+      { "es": "la riqueza", "ru": "богатство" }
+    ],
+    "questions": [
+      {
+        "q": "Какие языки упоминаются в тексте кроме испанского?",
+        "options": ["Каталанский, эускера и галисийский", "Португальский и французский", "Только каталанский"],
+        "answer": 0
+      },
+      {
+        "q": "Чем уникален баскский язык (эускера)?",
+        "options": ["Он произошёл от латыни", "Он не принадлежит ни к одной известной языковой семье", "Он похож на португальский"],
+        "answer": 1
+      },
+      {
+        "q": "Что происходило с этими языками при Франко?",
+        "options": ["Они активно развивались", "Они стали официальными", "Они были вытеснены из общественной жизни"],
+        "answer": 2
+      },
+      {
+        "q": "С каким языком галисийский делит корни?",
+        "options": ["С португальским", "С французским", "С баскским"],
+        "answer": 0
+      },
+      {
+        "q": "Какой практический совет даёт автор путешественнику?",
+        "options": ["Говорить только по-английски", "Выучить «спасибо» на местном языке", "Избегать регионов с другими языками"],
+        "answer": 1
+      }
+    ]
+  },
+  {
+    "id": 24,
+    "title": "El futuro de las ciudades",
+    "titleRu": "Будущее городов",
+    "level": "B2",
+    "paragraphs": [
+      {
+        "es": "Más de la mitad de la humanidad vive ya en ciudades, y la ONU calcula que en 2050 serán casi siete de cada diez personas. La pregunta no es si las ciudades crecerán, sino cómo lo harán: ¿serán lugares donde merezca la pena vivir o gigantes de cemento y atascos?",
+        "ru": "Больше половины человечества уже живёт в городах, и по расчётам ООН к 2050 году это будут почти семь человек из десяти. Вопрос не в том, будут ли города расти, а в том, как: станут ли они местами, где стоит жить, или гигантами из бетона и пробок?"
+      },
+      {
+        "es": "Algunas urbes ya ensayan respuestas. París impulsa la «ciudad de los quince minutos», donde el trabajo, la escuela y el médico están a un cuarto de hora andando o en bici. Pontevedra, en Galicia, expulsó los coches del centro hace dos décadas: hoy los niños van solos a la escuela y el aire es otro.",
+        "ru": "Некоторые города уже пробуют ответы. Париж продвигает «город пятнадцати минут», где работа, школа и врач — в четверти часа пешком или на велосипеде. Понтеведра в Галисии убрала машины из центра два десятилетия назад: сегодня дети ходят в школу одни, и воздух там совсем другой."
+      },
+      {
+        "es": "La tecnología ayudará — sensores que optimizan el tráfico, edificios que ahorran energía —, pero los expertos coinciden en que la clave no es tecnológica sino política: menos coche privado y más transporte público, menos asfalto y más árboles, viviendas que la gente normal pueda pagar.",
+        "ru": "Технологии помогут — датчики, оптимизирующие трафик, здания, экономящие энергию, — но эксперты сходятся в том, что ключ не технологический, а политический: меньше личных машин и больше общественного транспорта, меньше асфальта и больше деревьев, жильё, которое могут себе позволить обычные люди."
+      },
+      {
+        "es": "En el fondo, la ciudad del futuro no exige inventos revolucionarios, sino recuperar una idea antigua: la ciudad se hizo para encontrarse. Cualquier calle donde los vecinos se saludan ya es, en cierto modo, una ciudad inteligente.",
+        "ru": "По сути, город будущего требует не революционных изобретений, а возвращения старой идеи: город создан для того, чтобы встречаться. Любая улица, где соседи здороваются друг с другом, — уже в каком-то смысле умный город."
+      }
+    ],
+    "glossary": [
+      { "es": "la humanidad", "ru": "человечество" },
+      { "es": "merecer la pena", "ru": "стоить того" },
+      { "es": "la urbe", "ru": "крупный город" },
+      { "es": "ensayar", "ru": "пробовать, испытывать" },
+      { "es": "impulsar", "ru": "продвигать, стимулировать" },
+      { "es": "expulsar", "ru": "изгонять" },
+      { "es": "ahorrar", "ru": "экономить" },
+      { "es": "coincidir en", "ru": "сходиться во мнении" },
+      { "es": "la vivienda", "ru": "жильё" },
+      { "es": "en el fondo", "ru": "по сути" }
+    ],
+    "questions": [
+      {
+        "q": "Какая доля человечества будет жить в городах к 2050 году?",
+        "options": ["Почти семь из десяти", "Ровно половина", "Девять из десяти"],
+        "answer": 0
+      },
+      {
+        "q": "Что такое «город пятнадцати минут»?",
+        "options": ["Город с самым быстрым метро", "Всё нужное — в 15 минутах пешком или на велосипеде", "Центр, закрытый для пешеходов"],
+        "answer": 1
+      },
+      {
+        "q": "Что сделала Понтеведра двадцать лет назад?",
+        "options": ["Построила небоскрёбы", "Ввела платный въезд", "Убрала машины из центра"],
+        "answer": 2
+      },
+      {
+        "q": "В чём, по мнению экспертов, ключ к будущему городов?",
+        "options": ["В политических решениях", "Только в технологиях", "В строительстве дорог"],
+        "answer": 0
+      },
+      {
+        "q": "Какую старую идею нужно вернуть?",
+        "options": ["Город — это крепость", "Город создан для встреч", "Город — это рынок"],
+        "answer": 1
+      }
+    ]
+  },
+  {
+    "id": 25,
+    "title": "La mudanza",
+    "titleRu": "Переезд",
+    "level": "A2",
+    "series": "El misterio del séptimo piso",
+    "episode": 1,
+    "paragraphs": [
+      {
+        "es": "Marta llegó a Madrid un lunes de septiembre con dos maletas y muchas ilusiones. Alquiló un piso barato en la calle Luna, en un edificio antiguo de siete pisos. El portero, don Andrés, un señor mayor de pocas palabras, le dio las llaves sin mirarla a los ojos.",
+        "ru": "Марта приехала в Мадрид в сентябрьский понедельник с двумя чемоданами и большими надеждами. Она сняла недорогую квартиру на улице Луна, в старом семиэтажном доме. Портье, дон Андрес, немногословный пожилой сеньор, отдал ей ключи, не глядя в глаза."
+      },
+      {
+        "es": "El piso de Marta estaba en el sexto. Esa primera noche, cansada de la mudanza, se durmió pronto. Pero a las dos de la madrugada se despertó: alguien tocaba el piano justo encima de su cabeza. Una melodía lenta y triste.",
+        "ru": "Квартира Марты была на шестом этаже. В первую ночь, уставшая от переезда, она быстро уснула. Но в два часа ночи проснулась: кто-то играл на пианино прямо над её головой. Медленная, грустная мелодия."
+      },
+      {
+        "es": "Por la mañana preguntó a la vecina del quinto por el músico del séptimo. La mujer la miró muy seria y respondió en voz baja: «Eso es imposible, hija. En el séptimo no vive nadie desde hace treinta años». Continuará...",
+        "ru": "Утром она спросила соседку с пятого этажа о музыканте с седьмого. Женщина посмотрела на неё очень серьёзно и тихо ответила: «Это невозможно, милая. На седьмом уже тридцать лет никто не живёт». Продолжение следует..."
+      }
+    ],
+    "glossary": [
+      { "es": "la mudanza", "ru": "переезд" },
+      { "es": "alquilar", "ru": "снимать (жильё)" },
+      { "es": "el portero", "ru": "портье, консьерж" },
+      { "es": "de pocas palabras", "ru": "немногословный" },
+      { "es": "la madrugada", "ru": "раннее утро, глубокая ночь" },
+      { "es": "justo encima", "ru": "прямо над" },
+      { "es": "en voz baja", "ru": "тихо, вполголоса" },
+      { "es": "desde hace", "ru": "вот уже (о сроке)" }
+    ],
+    "questions": [
+      {
+        "q": "На каком этаже квартира Марты?",
+        "options": ["На шестом", "На седьмом", "На пятом"],
+        "answer": 0
+      },
+      {
+        "q": "Что разбудило Марту ночью?",
+        "options": ["Шаги на лестнице", "Пианино над головой", "Телефонный звонок"],
+        "answer": 1
+      },
+      {
+        "q": "Что сказала соседка с пятого этажа?",
+        "options": ["Музыкант играет каждую ночь", "Пианино стоит у портье", "На седьмом никто не живёт тридцать лет"],
+        "answer": 2
+      },
+      {
+        "q": "Каким показан портье дон Андрес?",
+        "options": ["Немногословным и странным", "Весёлым и дружелюбным", "Молодым и любопытным"],
+        "answer": 0
+      }
+    ]
+  },
+  {
+    "id": 26,
+    "title": "El gato de la escalera",
+    "titleRu": "Кот с лестницы",
+    "level": "A2",
+    "series": "El misterio del séptimo piso",
+    "episode": 2,
+    "paragraphs": [
+      {
+        "es": "Durante una semana, Marta escuchó el piano casi todas las noches. Siempre la misma melodía. Preguntó a don Andrés, pero el portero solo dijo: «Los edificios viejos hacen ruidos» y cerró la puerta de su oficina.",
+        "ru": "Целую неделю Марта слышала пианино почти каждую ночь. Всегда одна и та же мелодия. Она спросила дона Андреса, но портье лишь сказал: «Старые дома издают звуки» — и закрыл дверь своей каморки."
+      },
+      {
+        "es": "El sábado, Marta encontró un gato negro sentado en la escalera, entre el sexto y el séptimo piso. Parecía esperarla. En el collar llevaba una pequeña llave antigua y una placa con un nombre: «Nocturno».",
+        "ru": "В субботу Марта нашла чёрного кота, сидевшего на лестнице между шестым и седьмым этажом. Казалось, он ждал её. На ошейнике у него была маленькая старинная ключик и табличка с именем: «Ноктюрн»."
+      },
+      {
+        "es": "El gato subió despacio hasta el séptimo y se paró delante de la única puerta del piso, una puerta de madera oscura sin número. Miró a Marta y maulló. Ella entendió la invitación: la llave del collar era, seguramente, la llave de esa puerta. Continuará...",
+        "ru": "Кот медленно поднялся на седьмой и остановился перед единственной дверью этажа — тёмной деревянной дверью без номера. Он посмотрел на Марту и мяукнул. Она поняла приглашение: ключик с ошейника был, наверняка, ключом от этой двери. Продолжение следует..."
+      }
+    ],
+    "glossary": [
+      { "es": "el ruido", "ru": "шум" },
+      { "es": "la escalera", "ru": "лестница" },
+      { "es": "parecer", "ru": "казаться" },
+      { "es": "el collar", "ru": "ошейник; ожерелье" },
+      { "es": "la placa", "ru": "табличка" },
+      { "es": "despacio", "ru": "медленно" },
+      { "es": "pararse", "ru": "остановиться" },
+      { "es": "maullar", "ru": "мяукать" }
+    ],
+    "questions": [
+      {
+        "q": "Как портье объяснил ночные звуки?",
+        "options": ["«Это соседи сверху»", "«Старые дома издают звуки»", "«Вам показалось»"],
+        "answer": 1
+      },
+      {
+        "q": "Что было на ошейнике кота?",
+        "options": ["Старинный ключик и табличка с именем", "Колокольчик", "Записка с адресом"],
+        "answer": 0
+      },
+      {
+        "q": "Как звали кота?",
+        "options": ["Луна", "Мистерио", "Ноктюрн"],
+        "answer": 2
+      },
+      {
+        "q": "Куда кот привёл Марту?",
+        "options": ["К двери без номера на седьмом", "В каморку портье", "На крышу"],
+        "answer": 0
+      }
+    ]
+  },
+  {
+    "id": 27,
+    "title": "Detrás de la puerta",
+    "titleRu": "За дверью",
+    "level": "A2",
+    "series": "El misterio del séptimo piso",
+    "episode": 3,
+    "paragraphs": [
+      {
+        "es": "El corazón de Marta latía muy rápido cuando metió la llave en la cerradura. La puerta se abrió sin problema. Dentro, el aire olía a polvo y a tiempo pasado. Los muebles estaban cubiertos con sábanas blancas, como fantasmas dormidos.",
+        "ru": "Сердце Марты билось очень быстро, когда она вставила ключ в замок. Дверь открылась без проблем. Внутри воздух пах пылью и ушедшим временем. Мебель была накрыта белыми простынями, как уснувшие привидения."
+      },
+      {
+        "es": "En el centro del salón había un piano de cola negro. Sobre el piano, un vaso con flores secas y un montón de cartas atadas con una cinta azul. Marta tomó la primera carta con cuidado. La letra era elegante y antigua.",
+        "ru": "В центре гостиной стоял чёрный рояль. На рояле — стакан с засохшими цветами и стопка писем, перевязанных синей лентой. Марта осторожно взяла первое письмо. Почерк был изящный и старинный."
+      },
+      {
+        "es": "«Querido Tomás», empezaba la carta. Marta leyó rápido hasta la firma final y se quedó helada. La carta estaba firmada por «Clara Ferrer». Ferrer. El mismo apellido que ella. El apellido de su familia. Continuará...",
+        "ru": "«Дорогой Томас», — начиналось письмо. Марта быстро дочитала до подписи в конце и замерла. Письмо было подписано «Клара Феррер». Феррер. Та же фамилия, что у неё. Фамилия её семьи. Продолжение следует..."
+      }
+    ],
+    "glossary": [
+      { "es": "latir", "ru": "биться (о сердце)" },
+      { "es": "la cerradura", "ru": "замок (дверной)" },
+      { "es": "el polvo", "ru": "пыль" },
+      { "es": "la sábana", "ru": "простыня" },
+      { "es": "el fantasma", "ru": "привидение" },
+      { "es": "el piano de cola", "ru": "рояль" },
+      { "es": "atado", "ru": "связанный, перевязанный" },
+      { "es": "la letra", "ru": "почерк; буква" },
+      { "es": "el apellido", "ru": "фамилия" }
+    ],
+    "questions": [
+      {
+        "q": "Чем пахло в квартире?",
+        "options": ["Свежей краской", "Пылью и ушедшим временем", "Цветами"],
+        "answer": 1
+      },
+      {
+        "q": "Что стояло в центре гостиной?",
+        "options": ["Чёрный рояль", "Большой стол", "Старое кресло"],
+        "answer": 0
+      },
+      {
+        "q": "Что лежало на рояле?",
+        "options": ["Ноты и очки", "Фотоальбом", "Письма, перевязанные синей лентой"],
+        "answer": 2
+      },
+      {
+        "q": "Почему Марта замерла, прочитав подпись?",
+        "options": ["У автора писем её фамилия", "Письмо было адресовано ей", "Подпись была кровью"],
+        "answer": 0
+      }
+    ]
+  },
+  {
+    "id": 28,
+    "title": "Las cartas de Clara",
+    "titleRu": "Письма Клары",
+    "level": "A2",
+    "series": "El misterio del séptimo piso",
+    "episode": 4,
+    "paragraphs": [
+      {
+        "es": "Marta pasó toda la tarde leyendo las cartas, sentada en el suelo del salón. Clara Ferrer era pianista y escribía a su hermano Tomás, que vivía en Valencia. Hablaba de conciertos, de teatros y de un amor secreto que no podía decir en voz alta.",
+        "ru": "Марта провела весь вечер за чтением писем, сидя на полу гостиной. Клара Феррер была пианисткой и писала своему брату Томасу, который жил в Валенсии. Она рассказывала о концертах, театрах и о тайной любви, о которой нельзя было говорить вслух."
+      },
+      {
+        "es": "La última carta tenía fecha del doce de mayo de mil novecientos noventa y tres. Solo decía: «Querido hermano: por fin soy valiente. El viernes empiezo una nueva vida. Te escribiré desde allí. No me busques y no te preocupes. Soy feliz».",
+        "ru": "Последнее письмо было датировано двенадцатым мая тысяча девятьсот девяносто третьего года. В нём было только: «Дорогой брат, наконец-то я стала смелой. В пятницу я начинаю новую жизнь. Напишу тебе оттуда. Не ищи меня и не волнуйся. Я счастлива»."
+      },
+      {
+        "es": "Marta buscó el nombre en su memoria familiar. Tomás era el nombre de su bisabuelo. Entonces Clara era... su tía bisabuela. Llamó a su madre por teléfono y le preguntó por Clara Ferrer. Al otro lado hubo un largo silencio. Continuará...",
+        "ru": "Марта поискала имя в семейной памяти. Томасом звали её прадеда. Значит, Клара была... её двоюродной прабабушкой. Она позвонила маме и спросила о Кларе Феррер. На другом конце повисла долгая тишина. Продолжение следует..."
+      }
+    ],
+    "glossary": [
+      { "es": "el suelo", "ru": "пол; земля" },
+      { "es": "en voz alta", "ru": "вслух" },
+      { "es": "la fecha", "ru": "дата" },
+      { "es": "valiente", "ru": "смелый" },
+      { "es": "preocuparse", "ru": "волноваться" },
+      { "es": "el bisabuelo", "ru": "прадед" },
+      { "es": "al otro lado", "ru": "на другом конце" },
+      { "es": "el silencio", "ru": "тишина, молчание" }
+    ],
+    "questions": [
+      {
+        "q": "Кем была Клара Феррер?",
+        "options": ["Пианисткой", "Учительницей", "Актрисой"],
+        "answer": 0
+      },
+      {
+        "q": "О чём говорилось в последнем письме 1993 года?",
+        "options": ["Она заболела", "Она начинает новую жизнь в пятницу", "Она возвращается в Валенсию"],
+        "answer": 1
+      },
+      {
+        "q": "Кем Клара приходится Марте?",
+        "options": ["Бабушкой", "Тётей", "Двоюродной прабабушкой"],
+        "answer": 2
+      },
+      {
+        "q": "Как отреагировала мама Марты на вопрос о Кларе?",
+        "options": ["Долгим молчанием", "Смехом", "Радостью"],
+        "answer": 0
+      }
+    ]
+  },
+  {
+    "id": 29,
+    "title": "La historia de mamá",
+    "titleRu": "Мамина история",
+    "level": "A2",
+    "series": "El misterio del séptimo piso",
+    "episode": 5,
+    "paragraphs": [
+      {
+        "es": "«¿Dónde has oído ese nombre?», preguntó por fin su madre. Marta le contó todo: el piano por las noches, el gato, la llave, las cartas. Su madre suspiró y empezó a hablar.",
+        "ru": "«Где ты слышала это имя?» — спросила наконец мама. Марта рассказала ей всё: пианино по ночам, кота, ключ, письма. Мама вздохнула и начала говорить."
+      },
+      {
+        "es": "«Clara era la hermana de tu bisabuelo Tomás. Una pianista con mucho talento. En mayo de 1993 desapareció. Dejó una nota, pero la familia nunca recibió ninguna carta más. Tomás la buscó durante años. Nunca la encontró. En la familia dejamos de hablar de ella, porque dolía demasiado».",
+        "ru": "«Клара была сестрой твоего прадеда Томаса. Очень талантливая пианистка. В мае 1993 года она исчезла. Оставила записку, но семья больше не получила ни одного письма. Томас искал её годами. Так и не нашёл. В семье о ней перестали говорить — слишком было больно»."
+      },
+      {
+        "es": "Marta prometió investigar. Esa noche, cuando subía a su piso, vio a don Andrés en la escalera. El portero la miró fijamente y dijo algo extraño: «Algunas puertas es mejor no abrirlas, señorita Ferrer». Marta nunca le había dicho su apellido. Continuará...",
+        "ru": "Марта пообещала разобраться. Тем вечером, поднимаясь к себе, она увидела дона Андреса на лестнице. Портье пристально посмотрел на неё и сказал странную вещь: «Некоторые двери лучше не открывать, сеньорита Феррер». Марта никогда не называла ему свою фамилию. Продолжение следует..."
+      }
+    ],
+    "glossary": [
+      { "es": "suspirar", "ru": "вздыхать" },
+      { "es": "desaparecer", "ru": "исчезать" },
+      { "es": "la nota", "ru": "записка" },
+      { "es": "dejar de + inf.", "ru": "перестать (что-то делать)" },
+      { "es": "doler", "ru": "болеть, причинять боль" },
+      { "es": "prometer", "ru": "обещать" },
+      { "es": "investigar", "ru": "расследовать" },
+      { "es": "mirar fijamente", "ru": "пристально смотреть" }
+    ],
+    "questions": [
+      {
+        "q": "Что случилось с Кларой в мае 1993 года?",
+        "options": ["Она уехала на гастроли", "Она исчезла, оставив записку", "Она вышла замуж"],
+        "answer": 1
+      },
+      {
+        "q": "Почему в семье перестали говорить о Кларе?",
+        "options": ["Это было слишком больно", "Её все забыли", "Так велел Томас"],
+        "answer": 0
+      },
+      {
+        "q": "Что странного сказал дон Андрес?",
+        "options": ["«Кот не ваш»", "«Съезжайте из квартиры»", "«Некоторые двери лучше не открывать»"],
+        "answer": 2
+      },
+      {
+        "q": "Почему слова портье особенно удивили Марту?",
+        "options": ["Она не называла ему свою фамилию", "Он впервые заговорил", "Он говорил по-французски"],
+        "answer": 0
+      }
+    ]
+  },
+  {
+    "id": 30,
+    "title": "Doña Rosa recuerda",
+    "titleRu": "Донья Роса вспоминает",
+    "level": "A2",
+    "series": "El misterio del séptimo piso",
+    "episode": 6,
+    "paragraphs": [
+      {
+        "es": "La vecina más antigua del edificio era doña Rosa, del segundo piso, que vivía allí desde los años setenta. Marta la visitó con una caja de pasteles. A doña Rosa le encantaba hablar del pasado.",
+        "ru": "Самой давней жительницей дома была донья Роса со второго этажа — она жила там с семидесятых годов. Марта пришла к ней с коробкой пирожных. Донья Роса обожала говорить о прошлом."
+      },
+      {
+        "es": "«¿Clara? ¡Claro que me acuerdo! Tocaba el piano como los ángeles. Y no desapareció, hija, se fue. Se fue con su gran amor a Argentina. Un músico argentino que tocaba en el teatro. La familia no lo aceptaba porque él era pobre y extranjero. Otros tiempos, ya sabes».",
+        "ru": "«Клара? Конечно, помню! Играла на пианино, как ангел. И она не исчезла, милая, — она уехала. Уехала со своей большой любовью в Аргентину. Музыкант-аргентинец, играл в театре. Семья была против, потому что он был беден и иностранец. Другие времена, сама понимаешь»."
+      },
+      {
+        "es": "«¿Y quién cuidó su piso todos estos años?», preguntó Marta. Doña Rosa sonrió con tristeza: «El joven portero de entonces. Estaba enamorado de Clara en silencio. Ella le pidió guardar el piso y sus cartas. Él lo prometió... y sigue cumpliendo su promesa». Marta entendió de golpe: era don Andrés. Continuará...",
+        "ru": "«А кто все эти годы присматривал за её квартирой?» — спросила Марта. Донья Роса грустно улыбнулась: «Тогдашний молодой портье. Он был тайно влюблён в Клару. Она попросила его сохранить квартиру и её письма. Он пообещал... и до сих пор держит слово». Марта вдруг поняла: это дон Андрес. Продолжение следует..."
+      }
+    ],
+    "glossary": [
+      { "es": "acordarse de", "ru": "помнить, вспоминать о" },
+      { "es": "irse", "ru": "уходить, уезжать" },
+      { "es": "aceptar", "ru": "принимать, соглашаться" },
+      { "es": "extranjero", "ru": "иностранец; иностранный" },
+      { "es": "cuidar", "ru": "заботиться, присматривать" },
+      { "es": "enamorado de", "ru": "влюблённый в" },
+      { "es": "cumplir una promesa", "ru": "сдержать обещание" },
+      { "es": "de golpe", "ru": "вдруг, разом" }
+    ],
+    "questions": [
+      {
+        "q": "Что рассказала донья Роса о судьбе Клары?",
+        "options": ["Она уехала с любимым в Аргентину", "Она таинственно исчезла", "Она переехала в Валенсию"],
+        "answer": 0
+      },
+      {
+        "q": "Почему семья была против её любви?",
+        "options": ["Он был музыкантом", "Он был беден и иностранец", "Он был намного старше"],
+        "answer": 1
+      },
+      {
+        "q": "Кто хранил квартиру Клары все эти годы?",
+        "options": ["Её брат Томас", "Донья Роса", "Тогдашний молодой портье"],
+        "answer": 2
+      },
+      {
+        "q": "Что вдруг поняла Марта?",
+        "options": ["Этим портье был дон Андрес", "Клара вернулась", "Кот принадлежал Кларе"],
+        "answer": 0
+      }
+    ]
+  },
+  {
+    "id": 31,
+    "title": "La confesión de don Andrés",
+    "titleRu": "Признание дона Андреса",
+    "level": "A2",
+    "series": "El misterio del séptimo piso",
+    "episode": 7,
+    "paragraphs": [
+      {
+        "es": "Marta bajó a la portería con las cartas en la mano. Don Andrés las vio y, por primera vez, sus ojos se llenaron de lágrimas. «Así que ya lo sabes», dijo. «Pasa, siéntate. Te lo voy a contar todo».",
+        "ru": "Марта спустилась в каморку портье с письмами в руках. Дон Андрес увидел их, и впервые его глаза наполнились слезами. «Значит, ты уже знаешь, — сказал он. — Проходи, садись. Я всё тебе расскажу»."
+      },
+      {
+        "es": "«Yo quería a Clara, pero ella quería a Julián, y él la hacía feliz. Cuando decidieron irse a Buenos Aires, la familia de Clara no quiso escucharla. Yo la ayudé con las maletas aquella noche. Me pidió dos cosas: guardar su piso y no contar nunca adónde iba. He cumplido cuarenta años de promesa».",
+        "ru": "«Я любил Клару, но она любила Хулиана, и он делал её счастливой. Когда они решили уехать в Буэнос-Айрес, семья Клары не захотела её слушать. В ту ночь я помог ей с чемоданами. Она попросила меня о двух вещах: сохранить её квартиру и никогда не рассказывать, куда она уехала. Я держу слово уже сорок лет»."
+      },
+      {
+        "es": "«¿Y el piano que suena por las noches?», preguntó Marta casi sin voz. Don Andrés sonrió por primera vez: «Ven el domingo a las diez a la portería. Hay algo que Clara dejó para su familia. Creo que ese algo te espera a ti». Continuará...",
+        "ru": "«А пианино, которое звучит по ночам?» — спросила Марта почти без голоса. Дон Андрес впервые улыбнулся: «Приходи в воскресенье в десять в портерию. Есть кое-что, что Клара оставила для своей семьи. Думаю, это кое-что ждёт именно тебя». Продолжение следует..."
+      }
+    ],
+    "glossary": [
+      { "es": "la portería", "ru": "каморка консьержа" },
+      { "es": "la lágrima", "ru": "слеза" },
+      { "es": "querer a alguien", "ru": "любить кого-либо" },
+      { "es": "hacer feliz", "ru": "делать счастливым" },
+      { "es": "aquella noche", "ru": "в ту ночь" },
+      { "es": "adónde", "ru": "куда" },
+      { "es": "sonar", "ru": "звучать" },
+      { "es": "casi sin voz", "ru": "почти без голоса" }
+    ],
+    "questions": [
+      {
+        "q": "Как отреагировал дон Андрес, увидев письма?",
+        "options": ["Рассердился", "Его глаза наполнились слезами", "Сделал вид, что не узнал их"],
+        "answer": 1
+      },
+      {
+        "q": "О каких двух вещах попросила его Клара?",
+        "options": ["Хранить квартиру и молчать, куда она уехала", "Продать пианино и письма", "Уехать с ней и Хулианом"],
+        "answer": 0
+      },
+      {
+        "q": "Сколько лет дон Андрес держит обещание?",
+        "options": ["Двадцать", "Тридцать", "Сорок"],
+        "answer": 2
+      },
+      {
+        "q": "Что он предложил Марте?",
+        "options": ["Забыть эту историю", "Прийти в воскресенье — Клара кое-что оставила семье", "Написать письмо в Аргентину"],
+        "answer": 1
+      }
+    ]
+  },
+  {
+    "id": 32,
+    "title": "La caja de Clara",
+    "titleRu": "Шкатулка Клары",
+    "level": "A2",
+    "series": "El misterio del séptimo piso",
+    "episode": 8,
+    "paragraphs": [
+      {
+        "es": "El domingo, don Andrés puso sobre la mesa una caja de madera. Dentro había programas de conciertos de Buenos Aires, fotos de Clara sonriendo junto a Julián, y una última carta: «Para mi familia, cuando alguien me encuentre».",
+        "ru": "В воскресенье дон Андрес поставил на стол деревянную шкатулку. Внутри были программки концертов из Буэнос-Айреса, фотографии улыбающейся Клары рядом с Хулианом и последнее письмо: «Моей семье, когда кто-нибудь меня найдёт»."
+      },
+      {
+        "es": "La carta contaba una vida entera: los teatros de Buenos Aires, la boda con Julián, dos hijos, cientos de conciertos. «No me perdí», escribía Clara. «Me encontré. Perdonad el silencio: era el precio de mi felicidad». Clara había muerto en 2010, en paz, tocando hasta el final.",
+        "ru": "Письмо рассказывало целую жизнь: театры Буэнос-Айреса, свадьба с Хулианом, двое детей, сотни концертов. «Я не потерялась, — писала Клара. — Я нашла себя. Простите за молчание: это была цена моего счастья». Клара умерла в 2010 году, в мире с собой, играя до самого конца."
+      },
+      {
+        "es": "Marta lloró y rió a la vez. Esa noche subió al séptimo, quitó la sábana del piano y tocó, muy mal, la melodía que había oído tantas noches. El gato Nocturno se durmió sobre el piano. Marta decidió dos cosas: aprender a tocar el piano y quedarse con el gato. El séptimo piso, por fin, tenía música de verdad. FIN.",
+        "ru": "Марта плакала и смеялась одновременно. В тот вечер она поднялась на седьмой, сняла простыню с рояля и сыграла — очень плохо — мелодию, которую слышала столько ночей. Кот Ноктюрн уснул на рояле. Марта решила две вещи: научиться играть на пианино и оставить кота себе. На седьмом этаже наконец звучала настоящая музыка. КОНЕЦ."
+      }
+    ],
+    "glossary": [
+      { "es": "la caja", "ru": "коробка, шкатулка" },
+      { "es": "la boda", "ru": "свадьба" },
+      { "es": "cientos de", "ru": "сотни (чего-л.)" },
+      { "es": "perderse", "ru": "потеряться" },
+      { "es": "perdonar", "ru": "прощать" },
+      { "es": "el precio", "ru": "цена" },
+      { "es": "la felicidad", "ru": "счастье" },
+      { "es": "quedarse con", "ru": "оставить себе" },
+      { "es": "de verdad", "ru": "настоящий, по-настоящему" }
+    ],
+    "questions": [
+      {
+        "q": "Что было в шкатулке Клары?",
+        "options": ["Программки, фото и последнее письмо", "Деньги и драгоценности", "Ноты её сочинений"],
+        "answer": 0
+      },
+      {
+        "q": "Как сложилась жизнь Клары в Буэнос-Айресе?",
+        "options": ["Она бросила музыку", "Счастливо: семья, дети и сотни концертов", "Она вернулась в Мадрид тайно"],
+        "answer": 1
+      },
+      {
+        "q": "Что написала Клара о своём молчании?",
+        "options": ["Она жалела о нём всю жизнь", "Она забыла семью", "Это была цена её счастья"],
+        "answer": 2
+      },
+      {
+        "q": "Какие два решения приняла Марта в финале?",
+        "options": ["Научиться играть на пианино и оставить кота", "Продать квартиру и уехать", "Найти детей Клары и написать книгу"],
+        "answer": 0
+      }
+    ]
+  },
+  {
+    "id": 33,
+    "title": "El cuaderno del abuelo",
+    "titleRu": "Дедушкина тетрадь",
+    "level": "B1",
+    "series": "Rumbo al sur",
+    "episode": 1,
+    "paragraphs": [
+      {
+        "es": "El día que Dani perdió su trabajo en Bilbao, llovía como para construir un arca. Tenía veintiséis años, un máster que no le servía de mucho y la sensación de que la vida pasaba por su lado sin saludarlo. Esa misma tarde encontró un vuelo absurdamente barato a Ciudad de México, con salida en dos semanas. Lo compró sin pensarlo dos veces.",
+        "ru": "В день, когда Дани потерял работу в Бильбао, лило так, что впору строить ковчег. Ему было двадцать шесть, у него был магистерский диплом, от которого было мало толку, и ощущение, что жизнь проходит мимо, не здороваясь. В тот же вечер он нашёл абсурдно дешёвый билет в Мехико с вылетом через две недели. И купил его, не раздумывая."
+      },
+      {
+        "es": "Cuando se lo contó a su abuelo Julio, el viejo no se rio ni le dio consejos. Se levantó despacio, buscó en el fondo de un armario y volvió con un cuaderno de tapas gastadas. «Yo también me fui al sur a tu edad», dijo. «Aquí hay nombres y direcciones de gente que me ayudó. Ha pasado medio siglo, pero busca a sus familias. Diles que vas de mi parte».",
+        "ru": "Когда он рассказал об этом деду Хулио, старик не засмеялся и не стал давать советов. Он медленно встал, порылся в глубине шкафа и вернулся с тетрадью в потёртой обложке. «Я тоже уехал на юг в твоём возрасте, — сказал он. — Здесь имена и адреса людей, которые мне помогли. Прошло полвека, но найди их семьи. Скажи, что ты от меня»."
+      },
+      {
+        "es": "Esa noche, Dani hojeó el cuaderno: direcciones en México, Guatemala, Perú, Argentina. En la primera página había un nombre de mujer tachado con tanta fuerza que el papel estaba roto. Debajo, con letra pequeña, una sola palabra: «Perdóname». Continuará...",
+        "ru": "Тем вечером Дани пролистал тетрадь: адреса в Мексике, Гватемале, Перу, Аргентине. На первой странице было женское имя, зачёркнутое с такой силой, что бумага порвалась. Под ним, мелким почерком, одно-единственное слово: «Прости меня». Продолжение следует..."
+      }
+    ],
+    "glossary": [
+      { "es": "servir de", "ru": "годиться, быть полезным" },
+      { "es": "sin pensarlo dos veces", "ru": "не раздумывая" },
+      { "es": "el fondo", "ru": "глубина, дно" },
+      { "es": "gastado", "ru": "потёртый, изношенный" },
+      { "es": "a tu edad", "ru": "в твоём возрасте" },
+      { "es": "de mi parte", "ru": "от моего имени" },
+      { "es": "hojear", "ru": "листать" },
+      { "es": "tachado", "ru": "зачёркнутый" }
+    ],
+    "questions": [
+      {
+        "q": "Что случилось с Дани в начале истории?",
+        "options": ["Он потерял работу", "Он закончил университет", "Он выиграл билет в лотерею"],
+        "answer": 0
+      },
+      {
+        "q": "Что дал ему дед Хулио?",
+        "options": ["Деньги на дорогу", "Тетрадь с именами и адресами", "Старую гитару"],
+        "answer": 1
+      },
+      {
+        "q": "О чём дед попросил Дани?",
+        "options": ["Не уезжать надолго", "Писать каждую неделю", "Найти семьи людей, которые ему помогли"],
+        "answer": 2
+      },
+      {
+        "q": "Что было на первой странице тетради?",
+        "options": ["Зачёркнутое женское имя и слово «прости меня»", "Карта Мексики", "Список долгов"],
+        "answer": 0
+      }
+    ]
+  },
+  {
+    "id": 34,
+    "title": "Bienvenido a México",
+    "titleRu": "Добро пожаловать в Мексику",
+    "level": "B1",
+    "series": "Rumbo al sur",
+    "episode": 2,
+    "paragraphs": [
+      {
+        "es": "Ciudad de México golpeó a Dani con todo a la vez: el ruido, los colores, el olor a maíz tostado, los organillos del centro. La primera dirección del cuaderno correspondía a una zapatería en el barrio de Coyoacán. Cuando llegó, encontró una cafetería moderna. La zapatería había cerrado hacía más de veinte años.",
+        "ru": "Мехико обрушился на Дани всем сразу: шумом, красками, запахом жареной кукурузы, шарманками в центре. Первый адрес из тетради вёл к обувной мастерской в районе Койоакан. Когда он пришёл, там оказалась современная кофейня. Мастерская закрылась больше двадцати лет назад."
+      },
+      {
+        "es": "Una camarera de su edad, Valeria, lo vio tan perdido que le invitó a un café. Dani le contó la historia del cuaderno. A ella le brillaron los ojos: «Mi ciudad es enorme, pero los barrios tienen memoria. Si la familia del zapatero sigue en Coyoacán, mi abuela lo sabrá. Ella conoce hasta a los fantasmas».",
+        "ru": "Официантка его возраста, Валерия, увидела его настолько растерянным, что угостила кофе. Дани рассказал ей историю тетради. У неё загорелись глаза: «Мой город огромный, но у районов есть память. Если семья сапожника всё ещё в Койоакане, моя бабушка будет знать. Она знакома даже с привидениями»."
+      },
+      {
+        "es": "Al salir del metro esa tarde, dos chicos le robaron la cartera de un tirón. Dani se quedó sin tarjetas y sin efectivo, pero respiró aliviado al tocar su mochila: el cuaderno seguía allí. Valeria le prestó dinero sin dudarlo. «Ahora me debes una historia entera», le dijo riendo. Continuará...",
+        "ru": "Выходя тем вечером из метро, он лишился кошелька — двое парней вырвали его одним рывком. Дани остался без карт и наличных, но с облегчением выдохнул, нащупав рюкзак: тетрадь была на месте. Валерия без колебаний одолжила ему денег. «Теперь ты должен мне целую историю», — сказала она смеясь. Продолжение следует..."
+      }
+    ],
+    "glossary": [
+      { "es": "golpear", "ru": "ударять, обрушиваться" },
+      { "es": "corresponder a", "ru": "соответствовать" },
+      { "es": "la zapatería", "ru": "обувная мастерская" },
+      { "es": "perdido", "ru": "потерянный, растерянный" },
+      { "es": "brillar", "ru": "блестеть, сиять" },
+      { "es": "de un tirón", "ru": "одним рывком" },
+      { "es": "el efectivo", "ru": "наличные" },
+      { "es": "aliviado", "ru": "с облегчением" },
+      { "es": "prestar", "ru": "одалживать" },
+      { "es": "deber", "ru": "быть должным" }
+    ],
+    "questions": [
+      {
+        "q": "Что Дани нашёл по первому адресу из тетради?",
+        "options": ["Современную кофейню вместо мастерской", "Заброшенный дом", "Семью сапожника"],
+        "answer": 0
+      },
+      {
+        "q": "Чем Валерия предложила помочь?",
+        "options": ["Отвезти его на автобусе", "Спросить бабушку, которая знает весь район", "Дать адрес полиции"],
+        "answer": 1
+      },
+      {
+        "q": "Что случилось у метро?",
+        "options": ["Дани потерял тетрадь", "Дани встретил земляка", "У Дани вырвали кошелёк"],
+        "answer": 2
+      },
+      {
+        "q": "Почему Дани выдохнул с облегчением после кражи?",
+        "options": ["Тетрадь осталась в рюкзаке", "Кошелёк был пустой", "Воров поймали"],
+        "answer": 0
+      }
+    ]
+  },
+  {
+    "id": 35,
+    "title": "La foto de Oaxaca",
+    "titleRu": "Фотография из Оахаки",
+    "level": "B1",
+    "series": "Rumbo al sur",
+    "episode": 3,
+    "paragraphs": [
+      {
+        "es": "La abuela de Valeria cumplió su fama: en dos días localizó a la nieta del zapatero. La mujer abrazó a Dani como si fuera de la familia. «Mi abuelo hablaba de un español joven que cantaba para pagar el hospedaje», recordó. «Decía que tenía la voz triste y las manos rápidas para la guitarra».",
+        "ru": "Бабушка Валерии оправдала свою славу: за два дня она разыскала внучку сапожника. Женщина обняла Дани, как родного. «Мой дед рассказывал о молодом испанце, который пел, чтобы оплатить ночлег, — вспомнила она. — Говорил, что у него был грустный голос и быстрые руки для гитары»."
+      },
+      {
+        "es": "¿Su abuelo, cantante? Julio jamás había mencionado nada parecido. Dani y Valeria viajaron juntos a Oaxaca para las fiestas del Día de los Muertos, y entre velas y flores naranjas, Dani revisó otra vez el cuaderno, ahora con otros ojos. Entre las últimas páginas encontró una foto pequeña en blanco y negro que no había visto antes.",
+        "ru": "Его дед — певец? Хулио никогда не упоминал ничего подобного. Дани и Валерия вместе поехали в Оахаку на празднование Дня мёртвых, и среди свечей и оранжевых цветов Дани ещё раз пересмотрел тетрадь — теперь другими глазами. Между последними страницами он нашёл маленькую чёрно-белую фотографию, которую раньше не замечал."
+      },
+      {
+        "es": "En la foto, un Julio de veinte años sonreía con una guitarra en la mano. A su lado, una mujer joven de trenzas oscuras lo miraba a él, no a la cámara. Al dorso, con la letra del abuelo: «A. — Buenos Aires, 1974». La misma inicial que el nombre tachado de la primera página. Continuará...",
+        "ru": "На фото двадцатилетний Хулио улыбался с гитарой в руке. Рядом молодая женщина с тёмными косами смотрела на него, а не в камеру. На обороте, почерком деда: «А. — Буэнос-Айрес, 1974». Та же начальная буква, что и у зачёркнутого имени на первой странице. Продолжение следует..."
+      }
+    ],
+    "glossary": [
+      { "es": "cumplir su fama", "ru": "оправдать свою славу" },
+      { "es": "localizar", "ru": "разыскать, найти" },
+      { "es": "como si fuera", "ru": "как будто он/она..." },
+      { "es": "el hospedaje", "ru": "ночлег, проживание" },
+      { "es": "jamás", "ru": "никогда" },
+      { "es": "mencionar", "ru": "упоминать" },
+      { "es": "revisar", "ru": "пересматривать, проверять" },
+      { "es": "la trenza", "ru": "коса (волосы)" },
+      { "es": "al dorso", "ru": "на обороте" },
+      { "es": "la inicial", "ru": "начальная буква, инициал" }
+    ],
+    "questions": [
+      {
+        "q": "Что рассказывал сапожник о молодом испанце?",
+        "options": ["Он пел, чтобы оплатить ночлег", "Он чинил обувь", "Он продавал книги"],
+        "answer": 0
+      },
+      {
+        "q": "Куда Дани и Валерия поехали вместе?",
+        "options": ["В Акапулько на пляж", "В Оахаку на День мёртвых", "В Гвадалахару к её бабушке"],
+        "answer": 1
+      },
+      {
+        "q": "Что Дани нашёл между страницами тетради?",
+        "options": ["Билет на корабль", "Засушенный цветок", "Чёрно-белую фотографию"],
+        "answer": 2
+      },
+      {
+        "q": "Что было написано на обороте фото?",
+        "options": ["«А. — Буэнос-Айрес, 1974»", "«Моя свадьба»", "Адрес в Мехико"],
+        "answer": 0
+      }
+    ]
+  },
+  {
+    "id": 36,
+    "title": "La pista de Antigua",
+    "titleRu": "След в Антигуа",
+    "level": "B1",
+    "series": "Rumbo al sur",
+    "episode": 4,
+    "paragraphs": [
+      {
+        "es": "Valeria no pudo pedir más días libres, así que Dani siguió solo en un autobús nocturno hacia Guatemala. Se despidieron sin saber muy bien qué decirse; él prometió escribirle cada vez que encontrara algo. «Más te vale», respondió ella, y le regaló una pulsera de hilo rojo «para el camino».",
+        "ru": "Валерия не смогла взять ещё выходных, так что Дани поехал дальше один, ночным автобусом в Гватемалу. Они попрощались, не очень зная, что сказать друг другу; он пообещал писать ей каждый раз, когда что-то найдёт. «Уж постарайся», — ответила она и подарила ему браслет из красной нити «на дорогу»."
+      },
+      {
+        "es": "En Antigua, entre volcanes y calles empedradas, la segunda dirección del cuaderno seguía existiendo: una casa amarilla con un patio lleno de buganvillas. La familia Morales reconoció el apellido de su abuelo al instante. «¡El español del arpa rota!», exclamó el padre. «Mi madre contaba que se quedó un mes entero reparando el arpa de la iglesia. No aceptó ni un centavo».",
+        "ru": "В Антигуа, среди вулканов и мощёных улиц, второй адрес из тетради всё ещё существовал: жёлтый дом с двориком, заросшим бугенвиллией. Семья Моралес мгновенно узнала фамилию его деда. «Испанец сломанной арфы! — воскликнул отец. — Моя мать рассказывала, что он целый месяц чинил арфу для церкви. И не взял ни сентаво»."
+      },
+      {
+        "es": "Durante la cena, la abuela Morales, ya muy mayor, tomó la mano de Dani y bajó la voz: «Tu abuelo era un hombre bueno con una pena grande. Le debía una promesa a alguien del Perú, un tal Quispe, de Cuzco. Decía que no podría volver a España en paz sin cumplirla. ¿La cumplió?». Dani no supo qué responder. Continuará...",
+        "ru": "За ужином очень пожилая бабушка Моралес взяла Дани за руку и понизила голос: «Твой дед был хорошим человеком с большой печалью. Он был должен сдержать обещание кому-то из Перу, некоему Киспе из Куско. Говорил, что не сможет спокойно вернуться в Испанию, не выполнив его. Он его выполнил?». Дани не знал, что ответить. Продолжение следует..."
+      }
+    ],
+    "glossary": [
+      { "es": "despedirse", "ru": "прощаться" },
+      { "es": "más te vale", "ru": "уж постарайся; смотри у меня" },
+      { "es": "la pulsera", "ru": "браслет" },
+      { "es": "empedrado", "ru": "мощёный" },
+      { "es": "reconocer", "ru": "узнавать" },
+      { "es": "al instante", "ru": "мгновенно" },
+      { "es": "el arpa", "ru": "арфа" },
+      { "es": "el centavo", "ru": "сентаво, грош" },
+      { "es": "la pena", "ru": "печаль, боль" },
+      { "es": "un tal", "ru": "некий" }
+    ],
+    "questions": [
+      {
+        "q": "Что Валерия подарила Дани на прощание?",
+        "options": ["Браслет из красной нити", "Карту Гватемалы", "Свою фотографию"],
+        "answer": 0
+      },
+      {
+        "q": "Как семья Моралес запомнила деда Дани?",
+        "options": ["Как торговца кофе", "Как «испанца сломанной арфы»", "Как учителя музыки"],
+        "answer": 1
+      },
+      {
+        "q": "Что дед сделал для церкви Антигуа?",
+        "options": ["Написал для неё песню", "Подарил колокол", "Месяц чинил арфу бесплатно"],
+        "answer": 2
+      },
+      {
+        "q": "Что рассказала бабушка Моралес?",
+        "options": ["Дед был должен сдержать обещание некоему Киспе из Куско", "Дед оставил в Антигуа долг", "Дед хотел остаться в Гватемале"],
+        "answer": 0
+      }
+    ]
+  },
+  {
+    "id": 37,
+    "title": "La deuda de Cuzco",
+    "titleRu": "Долг в Куско",
+    "level": "B1",
+    "series": "Rumbo al sur",
+    "episode": 5,
+    "paragraphs": [
+      {
+        "es": "Cuzco recibió a Dani con un sol blanco y un dolor de cabeza feroz: el mal de altura no perdona a los que llegan con prisa. Tres días después, ya recuperado y tras visitar Machu Picchu al amanecer, encontró la casa de los Quispe en el barrio de San Blas, gracias al cuaderno y a medio vecindario.",
+        "ru": "Куско встретил Дани белым солнцем и свирепой головной болью: горная болезнь не прощает тех, кто приезжает второпях. Три дня спустя, уже придя в себя и побывав на Мачу-Пикчу на рассвете, он нашёл дом семьи Киспе в квартале Сан-Блас — благодаря тетради и половине округи."
+      },
+      {
+        "es": "El señor Quispe, un hombre de unos ochenta años y ojos llenos de humor, escuchó el nombre de Julio y soltó una carcajada que se oyó en toda la calle. «¡Medio siglo esperando! Tu abuelo me debe una guitarra. Se la presté para un concurso en Lima y el muy pícaro se fue con ella hasta Buenos Aires. Me mandó una carta prometiendo devolverla. Todavía la espero».",
+        "ru": "Сеньор Киспе, мужчина лет восьмидесяти с полными юмора глазами, услышав имя Хулио, расхохотался на всю улицу. «Полвека жду! Твой дед должен мне гитару. Я одолжил её ему для конкурса в Лиме, а этот плут уехал с ней аж в Буэнос-Айрес. Прислал письмо с обещанием вернуть. До сих пор жду»."
+      },
+      {
+        "es": "Dani se deshizo en disculpas, pero el viejo lo paró con la mano: «La guitarra fue la mejor inversión de mi vida, muchacho. Ven, quiero enseñarte algo». De un baúl sacó un paquete de cartas amarillentas. «Tu abuelo me escribió durante años. Aquí está toda su historia. También la de Amalia». Ahí estaba por fin: el nombre tachado tenía dueña. Continuará...",
+        "ru": "Дани рассыпался в извинениях, но старик остановил его рукой: «Эта гитара стала лучшим вложением моей жизни, парень. Идём, я хочу тебе кое-что показать». Из сундука он достал пачку пожелтевших писем. «Твой дед писал мне годами. Здесь вся его история. И история Амалии тоже». Вот оно: у зачёркнутого имени была хозяйка. Продолжение следует..."
+      }
+    ],
+    "glossary": [
+      { "es": "feroz", "ru": "свирепый" },
+      { "es": "el mal de altura", "ru": "горная болезнь" },
+      { "es": "al amanecer", "ru": "на рассвете" },
+      { "es": "el vecindario", "ru": "округа, соседи" },
+      { "es": "soltar una carcajada", "ru": "расхохотаться" },
+      { "es": "el concurso", "ru": "конкурс" },
+      { "es": "el pícaro", "ru": "плут, хитрец" },
+      { "es": "deshacerse en disculpas", "ru": "рассыпаться в извинениях" },
+      { "es": "la inversión", "ru": "вложение, инвестиция" },
+      { "es": "el baúl", "ru": "сундук" },
+      { "es": "amarillento", "ru": "пожелтевший" }
+    ],
+    "questions": [
+      {
+        "q": "Как Куско встретил Дани?",
+        "options": ["Горной болезнью", "Дождём", "Праздником"],
+        "answer": 0
+      },
+      {
+        "q": "Какой «долг» был у деда перед сеньором Киспе?",
+        "options": ["Деньги за жильё", "Одолженная гитара, которую он так и не вернул", "Обещание приехать на свадьбу"],
+        "answer": 1
+      },
+      {
+        "q": "Как сеньор Киспе отнёсся к этой истории?",
+        "options": ["Со старой обидой", "Равнодушно", "С юмором — «лучшее вложение жизни»"],
+        "answer": 2
+      },
+      {
+        "q": "Что сеньор Киспе достал из сундука?",
+        "options": ["Письма деда за многие годы", "Старую гитару", "Фотографию Амалии"],
+        "answer": 0
+      }
+    ]
+  },
+  {
+    "id": 38,
+    "title": "Cartas en el altiplano",
+    "titleRu": "Письма на альтиплано",
+    "level": "B1",
+    "series": "Rumbo al sur",
+    "episode": 6,
+    "paragraphs": [
+      {
+        "es": "Dani leyó las cartas en el largo viaje en autobús por el altiplano boliviano, con el salar de Uyuni brillando al fondo como un espejo infinito. La historia se completaba carta a carta: Julio había llegado a Buenos Aires en 1973 y cantaba en los cafés de San Telmo. Allí conoció a Amalia, bailarina de tango. Se enamoraron como en las canciones: rápido y sin remedio.",
+        "ru": "Дани читал письма в долгой автобусной дороге через боливийское альтиплано, пока вдали, как бесконечное зеркало, сверкал солончак Уюни. История складывалась письмо за письмом: Хулио приехал в Буэнос-Айрес в 1973-м и пел в кафе Сан-Тельмо. Там он познакомился с Амалией, танцовщицей танго. Они влюбились, как в песнях: быстро и безнадёжно."
+      },
+      {
+        "es": "Pero en 1975 murió el padre de Julio, y él tuvo que volver a España para hacerse cargo de la familia. Le prometió a Amalia regresar en un año. La vida decidió otra cosa: la fábrica, las deudas, los hermanos pequeños. Cuando por fin ahorró para el pasaje, ya se había casado con la abuela de Dani. Nunca volvió. Y nunca se perdonó no haber escrito para explicarlo.",
+        "ru": "Но в 1975-м умер отец Хулио, и ему пришлось вернуться в Испанию, чтобы взять на себя заботу о семье. Он пообещал Амалии вернуться через год. Жизнь решила иначе: фабрика, долги, младшие братья. Когда он наконец накопил на билет, он уже был женат на бабушке Дани. Он так и не вернулся. И так и не простил себе, что не написал ей всё объяснить."
+      },
+      {
+        "es": "La última carta al señor Quispe, fechada hacía solo cinco años, terminaba así: «Fui feliz con mi mujer, que en paz descanse, y no cambiaría mi vida. Pero hay una deuda que me pesa más que tu guitarra, amigo: nunca le pedí perdón a Amalia. Ya soy viejo para el viaje. Quizá algún día alguien lo haga por mí». Dani entendió por fin cuál era su verdadera misión. Continuará...",
+        "ru": "Последнее письмо сеньору Киспе, датированное всего пятью годами ранее, заканчивалось так: «Я был счастлив с моей женой, покойся она с миром, и не поменял бы свою жизнь. Но есть долг, который тяготит меня больше твоей гитары, друг: я так и не попросил прощения у Амалии. Я уже стар для такого путешествия. Может, однажды кто-то сделает это за меня». Дани наконец понял, в чём его настоящая миссия. Продолжение следует..."
+      }
+    ],
+    "glossary": [
+      { "es": "el altiplano", "ru": "альтиплано, высокогорное плато" },
+      { "es": "el salar", "ru": "солончак" },
+      { "es": "sin remedio", "ru": "безнадёжно, неизбежно" },
+      { "es": "hacerse cargo de", "ru": "взять на себя заботу о" },
+      { "es": "la deuda", "ru": "долг" },
+      { "es": "ahorrar", "ru": "копить" },
+      { "es": "el pasaje", "ru": "билет (на транспорт)" },
+      { "es": "que en paz descanse", "ru": "покойся с миром" },
+      { "es": "pesar", "ru": "тяготить; весить" },
+      { "es": "la misión", "ru": "миссия" }
+    ],
+    "questions": [
+      {
+        "q": "Кем была Амалия?",
+        "options": ["Танцовщицей танго", "Певицей", "Художницей"],
+        "answer": 0
+      },
+      {
+        "q": "Почему Хулио вернулся в Испанию в 1975 году?",
+        "options": ["Его депортировали", "Умер его отец, нужно было заботиться о семье", "Он разлюбил Амалию"],
+        "answer": 1
+      },
+      {
+        "q": "Что Хулио так и не простил себе?",
+        "options": ["Что не вернул гитару", "Что уехал из Аргентины", "Что не написал Амалии и не объяснился"],
+        "answer": 2
+      },
+      {
+        "q": "Какую «настоящую миссию» понял Дани?",
+        "options": ["Попросить прощения у Амалии за деда", "Вернуть гитару в Куско", "Написать книгу о деде"],
+        "answer": 0
+      }
+    ]
+  },
+  {
+    "id": 39,
+    "title": "Amalia",
+    "titleRu": "Амалия",
+    "level": "B1",
+    "series": "Rumbo al sur",
+    "episode": 7,
+    "paragraphs": [
+      {
+        "es": "Buenos Aires olía a café y a papel de libro viejo. Dani tardó una semana en encontrar a Amalia: los milongueros de San Telmo la conocían bien. «¿La profesora Amalia? Enseña tango los jueves en el club Sur», le dijeron. Tenía ochenta años y la espalda más recta que Dani había visto en su vida.",
+        "ru": "Буэнос-Айрес пах кофе и страницами старых книг. Дани потребовалась неделя, чтобы найти Амалию: завсегдатаи милонг Сан-Тельмо хорошо её знали. «Профессор Амалия? Преподаёт танго по четвергам в клубе Сур», — сказали ему. Ей было восемьдесят, и у неё была самая прямая спина, которую Дани видел в жизни."
+      },
+      {
+        "es": "Cuando Dani se presentó y dijo el nombre de su abuelo, Amalia no se sorprendió. Sonrió despacio, como quien recibe una carta que esperaba desde hace décadas. «Tienes sus mismos ojos», dijo. Escuchó la historia entera en silencio, con las manos cruzadas sobre el bastón, y al final pronunció una sola frase: «Dile que lo perdoné en 1980. La vida es demasiado corta para el rencor... pero demasiado larga para olvidar un buen tango».",
+        "ru": "Когда Дани представился и назвал имя деда, Амалия не удивилась. Она медленно улыбнулась — как человек, получивший письмо, которого ждал десятилетиями. «У тебя его глаза», — сказала она. Она выслушала всю историю молча, сложив руки на трости, и в конце произнесла одну фразу: «Передай ему, что я простила его в 1980-м. Жизнь слишком коротка для обиды... но слишком длинна, чтобы забыть хорошее танго»."
+      },
+      {
+        "es": "Esa noche, en el club, Amalia le mostró un papel amarillento enmarcado en la pared: una partitura escrita a mano. «Tu abuelo compuso este tango para mí antes de irse. Se llama 'Rumbo al sur'. Nunca dejamos de tocarlo aquí». Dani sacó el teléfono con las manos temblando: era hora de hacer una videollamada a Bilbao. Continuará...",
+        "ru": "Тем вечером в клубе Амалия показала ему пожелтевший лист в рамке на стене: партитуру, написанную от руки. «Твой дед сочинил это танго для меня перед отъездом. Оно называется «Rumbo al sur» — «Курс на юг». Мы никогда не переставали играть его здесь». Дани достал телефон дрожащими руками: пришло время видеозвонка в Бильбао. Продолжение следует..."
+      }
+    ],
+    "glossary": [
+      { "es": "tardar en", "ru": "потратить время на" },
+      { "es": "el milonguero", "ru": "завсегдатай милонг (танго-вечеров)" },
+      { "es": "recto", "ru": "прямой" },
+      { "es": "presentarse", "ru": "представиться" },
+      { "es": "la década", "ru": "десятилетие" },
+      { "es": "el bastón", "ru": "трость" },
+      { "es": "el rencor", "ru": "обида, злопамятство" },
+      { "es": "enmarcado", "ru": "в рамке" },
+      { "es": "la partitura", "ru": "партитура, ноты" },
+      { "es": "componer", "ru": "сочинять" },
+      { "es": "temblar", "ru": "дрожать" }
+    ],
+    "questions": [
+      {
+        "q": "Как Дани нашёл Амалию?",
+        "options": ["Через завсегдатаев милонг Сан-Тельмо", "По адресу из тетради", "Через газетное объявление"],
+        "answer": 0
+      },
+      {
+        "q": "Как Амалия отреагировала на имя Хулио?",
+        "options": ["Расплакалась", "Не удивилась и медленно улыбнулась", "Не захотела разговаривать"],
+        "answer": 1
+      },
+      {
+        "q": "Что Амалия просила передать Хулио?",
+        "options": ["Что ждёт его в Буэнос-Айресе", "Что забыла его", "Что простила его ещё в 1980-м"],
+        "answer": 2
+      },
+      {
+        "q": "Что висело в рамке на стене клуба?",
+        "options": ["Партитура танго, которое Хулио сочинил для Амалии", "Афиша концерта 1974 года", "Фотография молодых Хулио и Амалии"],
+        "answer": 0
+      }
+    ]
+  },
+  {
+    "id": 40,
+    "title": "La canción del abuelo",
+    "titleRu": "Дедушкина песня",
+    "level": "B1",
+    "series": "Rumbo al sur",
+    "episode": 8,
+    "paragraphs": [
+      {
+        "es": "La videollamada duró casi dos horas. Julio y Amalia hablaron como si los cincuenta años fueran una semana de vacaciones: se rieron, se interrumpieron, terminaron las frases el uno del otro. Dani y los músicos del club escuchaban en silencio, conscientes de estar viendo algo que no se ve dos veces en la vida. «Gracias, muchacho», dijo el abuelo al despedirse, con la voz rota. «Ya puedo estar en paz».",
+        "ru": "Видеозвонок длился почти два часа. Хулио и Амалия говорили так, будто пятьдесят лет были неделей отпуска: смеялись, перебивали друг друга, договаривали фразы друг за друга. Дани и музыканты клуба слушали молча, понимая, что видят то, что не увидишь дважды в жизни. «Спасибо, парень, — сказал дед на прощание сорвавшимся голосом. — Теперь я могу быть спокоен»."
+      },
+      {
+        "es": "El jueves siguiente, el club Sur estaba lleno. El señor Quispe había mandado desde Cuzco un regalo con una nota: «La guitarra ya sabe el camino de vuelta. Que la toque el nieto». Con esa guitarra vieja y una partitura amarillenta, Dani, que apenas sabía cuatro acordes, tocó «Rumbo al sur» acompañado por la orquesta. Tocó mal y nadie se lo tuvo en cuenta: había lágrimas hasta en la barra.",
+        "ru": "В следующий четверг клуб Сур был полон. Сеньор Киспе прислал из Куско подарок с запиской: «Гитара уже знает дорогу назад. Пусть на ней сыграет внук». С этой старой гитарой и пожелтевшей партитурой Дани, знавший от силы четыре аккорда, сыграл «Rumbo al sur» в сопровождении оркестра. Сыграл плохо — и никто не поставил ему это в вину: слёзы были даже за барной стойкой."
+      },
+      {
+        "es": "Dani decidió quedarse en Buenos Aires una temporada: encontró trabajo en una librería y clases de guitarra los martes. En la primera página de un cuaderno nuevo escribió: «Direcciones de gente buena. Empezar por: Valeria, Ciudad de México». Sonrió al recordar la pulsera roja. Al fin y al cabo, su historia también merecía un segundo episodio. FIN.",
+        "ru": "Дани решил остаться в Буэнос-Айресе на время: нашёл работу в книжном и уроки гитары по вторникам. На первой странице новой тетради он написал: «Адреса хороших людей. Начать с: Валерия, Мехико». Он улыбнулся, вспомнив красный браслет. В конце концов, его собственная история тоже заслуживала второй серии. КОНЕЦ."
+      }
+    ],
+    "glossary": [
+      { "es": "consciente de", "ru": "осознающий, понимающий" },
+      { "es": "con la voz rota", "ru": "сорвавшимся голосом" },
+      { "es": "estar en paz", "ru": "быть в мире, спокойным" },
+      { "es": "el camino de vuelta", "ru": "обратный путь" },
+      { "es": "apenas", "ru": "едва, еле" },
+      { "es": "el acorde", "ru": "аккорд" },
+      { "es": "tener en cuenta", "ru": "принимать в расчёт, ставить в вину" },
+      { "es": "la temporada", "ru": "сезон, период времени" },
+      { "es": "la librería", "ru": "книжный магазин" },
+      { "es": "al fin y al cabo", "ru": "в конце концов" }
+    ],
+    "questions": [
+      {
+        "q": "Как прошёл видеозвонок Хулио и Амалии?",
+        "options": ["Они говорили два часа, как будто не было пятидесяти лет", "Они молчали от волнения", "Связь всё время прерывалась"],
+        "answer": 0
+      },
+      {
+        "q": "Какой подарок прислал сеньор Киспе?",
+        "options": ["Пончо из Куско", "Ту самую гитару — «пусть сыграет внук»", "Новую тетрадь"],
+        "answer": 1
+      },
+      {
+        "q": "Как публика отнеслась к плохой игре Дани?",
+        "options": ["Посмеялась над ним", "Попросила сыграть ещё раз", "Никто не поставил ему это в вину — все были растроганы"],
+        "answer": 2
+      },
+      {
+        "q": "Чем заканчивается история Дани?",
+        "options": ["Он остаётся в Буэнос-Айресе и заводит новую тетрадь, начиная с Валерии", "Он возвращается в Бильбао", "Он едет обратно в Куско"],
+        "answer": 0
+      }
+    ]
+  }
+]

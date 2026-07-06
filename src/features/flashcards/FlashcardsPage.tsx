@@ -4,7 +4,10 @@ import { Button } from '../../components/Button'
 import { addCard } from '../../lib/cards'
 import { getDueCards, reviewCard, type DueCard } from '../../lib/fsrs'
 import { logActivity } from '../../lib/activity'
-import type { Rating } from '../../types'
+import { speak } from '../../lib/speech'
+import { useLanguage } from '../../context/LanguageContext'
+import { PacksSheet } from './PacksSheet'
+import type { AppLang, Rating } from '../../types'
 
 const ratingButtons: { rating: Rating; label: string; className: string }[] = [
   { rating: 'again', label: 'Снова', className: 'bg-red-500 hover:bg-red-400 text-white' },
@@ -14,6 +17,7 @@ const ratingButtons: { rating: Rating; label: string; className: string }[] = [
 ]
 
 export function FlashcardsPage() {
+  const { lang } = useLanguage()
   const [queue, setQueue] = useState<DueCard[]>([])
   const [index, setIndex] = useState(0)
   const [revealed, setRevealed] = useState(false)
@@ -21,12 +25,13 @@ export function FlashcardsPage() {
   const [reviewedCount, setReviewedCount] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [showAdd, setShowAdd] = useState(false)
+  const [showPacks, setShowPacks] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      const due = await getDueCards()
+      const due = await getDueCards(50, lang)
       setQueue(due)
       setIndex(0)
       setRevealed(false)
@@ -35,9 +40,11 @@ export function FlashcardsPage() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [lang])
 
   useEffect(() => {
+    setShowPacks(false)
+    setReviewedCount(0)
     void load()
   }, [load])
 
@@ -60,16 +67,34 @@ export function FlashcardsPage() {
     <div className="flex flex-col gap-4">
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">🎴 Колода</h1>
-        <Button
-          variant="secondary"
-          className="px-3 py-2 text-sm"
-          onClick={() => setShowAdd((s) => !s)}
-        >
-          {showAdd ? 'Закрыть' : '+ Слово'}
-        </Button>
+        <div className="flex gap-2">
+          {lang === 'es' && (
+            <Button
+              variant="secondary"
+              className="px-3 py-2 text-sm"
+              onClick={() => {
+                setShowPacks((s) => !s)
+                setShowAdd(false)
+              }}
+            >
+              {showPacks ? 'Закрыть' : '📦 Паки'}
+            </Button>
+          )}
+          <Button
+            variant="secondary"
+            className="px-3 py-2 text-sm"
+            onClick={() => {
+              setShowAdd((s) => !s)
+              setShowPacks(false)
+            }}
+          >
+            {showAdd ? 'Закрыть' : '+ Слово'}
+          </Button>
+        </div>
       </header>
 
-      {showAdd && <AddCardForm onAdded={load} />}
+      {showAdd && <AddCardForm lang={lang} onAdded={load} />}
+      {showPacks && <PacksSheet onAdded={load} />}
 
       {error && (
         <Card className="border-red-300 bg-red-50 dark:bg-red-950/30">
@@ -86,7 +111,16 @@ export function FlashcardsPage() {
           </p>
           <Card className="min-h-[220px] flex-col items-center justify-center text-center">
             <div className="flex min-h-[180px] flex-col items-center justify-center gap-3">
-              <p className="text-3xl font-bold">{current.card.front}</p>
+              <div className="flex items-center gap-2">
+                <p className="text-3xl font-bold">{current.card.front}</p>
+                <button
+                  onClick={() => speak(current.card.front, { lang })}
+                  className="rounded-full bg-slate-100 px-2.5 py-1 text-lg dark:bg-slate-700"
+                  aria-label="Озвучить"
+                >
+                  🔊
+                </button>
+              </div>
               {current.card.ipa && (
                 <p className="text-slate-400">/{current.card.ipa}/</p>
               )}
@@ -132,7 +166,9 @@ export function FlashcardsPage() {
               : 'Карточек к повторению нет'}
           </p>
           <p className="mt-1 text-sm text-slate-500">
-            Добавь слова кнопкой «+ Слово» или из раздела «Ввод».
+            {lang === 'es'
+              ? 'Добавь слова кнопкой «📦 Паки», «+ Слово» или из раздела «Ввод».'
+              : 'Добавь слова кнопкой «+ Слово» или из раздела «Ввод».'}
           </p>
           <Button variant="secondary" className="mt-4" onClick={load}>
             Обновить
@@ -143,7 +179,7 @@ export function FlashcardsPage() {
   )
 }
 
-function AddCardForm({ onAdded }: { onAdded: () => void }) {
+function AddCardForm({ lang, onAdded }: { lang: AppLang; onAdded: () => void }) {
   const [front, setFront] = useState('')
   const [back, setBack] = useState('')
   const [example, setExample] = useState('')
@@ -162,6 +198,7 @@ function AddCardForm({ onAdded }: { onAdded: () => void }) {
         front: front.trim(),
         back: back.trim() || undefined,
         example: example.trim() || undefined,
+        lang,
         source: 'manual',
       })
       setFront('')
@@ -180,7 +217,7 @@ function AddCardForm({ onAdded }: { onAdded: () => void }) {
     <Card className="flex flex-col gap-2">
       <input
         className={inputClass}
-        placeholder="Слово / фраза (англ.)"
+        placeholder={lang === 'es' ? 'Слово / фраза (исп.)' : 'Слово / фраза (англ.)'}
         value={front}
         onChange={(e) => setFront(e.target.value)}
       />
