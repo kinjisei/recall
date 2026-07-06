@@ -169,3 +169,23 @@ export interface WritingSubmission {
   feedback: unknown | null
   created_at: string
 }
+
+// ---------------------------------------------------------------------------
+// Фаза 4: режим «Преподаватель».
+// ---------------------------------------------------------------------------
+
+/** Связь преподаватель — ученица (создаётся вводом кода-приглашения). */
+export interface TeacherStudent {
+  id: string
+  teacher_id: string
+  student_id: string
+  created_at: string
+}
+
+/** Назначение колоды преподавателя ученице (только чтение карточек). */
+export interface DeckAssignment {
+  id: string
+  deck_id: string
+  student_id: string
+  created_at: string
+}

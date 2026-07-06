@@ -7,6 +7,7 @@ import { getStreak, getTodayTypes } from '../../lib/activity'
 import { getDueCards } from '../../lib/fsrs'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
+import { TeacherBlock } from '../teacher/TeacherBlock'
 import type { ActivityType, Profile } from '../../types'
 
 const sessionBlocks: {
@@ -117,6 +118,8 @@ export function DashboardPage() {
           })}
         </div>
       </section>
+
+      <TeacherBlock profile={profile} />
     </div>
   )
 }

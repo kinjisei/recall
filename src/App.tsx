@@ -9,6 +9,7 @@ import { FlashcardsPage } from './features/flashcards/FlashcardsPage'
 import { ReaderPage } from './features/reader/ReaderPage'
 import { PronunciationPage } from './features/pronunciation/PronunciationPage'
 import { ConversationPage } from './features/conversation/ConversationPage'
+import { TeacherPage } from './features/teacher/TeacherPage'
 
 export default function App() {
   return (
@@ -29,6 +30,7 @@ export default function App() {
               <Route path="/reader" element={<ReaderPage />} />
               <Route path="/pronunciation" element={<PronunciationPage />} />
               <Route path="/conversation" element={<ConversationPage />} />
+              <Route path="/teacher" element={<TeacherPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
