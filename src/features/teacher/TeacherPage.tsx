@@ -65,8 +65,9 @@ function TeacherDashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // «Загрузка…» только при первом открытии: при обновлениях список остаётся
+  // на экране, иначе раскрытые колоды учениц схлопываются при каждом действии.
   const load = useCallback(async () => {
-    setLoading(true)
     setError(null)
     try {
       const [c, s, d] = await Promise.all([
