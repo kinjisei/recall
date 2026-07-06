@@ -5,7 +5,9 @@
 // ============================================================================
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import type { ChatTurn } from '../src/types'
-import { callGemini, DEFAULT_GEMINI_MODEL } from './_core'
+// расширение .js обязательно: "type": "module" — Vercel/Node в ESM-режиме
+// не находит модуль без расширения (FUNCTION_INVOCATION_FAILED при старте)
+import { callGemini, DEFAULT_GEMINI_MODEL } from './_core.js'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS — на случай вызова задеплоенного эндпоинта с localhost при разработке
