@@ -1,7 +1,18 @@
 @import 'tailwindcss';
 
+/* ==========================================================================
+   Recall — базовые стили и токены дизайн-системы.
+   Акцент: sky (голубой) + индиго-градиент для «геройских» элементов.
+   Всё адаптивно, поддерживает светлую/тёмную тему и prefers-reduced-motion.
+   ========================================================================== */
+
 :root {
   color-scheme: light dark;
+  /* Семантические токены акцента (используются в градиентах и кольцах фокуса) */
+  --brand-500: #0ea5e9; /* sky-500 */
+  --brand-600: #0284c7; /* sky-600 */
+  --brand-700: #0369a1; /* sky-700 */
+  --accent-500: #6366f1; /* indigo-500 — второй цвет градиента */
 }
 
 html,
@@ -12,7 +23,60 @@ body,
 
 body {
   margin: 0;
+  min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
   font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
     Helvetica, Arial, sans-serif;
+}
+
+/* Убираем серую вспышку при тапе на мобильных и лишнюю задержку. */
+button,
+a,
+[role='button'] {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Единое, доступное кольцо фокуса (только для клавиатуры). */
+:where(button, a, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--brand-600);
+  outline-offset: 2px;
+  border-radius: 0.5rem;
+}
+
+/* Градиент бренда — для стрик-героя и главных кнопок. */
+.bg-brand-gradient {
+  background-image: linear-gradient(135deg, var(--brand-500), var(--accent-500));
+}
+
+/* Мягкое появление контента. */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-fade-in {
+  animation: fade-in 0.22s ease-out both;
+}
+
+/* Уважаем настройку «уменьшить движение». */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Тонкий скроллбар, не перетягивающий внимание. */
+* {
+  scrollbar-width: thin;
 }

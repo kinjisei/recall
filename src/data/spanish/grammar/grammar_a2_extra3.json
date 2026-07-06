@@ -1,0 +1,82 @@
+[
+  {
+    "title": "Saber или conocer",
+    "level": "A2",
+    "order": 25,
+    "theory": [
+      { "type": "paragraph", "text": "Оба глагола переводятся «знать», но не взаимозаменяемы. Saber — знать факт, информацию или уметь что-то делать (saber + инфинитив). Conocer — быть знакомым с человеком, местом или вещью." },
+      { "type": "table", "headers": ["Глагол", "Употребление", "Пример"], "rows": [["saber", "факты, информация", "Sé la respuesta / Sé dónde vive"], ["saber + inf.", "умение", "Sé nadar"], ["conocer", "люди, места", "Conozco a Juan / Conozco Madrid"]] },
+      { "type": "example", "es": "No sé su nombre, pero conozco a su hermano.", "ru": "Я не знаю его имени, но знаком с его братом." },
+      { "type": "paragraph", "text": "Формы «yo» у обоих особые: sé (saber) и conozco (conocer). С людьми conocer требует личное a: conozco A María." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "¿___ dónde vive Marta?", "options": ["Conoces", "Sabes", "Conoce", "Sabéis"], "answer": 1 },
+      { "type": "mcq", "prompt": "¿___ Barcelona? Es preciosa.", "options": ["Sabes", "Conoces", "Sabe", "Sabemos"], "answer": 1 },
+      { "type": "fill", "prompt": "Yo no ___ cocinar. (saber)", "answer": "sé", "hint": "умение = saber, форма yo" },
+      { "type": "mcq", "prompt": "Quiero ___ a tus padres.", "options": ["saber", "conocer", "saber a", "conocer de"], "answer": 1 },
+      { "type": "mcq", "prompt": "Ella ___ hablar tres idiomas.", "options": ["conoce", "sabe", "conozco", "saben"], "answer": 1 },
+      { "type": "fill", "prompt": "___ un restaurante muy bueno cerca de aquí. (conocer, yo)", "answer": "Conozco", "hint": "форма yo: -zco" },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["No", "sé", "nadar", "muy", "bien"], "answer": ["No", "sé", "nadar", "muy", "bien"] }
+    ]
+  },
+  {
+    "title": "Превосходная степень (el más… / -ísimo)",
+    "level": "A2",
+    "order": 26,
+    "theory": [
+      { "type": "paragraph", "text": "«Самый…» выражается конструкцией el/la/los/las (+ существительное) + más/menos + прилагательное (+ de …): la ciudad más bonita del país. «Очень-очень» — суффиксом -ísimo: buenísimo, interesantísima." },
+      { "type": "table", "headers": ["Обычная", "Особая форма"], "rows": [["más bueno", "mejor (лучше, el mejor — лучший)"], ["más malo", "peor"], ["más grande (возраст)", "mayor (старший)"], ["más pequeño (возраст)", "menor (младший)"]] },
+      { "type": "example", "es": "Es el restaurante más caro de la ciudad.", "ru": "Это самый дорогой ресторан в городе." },
+      { "type": "paragraph", "text": "Суффикс -ísimo согласуется в роде и числе: un libro malísimo, unas playas larguísimas. Конечная гласная прилагательного отбрасывается: interesante → interesantísimo." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "Es la playa ___ bonita de la isla.", "options": ["muy", "más", "tan", "mucho"], "answer": 1 },
+      { "type": "mcq", "prompt": "«Este libro es buenísimo» означает…", "options": ["книга самая лучшая", "книга очень-очень хорошая", "книга довольно неплохая"], "answer": 1 },
+      { "type": "fill", "prompt": "Es el ___ restaurante de la ciudad. (лучший)", "answer": "mejor", "hint": "особая форма bueno" },
+      { "type": "mcq", "prompt": "María es la ___ de sus hermanas. (старшая)", "options": ["más grande", "mayor", "mejor", "menor"], "answer": 1 },
+      { "type": "fill", "prompt": "La película es ___. (interesante + -ísimo, ж.р.)", "answer": "interesantísima", "hint": "конечная гласная отбрасывается" },
+      { "type": "mcq", "prompt": "Es el problema más difícil ___ todos.", "options": ["que", "de", "en", "por"], "answer": 1 },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Es", "la", "ciudad", "más", "bonita", "del", "país"], "answer": ["Es", "la", "ciudad", "más", "bonita", "del", "país"] }
+    ]
+  },
+  {
+    "title": "Глаголы направления: ir/venir, llevar/traer",
+    "level": "A2",
+    "order": 27,
+    "theory": [
+      { "type": "paragraph", "text": "Испанский строго различает направление относительно говорящего. Ir — идти ТУДА (от себя), venir — идти СЮДА (к говорящему). Точно так же с вещами: llevar — нести туда, traer — приносить сюда." },
+      { "type": "table", "headers": ["Туда (от меня)", "Сюда (ко мне)"], "rows": [["ir — voy al trabajo", "venir — ¿vienes a mi casa?"], ["llevar — llevo vino a la fiesta", "traer — trae vino cuando vengas"]] },
+      { "type": "example", "es": "¿Vienes a mi fiesta? Trae algo de beber.", "ru": "Придёшь на мою вечеринку? Принеси что-нибудь попить." },
+      { "type": "paragraph", "text": "По-русски «прийти/принести» не зависят от направления, поэтому это частая ошибка: нельзя сказать «*vengo a tu casa mañana» о чужом доме, если вас там нет — правильно voy a tu casa." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "¿___ a mi casa esta tarde? (движение к говорящему)", "options": ["Vas", "Vienes", "Llevas", "Vuelves"], "answer": 1 },
+      { "type": "mcq", "prompt": "Mañana ___ al médico. (yo, движение от себя)", "options": ["vengo", "voy", "traigo", "vienes"], "answer": 1 },
+      { "type": "mcq", "prompt": "Camarero, ¿me puede ___ la cuenta? (сюда, ко мне)", "options": ["llevar", "traer", "ir", "venir"], "answer": 1 },
+      { "type": "fill", "prompt": "Voy a ___ los libros a la biblioteca. (отнести туда)", "answer": "llevar", "hint": "движение от говорящего" },
+      { "type": "mcq", "prompt": "Ven aquí y ___ tu cuaderno.", "options": ["lleva", "trae", "va", "llevas"], "answer": 1 },
+      { "type": "fill", "prompt": "Este autobús te ___ al aeropuerto. (llevar)", "answer": "lleva", "hint": "везёт туда" },
+      { "type": "order", "prompt": "Соберите вопрос", "words": ["¿Me", "traes", "un", "vaso", "de", "agua?"], "answer": ["¿Me", "traes", "un", "vaso", "de", "agua?"] }
+    ]
+  },
+  {
+    "title": "Неопределённые слова (algo, alguien, alguno…)",
+    "level": "A2",
+    "order": 28,
+    "theory": [
+      { "type": "paragraph", "text": "Пары «что-то/ничего»: algo — nada, «кто-то/никто»: alguien — nadie, «какой-то/никакой»: alguno — ninguno. Отрицательные формы требуют отрицания no перед глаголом, если стоят после него: No veo nada." },
+      { "type": "table", "headers": ["Утверждение / вопрос", "Отрицание"], "rows": [["algo — ¿Quieres algo?", "nada — No quiero nada"], ["alguien — ¿Hay alguien?", "nadie — No hay nadie"], ["alguno/algún — ¿Tienes algún libro?", "ninguno/ningún — No tengo ningún libro"]] },
+      { "type": "example", "es": "¿Hay alguien en casa? — No, no hay nadie.", "ru": "Дома кто-нибудь есть? — Нет, никого нет." },
+      { "type": "paragraph", "text": "Перед существительным мужского рода единственного числа alguno и ninguno укорачиваются: algún amigo, ningún problema. Двойное отрицание в испанском — норма, а не ошибка." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "¿Hay ___ en casa?", "options": ["algo", "alguien", "nadie", "ningún"], "answer": 1 },
+      { "type": "mcq", "prompt": "No tengo ___ problema con eso.", "options": ["ninguno", "ningún", "nada", "alguno"], "answer": 1 },
+      { "type": "fill", "prompt": "¿Quieres ___ de comer? (что-нибудь)", "answer": "algo", "hint": "в вопросе — algo" },
+      { "type": "mcq", "prompt": "No veo a ___ aquí.", "options": ["alguien", "nadie", "nada", "ninguno"], "answer": 1 },
+      { "type": "mcq", "prompt": "¿Tienes ___ libro de español? (какой-нибудь)", "options": ["alguno", "algún", "alguien", "algo"], "answer": 1 },
+      { "type": "fill", "prompt": "No quiero ___, gracias. (ничего)", "answer": "nada", "hint": "после глагола с no" },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["No", "hay", "nadie", "en", "la", "oficina"], "answer": ["No", "hay", "nadie", "en", "la", "oficina"] }
+    ]
+  }
+]

@@ -1,0 +1,159 @@
+[
+  {
+    "title": "Артикли (el, la, un, una)",
+    "level": "A1",
+    "order": 1,
+    "theory": [
+      { "type": "paragraph", "text": "В испанском у каждого существительного есть род — мужской или женский. Артикль показывает род и число." },
+      { "type": "table", "headers": ["", "Мужской", "Женский"], "rows": [["Определённый ед.ч.", "el", "la"], ["Определённый мн.ч.", "los", "las"], ["Неопределённый ед.ч.", "un", "una"], ["Неопределённый мн.ч.", "unos", "unas"]] },
+      { "type": "example", "es": "el libro / un libro", "ru": "книга / (одна) книга — м.р." },
+      { "type": "example", "es": "la casa / una casa", "ru": "дом / (один) дом — ж.р." },
+      { "type": "paragraph", "text": "Определённый артикль (el, la) — о конкретном предмете. Неопределённый (un, una) — о новом или любом." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "___ casa es grande.", "options": ["El", "La", "Los", "Un"], "answer": 1 },
+      { "type": "mcq", "prompt": "Quiero ___ café.", "options": ["un", "una", "la", "unos"], "answer": 0 },
+      { "type": "fill", "prompt": "___ libros están en la mesa. (мн.ч., м.р., опред.)", "answer": "los", "hint": "мн. число, мужской род" },
+      { "type": "fill", "prompt": "Tengo ___ hermana. (неопред., ж.р.)", "answer": "una", "hint": "неопределённый артикль" },
+      { "type": "mcq", "prompt": "___ agua está fría.", "options": ["El", "La", "Un", "Los"], "answer": 0 },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["El", "perro", "es", "grande"], "answer": ["El", "perro", "es", "grande"] },
+      { "type": "fill", "prompt": "Veo ___ gatos en la calle. (неопред., мн.ч.)", "answer": "unos", "hint": "неопред. множественное" }
+    ]
+  },
+  {
+    "title": "Глагол SER (быть)",
+    "level": "A1",
+    "order": 2,
+    "theory": [
+      { "type": "paragraph", "text": "SER используют для постоянных характеристик: кто это, откуда, профессия, национальность, описание характера." },
+      { "type": "table", "headers": ["Местоимение", "Форма SER"], "rows": [["yo", "soy"], ["tú", "eres"], ["él/ella", "es"], ["nosotros", "somos"], ["vosotros", "sois"], ["ellos/ellas", "son"]] },
+      { "type": "example", "es": "Yo soy de Rusia.", "ru": "Я из России." },
+      { "type": "example", "es": "Ella es médica.", "ru": "Она врач." }
+    ],
+    "exercises": [
+      { "type": "fill", "prompt": "Yo ___ estudiante.", "answer": "soy", "hint": "yo" },
+      { "type": "fill", "prompt": "Tú ___ muy amable.", "answer": "eres", "hint": "tú" },
+      { "type": "mcq", "prompt": "Nosotros ___ amigos.", "options": ["soy", "es", "somos", "son"], "answer": 2 },
+      { "type": "mcq", "prompt": "Ellos ___ de España.", "options": ["es", "son", "somos", "eres"], "answer": 1 },
+      { "type": "fill", "prompt": "Ella ___ profesora.", "answer": "es", "hint": "él/ella" },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Yo", "soy", "de", "México"], "answer": ["Yo", "soy", "de", "México"] },
+      { "type": "mcq", "prompt": "¿Tú ___ ruso?", "options": ["eres", "es", "soy", "son"], "answer": 0 }
+    ]
+  },
+  {
+    "title": "Глагол ESTAR (находиться)",
+    "level": "A1",
+    "order": 3,
+    "theory": [
+      { "type": "paragraph", "text": "ESTAR используют для местоположения и временного состояния (настроение, самочувствие)." },
+      { "type": "table", "headers": ["Местоимение", "Форма ESTAR"], "rows": [["yo", "estoy"], ["tú", "estás"], ["él/ella", "está"], ["nosotros", "estamos"], ["vosotros", "estáis"], ["ellos/ellas", "están"]] },
+      { "type": "example", "es": "Estoy cansado.", "ru": "Я устал. (состояние)" },
+      { "type": "example", "es": "El libro está en la mesa.", "ru": "Книга на столе. (место)" }
+    ],
+    "exercises": [
+      { "type": "fill", "prompt": "Yo ___ en casa.", "answer": "estoy", "hint": "yo" },
+      { "type": "mcq", "prompt": "¿Cómo ___ tú?", "options": ["estás", "está", "estoy", "están"], "answer": 0 },
+      { "type": "fill", "prompt": "Nosotros ___ contentos.", "answer": "estamos", "hint": "nosotros" },
+      { "type": "mcq", "prompt": "Madrid ___ en España.", "options": ["es", "está", "estás", "son"], "answer": 1 },
+      { "type": "fill", "prompt": "Ellos ___ cansados.", "answer": "están", "hint": "ellos" },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["El", "gato", "está", "aquí"], "answer": ["El", "gato", "está", "aquí"] },
+      { "type": "mcq", "prompt": "¿Dónde ___ el baño?", "options": ["es", "está", "son", "estoy"], "answer": 1 }
+    ]
+  },
+  {
+    "title": "Настоящее время: глаголы на -AR",
+    "level": "A1",
+    "order": 4,
+    "theory": [
+      { "type": "paragraph", "text": "Правильные глаголы на -AR (hablar, trabajar, estudiar) спрягаются заменой окончания -ar на личное окончание." },
+      { "type": "table", "headers": ["Местоимение", "hablar"], "rows": [["yo", "hablo"], ["tú", "hablas"], ["él/ella", "habla"], ["nosotros", "hablamos"], ["vosotros", "habláis"], ["ellos/ellas", "hablan"]] },
+      { "type": "example", "es": "Hablo español.", "ru": "Я говорю по-испански." }
+    ],
+    "exercises": [
+      { "type": "fill", "prompt": "Yo ___ español. (hablar)", "answer": "hablo", "hint": "yo, -ar" },
+      { "type": "fill", "prompt": "Ella ___ en una oficina. (trabajar)", "answer": "trabaja", "hint": "él/ella" },
+      { "type": "mcq", "prompt": "Nosotros ___ medicina. (estudiar)", "options": ["estudio", "estudias", "estudiamos", "estudian"], "answer": 2 },
+      { "type": "fill", "prompt": "Tú ___ mucho. (trabajar)", "answer": "trabajas", "hint": "tú" },
+      { "type": "mcq", "prompt": "Ellos ___ inglés. (hablar)", "options": ["habla", "hablan", "hablamos", "hablo"], "answer": 1 },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Yo", "estudio", "español"], "answer": ["Yo", "estudio", "español"] },
+      { "type": "fill", "prompt": "Nosotros ___ en Madrid. (trabajar)", "answer": "trabajamos", "hint": "nosotros" }
+    ]
+  },
+  {
+    "title": "Настоящее время: глаголы на -ER и -IR",
+    "level": "A1",
+    "order": 5,
+    "theory": [
+      { "type": "paragraph", "text": "Глаголы на -ER (comer) и -IR (vivir) имеют похожие окончания, отличается только nosotros/vosotros." },
+      { "type": "table", "headers": ["Местоимение", "comer", "vivir"], "rows": [["yo", "como", "vivo"], ["tú", "comes", "vives"], ["él/ella", "come", "vive"], ["nosotros", "comemos", "vivimos"], ["ellos/ellas", "comen", "viven"]] },
+      { "type": "example", "es": "Vivo en Madrid y como a las dos.", "ru": "Я живу в Мадриде и обедаю в два." }
+    ],
+    "exercises": [
+      { "type": "fill", "prompt": "Yo ___ en Barcelona. (vivir)", "answer": "vivo", "hint": "yo, -ir" },
+      { "type": "mcq", "prompt": "Tú ___ mucha fruta. (comer)", "options": ["como", "comes", "come", "comen"], "answer": 1 },
+      { "type": "fill", "prompt": "Nosotros ___ pan. (comer)", "answer": "comemos", "hint": "nosotros, -er" },
+      { "type": "fill", "prompt": "Ellos ___ aquí. (vivir)", "answer": "viven", "hint": "ellos" },
+      { "type": "mcq", "prompt": "Ella ___ agua. (beber)", "options": ["bebo", "bebes", "bebe", "beben"], "answer": 2 },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Nosotros", "vivimos", "en", "España"], "answer": ["Nosotros", "vivimos", "en", "España"] },
+      { "type": "fill", "prompt": "Yo ___ un libro. (leer)", "answer": "leo", "hint": "yo, -er" }
+    ]
+  },
+  {
+    "title": "Род и число существительных",
+    "level": "A1",
+    "order": 6,
+    "theory": [
+      { "type": "paragraph", "text": "Обычно слова на -o мужского рода, на -a — женского. Множественное число: +s (после гласной) или +es (после согласной)." },
+      { "type": "table", "headers": ["Ед. число", "Мн. число"], "rows": [["el libro", "los libros"], ["la casa", "las casas"], ["el profesor", "los profesores"], ["la ciudad", "las ciudades"]] },
+      { "type": "example", "es": "un gato → dos gatos", "ru": "один кот → два кота" }
+    ],
+    "exercises": [
+      { "type": "fill", "prompt": "Множественное число «el coche»: los ___.", "answer": "coches", "hint": "+s" },
+      { "type": "mcq", "prompt": "Какого рода «la mano»?", "options": ["мужской", "женский"], "answer": 1 },
+      { "type": "fill", "prompt": "Множественное «la ciudad»: las ___.", "answer": "ciudades", "hint": "+es" },
+      { "type": "mcq", "prompt": "Какого рода «el problema»?", "options": ["мужской", "женский"], "answer": 0 },
+      { "type": "fill", "prompt": "Множественное «el profesor»: los ___.", "answer": "profesores", "hint": "+es" },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Las", "casas", "son", "blancas"], "answer": ["Las", "casas", "son", "blancas"] },
+      { "type": "mcq", "prompt": "Множественное «la flor»:", "options": ["las flors", "las flores", "los flores", "las flor"], "answer": 1 }
+    ]
+  },
+  {
+    "title": "Глагол TENER и его выражения",
+    "level": "A1",
+    "order": 7,
+    "theory": [
+      { "type": "paragraph", "text": "TENER значит «иметь». Используется в выражениях о возрасте, голоде, жажде." },
+      { "type": "table", "headers": ["Местоимение", "TENER"], "rows": [["yo", "tengo"], ["tú", "tienes"], ["él/ella", "tiene"], ["nosotros", "tenemos"], ["ellos/ellas", "tienen"]] },
+      { "type": "example", "es": "Tengo veinte años.", "ru": "Мне двадцать лет. (букв. «имею 20 лет»)" },
+      { "type": "example", "es": "Tengo hambre.", "ru": "Я голоден. (букв. «имею голод»)" }
+    ],
+    "exercises": [
+      { "type": "fill", "prompt": "Yo ___ dos hermanos.", "answer": "tengo", "hint": "yo" },
+      { "type": "mcq", "prompt": "¿Cuántos años ___ tú?", "options": ["tengo", "tienes", "tiene", "tienen"], "answer": 1 },
+      { "type": "fill", "prompt": "Ella ___ hambre.", "answer": "tiene", "hint": "él/ella" },
+      { "type": "fill", "prompt": "Nosotros ___ un perro.", "answer": "tenemos", "hint": "nosotros" },
+      { "type": "mcq", "prompt": "Ellos ___ sed.", "options": ["tengo", "tienes", "tiene", "tienen"], "answer": 3 },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Tengo", "veinte", "años"], "answer": ["Tengo", "veinte", "años"] },
+      { "type": "fill", "prompt": "Tú ___ razón. (ты прав)", "answer": "tienes", "hint": "tú" }
+    ]
+  },
+  {
+    "title": "Вопросы и вопросительные слова",
+    "level": "A1",
+    "order": 8,
+    "theory": [
+      { "type": "paragraph", "text": "Вопросы оформляются перевёрнутым «¿» в начале. Вопросительные слова всегда с ударением." },
+      { "type": "table", "headers": ["Слово", "Перевод"], "rows": [["¿Qué?", "Что?"], ["¿Quién?", "Кто?"], ["¿Dónde?", "Где?"], ["¿Cuándo?", "Когда?"], ["¿Cómo?", "Как?"], ["¿Por qué?", "Почему?"], ["¿Cuánto?", "Сколько?"]] },
+      { "type": "example", "es": "¿Dónde vives?", "ru": "Где ты живёшь?" }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "___ te llamas? (Как тебя зовут?)", "options": ["Qué", "Cómo", "Dónde", "Quién"], "answer": 1 },
+      { "type": "mcq", "prompt": "___ está el baño? (Где?)", "options": ["Qué", "Quién", "Dónde", "Cuándo"], "answer": 2 },
+      { "type": "fill", "prompt": "¿___ es esto? (Что это?)", "answer": "Qué", "hint": "что" },
+      { "type": "mcq", "prompt": "___ es él? (Кто он?)", "options": ["Qué", "Quién", "Cómo", "Cuánto"], "answer": 1 },
+      { "type": "fill", "prompt": "¿___ cuesta? (Сколько стоит?)", "answer": "Cuánto", "hint": "сколько" },
+      { "type": "order", "prompt": "Соберите вопрос", "words": ["¿Dónde", "vives", "tú?"], "answer": ["¿Dónde", "vives", "tú?"] },
+      { "type": "mcq", "prompt": "___ no vienes? (Почему?)", "options": ["Cómo", "Cuándo", "Por qué", "Qué"], "answer": 2 }
+    ]
+  }
+]

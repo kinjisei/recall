@@ -26,6 +26,8 @@ export type ActivityType =
   | 'pronunciation'
   | 'conversation'
   | 'writing'
+  | 'grammar'
+  | 'practice'
 
 export interface Profile {
   id: string
@@ -159,6 +161,68 @@ export interface SpanishSentence {
   level: string
   ru: string
   es: string
+}
+
+/** Блок теории в уроке грамматики. */
+export type GrammarTheoryBlock =
+  | { type: 'paragraph'; text: string }
+  | { type: 'table'; headers: string[]; rows: string[][] }
+  | { type: 'example'; es: string; ru: string }
+
+/** Упражнение в уроке грамматики. */
+export type GrammarExercise =
+  | { type: 'mcq'; prompt: string; options: string[]; answer: number }
+  | { type: 'fill'; prompt: string; answer: string; hint?: string }
+  | { type: 'order'; prompt: string; words: string[]; answer: string[] }
+
+/** Тема (урок) грамматики: теория + упражнения. id присваивается загрузчиком. */
+export interface GrammarTopic {
+  id: number
+  title: string
+  level: string
+  order: number
+  theory: GrammarTheoryBlock[]
+  exercises: GrammarExercise[]
+}
+
+/** Одно время в справочнике спряжений: окончания + примеры глаголов. */
+export interface ConjugationTense {
+  id: string
+  name: string
+  nameRu: string
+  level: string
+  usage: string
+  example: string
+  exampleRu: string
+  endings: { label: string; forms: string[] }[]
+  verbs: { infinitive: string; ru: string; irregular: boolean; forms: string[] }[]
+}
+
+/** Справочник спряжений целиком (persons — подписи 6 лиц). */
+export interface ConjugationReference {
+  persons: string[]
+  tenses: ConjugationTense[]
+}
+
+/** Вопрос теста на определение уровня (placement). */
+export interface PlacementQuestion {
+  id: number
+  level: string
+  prompt: string
+  options: string[]
+  answer: number
+}
+
+/** Упражнение тренажёра окончаний (выбор правильной формы глагола). */
+export interface EndingsExercise {
+  id: number
+  level: string
+  prompt: string
+  infinitive: string
+  options: string[]
+  answer: number
+  rule: string
+  explanation: string
 }
 
 export interface WritingSubmission {

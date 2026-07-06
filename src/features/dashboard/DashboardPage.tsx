@@ -1,25 +1,56 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import type { ComponentType, SVGProps } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { supabase } from '../../lib/supabase'
 import { getStreak, getTodayTypes } from '../../lib/activity'
 import { getDueCards } from '../../lib/fsrs'
+import { getEsLevel } from '../../lib/esLevel'
 import { Card } from '../../components/Card'
-import { Button } from '../../components/Button'
+import {
+  IconFlame,
+  IconLogout,
+  IconDeck,
+  IconBook,
+  IconMic,
+  IconGrammar,
+  IconGamepad,
+  IconChat,
+  IconCheck,
+  IconChevronRight,
+  IconSparkles,
+} from '../../components/icons'
 import type { ActivityType, Profile } from '../../types'
 
-const sessionBlocks: {
+type Tone = 'sky' | 'violet' | 'rose' | 'amber' | 'emerald' | 'cyan'
+
+interface SessionBlock {
   to: string
-  icon: string
+  Icon: ComponentType<SVGProps<SVGSVGElement>>
+  tone: Tone
   title: string
   desc: string
   types: ActivityType[]
-}[] = [
-  { to: '/flashcards', icon: '🎴', title: 'Колода', desc: 'Повторить слова', types: ['flashcards'] },
-  { to: '/reader', icon: '📖', title: 'Ввод', desc: 'Почитать текст', types: ['reader'] },
-  { to: '/pronunciation', icon: '🎙', title: 'Речь', desc: 'Потренировать произношение', types: ['pronunciation'] },
-  { to: '/conversation', icon: '💬', title: 'Диалог', desc: 'Поговорить с AI', types: ['conversation', 'writing'] },
+  esOnly?: boolean
+}
+
+const toneChip: Record<Tone, string> = {
+  sky: 'bg-sky-100 text-sky-600 dark:bg-sky-950/60 dark:text-sky-400',
+  violet: 'bg-violet-100 text-violet-600 dark:bg-violet-950/60 dark:text-violet-400',
+  rose: 'bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400',
+  amber: 'bg-amber-100 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400',
+  emerald: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400',
+  cyan: 'bg-cyan-100 text-cyan-600 dark:bg-cyan-950/60 dark:text-cyan-400',
+}
+
+const sessionBlocks: SessionBlock[] = [
+  { to: '/flashcards', Icon: IconDeck, tone: 'sky', title: 'Колода', desc: 'Повторить слова', types: ['flashcards'] },
+  { to: '/reader', Icon: IconBook, tone: 'violet', title: 'Ввод', desc: 'Почитать текст', types: ['reader'] },
+  { to: '/pronunciation', Icon: IconMic, tone: 'rose', title: 'Речь', desc: 'Произношение', types: ['pronunciation'] },
+  { to: '/grammar', Icon: IconGrammar, tone: 'amber', title: 'Грамматика', desc: 'Урок + упражнения', types: ['grammar'], esOnly: true },
+  { to: '/practice', Icon: IconGamepad, tone: 'emerald', title: 'Практика', desc: 'Мини-игры', types: ['practice'], esOnly: true },
+  { to: '/conversation', Icon: IconChat, tone: 'cyan', title: 'Диалог', desc: 'Поговорить с AI', types: ['conversation', 'writing'] },
 ]
 
 export function DashboardPage() {
@@ -42,7 +73,6 @@ export function DashboardPage() {
     getTodayTypes().then(setDoneToday).catch(() => {})
   }, [user])
 
-  // Счётчик «к повторению» — по колодам выбранного языка.
   useEffect(() => {
     if (!user) return
     setDueCount(null)
@@ -51,12 +81,13 @@ export function DashboardPage() {
 
   const name = profile?.display_name || user?.email?.split('@')[0] || 'друг'
   const didSomethingToday = doneToday.size > 0
+  const esLevel = lang === 'es' ? getEsLevel() : null
 
   const streakHint = didSomethingToday
     ? 'Сегодня засчитано — так держать!'
     : streak > 0
-      ? 'Сделай хотя бы одно упражнение, чтобы не потерять серию'
-      : 'Занимайся каждый день — серия будет расти'
+      ? 'Сделай упражнение, чтобы не потерять серию'
+      : 'Занимайся каждый день — серия растёт'
 
   const flashcardsDesc =
     dueCount === null
@@ -65,49 +96,82 @@ export function DashboardPage() {
         ? 'Всё повторено ✨'
         : `К повторению: ${dueCount}${dueCount >= 99 ? '+' : ''}`
 
+  const blocks = sessionBlocks.filter((b) => !b.esOnly || lang === 'es')
+
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex items-start justify-between">
-        <div>
+      <header className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
           <h1 className="text-2xl font-bold">Привет, {name}! 👋</h1>
-          <p className="text-slate-500 dark:text-slate-400">
+          <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
             {lang === 'es'
-              ? 'Испанский · A1–A2 · готов к сегодняшней практике?'
-              : `Английский · ${profile?.level ?? '—'} · готов к сегодняшней практике?`}
+              ? `Испанский · ${esLevel ?? 'A1–A2'}`
+              : `Английский · ${profile?.level ?? '—'}`}{' '}
+            · готов к практике?
           </p>
         </div>
-        <Button variant="ghost" onClick={signOut} className="px-3 py-2 text-sm">
-          Выйти
-        </Button>
+        <button
+          onClick={signOut}
+          aria-label="Выйти"
+          className="shrink-0 rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
+        >
+          <IconLogout className="h-5 w-5" />
+        </button>
       </header>
 
-      <Card className="flex items-center justify-between">
-        <div>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Серия дней подряд
-          </p>
-          <p className="text-3xl font-bold">🔥 {streak}</p>
+      {/* Стрик-герой */}
+      <div className="relative overflow-hidden rounded-2xl bg-brand-gradient p-5 text-white shadow-md shadow-sky-600/25">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-6 -top-8 h-32 w-32 rounded-full bg-white/10"
+        />
+        <div className="relative flex items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-medium text-white/80">Серия дней подряд</p>
+            <p className="mt-1 flex items-center gap-2 text-4xl font-bold tabular-nums">
+              <IconFlame className="h-8 w-8" />
+              {streak}
+            </p>
+          </div>
+          <p className="max-w-[52%] text-right text-sm text-white/90">{streakHint}</p>
         </div>
-        <p className="max-w-[55%] text-right text-sm text-slate-500 dark:text-slate-400">
-          {streakHint}
-        </p>
-      </Card>
+      </div>
+
+      {/* Тест уровня — показываем в ES-режиме, пока уровень не определён */}
+      {lang === 'es' && !esLevel && (
+        <Link to="/placement" className="focus-visible:outline-none">
+          <Card interactive className="flex items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-600 dark:bg-sky-950/60 dark:text-sky-400">
+              <IconSparkles className="h-6 w-6" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold">Определи свой уровень</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                Короткий тест A1–B2 — подстроит «Диалог» под тебя
+              </p>
+            </div>
+            <IconChevronRight className="h-5 w-5 shrink-0 text-slate-400" />
+          </Card>
+        </Link>
+      )}
 
       <section>
         <h2 className="mb-3 text-lg font-semibold">Сегодняшняя сессия</h2>
         <div className="grid grid-cols-2 gap-3">
-          {sessionBlocks.map((b) => {
+          {blocks.map((b) => {
             const done = b.types.some((t) => doneToday.has(t))
             return (
-              <Link key={b.to} to={b.to}>
-                <Card className="relative h-full transition-transform active:scale-95">
+              <Link key={b.to} to={b.to} className="focus-visible:outline-none">
+                <Card interactive className="relative flex h-full flex-col">
                   {done && (
-                    <span className="absolute right-3 top-3 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">
-                      ✓ сделано
+                    <span className="absolute right-3 top-3 flex items-center gap-0.5 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">
+                      <IconCheck className="h-3 w-3" /> готово
                     </span>
                   )}
-                  <div className="text-3xl">{b.icon}</div>
-                  <div className="mt-2 font-semibold">{b.title}</div>
+                  <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${toneChip[b.tone]}`}>
+                    <b.Icon className="h-6 w-6" />
+                  </div>
+                  <div className="mt-3 font-semibold">{b.title}</div>
                   <div className="text-sm text-slate-500 dark:text-slate-400">
                     {b.to === '/flashcards' ? flashcardsDesc : b.desc}
                   </div>

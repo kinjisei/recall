@@ -1,0 +1,154 @@
+[
+  {
+    "title": "Косвенная речь (estilo indirecto)",
+    "level": "B2",
+    "order": 200,
+    "theory": [
+      { "type": "paragraph", "text": "При переводе прямой речи в косвенную (после глагола речи в прошедшем времени: dijo que..., me preguntó si...) сдвигаются времена, местоимения и обстоятельства. Основные сдвиги: presente → imperfecto; indefinido/pretérito perfecto → pluscuamperfecto; futuro → condicional; императив → imperfecto de subjuntivo." },
+      { "type": "table", "headers": ["Прямая речь", "Косвенная (Dijo que...)"], "rows": [["«Estoy cansado»", "Dijo que estaba cansado"], ["«Llegué tarde»", "Dijo que había llegado tarde"], ["«Vendré mañana»", "Dijo que vendría al día siguiente"], ["«Hazlo»", "Me dijo que lo hiciera"]] },
+      { "type": "example", "es": "María dijo que vendría a la fiesta.", "ru": "Мария сказала, что придёт на вечеринку." }
+    ],
+    "exercises": [
+      { "type": "fill", "prompt": "«Estoy enfermo» → Dijo que ___ enfermo. (estar)", "answer": "estaba", "hint": "presente → imperfecto" },
+      { "type": "mcq", "prompt": "«Llegaré tarde» → Dijo que ___ tarde.", "options": ["llegaré", "llegaría", "llegaba", "llegó"], "answer": 1 },
+      { "type": "mcq", "prompt": "«Compré un coche» → Dijo que ___ un coche.", "options": ["compró", "compraba", "había comprado", "compraría"], "answer": 2 },
+      { "type": "fill", "prompt": "«Hazlo ahora» → Me pidió que lo ___. (hacer, subj.)", "answer": "hiciera", "hint": "императив → imperf. de subjuntivo" },
+      { "type": "mcq", "prompt": "«¿Dónde vives?» → Me preguntó dónde ___.", "options": ["vivo", "vives", "vivía", "viviera"], "answer": 2 },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Dijo", "que", "estaba", "ocupado"], "answer": ["Dijo", "que", "estaba", "ocupado"] },
+      { "type": "mcq", "prompt": "«Te ayudaré» → Prometió que me ___.", "options": ["ayudará", "ayudaría", "ayudaba", "ayude"], "answer": 1 }
+    ]
+  },
+  {
+    "title": "Относительные придаточные (que, quien, cuyo)",
+    "level": "B2",
+    "order": 201,
+    "theory": [
+      { "type": "paragraph", "text": "Относительные местоимения связывают придаточное с существительным. «Que» — самый общий (люди и вещи). «Quien/quienes» — только о людях, обычно после предлога. «Cuyo/cuya/cuyos/cuyas» — «чей», согласуется с предметом обладания, а не с обладателем. После предлога с вещами: el que / la que / el cual." },
+      { "type": "table", "headers": ["Местоимение", "Употребление", "Пример"], "rows": [["que", "люди и вещи", "El libro que leí"], ["quien(es)", "люди после предлога", "La chica con quien hablé"], ["cuyo/-a/-os/-as", "чей (согласуется с обладаемым)", "El autor cuya novela leí"], ["el/la que", "после предлога (вещи)", "La casa en la que vivo"]] },
+      { "type": "example", "es": "El hombre cuyo coche se averió llamó a un taxi.", "ru": "Мужчина, чья машина сломалась, вызвал такси." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "El chico ___ conocí ayer es médico.", "options": ["que", "quien", "cuyo", "cual"], "answer": 0 },
+      { "type": "fill", "prompt": "La mujer con ___ trabajo es muy amable. (о человеке, после предлога)", "answer": "quien", "hint": "о людях после предлога" },
+      { "type": "mcq", "prompt": "El escritor ___ libros leemos es español. (чьи книги)", "options": ["que", "quien", "cuyos", "cuyo"], "answer": 2 },
+      { "type": "fill", "prompt": "Esta es la casa en la ___ nací. (после предлога en)", "answer": "que", "hint": "en la que" },
+      { "type": "mcq", "prompt": "La profesora ___ enseña francés es nueva.", "options": ["que", "quien", "cuya", "lo que"], "answer": 0 },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["La", "ciudad", "donde", "vivo", "es", "pequeña"], "answer": ["La", "ciudad", "donde", "vivo", "es", "pequeña"] },
+      { "type": "mcq", "prompt": "«Девушка, чей брат — мой друг»:", "options": ["La chica cuyo hermano es mi amigo", "La chica que hermano es mi amigo", "La chica cuya hermano es mi amigo", "La chica quien hermano es mi amigo"], "answer": 0 }
+    ]
+  },
+  {
+    "title": "Por и para: продвинутое употребление",
+    "level": "B2",
+    "order": 202,
+    "theory": [
+      { "type": "paragraph", "text": "«Para» — цель, назначение, адресат, срок (дедлайн), направление к пункту назначения, мнение. «Por» — причина/мотив, обмен и цена, период и место «через/по/вдоль», средство, деятель в пассиве, «в пользу»." },
+      { "type": "table", "headers": ["Предлог", "Значение", "Пример"], "rows": [["para", "цель", "Estudio para aprender"], ["para", "адресат / срок", "Es para ti; para el lunes"], ["por", "причина / мотив", "Lo hago por amor"], ["por", "обмен / цена", "Lo compré por 10 euros"], ["por", "место (через, по)", "Paseo por el parque"]] },
+      { "type": "example", "es": "Estudio español para viajar por Latinoamérica.", "ru": "Я учу испанский, чтобы путешествовать по Латинской Америке." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "Este regalo es ___ ti. (адресат)", "options": ["por", "para", "de", "a"], "answer": 1 },
+      { "type": "mcq", "prompt": "Gracias ___ tu ayuda. (мотив)", "options": ["para", "por", "de", "en"], "answer": 1 },
+      { "type": "fill", "prompt": "Pagué veinte euros ___ este libro. (цена/обмен)", "answer": "por", "hint": "обмен и цена → por" },
+      { "type": "fill", "prompt": "Estudio mucho ___ aprobar el examen. (цель)", "answer": "para", "hint": "цель → para" },
+      { "type": "mcq", "prompt": "Caminamos ___ la playa. (вдоль, по)", "options": ["para", "por", "en", "a"], "answer": 1 },
+      { "type": "mcq", "prompt": "El trabajo es ___ el lunes. (срок/дедлайн)", "options": ["por", "para", "en", "a"], "answer": 1 },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Salgo", "para", "Madrid", "mañana"], "answer": ["Salgo", "para", "Madrid", "mañana"] }
+    ]
+  },
+  {
+    "title": "Futuro perfecto (habré hablado)",
+    "level": "B2",
+    "order": 203,
+    "theory": [
+      { "type": "paragraph", "text": "Образуется: futuro глагола haber (habré, habrás, habrá...) + причастие. Обозначает действие, которое завершится к определённому моменту в будущем («к тому времени уже сделаю»), а также предположение о недавнем прошлом («наверное, уже сделал»)." },
+      { "type": "table", "headers": ["Местоимение", "haber (futuro)", "+ participio"], "rows": [["yo", "habré", "hablado"], ["tú", "habrás", "comido"], ["él/ella", "habrá", "hecho"], ["nosotros", "habremos", "vivido"], ["ellos", "habrán", "vuelto"]] },
+      { "type": "example", "es": "Para las cinco, habré terminado el informe.", "ru": "К пяти часам я уже закончу отчёт." }
+    ],
+    "exercises": [
+      { "type": "fill", "prompt": "Para mañana, yo ya ___ terminado. (haber → habré)", "answer": "habré", "hint": "yo, futuro de haber" },
+      { "type": "mcq", "prompt": "Participio de «volver»: habrá ___.", "options": ["volvido", "vuelto", "volviendo", "volvía"], "answer": 1 },
+      { "type": "mcq", "prompt": "Para junio, nosotros ___ aprendido mucho. (haber)", "options": ["habremos", "habríamos", "hemos", "habíamos"], "answer": 0 },
+      { "type": "mcq", "prompt": "No ha llegado. ___ perdido el tren. (предположение о прошлом)", "options": ["Habrá", "Habría", "Había", "Ha"], "answer": 0 },
+      { "type": "fill", "prompt": "¿___ llegado ellos ya? (haber, ellos → habrán)", "answer": "habrán", "hint": "ellos, futuro de haber" },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Para", "el", "viernes", "habré", "acabado"], "answer": ["Para", "el", "viernes", "habré", "acabado"] },
+      { "type": "mcq", "prompt": "«Они, наверное, уже уехали» (предположение):", "options": ["Habrán salido", "Habrían salido", "Han salido", "Habían salido"], "answer": 0 }
+    ]
+  },
+  {
+    "title": "Subjuntivo в придаточных времени и цели",
+    "level": "B2",
+    "order": 204,
+    "theory": [
+      { "type": "paragraph", "text": "После союзов цели (para que, a fin de que) всегда subjuntivo. После союзов времени (cuando, en cuanto, hasta que): subjuntivo, если действие относится к будущему / ещё не произошло; indicativo, если это привычка или прошлый факт. «Antes de que» — всегда subjuntivo." },
+      { "type": "table", "headers": ["Союз", "Наклонение", "Пример"], "rows": [["para que", "subjuntivo (цель)", "Te lo digo para que lo sepas"], ["cuando (будущее)", "subjuntivo", "Cuando llegues, llámame"], ["cuando (привычка)", "indicativo", "Cuando llego, como"], ["antes de que", "subjuntivo", "Antes de que salgas, cierra"]] },
+      { "type": "example", "es": "Llámame cuando llegues a casa.", "ru": "Позвони мне, когда придёшь домой." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "Cuando ___ a casa, te llamo. (будущее — llegar, yo)", "options": ["llego", "llegue", "llegué", "llegaré"], "answer": 1 },
+      { "type": "fill", "prompt": "Te doy dinero para que ___ comida. (comprar, tú → compres)", "answer": "compres", "hint": "para que + subjuntivo" },
+      { "type": "mcq", "prompt": "Cuando ___ pequeño, jugaba mucho. (привычка — ser, yo)", "options": ["sea", "soy", "era", "fuera"], "answer": 2 },
+      { "type": "fill", "prompt": "Llama antes de que ___ tarde. (ser → sea)", "answer": "sea", "hint": "antes de que + subjuntivo" },
+      { "type": "mcq", "prompt": "Espera aquí hasta que yo ___. (volver, будущее)", "options": ["vuelvo", "vuelva", "volví", "volveré"], "answer": 1 },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Cuando", "termines,", "avísame"], "answer": ["Cuando", "termines,", "avísame"] },
+      { "type": "mcq", "prompt": "Lo explico ___ todos entiendan. (цель)", "options": ["para que", "porque", "aunque", "cuando"], "answer": 0 }
+    ]
+  },
+  {
+    "title": "Глагольные перифразы (volver a, acabar de, dejar de)",
+    "level": "B2",
+    "order": 205,
+    "theory": [
+      { "type": "paragraph", "text": "Перифраза = вспомогательный глагол + инфинитив/герундий и выражает аспект действия. «Acabar de + inf.» — только что сделать; «volver a + inf.» — снова сделать; «dejar de + inf.» — перестать; «ponerse a + inf.» — приняться; «llevar + gerundio» — делать в течение (срока)." },
+      { "type": "table", "headers": ["Перифраза", "Значение", "Пример"], "rows": [["acabar de + inf.", "только что", "Acabo de llegar"], ["volver a + inf.", "снова", "Volví a leerlo"], ["dejar de + inf.", "перестать", "Dejé de fumar"], ["ponerse a + inf.", "приняться", "Se puso a llorar"], ["llevar + gerundio", "(делать) уже ... времени", "Llevo dos horas estudiando"]] },
+      { "type": "example", "es": "Acabo de comer, pero volveré a cenar más tarde.", "ru": "Я только что поел, но снова поем (поужинаю) позже." }
+    ],
+    "exercises": [
+      { "type": "fill", "prompt": "Acabo ___ llegar a casa. (предлог)", "answer": "de", "hint": "acabar de + инфинитив" },
+      { "type": "mcq", "prompt": "Значение фразы «Volví a llamarlo»:", "options": ["я перестал звонить ему", "я снова позвонил ему", "я только что позвонил ему", "я начал звонить ему"], "answer": 1 },
+      { "type": "fill", "prompt": "Dejé ___ fumar hace un año. (предлог)", "answer": "de", "hint": "dejar de + инфинитив" },
+      { "type": "mcq", "prompt": "Какая перифраза означает «только что (сделать)»?", "options": ["acabar de + inf.", "volver a + inf.", "dejar de + inf.", "ponerse a + inf."], "answer": 0 },
+      { "type": "mcq", "prompt": "Tras la noticia, se ___ a llorar. (ponerse, él)", "options": ["puso", "pone", "pondría", "ponía"], "answer": 0 },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Llevo", "dos", "años", "estudiando", "español"], "answer": ["Llevo", "dos", "años", "estudiando", "español"] },
+      { "type": "mcq", "prompt": "Чтобы выразить «снова сделать», используем:", "options": ["volver a + infinitivo", "acabar de + infinitivo", "estar + gerundio", "dejar de + infinitivo"], "answer": 0 }
+    ]
+  },
+  {
+    "title": "Глаголы изменения (ponerse, volverse, hacerse, llegar a ser)",
+    "level": "B2",
+    "order": 206,
+    "theory": [
+      { "type": "paragraph", "text": "В испанском нет одного глагола «становиться» — выбор зависит от типа изменения. «Ponerse + прилаг.» — внезапное, временное состояние. «Volverse + прилаг.» — глубокое, часто непроизвольное изменение характера. «Hacerse» — постепенное изменение, нередко усилием (профессия, статус). «Llegar a ser» — достичь чего-то со временем (результат). «Quedarse + прилаг.» — новое состояние, часто после потери." },
+      { "type": "table", "headers": ["Глагол", "Тип изменения", "Пример"], "rows": [["ponerse", "внезапное состояние", "Se puso nervioso"], ["volverse", "коренное (характер)", "Se volvió egoísta"], ["hacerse", "постепенное / усилием", "Se hizo médico"], ["llegar a ser", "достижение результата", "Llegó a ser director"], ["quedarse", "новое состояние", "Se quedó sordo"]] },
+      { "type": "example", "es": "Estudió mucho y llegó a ser un gran médico.", "ru": "Он много учился и стал великим врачом." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "Al oír la noticia, se ___ pálido. (внезапно)", "options": ["puso", "hizo", "volvió", "quedó"], "answer": 0 },
+      { "type": "mcq", "prompt": "Con los años, se ___ muy famoso. (постепенно, усилием)", "options": ["puso", "hizo", "quedó", "volvió"], "answer": 1 },
+      { "type": "fill", "prompt": "Después del accidente, se ___ ciego. (quedarse, él → quedó)", "answer": "quedó", "hint": "quedarse + состояние после потери" },
+      { "type": "mcq", "prompt": "«Volverse» употребляется для:", "options": ["внезапного настроения", "коренного изменения характера", "профессии", "временного состояния"], "answer": 1 },
+      { "type": "mcq", "prompt": "Tras años de trabajo, ___ a ser presidente. (llegar, él)", "options": ["llegó", "puso", "hizo", "quedó"], "answer": 0 },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Se", "puso", "muy", "contento"], "answer": ["Se", "puso", "muy", "contento"] },
+      { "type": "mcq", "prompt": "«Стать врачом» (профессия, усилием):", "options": ["hacerse médico", "ponerse médico", "volverse médico", "quedarse médico"], "answer": 0 }
+    ]
+  },
+  {
+    "title": "Условные предложения (типы 1, 2, 3 с si)",
+    "level": "B2",
+    "order": 207,
+    "theory": [
+      { "type": "paragraph", "text": "Условные предложения с «si». Тип 1 (реальное условие): si + presente de indicativo + futuro/presente. Тип 2 (гипотеза о настоящем/будущем): si + imperfecto de subjuntivo + condicional simple. Тип 3 (нереальное прошлое): si + pluscuamperfecto de subjuntivo + condicional compuesto. Внимание: после «si» НЕ употребляются presente de subjuntivo и condicional." },
+      { "type": "table", "headers": ["Тип", "Si + ...", "Главная часть"], "rows": [["1 (реальное)", "si + presente", "Si estudias, aprobarás"], ["2 (гипотеза)", "si + imperf. subj.", "Si estudiaras, aprobarías"], ["3 (нереал. прошлое)", "si + plusc. subj.", "Si hubieras estudiado, habrías aprobado"]] },
+      { "type": "example", "es": "Si tuviera dinero, viajaría por el mundo.", "ru": "Если бы у меня были деньги, я бы путешествовал по миру." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "Si ___ tiempo, iré al cine. (тип 1 — tener, yo)", "options": ["tengo", "tenga", "tuviera", "tendría"], "answer": 0 },
+      { "type": "mcq", "prompt": "Si ___ rico, viajaría más. (тип 2 — ser, yo)", "options": ["soy", "sea", "fuera", "sería"], "answer": 2 },
+      { "type": "fill", "prompt": "Si hubiera estudiado, ___ aprobado. (тип 3 — haber → habría)", "answer": "habría", "hint": "condicional compuesto" },
+      { "type": "mcq", "prompt": "Si me ___ antes, te habría ayudado. (тип 3 — llamar, tú)", "options": ["llamas", "llamaras", "hubieras llamado", "llamabas"], "answer": 2 },
+      { "type": "fill", "prompt": "Si ___ ayudarte, lo haría. (тип 2 — poder, yo → pudiera)", "answer": "pudiera", "hint": "imperfecto de subjuntivo" },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Si", "llueve,", "no", "saldremos"], "answer": ["Si", "llueve,", "no", "saldremos"] },
+      { "type": "mcq", "prompt": "После «si» (условие) НЕЛЬЗЯ употреблять:", "options": ["presente de indicativo", "imperfecto de subjuntivo", "presente de subjuntivo", "pluscuamperfecto de subjuntivo"], "answer": 2 }
+    ]
+  }
+]

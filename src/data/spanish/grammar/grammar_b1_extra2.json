@@ -1,0 +1,116 @@
+[
+  {
+    "title": "Subjuntivo с союзами (cuando, para que, antes de que)",
+    "level": "B1",
+    "order": 26,
+    "theory": [
+      { "type": "paragraph", "text": "После некоторых союзов, когда речь о будущем или цели, используется subjuntivo: cuando (когда, о будущем), para que (чтобы), antes de que (прежде чем), aunque (даже если)." },
+      { "type": "table", "headers": ["Союз", "Пример"], "rows": [["cuando + subj.", "Cuando llegues, llámame"], ["para que + subj.", "Te lo digo para que lo sepas"], ["antes de que + subj.", "Sal antes de que llueva"]] },
+      { "type": "example", "es": "Cuando tenga tiempo, te visitaré.", "ru": "Когда у меня будет время, я тебя навещу." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "Cuando ___ a casa, descansaré. (llegar)", "options": ["llego", "llegue", "llegaré", "llegaba"], "answer": 1 },
+      { "type": "fill", "prompt": "Te lo explico para que lo ___. (entender, tú → entiendas)", "answer": "entiendas", "hint": "para que + subj." },
+      { "type": "mcq", "prompt": "Sal antes de que ___ tarde. (ser)", "options": ["es", "sea", "será", "era"], "answer": 1 },
+      { "type": "fill", "prompt": "Cuando ___ grande, seré médico. (ser → sea)", "answer": "sea", "hint": "будущее → subj." },
+      { "type": "mcq", "prompt": "Trabajo para que mi familia ___ bien. (vivir)", "options": ["vive", "viva", "vivirá", "vivía"], "answer": 1 },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Llámame", "cuando", "puedas"], "answer": ["Llámame", "cuando", "puedas"] },
+      { "type": "mcq", "prompt": "Llegaremos antes de que ___ el concierto. (empezar)", "options": ["empieza", "empiece", "empezará", "empezaba"], "answer": 1 }
+    ]
+  },
+  {
+    "title": "Отрицательный императив + местоимения",
+    "level": "B1",
+    "order": 27,
+    "theory": [
+      { "type": "paragraph", "text": "В отрицательной команде используется форма subjuntivo, а местоимения ставятся ПЕРЕД глаголом. В утвердительной — местоимения присоединяются в конце." },
+      { "type": "table", "headers": ["Утвердительно", "Отрицательно"], "rows": [["Hazlo", "No lo hagas"], ["Dímelo", "No me lo digas"], ["Levántate", "No te levantes"]] },
+      { "type": "example", "es": "No te preocupes por mí.", "ru": "Не беспокойся обо мне." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "¡No ___ eso! (hacer, tú)", "options": ["haces", "hagas", "haz", "hace"], "answer": 1 },
+      { "type": "fill", "prompt": "No ___ lo digas a nadie. (me — позиция перед глаголом)", "answer": "me", "hint": "отриц. → местоимение перед" },
+      { "type": "mcq", "prompt": "Утвердительно «скажи мне это»:", "options": ["Me lo dices", "Dímelo", "No me lo digas", "Lo me dices"], "answer": 1 },
+      { "type": "mcq", "prompt": "¡No ___ tarde! (levantarse, tú)", "options": ["te levantes", "levántate", "te levantas", "se levante"], "answer": 0 },
+      { "type": "fill", "prompt": "No ___ comas. (lo — позиция)", "answer": "lo", "hint": "no + lo + глагол" },
+      { "type": "order", "prompt": "Соберите команду", "words": ["No", "te", "preocupes"], "answer": ["No", "te", "preocupes"] },
+      { "type": "mcq", "prompt": "Отрицательная форма «hazlo»:", "options": ["no hazlo", "no lo hagas", "no haces lo", "no lo haces"], "answer": 1 }
+    ]
+  },
+  {
+    "title": "Косвенная речь (estilo indirecto)",
+    "level": "B1",
+    "order": 28,
+    "theory": [
+      { "type": "paragraph", "text": "При передаче чужих слов времена и местоимения смещаются. Presente → imperfecto, futuro → condicional, pretérito perfecto → pluscuamperfecto." },
+      { "type": "table", "headers": ["Прямая речь", "Косвенная речь"], "rows": [["«Estoy cansado»", "Dijo que estaba cansado"], ["«Vendré»", "Dijo que vendría"], ["«He comido»", "Dijo que había comido"]] },
+      { "type": "example", "es": "Dijo que me llamaría más tarde.", "ru": "Он сказал, что позвонит мне позже." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "«Tengo hambre» → Dijo que ___ hambre.", "options": ["tiene", "tenía", "tendría", "tuvo"], "answer": 1 },
+      { "type": "fill", "prompt": "«Iré» → Dijo que ___. (ir → iría)", "answer": "iría", "hint": "futuro → condicional" },
+      { "type": "mcq", "prompt": "«Estoy en casa» → Me dijo que ___ en casa.", "options": ["está", "estaba", "estaría", "estuvo"], "answer": 1 },
+      { "type": "mcq", "prompt": "«He terminado» → Dijo que ___ terminado.", "options": ["ha", "había", "habría", "haya"], "answer": 1 },
+      { "type": "fill", "prompt": "«Te ayudaré» → Dijo que me ___. (ayudar → ayudaría)", "answer": "ayudaría", "hint": "condicional" },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Dijo", "que", "estaba", "ocupado"], "answer": ["Dijo", "que", "estaba", "ocupado"] },
+      { "type": "mcq", "prompt": "«Quiero verte» → Dijo que ___ verme.", "options": ["quiere", "quería", "querría", "quiso"], "answer": 1 }
+    ]
+  },
+  {
+    "title": "Глаголы изменения (ponerse, volverse, hacerse)",
+    "level": "B1",
+    "order": 29,
+    "theory": [
+      { "type": "paragraph", "text": "В испанском «становиться» передаётся разными глаголами в зависимости от характера изменения: ponerse (временное состояние), volverse (внезапное/непроизвольное), hacerse (постепенное, по усилию), llegar a ser (достижение цели)." },
+      { "type": "table", "headers": ["Глагол", "Тип изменения", "Пример"], "rows": [["ponerse", "временное состояние", "Se puso nervioso"], ["volverse", "резкое, характер", "Se volvió loco"], ["hacerse", "постепенное", "Se hizo rico"], ["llegar a ser", "достижение", "Llegó a ser director"]] },
+      { "type": "example", "es": "Cuando la vio, se puso muy contento.", "ru": "Когда он её увидел, он очень обрадовался." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "Se ___ rojo de vergüenza. (временное → ponerse)", "options": ["puso", "volvió", "hizo", "llegó"], "answer": 0 },
+      { "type": "mcq", "prompt": "Con los años se ___ médico. (постепенно)", "options": ["puso", "volvió", "hizo", "quedó"], "answer": 2 },
+      { "type": "fill", "prompt": "Me ___ nervioso antes del examen. (ponerse, yo → pongo)", "answer": "pongo", "hint": "ponerse, yo" },
+      { "type": "mcq", "prompt": "Después del accidente se ___ muy callado. (резкая перемена)", "options": ["puso", "volvió", "hizo", "llegó a ser"], "answer": 1 },
+      { "type": "mcq", "prompt": "Estudió mucho y ___ a ser ingeniero.", "options": ["se puso", "se volvió", "se hizo", "llegó"], "answer": 3 },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Se", "puso", "muy", "contenta"], "answer": ["Se", "puso", "muy", "contenta"] },
+      { "type": "mcq", "prompt": "«Он разбогател (постепенно)»:", "options": ["Se puso rico", "Se hizo rico", "Se volvió rico", "Llegó rico"], "answer": 1 }
+    ]
+  },
+  {
+    "title": "Коннекторы речи (причина, следствие, контраст)",
+    "level": "B1",
+    "order": 30,
+    "theory": [
+      { "type": "paragraph", "text": "Коннекторы связывают идеи: причина (porque, ya que), следствие (por eso, así que, por lo tanto), контраст (pero, sin embargo, aunque), добавление (además)." },
+      { "type": "table", "headers": ["Тип", "Коннекторы"], "rows": [["причина", "porque, ya que, como"], ["следствие", "por eso, así que, por lo tanto"], ["контраст", "pero, sin embargo, aunque"], ["добавление", "además, también"]] },
+      { "type": "example", "es": "Estaba cansado, así que me fui a casa.", "ru": "Я устал, поэтому пошёл домой." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "No vino ___ estaba enfermo. (причина)", "options": ["porque", "por eso", "sin embargo", "además"], "answer": 0 },
+      { "type": "mcq", "prompt": "Llovía; ___ no salimos. (следствие)", "options": ["porque", "por eso", "aunque", "ya que"], "answer": 1 },
+      { "type": "fill", "prompt": "Es caro; ___ embargo, lo compraré. (контраст)", "answer": "sin", "hint": "sin embargo" },
+      { "type": "mcq", "prompt": "___ llueve, saldremos. (даже если)", "options": ["Porque", "Aunque", "Por eso", "Ya que"], "answer": 1 },
+      { "type": "fill", "prompt": "Estudié mucho, ___ que aprobé. (так что)", "answer": "así", "hint": "así que" },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Tengo", "sueño,", "por", "eso", "me", "acuesto"], "answer": ["Tengo", "sueño,", "por", "eso", "me", "acuesto"] },
+      { "type": "mcq", "prompt": "Es tarde y, ___, estoy cansado. (добавление)", "options": ["además", "pero", "porque", "aunque"], "answer": 0 }
+    ]
+  },
+  {
+    "title": "Конструкции долженствования (tener que, hay que, deber)",
+    "level": "B1",
+    "order": 31,
+    "theory": [
+      { "type": "paragraph", "text": "Долженствование выражают: tener que + inf. (личная необходимость), hay que + inf. (безличная необходимость, «нужно»), deber + inf. (моральный долг, совет)." },
+      { "type": "table", "headers": ["Конструкция", "Значение", "Пример"], "rows": [["tener que", "я должен (необходимость)", "Tengo que trabajar"], ["hay que", "нужно (вообще)", "Hay que estudiar"], ["deber", "следует (долг/совет)", "Debes descansar"]] },
+      { "type": "example", "es": "Hay que respetar las reglas.", "ru": "Нужно соблюдать правила." }
+    ],
+    "exercises": [
+      { "type": "fill", "prompt": "Yo ___ que estudiar hoy. (tener)", "answer": "tengo", "hint": "tener, yo" },
+      { "type": "mcq", "prompt": "___ que comer para vivir. (безлично)", "options": ["Tengo", "Hay", "Debo", "Tienes"], "answer": 1 },
+      { "type": "mcq", "prompt": "Tú ___ descansar más. (совет — deber)", "options": ["debes", "debo", "debe", "debemos"], "answer": 0 },
+      { "type": "fill", "prompt": "Nosotros ___ que salir ahora. (tener)", "answer": "tenemos", "hint": "tener, nosotros" },
+      { "type": "mcq", "prompt": "Para aprobar ___ que practicar mucho.", "options": ["tengo", "hay", "debo", "tienes"], "answer": 1 },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Tengo", "que", "irme", "ya"], "answer": ["Tengo", "que", "irme", "ya"] },
+      { "type": "mcq", "prompt": "«Не следует так делать»:", "options": ["No hay que hacerlo así", "No tienes que hacerlo", "No debes hacerlo así", "No hago que así"], "answer": 2 }
+    ]
+  }
+]

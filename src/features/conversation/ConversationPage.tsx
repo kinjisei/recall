@@ -6,6 +6,7 @@ import { chat } from '../../lib/gemini'
 import { logActivity } from '../../lib/activity'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
+import { getEsLevel } from '../../lib/esLevel'
 import type { AppLang, CEFRLevel, ChatTurn } from '../../types'
 
 type Mode = 'chat' | 'writing'
@@ -35,14 +36,14 @@ export function ConversationPage() {
       })
   }, [user])
 
-  const level: CEFRLevel = lang === 'es' ? 'A1' : profileLevel
+  const level: CEFRLevel = lang === 'es' ? getEsLevel() ?? 'A1' : profileLevel
 
   return (
     <div className="flex flex-col gap-4">
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">💬 Диалог</h1>
         <span className="text-sm text-slate-400">
-          {lang === 'es' ? 'испанский · A1–A2' : `уровень ${level}`}
+          {lang === 'es' ? `испанский · ${level}` : `уровень ${level}`}
         </span>
       </header>
 
@@ -78,10 +79,14 @@ export function ConversationPage() {
 
 function chatSystemPrompt(level: CEFRLevel, lang: AppLang): string {
   if (lang === 'es') {
+    const esHint =
+      level === 'B1' || level === 'B2' || level === 'C1' || level === 'C2'
+        ? 'Use natural Spanish with varied tenses and richer vocabulary, but stay clear.'
+        : 'Use very simple Spanish: short sentences, present tense mostly, common everyday words.'
     return [
       'You are a friendly Spanish conversation partner in the language-learning app "Recall".',
-      'The learner is a native Russian speaker and a BEGINNER in Spanish (CEFR A1-A2).',
-      'Use very simple Spanish: short sentences, present tense mostly, common everyday words.',
+      `The learner is a native Russian speaker at CEFR level ${level} in Spanish.`,
+      esHint,
       'Keep every reply short: 2-3 sentences, and end with a simple question to keep the conversation going.',
       'If the learner makes a noticeable mistake, start your reply with a separate line like:',
       '✏️ corrected phrase — короткое объяснение ошибки по-русски',

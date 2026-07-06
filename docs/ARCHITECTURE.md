@@ -53,6 +53,7 @@ recall-app/
       fsrs.ts                 <- обёртка над ts-fsrs (Worker 1)
       dictionary.ts           <- Free Dictionary API, только EN (Worker 2)
       spanishDict.ts          <- перевод исп. слов: локальные паки -> Gemini
+      esLevel.ts              <- уровень испанского (placement) в localStorage
       speech.ts               <- Web Speech API: TTS+STT, en-US/es-ES (Worker 3)
       gemini.ts               <- вызов нашего /api/gemini (Worker 4)
       cards.ts                <- addCard(), getDefaultDeck(lang), addCardsBulk()
@@ -63,8 +64,13 @@ recall-app/
       AuthContext.tsx         <- вход/выход
       LanguageContext.tsx     <- язык изучения EN/ES (localStorage recall.lang)
     data/
-      spanish/                <- контент из приложения spanish (JSON + index.ts):
-                                 words_a1/a2 (паки), readings, dialogues, sentences
+      spanish/                <- контент из приложения spanish:
+                                 index.ts — readings, dialogues, sentences (eager);
+                                 words.ts + words/*.json — ВЕСЬ словарь (~4668 слов,
+                                 ~281 тема, A1–B2), ЛЕНИВО (dynamic import);
+                                 grammar.ts + grammar/*.json — 74 урока A1–B2, ЛЕНИВО;
+                                 conjugation.ts (+ conjugation_reference/endings_trainer
+                                 .json) — справочник времён + тренажёр окончаний, ЛЕНИВО
     components/               <- общие UI (Button, Card, Layout c шапкой EN/ES, Nav)
     features/
       dashboard/              <- главный экран, стрик, дневная сессия (Foundation+Worker4)
@@ -72,6 +78,14 @@ recall-app/
       reader/                 <- блок «Ввод»: EN тексты; ES тексты+диалоги (SpanishReader)
       pronunciation/          <- блок «Произношение», обе речи
       conversation/           <- AI-диалог + проверка письма, EN/ES промпты
+      grammar/                <- «Грамматика» (только ES): GrammarPage (2 раздела) —
+                                 «Уроки» (теория + упражнения) и «Глаголы»
+                                 (ConjugationSection: справочник времён + тренажёр)
+      practice/               <- «Практика» (только ES): PracticePage-хаб + 4 мини-игры
+                                 (Match, Translation, SentenceBuilder, Listening);
+                                 util.ts — shuffle/sample/пул слов
+      onboarding/             <- PlacementTest: тест уровня ES (роут /placement)
+    components/icons.tsx      <- инлайн-SVG-иконки (Lucide-стиль) для навигации/кнопок
   .env.local                  <- VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
 ```
 

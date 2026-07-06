@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { Button } from '../../components/Button'
 import { Card } from '../../components/Card'
+import { IconSparkles } from '../../components/icons'
 
 export function LoginPage() {
   const { user, signIn, signUp } = useAuth()
@@ -39,17 +40,20 @@ export function LoginPage() {
   }
 
   const inputClass =
-    'w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base outline-none focus:border-sky-500 dark:border-slate-600 dark:bg-slate-900'
+    'w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base outline-none transition-colors focus:border-sky-500 dark:border-slate-600 dark:bg-slate-900'
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 dark:bg-slate-950">
-      <div className="w-full max-w-sm">
-        <div className="mb-6 text-center">
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+    <div className="flex min-h-[100dvh] items-center justify-center bg-slate-50 px-4 py-10 dark:bg-slate-950">
+      <div className="w-full max-w-sm animate-fade-in">
+        <div className="mb-6 flex flex-col items-center text-center">
+          <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-gradient text-white shadow-lg shadow-sky-600/30">
+            <IconSparkles className="h-8 w-8" />
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
             Recall
           </h1>
           <p className="mt-1 text-slate-500 dark:text-slate-400">
-            Учим и поддерживаем английский
+            Английский и испанский — каждый день
           </p>
         </div>
 
@@ -60,6 +64,7 @@ export function LoginPage() {
                 className={inputClass}
                 type="text"
                 placeholder="Имя"
+                autoComplete="name"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
               />
@@ -67,6 +72,8 @@ export function LoginPage() {
             <input
               className={inputClass}
               type="email"
+              inputMode="email"
+              autoComplete="email"
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -75,6 +82,7 @@ export function LoginPage() {
             <input
               className={inputClass}
               type="password"
+              autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
               placeholder="Пароль (минимум 6 символов)"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -82,15 +90,15 @@ export function LoginPage() {
               minLength={6}
             />
 
-            {error && <p className="text-sm text-red-500">{error}</p>}
+            {error && (
+              <p role="alert" className="text-sm text-red-500">
+                {error}
+              </p>
+            )}
             {info && <p className="text-sm text-emerald-600">{info}</p>}
 
-            <Button type="submit" disabled={busy}>
-              {busy
-                ? 'Минутку…'
-                : mode === 'signin'
-                  ? 'Войти'
-                  : 'Создать аккаунт'}
+            <Button type="submit" loading={busy} className="mt-1">
+              {mode === 'signin' ? 'Войти' : 'Создать аккаунт'}
             </Button>
           </form>
 
@@ -101,7 +109,7 @@ export function LoginPage() {
               setError(null)
               setInfo(null)
             }}
-            className="mt-4 w-full text-center text-sm text-sky-600 hover:underline dark:text-sky-400"
+            className="mt-4 w-full text-center text-sm font-medium text-sky-600 hover:underline dark:text-sky-400"
           >
             {mode === 'signin'
               ? 'Нет аккаунта? Зарегистрироваться'

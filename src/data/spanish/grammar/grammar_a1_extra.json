@@ -1,0 +1,135 @@
+[
+  {
+    "title": "Притяжательные местоимения (mi, tu, su)",
+    "level": "A1",
+    "order": 21,
+    "theory": [
+      { "type": "paragraph", "text": "Притяжательные местоимения показывают принадлежность и согласуются в числе с предметом (не с владельцем)." },
+      { "type": "table", "headers": ["Владелец", "ед. число", "мн. число"], "rows": [["мой", "mi", "mis"], ["твой", "tu", "tus"], ["его/её/ваш", "su", "sus"], ["наш", "nuestro/a", "nuestros/as"]] },
+      { "type": "example", "es": "Mi casa y mis libros.", "ru": "Мой дом и мои книги." }
+    ],
+    "exercises": [
+      { "type": "fill", "prompt": "___ casa es grande. (мой)", "answer": "Mi", "hint": "мой — ед.ч." },
+      { "type": "mcq", "prompt": "Son ___ libros. (мои)", "options": ["mi", "mis", "tu", "su"], "answer": 1 },
+      { "type": "fill", "prompt": "¿Dónde está ___ coche? (твой)", "answer": "tu", "hint": "твой — ед.ч." },
+      { "type": "mcq", "prompt": "___ padres viven en Madrid. (его)", "options": ["su", "sus", "mi", "tu"], "answer": 1 },
+      { "type": "fill", "prompt": "___ profesora es amable. (наша)", "answer": "Nuestra", "hint": "наша — ж.р." },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Mis", "amigos", "son", "simpáticos"], "answer": ["Mis", "amigos", "son", "simpáticos"] },
+      { "type": "mcq", "prompt": "Es ___ perro. (твой)", "options": ["tu", "tus", "mi", "su"], "answer": 0 }
+    ]
+  },
+  {
+    "title": "Указательные (este, ese, aquel)",
+    "level": "A1",
+    "order": 22,
+    "theory": [
+      { "type": "paragraph", "text": "Указательные местоимения показывают расстояние: este (близко), ese (средне), aquel (далеко). Согласуются в роде и числе." },
+      { "type": "table", "headers": ["Расстояние", "м.р.", "ж.р."], "rows": [["этот (близко)", "este / estos", "esta / estas"], ["тот (средне)", "ese / esos", "esa / esas"], ["тот (далеко)", "aquel / aquellos", "aquella / aquellas"]] },
+      { "type": "example", "es": "Este libro es mío, ese es tuyo.", "ru": "Эта книга моя, та — твоя." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "___ libro (этот, рядом).", "options": ["este", "esta", "ese", "aquel"], "answer": 0 },
+      { "type": "fill", "prompt": "___ casa es bonita. (эта)", "answer": "Esta", "hint": "ж.р., близко" },
+      { "type": "mcq", "prompt": "___ coches de allí. (те, далеко)", "options": ["estos", "esos", "aquellos", "estas"], "answer": 2 },
+      { "type": "fill", "prompt": "Quiero ___ manzanas. (эти)", "answer": "estas", "hint": "ж.р. мн.ч." },
+      { "type": "mcq", "prompt": "¿Qué es ___? (это)", "options": ["esto", "esta", "este", "ese"], "answer": 0 },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Esta", "mesa", "es", "nueva"], "answer": ["Esta", "mesa", "es", "nueva"] },
+      { "type": "mcq", "prompt": "___ chico de ahí. (тот)", "options": ["este", "ese", "esta", "estos"], "answer": 1 }
+    ]
+  },
+  {
+    "title": "Глагол HAY (есть, имеется)",
+    "level": "A1",
+    "order": 23,
+    "theory": [
+      { "type": "paragraph", "text": "HAY означает «есть/имеется/находится» и не изменяется. Используется для существования предмета: hay + (un/una/dos...) + существительное." },
+      { "type": "table", "headers": ["HAY", "ESTAR"], "rows": [["Hay un libro", "El libro está aquí"], ["¿Hay leche?", "La leche está en la nevera"]] },
+      { "type": "example", "es": "En la mesa hay tres libros.", "ru": "На столе три книги." }
+    ],
+    "exercises": [
+      { "type": "fill", "prompt": "En la nevera ___ leche.", "answer": "hay", "hint": "существование" },
+      { "type": "mcq", "prompt": "¿___ un banco cerca?", "options": ["Hay", "Está", "Es", "Son"], "answer": 0 },
+      { "type": "mcq", "prompt": "El libro ___ en la mesa. (конкретный)", "options": ["hay", "está", "es", "son"], "answer": 1 },
+      { "type": "fill", "prompt": "___ muchas personas en la plaza.", "answer": "Hay", "hint": "существование, мн.ч." },
+      { "type": "mcq", "prompt": "Madrid ___ en España. (место)", "options": ["hay", "está", "es", "son"], "answer": 1 },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Hay", "un", "gato", "aquí"], "answer": ["Hay", "un", "gato", "aquí"] },
+      { "type": "fill", "prompt": "¿Cuántos alumnos ___ en clase?", "answer": "hay", "hint": "сколько есть" }
+    ]
+  },
+  {
+    "title": "Глагол GUSTAR (нравиться)",
+    "level": "A1",
+    "order": 24,
+    "theory": [
+      { "type": "paragraph", "text": "GUSTAR работает «наоборот»: то, что нравится, — подлежащее. Используют me/te/le/nos/les + gusta (ед.ч.) или gustan (мн.ч.)." },
+      { "type": "table", "headers": ["Кому", "+ gusta/gustan"], "rows": [["мне", "me gusta el café"], ["тебе", "te gustan los libros"], ["ему/ей", "le gusta bailar"], ["нам", "nos gusta viajar"]] },
+      { "type": "example", "es": "Me gusta el chocolate.", "ru": "Мне нравится шоколад." }
+    ],
+    "exercises": [
+      { "type": "fill", "prompt": "Me ___ el café. (нравится, ед.ч.)", "answer": "gusta", "hint": "ед. число" },
+      { "type": "mcq", "prompt": "Me ___ los gatos.", "options": ["gusta", "gustan", "gusto", "gustas"], "answer": 1 },
+      { "type": "fill", "prompt": "¿Te ___ bailar? (нравится)", "answer": "gusta", "hint": "глагол → gusta" },
+      { "type": "mcq", "prompt": "A ella le ___ las flores.", "options": ["gusta", "gustan", "gusto", "gusta n"], "answer": 1 },
+      { "type": "fill", "prompt": "Nos ___ viajar. (нравится)", "answer": "gusta", "hint": "инфинитив → gusta" },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Me", "gusta", "el", "fútbol"], "answer": ["Me", "gusta", "el", "fútbol"] },
+      { "type": "mcq", "prompt": "Перевод: «Тебе нравятся книги».", "options": ["Te gusta los libros", "Te gustan los libros", "Te gusto libros", "Tú gustas libros"], "answer": 1 }
+    ]
+  },
+  {
+    "title": "Слияния AL и DEL",
+    "level": "A1",
+    "order": 25,
+    "theory": [
+      { "type": "paragraph", "text": "Предлоги a и de сливаются с артиклем el: a + el = al, de + el = del. С другими артиклями слияния нет." },
+      { "type": "table", "headers": ["Правильно", "Неправильно"], "rows": [["Voy al cine", "Voy a el cine"], ["la casa del profesor", "de el profesor"], ["a la escuela", "(не меняется)"]] },
+      { "type": "example", "es": "Vuelvo del trabajo.", "ru": "Я возвращаюсь с работы." }
+    ],
+    "exercises": [
+      { "type": "fill", "prompt": "Voy ___ cine. (a + el)", "answer": "al", "hint": "a + el" },
+      { "type": "fill", "prompt": "Es el coche ___ profesor. (de + el)", "answer": "del", "hint": "de + el" },
+      { "type": "mcq", "prompt": "Vamos ___ parque.", "options": ["a el", "al", "del", "a la"], "answer": 1 },
+      { "type": "mcq", "prompt": "Salgo ___ banco.", "options": ["de el", "del", "al", "de la"], "answer": 1 },
+      { "type": "fill", "prompt": "Voy ___ escuela. (a + la)", "answer": "a la", "hint": "не сливается" },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Vuelvo", "del", "trabajo", "tarde"], "answer": ["Vuelvo", "del", "trabajo", "tarde"] },
+      { "type": "mcq", "prompt": "La puerta ___ coche está abierta.", "options": ["de el", "del", "al", "de la"], "answer": 1 }
+    ]
+  },
+  {
+    "title": "Отрицание (no, nada, nadie, nunca)",
+    "level": "A1",
+    "order": 26,
+    "theory": [
+      { "type": "paragraph", "text": "Простое отрицание — no перед глаголом. В испанском допускается двойное отрицание: No veo nada (Я ничего не вижу)." },
+      { "type": "table", "headers": ["Слово", "Значение"], "rows": [["no", "не"], ["nada", "ничего"], ["nadie", "никто"], ["nunca", "никогда"], ["tampoco", "тоже не"]] },
+      { "type": "example", "es": "No conozco a nadie aquí.", "ru": "Я никого здесь не знаю." }
+    ],
+    "exercises": [
+      { "type": "fill", "prompt": "Yo ___ hablo francés.", "answer": "no", "hint": "перед глаголом" },
+      { "type": "mcq", "prompt": "No veo ___. (ничего)", "options": ["nada", "nadie", "nunca", "no"], "answer": 0 },
+      { "type": "mcq", "prompt": "___ viene a la fiesta. (никто)", "options": ["Nada", "Nadie", "Nunca", "No"], "answer": 1 },
+      { "type": "fill", "prompt": "___ como carne. (никогда — перед глаголом)", "answer": "Nunca", "hint": "никогда" },
+      { "type": "mcq", "prompt": "—No tengo dinero. —Yo ___. (тоже не)", "options": ["también", "tampoco", "nada", "nunca"], "answer": 1 },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["No", "tengo", "nada"], "answer": ["No", "tengo", "nada"] },
+      { "type": "fill", "prompt": "No hay ___ en casa. (никого)", "answer": "nadie", "hint": "никто/никого" }
+    ]
+  },
+  {
+    "title": "MUY или MUCHO",
+    "level": "A1",
+    "order": 27,
+    "theory": [
+      { "type": "paragraph", "text": "MUY (очень) ставится перед прилагательными и наречиями и не изменяется. MUCHO (много/очень) идёт с существительными (согласуется) или после глагола." },
+      { "type": "table", "headers": ["MUY + ...", "MUCHO + ..."], "rows": [["muy alto", "mucho dinero"], ["muy bien", "muchas personas"], ["muy rápido", "Trabajo mucho"]] },
+      { "type": "example", "es": "Es muy alto y trabaja mucho.", "ru": "Он очень высокий и много работает." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "Ella es ___ inteligente.", "options": ["muy", "mucho", "mucha", "muchos"], "answer": 0 },
+      { "type": "fill", "prompt": "Tengo ___ trabajo. (много, м.р. ед.ч.)", "answer": "mucho", "hint": "+ существительное" },
+      { "type": "mcq", "prompt": "Hay ___ personas.", "options": ["muy", "mucho", "muchas", "mucha"], "answer": 2 },
+      { "type": "fill", "prompt": "Hablas ___ bien español. (очень)", "answer": "muy", "hint": "+ наречие" },
+      { "type": "mcq", "prompt": "Estudio ___. (много, после глагола)", "options": ["muy", "mucho", "muchos", "mucha"], "answer": 1 },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Es", "muy", "caro"], "answer": ["Es", "muy", "caro"] },
+      { "type": "mcq", "prompt": "Bebo ___ agua.", "options": ["muy", "mucha", "muchos", "muy mucha"], "answer": 1 }
+    ]
+  }
+]

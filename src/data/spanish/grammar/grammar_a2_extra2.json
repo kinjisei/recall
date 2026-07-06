@@ -1,0 +1,97 @@
+[
+  {
+    "title": "Предлоги a, de, en, con",
+    "level": "A2",
+    "order": 20,
+    "theory": [
+      { "type": "paragraph", "text": "Основные предлоги задают направление, принадлежность, место и совместность. Запомните устойчивые сочетания с глаголами." },
+      { "type": "table", "headers": ["Предлог", "Значение", "Пример"], "rows": [["a", "к, в (направление), кому", "Voy a Madrid"], ["de", "из, от, о, чей", "Soy de España"], ["en", "в, на (место), на (транспорт)", "Estoy en casa"], ["con", "с (совместно)", "Café con leche"]] },
+      { "type": "example", "es": "Voy a la fiesta con mi hermano.", "ru": "Я иду на вечеринку с братом." }
+    ],
+    "exercises": [
+      { "type": "fill", "prompt": "Voy ___ la escuela. (направление)", "answer": "a", "hint": "к/в" },
+      { "type": "mcq", "prompt": "Soy ___ Argentina.", "options": ["a", "de", "en", "con"], "answer": 1 },
+      { "type": "fill", "prompt": "El libro está ___ la mesa. (место)", "answer": "en", "hint": "на/в" },
+      { "type": "mcq", "prompt": "Hablo ___ mi profesora.", "options": ["a", "de", "en", "con"], "answer": 3 },
+      { "type": "fill", "prompt": "Vamos ___ tren. (транспорт)", "answer": "en", "hint": "на транспорте → en" },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Voy", "a", "casa", "con", "ella"], "answer": ["Voy", "a", "casa", "con", "ella"] },
+      { "type": "mcq", "prompt": "Es el coche ___ mi padre.", "options": ["a", "de", "en", "con"], "answer": 1 }
+    ]
+  },
+  {
+    "title": "Двойные местоимения (se lo, me lo)",
+    "level": "A2",
+    "order": 21,
+    "theory": [
+      { "type": "paragraph", "text": "Когда в предложении два местоимения-дополнения, сначала идёт косвенное (кому), затем прямое (что): me lo, te lo. Если оба в 3-м лице, le/les превращается в se: se lo." },
+      { "type": "table", "headers": ["Кому + что", "Форма"], "rows": [["мне это", "me lo"], ["тебе это", "te lo"], ["ему/ей это", "se lo"], ["им это", "se lo"]] },
+      { "type": "example", "es": "—¿Me das el libro? —Sí, te lo doy.", "ru": "—Дашь мне книгу? —Да, даю (тебе её)." }
+    ],
+    "exercises": [
+      { "type": "fill", "prompt": "¿El dinero? Te ___ doy mañana. (его)", "answer": "lo", "hint": "что → lo" },
+      { "type": "mcq", "prompt": "Le doy el libro a Ana. → ___ doy.", "options": ["Me lo", "Te lo", "Se lo", "Lo le"], "answer": 2 },
+      { "type": "fill", "prompt": "¿La carta? Mañana ___ la escribo a ellos. (им → se)", "answer": "se", "hint": "le/les + lo → se lo" },
+      { "type": "mcq", "prompt": "¿Me compras el café? —Sí, ___ compro.", "options": ["te lo", "se lo", "me lo", "lo te"], "answer": 0 },
+      { "type": "fill", "prompt": "Las llaves, ___ las doy a ti ahora. (тебе)", "answer": "te", "hint": "тебе → te" },
+      { "type": "order", "prompt": "Соберите ответ", "words": ["Se", "lo", "explico", "mañana"], "answer": ["Se", "lo", "explico", "mañana"] },
+      { "type": "mcq", "prompt": "Forma correcta: «Я дарю ей это».", "options": ["Le lo regalo", "Se lo regalo", "Me lo regala", "Lo se regalo"], "answer": 1 }
+    ]
+  },
+  {
+    "title": "Глаголы как gustar (encantar, doler, faltar)",
+    "level": "A2",
+    "order": 22,
+    "theory": [
+      { "type": "paragraph", "text": "Многие глаголы работают как gustar: подлежащее — то, что нравится/болит/не хватает, а человек обозначается местоимением me/te/le/nos/les." },
+      { "type": "table", "headers": ["Глагол", "Значение", "Пример"], "rows": [["encantar", "очень нравиться", "Me encanta el mar"], ["doler", "болеть", "Me duele la cabeza"], ["faltar", "не хватать", "Me falta dinero"], ["interesar", "интересовать", "Me interesa el arte"]] },
+      { "type": "example", "es": "A mí me encantan los gatos.", "ru": "Мне очень нравятся коты." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "Me ___ los libros. (encantar)", "options": ["encanta", "encantan", "encanto", "encantas"], "answer": 1 },
+      { "type": "fill", "prompt": "Me ___ la cabeza. (doler, ед.)", "answer": "duele", "hint": "ед. число" },
+      { "type": "mcq", "prompt": "Nos ___ dos euros. (faltar)", "options": ["falta", "faltan", "faltamos", "falto"], "answer": 1 },
+      { "type": "fill", "prompt": "¿Te ___ el español? (interesar, ед.)", "answer": "interesa", "hint": "ед. число" },
+      { "type": "mcq", "prompt": "A ella le ___ los pies. (doler)", "options": ["duele", "duelen", "duelo", "dueles"], "answer": 1 },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Me", "encanta", "bailar"], "answer": ["Me", "encanta", "bailar"] },
+      { "type": "mcq", "prompt": "Перевод: «Нам нравится этот город».", "options": ["Nos gusta esta ciudad", "Nos gustan esta ciudad", "Nos gusto esta ciudad", "Le gusta esta ciudad"], "answer": 0 }
+    ]
+  },
+  {
+    "title": "Hace, desde, desde hace (время)",
+    "level": "A2",
+    "order": 23,
+    "theory": [
+      { "type": "paragraph", "text": "Для выражения длительности используют: «hace + период» (сколько времени назад / как долго длится с настоящим), «desde + момент» (с какого момента), «desde hace + период» (в течение, до сих пор)." },
+      { "type": "table", "headers": ["Конструкция", "Значение", "Пример"], "rows": [["hace dos años", "два года назад", "Llegué hace dos años"], ["desde 2010", "с 2010 года", "Vivo aquí desde 2010"], ["desde hace un mes", "уже месяц", "Estudio desde hace un mes"]] },
+      { "type": "example", "es": "Trabajo aquí desde hace tres años.", "ru": "Я работаю здесь уже три года." }
+    ],
+    "exercises": [
+      { "type": "fill", "prompt": "Llegué ___ una hora. (час назад)", "answer": "hace", "hint": "X назад → hace" },
+      { "type": "mcq", "prompt": "Vivo en Madrid ___ 2015.", "options": ["hace", "desde", "desde hace", "por"], "answer": 1 },
+      { "type": "mcq", "prompt": "Estudio español ___ seis meses. (в течение, до сих пор)", "options": ["hace", "desde", "desde hace", "en"], "answer": 2 },
+      { "type": "fill", "prompt": "Te espero ___ las cinco. (с пяти)", "answer": "desde", "hint": "с момента → desde" },
+      { "type": "mcq", "prompt": "Terminé el trabajo ___ dos días.", "options": ["desde", "hace", "desde hace", "con"], "answer": 1 },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Vivo", "aquí", "desde", "hace", "un", "año"], "answer": ["Vivo", "aquí", "desde", "hace", "un", "año"] },
+      { "type": "mcq", "prompt": "«Я знаю его уже много лет».", "options": ["Lo conozco desde hace muchos años", "Lo conozco hace muchos años atrás", "Lo conozco por muchos años", "Lo conozco en muchos años"], "answer": 0 }
+    ]
+  },
+  {
+    "title": "Наречия на -mente",
+    "level": "A2",
+    "order": 24,
+    "theory": [
+      { "type": "paragraph", "text": "Наречия образа действия образуются от прилагательного в женском роде + суффикс -mente (как русское «-о/-но»)." },
+      { "type": "table", "headers": ["Прилагательное (ж.р.)", "Наречие"], "rows": [["rápida", "rápidamente (быстро)"], ["lenta", "lentamente (медленно)"], ["fácil", "fácilmente (легко)"], ["normal", "normalmente (обычно)"]] },
+      { "type": "example", "es": "Habla muy rápidamente.", "ru": "Он говорит очень быстро." }
+    ],
+    "exercises": [
+      { "type": "fill", "prompt": "Наречие от «rápido»: ___.", "answer": "rápidamente", "hint": "ж.р. + mente" },
+      { "type": "mcq", "prompt": "Lo hizo ___. (fácil)", "options": ["facilmente", "fácilmente", "facilamente", "fácilemente"], "answer": 1 },
+      { "type": "fill", "prompt": "Наречие от «lento»: ___.", "answer": "lentamente", "hint": "lenta + mente" },
+      { "type": "mcq", "prompt": "___ desayuno en casa. (обычно)", "options": ["Normalmente", "Normal", "Normalemente", "Normamente"], "answer": 0 },
+      { "type": "fill", "prompt": "Наречие от «tranquilo»: ___.", "answer": "tranquilamente", "hint": "tranquila + mente" },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Conduce", "muy", "lentamente"], "answer": ["Conduce", "muy", "lentamente"] },
+      { "type": "mcq", "prompt": "Наречие от «perfecto»:", "options": ["perfectomente", "perfectamente", "perfectemente", "perfectimente"], "answer": 1 }
+    ]
+  }
+]

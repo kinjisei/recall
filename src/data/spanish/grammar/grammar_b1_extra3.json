@@ -1,0 +1,62 @@
+[
+  {
+    "title": "Глаголы с предлогами (soñar con, depender de…)",
+    "level": "B1",
+    "order": 32,
+    "theory": [
+      { "type": "paragraph", "text": "Многие глаголы требуют строго определённого предлога, и он часто не совпадает с русским: мечтать О — soñar CON, влюбиться В — enamorarse DE. Эти пары нужно запоминать целиком." },
+      { "type": "table", "headers": ["Глагол + предлог", "Пример"], "rows": [["soñar con", "Sueño con vivir junto al mar"], ["casarse con", "Se casó con un ingeniero"], ["enamorarse de", "Me enamoré de ella"], ["depender de", "Depende de ti"], ["confiar en", "Confío en mis amigos"], ["pensar en", "Pienso en mi futuro"], ["empezar a / aprender a", "Empezó a llover / Aprendo a conducir"], ["dejar de / tratar de", "Dejé de fumar / Trato de ayudar"]] },
+      { "type": "example", "es": "Todo depende de lo que decidas tú.", "ru": "Всё зависит от того, что решишь ты." },
+      { "type": "paragraph", "text": "После предлога глагол всегда стоит в инфинитиве: antes de salir, después de comer, sueño con viajar (не «viajando»)." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "Me enamoré ___ ella el primer día.", "options": ["con", "de", "en", "a"], "answer": 1 },
+      { "type": "mcq", "prompt": "¿Confías ___ tus compañeros?", "options": ["de", "con", "en", "a"], "answer": 2 },
+      { "type": "fill", "prompt": "Piensa ___ tu futuro. (предлог)", "answer": "en", "hint": "pensar en = думать о" },
+      { "type": "mcq", "prompt": "De repente empezó ___ llover.", "options": ["de", "a", "en", "con"], "answer": 1 },
+      { "type": "fill", "prompt": "Se casó ___ un ingeniero de Sevilla. (предлог)", "answer": "con", "hint": "casarse con" },
+      { "type": "mcq", "prompt": "Trato ___ hacer deporte cada día.", "options": ["a", "en", "de", "por"], "answer": 2 },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Sueño", "con", "viajar", "por", "toda", "España"], "answer": ["Sueño", "con", "viajar", "por", "toda", "España"] }
+    ]
+  },
+  {
+    "title": "Предположения: futuro и condicional",
+    "level": "B1",
+    "order": 33,
+    "theory": [
+      { "type": "paragraph", "text": "Futuro simple выражает не только будущее, но и догадку о НАСТОЯЩЕМ: ¿Dónde estará Juan? — «интересно, где сейчас Хуан». Condicional — догадку о ПРОШЛОМ: Serían las diez cuando llegó — «было, наверное, часов десять»." },
+      { "type": "table", "headers": ["Догадка о…", "Форма", "Пример"], "rows": [["настоящем", "futuro simple", "Estará en casa (наверное, он дома)"], ["прошлом", "condicional", "Tendría veinte años entonces (ему было лет двадцать)"]] },
+      { "type": "example", "es": "—¿Qué hora es? —No sé, serán las tres.", "ru": "— Который час? — Не знаю, наверное, около трёх." },
+      { "type": "paragraph", "text": "Это очень частый разговорный приём: вместо «probablemente + presente» испанцы просто ставят будущее время." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "¿Dónde ___ Juan ahora? No lo veo por aquí.", "options": ["está", "estará", "estaba", "esté"], "answer": 1 },
+      { "type": "mcq", "prompt": "—¿Cuántos años tiene? —No sé, ___ unos treinta.", "options": ["tiene", "tendrá", "tenía", "tenga"], "answer": 1 },
+      { "type": "fill", "prompt": "___ las diez cuando llegamos anoche. (ser, догадка о прошлом)", "answer": "Serían", "hint": "condicional" },
+      { "type": "mcq", "prompt": "Suena el teléfono. ___ mi madre.", "options": ["Es seguro", "Será", "Sería", "Fue"], "answer": 1 },
+      { "type": "mcq", "prompt": "En su primer trabajo ___ unos mil euros. (наверное, зарабатывал)", "options": ["gana", "ganará", "ganaría", "gane"], "answer": 2 },
+      { "type": "fill", "prompt": "No contesta al teléfono. ___ ocupado. (estar, догадка)", "answer": "Estará", "hint": "догадка о настоящем = futuro" },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Serán", "las", "dos", "de", "la", "tarde"], "answer": ["Serán", "las", "dos", "de", "la", "tarde"] }
+    ]
+  },
+  {
+    "title": "Нейтральное LO: lo que, lo + прилагательное",
+    "level": "B1",
+    "order": 34,
+    "theory": [
+      { "type": "paragraph", "text": "Lo — «средний» артикль: он превращает прилагательное в абстрактное понятие. Lo importante — «(самое) важное», lo mejor — «лучшее», lo difícil — «трудное»." },
+      { "type": "table", "headers": ["Конструкция", "Значение", "Пример"], "rows": [["lo + прилагательное", "«то, что» + качество", "Lo importante es la salud"], ["lo que + глагол", "то, что…", "No entiendo lo que dices"], ["lo de + сущ.", "та история с…", "¿Sabes lo de Ana?"]] },
+      { "type": "example", "es": "Lo mejor del viaje fue la comida.", "ru": "Лучшим в поездке была еда." },
+      { "type": "paragraph", "text": "Не путайте: el que / la que отсылают к конкретному существительному, lo que — к целой мысли или чему-то абстрактному." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "___ mejor del viaje fue la comida.", "options": ["El", "La", "Lo", "Los"], "answer": 2 },
+      { "type": "mcq", "prompt": "No entiendo ___ dices.", "options": ["que", "lo que", "el que", "cual"], "answer": 1 },
+      { "type": "fill", "prompt": "___ importante es la salud. (нейтральный артикль)", "answer": "Lo", "hint": "lo + прилагательное" },
+      { "type": "mcq", "prompt": "¿Te has enterado de ___ de Ana? (та история)", "options": ["lo", "la", "el", "le"], "answer": 0 },
+      { "type": "fill", "prompt": "Haz ___ que quieras. (то, что)", "answer": "lo", "hint": "lo que" },
+      { "type": "mcq", "prompt": "Eso es ___ más difícil de aprender un idioma.", "options": ["el", "lo", "la", "un"], "answer": 1 },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Lo", "que", "dices", "es", "verdad"], "answer": ["Lo", "que", "dices", "es", "verdad"] }
+    ]
+  }
+]

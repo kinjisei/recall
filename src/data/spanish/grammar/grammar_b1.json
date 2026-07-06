@@ -1,0 +1,120 @@
+[
+  {
+    "title": "Presente de subjuntivo (введение)",
+    "level": "B1",
+    "order": 15,
+    "theory": [
+      { "type": "paragraph", "text": "Subjuntivo выражает желания, сомнения, эмоции и оценки. Часто после que: espero que, quiero que, no creo que, es importante que." },
+      { "type": "table", "headers": ["Местоимение", "hablar", "comer", "vivir"], "rows": [["yo", "hable", "coma", "viva"], ["tú", "hables", "comas", "vivas"], ["él/ella", "hable", "coma", "viva"], ["nosotros", "hablemos", "comamos", "vivamos"], ["ellos", "hablen", "coman", "vivan"]] },
+      { "type": "example", "es": "Espero que tengas un buen día.", "ru": "Надеюсь, у тебя будет хороший день." },
+      { "type": "paragraph", "text": "Окончания «меняются местами»: -ar берёт -e, а -er/-ir берут -a. Неправильные: ser → sea, ir → vaya, tener → tenga." }
+    ],
+    "exercises": [
+      { "type": "fill", "prompt": "Espero que tú ___ bien. (estar → estés)", "answer": "estés", "hint": "estar, tú" },
+      { "type": "mcq", "prompt": "Quiero que ellos ___ pronto. (venir)", "options": ["vienen", "vengan", "vinieron", "vendrán"], "answer": 1 },
+      { "type": "fill", "prompt": "Es importante que nosotros ___ español. (hablar)", "answer": "hablemos", "hint": "hablar, nosotros" },
+      { "type": "mcq", "prompt": "No creo que él ___ razón. (tener)", "options": ["tiene", "tenga", "tendrá", "tuvo"], "answer": 1 },
+      { "type": "fill", "prompt": "Ojalá ___ buen tiempo mañana. (hacer → haga)", "answer": "haga", "hint": "hacer, él" },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Espero", "que", "vengas", "pronto"], "answer": ["Espero", "que", "vengas", "pronto"] },
+      { "type": "mcq", "prompt": "Quiero que tú ___ feliz. (ser)", "options": ["eres", "seas", "serás", "fuiste"], "answer": 1 }
+    ]
+  },
+  {
+    "title": "Condicional simple (условное наклонение)",
+    "level": "B1",
+    "order": 16,
+    "theory": [
+      { "type": "paragraph", "text": "Condicional выражает вежливость, гипотезы и желания (бы): «я бы хотел», «было бы хорошо». Образуется: инфинитив + -ía, -ías, -ía, -íamos, -ían." },
+      { "type": "table", "headers": ["Местоимение", "hablar", "comer"], "rows": [["yo", "hablaría", "comería"], ["tú", "hablarías", "comerías"], ["él/ella", "hablaría", "comería"], ["nosotros", "hablaríamos", "comeríamos"], ["ellos", "hablarían", "comerían"]] },
+      { "type": "example", "es": "Me gustaría viajar a España.", "ru": "Я бы хотел поехать в Испанию." },
+      { "type": "paragraph", "text": "Неправильные основы те же, что у будущего: tener → tendría, hacer → haría, poder → podría." }
+    ],
+    "exercises": [
+      { "type": "fill", "prompt": "Me ___ un café, por favor. (gustar)", "answer": "gustaría", "hint": "вежливость" },
+      { "type": "mcq", "prompt": "Yo en tu lugar ___ al médico. (ir)", "options": ["voy", "iría", "fui", "iré"], "answer": 1 },
+      { "type": "fill", "prompt": "¿___ ayudarme? (poder, tú)", "answer": "Podrías", "hint": "poder → podr-" },
+      { "type": "mcq", "prompt": "Nosotros ___ encantados de venir. (estar)", "options": ["estamos", "estaríamos", "estuvimos", "estaremos"], "answer": 1 },
+      { "type": "fill", "prompt": "Ellos ___ más si tuvieran tiempo. (hacer)", "answer": "harían", "hint": "hacer → har-" },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Me", "gustaría", "un", "té"], "answer": ["Me", "gustaría", "un", "té"] },
+      { "type": "mcq", "prompt": "Перевод: «Я бы поехал».", "options": ["Iré", "Iría", "Iba", "Voy"], "answer": 1 }
+    ]
+  },
+  {
+    "title": "Imperativo (повелительное наклонение)",
+    "level": "B1",
+    "order": 17,
+    "theory": [
+      { "type": "paragraph", "text": "Императив используют для команд, советов и просьб. Утвердительный для tú = форма 3-го лица настоящего; отрицательный использует subjuntivo." },
+      { "type": "table", "headers": ["Глагол", "tú (+)", "tú (–)"], "rows": [["hablar", "habla", "no hables"], ["comer", "come", "no comas"], ["abrir", "abre", "no abras"]] },
+      { "type": "example", "es": "Habla más despacio, por favor.", "ru": "Говори медленнее, пожалуйста." },
+      { "type": "paragraph", "text": "Неправильные tú(+): hacer → haz, ir → ve, poner → pon, tener → ten, venir → ven, decir → di, salir → sal." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "___ la puerta, por favor. (abrir, tú+)", "options": ["Abre", "Abres", "Abra", "Abrir"], "answer": 0 },
+      { "type": "fill", "prompt": "¡___ aquí! (venir, tú+ — неправ.)", "answer": "Ven", "hint": "venir → ven" },
+      { "type": "mcq", "prompt": "No ___ tan rápido. (hablar, tú–)", "options": ["hablas", "habla", "hables", "hablar"], "answer": 2 },
+      { "type": "fill", "prompt": "___ los deberes ahora. (hacer, tú+ — неправ.)", "answer": "Haz", "hint": "hacer → haz" },
+      { "type": "mcq", "prompt": "No ___ eso. (comer, tú–)", "options": ["comes", "come", "comas", "coma"], "answer": 2 },
+      { "type": "order", "prompt": "Соберите команду", "words": ["Cierra", "la", "ventana"], "answer": ["Cierra", "la", "ventana"] },
+      { "type": "mcq", "prompt": "«Иди!» (ir, tú+):", "options": ["Va", "Ve", "Ir", "Vas"], "answer": 1 }
+    ]
+  },
+  {
+    "title": "POR или PARA",
+    "level": "B1",
+    "order": 18,
+    "theory": [
+      { "type": "paragraph", "text": "POR — причина, обмен, движение «через», период; PARA — цель, назначение, срок, мнение, направление «к»." },
+      { "type": "table", "headers": ["POR", "PARA"], "rows": [["Gracias por todo", "Es para ti"], ["por la mañana", "para mañana"], ["pasar por el parque", "salir para Madrid"], ["dos euros por kilo", "estudiar para médico"]] },
+      { "type": "example", "es": "Este regalo es para ti.", "ru": "Этот подарок для тебя." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "Este regalo es ___ mi madre.", "options": ["por", "para"], "answer": 1 },
+      { "type": "fill", "prompt": "Gracias ___ tu ayuda.", "answer": "por", "hint": "причина/благодарность" },
+      { "type": "mcq", "prompt": "Estudio mucho ___ aprobar el examen.", "options": ["por", "para"], "answer": 1 },
+      { "type": "fill", "prompt": "Caminamos ___ el parque.", "answer": "por", "hint": "движение «через»" },
+      { "type": "mcq", "prompt": "El tren sale ___ Barcelona.", "options": ["por", "para"], "answer": 1 },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Lo", "hago", "por", "ti"], "answer": ["Lo", "hago", "por", "ti"] },
+      { "type": "mcq", "prompt": "La tarea es ___ el lunes.", "options": ["por", "para"], "answer": 1 }
+    ]
+  },
+  {
+    "title": "Pretérito perfecto (he hablado)",
+    "level": "B1",
+    "order": 19,
+    "theory": [
+      { "type": "paragraph", "text": "Pretérito perfecto описывает действия в недавнем прошлом или с результатом в настоящем (hoy, esta semana, ya, todavía no). Образуется: haber + причастие (participio)." },
+      { "type": "table", "headers": ["Местоимение", "haber", "+ participio"], "rows": [["yo", "he", "hablado"], ["tú", "has", "comido"], ["él/ella", "ha", "vivido"], ["nosotros", "hemos", "hecho"], ["ellos", "han", "visto"]] },
+      { "type": "example", "es": "Hoy he comido demasiado.", "ru": "Сегодня я слишком много съел." },
+      { "type": "paragraph", "text": "Неправильные причастия: hacer → hecho, ver → visto, escribir → escrito, abrir → abierto, decir → dicho, volver → vuelto." }
+    ],
+    "exercises": [
+      { "type": "fill", "prompt": "Hoy yo ___ comido en casa. (haber)", "answer": "he", "hint": "yo → he" },
+      { "type": "mcq", "prompt": "¿___ visto la película? (tú, haber)", "options": ["Has", "Ha", "Han", "Hemos"], "answer": 0 },
+      { "type": "fill", "prompt": "Participio de «hacer»: he ___.", "answer": "hecho", "hint": "неправ. причастие" },
+      { "type": "mcq", "prompt": "Nosotros ___ terminado el trabajo.", "options": ["ha", "has", "hemos", "han"], "answer": 2 },
+      { "type": "fill", "prompt": "Ellos ya ___ llegado. (haber)", "answer": "han", "hint": "ellos → han" },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Esta", "semana", "he", "estudiado", "mucho"], "answer": ["Esta", "semana", "he", "estudiado", "mucho"] },
+      { "type": "mcq", "prompt": "Participio de «escribir»:", "options": ["escribido", "escrito", "escribiendo", "escribió"], "answer": 1 }
+    ]
+  },
+  {
+    "title": "Относительные местоимения (que, quien, donde)",
+    "level": "B1",
+    "order": 20,
+    "theory": [
+      { "type": "paragraph", "text": "Относительные местоимения связывают предложения: que (который/что — для людей и вещей), quien/quienes (кто — для людей после предлога), donde (где)." },
+      { "type": "table", "headers": ["Слово", "Использование", "Пример"], "rows": [["que", "люди и вещи", "el libro que leí"], ["quien", "люди (после предлога)", "la chica con quien hablo"], ["donde", "место", "la casa donde vivo"]] },
+      { "type": "example", "es": "Este es el amigo que conocí en Madrid.", "ru": "Это друг, которого я встретил в Мадриде." }
+    ],
+    "exercises": [
+      { "type": "fill", "prompt": "El libro ___ leí es interesante.", "answer": "que", "hint": "вещь → que" },
+      { "type": "mcq", "prompt": "La ciudad ___ nací es pequeña.", "options": ["que", "quien", "donde", "cual"], "answer": 2 },
+      { "type": "mcq", "prompt": "Es la persona con ___ trabajo.", "options": ["que", "quien", "donde", "qué"], "answer": 1 },
+      { "type": "fill", "prompt": "Ese es el coche ___ compré ayer.", "answer": "que", "hint": "вещь → que" },
+      { "type": "mcq", "prompt": "El restaurante ___ cenamos era caro.", "options": ["que", "quien", "donde", "cuyo"], "answer": 2 },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["La", "casa", "donde", "vivo", "es", "vieja"], "answer": ["La", "casa", "donde", "vivo", "es", "vieja"] },
+      { "type": "mcq", "prompt": "Los estudiantes ___ estudian aprueban.", "options": ["que", "quien", "donde", "cuyos"], "answer": 0 }
+    ]
+  }
+]

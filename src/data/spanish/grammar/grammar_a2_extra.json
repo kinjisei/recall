@@ -1,0 +1,98 @@
+[
+  {
+    "title": "Прямые местоимения-дополнения (lo, la, los, las)",
+    "level": "A2",
+    "order": 15,
+    "theory": [
+      { "type": "paragraph", "text": "Прямое дополнение заменяется на lo/la/los/las и ставится перед спрягаемым глаголом. Согласуется в роде и числе с заменяемым словом." },
+      { "type": "table", "headers": ["Заменяет", "Местоимение", "Пример"], "rows": [["м.р. ед.", "lo", "Veo el libro → Lo veo"], ["ж.р. ед.", "la", "Veo la casa → La veo"], ["м.р. мн.", "los", "Compro los zapatos → Los compro"], ["ж.р. мн.", "las", "Tengo las llaves → Las tengo"]] },
+      { "type": "example", "es": "—¿Tienes el dinero? —Sí, lo tengo.", "ru": "—У тебя есть деньги? —Да, есть (их)." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "—¿Ves la película? —Sí, ___ veo.", "options": ["lo", "la", "los", "las"], "answer": 1 },
+      { "type": "fill", "prompt": "—¿Compras el pan? —Sí, ___ compro.", "answer": "lo", "hint": "м.р. ед." },
+      { "type": "mcq", "prompt": "—¿Tienes las llaves? —Sí, ___ tengo.", "options": ["lo", "la", "los", "las"], "answer": 3 },
+      { "type": "fill", "prompt": "—¿Lees los libros? —Sí, ___ leo.", "answer": "los", "hint": "м.р. мн." },
+      { "type": "mcq", "prompt": "Conozco a María. → ___ conozco.", "options": ["lo", "la", "le", "las"], "answer": 1 },
+      { "type": "order", "prompt": "Соберите ответ", "words": ["Sí,", "lo", "veo"], "answer": ["Sí,", "lo", "veo"] },
+      { "type": "fill", "prompt": "—¿Haces los deberes? —Sí, ___ hago.", "answer": "los", "hint": "м.р. мн." }
+    ]
+  },
+  {
+    "title": "Косвенные местоимения (me, te, le, nos, les)",
+    "level": "A2",
+    "order": 16,
+    "theory": [
+      { "type": "paragraph", "text": "Косвенное дополнение отвечает на вопрос «кому?». Используется с глаголами дарения, говорения и типа gustar." },
+      { "type": "table", "headers": ["Кому", "Местоимение"], "rows": [["мне", "me"], ["тебе", "te"], ["ему/ей", "le"], ["нам", "nos"], ["им", "les"]] },
+      { "type": "example", "es": "Le doy un regalo a mi madre.", "ru": "Я дарю подарок маме (ей)." }
+    ],
+    "exercises": [
+      { "type": "fill", "prompt": "___ doy el libro a Juan. (ему)", "answer": "Le", "hint": "ему → le" },
+      { "type": "mcq", "prompt": "¿___ dices la verdad? (мне)", "options": ["me", "te", "le", "nos"], "answer": 0 },
+      { "type": "fill", "prompt": "___ escribo una carta a mis padres. (им)", "answer": "Les", "hint": "им → les" },
+      { "type": "mcq", "prompt": "Mi amigo ___ regala flores a ella.", "options": ["me", "te", "le", "les"], "answer": 2 },
+      { "type": "fill", "prompt": "¿Puedes prestar___ un boli? (мне — после инфинитива)", "answer": "me", "hint": "мне → me" },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Le", "doy", "las", "gracias"], "answer": ["Le", "doy", "las", "gracias"] },
+      { "type": "mcq", "prompt": "El profesor ___ explica la lección a nosotros.", "options": ["me", "te", "nos", "les"], "answer": 2 }
+    ]
+  },
+  {
+    "title": "Futuro simple (будущее время)",
+    "level": "A2",
+    "order": 17,
+    "theory": [
+      { "type": "paragraph", "text": "Простое будущее образуется добавлением окончаний к полному инфинитиву (одинаковы для -ar/-er/-ir)." },
+      { "type": "table", "headers": ["Местоимение", "hablar"], "rows": [["yo", "hablaré"], ["tú", "hablarás"], ["él/ella", "hablará"], ["nosotros", "hablaremos"], ["ellos", "hablarán"]] },
+      { "type": "example", "es": "Mañana hablaré con el director.", "ru": "Завтра я поговорю с директором." },
+      { "type": "paragraph", "text": "Неправильные основы: tener → tendr-, hacer → har-, poder → podr-, venir → vendr-, decir → dir-." }
+    ],
+    "exercises": [
+      { "type": "fill", "prompt": "Mañana yo ___ a Madrid. (viajar)", "answer": "viajaré", "hint": "yo, +é" },
+      { "type": "mcq", "prompt": "El año que viene nosotros ___ una casa. (comprar)", "options": ["compramos", "compraremos", "compraréis", "compraríamos"], "answer": 1 },
+      { "type": "fill", "prompt": "¿Tú ___ a la fiesta? (venir → vendr-)", "answer": "vendrás", "hint": "venir, tú" },
+      { "type": "mcq", "prompt": "Ellos ___ el trabajo pronto. (hacer)", "options": ["hacen", "harán", "hicieron", "harían"], "answer": 1 },
+      { "type": "fill", "prompt": "Ella ___ mucho éxito. (tener → tendr-)", "answer": "tendrá", "hint": "tener, ella" },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Mañana", "lloverá", "todo", "el", "día"], "answer": ["Mañana", "lloverá", "todo", "el", "día"] },
+      { "type": "mcq", "prompt": "Перевод: «Я приду завтра».", "options": ["Vengo mañana", "Vendré mañana", "Vine mañana", "Venía mañana"], "answer": 1 }
+    ]
+  },
+  {
+    "title": "Presente continuo (estar + gerundio)",
+    "level": "A2",
+    "order": 18,
+    "theory": [
+      { "type": "paragraph", "text": "Действие, происходящее прямо сейчас, выражается: estar + герундий. Герундий: -ar → -ando, -er/-ir → -iendo." },
+      { "type": "table", "headers": ["Инфинитив", "Герундий"], "rows": [["hablar", "hablando"], ["comer", "comiendo"], ["vivir", "viviendo"], ["leer", "leyendo"], ["dormir", "durmiendo"]] },
+      { "type": "example", "es": "Estoy estudiando español ahora.", "ru": "Я сейчас изучаю испанский." }
+    ],
+    "exercises": [
+      { "type": "fill", "prompt": "Yo estoy ___ la televisión. (ver → viendo)", "answer": "viendo", "hint": "-er → -iendo" },
+      { "type": "mcq", "prompt": "Ella está ___ una carta. (escribir)", "options": ["escribiendo", "escribando", "escribir", "escrito"], "answer": 0 },
+      { "type": "fill", "prompt": "Gerundio de «hablar»: estoy ___.", "answer": "hablando", "hint": "-ar → -ando" },
+      { "type": "mcq", "prompt": "Los niños están ___. (dormir)", "options": ["dormiendo", "durmiendo", "dormando", "dormido"], "answer": 1 },
+      { "type": "fill", "prompt": "Nosotros ___ comiendo. (estar)", "answer": "estamos", "hint": "estar, nosotros" },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Estoy", "leyendo", "un", "libro"], "answer": ["Estoy", "leyendo", "un", "libro"] },
+      { "type": "mcq", "prompt": "Перевод: «Они работают (сейчас)».", "options": ["Trabajan", "Están trabajando", "Trabajaban", "Trabajarán"], "answer": 1 }
+    ]
+  },
+  {
+    "title": "Indefinido или Imperfecto",
+    "level": "A2",
+    "order": 19,
+    "theory": [
+      { "type": "paragraph", "text": "Indefinido — конкретное завершённое действие (что произошло). Imperfecto — описание, фон, привычка (как было). Часто в одном предложении: фон (imperfecto) + событие (indefinido)." },
+      { "type": "table", "headers": ["Imperfecto (фон)", "Indefinido (событие)"], "rows": [["Llovía", "cuando salí"], ["Era de noche", "y llegó un coche"], ["Dormía", "cuando sonó el teléfono"]] },
+      { "type": "example", "es": "Mientras cenaba, llamó mi madre.", "ru": "Пока я ужинал, позвонила мама." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "Ayer ___ a las ocho. (levantarse — конкретное)", "options": ["me levantaba", "me levanté", "me levanto", "me levantaré"], "answer": 1 },
+      { "type": "mcq", "prompt": "Antes ___ todos los días. (correr — привычка)", "options": ["corrí", "corría", "corro", "correré"], "answer": 1 },
+      { "type": "fill", "prompt": "Cuando ___ niño, vivía en el campo. (ser → era)", "answer": "era", "hint": "описание → imperfecto" },
+      { "type": "mcq", "prompt": "Esta mañana ___ café. (tomar — конкретное)", "options": ["tomaba", "tomé", "tomo", "tomaré"], "answer": 1 },
+      { "type": "fill", "prompt": "El año pasado yo ___ a Italia. (viajar — событие)", "answer": "viajé", "hint": "конкретный момент" },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Llovía", "cuando", "salí", "de", "casa"], "answer": ["Llovía", "cuando", "salí", "de", "casa"] },
+      { "type": "mcq", "prompt": "De repente, ___ un ruido. (oír — событие)", "options": ["oía", "oí", "oigo", "oiré"], "answer": 1 }
+    ]
+  }
+]

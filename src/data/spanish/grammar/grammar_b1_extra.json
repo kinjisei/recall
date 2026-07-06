@@ -1,0 +1,97 @@
+[
+  {
+    "title": "Pretérito pluscuamperfecto (había hablado)",
+    "level": "B1",
+    "order": 21,
+    "theory": [
+      { "type": "paragraph", "text": "Pluscuamperfecto описывает действие, которое произошло раньше другого прошлого действия («уже сделал к тому моменту»). Образуется: imperfecto de haber + причастие." },
+      { "type": "table", "headers": ["Местоимение", "haber (imperf.)", "+ participio"], "rows": [["yo", "había", "hablado"], ["tú", "habías", "comido"], ["él/ella", "había", "vivido"], ["nosotros", "habíamos", "hecho"], ["ellos", "habían", "visto"]] },
+      { "type": "example", "es": "Cuando llegué, ya habían salido.", "ru": "Когда я пришёл, они уже ушли." }
+    ],
+    "exercises": [
+      { "type": "fill", "prompt": "Cuando llegué, ellos ya ___ comido. (haber)", "answer": "habían", "hint": "ellos → habían" },
+      { "type": "mcq", "prompt": "Yo nunca ___ visto algo así. (haber)", "options": ["he", "había", "habría", "haya"], "answer": 1 },
+      { "type": "fill", "prompt": "Participio de «hacer»: había ___.", "answer": "hecho", "hint": "неправ." },
+      { "type": "mcq", "prompt": "Ella ___ terminado antes de las cinco.", "options": ["ha", "había", "habrá", "haya"], "answer": 1 },
+      { "type": "fill", "prompt": "Nosotros ya ___ cenado cuando llamaste. (haber)", "answer": "habíamos", "hint": "nosotros → habíamos" },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Ya", "había", "llovido", "antes"], "answer": ["Ya", "había", "llovido", "antes"] },
+      { "type": "mcq", "prompt": "Participio de «escribir»:", "options": ["escribido", "escrito", "escribiendo", "escribió"], "answer": 1 }
+    ]
+  },
+  {
+    "title": "Пассивный залог (ser + participio)",
+    "level": "B1",
+    "order": 22,
+    "theory": [
+      { "type": "paragraph", "text": "Пассив образуется: ser + причастие (+ por + исполнитель). Причастие согласуется в роде и числе с подлежащим. Часто используют и пассив с se." },
+      { "type": "table", "headers": ["Актив", "Пассив"], "rows": [["Cervantes escribió el libro", "El libro fue escrito por Cervantes"], ["Construyen casas", "Se construyen casas"]] },
+      { "type": "example", "es": "La carta fue enviada ayer.", "ru": "Письмо было отправлено вчера." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "La novela ___ escrita por García Márquez.", "options": ["es", "fue", "ha", "está"], "answer": 1 },
+      { "type": "fill", "prompt": "El puente fue ___ en 1900. (construir → construido)", "answer": "construido", "hint": "причастие м.р." },
+      { "type": "mcq", "prompt": "Las casas ___ vendidas rápidamente.", "options": ["fue", "fueron", "es", "está"], "answer": 1 },
+      { "type": "fill", "prompt": "Aquí ___ venden billetes. (пассив с se)", "answer": "se", "hint": "se + глагол" },
+      { "type": "mcq", "prompt": "El cuadro fue ___ por un artista famoso. (pintar)", "options": ["pintado", "pintada", "pintando", "pintó"], "answer": 0 },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["La", "casa", "fue", "vendida"], "answer": ["La", "casa", "fue", "vendida"] },
+      { "type": "mcq", "prompt": "En España ___ habla español. (пассив с se)", "options": ["es", "se", "está", "fue"], "answer": 1 }
+    ]
+  },
+  {
+    "title": "Условные предложения (si + ...)",
+    "level": "B1",
+    "order": 23,
+    "theory": [
+      { "type": "paragraph", "text": "Реальное условие: Si + presente, → futuro/presente. Нереальное условие: Si + imperfecto de subjuntivo, → condicional." },
+      { "type": "table", "headers": ["Тип", "Структура", "Пример"], "rows": [["Реальное", "Si + presente → futuro", "Si llueve, no saldré"], ["Нереальное", "Si + imperf. subj. → condicional", "Si tuviera dinero, viajaría"]] },
+      { "type": "example", "es": "Si estudias, aprobarás el examen.", "ru": "Если будешь учиться, сдашь экзамен." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "Si ___ tiempo, iré contigo. (tener — реальное)", "options": ["tengo", "tuviera", "tendré", "tenía"], "answer": 0 },
+      { "type": "mcq", "prompt": "Si tuviera dinero, ___ un coche. (нереальное)", "options": ["compro", "compraré", "compraría", "compré"], "answer": 2 },
+      { "type": "fill", "prompt": "Si llueve, no ___ (salir, yo — futuro).", "answer": "saldré", "hint": "futuro de salir" },
+      { "type": "mcq", "prompt": "Si ___ rico, viajaría por el mundo. (ser — imperf. subj.)", "options": ["soy", "fuera", "seré", "era"], "answer": 1 },
+      { "type": "fill", "prompt": "Si estudias más, ___ mejores notas. (sacar — futuro)", "answer": "sacarás", "hint": "futuro, tú" },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Si", "puedo,", "te", "ayudaré"], "answer": ["Si", "puedo,", "te", "ayudaré"] },
+      { "type": "mcq", "prompt": "Si ___ más temprano, no llegarías tarde. (levantarse)", "options": ["te levantas", "te levantaras", "te levantarás", "te levantabas"], "answer": 1 }
+    ]
+  },
+  {
+    "title": "Глагольные перифразы (acabar de, volver a, soler)",
+    "level": "B1",
+    "order": 24,
+    "theory": [
+      { "type": "paragraph", "text": "Перифразы — устойчивые конструкции «глагол + инфинитив/герундий», передающие оттенки действия." },
+      { "type": "table", "headers": ["Перифраза", "Значение", "Пример"], "rows": [["acabar de + inf.", "только что", "Acabo de llegar"], ["volver a + inf.", "снова", "Volví a leerlo"], ["soler + inf.", "обычно", "Suelo desayunar café"], ["empezar a + inf.", "начинать", "Empezó a llover"]] },
+      { "type": "example", "es": "Acabo de terminar el trabajo.", "ru": "Я только что закончил работу." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "___ de llegar a casa. (только что, yo)", "options": ["Acabo", "Vuelvo", "Suelo", "Empiezo"], "answer": 0 },
+      { "type": "fill", "prompt": "Yo ___ desayunar a las ocho. (обычно — soler)", "answer": "suelo", "hint": "soler, yo" },
+      { "type": "mcq", "prompt": "Después de la lluvia, ___ a salir el sol. (снова)", "options": ["acabó", "volvió", "soler", "dejó"], "answer": 1 },
+      { "type": "fill", "prompt": "Empezó ___ llover de repente. (предлог)", "answer": "a", "hint": "empezar a + inf." },
+      { "type": "mcq", "prompt": "«Acabo de comer» означает:", "options": ["я обычно ем", "я только что поел", "я снова ем", "я начинаю есть"], "answer": 1 },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Suelo", "ir", "al", "gimnasio"], "answer": ["Suelo", "ir", "al", "gimnasio"] },
+      { "type": "mcq", "prompt": "Mañana ___ a intentarlo. (снова, yo)", "options": ["acabo", "vuelvo", "suelo", "acabaré"], "answer": 1 }
+    ]
+  },
+  {
+    "title": "Subjuntivo: эмоции и оценки",
+    "level": "B1",
+    "order": 25,
+    "theory": [
+      { "type": "paragraph", "text": "После выражений эмоций и оценки (me alegro de que, es una pena que, me molesta que) используется subjuntivo, если подлежащие разные." },
+      { "type": "table", "headers": ["Выражение", "+ que + subjuntivo"], "rows": [["Me alegro de que", "vengas"], ["Es una pena que", "no puedas"], ["Es importante que", "estudies"], ["Me molesta que", "llegue tarde"]] },
+      { "type": "example", "es": "Me alegro de que estés aquí.", "ru": "Я рад, что ты здесь." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "Me alegro de que ___ bien. (estar, tú)", "options": ["estás", "estés", "estarás", "estabas"], "answer": 1 },
+      { "type": "fill", "prompt": "Es una pena que no ___ venir. (poder, tú → puedas)", "answer": "puedas", "hint": "poder, subj." },
+      { "type": "mcq", "prompt": "Es importante que nosotros ___ a tiempo. (llegar)", "options": ["llegamos", "lleguemos", "llegaremos", "llegábamos"], "answer": 1 },
+      { "type": "fill", "prompt": "Me molesta que él ___ tarde. (llegar → llegue)", "answer": "llegue", "hint": "llegar, él, subj." },
+      { "type": "mcq", "prompt": "Es bueno que tú ___ español. (estudiar)", "options": ["estudias", "estudies", "estudiarás", "estudiabas"], "answer": 1 },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Espero", "que", "te", "guste"], "answer": ["Espero", "que", "te", "guste"] },
+      { "type": "mcq", "prompt": "Me sorprende que ellos no ___ nada. (saber)", "options": ["saben", "sepan", "sabrán", "sabían"], "answer": 1 }
+    ]
+  }
+]

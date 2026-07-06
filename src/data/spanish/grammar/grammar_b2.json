@@ -1,0 +1,116 @@
+[
+  {
+    "title": "Imperfecto de subjuntivo (hablara/hablase)",
+    "level": "B2",
+    "order": 1,
+    "theory": [
+      { "type": "paragraph", "text": "Имперфект сослагательного образуется от 3-го лица мн.ч. indefinido (hablaron → habla-) + окончания -ra или -se (равноценны). Используется после прошедших глаголов мнения/желания и в условных предложениях." },
+      { "type": "table", "headers": ["Местоимение", "hablar", "comer", "ser/ir"], "rows": [["yo", "hablara", "comiera", "fuera"], ["tú", "hablaras", "comieras", "fueras"], ["él/ella", "hablara", "comiera", "fuera"], ["nosotros", "habláramos", "comiéramos", "fuéramos"], ["ellos", "hablaran", "comieran", "fueran"]] },
+      { "type": "example", "es": "Quería que vinieras a la fiesta.", "ru": "Я хотел, чтобы ты пришёл на вечеринку." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "Quería que tú ___ aquí. (estar)", "options": ["estás", "estuvieras", "estés", "estabas"], "answer": 1 },
+      { "type": "fill", "prompt": "Si yo ___ rico, viajaría. (ser → fuera)", "answer": "fuera", "hint": "ser, yo, imperf. subj." },
+      { "type": "mcq", "prompt": "Me pidió que le ___ la verdad. (decir)", "options": ["digo", "dijera", "diga", "decía"], "answer": 1 },
+      { "type": "fill", "prompt": "Esperaba que nosotros ___ pronto. (llegar → llegáramos)", "answer": "llegáramos", "hint": "nosotros, -ar" },
+      { "type": "mcq", "prompt": "Si ___ tiempo, te ayudaría. (tener, yo)", "options": ["tengo", "tuviera", "tendría", "tenía"], "answer": 1 },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Quería", "que", "fueras", "feliz"], "answer": ["Quería", "que", "fueras", "feliz"] },
+      { "type": "mcq", "prompt": "No creía que ellos ___ razón. (tener)", "options": ["tienen", "tuvieran", "tengan", "tenían"], "answer": 1 }
+    ]
+  },
+  {
+    "title": "Pluscuamperfecto de subjuntivo (hubiera hablado)",
+    "level": "B2",
+    "order": 2,
+    "theory": [
+      { "type": "paragraph", "text": "Образуется: imperfecto de subjuntivo глагола haber (hubiera/hubiese) + причастие. Выражает нереальное действие в прошлом («если бы сделал»)." },
+      { "type": "table", "headers": ["Местоимение", "haber (subj.)", "+ participio"], "rows": [["yo", "hubiera", "hablado"], ["tú", "hubieras", "comido"], ["él/ella", "hubiera", "hecho"], ["nosotros", "hubiéramos", "visto"], ["ellos", "hubieran", "ido"]] },
+      { "type": "example", "es": "Si hubiera estudiado, habría aprobado.", "ru": "Если бы я учился, я бы сдал." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "Si ___ sabido, te habría avisado. (haber, yo)", "options": ["había", "hubiera", "habría", "haya"], "answer": 1 },
+      { "type": "fill", "prompt": "Ojalá ___ venido antes. (haber, tú → hubieras)", "answer": "hubieras", "hint": "tú, subj." },
+      { "type": "mcq", "prompt": "Participio de «escribir»: hubiera ___.", "options": ["escribido", "escrito", "escribiendo", "escribía"], "answer": 1 },
+      { "type": "mcq", "prompt": "Si ellos ___ llegado a tiempo... (haber)", "options": ["habían", "hubieran", "habrían", "hayan"], "answer": 1 },
+      { "type": "fill", "prompt": "Nosotros nunca ___ imaginado eso. (haber → hubiéramos)", "answer": "hubiéramos", "hint": "nosotros, subj." },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Si", "hubiera", "podido,", "habría", "ido"], "answer": ["Si", "hubiera", "podido,", "habría", "ido"] },
+      { "type": "mcq", "prompt": "Me habló como si nada ___ pasado.", "options": ["había", "hubiera", "habría", "ha"], "answer": 1 }
+    ]
+  },
+  {
+    "title": "Condicional compuesto (habría hablado)",
+    "level": "B2",
+    "order": 3,
+    "theory": [
+      { "type": "paragraph", "text": "Образуется: condicional глагола haber (habría) + причастие. Обозначает действие, которое произошло бы в прошлом при условии. Часто в паре с pluscuamperfecto de subjuntivo." },
+      { "type": "table", "headers": ["Местоимение", "haber (cond.)", "+ participio"], "rows": [["yo", "habría", "hablado"], ["tú", "habrías", "comido"], ["él/ella", "habría", "hecho"], ["nosotros", "habríamos", "visto"], ["ellos", "habrían", "ido"]] },
+      { "type": "example", "es": "Yo en tu lugar habría aceptado.", "ru": "На твоём месте я бы согласился." }
+    ],
+    "exercises": [
+      { "type": "fill", "prompt": "Yo ___ ido, pero estaba enfermo. (haber → habría)", "answer": "habría", "hint": "yo, cond." },
+      { "type": "mcq", "prompt": "¿Qué ___ hecho tú? (haber)", "options": ["habías", "habrías", "hubieras", "has"], "answer": 1 },
+      { "type": "mcq", "prompt": "Si hubiera podido, lo ___ ayudado.", "options": ["había", "habría", "hubiera", "ha"], "answer": 1 },
+      { "type": "fill", "prompt": "Nosotros ___ venido antes. (haber → habríamos)", "answer": "habríamos", "hint": "nosotros, cond." },
+      { "type": "mcq", "prompt": "Ellos ___ ganado con más esfuerzo. (haber)", "options": ["habían", "habrían", "hubieran", "han"], "answer": 1 },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Te", "habría", "llamado", "antes"], "answer": ["Te", "habría", "llamado", "antes"] },
+      { "type": "mcq", "prompt": "«Я бы сказал тебе правду»:", "options": ["Te habría dicho la verdad", "Te había dicho la verdad", "Te diría la verdad", "Te he dicho la verdad"], "answer": 0 }
+    ]
+  },
+  {
+    "title": "Уступительные конструкции (aunque, a pesar de)",
+    "level": "B2",
+    "order": 4,
+    "theory": [
+      { "type": "paragraph", "text": "«Aunque» + indicativo = реальный факт («хотя»); aunque + subjuntivo = гипотеза/уступка («даже если»). Также: a pesar de (que), pese a que." },
+      { "type": "table", "headers": ["Конструкция", "Наклонение", "Пример"], "rows": [["aunque + ind.", "реальный факт", "Aunque llueve, salgo"], ["aunque + subj.", "гипотеза", "Aunque llueva, saldré"], ["a pesar de que", "несмотря на то что", "A pesar de que es caro, lo compro"]] },
+      { "type": "example", "es": "Aunque estaba cansado, terminó el trabajo.", "ru": "Хотя он устал, он закончил работу." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "Aunque ___ frío, salimos. (реальный факт — hacer)", "options": ["hace", "haga", "hacía", "hiciera"], "answer": 0 },
+      { "type": "mcq", "prompt": "Aunque ___ mañana, iré a la playa. (гипотеза — llover)", "options": ["llueve", "llueva", "llovía", "lloverá"], "answer": 1 },
+      { "type": "fill", "prompt": "A pesar ___ que es difícil, lo intentaré. (предлог)", "answer": "de", "hint": "a pesar de que" },
+      { "type": "mcq", "prompt": "Aunque ___ rico, no es feliz. (реальность — ser)", "options": ["es", "sea", "fuera", "será"], "answer": 0 },
+      { "type": "fill", "prompt": "___ de su edad, trabaja mucho. (несмотря на — a pesar)", "answer": "A pesar", "hint": "a pesar de" },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Aunque", "llueva,", "saldré"], "answer": ["Aunque", "llueva,", "saldré"] },
+      { "type": "mcq", "prompt": "Pese a que ___ tarde, llegamos. (era / реальность)", "options": ["era", "fuera", "sea", "será"], "answer": 0 }
+    ]
+  },
+  {
+    "title": "Пассив и безличность (se, ser/estar + participio)",
+    "level": "B2",
+    "order": 5,
+    "theory": [
+      { "type": "paragraph", "text": "Три способа: пассив с ser (действие, + por), результат с estar, и пассив/безличность с se (без указания деятеля)." },
+      { "type": "table", "headers": ["Тип", "Пример", "Значение"], "rows": [["ser + part.", "La casa fue construida en 1990", "действие (кем)"], ["estar + part.", "La casa está construida", "результат/состояние"], ["se pasiva", "Se construyen casas aquí", "без деятеля"], ["se impersonal", "Se vive bien aquí", "вообще, люди"]] },
+      { "type": "example", "es": "Aquí se habla español.", "ru": "Здесь говорят по-испански." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "Aquí ___ venden billetes. (se pasiva)", "options": ["es", "se", "está", "son"], "answer": 1 },
+      { "type": "mcq", "prompt": "La novela ___ escrita por Cervantes. (действие, прошлое)", "options": ["es", "fue", "está", "ha"], "answer": 1 },
+      { "type": "mcq", "prompt": "La puerta ___ cerrada. (результат)", "options": ["es", "fue", "está", "se"], "answer": 2 },
+      { "type": "fill", "prompt": "En España ___ cena tarde. (безлично с se)", "answer": "se", "hint": "se + 3 л. ед." },
+      { "type": "mcq", "prompt": "Los problemas ___ resueltos ayer. (действие, мн., прошлое)", "options": ["son", "fueron", "están", "se"], "answer": 1 },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Aquí", "se", "trabaja", "mucho"], "answer": ["Aquí", "se", "trabaja", "mucho"] },
+      { "type": "mcq", "prompt": "«Дома уже проданы» (результат):", "options": ["Las casas son vendidas", "Las casas están vendidas", "Las casas fueron vendidas", "Se venden las casas"], "answer": 1 }
+    ]
+  },
+  {
+    "title": "Ser и estar: тонкости с прилагательными",
+    "level": "B2",
+    "order": 6,
+    "theory": [
+      { "type": "paragraph", "text": "С некоторыми прилагательными выбор ser/estar меняет смысл: ser = постоянное качество, estar = состояние/восприятие в момент." },
+      { "type": "table", "headers": ["Прилаг.", "ser (качество)", "estar (состояние)"], "rows": [["listo", "умный", "готовый"], ["aburrido", "скучный", "скучающий"], ["rico", "богатый", "вкусный"], ["malo", "плохой", "больной"], ["bueno", "хороший/добрый", "вкусный/привлекательный"]] },
+      { "type": "example", "es": "Es listo (умный), pero hoy no está listo (не готов).", "ru": "Он умный, но сегодня не готов." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "La sopa ___ muy rica. (вкусная → состояние)", "options": ["es", "está", "ser", "son"], "answer": 1 },
+      { "type": "mcq", "prompt": "Mi amigo ___ muy listo. (умный → качество)", "options": ["es", "está", "están", "ser"], "answer": 0 },
+      { "type": "fill", "prompt": "¿Ya ___ listo para salir? (готов — estar, tú)", "answer": "estás", "hint": "estar, tú" },
+      { "type": "mcq", "prompt": "La película ___ aburrida. (скучный фильм → качество)", "options": ["es", "está", "ser", "son"], "answer": 0 },
+      { "type": "mcq", "prompt": "Estoy aburrido. Значение:", "options": ["я скучный", "мне скучно", "я умный", "я готов"], "answer": 1 },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["La", "comida", "está", "muy", "rica"], "answer": ["La", "comida", "está", "muy", "rica"] },
+      { "type": "mcq", "prompt": "Pedro ___ malo (болеет). (состояние)", "options": ["es", "está", "ser", "son"], "answer": 1 }
+    ]
+  }
+]

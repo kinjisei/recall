@@ -1,0 +1,321 @@
+{
+  "persons": ["yo", "tú", "él / ella / usted", "nosotros", "vosotros", "ellos / ustedes"],
+  "tenses": [
+    {
+      "id": "presente",
+      "name": "Presente de indicativo",
+      "nameRu": "Настоящее время",
+      "level": "A1",
+      "usage": "Регулярные действия, факты и привычки. Самое частое время в языке.",
+      "example": "Hablo español todos los días.",
+      "exampleRu": "Я говорю по-испански каждый день.",
+      "endings": [
+        { "label": "-AR (hablar)", "forms": ["-o", "-as", "-a", "-amos", "-áis", "-an"] },
+        { "label": "-ER (comer)", "forms": ["-o", "-es", "-e", "-emos", "-éis", "-en"] },
+        { "label": "-IR (vivir)", "forms": ["-o", "-es", "-e", "-imos", "-ís", "-en"] }
+      ],
+      "verbs": [
+        { "infinitive": "hablar", "ru": "говорить", "irregular": false, "forms": ["hablo", "hablas", "habla", "hablamos", "habláis", "hablan"] },
+        { "infinitive": "comer", "ru": "есть", "irregular": false, "forms": ["como", "comes", "come", "comemos", "coméis", "comen"] },
+        { "infinitive": "vivir", "ru": "жить", "irregular": false, "forms": ["vivo", "vives", "vive", "vivimos", "vivís", "viven"] },
+        { "infinitive": "ser", "ru": "быть (постоянный признак)", "irregular": true, "forms": ["soy", "eres", "es", "somos", "sois", "son"] },
+        { "infinitive": "estar", "ru": "быть (состояние, место)", "irregular": true, "forms": ["estoy", "estás", "está", "estamos", "estáis", "están"] },
+        { "infinitive": "tener", "ru": "иметь", "irregular": true, "forms": ["tengo", "tienes", "tiene", "tenemos", "tenéis", "tienen"] },
+        { "infinitive": "ir", "ru": "идти, ехать", "irregular": true, "forms": ["voy", "vas", "va", "vamos", "vais", "van"] },
+        { "infinitive": "hacer", "ru": "делать", "irregular": true, "forms": ["hago", "haces", "hace", "hacemos", "hacéis", "hacen"] },
+        { "infinitive": "querer", "ru": "хотеть, любить", "irregular": true, "forms": ["quiero", "quieres", "quiere", "queremos", "queréis", "quieren"] },
+        { "infinitive": "poder", "ru": "мочь", "irregular": true, "forms": ["puedo", "puedes", "puede", "podemos", "podéis", "pueden"] },
+        { "infinitive": "saber", "ru": "знать", "irregular": true, "forms": ["sé", "sabes", "sabe", "sabemos", "sabéis", "saben"] },
+        { "infinitive": "decir", "ru": "говорить, сказать", "irregular": true, "forms": ["digo", "dices", "dice", "decimos", "decís", "dicen"] },
+        { "infinitive": "venir", "ru": "приходить", "irregular": true, "forms": ["vengo", "vienes", "viene", "venimos", "venís", "vienen"] },
+        { "infinitive": "pensar", "ru": "думать", "irregular": true, "forms": ["pienso", "piensas", "piensa", "pensamos", "pensáis", "piensan"] },
+        { "infinitive": "dormir", "ru": "спать", "irregular": true, "forms": ["duermo", "duermes", "duerme", "dormimos", "dormís", "duermen"] },
+        { "infinitive": "pedir", "ru": "просить, заказывать", "irregular": true, "forms": ["pido", "pides", "pide", "pedimos", "pedís", "piden"] },
+        { "infinitive": "jugar", "ru": "играть", "irregular": true, "forms": ["juego", "juegas", "juega", "jugamos", "jugáis", "juegan"] },
+        { "infinitive": "oír", "ru": "слышать", "irregular": true, "forms": ["oigo", "oyes", "oye", "oímos", "oís", "oyen"] },
+        { "infinitive": "conocer", "ru": "знать, быть знакомым", "irregular": true, "forms": ["conozco", "conoces", "conoce", "conocemos", "conocéis", "conocen"] },
+        { "infinitive": "dar", "ru": "давать", "irregular": true, "forms": ["doy", "das", "da", "damos", "dais", "dan"] },
+        { "infinitive": "salir", "ru": "выходить", "irregular": true, "forms": ["salgo", "sales", "sale", "salimos", "salís", "salen"] },
+        { "infinitive": "poner", "ru": "класть, ставить", "irregular": true, "forms": ["pongo", "pones", "pone", "ponemos", "ponéis", "ponen"] }
+      ],
+      "note": "Чередования в корне: e→ie (querer → quiero, pensar → pienso), o→ue (poder → puedo, dormir → duermo), e→i (pedir → pido), u→ue (jugar → juego). Они происходят во всех лицах, кроме nosotros и vosotros."
+    },
+    {
+      "id": "estar-gerundio",
+      "name": "Estar + gerundio",
+      "nameRu": "Действие прямо сейчас",
+      "level": "A2",
+      "usage": "То, что происходит в момент речи — аналог английского Present Continuous.",
+      "example": "Ahora mismo estoy estudiando.",
+      "exampleRu": "Прямо сейчас я занимаюсь.",
+      "endings": [
+        { "label": "estar (presente)", "forms": ["estoy", "estás", "está", "estamos", "estáis", "están"] }
+      ],
+      "verbs": [
+        { "infinitive": "hablar", "ru": "говорить", "irregular": false, "forms": ["estoy hablando", "estás hablando", "está hablando", "estamos hablando", "estáis hablando", "están hablando"] }
+      ],
+      "note": "Герундий: -ar → -ando (hablando), -er/-ir → -iendo (comiendo). Неправильные герундии: leer → leyendo, dormir → durmiendo, pedir → pidiendo, ir → yendo."
+    },
+    {
+      "id": "ir-a-infinitivo",
+      "name": "Ir a + infinitivo",
+      "nameRu": "Ближайшее будущее",
+      "level": "A2",
+      "usage": "Планы и ближайшее будущее: voy a comprar — я собираюсь купить / куплю.",
+      "example": "Mañana voy a estudiar mucho.",
+      "exampleRu": "Завтра я буду много заниматься.",
+      "endings": [
+        { "label": "ir (presente)", "forms": ["voy", "vas", "va", "vamos", "vais", "van"] }
+      ],
+      "verbs": [
+        { "infinitive": "comprar", "ru": "покупать", "irregular": false, "forms": ["voy a comprar", "vas a comprar", "va a comprar", "vamos a comprar", "vais a comprar", "van a comprar"] }
+      ],
+      "note": "Конструкция всегда трёхчастная: ir (в нужном лице) + a + инфинитив. В разговорной речи заменяет futuro simple."
+    },
+    {
+      "id": "indefinido",
+      "name": "Pretérito indefinido",
+      "nameRu": "Прошедшее завершённое",
+      "level": "A2",
+      "usage": "Однократные завершённые действия в прошлом. Маркеры: ayer, el año pasado, en 2020, de repente.",
+      "example": "Ayer comí paella en un restaurante.",
+      "exampleRu": "Вчера я поел паэлью в ресторане.",
+      "endings": [
+        { "label": "-AR (hablar)", "forms": ["-é", "-aste", "-ó", "-amos", "-asteis", "-aron"] },
+        { "label": "-ER / -IR (comer, vivir)", "forms": ["-í", "-iste", "-ió", "-imos", "-isteis", "-ieron"] }
+      ],
+      "verbs": [
+        { "infinitive": "hablar", "ru": "говорить", "irregular": false, "forms": ["hablé", "hablaste", "habló", "hablamos", "hablasteis", "hablaron"] },
+        { "infinitive": "comer", "ru": "есть", "irregular": false, "forms": ["comí", "comiste", "comió", "comimos", "comisteis", "comieron"] },
+        { "infinitive": "ser / ir", "ru": "быть / идти (формы совпадают)", "irregular": true, "forms": ["fui", "fuiste", "fue", "fuimos", "fuisteis", "fueron"] },
+        { "infinitive": "estar", "ru": "быть, находиться", "irregular": true, "forms": ["estuve", "estuviste", "estuvo", "estuvimos", "estuvisteis", "estuvieron"] },
+        { "infinitive": "tener", "ru": "иметь", "irregular": true, "forms": ["tuve", "tuviste", "tuvo", "tuvimos", "tuvisteis", "tuvieron"] },
+        { "infinitive": "hacer", "ru": "делать", "irregular": true, "forms": ["hice", "hiciste", "hizo", "hicimos", "hicisteis", "hicieron"] },
+        { "infinitive": "decir", "ru": "сказать", "irregular": true, "forms": ["dije", "dijiste", "dijo", "dijimos", "dijisteis", "dijeron"] },
+        { "infinitive": "dar", "ru": "давать", "irregular": true, "forms": ["di", "diste", "dio", "dimos", "disteis", "dieron"] },
+        { "infinitive": "ver", "ru": "видеть", "irregular": true, "forms": ["vi", "viste", "vio", "vimos", "visteis", "vieron"] },
+        { "infinitive": "poder", "ru": "мочь", "irregular": true, "forms": ["pude", "pudiste", "pudo", "pudimos", "pudisteis", "pudieron"] },
+        { "infinitive": "venir", "ru": "приходить", "irregular": true, "forms": ["vine", "viniste", "vino", "vinimos", "vinisteis", "vinieron"] },
+        { "infinitive": "poner", "ru": "класть, ставить", "irregular": true, "forms": ["puse", "pusiste", "puso", "pusimos", "pusisteis", "pusieron"] },
+        { "infinitive": "querer", "ru": "хотеть", "irregular": true, "forms": ["quise", "quisiste", "quiso", "quisimos", "quisisteis", "quisieron"] },
+        { "infinitive": "traer", "ru": "приносить", "irregular": true, "forms": ["traje", "trajiste", "trajo", "trajimos", "trajisteis", "trajeron"] }
+      ],
+      "note": "У «сильных» глаголов (estuve, tuve, hice, dije…) особая основа, ударение не на окончании и нет акцентов. После j окончание -eron, а не -ieron: dijeron, trajeron."
+    },
+    {
+      "id": "imperfecto",
+      "name": "Pretérito imperfecto",
+      "nameRu": "Прошедшее длительное",
+      "level": "A2",
+      "usage": "Привычки, фон и описания в прошлом. Маркеры: antes, todos los días, de pequeño, mientras.",
+      "example": "De pequeño tenía mucho miedo.",
+      "exampleRu": "В детстве я всего боялся.",
+      "endings": [
+        { "label": "-AR (hablar)", "forms": ["-aba", "-abas", "-aba", "-ábamos", "-abais", "-aban"] },
+        { "label": "-ER / -IR (comer, vivir)", "forms": ["-ía", "-ías", "-ía", "-íamos", "-íais", "-ían"] }
+      ],
+      "verbs": [
+        { "infinitive": "hablar", "ru": "говорить", "irregular": false, "forms": ["hablaba", "hablabas", "hablaba", "hablábamos", "hablabais", "hablaban"] },
+        { "infinitive": "comer", "ru": "есть", "irregular": false, "forms": ["comía", "comías", "comía", "comíamos", "comíais", "comían"] },
+        { "infinitive": "ser", "ru": "быть", "irregular": true, "forms": ["era", "eras", "era", "éramos", "erais", "eran"] },
+        { "infinitive": "ir", "ru": "идти, ехать", "irregular": true, "forms": ["iba", "ibas", "iba", "íbamos", "ibais", "iban"] },
+        { "infinitive": "ver", "ru": "видеть", "irregular": true, "forms": ["veía", "veías", "veía", "veíamos", "veíais", "veían"] }
+      ],
+      "note": "Неправильных глаголов всего три: ser, ir и ver. Сравните с indefinido: comí (однократно) vs comía (регулярно)."
+    },
+    {
+      "id": "perfecto",
+      "name": "Pretérito perfecto",
+      "nameRu": "Прошедшее с haber",
+      "level": "A2",
+      "usage": "Действие в прошлом, связанное с настоящим. Маркеры: hoy, esta semana, ya, todavía no, alguna vez.",
+      "example": "Hoy he trabajado mucho.",
+      "exampleRu": "Сегодня я много работал.",
+      "endings": [
+        { "label": "haber (presente) + причастие", "forms": ["he", "has", "ha", "hemos", "habéis", "han"] }
+      ],
+      "verbs": [
+        { "infinitive": "trabajar", "ru": "работать", "irregular": false, "forms": ["he trabajado", "has trabajado", "ha trabajado", "hemos trabajado", "habéis trabajado", "han trabajado"] },
+        { "infinitive": "hacer", "ru": "делать", "irregular": true, "forms": ["he hecho", "has hecho", "ha hecho", "hemos hecho", "habéis hecho", "han hecho"] }
+      ],
+      "note": "Причастие: -ar → -ado, -er/-ir → -ido. Неправильные причастия: hecho, dicho, visto, escrito, puesto, vuelto, abierto, roto, muerto."
+    },
+    {
+      "id": "futuro",
+      "name": "Futuro simple",
+      "nameRu": "Будущее время",
+      "level": "B1",
+      "usage": "Предсказания, обещания и предположения. Окончания добавляются к целому инфинитиву.",
+      "example": "Te llamaré mañana.",
+      "exampleRu": "Я позвоню тебе завтра.",
+      "endings": [
+        { "label": "инфинитив + окончание", "forms": ["-é", "-ás", "-á", "-emos", "-éis", "-án"] }
+      ],
+      "verbs": [
+        { "infinitive": "hablar", "ru": "говорить", "irregular": false, "forms": ["hablaré", "hablarás", "hablará", "hablaremos", "hablaréis", "hablarán"] },
+        { "infinitive": "tener", "ru": "иметь", "irregular": true, "forms": ["tendré", "tendrás", "tendrá", "tendremos", "tendréis", "tendrán"] },
+        { "infinitive": "hacer", "ru": "делать", "irregular": true, "forms": ["haré", "harás", "hará", "haremos", "haréis", "harán"] },
+        { "infinitive": "decir", "ru": "сказать", "irregular": true, "forms": ["diré", "dirás", "dirá", "diremos", "diréis", "dirán"] },
+        { "infinitive": "poder", "ru": "мочь", "irregular": true, "forms": ["podré", "podrás", "podrá", "podremos", "podréis", "podrán"] },
+        { "infinitive": "saber", "ru": "знать", "irregular": true, "forms": ["sabré", "sabrás", "sabrá", "sabremos", "sabréis", "sabrán"] },
+        { "infinitive": "venir", "ru": "приходить", "irregular": true, "forms": ["vendré", "vendrás", "vendrá", "vendremos", "vendréis", "vendrán"] },
+        { "infinitive": "salir", "ru": "выходить", "irregular": true, "forms": ["saldré", "saldrás", "saldrá", "saldremos", "saldréis", "saldrán"] },
+        { "infinitive": "poner", "ru": "класть, ставить", "irregular": true, "forms": ["pondré", "pondrás", "pondrá", "pondremos", "pondréis", "pondrán"] },
+        { "infinitive": "querer", "ru": "хотеть", "irregular": true, "forms": ["querré", "querrás", "querrá", "querremos", "querréis", "querrán"] }
+      ],
+      "note": "Неправильны только основы (tendr-, har-, dir-…) — окончания у всех глаголов одинаковые."
+    },
+    {
+      "id": "condicional",
+      "name": "Condicional simple",
+      "nameRu": "Условное наклонение",
+      "level": "B1",
+      "usage": "Вежливые просьбы, советы, нереальные условия и «будущее в прошедшем» в косвенной речи.",
+      "example": "Si tuviera dinero, compraría un coche.",
+      "exampleRu": "Если бы у меня были деньги, я купил бы машину.",
+      "endings": [
+        { "label": "инфинитив + окончание", "forms": ["-ía", "-ías", "-ía", "-íamos", "-íais", "-ían"] }
+      ],
+      "verbs": [
+        { "infinitive": "comprar", "ru": "покупать", "irregular": false, "forms": ["compraría", "comprarías", "compraría", "compraríamos", "compraríais", "comprarían"] },
+        { "infinitive": "tener", "ru": "иметь", "irregular": true, "forms": ["tendría", "tendrías", "tendría", "tendríamos", "tendríais", "tendrían"] },
+        { "infinitive": "hacer", "ru": "делать", "irregular": true, "forms": ["haría", "harías", "haría", "haríamos", "haríais", "harían"] },
+        { "infinitive": "poder", "ru": "мочь", "irregular": true, "forms": ["podría", "podrías", "podría", "podríamos", "podríais", "podrían"] },
+        { "infinitive": "saber", "ru": "знать", "irregular": true, "forms": ["sabría", "sabrías", "sabría", "sabríamos", "sabríais", "sabrían"] },
+        { "infinitive": "venir", "ru": "приходить", "irregular": true, "forms": ["vendría", "vendrías", "vendría", "vendríamos", "vendríais", "vendrían"] }
+      ],
+      "note": "Неправильные основы те же, что у будущего времени: tendr-, har-, dir-, podr-, sabr-, vendr-, saldr-."
+    },
+    {
+      "id": "pluscuamperfecto",
+      "name": "Pretérito pluscuamperfecto",
+      "nameRu": "Предпрошедшее (había + причастие)",
+      "level": "B1",
+      "usage": "«Прошлое до прошлого»: действие, которое случилось раньше другого прошедшего действия.",
+      "example": "Cuando llegué, el tren ya había salido.",
+      "exampleRu": "Когда я пришёл, поезд уже ушёл.",
+      "endings": [
+        { "label": "haber (imperfecto) + причастие", "forms": ["había", "habías", "había", "habíamos", "habíais", "habían"] }
+      ],
+      "verbs": [
+        { "infinitive": "salir", "ru": "выходить, уходить", "irregular": false, "forms": ["había salido", "habías salido", "había salido", "habíamos salido", "habíais salido", "habían salido"] },
+        { "infinitive": "ver", "ru": "видеть", "irregular": true, "forms": ["había visto", "habías visto", "había visto", "habíamos visto", "habíais visto", "habían visto"] }
+      ],
+      "note": "Причастия те же, что в perfecto: -ado/-ido и неправильные hecho, dicho, visto, escrito, puesto, vuelto, abierto, roto."
+    },
+    {
+      "id": "subjuntivo-presente",
+      "name": "Presente de subjuntivo",
+      "nameRu": "Субхунтив: настоящее",
+      "level": "B1",
+      "usage": "После espero que, quiero que, no creo que, para que, es importante que и cuando (о будущем).",
+      "example": "Espero que estés bien.",
+      "exampleRu": "Надеюсь, что у тебя всё хорошо.",
+      "endings": [
+        { "label": "-AR (hablar)", "forms": ["-e", "-es", "-e", "-emos", "-éis", "-en"] },
+        { "label": "-ER / -IR (comer, vivir)", "forms": ["-a", "-as", "-a", "-amos", "-áis", "-an"] }
+      ],
+      "verbs": [
+        { "infinitive": "hablar", "ru": "говорить", "irregular": false, "forms": ["hable", "hables", "hable", "hablemos", "habléis", "hablen"] },
+        { "infinitive": "comer", "ru": "есть", "irregular": false, "forms": ["coma", "comas", "coma", "comamos", "comáis", "coman"] },
+        { "infinitive": "ser", "ru": "быть", "irregular": true, "forms": ["sea", "seas", "sea", "seamos", "seáis", "sean"] },
+        { "infinitive": "estar", "ru": "быть, находиться", "irregular": true, "forms": ["esté", "estés", "esté", "estemos", "estéis", "estén"] },
+        { "infinitive": "ir", "ru": "идти, ехать", "irregular": true, "forms": ["vaya", "vayas", "vaya", "vayamos", "vayáis", "vayan"] },
+        { "infinitive": "haber", "ru": "вспомогательный", "irregular": true, "forms": ["haya", "hayas", "haya", "hayamos", "hayáis", "hayan"] },
+        { "infinitive": "saber", "ru": "знать", "irregular": true, "forms": ["sepa", "sepas", "sepa", "sepamos", "sepáis", "sepan"] },
+        { "infinitive": "tener", "ru": "иметь", "irregular": true, "forms": ["tenga", "tengas", "tenga", "tengamos", "tengáis", "tengan"] },
+        { "infinitive": "dar", "ru": "давать", "irregular": true, "forms": ["dé", "des", "dé", "demos", "deis", "den"] },
+        { "infinitive": "llegar", "ru": "приходить, приезжать", "irregular": true, "forms": ["llegue", "llegues", "llegue", "lleguemos", "lleguéis", "lleguen"] },
+        { "infinitive": "hacer", "ru": "делать", "irregular": true, "forms": ["haga", "hagas", "haga", "hagamos", "hagáis", "hagan"] },
+        { "infinitive": "poder", "ru": "мочь", "irregular": true, "forms": ["pueda", "puedas", "pueda", "podamos", "podáis", "puedan"] },
+        { "infinitive": "venir", "ru": "приходить", "irregular": true, "forms": ["venga", "vengas", "venga", "vengamos", "vengáis", "vengan"] },
+        { "infinitive": "ver", "ru": "видеть", "irregular": true, "forms": ["vea", "veas", "vea", "veamos", "veáis", "vean"] }
+      ],
+      "note": "Окончания «меняются местами»: глаголы на -ar получают -e, а на -er/-ir получают -a. У llegar орфографическая замена g → gu перед e."
+    },
+    {
+      "id": "imperativo",
+      "name": "Imperativo",
+      "nameRu": "Повелительное наклонение",
+      "level": "B1",
+      "persons": ["tú", "usted", "nosotros", "vosotros", "ustedes"],
+      "usage": "Просьбы, приказы, инструкции: habla, pase, siéntese. Формы «yo» нет; usted/nosotros/ustedes берутся из subjuntivo.",
+      "example": "Habla más despacio, por favor.",
+      "exampleRu": "Говори помедленнее, пожалуйста.",
+      "endings": [
+        { "label": "-AR (hablar)", "forms": ["-a", "-e", "-emos", "-ad", "-en"] },
+        { "label": "-ER (comer)", "forms": ["-e", "-a", "-amos", "-ed", "-an"] },
+        { "label": "-IR (vivir)", "forms": ["-e", "-a", "-amos", "-id", "-an"] }
+      ],
+      "verbs": [
+        { "infinitive": "hablar", "ru": "говорить", "irregular": false, "forms": ["habla", "hable", "hablemos", "hablad", "hablen"] },
+        { "infinitive": "comer", "ru": "есть", "irregular": false, "forms": ["come", "coma", "comamos", "comed", "coman"] },
+        { "infinitive": "hacer", "ru": "делать", "irregular": true, "forms": ["haz", "haga", "hagamos", "haced", "hagan"] },
+        { "infinitive": "poner", "ru": "класть, ставить", "irregular": true, "forms": ["pon", "ponga", "pongamos", "poned", "pongan"] },
+        { "infinitive": "decir", "ru": "сказать", "irregular": true, "forms": ["di", "diga", "digamos", "decid", "digan"] },
+        { "infinitive": "ir", "ru": "идти, ехать", "irregular": true, "forms": ["ve", "vaya", "vayamos", "id", "vayan"] },
+        { "infinitive": "ser", "ru": "быть", "irregular": true, "forms": ["sé", "sea", "seamos", "sed", "sean"] },
+        { "infinitive": "venir", "ru": "приходить", "irregular": true, "forms": ["ven", "venga", "vengamos", "venid", "vengan"] }
+      ],
+      "note": "Отрицательный императив ВЕСЬ из subjuntivo: no hables, no comas, no vayas. Особые формы tú: haz, pon, sal, ten, ven, di, sé, ve. Местоимения приклеиваются к утвердительной форме: dímelo, siéntate."
+    },
+    {
+      "id": "futuro-perfecto",
+      "name": "Futuro perfecto",
+      "nameRu": "Будущее совершённое",
+      "level": "B2",
+      "usage": "Действие, которое завершится к моменту в будущем (para junio, antes de las cinco), и предположения о недавнем прошлом.",
+      "example": "Para junio ya habré terminado la carrera.",
+      "exampleRu": "К июню я уже закончу университет.",
+      "endings": [
+        { "label": "haber (futuro) + причастие", "forms": ["habré", "habrás", "habrá", "habremos", "habréis", "habrán"] }
+      ],
+      "verbs": [
+        { "infinitive": "terminar", "ru": "заканчивать", "irregular": false, "forms": ["habré terminado", "habrás terminado", "habrá terminado", "habremos terminado", "habréis terminado", "habrán terminado"] }
+      ],
+      "note": "Второе значение — догадка о прошлом: ¿Dónde está Juan? — Habrá salido («наверное, вышел»)."
+    },
+    {
+      "id": "subjuntivo-imperfecto",
+      "name": "Imperfecto de subjuntivo",
+      "nameRu": "Субхунтив: прошедшее",
+      "level": "B2",
+      "usage": "Согласование времён (quería que vinieras), нереальные условия (si tuviera…) и como si («как будто»).",
+      "example": "Quería que vinieras a la reunión.",
+      "exampleRu": "Я хотел, чтобы ты пришёл на встречу.",
+      "endings": [
+        { "label": "-AR (hablar)", "forms": ["-ara", "-aras", "-ara", "-áramos", "-arais", "-aran"] },
+        { "label": "-ER / -IR (comer, vivir)", "forms": ["-iera", "-ieras", "-iera", "-iéramos", "-ierais", "-ieran"] }
+      ],
+      "verbs": [
+        { "infinitive": "hablar", "ru": "говорить", "irregular": false, "forms": ["hablara", "hablaras", "hablara", "habláramos", "hablarais", "hablaran"] },
+        { "infinitive": "tener", "ru": "иметь", "irregular": true, "forms": ["tuviera", "tuvieras", "tuviera", "tuviéramos", "tuvierais", "tuvieran"] },
+        { "infinitive": "venir", "ru": "приходить", "irregular": true, "forms": ["viniera", "vinieras", "viniera", "viniéramos", "vinierais", "vinieran"] },
+        { "infinitive": "saber", "ru": "знать", "irregular": true, "forms": ["supiera", "supieras", "supiera", "supiéramos", "supierais", "supieran"] },
+        { "infinitive": "ser / ir", "ru": "быть / идти (формы совпадают)", "irregular": true, "forms": ["fuera", "fueras", "fuera", "fuéramos", "fuerais", "fueran"] },
+        { "infinitive": "decir", "ru": "сказать", "irregular": true, "forms": ["dijera", "dijeras", "dijera", "dijéramos", "dijerais", "dijeran"] },
+        { "infinitive": "hacer", "ru": "делать", "irregular": true, "forms": ["hiciera", "hicieras", "hiciera", "hiciéramos", "hicierais", "hicieran"] },
+        { "infinitive": "poder", "ru": "мочь", "irregular": true, "forms": ["pudiera", "pudieras", "pudiera", "pudiéramos", "pudierais", "pudieran"] },
+        { "infinitive": "estar", "ru": "быть, находиться", "irregular": true, "forms": ["estuviera", "estuvieras", "estuviera", "estuviéramos", "estuvierais", "estuvieran"] }
+      ],
+      "note": "Основа = 3-е лицо мн. ч. indefinido без -ron: tuvieron → tuviera. Существуют параллельные формы на -se: hablase, tuviese."
+    },
+    {
+      "id": "condicional-compuesto",
+      "name": "Hubiera / habría + participio",
+      "nameRu": "Нереальное прошлое",
+      "level": "B2",
+      "usage": "Условия, которые уже не сбылись: «если бы я (тогда) готовился, я бы сдал». И сожаления с ojalá.",
+      "example": "Si hubiera estudiado, habría aprobado.",
+      "exampleRu": "Если бы я готовился, я бы сдал.",
+      "endings": [
+        { "label": "haber (imperf. de subjuntivo) + причастие", "forms": ["hubiera", "hubieras", "hubiera", "hubiéramos", "hubierais", "hubieran"] },
+        { "label": "haber (condicional) + причастие", "forms": ["habría", "habrías", "habría", "habríamos", "habríais", "habrían"] }
+      ],
+      "verbs": [
+        { "infinitive": "estudiar", "ru": "учиться, готовиться", "irregular": false, "forms": ["hubiera estudiado", "hubieras estudiado", "hubiera estudiado", "hubiéramos estudiado", "hubierais estudiado", "hubieran estudiado"] }
+      ],
+      "note": "В части с «si» — hubiera + причастие, в главной части — habría + причастие. Сожаление о прошлом: Ojalá hubieras venido — жаль, что ты не пришёл."
+    }
+  ]
+}

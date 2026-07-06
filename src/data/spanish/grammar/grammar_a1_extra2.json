@@ -1,0 +1,62 @@
+[
+  {
+    "title": "Чередование гласных (e→ie, o→ue, e→i)",
+    "level": "A1",
+    "order": 28,
+    "theory": [
+      { "type": "paragraph", "text": "У многих частых глаголов в настоящем времени меняется гласная в корне — но только под ударением. В формах nosotros и vosotros ударение уходит на окончание, поэтому корень остаётся обычным: quiero, но queremos." },
+      { "type": "table", "headers": ["Тип", "Примеры"], "rows": [["e → ie", "querer → quiero · pensar → pienso · empezar → empiezo"], ["o → ue", "poder → puedo · dormir → duermo · volver → vuelvo"], ["e → i", "pedir → pido · repetir → repito · servir → sirvo"]] },
+      { "type": "example", "es": "¿A qué hora empieza la película?", "ru": "Во сколько начинается фильм?" },
+      { "type": "paragraph", "text": "Запомните схему «сапожка»: чередование есть в yo, tú, él, ellos — и исчезает в nosotros, vosotros: duermo, duermes, duerme, dormimos, dormís, duermen." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "Yo ___ ir al cine esta noche. (querer)", "options": ["quero", "quiero", "quiere", "queremos"], "answer": 1 },
+      { "type": "mcq", "prompt": "¿Cuántas horas ___ tu hijo? (dormir)", "options": ["dorme", "duerme", "dormimos", "duermo"], "answer": 1 },
+      { "type": "fill", "prompt": "La clase ___ a las nueve. (empezar → empieza)", "answer": "empieza", "hint": "e → ie" },
+      { "type": "mcq", "prompt": "Nosotros no ___ venir mañana. (poder)", "options": ["puedemos", "podemos", "puedo", "pueden"], "answer": 1 },
+      { "type": "fill", "prompt": "Ella siempre ___ pizza en este restaurante. (pedir → pide)", "answer": "pide", "hint": "e → i" },
+      { "type": "mcq", "prompt": "¿En qué ___ ahora? (pensar, tú)", "options": ["pensas", "piensas", "pienses", "pensáis"], "answer": 1 },
+      { "type": "order", "prompt": "Соберите вопрос", "words": ["¿A", "qué", "hora", "vuelves?"], "answer": ["¿A", "qué", "hora", "vuelves?"] }
+    ]
+  },
+  {
+    "title": "Который час (¿Qué hora es?)",
+    "level": "A1",
+    "order": 29,
+    "theory": [
+      { "type": "paragraph", "text": "Время спрашивают вопросом ¿Qué hora es? Для одного часа — Es la una, для остальных — Son las dos/tres/cuatro… Минуты добавляют через y, «без» — через menos." },
+      { "type": "table", "headers": ["Время", "По-испански"], "rows": [["1:00", "Es la una"], ["3:15", "Son las tres y cuarto"], ["5:30", "Son las cinco y media"], ["8:45", "Son las nueve menos cuarto"], ["в 8:00", "a las ocho"]] },
+      { "type": "example", "es": "—¿Qué hora es? —Son las siete y media de la tarde.", "ru": "— Который час? — Половина восьмого вечера." },
+      { "type": "paragraph", "text": "Часть суток уточняют так: de la mañana (утра), de la tarde (дня/вечера), de la noche (ночи). «Во сколько?» — ¿A qué hora?: La clase empieza a las nueve." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "1:00 → ___ la una.", "options": ["Son", "Es", "Está", "Hay"], "answer": 1 },
+      { "type": "mcq", "prompt": "«Половина шестого вечера» — это…", "options": ["Son las seis y media de la mañana", "Son las cinco y media de la tarde", "Es la cinco y media"], "answer": 1 },
+      { "type": "fill", "prompt": "4:15 → Son las cuatro y ___. (четверть)", "answer": "cuarto", "hint": "15 минут = cuarto" },
+      { "type": "mcq", "prompt": "8:45 → Son las nueve ___ cuarto.", "options": ["y", "menos", "sin", "para"], "answer": 1 },
+      { "type": "fill", "prompt": "«Во сколько начинается урок?» → ¿___ qué hora empieza la clase?", "answer": "A", "hint": "предлог a" },
+      { "type": "mcq", "prompt": "«В восемь утра» — это…", "options": ["a las ocho de la mañana", "en las ocho por mañana", "las ocho de mañana"], "answer": 0 },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Son", "las", "dos", "y", "media"], "answer": ["Son", "las", "dos", "y", "media"] }
+    ]
+  },
+  {
+    "title": "Предлоги места (encima de, debajo de…)",
+    "level": "A1",
+    "order": 30,
+    "theory": [
+      { "type": "paragraph", "text": "Где что находится, описывают глаголом estar + предлог места. Большинство предлогов места — составные, с de." },
+      { "type": "table", "headers": ["Предлог", "Значение"], "rows": [["encima de", "на, сверху"], ["debajo de", "под"], ["delante de", "перед"], ["detrás de", "за, позади"], ["al lado de", "рядом с"], ["entre", "между"], ["dentro de", "внутри"], ["cerca de / lejos de", "близко от / далеко от"]] },
+      { "type": "example", "es": "El gato está debajo de la mesa.", "ru": "Кот под столом." },
+      { "type": "paragraph", "text": "Не забудьте слияния: de + el = del, a + el = al: al lado del banco (рядом с банком)." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "Las llaves están ___ la mesa. (на)", "options": ["debajo de", "encima de", "detrás de", "entre"], "answer": 1 },
+      { "type": "mcq", "prompt": "El perro duerme ___ del sofá. (за)", "options": ["detrás", "delante", "encima", "dentro"], "answer": 0 },
+      { "type": "fill", "prompt": "La farmacia está al ___ del banco. (рядом)", "answer": "lado", "hint": "al lado de" },
+      { "type": "mcq", "prompt": "Vivo ___ del centro, a una hora en tren. (далеко)", "options": ["cerca", "lejos", "dentro", "debajo"], "answer": 1 },
+      { "type": "mcq", "prompt": "El supermercado está ___ el banco y la farmacia.", "options": ["entre", "encima", "dentro", "al lado"], "answer": 0 },
+      { "type": "fill", "prompt": "Los libros están ___ de la mochila. (внутри)", "answer": "dentro", "hint": "dentro de" },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["El", "gato", "está", "debajo", "de", "la", "cama"], "answer": ["El", "gato", "está", "debajo", "de", "la", "cama"] }
+    ]
+  }
+]

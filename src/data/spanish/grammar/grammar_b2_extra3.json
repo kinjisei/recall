@@ -1,0 +1,42 @@
+[
+  {
+    "title": "Перифразы с герундием (llevar, seguir, ir + gerundio)",
+    "level": "B2",
+    "order": 208,
+    "theory": [
+      { "type": "paragraph", "text": "Испанский любит выражать характер действия связкой «глагол + герундий». Llevar + срок + gerundio — «уже N времени делаю», seguir + gerundio — «продолжаю делать», ir + gerundio — «постепенно делаю»." },
+      { "type": "table", "headers": ["Перифраза", "Значение", "Пример"], "rows": [["llevar + срок + ger.", "уже N времени", "Llevo tres años estudiando español"], ["seguir + ger.", "продолжать", "Sigue trabajando en el banco"], ["ir + ger.", "постепенно", "Voy mejorando poco a poco"], ["andar + ger. (разг.)", "ходить и делать", "Anda diciendo tonterías"]] },
+      { "type": "example", "es": "Llevo media hora esperándote.", "ru": "Я жду тебя уже полчаса." },
+      { "type": "paragraph", "text": "Llevar + gerundio — ёмкая замена конструкции hace … que: Llevo tres años viviendo aquí = Hace tres años que vivo aquí. Отрицание строится иначе: llevo dos días SIN dormir («два дня не сплю»)." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "___ dos horas esperando el autobús.", "options": ["Llevo", "Tengo", "Hago", "Estoy"], "answer": 0 },
+      { "type": "mcq", "prompt": "Mi abuelo ___ trabajando a sus setenta años.", "options": ["lleva", "sigue", "va", "anda"], "answer": 1 },
+      { "type": "fill", "prompt": "Poco a poco ___ mejorando. (ir, yo)", "answer": "voy", "hint": "ir + gerundio = постепенно" },
+      { "type": "mcq", "prompt": "Llevamos meses ___ este proyecto. (preparar)", "options": ["preparar", "preparado", "preparando", "a preparar"], "answer": 2 },
+      { "type": "fill", "prompt": "Sigue ___ en la misma empresa. (trabajar)", "answer": "trabajando", "hint": "seguir + gerundio" },
+      { "type": "mcq", "prompt": "El clima va ___ cada año.", "options": ["cambiar", "cambiado", "cambiando", "a cambiar"], "answer": 2 },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Llevo", "media", "hora", "esperándote"], "answer": ["Llevo", "media", "hora", "esperándote"] }
+    ]
+  },
+  {
+    "title": "Продвинутые коннекторы (sin embargo, por lo tanto…)",
+    "level": "B2",
+    "order": 209,
+    "theory": [
+      { "type": "paragraph", "text": "Коннекторы уровня B2 делают речь связной и «взрослой». Контраст: sin embargo, no obstante (однако), en cambio (зато, напротив). Следствие: por lo tanto (следовательно), así que (так что). Добавление: además (кроме того), es más (более того)." },
+      { "type": "table", "headers": ["Тип", "Коннекторы", "Пример"], "rows": [["контраст", "sin embargo · no obstante · en cambio", "No estudió; sin embargo, aprobó"], ["следствие", "por lo tanto · así que", "Pienso, por lo tanto existo"], ["условие", "siempre que · a menos que (+ subj.)", "Iré siempre que me inviten"], ["добавление", "además · es más", "Es caro y, además, lento"]] },
+      { "type": "example", "es": "No estudió mucho; sin embargo, aprobó el examen.", "ru": "Он мало занимался; однако экзамен сдал." },
+      { "type": "paragraph", "text": "Siempre que («при условии, что») и a menos que («если только не») требуют subjuntivo: Te ayudo siempre que me lo pidas. A menos que me inviten, no iré." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "Llueve mucho; ___, saldremos a caminar.", "options": ["porque", "sin embargo", "además", "así que"], "answer": 1 },
+      { "type": "mcq", "prompt": "Pienso, ___ existo.", "options": ["en cambio", "a menos que", "por lo tanto", "no obstante"], "answer": 2 },
+      { "type": "fill", "prompt": "Te ayudo ___ que me lo pidas. (при условии, что)", "answer": "siempre", "hint": "siempre que + subjuntivo" },
+      { "type": "mcq", "prompt": "No iré a la fiesta ___ me inviten. (если только не)", "options": ["siempre que", "a menos que", "así que", "puesto que"], "answer": 1 },
+      { "type": "mcq", "prompt": "Juan es muy serio; su hermano, ___, es un bromista.", "options": ["por lo tanto", "además", "en cambio", "es más"], "answer": 2 },
+      { "type": "fill", "prompt": "Es tarde, ___ que nos vamos. (так что)", "answer": "así", "hint": "así que" },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["No", "obstante,", "seguiremos", "adelante"], "answer": ["No", "obstante,", "seguiremos", "adelante"] }
+    ]
+  }
+]

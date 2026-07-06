@@ -1,0 +1,119 @@
+[
+  {
+    "title": "Pretérito indefinido (прошедшее завершённое)",
+    "level": "A2",
+    "order": 9,
+    "theory": [
+      { "type": "paragraph", "text": "Pretérito indefinido описывает завершённые действия в прошлом с конкретным моментом времени (ayer, el año pasado)." },
+      { "type": "table", "headers": ["Местоимение", "hablar", "comer", "vivir"], "rows": [["yo", "hablé", "comí", "viví"], ["tú", "hablaste", "comiste", "viviste"], ["él/ella", "habló", "comió", "vivió"], ["nosotros", "hablamos", "comimos", "vivimos"], ["ellos", "hablaron", "comieron", "vivieron"]] },
+      { "type": "example", "es": "Ayer comí en un restaurante.", "ru": "Вчера я поел в ресторане." },
+      { "type": "paragraph", "text": "Важные неправильные: ser/ir → fui, fuiste, fue...; tener → tuve; hacer → hice." }
+    ],
+    "exercises": [
+      { "type": "fill", "prompt": "Ayer yo ___ paella. (comer)", "answer": "comí", "hint": "yo, -er" },
+      { "type": "mcq", "prompt": "El año pasado ellos ___ a México. (viajar)", "options": ["viajaron", "viajan", "viajaban", "viajarán"], "answer": 0 },
+      { "type": "fill", "prompt": "¿Tú ___ la película anoche? (ver)", "answer": "viste", "hint": "tú" },
+      { "type": "mcq", "prompt": "Ella ___ una carta a su madre. (escribir)", "options": ["escribe", "escribió", "escribía", "escribirá"], "answer": 1 },
+      { "type": "fill", "prompt": "Nosotros ___ en casa todo el día. (estar)", "answer": "estuvimos", "hint": "estar — неправ.: estuv-" },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Ayer", "fui", "al", "cine"], "answer": ["Ayer", "fui", "al", "cine"] },
+      { "type": "mcq", "prompt": "Yo ___ los deberes anoche. (hacer)", "options": ["hago", "hacía", "hice", "haré"], "answer": 2 }
+    ]
+  },
+  {
+    "title": "Pretérito imperfecto (описание прошлого)",
+    "level": "A2",
+    "order": 10,
+    "theory": [
+      { "type": "paragraph", "text": "Imperfecto описывает привычные/повторяющиеся действия и обстановку в прошлом (antes, siempre, todos los días)." },
+      { "type": "table", "headers": ["Местоимение", "hablar", "comer/vivir"], "rows": [["yo", "hablaba", "comía"], ["tú", "hablabas", "comías"], ["él/ella", "hablaba", "comía"], ["nosotros", "hablábamos", "comíamos"], ["ellos", "hablaban", "comían"]] },
+      { "type": "example", "es": "Antes vivía en un pueblo pequeño.", "ru": "Раньше я жил в маленькой деревне." },
+      { "type": "paragraph", "text": "Только 3 неправильных: ser → era; ir → iba; ver → veía." }
+    ],
+    "exercises": [
+      { "type": "fill", "prompt": "Antes yo ___ en Madrid. (vivir)", "answer": "vivía", "hint": "yo, -ir" },
+      { "type": "mcq", "prompt": "De niño él ___ mucho. (jugar)", "options": ["jugó", "jugaba", "juega", "jugará"], "answer": 1 },
+      { "type": "fill", "prompt": "Todos los días nosotros ___ café. (tomar)", "answer": "tomábamos", "hint": "nosotros, -ar" },
+      { "type": "mcq", "prompt": "Cuando ___ joven, viajaba mucho. (ser)", "options": ["fui", "soy", "era", "seré"], "answer": 2 },
+      { "type": "fill", "prompt": "Mis padres ___ al parque los domingos. (ir)", "answer": "iban", "hint": "ir — iba/ibas/iba..." },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Siempre", "comíamos", "en", "casa"], "answer": ["Siempre", "comíamos", "en", "casa"] },
+      { "type": "mcq", "prompt": "La casa ___ muy grande. (ser)", "options": ["era", "fue", "es", "sería"], "answer": 0 }
+    ]
+  },
+  {
+    "title": "Возвратные глаголы (verbos reflexivos)",
+    "level": "A2",
+    "order": 11,
+    "theory": [
+      { "type": "paragraph", "text": "Возвратные глаголы описывают действие, направленное на себя (умываться, одеваться). Используют местоимения me, te, se, nos, os, se перед глаголом." },
+      { "type": "table", "headers": ["Местоимение", "levantarse"], "rows": [["yo", "me levanto"], ["tú", "te levantas"], ["él/ella", "se levanta"], ["nosotros", "nos levantamos"], ["ellos", "se levantan"]] },
+      { "type": "example", "es": "Me ducho por la mañana.", "ru": "Я принимаю душ утром." }
+    ],
+    "exercises": [
+      { "type": "fill", "prompt": "Yo ___ levanto a las siete.", "answer": "me", "hint": "yo → me" },
+      { "type": "mcq", "prompt": "Ella ___ viste rápido.", "options": ["me", "te", "se", "nos"], "answer": 2 },
+      { "type": "fill", "prompt": "Nosotros ___ acostamos tarde.", "answer": "nos", "hint": "nosotros → nos" },
+      { "type": "mcq", "prompt": "¿A qué hora ___ despiertas tú?", "options": ["me", "te", "se", "os"], "answer": 1 },
+      { "type": "fill", "prompt": "Los niños ___ lavan las manos.", "answer": "se", "hint": "ellos → se" },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Me", "ducho", "por", "la", "mañana"], "answer": ["Me", "ducho", "por", "la", "mañana"] },
+      { "type": "mcq", "prompt": "Forma correcta: «Я одеваюсь».", "options": ["Me visto", "Te vistes", "Se viste", "Visto me"], "answer": 0 }
+    ]
+  },
+  {
+    "title": "SER или ESTAR — различия",
+    "level": "A2",
+    "order": 12,
+    "theory": [
+      { "type": "paragraph", "text": "SER — постоянное: идентичность, происхождение, профессия, характеристика, время. ESTAR — временное: местоположение, состояние, настроение, результат." },
+      { "type": "table", "headers": ["SER", "ESTAR"], "rows": [["Soy profesor", "Estoy cansado"], ["Es de España", "Está en casa"], ["Son las dos", "Está contenta"], ["Es alto", "La sopa está fría"]] },
+      { "type": "example", "es": "Es inteligente, pero hoy está nervioso.", "ru": "Он умный, но сегодня нервничает." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "Madrid ___ en España.", "options": ["es", "está", "son", "están"], "answer": 1 },
+      { "type": "mcq", "prompt": "Mi padre ___ médico.", "options": ["es", "está", "estoy", "son"], "answer": 0 },
+      { "type": "fill", "prompt": "La comida ___ muy rica hoy. (estar/ser)", "answer": "está", "hint": "состояние/результат" },
+      { "type": "mcq", "prompt": "Nosotros ___ cansados.", "options": ["somos", "estamos", "es", "está"], "answer": 1 },
+      { "type": "fill", "prompt": "¿Qué hora ___? — Son las tres.", "answer": "es", "hint": "время → ser" },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Hoy", "estoy", "muy", "feliz"], "answer": ["Hoy", "estoy", "muy", "feliz"] },
+      { "type": "mcq", "prompt": "Ella ___ alta y morena.", "options": ["está", "es", "estoy", "están"], "answer": 1 }
+    ]
+  },
+  {
+    "title": "Сравнения (más / menos / tan)",
+    "level": "A2",
+    "order": 13,
+    "theory": [
+      { "type": "paragraph", "text": "Сравнения: más + прилаг. + que (более...чем), menos + ... + que (менее...чем), tan + ... + como (такой же...как)." },
+      { "type": "table", "headers": ["Тип", "Формула", "Пример"], "rows": [["Превосходство", "más ... que", "más alto que"], ["Уступание", "menos ... que", "menos caro que"], ["Равенство", "tan ... como", "tan rápido como"]] },
+      { "type": "example", "es": "Madrid es más grande que Sevilla.", "ru": "Мадрид больше, чем Севилья." },
+      { "type": "paragraph", "text": "Особые формы: bueno → mejor, malo → peor, grande → mayor, pequeño → menor." }
+    ],
+    "exercises": [
+      { "type": "fill", "prompt": "Este libro es ___ interesante que el otro. (более)", "answer": "más", "hint": "более" },
+      { "type": "mcq", "prompt": "Ana es ___ alta ___ su hermana. (такая же)", "options": ["más / que", "tan / como", "menos / que", "tan / que"], "answer": 1 },
+      { "type": "fill", "prompt": "El café es ___ caro que el té. (менее)", "answer": "menos", "hint": "менее" },
+      { "type": "mcq", "prompt": "«лучше» — это:", "options": ["más bueno", "mejor", "más bien", "buenísimo"], "answer": 1 },
+      { "type": "fill", "prompt": "Hoy hace ___ calor que ayer. (больше)", "answer": "más", "hint": "más ... que" },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Soy", "más", "alto", "que", "tú"], "answer": ["Soy", "más", "alto", "que", "tú"] },
+      { "type": "mcq", "prompt": "Esta película es ___ que la anterior. (хуже)", "options": ["más mala", "peor", "menos buena", "mala"], "answer": 1 }
+    ]
+  },
+  {
+    "title": "Ближайшее будущее (ir a + инфинитив)",
+    "level": "A2",
+    "order": 14,
+    "theory": [
+      { "type": "paragraph", "text": "Чтобы выразить планы и ближайшее будущее, используют конструкцию: ir (в настоящем) + a + инфинитив." },
+      { "type": "table", "headers": ["Местоимение", "ir a + inf."], "rows": [["yo", "voy a estudiar"], ["tú", "vas a comer"], ["él/ella", "va a salir"], ["nosotros", "vamos a viajar"], ["ellos", "van a venir"]] },
+      { "type": "example", "es": "Mañana voy a visitar a mis abuelos.", "ru": "Завтра я навещу бабушку с дедушкой." }
+    ],
+    "exercises": [
+      { "type": "fill", "prompt": "Mañana yo ___ a estudiar español. (ir)", "answer": "voy", "hint": "yo → voy" },
+      { "type": "mcq", "prompt": "Ellos ___ a viajar en verano.", "options": ["va", "van", "vamos", "vas"], "answer": 1 },
+      { "type": "fill", "prompt": "¿Tú ___ a venir a la fiesta? (ir)", "answer": "vas", "hint": "tú → vas" },
+      { "type": "order", "prompt": "Соберите предложение", "words": ["Vamos", "a", "comer", "fuera"], "answer": ["Vamos", "a", "comer", "fuera"] },
+      { "type": "mcq", "prompt": "Nosotros ___ a ver una película.", "options": ["van", "voy", "vamos", "va"], "answer": 2 },
+      { "type": "fill", "prompt": "Ella ___ a trabajar el sábado. (ir)", "answer": "va", "hint": "él/ella → va" },
+      { "type": "mcq", "prompt": "Перевод: «Я собираюсь спать».", "options": ["Voy a dormir", "Voy dormir", "Voy a duermo", "Va a dormir"], "answer": 0 }
+    ]
+  }
+]
