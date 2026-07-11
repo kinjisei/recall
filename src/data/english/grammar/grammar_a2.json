@@ -1,0 +1,169 @@
+[
+  {
+    "title": "Was / were — прошедшее от to be",
+    "level": "A2",
+    "order": 1,
+    "theory": [
+      { "type": "paragraph", "text": "«Я был дома», «они были уставшие» — это прошедшее время глагола to be. Форм всего две: was и were. Это первый шаг в прошедшее время, и он самый простой." },
+      { "type": "table", "headers": ["Кто", "Форма", "Пример", "Перевод"], "rows": [["I, he, she, it", "was", "I was at home.", "Я был дома."], ["we, you, they", "were", "They were tired.", "Они были уставшие."]] },
+      { "type": "example", "en": "The film was great.", "ru": "Фильм был отличный." },
+      { "type": "example", "en": "We were in Turkey last summer.", "ru": "Прошлым летом мы были в Турции." },
+      { "type": "example", "en": "Where were you yesterday?", "ru": "Где ты был вчера?" },
+      { "type": "paragraph", "text": "Вопросы и отрицания — БЕЗ помощника did, просто перестановкой: Was she at work? — Она была на работе? She wasn't there. — Её там не было. Краткие отрицания: wasn't, weren't." },
+      { "type": "paragraph", "text": "⚠️ Ошибки: I were ✗ (с I — was), Did you be…? ✗ (to be обходится без did: Were you…?)." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "I ___ at school yesterday.", "options": ["was", "were", "am"], "answer": 0 },
+      { "type": "mcq", "prompt": "They ___ very happy.", "options": ["was", "were", "did"], "answer": 1 },
+      { "type": "mcq", "prompt": "___ you at home last night?", "options": ["Did", "Was", "Were"], "answer": 2 },
+      { "type": "mcq", "prompt": "Как сказать «Где ты был?»", "options": ["Where did you be?", "Where were you?", "Where was you?"], "answer": 1 },
+      { "type": "fill", "prompt": "She ___ tired after work. (was/were)", "answer": "was", "hint": "she → ?" },
+      { "type": "fill", "prompt": "We ___ in London in May. (was/were)", "answer": "were", "hint": "we → ?" },
+      { "type": "fill", "prompt": "Краткое «was not» (одним словом)", "answer": "wasn't", "hint": "was + n't" },
+      { "type": "order", "prompt": "Собери: «Фильм был отличный»", "words": ["The", "film", "was", "great"], "answer": ["The", "film", "was", "great"] }
+    ]
+  },
+  {
+    "title": "Past Simple: правильные глаголы (worked, played)",
+    "level": "A2",
+    "order": 2,
+    "theory": [
+      { "type": "paragraph", "text": "Past Simple — время законченных действий в прошлом: «вчера я работал», «в 2020 мы переехали». У правильных глаголов оно образуется просто: глагол + ed. Форма одна для всех лиц — и для I, и для he." },
+      { "type": "table", "headers": ["Правило написания", "Пример"], "rows": [["обычно: +ed", "work → worked, play → played"], ["кончается на -e: +d", "live → lived, dance → danced"], ["согласная + y: y → ied", "study → studied, try → tried"], ["короткий слог + 1 согласная: удвоение", "stop → stopped, plan → planned"]] },
+      { "type": "example", "en": "I worked late yesterday.", "ru": "Вчера я работал допоздна." },
+      { "type": "example", "en": "She lived in Spain for two years.", "ru": "Она два года жила в Испании." },
+      { "type": "example", "en": "We watched a film last night.", "ru": "Вчера вечером мы посмотрели фильм." },
+      { "type": "paragraph", "text": "Слова-маркеры прошедшего: yesterday (вчера), last week/year (на прошлой неделе / в прошлом году), two days ago (два дня назад), in 2020." },
+      { "type": "paragraph", "text": "⚠️ Ошибки: «Yesterday I work» ✗ — с yesterday нужен worked. И никаких -s в прошедшем: He workeds ✗ → He worked ✓." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "play → ?", "options": ["plaied", "played", "playd"], "answer": 1 },
+      { "type": "mcq", "prompt": "study → ?", "options": ["studyed", "studied", "studdied"], "answer": 1 },
+      { "type": "mcq", "prompt": "stop → ?", "options": ["stoped", "stopped", "stopt"], "answer": 1 },
+      { "type": "mcq", "prompt": "He ___ in a bank in 2020.", "options": ["works", "work", "worked"], "answer": 2 },
+      { "type": "fill", "prompt": "I ___ (watch) TV last night.", "answer": "watched", "hint": "просто +ed" },
+      { "type": "fill", "prompt": "She ___ (live) in Rome for a year.", "answer": "lived", "hint": "кончается на -e" },
+      { "type": "fill", "prompt": "«Два года назад» = two years ___", "answer": "ago", "hint": "слово-маркер" },
+      { "type": "fill", "prompt": "They ___ (try) again.", "answer": "tried", "hint": "y → ied" },
+      { "type": "order", "prompt": "Собери: «Мы играли в футбол вчера»", "words": ["We", "played", "football", "yesterday"], "answer": ["We", "played", "football", "yesterday"] }
+    ]
+  },
+  {
+    "title": "Past Simple: неправильные глаголы (went, saw)",
+    "level": "A2",
+    "order": 3,
+    "theory": [
+      { "type": "paragraph", "text": "Самые частые глаголы английского — неправильные: прошедшее время у них своё, без -ed. Плохая новость: их надо запоминать. Хорошая: верхние 15–20 покрывают большинство разговоров." },
+      { "type": "table", "headers": ["Глагол", "Прошедшее", "Перевод"], "rows": [["go", "went", "идти → пошёл"], ["have", "had", "иметь → имел"], ["do", "did", "делать → сделал"], ["say", "said", "сказать"], ["get", "got", "получать"], ["make", "made", "делать, создавать"], ["see", "saw", "видеть → увидел"], ["come", "came", "приходить"], ["take", "took", "брать"], ["know", "knew", "знать"], ["eat", "ate", "есть → съел"], ["drink", "drank", "пить"], ["buy", "bought", "покупать"], ["think", "thought", "думать"], ["write", "wrote", "писать"]] },
+      { "type": "example", "en": "I went to the shop and bought bread.", "ru": "Я пошёл в магазин и купил хлеб." },
+      { "type": "example", "en": "She saw a good film last week.", "ru": "На прошлой неделе она посмотрела хороший фильм." },
+      { "type": "example", "en": "We ate pizza and drank juice.", "ru": "Мы ели пиццу и пили сок." },
+      { "type": "paragraph", "text": "⚠️ Ошибки: goed, eated, seed ✗ — к неправильным глаголам -ed не добавляется. И в утверждении не нужен did: I did go ✗ → I went ✓ (did появится в вопросах — следующий урок)." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "go → ?", "options": ["goed", "went", "gone"], "answer": 1 },
+      { "type": "mcq", "prompt": "eat → ?", "options": ["ate", "eated", "eaten"], "answer": 0 },
+      { "type": "mcq", "prompt": "see → ?", "options": ["seed", "sawed", "saw"], "answer": 2 },
+      { "type": "mcq", "prompt": "Как сказать «Я написал письмо»?", "options": ["I writed a letter.", "I wrote a letter.", "I did wrote a letter."], "answer": 1 },
+      { "type": "fill", "prompt": "buy: I ___ bread this morning.", "answer": "bought", "hint": "b_____t" },
+      { "type": "fill", "prompt": "have: She ___ breakfast at eight.", "answer": "had", "hint": "короткое слово" },
+      { "type": "fill", "prompt": "think: I ___ about your idea.", "answer": "thought", "hint": "th____t" },
+      { "type": "fill", "prompt": "come: He ___ home late.", "answer": "came", "hint": "o → a" },
+      { "type": "order", "prompt": "Собери: «Она поехала на работу на автобусе»", "words": ["She", "went", "to", "work", "by", "bus"], "answer": ["She", "went", "to", "work", "by", "bus"] }
+    ]
+  },
+  {
+    "title": "Past Simple: вопросы и отрицания (did)",
+    "level": "A2",
+    "order": 4,
+    "theory": [
+      { "type": "paragraph", "text": "В прошедшем времени вопросы и отрицания строит помощник did — один для всех лиц. Важно: did забирает «прошедшесть» себе, а смысловой глагол возвращается в начальную форму." },
+      { "type": "table", "headers": ["Тип", "Формула", "Пример"], "rows": [["Вопрос", "Did + кто + глагол?", "Did you sleep well?"], ["Отрицание", "didn't + глагол", "She didn't come."], ["Спец. вопрос", "What/Where + did + кто + глагол?", "What did you do yesterday?"], ["Краткий ответ", "Yes, I did. / No, I didn't.", "Did he call? — No, he didn't."]] },
+      { "type": "example", "en": "Did you sleep well? — Yes, I did.", "ru": "Ты хорошо спал? — Да." },
+      { "type": "example", "en": "She didn't come to the party.", "ru": "Она не пришла на вечеринку." },
+      { "type": "example", "en": "What did you do at the weekend?", "ru": "Что ты делал на выходных?" },
+      { "type": "paragraph", "text": "⚠️ Главная ошибка — двойное прошедшее: Did you went? ✗ → Did you GO? ✓. I didn't saw ✗ → I didn't SEE ✓. Прошедшее время в предложении бывает только одно: либо у did, либо у глагола." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "___ you see him yesterday?", "options": ["Do", "Did", "Was"], "answer": 1 },
+      { "type": "mcq", "prompt": "Did she ___ the film?", "options": ["liked", "likes", "like"], "answer": 2 },
+      { "type": "mcq", "prompt": "I ___ go to work yesterday.", "options": ["didn't", "don't", "wasn't"], "answer": 0 },
+      { "type": "mcq", "prompt": "Найди правильное:", "options": ["Did you went home?", "Did you go home?", "Do you went home?"], "answer": 1 },
+      { "type": "fill", "prompt": "___ they arrive on time? (помощник)", "answer": "did", "hint": "прошедшее время" },
+      { "type": "fill", "prompt": "He ___ call me. (не позвонил — одно слово)", "answer": "didn't", "hint": "did + n't" },
+      { "type": "fill", "prompt": "Did you ___ (go) there?", "answer": "go", "hint": "после did — начальная форма!" },
+      { "type": "order", "prompt": "Собери вопрос: «Ты хорошо спал?»", "words": ["Did", "you", "sleep", "well"], "answer": ["Did", "you", "sleep", "well"] },
+      { "type": "order", "prompt": "Собери: «Ей не понравился фильм»", "words": ["She", "didn't", "like", "the", "film"], "answer": ["She", "didn't", "like", "the", "film"] }
+    ]
+  },
+  {
+    "title": "Present Continuous: происходит сейчас",
+    "level": "A2",
+    "order": 5,
+    "theory": [
+      { "type": "paragraph", "text": "«Я сейчас читаю», «смотри, идёт дождь» — для действий, которые происходят прямо сейчас, английский использует Present Continuous: am/is/are + глагол с окончанием -ing." },
+      { "type": "table", "headers": ["Тип", "Формула", "Пример"], "rows": [["+", "am/is/are + глагол-ing", "I am reading. She is cooking."], ["−", "am/is/are + not + -ing", "He isn't sleeping."], ["?", "Am/Is/Are + кто + -ing?", "Are you listening?"]] },
+      { "type": "paragraph", "text": "Правила -ing: make → making (немая e уходит), run → running (короткий слог — удвоение), lie → lying. Обычно же просто +ing: read → reading." },
+      { "type": "example", "en": "I'm learning English now.", "ru": "Я сейчас учу английский." },
+      { "type": "example", "en": "Look! It's raining.", "ru": "Смотри! Идёт дождь." },
+      { "type": "example", "en": "She is cooking dinner at the moment.", "ru": "Она сейчас готовит ужин." },
+      { "type": "paragraph", "text": "Маркеры: now, at the moment, Look!, Listen! ⚠️ Ошибки: I reading ✗ — без am никак. И глаголы состояния (know, like, want, need) в continuous не ставят: I am wanting tea ✗ → I want tea ✓." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "I ___ working now.", "options": ["am", "is", "are"], "answer": 0 },
+      { "type": "mcq", "prompt": "She is ___ dinner.", "options": ["cook", "cooking", "cooks"], "answer": 1 },
+      { "type": "mcq", "prompt": "make + ing = ?", "options": ["makeing", "making", "makking"], "answer": 1 },
+      { "type": "mcq", "prompt": "Можно ли сказать «I am wanting tea»?", "options": ["Да, это правильно", "Нет: want не используется в continuous"], "answer": 1 },
+      { "type": "fill", "prompt": "They ___ playing football now. (am/is/are)", "answer": "are", "hint": "they → ?" },
+      { "type": "fill", "prompt": "Look! It ___ raining. (am/is/are)", "answer": "is", "hint": "it → ?" },
+      { "type": "fill", "prompt": "run + ing = ?", "answer": "running", "hint": "удвоение последней буквы" },
+      { "type": "order", "prompt": "Собери: «Она сейчас готовит ужин»", "words": ["She", "is", "cooking", "dinner", "now"], "answer": ["She", "is", "cooking", "dinner", "now"] }
+    ]
+  },
+  {
+    "title": "Present Simple или Continuous?",
+    "level": "A2",
+    "order": 6,
+    "theory": [
+      { "type": "paragraph", "text": "Оба времени — про настоящее, но смысл разный. Simple — то, что происходит вообще, регулярно, всегда. Continuous — то, что происходит прямо сейчас, в момент речи." },
+      { "type": "table", "headers": ["", "Present Simple", "Present Continuous"], "rows": [["Смысл", "обычно, регулярно", "прямо сейчас"], ["Пример", "I work in a bank.", "I am working now."], ["Перевод", "Я работаю в банке (вообще).", "Я работаю (в данный момент)."], ["Маркеры", "usually, every day, on Mondays, never", "now, at the moment, today, Look!"]] },
+      { "type": "example", "en": "She usually drinks tea, but today she is drinking coffee.", "ru": "Обычно она пьёт чай, но сегодня пьёт кофе." },
+      { "type": "example", "en": "I don't watch TV, but I'm watching the news now.", "ru": "Я не смотрю телевизор (вообще), но сейчас смотрю новости." },
+      { "type": "example", "en": "He can't answer — he is driving.", "ru": "Он не может ответить — он за рулём (прямо сейчас)." },
+      { "type": "paragraph", "text": "Приём: ищи маркер. Есть usually/every day → Simple. Есть now/Look! → Continuous. Нет маркера — спроси себя: это «вообще» или «сейчас»?" }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "I usually ___ at 7 o'clock.", "options": ["get up", "am getting up", "getting up"], "answer": 0 },
+      { "type": "mcq", "prompt": "Listen! Someone ___ .", "options": ["sings", "is singing", "sing"], "answer": 1 },
+      { "type": "mcq", "prompt": "He ___ every morning.", "options": ["is running", "runs", "run"], "answer": 1 },
+      { "type": "mcq", "prompt": "She can't talk now — she ___ .", "options": ["works", "is working", "work"], "answer": 1 },
+      { "type": "fill", "prompt": "She ___ (work) at the moment. (два слова)", "answer": "is working", "hint": "сейчас → continuous" },
+      { "type": "fill", "prompt": "We ___ (go) to school every day. (одно слово)", "answer": "go", "hint": "регулярно → simple" },
+      { "type": "fill", "prompt": "Look! It ___ (snow). (два слова)", "answer": "is snowing", "hint": "прямо сейчас" },
+      { "type": "order", "prompt": "Собери: «Сегодня она пьёт кофе»", "words": ["Today", "she", "is", "drinking", "coffee"], "answer": ["Today", "she", "is", "drinking", "coffee"] }
+    ]
+  },
+  {
+    "title": "Going to — планы и намерения",
+    "level": "A2",
+    "order": 7,
+    "theory": [
+      { "type": "paragraph", "text": "«Я собираюсь…» = am/is/are going to + глагол. Используем для планов, которые уже решены: собираюсь купить машину, собираемся переехать. Второй случай — предсказание по очевидным признакам: тучи на небе → сейчас польёт." },
+      { "type": "table", "headers": ["Тип", "Пример", "Перевод"], "rows": [["+", "I'm going to visit my parents.", "Я собираюсь навестить родителей."], ["−", "We aren't going to buy it.", "Мы не собираемся это покупать."], ["?", "Are you going to call him?", "Ты собираешься ему позвонить?"], ["Предсказание", "Look at the clouds! It's going to rain.", "Посмотри на тучи! Сейчас пойдёт дождь."]] },
+      { "type": "example", "en": "She is going to learn Spanish next year.", "ru": "В следующем году она собирается учить испанский." },
+      { "type": "example", "en": "We're going to move to a new flat.", "ru": "Мы собираемся переехать в новую квартиру." },
+      { "type": "example", "en": "I'm not going to wait any more.", "ru": "Я не собираюсь больше ждать." },
+      { "type": "paragraph", "text": "⚠️ Ошибки: I going to ✗ — не теряй am/is/are. В разговоре часто слышно gonna (= going to), понимать полезно, а вот писать так в сообщениях учителю не стоит." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "I ___ going to buy a new phone.", "options": ["am", "is", "___ (ничего)"], "answer": 0 },
+      { "type": "mcq", "prompt": "She is going ___ her grandma.", "options": ["visit", "to visit", "visiting"], "answer": 1 },
+      { "type": "mcq", "prompt": "Look at the clouds! It ___ rain.", "options": ["is going to", "goes to", "going to"], "answer": 0 },
+      { "type": "mcq", "prompt": "___ you going to call him?", "options": ["Do", "Is", "Are"], "answer": 2 },
+      { "type": "fill", "prompt": "We are ___ to move next month. (собираемся)", "answer": "going", "hint": "going to" },
+      { "type": "fill", "prompt": "They ___ going to come. (не собираются: are + not кратко)", "answer": "aren't", "hint": "are + n't" },
+      { "type": "fill", "prompt": "He ___ going to study tonight. (is/are)", "answer": "is", "hint": "he → ?" },
+      { "type": "order", "prompt": "Собери: «Я собираюсь учить английский»", "words": ["I", "am", "going", "to", "learn", "English"], "answer": ["I", "am", "going", "to", "learn", "English"] }
+    ]
+  }
+]

@@ -1,0 +1,168 @@
+[
+  {
+    "title": "Will — будущее время",
+    "level": "A2",
+    "order": 8,
+    "theory": [
+      { "type": "paragraph", "text": "Will — универсальное будущее: предсказания («будет холодно»), обещания («я позвоню»), спонтанные решения («ладно, я помогу» — решил прямо в момент разговора). Will одинаков для всех лиц, после него глагол без to." },
+      { "type": "table", "headers": ["Тип", "Пример", "Перевод"], "rows": [["+", "I will call you. (I'll call)", "Я тебе позвоню."], ["−", "I won't go there.", "Я туда не пойду."], ["?", "Will you come tomorrow?", "Ты придёшь завтра?"]] },
+      { "type": "example", "en": "I'll help you with the boxes.", "ru": "Я помогу тебе с коробками. (решил только что)" },
+      { "type": "example", "en": "It will be cold in December.", "ru": "В декабре будет холодно." },
+      { "type": "example", "en": "Don't worry, everything will be OK.", "ru": "Не волнуйся, всё будет хорошо." },
+      { "type": "paragraph", "text": "Will или going to? Если план был ДО разговора — going to (We're going to move — мы давно решили). Если решение родилось прямо сейчас — will (OK, I'll take it — беру!)." },
+      { "type": "paragraph", "text": "⚠️ Ошибки: will to go ✗ (без to), he wills ✗ (не меняется). Отрицание won't — да, пишется именно так (не willn't)." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "I ___ call you tomorrow.", "options": ["will", "wills", "will to"], "answer": 0 },
+      { "type": "mcq", "prompt": "She ___ be happy to see you.", "options": ["will to", "will", "wills"], "answer": 1 },
+      { "type": "mcq", "prompt": "Краткая форма «will not»:", "options": ["willn't", "wan't", "won't"], "answer": 2 },
+      { "type": "mcq", "prompt": "Звонок в дверь. «___ открою!»", "options": ["I'm going to open", "I'll open", "I open"], "answer": 1 },
+      { "type": "fill", "prompt": "Don't worry, it ___ be OK. (будет)", "answer": "will", "hint": "одна форма для всех" },
+      { "type": "fill", "prompt": "I ___ tell anyone. (не расскажу — кратко)", "answer": "won't", "hint": "will not кратко" },
+      { "type": "fill", "prompt": "___ you help me? (поможешь…?)", "answer": "will", "hint": "вопрос начинается с него" },
+      { "type": "order", "prompt": "Собери: «Я позвоню тебе завтра»", "words": ["I", "will", "call", "you", "tomorrow"], "answer": ["I", "will", "call", "you", "tomorrow"] }
+    ]
+  },
+  {
+    "title": "Сравнение: bigger, more interesting",
+    "level": "A2",
+    "order": 9,
+    "theory": [
+      { "type": "paragraph", "text": "«Больше, старше, интереснее» — сравнительная степень. Правило выбора простое: короткое прилагательное (1–2 слога) получает -er, длинное — слово more перед собой. «Чем» = than." },
+      { "type": "table", "headers": ["Правило", "Пример"], "rows": [["короткое: +er", "old → older, fast → faster"], ["на -e: +r", "nice → nicer, large → larger"], ["короткий слог: удвоение", "big → bigger, hot → hotter"], ["на -y: y → ier", "happy → happier, easy → easier"], ["длинное: more + слово", "interesting → more interesting"], ["исключения", "good → better, bad → worse, far → further"]] },
+      { "type": "example", "en": "My car is older than yours.", "ru": "Моя машина старее твоей." },
+      { "type": "example", "en": "This book is more interesting than the film.", "ru": "Книга интереснее фильма." },
+      { "type": "example", "en": "The weather is better today.", "ru": "Сегодня погода лучше." },
+      { "type": "paragraph", "text": "⚠️ Ошибки: more better ✗ (better уже сравнение), more old ✗ (короткие — через -er: older), gooder ✗ (good — исключение: better)." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "big → ?", "options": ["biger", "bigger", "more big"], "answer": 1 },
+      { "type": "mcq", "prompt": "interesting → ?", "options": ["interestinger", "more interesting", "most interesting"], "answer": 1 },
+      { "type": "mcq", "prompt": "good → ?", "options": ["gooder", "more good", "better"], "answer": 2 },
+      { "type": "mcq", "prompt": "This exercise is ___ than the last one.", "options": ["easyer", "easier", "more easy"], "answer": 1 },
+      { "type": "fill", "prompt": "My brother is ___ (old) than me.", "answer": "older", "hint": "короткое → +er" },
+      { "type": "fill", "prompt": "bad → ? (хуже)", "answer": "worse", "hint": "исключение" },
+      { "type": "fill", "prompt": "Москва ___ (big), чем Астана: Moscow is ___ than Astana.", "answer": "bigger", "hint": "удвоение g" },
+      { "type": "fill", "prompt": "«Чем» по-английски (в сравнениях)", "answer": "than", "hint": "older ___ me" },
+      { "type": "order", "prompt": "Собери: «Книга интереснее фильма»", "words": ["The", "book", "is", "more", "interesting", "than", "the", "film"], "answer": ["The", "book", "is", "more", "interesting", "than", "the", "film"] }
+    ]
+  },
+  {
+    "title": "Превосходная степень: the best, the biggest",
+    "level": "A2",
+    "order": 10,
+    "theory": [
+      { "type": "paragraph", "text": "«Самый большой, самый лучший» — превосходная степень. Логика та же, что у сравнения: короткие слова получают -est, длинные — most. И обязательно the впереди: предмет-то единственный в своём роде." },
+      { "type": "table", "headers": ["Правило", "Сравнение", "Превосходная"], "rows": [["короткое: the …est", "older", "the oldest — самый старый"], ["короткий слог: удвоение", "bigger", "the biggest"], ["на -y: the …iest", "happier", "the happiest"], ["длинное: the most …", "more interesting", "the most interesting"], ["исключения", "better / worse", "the best / the worst"]] },
+      { "type": "example", "en": "Almaty is the biggest city in Kazakhstan.", "ru": "Алматы — самый большой город Казахстана." },
+      { "type": "example", "en": "She is the best student in the class.", "ru": "Она лучшая ученица в классе." },
+      { "type": "example", "en": "It was the most interesting lesson.", "ru": "Это был самый интересный урок." },
+      { "type": "paragraph", "text": "⚠️ Ошибки: забыть the (She is best ✗ → the best ✓) и смешать степени (the most biggest ✗ → the biggest ✓). Заметь: «в классе/в мире» после превосходной — предлог in: the best in the world." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "big → самый большой = ?", "options": ["the bigest", "the biggest", "the most big"], "answer": 1 },
+      { "type": "mcq", "prompt": "good → самый лучший = ?", "options": ["the goodest", "the most good", "the best"], "answer": 2 },
+      { "type": "mcq", "prompt": "expensive → самый дорогой = ?", "options": ["the expensivest", "the most expensive", "most expensive"], "answer": 1 },
+      { "type": "mcq", "prompt": "She is the best student ___ the class.", "options": ["of", "in", "at"], "answer": 1 },
+      { "type": "fill", "prompt": "bad → the ___ (самый плохой)", "answer": "worst", "hint": "исключение" },
+      { "type": "fill", "prompt": "happy → the ___ (самый счастливый)", "answer": "happiest", "hint": "y → iest" },
+      { "type": "fill", "prompt": "Это ___ (easy) — самый лёгкий урок: the ___ lesson.", "answer": "easiest", "hint": "y → iest" },
+      { "type": "order", "prompt": "Собери: «Это лучший день в моей жизни»", "words": ["It", "is", "the", "best", "day", "of", "my", "life"], "answer": ["It", "is", "the", "best", "day", "of", "my", "life"] }
+    ]
+  },
+  {
+    "title": "Some, any, much, many, a lot of",
+    "level": "A2",
+    "order": 11,
+    "theory": [
+      { "type": "paragraph", "text": "Английские существительные делятся на считаемые (apple — можно посчитать: two apples) и несчитаемые (water, money, time — не скажешь two waters). От этого зависит выбор слов «немного, много, сколько»." },
+      { "type": "table", "headers": ["Слово", "Где используется", "Пример"], "rows": [["some", "утверждения: «немного, несколько»", "There is some milk. I have some questions."], ["any", "вопросы и отрицания", "Are there any questions? I don't have any money."], ["many", "много + СЧИТАЕМЫЕ", "many friends, many books"], ["much", "много + НЕсчитаемые", "much time, much money"], ["a lot of", "много + любые (универсальное)", "a lot of friends, a lot of time"]] },
+      { "type": "example", "en": "There is some milk in the fridge.", "ru": "В холодильнике есть немного молока." },
+      { "type": "example", "en": "Do you have any questions?", "ru": "У тебя есть (какие-нибудь) вопросы?" },
+      { "type": "example", "en": "I don't have much time.", "ru": "У меня мало времени (не много)." },
+      { "type": "example", "en": "She has a lot of friends.", "ru": "У неё много друзей." },
+      { "type": "paragraph", "text": "Подсказки: сомневаешься между much/many — бери a lot of, оно подходит везде. How many — сколько (считаемых): How many books? How much — сколько (несчитаемых): How much money?" }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "There is ___ milk in the fridge.", "options": ["some", "any", "many"], "answer": 0 },
+      { "type": "mcq", "prompt": "Do you have ___ questions?", "options": ["some", "any", "much"], "answer": 1 },
+      { "type": "mcq", "prompt": "I don't have ___ time.", "options": ["many", "much", "a many"], "answer": 1 },
+      { "type": "mcq", "prompt": "How ___ books do you have?", "options": ["much", "many", "some"], "answer": 1 },
+      { "type": "fill", "prompt": "She has a lot ___ friends.", "answer": "of", "hint": "a lot ___" },
+      { "type": "fill", "prompt": "I don't have ___ money. (никаких)", "answer": "any", "hint": "отрицание" },
+      { "type": "fill", "prompt": "How ___ water do you drink? (сколько)", "answer": "much", "hint": "вода — несчитаемая" },
+      { "type": "order", "prompt": "Собери: «В холодильнике есть немного сыра»", "words": ["There", "is", "some", "cheese", "in", "the", "fridge"], "answer": ["There", "is", "some", "cheese", "in", "the", "fridge"] }
+    ]
+  },
+  {
+    "title": "Must и have to — надо, нельзя, не обязательно",
+    "level": "A2",
+    "order": 12,
+    "theory": [
+      { "type": "paragraph", "text": "«Должен» по-английски — must или have to. Разница тонкая: must — так решил я сам или таково правило; have to — так сложились обстоятельства. На уровне A2 главное другое: у них СИЛЬНО различаются отрицания." },
+      { "type": "table", "headers": ["Форма", "Значение", "Пример"], "rows": [["must", "должен (правило, сам решил)", "I must finish this today."], ["have to / has to", "приходится (обстоятельства)", "She has to get up at 6."], ["mustn't", "НЕЛЬЗЯ (запрет!)", "You mustn't smoke here."], ["don't have to", "НЕ ОБЯЗАТЕЛЬНО (но можно)", "You don't have to pay — it's free."]] },
+      { "type": "example", "en": "I must call my mum today.", "ru": "Я должен сегодня позвонить маме." },
+      { "type": "example", "en": "He has to work on Saturdays.", "ru": "Ему приходится работать по субботам." },
+      { "type": "example", "en": "You mustn't park here.", "ru": "Здесь нельзя парковаться. (запрещено)" },
+      { "type": "example", "en": "You don't have to come — I can do it myself.", "ru": "Тебе не обязательно приходить — я справлюсь сам." },
+      { "type": "paragraph", "text": "⚠️ Ошибки: must to go ✗ (после must — без to), he must works ✗ (must не меняется и глагол после него тоже). И не путай: mustn't = запрещено, don't have to = можно не делать. Это противоположные вещи!" }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "I ___ finish this report today.", "options": ["must", "must to", "musts"], "answer": 0 },
+      { "type": "mcq", "prompt": "She ___ get up early every day.", "options": ["have to", "has to", "must to"], "answer": 1 },
+      { "type": "mcq", "prompt": "«Здесь нельзя курить» = You ___ smoke here.", "options": ["don't have to", "mustn't", "not must"], "answer": 1 },
+      { "type": "mcq", "prompt": "Вход бесплатный. You ___ pay.", "options": ["mustn't", "don't have to", "can't"], "answer": 1 },
+      { "type": "fill", "prompt": "I ___ go now — it's late. (должен)", "answer": "must", "hint": "сам решил" },
+      { "type": "fill", "prompt": "He has ___ work tomorrow. (частица)", "answer": "to", "hint": "have/has + ?" },
+      { "type": "fill", "prompt": "You ___ be late! (нельзя опаздывать — кратко)", "answer": "mustn't", "hint": "запрет" },
+      { "type": "order", "prompt": "Собери: «Мне приходится рано вставать»", "words": ["I", "have", "to", "get", "up", "early"], "answer": ["I", "have", "to", "get", "up", "early"] }
+    ]
+  },
+  {
+    "title": "Me, him, her — местоимения после глагола",
+    "level": "A2",
+    "order": 13,
+    "theory": [
+      { "type": "paragraph", "text": "«Позвони МНЕ», «я видел ЕГО» — после глагола или предлога местоимение меняет форму: I превращается в me, he — в him. Это местоимения-дополнения." },
+      { "type": "table", "headers": ["Кто? (делает)", "Кого? Кому? (после глагола)", "Пример"], "rows": [["I", "me", "Call me. — Позвони мне."], ["you", "you", "I see you. — Я вижу тебя."], ["he", "him", "Ask him. — Спроси его."], ["she", "her", "I know her. — Я знаю её."], ["it", "it", "Take it. — Возьми это."], ["we", "us", "Help us! — Помоги нам!"], ["they", "them", "I like them. — Они мне нравятся."]] },
+      { "type": "example", "en": "Call me tomorrow, please.", "ru": "Позвони мне завтра, пожалуйста." },
+      { "type": "example", "en": "I saw him at the bus stop.", "ru": "Я видел его на остановке." },
+      { "type": "example", "en": "This present is for us.", "ru": "Этот подарок — для нас." },
+      { "type": "paragraph", "text": "Правило простое: ПЕРЕД глаголом — I/he/she/we/they (кто делает), ПОСЛЕ глагола или предлога (with, for, to, about) — me/him/her/us/them. ⚠️ I saw he ✗ → I saw him ✓." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "I saw ___ yesterday. (его)", "options": ["he", "him", "his"], "answer": 1 },
+      { "type": "mcq", "prompt": "Call ___ tonight. (мне)", "options": ["I", "my", "me"], "answer": 2 },
+      { "type": "mcq", "prompt": "This gift is for ___ . (нас)", "options": ["we", "us", "our"], "answer": 1 },
+      { "type": "mcq", "prompt": "I know ___ very well. (её)", "options": ["she", "her", "hers"], "answer": 1 },
+      { "type": "fill", "prompt": "I like ___ . (они мне нравятся)", "answer": "them", "hint": "they → ?" },
+      { "type": "fill", "prompt": "Ask ___ about it. (его)", "answer": "him", "hint": "he → ?" },
+      { "type": "fill", "prompt": "Wait for ___ ! (меня)", "answer": "me", "hint": "I → ?" },
+      { "type": "order", "prompt": "Собери: «Я видел его вчера»", "words": ["I", "saw", "him", "yesterday"], "answer": ["I", "saw", "him", "yesterday"] }
+    ]
+  },
+  {
+    "title": "Like doing, want to do, would like",
+    "level": "A2",
+    "order": 14,
+    "theory": [
+      { "type": "paragraph", "text": "После разных глаголов следующий глагол принимает разную форму. Три главных случая, которые покрывают половину разговоров: like + -ing, want + to, would like + to." },
+      { "type": "table", "headers": ["Конструкция", "Форма", "Пример"], "rows": [["like / love / hate / enjoy", "+ глагол-ing", "I like reading. She hates waiting."], ["want", "+ to + глагол", "I want to sleep. He wants to go home."], ["would like ('d like)", "+ to + глагол (вежливое «хотел бы»)", "I'd like to order a pizza."]] },
+      { "type": "example", "en": "I like cooking at the weekend.", "ru": "Я люблю готовить по выходным." },
+      { "type": "example", "en": "She wants to learn Spanish.", "ru": "Она хочет выучить испанский." },
+      { "type": "example", "en": "I'd like to book a table for two.", "ru": "Я хотел бы забронировать столик на двоих." },
+      { "type": "example", "en": "Would you like some tea?", "ru": "Хотите чаю? (вежливое предложение)" },
+      { "type": "paragraph", "text": "⚠️ Ошибки: I like read ✗ → like readING ✓. I want going ✗ → want TO go ✓. Разница want / would like: want — прямое «хочу», would like — вежливое «хотел бы» (в кафе, с незнакомыми — лучше оно)." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "I like ___ books.", "options": ["read", "reading", "to reading"], "answer": 1 },
+      { "type": "mcq", "prompt": "She wants ___ home.", "options": ["go", "going", "to go"], "answer": 2 },
+      { "type": "mcq", "prompt": "___ you like some coffee? (вежливо)", "options": ["Do", "Would", "Want"], "answer": 1 },
+      { "type": "mcq", "prompt": "We enjoy ___ films.", "options": ["watching", "watch", "to watch"], "answer": 0 },
+      { "type": "fill", "prompt": "I hate ___ (wait). (ненавижу ждать)", "answer": "waiting", "hint": "hate + ing" },
+      { "type": "fill", "prompt": "He wants ___ buy a car. (частица)", "answer": "to", "hint": "want + ?" },
+      { "type": "fill", "prompt": "I'd like ___ order a pizza. (частица)", "answer": "to", "hint": "would like + ?" },
+      { "type": "order", "prompt": "Собери вежливую фразу: «Я хотел бы заказать кофе»", "words": ["I", "would", "like", "to", "order", "a", "coffee"], "answer": ["I", "would", "like", "to", "order", "a", "coffee"] }
+    ]
+  }
+]

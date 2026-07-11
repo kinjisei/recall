@@ -9,11 +9,18 @@ import type { GrammarTopic } from '../../types'
 
 import grammarA1 from './grammar/grammar_a1.json'
 import grammarA1Extra from './grammar/grammar_a1_extra.json'
+import grammarA2 from './grammar/grammar_a2.json'
+import grammarA2Extra from './grammar/grammar_a2_extra.json'
 
 // Тип без поля id (в JSON его нет — присваиваем ниже).
 type RawTopic = Omit<GrammarTopic, 'id'>
 
-const files: RawTopic[][] = [grammarA1, grammarA1Extra] as RawTopic[][]
+const files: RawTopic[][] = [
+  grammarA1,
+  grammarA1Extra,
+  grammarA2,
+  grammarA2Extra,
+] as RawTopic[][]
 
 const levelRank: Record<string, number> = { A1: 0, A2: 1, B1: 2, B2: 3, C1: 4 }
 
