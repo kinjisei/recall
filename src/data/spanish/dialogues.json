@@ -550,5 +550,131 @@
       { "q": "Что делает Хавьер для экологии?", "options": ["Ездит на велосипеде", "Сортирует отходы и чинит одежду", "Сажает деревья"], "answer": 1 },
       { "q": "Что означает «Ya era hora»?", "options": ["Уже поздно", "Который час", "Давно пора"], "answer": 2 }
     ]
+  },
+  {
+    "id": 26,
+    "title": "В аптеке",
+    "level": "A2",
+    "lines": [
+      { "speaker": "Farmacéutica", "es": "Buenos días, ¿en qué puedo ayudarle?", "ru": "Доброе утро, чем могу помочь?" },
+      { "speaker": "Cliente", "es": "Buenos días. Me duele mucho la garganta desde ayer.", "ru": "Доброе утро. У меня со вчерашнего дня сильно болит горло." },
+      { "speaker": "Farmacéutica", "es": "¿Tiene fiebre o tos?", "ru": "Температура или кашель есть?" },
+      { "speaker": "Cliente", "es": "Fiebre no, pero toso un poco por la noche.", "ru": "Температуры нет, но ночью немного кашляю." },
+      { "speaker": "Farmacéutica", "es": "Le recomiendo estas pastillas para la garganta y un jarabe.", "ru": "Рекомендую вам эти таблетки для горла и сироп." },
+      { "speaker": "Cliente", "es": "¿Cada cuánto tomo las pastillas?", "ru": "Как часто принимать таблетки?" },
+      { "speaker": "Farmacéutica", "es": "Una cada seis horas, después de comer. Y beba mucha agua.", "ru": "По одной каждые шесть часов, после еды. И пейте побольше воды." },
+      { "speaker": "Cliente", "es": "Perfecto. ¿Cuánto es todo?", "ru": "Отлично. Сколько с меня?" },
+      { "speaker": "Farmacéutica", "es": "Son nueve euros con cincuenta. Que se mejore.", "ru": "Девять евро пятьдесят. Поправляйтесь!" }
+    ],
+    "questions": [
+      { "q": "Что болит у клиента?", "options": ["Голова", "Горло", "Спина"], "answer": 1 },
+      { "q": "Как часто принимать таблетки?", "options": ["Каждые шесть часов", "Раз в день", "Каждый час"], "answer": 0 },
+      { "q": "Что означает «Que se mejore»?", "options": ["До свидания", "Будьте осторожны", "Поправляйтесь"], "answer": 2 }
+    ]
+  },
+  {
+    "id": 27,
+    "title": "В магазине одежды",
+    "level": "A2",
+    "lines": [
+      { "speaker": "Dependienta", "es": "Hola, ¿le puedo ayudar en algo?", "ru": "Здравствуйте, могу чем-то помочь?" },
+      { "speaker": "Cliente", "es": "Sí, busco una camisa para una boda.", "ru": "Да, ищу рубашку на свадьбу." },
+      { "speaker": "Dependienta", "es": "¿Qué talla usa?", "ru": "Какой у вас размер?" },
+      { "speaker": "Cliente", "es": "La mediana, creo. ¿La tiene en azul?", "ru": "Средний, кажется. Есть в синем цвете?" },
+      { "speaker": "Dependienta", "es": "Sí, mire, esta acaba de llegar. El probador está al fondo.", "ru": "Да, смотрите, эта только что пришла. Примерочная в глубине зала." },
+      { "speaker": "Cliente", "es": "Me queda un poco grande. ¿Tiene una talla menos?", "ru": "Она мне немного велика. Есть на размер меньше?" },
+      { "speaker": "Dependienta", "es": "Claro, aquí tiene. Esta le queda perfecta.", "ru": "Конечно, вот, пожалуйста. Эта сидит на вас идеально." },
+      { "speaker": "Cliente", "es": "Genial, me la llevo. ¿Puedo pagar con tarjeta?", "ru": "Отлично, беру. Могу оплатить картой?" },
+      { "speaker": "Dependienta", "es": "Por supuesto. ¿Quiere el tique en papel o por correo?", "ru": "Разумеется. Чек бумажный или на почту?" }
+    ],
+    "questions": [
+      { "q": "Для чего клиенту рубашка?", "options": ["Для работы", "Для свадьбы", "Для спорта"], "answer": 1 },
+      { "q": "Какая проблема с первой рубашкой?", "options": ["Велика", "Мала", "Не тот цвет"], "answer": 0 },
+      { "q": "Что означает «me la llevo»?", "options": ["Я её примерю", "Я её верну", "Я её беру"], "answer": 2 }
+    ]
+  },
+  {
+    "id": 28,
+    "title": "Собеседование на работу",
+    "level": "B1",
+    "lines": [
+      { "speaker": "Entrevistadora", "es": "Gracias por venir, Andrés. Cuénteme un poco sobre usted.", "ru": "Спасибо, что пришли, Андрес. Расскажите немного о себе." },
+      { "speaker": "Andrés", "es": "Soy diseñador gráfico y llevo cinco años trabajando en publicidad.", "ru": "Я графический дизайнер, уже пять лет работаю в рекламе." },
+      { "speaker": "Entrevistadora", "es": "¿Por qué quiere cambiar de empresa?", "ru": "Почему вы хотите сменить компанию?" },
+      { "speaker": "Andrés", "es": "Busco nuevos retos. En mi puesto actual ya no aprendo nada nuevo.", "ru": "Ищу новые вызовы. На нынешней должности я уже не учусь ничему новому." },
+      { "speaker": "Entrevistadora", "es": "¿Cuál diría que es su punto fuerte?", "ru": "Что бы вы назвали своей сильной стороной?" },
+      { "speaker": "Andrés", "es": "Trabajo bien bajo presión y nunca entrego nada tarde.", "ru": "Я хорошо работаю в условиях стресса и никогда ничего не сдаю с опозданием." },
+      { "speaker": "Entrevistadora", "es": "¿Y su punto débil?", "ru": "А слабая сторона?" },
+      { "speaker": "Andrés", "es": "A veces me cuesta delegar. Estoy trabajando en ello.", "ru": "Иногда мне трудно делегировать. Я работаю над этим." },
+      { "speaker": "Entrevistadora", "es": "Muy bien. Le llamaremos la semana que viene.", "ru": "Очень хорошо. Мы позвоним вам на следующей неделе." }
+    ],
+    "questions": [
+      { "q": "Кем работает Андрес?", "options": ["Графическим дизайнером", "Программистом", "Журналистом"], "answer": 0 },
+      { "q": "Почему он меняет работу?", "options": ["Мало платят", "Ищет новые вызовы", "Далеко ездить"], "answer": 1 },
+      { "q": "Какая у него слабая сторона?", "options": ["Опаздывает", "Не любит стресс", "Трудно делегировать"], "answer": 2 }
+    ]
+  },
+  {
+    "id": 29,
+    "title": "Планы на выходные",
+    "level": "B1",
+    "lines": [
+      { "speaker": "Lucía", "es": "¿Qué planes tienes para el finde?", "ru": "Какие планы на выходные?" },
+      { "speaker": "Marco", "es": "Todavía no lo sé. Había pensado ir a la sierra, pero dan lluvia.", "ru": "Пока не знаю. Думал поехать в горы, но обещают дождь." },
+      { "speaker": "Lucía", "es": "¿Y si vamos al festival de comida coreana? Lo abren el sábado.", "ru": "А если сходим на фестиваль корейской еды? Его открывают в субботу." },
+      { "speaker": "Marco", "es": "No suena mal. ¿Hay que comprar entradas?", "ru": "Звучит неплохо. Нужно покупать билеты?" },
+      { "speaker": "Lucía", "es": "La entrada es gratis, solo pagas lo que comes.", "ru": "Вход бесплатный, платишь только за то, что ешь." },
+      { "speaker": "Marco", "es": "Entonces me apunto. ¿Quedamos a mediodía?", "ru": "Тогда я в деле. Встретимся в полдень?" },
+      { "speaker": "Lucía", "es": "Mejor a la una, así evitamos la cola de la entrada.", "ru": "Лучше в час — так избежим очереди на входе." },
+      { "speaker": "Marco", "es": "Hecho. Si al final llueve, plan B: cine y ramen.", "ru": "Договорились. Если всё-таки пойдёт дождь — план Б: кино и рамен." },
+      { "speaker": "Lucía", "es": "Contigo siempre hay plan B. ¡Por eso me caes bien!", "ru": "У тебя всегда есть план Б. За это ты мне и нравишься!" }
+    ],
+    "questions": [
+      { "q": "Почему Марко не едет в горы?", "options": ["Обещают дождь", "Нет денег", "Много работы"], "answer": 0 },
+      { "q": "Сколько стоит вход на фестиваль?", "options": ["10 евро", "Бесплатно", "5 евро"], "answer": 1 },
+      { "q": "Что означает «me apunto»?", "options": ["Я записываю", "Я подумаю", "Я в деле / присоединяюсь"], "answer": 2 }
+    ]
+  },
+  {
+    "id": 30,
+    "title": "Спор о фильме",
+    "level": "B2",
+    "lines": [
+      { "speaker": "Elena", "es": "¿Qué te pareció la película? A mí me encantó.", "ru": "Как тебе фильм? Мне очень понравился." },
+      { "speaker": "Raúl", "es": "Pues yo salí un poco decepcionado, la verdad.", "ru": "А я, честно говоря, вышел слегка разочарованным." },
+      { "speaker": "Elena", "es": "¡No me digas! ¿Y eso? La fotografía era una maravilla.", "ru": "Да ладно! Это почему? Операторская работа — просто чудо." },
+      { "speaker": "Raúl", "es": "Visualmente sí, no te lo discuto. Pero el guion hacía agua por todas partes.", "ru": "Визуально да, не спорю. Но сценарий трещал по швам." },
+      { "speaker": "Elena", "es": "Hombre, tampoco exageres. El giro final no te lo esperabas, admítelo.", "ru": "Ну, не преувеличивай. Финальный поворот ты не ожидал, признай." },
+      { "speaker": "Raúl", "es": "Lo admito. Pero un buen giro no arregla dos horas de diálogos flojos.", "ru": "Признаю. Но хороший поворот не исправляет два часа слабых диалогов." },
+      { "speaker": "Elena", "es": "Qué exigente te has vuelto desde que haces ese curso de cine.", "ru": "Каким требовательным ты стал с тех пор, как ходишь на кинокурсы." },
+      { "speaker": "Raúl", "es": "Será eso. Antes me tragaba cualquier cosa con palomitas.", "ru": "Наверное. Раньше я проглатывал что угодно, лишь бы с попкорном." },
+      { "speaker": "Elena", "es": "Pues la próxima elige tú. Así al menos no te quejas.", "ru": "Тогда в следующий раз выбираешь ты. Хоть жаловаться не будешь." }
+    ],
+    "questions": [
+      { "q": "Что понравилось обоим?", "options": ["Сценарий", "Операторская работа", "Диалоги"], "answer": 1 },
+      { "q": "Что означает «hacía agua por todas partes»?", "options": ["Был очень трогательным", "Трещал по швам", "Был про море"], "answer": 1 },
+      { "q": "Чем закончился спор?", "options": ["Следующий фильм выбирает Рауль", "Они поссорились", "Пойдут на курс вместе"], "answer": 0 }
+    ]
+  },
+  {
+    "id": 31,
+    "title": "Проблема с картой в банке",
+    "level": "B2",
+    "lines": [
+      { "speaker": "Empleado", "es": "Buenos días, ¿qué le trae por aquí?", "ru": "Доброе утро, что вас к нам привело?" },
+      { "speaker": "Clienta", "es": "Verá, ayer intenté pagar en el supermercado y me rechazaron la tarjeta dos veces.", "ru": "Понимаете, вчера я пыталась расплатиться в супермаркете, и карту дважды отклонили." },
+      { "speaker": "Empleado", "es": "¿Le llegó algún aviso al móvil?", "ru": "Вам приходило какое-нибудь уведомление на телефон?" },
+      { "speaker": "Clienta", "es": "Sí, un mensaje sobre una operación sospechosa que yo no hice.", "ru": "Да, сообщение о подозрительной операции, которую я не совершала." },
+      { "speaker": "Empleado", "es": "Entiendo. Por seguridad, el sistema bloqueó la tarjeta automáticamente.", "ru": "Понятно. В целях безопасности система автоматически заблокировала карту." },
+      { "speaker": "Clienta", "es": "¿Y ahora qué hago? Necesito la tarjeta para el viaje del jueves.", "ru": "И что мне теперь делать? Карта нужна мне для поездки в четверг." },
+      { "speaker": "Empleado", "es": "No se preocupe. Anulamos el cargo fraudulento y le emitimos una tarjeta nueva hoy mismo.", "ru": "Не волнуйтесь. Мы отменим мошенническое списание и выпустим вам новую карту сегодня же." },
+      { "speaker": "Clienta", "es": "¿Tendré que pagar algo por la reposición?", "ru": "Мне придётся платить за перевыпуск?" },
+      { "speaker": "Empleado", "es": "En este caso no, corre a cargo del banco. Firme aquí, por favor.", "ru": "В данном случае нет, расходы берёт на себя банк. Подпишите здесь, пожалуйста." }
+    ],
+    "questions": [
+      { "q": "Почему карту отклонили?", "options": ["Не было денег", "Система заблокировала её из-за подозрительной операции", "Истёк срок действия"], "answer": 1 },
+      { "q": "Когда клиентке нужна карта?", "options": ["К четвергу", "К выходным", "Сегодня вечером"], "answer": 0 },
+      { "q": "Что означает «corre a cargo del banco»?", "options": ["Банк закрывается", "Нужно бежать в банк", "Расходы берёт на себя банк"], "answer": 2 }
+    ]
   }
 ]

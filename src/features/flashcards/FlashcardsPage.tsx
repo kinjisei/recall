@@ -68,18 +68,16 @@ export function FlashcardsPage() {
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">🎴 Колода</h1>
         <div className="flex gap-2">
-          {lang === 'es' && (
-            <Button
-              variant="secondary"
-              className="px-3 py-2 text-sm"
-              onClick={() => {
-                setShowPacks((s) => !s)
-                setShowAdd(false)
-              }}
-            >
-              {showPacks ? 'Закрыть' : '📦 Паки'}
-            </Button>
-          )}
+          <Button
+            variant="secondary"
+            className="px-3 py-2 text-sm"
+            onClick={() => {
+              setShowPacks((s) => !s)
+              setShowAdd(false)
+            }}
+          >
+            {showPacks ? 'Закрыть' : '📦 Паки'}
+          </Button>
           <Button
             variant="secondary"
             className="px-3 py-2 text-sm"
@@ -94,7 +92,7 @@ export function FlashcardsPage() {
       </header>
 
       {showAdd && <AddCardForm lang={lang} onAdded={load} />}
-      {showPacks && <PacksSheet onAdded={load} />}
+      {showPacks && <PacksSheet lang={lang} onAdded={load} />}
 
       {error && (
         <Card className="border-red-300 bg-red-50 dark:bg-red-950/30">
@@ -166,9 +164,7 @@ export function FlashcardsPage() {
               : 'Карточек к повторению нет'}
           </p>
           <p className="mt-1 text-sm text-slate-500">
-            {lang === 'es'
-              ? 'Добавь слова кнопкой «📦 Паки», «+ Слово» или из раздела «Ввод».'
-              : 'Добавь слова кнопкой «+ Слово» или из раздела «Ввод».'}
+            Добавь слова кнопкой «📦 Паки», «+ Слово» или из раздела «Ввод».
           </p>
           <Button variant="secondary" className="mt-4" onClick={load}>
             Обновить

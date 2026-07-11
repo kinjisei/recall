@@ -6,6 +6,7 @@ import { getDeckIds } from '../../lib/cards'
 import { logActivity } from '../../lib/activity'
 import { useLanguage } from '../../context/LanguageContext'
 import { spanishSentences } from '../../data/spanish'
+import { englishSentences } from '../../data/english'
 import {
   speak,
   listen,
@@ -14,15 +15,7 @@ import {
   type PronunciationScore,
 } from '../../lib/speech'
 
-const fallbackPhrasesEn = [
-  'The weather is really lovely today.',
-  'Could you tell me how to get to the station?',
-  "I've been learning English for several years.",
-  'She decided to take a completely different approach.',
-  'Practising a little every day leads to real progress.',
-]
-
-/** Фраза для тренировки; hint — русский перевод (есть у испанских). */
+/** Фраза для тренировки; hint — русский перевод. */
 interface Phrase {
   text: string
   hint?: string
@@ -39,7 +32,7 @@ export function PronunciationPage() {
   const [error, setError] = useState<string | null>(null)
 
   // Испанский: встроенные фразы (рус → исп).
-  // Английский: фразы из карточек пользователя, иначе — встроенные.
+  // Английский: встроенные фразы B1–C1 (с переводом) + фразы из карточек в конце.
   useEffect(() => {
     setIndex(0)
     setHeard(null)
@@ -51,7 +44,8 @@ export function PronunciationPage() {
       return
     }
 
-    setPhrases(fallbackPhrasesEn.map((text) => ({ text })))
+    const builtIn = englishSentences.map((s) => ({ text: s.en, hint: s.ru }))
+    setPhrases(builtIn)
     void (async () => {
       try {
         const ids = await getDeckIds('en')
@@ -63,7 +57,9 @@ export function PronunciationPage() {
         const fromCards = (data ?? [])
           .map((c) => (c.example && c.example.trim() ? c.example : c.front))
           .filter((p): p is string => Boolean(p && /\s/.test(p))) // только фразы (с пробелом)
-        if (fromCards.length > 0) setPhrases(fromCards.map((text) => ({ text })))
+        if (fromCards.length > 0) {
+          setPhrases([...builtIn, ...fromCards.map((text) => ({ text }))])
+        }
       } catch {
         /* остаёмся на встроенных фразах */
       }

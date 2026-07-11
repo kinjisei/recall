@@ -2210,5 +2210,201 @@
         "answer": 0
       }
     ]
+  },
+  {
+    "id": 41,
+    "title": "Un sábado en el mercado",
+    "titleRu": "Суббота на рынке",
+    "level": "A2",
+    "paragraphs": [
+      {
+        "es": "Los sábados por la mañana voy al mercado con mi abuela. Ella conoce a todos los vendedores y siempre habla mucho con ellos. El mercado abre a las ocho, pero nosotras llegamos a las nueve, cuando hay más gente y más ruido.",
+        "ru": "По субботам утром я хожу на рынок с бабушкой. Она знает всех продавцов и всегда подолгу с ними разговаривает. Рынок открывается в восемь, но мы приходим к девяти, когда больше людей и шума."
+      },
+      {
+        "es": "Primero compramos fruta y verdura: tomates, naranjas y un melón si es verano. Después vamos al puesto de pescado. El pescadero, don Manuel, siempre nos regala una sonrisa y, a veces, unas gambas.",
+        "ru": "Сначала мы покупаем фрукты и овощи: помидоры, апельсины и дыню, если лето. Потом идём к рыбному прилавку. Продавец рыбы, дон Мануэль, всегда дарит нам улыбку, а иногда и немного креветок."
+      },
+      {
+        "es": "Mi abuela dice que en el supermercado todo es más rápido, pero en el mercado la comida tiene historia: sabes quién la vende y de dónde viene. Para mí, lo mejor es el desayuno después de las compras: churros con chocolate en el bar de la esquina.",
+        "ru": "Бабушка говорит, что в супермаркете всё быстрее, но у рыночной еды есть история: ты знаешь, кто её продаёт и откуда она. А для меня самое лучшее — завтрак после покупок: чуррос с горячим шоколадом в баре на углу."
+      }
+    ],
+    "glossary": [
+      { "es": "el vendedor", "ru": "продавец" },
+      { "es": "el puesto", "ru": "прилавок, ларёк" },
+      { "es": "regalar", "ru": "дарить" },
+      { "es": "las gambas", "ru": "креветки" },
+      { "es": "la esquina", "ru": "угол (улицы)" }
+    ],
+    "questions": [
+      { "q": "Когда девушка с бабушкой приходят на рынок?", "options": ["К восьми", "К девяти", "К обеду"], "answer": 1 },
+      { "q": "Что иногда дарит дон Мануэль?", "options": ["Помидоры", "Дыню", "Креветки"], "answer": 2 },
+      { "q": "Что для рассказчицы самое лучшее?", "options": ["Завтрак после покупок", "Покупка рыбы", "Разговоры с продавцами"], "answer": 0 }
+    ]
+  },
+  {
+    "id": 42,
+    "title": "Mi compañero de piso",
+    "titleRu": "Мой сосед по квартире",
+    "level": "A2",
+    "paragraphs": [
+      {
+        "es": "Desde septiembre comparto piso con Tomás, un estudiante de música. Al principio tenía miedo: ¿y si toca el piano por la noche? Pero Tomás es muy tranquilo y ordenado. Bueno, casi siempre.",
+        "ru": "С сентября я снимаю квартиру вместе с Томасом, студентом-музыкантом. Сначала я боялся: а вдруг он играет на пианино по ночам? Но Томас очень спокойный и аккуратный. Ну, почти всегда."
+      },
+      {
+        "es": "Tenemos reglas simples: yo cocino los lunes, miércoles y viernes; él cocina el resto de los días. El que no cocina, lava los platos. La limpieza grande la hacemos juntos los domingos, con música y sin prisa.",
+        "ru": "У нас простые правила: я готовлю по понедельникам, средам и пятницам; он готовит в остальные дни. Кто не готовит — моет посуду. Большую уборку мы делаем вместе по воскресеньям, с музыкой и без спешки."
+      },
+      {
+        "es": "Lo mejor de vivir con Tomás son las noches de conciertos gratis: cuando estudia una pieza nueva, yo soy su público. Lo peor es su despertador, que suena a las seis y media. ¡Pero nadie es perfecto!",
+        "ru": "Самое лучшее в жизни с Томасом — бесплатные вечерние концерты: когда он разучивает новую пьесу, я — его публика. Самое худшее — его будильник, который звонит в полседьмого. Но никто не идеален!"
+      }
+    ],
+    "glossary": [
+      { "es": "compartir piso", "ru": "снимать квартиру вместе" },
+      { "es": "ordenado", "ru": "аккуратный" },
+      { "es": "el resto", "ru": "остальное" },
+      { "es": "la limpieza", "ru": "уборка" },
+      { "es": "el despertador", "ru": "будильник" }
+    ],
+    "questions": [
+      { "q": "Кто такой Томас?", "options": ["Студент-музыкант", "Повар", "Учитель"], "answer": 0 },
+      { "q": "Кто моет посуду?", "options": ["Всегда Томас", "Тот, кто не готовил", "Никто"], "answer": 1 },
+      { "q": "Что рассказчику не нравится?", "options": ["Музыка Томаса", "Уборка по воскресеньям", "Будильник в 6:30"], "answer": 2 }
+    ]
+  },
+  {
+    "id": 43,
+    "title": "Aprender bailando",
+    "titleRu": "Учиться, танцуя",
+    "level": "B1",
+    "paragraphs": [
+      {
+        "es": "Cuando me mudé a Sevilla para estudiar, no conocía a nadie y mi español era bastante básico. Una compañera de clase me dijo: «Si quieres hablar mejor, no vayas a más clases. Apúntate a bailar sevillanas».",
+        "ru": "Когда я переехал в Севилью учиться, я никого не знал, а мой испанский был довольно базовым. Одногруппница сказала мне: «Хочешь говорить лучше — не ходи на дополнительные занятия. Запишись на севильянас»."
+      },
+      {
+        "es": "Me pareció una idea absurda, pero le hice caso. En la academia de baile nadie hablaba inglés, así que no me quedó más remedio que entender las instrucciones en español: gira, levanta el brazo, más despacio. Aprendí los verbos con el cuerpo, no con listas de palabras.",
+        "ru": "Идея показалась мне абсурдной, но я послушался. В школе танцев никто не говорил по-английски, так что мне ничего не оставалось, кроме как понимать инструкции на испанском: повернись, подними руку, помедленнее. Я учил глаголы телом, а не списками слов."
+      },
+      {
+        "es": "Tres meses después bailaba fatal, pero hablaba mil veces mejor. Y lo más importante: tenía amigos de verdad. En las pausas hablábamos de todo — de la feria, de la familia, de política. Nadie corregía mis errores, pero yo los oía y los iba corrigiendo solo.",
+        "ru": "Через три месяца танцевал я ужасно, зато говорил в тысячу раз лучше. И самое главное: у меня появились настоящие друзья. В перерывах мы болтали обо всём — о ферии, о семье, о политике. Никто не исправлял мои ошибки, но я их слышал и постепенно исправлял сам."
+      },
+      {
+        "es": "Ahora, cuando alguien me pregunta cómo aprender un idioma, respondo: busca un lugar donde el idioma no sea el objetivo, sino la herramienta. El resto viene solo.",
+        "ru": "Теперь, когда меня спрашивают, как выучить язык, я отвечаю: найди место, где язык — не цель, а инструмент. Остальное придёт само."
+      }
+    ],
+    "glossary": [
+      { "es": "apuntarse a", "ru": "записаться на" },
+      { "es": "hacer caso", "ru": "послушаться" },
+      { "es": "no quedar más remedio", "ru": "не оставаться другого выхода" },
+      { "es": "fatal", "ru": "ужасно" },
+      { "es": "la herramienta", "ru": "инструмент" }
+    ],
+    "questions": [
+      { "q": "Что посоветовала одногруппница?", "options": ["Записаться на танцы", "Взять больше уроков испанского", "Найти работу"], "answer": 0 },
+      { "q": "Почему пришлось понимать испанский в школе танцев?", "options": ["Там запрещали английский", "Никто не говорил по-английски", "Учитель был строгий"], "answer": 1 },
+      { "q": "Какой совет даёт рассказчик?", "options": ["Учить списки слов", "Ходить на все занятия", "Найти место, где язык — инструмент, а не цель"], "answer": 2 }
+    ]
+  },
+  {
+    "id": 44,
+    "title": "El pueblo que volvió a la vida",
+    "titleRu": "Деревня, которая ожила",
+    "level": "B1",
+    "paragraphs": [
+      {
+        "es": "Hace diez años, en Valdelosa vivían solo cuarenta personas, casi todas mayores. La escuela llevaba años cerrada, el bar abría solo los fines de semana y los jóvenes se marchaban a la ciudad en cuanto podían.",
+        "ru": "Десять лет назад в Вальделосе жили всего сорок человек, почти все пожилые. Школа годами стояла закрытой, бар открывался только по выходным, а молодёжь уезжала в город при первой возможности."
+      },
+      {
+        "es": "Todo cambió cuando el ayuntamiento tuvo una idea sencilla: instalar internet rápido y ofrecer casas baratas a familias que pudieran trabajar a distancia. El alquiler costaba la décima parte que en Madrid. En dos años llegaron quince familias.",
+        "ru": "Всё изменилось, когда мэрия придумала простую вещь: провести быстрый интернет и предложить дешёвое жильё семьям, которые могут работать удалённо. Аренда стоила в десять раз меньше, чем в Мадриде. За два года приехали пятнадцать семей."
+      },
+      {
+        "es": "Hoy la escuela tiene doce niños, el bar abre todos los días y hasta hay un pequeño coworking en el antiguo almacén. No todo es perfecto: falta un médico permanente y el autobús pasa dos veces al día. Pero Valdelosa ha demostrado algo importante: los pueblos no mueren por falta de belleza, sino por falta de oportunidades.",
+        "ru": "Сегодня в школе двенадцать детей, бар открыт каждый день, и даже есть маленький коворкинг в бывшем складе. Не всё идеально: не хватает постоянного врача, а автобус ходит два раза в день. Но Вальделоса доказала важную вещь: деревни умирают не от недостатка красоты, а от недостатка возможностей."
+      }
+    ],
+    "glossary": [
+      { "es": "el ayuntamiento", "ru": "мэрия" },
+      { "es": "trabajar a distancia", "ru": "работать удалённо" },
+      { "es": "el alquiler", "ru": "аренда" },
+      { "es": "el almacén", "ru": "склад" },
+      { "es": "la oportunidad", "ru": "возможность" }
+    ],
+    "questions": [
+      { "q": "Какая идея была у мэрии?", "options": ["Построить фабрику", "Интернет + дешёвое жильё для удалёнщиков", "Открыть отель"], "answer": 1 },
+      { "q": "Сколько семей приехало за два года?", "options": ["Пять", "Сорок", "Пятнадцать"], "answer": 2 },
+      { "q": "От чего, по тексту, умирают деревни?", "options": ["От недостатка возможностей", "От недостатка красоты", "От плохого климата"], "answer": 0 }
+    ]
+  },
+  {
+    "id": 45,
+    "title": "La siesta: entre el mito y la ciencia",
+    "titleRu": "Сиеста: между мифом и наукой",
+    "level": "B2",
+    "paragraphs": [
+      {
+        "es": "Pregunta a cualquier extranjero qué sabe de España y, tarde o temprano, mencionará la siesta. La imagen del país entero durmiendo a las tres de la tarde es, sin embargo, más un tópico que una realidad: según las encuestas, menos del veinte por ciento de los españoles duerme la siesta a diario.",
+        "ru": "Спросите любого иностранца, что он знает об Испании, и рано или поздно он упомянет сиесту. Однако образ целой страны, спящей в три часа дня, — скорее штамп, чем реальность: по опросам, меньше двадцати процентов испанцев спят днём ежедневно."
+      },
+      {
+        "es": "La paradoja es que, mientras España abandona la siesta por los horarios laborales modernos, la ciencia la reivindica. Numerosos estudios señalan que una siesta breve, de veinte a treinta minutos, mejora la memoria, la concentración y el estado de ánimo. Empresas tecnológicas de medio mundo han instalado salas de descanso precisamente por eso.",
+        "ru": "Парадокс в том, что пока Испания отказывается от сиесты из-за современных рабочих графиков, наука её реабилитирует. Многочисленные исследования показывают: короткий дневной сон, двадцать-тридцать минут, улучшает память, концентрацию и настроение. Именно поэтому технологические компании по всему миру оборудуют комнаты отдыха."
+      },
+      {
+        "es": "Eso sí, los expertos advierten: la clave está en la duración. Pasados los cuarenta minutos, el cerebro entra en sueño profundo y despertar se convierte en una pequeña tortura, con esa sensación de confusión que los científicos llaman «inercia del sueño». La siesta perfecta, dicen, es corta, temprana y, a ser posible, con café justo antes: la cafeína tarda unos veinte minutos en hacer efecto, exactamente lo que dura el descanso ideal.",
+        "ru": "Правда, эксперты предупреждают: всё дело в длительности. После сорока минут мозг входит в глубокий сон, и просыпаться становится маленькой пыткой — с тем чувством спутанности, которое учёные называют «инерцией сна». Идеальная сиеста, говорят они, короткая, ранняя и, по возможности, с кофе прямо перед ней: кофеин начинает действовать примерно через двадцать минут — ровно столько длится идеальный отдых."
+      }
+    ],
+    "glossary": [
+      { "es": "el tópico", "ru": "штамп, стереотип" },
+      { "es": "la encuesta", "ru": "опрос" },
+      { "es": "reivindicar", "ru": "реабилитировать, отстаивать" },
+      { "es": "el estado de ánimo", "ru": "настроение" },
+      { "es": "advertir", "ru": "предупреждать" }
+    ],
+    "questions": [
+      { "q": "Сколько испанцев спят сиесту ежедневно?", "options": ["Меньше 20%", "Около половины", "Почти все"], "answer": 0 },
+      { "q": "Какая сиеста считается идеальной?", "options": ["Час-полтора", "20–30 минут", "Пять минут"], "answer": 1 },
+      { "q": "Зачем пить кофе перед сиестой?", "options": ["Чтобы не заснуть глубоко", "Для вкуса", "Кофеин подействует как раз к пробуждению"], "answer": 2 }
+    ]
+  },
+  {
+    "id": 46,
+    "title": "Un idioma, veinte acentos",
+    "titleRu": "Один язык, двадцать акцентов",
+    "level": "B2",
+    "paragraphs": [
+      {
+        "es": "Casi quinientos millones de personas hablan español como lengua materna, repartidas en una veintena de países. Es inevitable que un idioma tan extendido suene distinto en cada orilla: el «vosotros» de Madrid desaparece en Buenos Aires, donde reina el «vos»; la «z» castellana se convierte en «s» en casi toda América.",
+        "ru": "Почти пятьсот миллионов человек говорят на испанском как на родном, и живут они в двух десятках стран. Неизбежно, что такой распространённый язык звучит по-разному на каждом берегу: мадридское «vosotros» исчезает в Буэнос-Айресе, где царит «vos»; кастильская «z» почти во всей Америке превращается в «s»."
+      },
+      {
+        "es": "El vocabulario también juega al despiste. Un ordenador español es una computadora mexicana; el autobús se llama guagua en Cuba y colectivo en Argentina. Palabras inocentes en un país pueden resultar malsonantes en otro, algo que los guionistas de doblaje conocen demasiado bien.",
+        "ru": "Лексика тоже любит запутывать. Испанский ordenador — это мексиканская computadora; автобус на Кубе зовётся guagua, а в Аргентине — colectivo. Невинные в одной стране слова могут звучать неприлично в другой — сценаристы дубляжа знают это слишком хорошо."
+      },
+      {
+        "es": "¿Debería preocuparse el estudiante? En absoluto. Las diferencias son reales, pero la comprensión mutua es casi total: un chileno y un andaluz pueden discutir de fútbol durante horas sin abrir el diccionario. Aprende el español que más te guste o el que más vayas a usar, y considera el resto no como un obstáculo, sino como un regalo: con un solo idioma te esperan veinte maneras de decir el mundo.",
+        "ru": "Стоит ли студенту переживать? Вовсе нет. Различия реальны, но взаимопонимание почти полное: чилиец и андалусец могут часами спорить о футболе, не открывая словаря. Учи тот испанский, который тебе больше нравится или который будешь чаще использовать, а остальное считай не препятствием, а подарком: с одним языком тебя ждут двадцать способов назвать мир."
+      }
+    ],
+    "glossary": [
+      { "es": "la lengua materna", "ru": "родной язык" },
+      { "es": "extendido", "ru": "распространённый" },
+      { "es": "jugar al despiste", "ru": "сбивать с толку" },
+      { "es": "malsonante", "ru": "неприлично звучащий" },
+      { "es": "el obstáculo", "ru": "препятствие" }
+    ],
+    "questions": [
+      { "q": "Сколько людей говорят на испанском как на родном?", "options": ["Около 100 миллионов", "Почти 500 миллионов", "Миллиард"], "answer": 1 },
+      { "q": "Как называют автобус на Кубе?", "options": ["Guagua", "Colectivo", "Camión"], "answer": 0 },
+      { "q": "Что советует текст студенту?", "options": ["Учить все варианты сразу", "Переживать из-за различий", "Учить тот вариант, который будет использовать"], "answer": 2 }
+    ]
   }
 ]

@@ -2,57 +2,82 @@ import { useEffect, useMemo, useState } from 'react'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { getDefaultDeck, addCardsBulk } from '../../lib/cards'
-import type { SpanishTopic, SpanishWord } from '../../types'
+import type { AppLang, WordTopic } from '../../types'
 
-const LEVELS = ['A1', 'A2', 'B1', 'B2'] as const
+const LEVEL_ORDER = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const
+
+/** Слово пака в общем виде — уже как будущая карточка. */
+interface PackWord {
+  front: string
+  back: string
+  example?: string
+}
 
 interface Loaded {
-  topics: SpanishTopic[]
-  wordsByTopic: Map<number, SpanishWord[]>
+  topics: WordTopic[]
+  wordsByTopic: Map<number, PackWord[]>
+}
+
+/** Ленивая загрузка словаря нужного языка (каждый — отдельный чанк). */
+async function loadPacks(lang: AppLang): Promise<Loaded> {
+  const map = new Map<number, PackWord[]>()
+  let topics: WordTopic[]
+  if (lang === 'es') {
+    const m = await import('../../data/spanish/words')
+    topics = m.allTopics
+    for (const w of m.allWords) {
+      const arr = map.get(w.topic_id) ?? []
+      arr.push({ front: w.spanish, back: w.russian, example: w.example_es })
+      map.set(w.topic_id, arr)
+    }
+  } else {
+    const m = await import('../../data/english/words')
+    topics = m.allTopics
+    for (const w of m.allWords) {
+      const arr = map.get(w.topic_id) ?? []
+      arr.push({ front: w.english, back: w.russian, example: w.example_en })
+      map.set(w.topic_id, arr)
+    }
+  }
+  return { topics, wordsByTopic: map }
 }
 
 /**
- * Паки испанских слов по темам (перенесены из приложения spanish, ~281 тема).
- * Данные грузятся лениво; темы сгруппированы по уровням, секции сворачиваются,
- * есть поиск. Кнопка добавляет тему в испанскую колоду; дубликаты пропускаются.
+ * Паки слов по темам: испанский (~281 тема из приложения spanish) и
+ * английский (авторские паки B1–C1). Данные грузятся лениво; темы сгруппированы
+ * по уровням, секции сворачиваются, есть поиск. Кнопка добавляет тему в колоду
+ * текущего языка; дубликаты пропускаются.
  */
-export function PacksSheet({ onAdded }: { onAdded: () => void }) {
+export function PacksSheet({ lang, onAdded }: { lang: AppLang; onAdded: () => void }) {
   const [data, setData] = useState<Loaded | null>(null)
   const [query, setQuery] = useState('')
-  const [openLevel, setOpenLevel] = useState<string | null>('A1')
+  const [openLevel, setOpenLevel] = useState<string | null>(null)
   const [busyTopic, setBusyTopic] = useState<number | null>(null)
   const [results, setResults] = useState<Record<number, string>>({})
 
   useEffect(() => {
     let alive = true
-    import('../../data/spanish/words').then((m) => {
+    setData(null)
+    setResults({})
+    loadPacks(lang).then((loaded) => {
       if (!alive) return
-      const map = new Map<number, SpanishWord[]>()
-      for (const w of m.allWords) {
-        const arr = map.get(w.topic_id)
-        if (arr) arr.push(w)
-        else map.set(w.topic_id, [w])
-      }
-      setData({ topics: m.allTopics, wordsByTopic: map })
+      setData(loaded)
+      setOpenLevel(loaded.topics[0]?.level ?? null)
     })
     return () => {
       alive = false
     }
-  }, [])
+  }, [lang])
 
   const addTopic = async (topicId: number) => {
     if (!data) return
     setBusyTopic(topicId)
     try {
-      const deck = await getDefaultDeck('es')
+      const deck = await getDefaultDeck(lang)
       const words = data.wordsByTopic.get(topicId) ?? []
       const added = await addCardsBulk(
         deck.id,
-        words.map((w) => ({
-          front: w.spanish,
-          back: w.russian,
-          example: w.example_es,
-        })),
+        words.map((w) => ({ front: w.front, back: w.back, example: w.example })),
       )
       setResults((r) => ({
         ...r,
@@ -72,12 +97,11 @@ export function PacksSheet({ onAdded }: { onAdded: () => void }) {
   // Поиск по названию темы (без учёта регистра). При поиске раскрываем все уровни.
   const q = query.trim().toLowerCase()
   const byLevel = useMemo(() => {
-    const groups: Record<string, SpanishTopic[]> = { A1: [], A2: [], B1: [], B2: [] }
+    const groups: Record<string, WordTopic[]> = {}
     if (!data) return groups
     for (const t of data.topics) {
-      const level = LEVELS.includes(t.level as (typeof LEVELS)[number]) ? t.level : 'A1'
       if (q && !t.name.toLowerCase().includes(q)) continue
-      groups[level]?.push(t)
+      ;(groups[t.level] ??= []).push(t)
     }
     return groups
   }, [data, q])
@@ -96,9 +120,9 @@ export function PacksSheet({ onAdded }: { onAdded: () => void }) {
   return (
     <Card className="flex flex-col gap-3">
       <p className="text-sm text-slate-500">
-        Готовые наборы испанских слов по темам ({totalTopics} тем, {totalWords} слов).
-        Добавленные слова появятся в колоде как новые карточки (дубликаты
-        пропускаются).
+        Готовые наборы {lang === 'es' ? 'испанских' : 'английских'} слов по темам
+        ({totalTopics} тем, {totalWords} слов). Добавленные слова появятся в колоде
+        как новые карточки (дубликаты пропускаются).
       </p>
 
       <input
@@ -108,7 +132,7 @@ export function PacksSheet({ onAdded }: { onAdded: () => void }) {
         onChange={(e) => setQuery(e.target.value)}
       />
 
-      {LEVELS.map((level) => {
+      {LEVEL_ORDER.map((level) => {
         const topics = byLevel[level] ?? []
         if (topics.length === 0) return null
         const isOpen = q.length > 0 || openLevel === level

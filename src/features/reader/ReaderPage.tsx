@@ -9,7 +9,7 @@ import { SpanishReaderPage } from './SpanishReader'
 import { sampleTexts, type SampleText } from './sampleTexts'
 import type { CEFRLevel } from '../../types'
 
-const levels: CEFRLevel[] = ['B1', 'C1']
+const levels: CEFRLevel[] = ['B1', 'B2', 'C1']
 
 /** «Ввод»: английский — тексты + словарь; испанский — свой раздел. */
 export function ReaderPage() {

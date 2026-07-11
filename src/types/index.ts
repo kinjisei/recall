@@ -127,6 +127,18 @@ export interface SpanishTopic {
   icon: string
 }
 
+/** Тема пака — общая форма для обоих языков (алиас, чтобы не ломать ES-код). */
+export type WordTopic = SpanishTopic
+
+/** Слово английского пака: английский + русский + пример (src/data/english). */
+export interface EnglishWord {
+  english: string
+  russian: string
+  example_en?: string
+  level: string
+  topic_id: number
+}
+
 /** Слово из пака: испанский + русский + пример. */
 export interface SpanishWord {
   spanish: string
