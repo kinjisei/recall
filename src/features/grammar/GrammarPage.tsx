@@ -1,22 +1,25 @@
 // ============================================================================
-// «Грамматика» (только испанский) — уроки A1–B2 из приложения spanish.
-// Список тем по уровням → теория (paragraph/table/example) → интерактивные
-// упражнения (mcq/fill/order) с проверкой. Завершение упражнений засчитывается
-// в стрик (logActivity('grammar')).
+// «Грамматика» — уроки для обоих языков: испанские A1–B2 (из приложения
+// spanish) и английские (авторские, пополняются). Список тем по уровням →
+// теория (paragraph/table/example) → интерактивные упражнения (mcq/fill/order)
+// с проверкой. Завершение упражнений засчитывается в стрик (logActivity).
+// Раздел «Глаголы» (спряжения) — только для испанского.
 // ============================================================================
 import { useEffect, useMemo, useState } from 'react'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { speak } from '../../lib/speech'
 import { logActivity } from '../../lib/activity'
+import { useLanguage } from '../../context/LanguageContext'
 import { ConjugationSection } from './ConjugationSection'
 import type {
+  AppLang,
   GrammarExercise,
   GrammarTheoryBlock,
   GrammarTopic,
 } from '../../types'
 
-const LEVELS = ['A1', 'A2', 'B1', 'B2'] as const
+const LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1'] as const
 
 /** Нормализация ответа: без регистра, диакритики и лишних пробелов. */
 export function normalize(s: string): string {
@@ -35,67 +38,82 @@ const sections: { id: Section; label: string }[] = [
   { id: 'verbs', label: '🔀 Глаголы' },
 ]
 
-/** «Грамматика» (только ES): два раздела — уроки и спряжения глаголов. */
+/** «Грамматика»: уроки (EN и ES) + спряжения глаголов (только ES). */
 export function GrammarPage() {
+  const { lang } = useLanguage()
   const [section, setSection] = useState<Section>('lessons')
+
+  // при переключении на английский раздел «Глаголы» недоступен
+  useEffect(() => {
+    if (lang !== 'es') setSection('lessons')
+  }, [lang])
+
+  const visibleSections = lang === 'es' ? sections : sections.filter((s) => s.id === 'lessons')
 
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-bold">📚 Грамматика</h1>
-      <div className="flex gap-2">
-        {sections.map((s) => (
-          <button
-            key={s.id}
-            onClick={() => setSection(s.id)}
-            className={`rounded-lg px-4 py-2 text-sm font-semibold ${
-              section === s.id
-                ? 'bg-sky-600 text-white'
-                : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
-            }`}
-          >
-            {s.label}
-          </button>
-        ))}
-      </div>
+      {visibleSections.length > 1 && (
+        <div className="flex gap-2">
+          {visibleSections.map((s) => (
+            <button
+              key={s.id}
+              onClick={() => setSection(s.id)}
+              className={`rounded-lg px-4 py-2 text-sm font-semibold ${
+                section === s.id
+                  ? 'bg-sky-600 text-white'
+                  : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
+              }`}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+      )}
 
-      {section === 'lessons' ? <LessonsSection /> : <ConjugationSection />}
+      {section === 'lessons' ? <LessonsSection key={lang} lang={lang} /> : <ConjugationSection />}
     </div>
   )
 }
 
-function LessonsSection() {
+function LessonsSection({ lang }: { lang: AppLang }) {
   const [topics, setTopics] = useState<GrammarTopic[] | null>(null)
   const [openLevel, setOpenLevel] = useState<string | null>('A1')
   const [selected, setSelected] = useState<GrammarTopic | null>(null)
 
   useEffect(() => {
     let alive = true
-    import('../../data/spanish/grammar').then((m) => {
+    const mod =
+      lang === 'es'
+        ? import('../../data/spanish/grammar')
+        : import('../../data/english/grammar')
+    mod.then((m) => {
       if (alive) setTopics(m.grammarTopics)
     })
     return () => {
       alive = false
     }
-  }, [])
+  }, [lang])
 
   const byLevel = useMemo(() => {
-    const groups: Record<string, GrammarTopic[]> = { A1: [], A2: [], B1: [], B2: [] }
+    const groups: Record<string, GrammarTopic[]> = {}
     for (const t of topics ?? []) {
       const level = LEVELS.includes(t.level as (typeof LEVELS)[number]) ? t.level : 'A1'
-      groups[level]?.push(t)
+      ;(groups[level] ??= []).push(t)
     }
     return groups
   }, [topics])
 
   if (selected) {
-    return <TopicScreen topic={selected} onBack={() => setSelected(null)} />
+    return <TopicScreen topic={selected} lang={lang} onBack={() => setSelected(null)} />
   }
 
   return (
     <div className="flex flex-col gap-4">
       <p className="text-sm text-slate-500">
-        Уроки испанской грамматики от A1 до B2: короткая теория и упражнения с
-        проверкой.
+        {lang === 'es'
+          ? 'Уроки испанской грамматики от A1 до B2: короткая теория и упражнения с проверкой.'
+          : 'Уроки английской грамматики: короткая теория и упражнения с проверкой. Разделы пополняются.'}
       </p>
 
       {!topics ? (
@@ -144,7 +162,15 @@ function LessonsSection() {
 // Экран темы: теория, затем упражнения.
 // ---------------------------------------------------------------------------
 
-function TopicScreen({ topic, onBack }: { topic: GrammarTopic; onBack: () => void }) {
+function TopicScreen({
+  topic,
+  lang,
+  onBack,
+}: {
+  topic: GrammarTopic
+  lang: AppLang
+  onBack: () => void
+}) {
   const [mode, setMode] = useState<'theory' | 'exercises'>('theory')
 
   return (
@@ -184,6 +210,7 @@ function TopicScreen({ topic, onBack }: { topic: GrammarTopic; onBack: () => voi
       {mode === 'theory' ? (
         <TheoryView
           topic={topic}
+          lang={lang}
           onStart={
             topic.exercises.length > 0 ? () => setMode('exercises') : undefined
           }
@@ -197,16 +224,18 @@ function TopicScreen({ topic, onBack }: { topic: GrammarTopic; onBack: () => voi
 
 function TheoryView({
   topic,
+  lang,
   onStart,
 }: {
   topic: GrammarTopic
+  lang: AppLang
   onStart?: () => void
 }) {
   return (
     <div className="flex flex-col gap-3">
       <Card className="flex flex-col gap-4">
         {topic.theory.map((block, i) => (
-          <TheoryBlock key={i} block={block} />
+          <TheoryBlock key={i} block={block} lang={lang} />
         ))}
       </Card>
       {onStart && <Button onClick={onStart}>Перейти к упражнениям →</Button>}
@@ -214,17 +243,19 @@ function TheoryView({
   )
 }
 
-function TheoryBlock({ block }: { block: GrammarTheoryBlock }) {
+function TheoryBlock({ block, lang }: { block: GrammarTheoryBlock; lang: AppLang }) {
   if (block.type === 'paragraph') {
     return <p className="leading-relaxed text-slate-700 dark:text-slate-200">{block.text}</p>
   }
   if (block.type === 'example') {
+    // текст примера: испанские уроки хранят его в es, английские — в en
+    const sample = block.es ?? block.en ?? ''
     return (
       <div className="rounded-xl bg-slate-100 px-3 py-2 dark:bg-slate-800">
         <div className="flex items-center gap-2">
-          <p className="font-medium text-slate-800 dark:text-slate-100">{block.es}</p>
+          <p className="font-medium text-slate-800 dark:text-slate-100">{sample}</p>
           <button
-            onClick={() => speak(block.es, { lang: 'es' })}
+            onClick={() => speak(sample, { lang })}
             className="rounded-full bg-white px-2 py-0.5 text-sm dark:bg-slate-700"
             aria-label="Озвучить"
           >

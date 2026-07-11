@@ -179,7 +179,8 @@ export interface SpanishSentence {
 export type GrammarTheoryBlock =
   | { type: 'paragraph'; text: string }
   | { type: 'table'; headers: string[]; rows: string[][] }
-  | { type: 'example'; es: string; ru: string }
+  // пример на изучаемом языке: es — для испанских уроков, en — для английских
+  | { type: 'example'; es?: string; en?: string; ru: string }
 
 /** Упражнение в уроке грамматики. */
 export type GrammarExercise =

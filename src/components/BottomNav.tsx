@@ -23,7 +23,7 @@ const tabs: Tab[] = [
   { to: '/flashcards', label: 'Колода', Icon: IconDeck, end: false },
   { to: '/reader', label: 'Ввод', Icon: IconBook, end: false },
   { to: '/pronunciation', label: 'Речь', Icon: IconMic, end: false },
-  { to: '/grammar', label: 'Грам.', Icon: IconGrammar, end: false, esOnly: true },
+  { to: '/grammar', label: 'Грам.', Icon: IconGrammar, end: false },
   { to: '/conversation', label: 'Диалог', Icon: IconChat, end: false },
 ]
 

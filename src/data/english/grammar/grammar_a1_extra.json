@@ -1,0 +1,144 @@
+[
+  {
+    "title": "This, that, these, those",
+    "level": "A1",
+    "order": 7,
+    "theory": [
+      { "type": "paragraph", "text": "Эти четыре слова показывают на предметы. Выбор зависит от двух вещей: близко или далеко, один предмет или несколько." },
+      { "type": "table", "headers": ["", "Близко", "Далеко"], "rows": [["один предмет", "this (этот)", "that (тот)"], ["несколько", "these (эти)", "those (те)"]] },
+      { "type": "example", "en": "This is my phone.", "ru": "Это мой телефон. (он в руке — близко)" },
+      { "type": "example", "en": "That house is beautiful.", "ru": "Тот дом красивый. (смотрим издалека)" },
+      { "type": "example", "en": "These shoes are new, but those are old.", "ru": "Эти туфли новые, а те — старые." },
+      { "type": "paragraph", "text": "Подсказка для запоминания: this/these — «здесь» (близко), that/those — «там» (далеко). А ещё this и that — с is, these и those — с are." },
+      { "type": "paragraph", "text": "⚠️ Ошибка: This books ✗. С множественным числом — только these/those: These books ✓." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "___ is my bag. (в руке)", "options": ["This", "These", "Those"], "answer": 0 },
+      { "type": "mcq", "prompt": "___ mountains are far away. (вдалеке)", "options": ["This", "That", "Those"], "answer": 2 },
+      { "type": "mcq", "prompt": "___ apples are fresh. (рядом, на столе)", "options": ["This", "These", "That"], "answer": 1 },
+      { "type": "mcq", "prompt": "Look at ___ bird in the sky! (далеко, одна)", "options": ["that", "these", "this"], "answer": 0 },
+      { "type": "fill", "prompt": "___ is my brother. (этот, рядом)", "answer": "this", "hint": "один, близко" },
+      { "type": "fill", "prompt": "___ books are interesting. (эти)", "answer": "these", "hint": "несколько, близко" },
+      { "type": "fill", "prompt": "___ car over there is fast. (та)", "answer": "that", "hint": "одна, далеко" },
+      { "type": "order", "prompt": "Собери: «Эти туфли — новые»", "words": ["These", "shoes", "are", "new"], "answer": ["These", "shoes", "are", "new"] }
+    ]
+  },
+  {
+    "title": "There is / There are — «есть, находится»",
+    "level": "A1",
+    "order": 8,
+    "theory": [
+      { "type": "paragraph", "text": "Чтобы сказать, что где-то ЧТО-ТО ЕСТЬ, английский использует конструкцию there is / there are. По-русски мы говорим «В комнате кот», по-английски — There is a cat in the room (дословно: «имеется кот в комнате»)." },
+      { "type": "table", "headers": ["Форма", "Когда", "Пример"], "rows": [["There is", "один предмет", "There is a cafe near my house."], ["There are", "несколько", "There are two windows in the room."], ["Is there…?", "вопрос (ед.)", "Is there a bank near here?"], ["There isn't / aren't", "отрицание", "There isn't any milk."]] },
+      { "type": "example", "en": "There is a park near my house.", "ru": "Рядом с моим домом есть парк." },
+      { "type": "example", "en": "There are five people in the team.", "ru": "В команде пять человек." },
+      { "type": "example", "en": "Is there a problem? — No, there isn't.", "ru": "Есть проблема? — Нет." },
+      { "type": "paragraph", "text": "⚠️ Ошибка — копировать русский порядок слов: In the room is a cat ✗. Начинай с there: There is a cat in the room ✓. Место (in the room) уходит в конец." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "___ a cafe on this street.", "options": ["There is", "There are", "It is"], "answer": 0 },
+      { "type": "mcq", "prompt": "___ many books on the shelf.", "options": ["There is", "There are", "They are"], "answer": 1 },
+      { "type": "mcq", "prompt": "___ a bank near here?", "options": ["Is there", "Are there", "There is"], "answer": 0 },
+      { "type": "mcq", "prompt": "Как сказать «В комнате два окна»?", "options": ["In the room two windows.", "There are two windows in the room.", "There is two windows in the room."], "answer": 1 },
+      { "type": "fill", "prompt": "There ___ a cat under the table. (is/are)", "answer": "is", "hint": "один кот" },
+      { "type": "fill", "prompt": "There ___ three shops here. (is/are)", "answer": "are", "hint": "несколько" },
+      { "type": "fill", "prompt": "There ___ any sugar. (нет сахара: is + not кратко)", "answer": "isn't", "hint": "is + n't" },
+      { "type": "order", "prompt": "Собери: «Рядом есть парк»", "words": ["There", "is", "a", "park", "near"], "answer": ["There", "is", "a", "park", "near"] }
+    ]
+  },
+  {
+    "title": "Have got — «у меня есть»",
+    "level": "A1",
+    "order": 9,
+    "theory": [
+      { "type": "paragraph", "text": "«У меня есть…» по-английски — I have got… (кратко: I've got) или просто I have. Оба варианта правильные; have got звучит разговорнее и очень частый в британском английском." },
+      { "type": "table", "headers": ["Кто", "Форма", "Пример"], "rows": [["I, you, we, they", "have got ('ve got)", "I've got a bike."], ["he, she, it", "has got ('s got)", "She's got a brother."], ["отрицание", "haven't / hasn't got", "I haven't got time."], ["вопрос", "Have you got…? / Has she got…?", "Have you got a pen?"]] },
+      { "type": "example", "en": "I've got two brothers.", "ru": "У меня два брата." },
+      { "type": "example", "en": "She's got a new phone.", "ru": "У неё новый телефон." },
+      { "type": "example", "en": "Have you got a pen? — Yes, I have.", "ru": "У тебя есть ручка? — Да." },
+      { "type": "paragraph", "text": "⚠️ Не смешивай два способа: вопрос либо Have you got a car?, либо Do you have a car? Оба верны, но «Do you have got» ✗ не существует." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "I ___ got a dog.", "options": ["have", "has", "am"], "answer": 0 },
+      { "type": "mcq", "prompt": "She ___ got a car.", "options": ["have", "has", "is"], "answer": 1 },
+      { "type": "mcq", "prompt": "___ you got a pen?", "options": ["Do", "Has", "Have"], "answer": 2 },
+      { "type": "mcq", "prompt": "Выбери правильное:", "options": ["Do you have got a car?", "Have you got a car?", "Has you got a car?"], "answer": 1 },
+      { "type": "fill", "prompt": "He ___ got two sisters. (have/has)", "answer": "has", "hint": "he → has" },
+      { "type": "fill", "prompt": "We ___ got a big flat. (have/has)", "answer": "have", "hint": "we → have" },
+      { "type": "fill", "prompt": "I ___ got time. (нет времени: have + not кратко)", "answer": "haven't", "hint": "have + n't" },
+      { "type": "order", "prompt": "Собери: «У неё есть брат»", "words": ["She", "has", "got", "a", "brother"], "answer": ["She", "has", "got", "a", "brother"] }
+    ]
+  },
+  {
+    "title": "Can — умею, могу",
+    "level": "A1",
+    "order": 10,
+    "theory": [
+      { "type": "paragraph", "text": "Can выражает умение или возможность: «умею плавать», «можешь помочь?». Это самый простой глагол английского: одна форма для всех, а после него глагол идёт БЕЗ to и без -s." },
+      { "type": "table", "headers": ["Тип", "Пример", "Перевод"], "rows": [["+", "I can swim.", "Я умею плавать."], ["+", "She can cook well.", "Она хорошо готовит (умеет)."], ["−", "He can't drive.", "Он не умеет водить."], ["?", "Can you help me?", "Можешь мне помочь?"]] },
+      { "type": "example", "en": "I can speak English a little.", "ru": "Я немного говорю по-английски." },
+      { "type": "example", "en": "Can you open the window, please?", "ru": "Можешь открыть окно, пожалуйста?" },
+      { "type": "example", "en": "Sorry, I can't come today.", "ru": "Извини, я не могу прийти сегодня." },
+      { "type": "paragraph", "text": "⚠️ Три «нельзя»: She cans ✗ (can не меняется), I can to swim ✗ (без to), Do you can…? ✗ (вопрос просто перестановкой: Can you…?)." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "She ___ swim very well.", "options": ["can", "cans", "can to"], "answer": 0 },
+      { "type": "mcq", "prompt": "I can ___ English.", "options": ["to speak", "speak", "speaks"], "answer": 1 },
+      { "type": "mcq", "prompt": "Как спросить «Ты умеешь готовить?»", "options": ["Do you can cook?", "Can you cook?", "You can cook?"], "answer": 1 },
+      { "type": "mcq", "prompt": "He ___ drive. (не умеет)", "options": ["don't can", "can not to", "can't"], "answer": 2 },
+      { "type": "fill", "prompt": "I ___ help you. (могу)", "answer": "can", "hint": "одна форма для всех" },
+      { "type": "fill", "prompt": "She ___ come today. (не может — кратко)", "answer": "can't", "hint": "can + n't" },
+      { "type": "fill", "prompt": "___ you help me? (можешь…?)", "answer": "can", "hint": "вопрос начинается с этого слова" },
+      { "type": "order", "prompt": "Собери: «Я умею плавать»", "words": ["I", "can", "swim"], "answer": ["I", "can", "swim"] },
+      { "type": "order", "prompt": "Собери вопрос: «Ты можешь мне помочь?»", "words": ["Can", "you", "help", "me"], "answer": ["Can", "you", "help", "me"] }
+    ]
+  },
+  {
+    "title": "Предлоги места: in, on, under, next to…",
+    "level": "A1",
+    "order": 11,
+    "theory": [
+      { "type": "paragraph", "text": "Предлоги места отвечают на вопрос «где?». Хорошая новость: основные предлоги легко представить картинкой." },
+      { "type": "table", "headers": ["Предлог", "Значение", "Пример"], "rows": [["in", "внутри", "in the box — в коробке"], ["on", "на поверхности", "on the table — на столе"], ["under", "под", "under the chair — под стулом"], ["next to", "рядом с", "next to the window — у окна"], ["behind", "позади", "behind the house — за домом"], ["in front of", "перед", "in front of the door — перед дверью"], ["between", "между", "between the shops — между магазинами"]] },
+      { "type": "example", "en": "The keys are on the table.", "ru": "Ключи на столе." },
+      { "type": "example", "en": "The cat is under the bed.", "ru": "Кот под кроватью." },
+      { "type": "example", "en": "The bank is next to the cafe.", "ru": "Банк рядом с кафе." },
+      { "type": "paragraph", "text": "Запомни устойчивые пары: in the room, in the car, in Kazakhstan — но on the bus, on the wall, on the floor. Если сомневаешься: внутри объёма — in, на поверхности — on." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "The book is ___ the table.", "options": ["in", "on", "under"], "answer": 1 },
+      { "type": "mcq", "prompt": "The cat is ___ the chair. (под)", "options": ["on", "next to", "under"], "answer": 2 },
+      { "type": "mcq", "prompt": "The milk is ___ the fridge. (внутри)", "options": ["in", "on", "behind"], "answer": 0 },
+      { "type": "mcq", "prompt": "The bank is ___ the cafe. (рядом с)", "options": ["between", "next to", "under"], "answer": 1 },
+      { "type": "fill", "prompt": "The picture is ___ the wall. (на)", "answer": "on", "hint": "на поверхности" },
+      { "type": "fill", "prompt": "My phone is ___ my bag. (в)", "answer": "in", "hint": "внутри" },
+      { "type": "fill", "prompt": "The garden is ___ the house. (за)", "answer": "behind", "hint": "позади" },
+      { "type": "order", "prompt": "Собери: «Кот под столом»", "words": ["The", "cat", "is", "under", "the", "table"], "answer": ["The", "cat", "is", "under", "the", "table"] }
+    ]
+  },
+  {
+    "title": "Предлоги времени: at 7, on Monday, in July",
+    "level": "A1",
+    "order": 12,
+    "theory": [
+      { "type": "paragraph", "text": "«В понедельник», «в июле», «в 7 часов» — по-русски везде «в», а по-английски три разных предлога. Логика простая: чем «крупнее» время, тем «шире» предлог." },
+      { "type": "table", "headers": ["Предлог", "С чем", "Примеры"], "rows": [["at", "точное время; ночь", "at 7 o'clock, at noon, at night"], ["on", "дни недели; даты", "on Monday, on the 5th of May, on my birthday"], ["in", "месяцы; годы; сезоны; части дня", "in July, in 2026, in winter, in the morning"]] },
+      { "type": "example", "en": "The lesson starts at 8 o'clock.", "ru": "Урок начинается в 8 часов." },
+      { "type": "example", "en": "We meet on Fridays.", "ru": "Мы встречаемся по пятницам." },
+      { "type": "example", "en": "My birthday is in March.", "ru": "Мой день рождения в марте." },
+      { "type": "example", "en": "I drink coffee in the morning.", "ru": "Я пью кофе по утрам." },
+      { "type": "paragraph", "text": "⚠️ Ловушки: in Monday ✗ → ON Monday ✓; on morning ✗ → IN the morning ✓. Но: AT night (ночью) — исключение, просто запомни." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "The film starts ___ 9 o'clock.", "options": ["in", "on", "at"], "answer": 2 },
+      { "type": "mcq", "prompt": "I work ___ Saturdays.", "options": ["in", "on", "at"], "answer": 1 },
+      { "type": "mcq", "prompt": "She was born ___ 2005.", "options": ["in", "on", "at"], "answer": 0 },
+      { "type": "mcq", "prompt": "I read books ___ the evening.", "options": ["at", "on", "in"], "answer": 2 },
+      { "type": "fill", "prompt": "We have a lesson ___ Monday.", "answer": "on", "hint": "день недели" },
+      { "type": "fill", "prompt": "My holiday is ___ August.", "answer": "in", "hint": "месяц" },
+      { "type": "fill", "prompt": "I sleep ___ night.", "answer": "at", "hint": "исключение!" },
+      { "type": "fill", "prompt": "The shop opens ___ 10 o'clock.", "answer": "at", "hint": "точное время" },
+      { "type": "order", "prompt": "Собери: «Мы встречаемся в пятницу»", "words": ["We", "meet", "on", "Friday"], "answer": ["We", "meet", "on", "Friday"] }
+    ]
+  }
+]

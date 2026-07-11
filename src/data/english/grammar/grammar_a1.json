@@ -1,0 +1,150 @@
+[
+  {
+    "title": "Глагол to be: am, is, are",
+    "level": "A1",
+    "order": 1,
+    "theory": [
+      { "type": "paragraph", "text": "To be значит «быть, являться, находиться». Это самый важный глагол английского языка. По-русски мы говорим «Я студент» — без глагола. По-английски так нельзя: глагол to be обязателен. I am a student — дословно «Я ЕСТЬ студент»." },
+      { "type": "table", "headers": ["Кто", "Форма", "Пример", "Перевод"], "rows": [["I (я)", "am", "I am happy.", "Я счастлив."], ["he, she, it (он, она, оно)", "is", "She is at home.", "Она дома."], ["we, you, they (мы, ты/вы, они)", "are", "They are friends.", "Они друзья."]] },
+      { "type": "example", "en": "I am from Kazakhstan.", "ru": "Я из Казахстана." },
+      { "type": "example", "en": "He is my brother.", "ru": "Он мой брат." },
+      { "type": "example", "en": "We are at work.", "ru": "Мы на работе." },
+      { "type": "paragraph", "text": "В разговоре почти всегда используют краткие формы: I am → I'm, he is → he's, she is → she's, it is → it's, we are → we're, you are → you're, they are → they're." },
+      { "type": "paragraph", "text": "⚠️ Типичная ошибка: пропускать to be, как в русском. «Она врач» — нельзя сказать She doctor. Правильно: She IS a doctor. Проверяй себя: если в предложении нет другого глагола — нужен to be." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "I ___ a student.", "options": ["am", "is", "are"], "answer": 0 },
+      { "type": "mcq", "prompt": "She ___ my friend.", "options": ["am", "is", "are"], "answer": 1 },
+      { "type": "mcq", "prompt": "They ___ from Spain.", "options": ["is", "are", "am"], "answer": 1 },
+      { "type": "mcq", "prompt": "Как сказать «Она врач»?", "options": ["She doctor.", "She is a doctor.", "She are a doctor."], "answer": 1 },
+      { "type": "fill", "prompt": "He ___ a doctor. (вставь форму to be)", "answer": "is", "hint": "he, she, it → is" },
+      { "type": "fill", "prompt": "We ___ happy. (вставь форму to be)", "answer": "are", "hint": "we, you, they → are" },
+      { "type": "fill", "prompt": "I ___ tired. (вставь форму to be)", "answer": "am", "hint": "с I всегда одна и та же форма" },
+      { "type": "fill", "prompt": "Краткая форма «she is» (одним словом с апострофом)", "answer": "she's", "hint": "апостроф вместо буквы i" },
+      { "type": "order", "prompt": "Собери предложение: «Она дома»", "words": ["She", "is", "at", "home"], "answer": ["She", "is", "at", "home"] }
+    ]
+  },
+  {
+    "title": "Местоимения: I, you, he… и my, your, his…",
+    "level": "A1",
+    "order": 2,
+    "theory": [
+      { "type": "paragraph", "text": "Местоимения заменяют имена, чтобы не повторяться: «Анна дома. ОНА устала». В английском у каждого личного местоимения (кто?) есть пара — притяжательное (чей?): I → my (я → мой), you → your (ты → твой)." },
+      { "type": "table", "headers": ["Кто?", "Перевод", "Чей?", "Пример"], "rows": [["I", "я", "my", "my phone — мой телефон"], ["you", "ты, вы", "your", "your car — твоя машина"], ["he", "он", "his", "his name — его имя"], ["she", "она", "her", "her book — её книга"], ["it", "оно (предмет)", "its", "its colour — его цвет"], ["we", "мы", "our", "our house — наш дом"], ["they", "они", "their", "their dog — их собака"]] },
+      { "type": "example", "en": "This is my sister. Her name is Anna.", "ru": "Это моя сестра. Её зовут Анна (дословно: её имя — Анна)." },
+      { "type": "example", "en": "Our flat is small.", "ru": "Наша квартира маленькая." },
+      { "type": "example", "en": "I like their music.", "ru": "Мне нравится их музыка." },
+      { "type": "paragraph", "text": "⚠️ Частая путаница: his и her. his = ЕГО (принадлежит мужчине), her = ЕЁ (принадлежит женщине). His car — его машина. Her car — её машина." },
+      { "type": "paragraph", "text": "Ещё запомни: I (я) ВСЕГДА пишется с большой буквы, даже в середине предложения: My friend and I are students." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "This is ___ car. (его)", "options": ["he", "his", "him"], "answer": 1 },
+      { "type": "mcq", "prompt": "___ am a teacher.", "options": ["My", "Me", "I"], "answer": 2 },
+      { "type": "mcq", "prompt": "We love ___ city. (наш)", "options": ["we", "us", "our"], "answer": 2 },
+      { "type": "mcq", "prompt": "Как правильно написать «я» в середине предложения?", "options": ["i", "I", "не важно"], "answer": 1 },
+      { "type": "fill", "prompt": "It is ___ book. (её)", "answer": "her", "hint": "принадлежит женщине" },
+      { "type": "fill", "prompt": "___ dog is big. (их)", "answer": "their", "hint": "they → ?" },
+      { "type": "fill", "prompt": "I love ___ job. (свою = мою)", "answer": "my", "hint": "I → ?" },
+      { "type": "fill", "prompt": "___ name is Tom. (его)", "answer": "his", "hint": "принадлежит мужчине" },
+      { "type": "order", "prompt": "Собери: «Её имя — Анна»", "words": ["Her", "name", "is", "Anna"], "answer": ["Her", "name", "is", "Anna"] }
+    ]
+  },
+  {
+    "title": "Артикли a / an и the",
+    "level": "A1",
+    "order": 3,
+    "theory": [
+      { "type": "paragraph", "text": "В русском артиклей нет, поэтому их постоянно хочется пропустить. Правило-минимум: предмет в единственном числе не может стоять «голым» — перед ним нужно a/an, the или слово вроде my, this." },
+      { "type": "table", "headers": ["Артикль", "Когда", "Пример"], "rows": [["a", "«один, какой-то» — перед согласным ЗВУКОМ", "a cat, a book, a doctor"], ["an", "то же самое, но перед гласным ЗВУКОМ", "an apple, an egg, an engineer"], ["the", "о конкретном, уже известном предмете", "the sun, the cat (тот самый кот)"]] },
+      { "type": "example", "en": "I have a cat. The cat is black.", "ru": "У меня есть кот (какой-то, впервые о нём говорю). Этот кот — чёрный (уже известный)." },
+      { "type": "example", "en": "She is an engineer.", "ru": "Она инженер. (профессия — всегда с a/an)" },
+      { "type": "example", "en": "The weather is nice today.", "ru": "Погода сегодня хорошая." },
+      { "type": "paragraph", "text": "Важно: a/an зависит от ЗВУКА, а не буквы. An hour (час) — h не читается, слово начинается со звука «ау». A university — буква u, но звук «ю» (согласный звук й)." },
+      { "type": "paragraph", "text": "⚠️ Ошибка: «Я врач» → I am doctor. Правильно: I am A doctor. Профессии, предметы, животные в единственном числе — всегда с артиклем." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "___ apple", "options": ["a", "an", "без артикля"], "answer": 1 },
+      { "type": "mcq", "prompt": "She is ___ doctor.", "options": ["a", "an", "the"], "answer": 0 },
+      { "type": "mcq", "prompt": "I see a dog. ___ dog is big.", "options": ["A", "An", "The"], "answer": 2 },
+      { "type": "mcq", "prompt": "Как сказать «Я учитель»?", "options": ["I am teacher.", "I am a teacher.", "I am the teacher."], "answer": 1 },
+      { "type": "fill", "prompt": "a или an: ___ egg", "answer": "an", "hint": "какой первый ЗВУК?" },
+      { "type": "fill", "prompt": "a или an: ___ car", "answer": "a", "hint": "согласный звук" },
+      { "type": "fill", "prompt": "a или an: ___ orange", "answer": "an", "hint": "гласный звук" },
+      { "type": "fill", "prompt": "I am ___ student. (артикль)", "answer": "a", "hint": "профессия/род занятий в ед. числе" },
+      { "type": "order", "prompt": "Собери: «У меня есть маленькая собака»", "words": ["I", "have", "a", "small", "dog"], "answer": ["I", "have", "a", "small", "dog"] }
+    ]
+  },
+  {
+    "title": "Множественное число: cats, buses, children",
+    "level": "A1",
+    "order": 4,
+    "theory": [
+      { "type": "paragraph", "text": "Чтобы сказать «коты» вместо «кот», обычно достаточно добавить -s: cat → cats, book → books. Но есть несколько особых случаев — их стоит знать с самого начала." },
+      { "type": "table", "headers": ["Правило", "Примеры"], "rows": [["обычно: +s", "book → books, dog → dogs"], ["после -s, -sh, -ch, -x: +es", "bus → buses, watch → watches, box → boxes"], ["согласная + y: y → ies", "city → cities, baby → babies"], ["слова-исключения", "man → men, woman → women, child → children, person → people, foot → feet, tooth → teeth"]] },
+      { "type": "example", "en": "I have two brothers.", "ru": "У меня два брата." },
+      { "type": "example", "en": "The children are in the park.", "ru": "Дети в парке." },
+      { "type": "example", "en": "There are many people here.", "ru": "Здесь много людей." },
+      { "type": "paragraph", "text": "⚠️ Ошибки: childs и mans не существуют — только children и men. И запомни: people («люди») — уже множественное число, поэтому People ARE… а не People is…" }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "box → ?", "options": ["boxs", "boxes", "boxies"], "answer": 1 },
+      { "type": "mcq", "prompt": "child → ?", "options": ["childs", "childes", "children"], "answer": 2 },
+      { "type": "mcq", "prompt": "city → ?", "options": ["citys", "cities", "cityes"], "answer": 1 },
+      { "type": "mcq", "prompt": "People ___ friendly here.", "options": ["is", "are", "am"], "answer": 1 },
+      { "type": "fill", "prompt": "one man, two ___", "answer": "men", "hint": "слово-исключение" },
+      { "type": "fill", "prompt": "one watch, two ___", "answer": "watches", "hint": "после -ch добавляем -es" },
+      { "type": "fill", "prompt": "one woman, two ___", "answer": "women", "hint": "слово-исключение" },
+      { "type": "fill", "prompt": "«Люди» по-английски (одно слово)", "answer": "people", "hint": "person → ?" },
+      { "type": "order", "prompt": "Собери: «Я вижу двух котов»", "words": ["I", "see", "two", "cats"], "answer": ["I", "see", "two", "cats"] }
+    ]
+  },
+  {
+    "title": "Present Simple: I work, he works",
+    "level": "A1",
+    "order": 5,
+    "theory": [
+      { "type": "paragraph", "text": "Present Simple — время для привычек, фактов и регулярных действий: «Я работаю в банке», «Он живёт в Астане», «Магазин открывается в 9». Это самое используемое время английского языка." },
+      { "type": "table", "headers": ["Кто", "Форма глагола", "Пример"], "rows": [["I, you, we, they", "глагол без изменений", "I work. They play."], ["he, she, it", "глагол + s", "He workS. She playS."]] },
+      { "type": "paragraph", "text": "Особые случаи с he/she/it: go → goes, watch → watches, study → studies. И самое важное исключение: have → HAS. «У неё есть машина» = She has a car." },
+      { "type": "example", "en": "I live in Almaty.", "ru": "Я живу в Алматы." },
+      { "type": "example", "en": "She speaks three languages.", "ru": "Она говорит на трёх языках." },
+      { "type": "example", "en": "The shop opens at nine.", "ru": "Магазин открывается в девять." },
+      { "type": "paragraph", "text": "⚠️ Ошибка №1 во всём английском — забыть -s после he/she/it. He work ✗ → He workS ✓. Натренируй глаз: он/она/оно → на конце глагола -s." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "She ___ in a bank.", "options": ["work", "works", "working"], "answer": 1 },
+      { "type": "mcq", "prompt": "They ___ football on Sundays.", "options": ["plays", "play", "is play"], "answer": 1 },
+      { "type": "mcq", "prompt": "He ___ TV every evening.", "options": ["watch", "watchs", "watches"], "answer": 2 },
+      { "type": "mcq", "prompt": "Как сказать «У неё есть машина»?", "options": ["She have a car.", "She has a car.", "She is a car."], "answer": 1 },
+      { "type": "fill", "prompt": "I ___ (live) in Astana.", "answer": "live", "hint": "с I глагол не меняется" },
+      { "type": "fill", "prompt": "My brother ___ (go) to school.", "answer": "goes", "hint": "he → go + es" },
+      { "type": "fill", "prompt": "She ___ (have) two cats.", "answer": "has", "hint": "have — исключение!" },
+      { "type": "fill", "prompt": "The lesson ___ (start) at eight.", "answer": "starts", "hint": "it → + s" },
+      { "type": "order", "prompt": "Собери: «Он работает в больнице»", "words": ["He", "works", "in", "a", "hospital"], "answer": ["He", "works", "in", "a", "hospital"] }
+    ]
+  },
+  {
+    "title": "Present Simple: вопросы и отрицания (do / does)",
+    "level": "A1",
+    "order": 6,
+    "theory": [
+      { "type": "paragraph", "text": "Для вопросов и отрицаний в Present Simple нужен помощник — глагол do (для he/she/it — does). Сам смысловой глагол при этом возвращается к простой форме: буква -s «переезжает» в does." },
+      { "type": "table", "headers": ["Тип", "I / you / we / they", "he / she / it"], "rows": [["Вопрос", "Do you work?", "Does he work?"], ["Отрицание", "I don't work.", "He doesn't work."], ["Краткий ответ", "Yes, I do. / No, I don't.", "Yes, he does. / No, he doesn't."]] },
+      { "type": "example", "en": "Do you like coffee? — Yes, I do.", "ru": "Ты любишь кофе? — Да." },
+      { "type": "example", "en": "Does she live here? — No, she doesn't.", "ru": "Она живёт здесь? — Нет." },
+      { "type": "example", "en": "I don't understand.", "ru": "Я не понимаю." },
+      { "type": "paragraph", "text": "⚠️ Две ошибки: 1) Does he workS? ✗ — после does глагол БЕЗ -s: Does he work? ✓ 2) He don't ✗ → He doesn't ✓. Помощник забирает и -s, и отрицание." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "___ you speak English?", "options": ["Do", "Does", "Are"], "answer": 0 },
+      { "type": "mcq", "prompt": "___ she like pizza?", "options": ["Do", "Does", "Is"], "answer": 1 },
+      { "type": "mcq", "prompt": "He ___ smoke.", "options": ["don't", "doesn't", "not"], "answer": 1 },
+      { "type": "mcq", "prompt": "Найди правильный вопрос:", "options": ["Does he works here?", "Does he work here?", "Do he work here?"], "answer": 1 },
+      { "type": "fill", "prompt": "___ they live in Moscow? (вставь помощник)", "answer": "do", "hint": "they → do" },
+      { "type": "fill", "prompt": "She ___ eat meat. (не ест — одно слово)", "answer": "doesn't", "hint": "she → does + n't" },
+      { "type": "fill", "prompt": "I ___ know. (не знаю — одно слово)", "answer": "don't", "hint": "I → do + n't" },
+      { "type": "order", "prompt": "Собери вопрос: «Ты любишь чай?»", "words": ["Do", "you", "like", "tea"], "answer": ["Do", "you", "like", "tea"] },
+      { "type": "order", "prompt": "Собери: «Она не работает в воскресенье»", "words": ["She", "doesn't", "work", "on", "Sunday"], "answer": ["She", "doesn't", "work", "on", "Sunday"] }
+    ]
+  }
+]

@@ -49,7 +49,7 @@ const sessionBlocks: SessionBlock[] = [
   { to: '/flashcards', Icon: IconDeck, tone: 'sky', title: 'Колода', desc: 'Повторить слова', types: ['flashcards'] },
   { to: '/reader', Icon: IconBook, tone: 'violet', title: 'Ввод', desc: 'Почитать текст', types: ['reader'] },
   { to: '/pronunciation', Icon: IconMic, tone: 'rose', title: 'Речь', desc: 'Произношение', types: ['pronunciation'] },
-  { to: '/grammar', Icon: IconGrammar, tone: 'amber', title: 'Грамматика', desc: 'Урок + упражнения', types: ['grammar'], esOnly: true },
+  { to: '/grammar', Icon: IconGrammar, tone: 'amber', title: 'Грамматика', desc: 'Урок + упражнения', types: ['grammar'] },
   { to: '/practice', Icon: IconGamepad, tone: 'emerald', title: 'Практика', desc: 'Мини-игры', types: ['practice'], esOnly: true },
   { to: '/conversation', Icon: IconChat, tone: 'cyan', title: 'Диалог', desc: 'Поговорить с AI', types: ['conversation', 'writing'] },
 ]
