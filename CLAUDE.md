@@ -172,9 +172,12 @@ npm run build    # проверка типов (tsc -b) + сборка
   **A2 — 14 уроков** (was/were, Past Simple прав./неправ./вопросы, Present
   Continuous и vs Simple, going to, will, сравнения, превосходная, some/any/
   much/many, must/have to, me/him/her, like doing/want to do).
+  **B1 — 14 уроков** (Present Perfect ×3: формы/спутники/vs Past Simple,
+  for/since, Past Continuous, условные 0-1-2, пассив, should/could/might,
+  used to, who/which/that, герундий vs инфинитив, косвенная речь, question tags).
   Стандарт качества: простой русский, таблица форм, озвучиваемые примеры,
   блок «⚠️ типичная ошибка русскоговорящего», 8–9 упражнений.
-  План дальше: Этап 3 — B1 (~14 уроков), Этап 4 — B2 (~12), Этап 5 — C1 (~8);
+  План дальше: Этап 4 — B2 (~12 уроков), Этап 5 — C1 (~8);
   опционально тренажёр неправильных глаголов.
 
 Дальше (позже):

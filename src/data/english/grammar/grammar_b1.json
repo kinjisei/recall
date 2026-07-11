@@ -1,0 +1,166 @@
+[
+  {
+    "title": "Present Perfect: I have done",
+    "level": "B1",
+    "order": 1,
+    "theory": [
+      { "type": "paragraph", "text": "Present Perfect — время, которого нет в русском, поэтому оно кажется странным. Смысл такой: действие произошло в прошлом, но ВАЖНО ДЛЯ НАСТОЯЩЕГО. «Я потерял ключи» (и сейчас не могу войти) = I have lost my keys. Не важно КОГДА — важен результат сейчас." },
+      { "type": "table", "headers": ["Тип", "Формула", "Пример"], "rows": [["+", "have/has + третья форма (V3)", "I have finished. She has arrived."], ["−", "haven't / hasn't + V3", "We haven't eaten yet."], ["?", "Have/Has + кто + V3?", "Have you seen this film?"]] },
+      { "type": "paragraph", "text": "Третья форма (V3): у правильных глаголов совпадает с прошедшим (worked — worked), у неправильных своя: go → gone, see → seen, do → done, be → been, write → written, eat → eaten, take → taken, break → broken." },
+      { "type": "example", "en": "I have lost my keys.", "ru": "Я потерял ключи. (результат: сейчас их нет)" },
+      { "type": "example", "en": "She has gone to the shop.", "ru": "Она ушла в магазин. (результат: её сейчас нет)" },
+      { "type": "example", "en": "We have finished the project!", "ru": "Мы закончили проект! (вот он, готовый)" },
+      { "type": "paragraph", "text": "⚠️ Ошибки: I have saw ✗ — после have идёт ТРЕТЬЯ форма: I have seen ✓. She have ✗ → she HAS ✓." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "I have ___ my homework.", "options": ["did", "done", "do"], "answer": 1 },
+      { "type": "mcq", "prompt": "She ___ arrived.", "options": ["have", "has", "is"], "answer": 1 },
+      { "type": "mcq", "prompt": "see → V3 = ?", "options": ["saw", "seed", "seen"], "answer": 2 },
+      { "type": "mcq", "prompt": "«Я потерял телефон (и его сейчас нет)»:", "options": ["I have lost my phone.", "I lose my phone.", "I am losing my phone."], "answer": 0 },
+      { "type": "fill", "prompt": "go → V3: She has ___ home.", "answer": "gone", "hint": "g___" },
+      { "type": "fill", "prompt": "We ___ finished! (мы закончили: have/has)", "answer": "have", "hint": "we → ?" },
+      { "type": "fill", "prompt": "write → V3: I have ___ a letter.", "answer": "written", "hint": "удвоенная t" },
+      { "type": "fill", "prompt": "___ you seen this film? (вопрос)", "answer": "have", "hint": "you → ?" },
+      { "type": "order", "prompt": "Собери: «Она потеряла ключи»", "words": ["She", "has", "lost", "her", "keys"], "answer": ["She", "has", "lost", "her", "keys"] }
+    ]
+  },
+  {
+    "title": "Present Perfect: ever, never, just, already, yet",
+    "level": "B1",
+    "order": 2,
+    "theory": [
+      { "type": "paragraph", "text": "У Present Perfect есть пять слов-спутников, которые постоянно встречаются в речи. Освой их — и время «оживёт»: с ними говорят об опыте («ты когда-нибудь…?») и о свежих новостях («я только что…»)." },
+      { "type": "table", "headers": ["Слово", "Значение", "Место", "Пример"], "rows": [["ever", "когда-нибудь (в вопросах)", "перед V3", "Have you ever been to Spain?"], ["never", "никогда", "перед V3", "I have never tried sushi."], ["just", "только что", "перед V3", "She has just left."], ["already", "уже", "перед V3", "We have already eaten."], ["yet", "ещё (−) / уже (?)", "в КОНЦЕ", "I haven't finished yet. Have you done it yet?"]] },
+      { "type": "example", "en": "Have you ever been to London?", "ru": "Ты когда-нибудь был в Лондоне?" },
+      { "type": "example", "en": "I have never eaten sushi.", "ru": "Я никогда не ел суши." },
+      { "type": "example", "en": "The bus has just left.", "ru": "Автобус только что уехал." },
+      { "type": "example", "en": "I haven't read the book yet.", "ru": "Я ещё не прочитал книгу." },
+      { "type": "paragraph", "text": "Запомни пару been/gone: She has GONE to Paris — уехала (и сейчас там). She has BEEN to Paris — бывала (опыт: ездила и вернулась). ⚠️ yet живёт только в конце предложения и только в вопросах/отрицаниях." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "Have you ___ been to Italy?", "options": ["never", "ever", "yet"], "answer": 1 },
+      { "type": "mcq", "prompt": "I haven't finished ___ .", "options": ["already", "just", "yet"], "answer": 2 },
+      { "type": "mcq", "prompt": "She has ___ left — five minutes ago!", "options": ["just", "yet", "ever"], "answer": 0 },
+      { "type": "mcq", "prompt": "«Она бывала в Париже (и вернулась)»:", "options": ["She has gone to Paris.", "She has been to Paris.", "She went Paris."], "answer": 1 },
+      { "type": "fill", "prompt": "I have ___ tried sushi. (никогда)", "answer": "never", "hint": "n____" },
+      { "type": "fill", "prompt": "We have ___ eaten, thanks. (уже)", "answer": "already", "hint": "a_____y" },
+      { "type": "fill", "prompt": "Have you done your homework ___ ? (уже — в конце вопроса)", "answer": "yet", "hint": "в конце" },
+      { "type": "order", "prompt": "Собери: «Я никогда не был в Лондоне»", "words": ["I", "have", "never", "been", "to", "London"], "answer": ["I", "have", "never", "been", "to", "London"] }
+    ]
+  },
+  {
+    "title": "Present Perfect или Past Simple?",
+    "level": "B1",
+    "order": 3,
+    "theory": [
+      { "type": "paragraph", "text": "Главный вопрос уровня B1. Оба времени — о прошлом, но: Past Simple — законченная история с указанием КОГДА (вчера, в 2020). Present Perfect — результат к настоящему моменту, время не названо." },
+      { "type": "table", "headers": ["", "Past Simple", "Present Perfect"], "rows": [["Когда произошло", "сказано или ясно: yesterday, in 2020, last week, ago", "не важно / не сказано"], ["Фокус", "само событие в прошлом", "результат сейчас"], ["Пример", "I lost my keys yesterday.", "I have lost my keys. (их нет!)"], ["Типичные слова", "yesterday, ago, last…, when?", "just, already, yet, ever, never, today"]] },
+      { "type": "example", "en": "I saw this film last week.", "ru": "Я смотрел этот фильм на прошлой неделе. (когда — известно)" },
+      { "type": "example", "en": "I have seen this film, let's choose another.", "ru": "Я (уже) видел этот фильм, давай выберем другой. (важен факт, а не когда)" },
+      { "type": "example", "en": "She has been to Japan twice. She went there in 2019 and 2023.", "ru": "Она дважды была в Японии. Ездила в 2019-м и 2023-м. (сначала опыт — Perfect, потом детали с датами — Past)" },
+      { "type": "paragraph", "text": "Железное правило: есть слово-указание времени (yesterday, in 2020, ago, when?) → ТОЛЬКО Past Simple. «I have seen him yesterday» ✗ — так нельзя, yesterday тянет за собой saw." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "I ___ him yesterday.", "options": ["have seen", "saw", "have saw"], "answer": 1 },
+      { "type": "mcq", "prompt": "I ___ my keys — help me find them!", "options": ["lost", "have lost", "lose"], "answer": 1 },
+      { "type": "mcq", "prompt": "She ___ to Spain in 2022.", "options": ["has gone", "went", "has been"], "answer": 1 },
+      { "type": "mcq", "prompt": "___ you ever ___ sushi?", "options": ["Did … eat", "Have … eaten", "Do … eat"], "answer": 1 },
+      { "type": "fill", "prompt": "We ___ (buy) a car last month. (одно слово)", "answer": "bought", "hint": "есть указание времени → Past Simple" },
+      { "type": "fill", "prompt": "I have ___ (finish) — can we go? (одно слово, V3)", "answer": "finished", "hint": "результат сейчас" },
+      { "type": "fill", "prompt": "When ___ you arrive? (вопрос со when)", "answer": "did", "hint": "when? → Past Simple" },
+      { "type": "order", "prompt": "Собери: «Я уже видел этот фильм»", "words": ["I", "have", "already", "seen", "this", "film"], "answer": ["I", "have", "already", "seen", "this", "film"] }
+    ]
+  },
+  {
+    "title": "For, since и How long — «как давно?»",
+    "level": "B1",
+    "order": 4,
+    "theory": [
+      { "type": "paragraph", "text": "«Я живу здесь пять лет» — по-русски настоящее время, а по-английски Present Perfect: I have lived here for five years. Действие началось в прошлом и ДО СИХ ПОР продолжается. Отсюда пара for/since." },
+      { "type": "table", "headers": ["Слово", "Значение", "С чем", "Пример"], "rows": [["for", "в течение (отрезок)", "период: five years, a week, ages", "for two years — два года"], ["since", "с (точка отсчёта)", "момент: 2020, Monday, my birthday", "since 2020 — с 2020 года"], ["How long…?", "как давно? сколько уже?", "вопрос", "How long have you lived here?"]] },
+      { "type": "example", "en": "I have known him for ten years.", "ru": "Я знаю его десять лет." },
+      { "type": "example", "en": "She has worked here since March.", "ru": "Она работает здесь с марта." },
+      { "type": "example", "en": "How long have you been married? — For three years.", "ru": "Как давно вы женаты? — Три года." },
+      { "type": "paragraph", "text": "Приём: подставь мысленно «в течение» — подошло? Значит for. Подошло «начиная с»? Значит since. ⚠️ Ошибка: I live here for 5 years ✗ → I HAVE LIVED here for 5 years ✓ — «живу уже N лет» всегда через Perfect." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "I have lived here ___ five years.", "options": ["since", "for", "from"], "answer": 1 },
+      { "type": "mcq", "prompt": "She has worked there ___ 2021.", "options": ["for", "since", "during"], "answer": 1 },
+      { "type": "mcq", "prompt": "«Я знаю её с детства»:", "options": ["I know her since childhood.", "I have known her since childhood.", "I knew her since childhood."], "answer": 1 },
+      { "type": "mcq", "prompt": "___ have you studied English?", "options": ["How much", "How long", "How many"], "answer": 1 },
+      { "type": "fill", "prompt": "We have been friends ___ school. (со школы)", "answer": "since", "hint": "точка отсчёта" },
+      { "type": "fill", "prompt": "He has worked here ___ a month. (месяц)", "answer": "for", "hint": "отрезок времени" },
+      { "type": "fill", "prompt": "I have had this phone ___ two years.", "answer": "for", "hint": "период" },
+      { "type": "order", "prompt": "Собери вопрос: «Как давно ты здесь живёшь?»", "words": ["How", "long", "have", "you", "lived", "here"], "answer": ["How", "long", "have", "you", "lived", "here"] }
+    ]
+  },
+  {
+    "title": "Past Continuous: I was doing",
+    "level": "B1",
+    "order": 5,
+    "theory": [
+      { "type": "paragraph", "text": "Past Continuous описывает процесс в прошлом: «я читал (был в процессе), когда ты позвонил». Формула: was/were + глагол-ing. Чаще всего работает в паре с Past Simple: длинное действие (Continuous) прерывается коротким (Simple)." },
+      { "type": "table", "headers": ["Тип", "Формула", "Пример"], "rows": [["+", "was/were + -ing", "I was reading at 9 pm."], ["−", "wasn't / weren't + -ing", "They weren't sleeping."], ["?", "Was/Were + кто + -ing?", "What were you doing?"], ["Пара с Past Simple", "…was doing WHEN …did", "I was cooking when he came."]] },
+      { "type": "example", "en": "I was watching TV when you called.", "ru": "Я смотрел телевизор, когда ты позвонил." },
+      { "type": "example", "en": "She was sleeping at midnight.", "ru": "В полночь она спала (была в процессе сна)." },
+      { "type": "example", "en": "While I was cooking, he was reading.", "ru": "Пока я готовил, он читал. (два параллельных процесса — while)" },
+      { "type": "paragraph", "text": "Подсказка: when + короткое событие (Past Simple), while + процесс (Past Continuous). ⚠️ Не забывай was/were: I reading ✗." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "I ___ reading when you called.", "options": ["was", "were", "am"], "answer": 0 },
+      { "type": "mcq", "prompt": "They ___ playing football at 5 o'clock.", "options": ["was", "were", "did"], "answer": 1 },
+      { "type": "mcq", "prompt": "What ___ you doing at 9 pm?", "options": ["was", "did", "were"], "answer": 2 },
+      { "type": "mcq", "prompt": "I was cooking ___ he came.", "options": ["when", "while", "since"], "answer": 0 },
+      { "type": "fill", "prompt": "She ___ sleeping when I arrived. (was/were)", "answer": "was", "hint": "she → ?" },
+      { "type": "fill", "prompt": "___ I was walking home, it started to rain. (пока)", "answer": "while", "hint": "процесс" },
+      { "type": "fill", "prompt": "We ___ (watch) TV at ten — двумя словами: We ___ TV at ten.", "answer": "were watching", "hint": "was/were + ing" },
+      { "type": "order", "prompt": "Собери: «Я готовил, когда он пришёл»", "words": ["I", "was", "cooking", "when", "he", "came"], "answer": ["I", "was", "cooking", "when", "he", "came"] }
+    ]
+  },
+  {
+    "title": "Условные: If it rains… (Zero и First Conditional)",
+    "level": "B1",
+    "order": 6,
+    "theory": [
+      { "type": "paragraph", "text": "Условные предложения — «если…, то…». Начнём с двух реальных: Zero — законы и привычки (если нагреть воду — кипит), First — реальное будущее (если пойдёт дождь — останемся дома)." },
+      { "type": "table", "headers": ["Тип", "Формула", "Пример", "Смысл"], "rows": [["Zero", "If + Present, Present", "If you heat water, it boils.", "всегда так (закон, правило)"], ["First", "If + Present, will + глагол", "If it rains, we will stay at home.", "реальное будущее"]] },
+      { "type": "example", "en": "If you press this button, the door opens.", "ru": "Если нажать эту кнопку, дверь открывается. (всегда)" },
+      { "type": "example", "en": "If it rains tomorrow, we'll cancel the picnic.", "ru": "Если завтра пойдёт дождь, мы отменим пикник." },
+      { "type": "example", "en": "I'll call you when I arrive.", "ru": "Я позвоню, когда приеду. (when работает как if — без will!)" },
+      { "type": "paragraph", "text": "⚠️ Золотое правило: в части с IF будущего НЕТ. If it WILL rain ✗ → If it rainS ✓. По-русски «если пойдёт дождь» — будущее, из-за этого и ошибаемся. То же с when, until, as soon as." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "If it ___ tomorrow, we will stay at home.", "options": ["will rain", "rains", "rained"], "answer": 1 },
+      { "type": "mcq", "prompt": "If you heat ice, it ___ .", "options": ["will melt", "melts", "melted"], "answer": 1 },
+      { "type": "mcq", "prompt": "I ___ you when I arrive.", "options": ["call", "will call", "called"], "answer": 1 },
+      { "type": "mcq", "prompt": "Найди ошибку:", "options": ["If it rains, we'll go home.", "If it will rain, we'll go home.", "If you're tired, sleep."], "answer": 1 },
+      { "type": "fill", "prompt": "If she ___ (come), I will tell her. (одно слово)", "answer": "comes", "hint": "после if — настоящее" },
+      { "type": "fill", "prompt": "If you don't hurry, you ___ be late. (будешь)", "answer": "will", "hint": "во второй части" },
+      { "type": "fill", "prompt": "I'll text you as soon as I ___ (arrive).", "answer": "arrive", "hint": "as soon as — как if" },
+      { "type": "order", "prompt": "Собери: «Если пойдёт дождь, мы останемся дома»", "words": ["If", "it", "rains", "we", "will", "stay", "home"], "answer": ["If", "it", "rains", "we", "will", "stay", "home"] }
+    ]
+  },
+  {
+    "title": "Second Conditional: If I had a million…",
+    "level": "B1",
+    "order": 7,
+    "theory": [
+      { "type": "paragraph", "text": "Second Conditional — «если бы»: воображаемые, маловероятные или нереальные ситуации в настоящем/будущем. «Если бы у меня был миллион, я бы купил дом» — миллиона нет, это фантазия." },
+      { "type": "table", "headers": ["Часть", "Формула", "Пример"], "rows": [["условие", "If + Past Simple", "If I had a million…"], ["результат", "would + глагол", "…I would buy a house."], ["особый случай", "If I were you…", "If I were you, I would rest. — На твоём месте я бы отдохнул."]] },
+      { "type": "example", "en": "If I had more time, I would learn Spanish too.", "ru": "Если бы у меня было больше времени, я бы учил ещё и испанский." },
+      { "type": "example", "en": "If I were you, I would take this job.", "ru": "На твоём месте я бы согласился на эту работу." },
+      { "type": "example", "en": "What would you do if you won the lottery?", "ru": "Что бы ты сделал, если бы выиграл в лотерею?" },
+      { "type": "paragraph", "text": "Обрати внимание: Past Simple здесь НЕ про прошлое — это способ показать нереальность. С to be в этой конструкции для всех лиц классически were: If I were, if she were. ⚠️ Ошибка: If I would have ✗ — would живёт только во второй части." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "If I ___ rich, I would travel a lot.", "options": ["am", "were", "will be"], "answer": 1 },
+      { "type": "mcq", "prompt": "If she had time, she ___ help us.", "options": ["will", "would", "does"], "answer": 1 },
+      { "type": "mcq", "prompt": "«На твоём месте я бы отдохнул»:", "options": ["If I were you, I would rest.", "If I am you, I will rest.", "If I would be you, I rest."], "answer": 0 },
+      { "type": "mcq", "prompt": "What ___ you do if you won a million?", "options": ["will", "would", "did"], "answer": 1 },
+      { "type": "fill", "prompt": "If I ___ (have) a car, I would drive to work. (одно слово)", "answer": "had", "hint": "после if — Past Simple" },
+      { "type": "fill", "prompt": "I ___ buy a house if I were rich. (бы купил)", "answer": "would", "hint": "вторая часть" },
+      { "type": "fill", "prompt": "If I ___ you, I would apologise. (форма to be)", "answer": "were", "hint": "для всех лиц одна" },
+      { "type": "order", "prompt": "Собери: «Если бы я был богат, я бы путешествовал»", "words": ["If", "I", "were", "rich", "I", "would", "travel"], "answer": ["If", "I", "were", "rich", "I", "would", "travel"] }
+    ]
+  }
+]

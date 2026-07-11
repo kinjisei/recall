@@ -1,0 +1,164 @@
+[
+  {
+    "title": "Пассивный залог: is made, was built",
+    "level": "B1",
+    "order": 8,
+    "theory": [
+      { "type": "paragraph", "text": "Пассив нужен, когда важно ЧТО сделано, а не кто сделал: «Этот дом построили в 1990» — кто строил, неизвестно или неважно. Формула: to be + третья форма (V3). Время показывает сам to be." },
+      { "type": "table", "headers": ["Время", "Формула", "Пример", "Перевод"], "rows": [["Present Simple", "am/is/are + V3", "Coffee is grown in Brazil.", "Кофе выращивают в Бразилии."], ["Past Simple", "was/were + V3", "This house was built in 1990.", "Этот дом построили в 1990."], ["с указанием деятеля", "… by + кто", "The book was written by Tolkien.", "Книга написана Толкином."]] },
+      { "type": "example", "en": "English is spoken in many countries.", "ru": "На английском говорят во многих странах." },
+      { "type": "example", "en": "The window was broken yesterday.", "ru": "Окно разбили вчера." },
+      { "type": "example", "en": "These phones are made in China.", "ru": "Эти телефоны делают в Китае." },
+      { "type": "paragraph", "text": "Приём перевода: русские безличные «делают, построили, говорят» (без подлежащего) — почти всегда пассив в английском. ⚠️ Ошибка: The house built in 1990 ✗ — без was дом «сам строил». The house WAS built ✓." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "Coffee ___ in Brazil.", "options": ["grows", "is grown", "grown"], "answer": 1 },
+      { "type": "mcq", "prompt": "This bridge ___ built in 1950.", "options": ["is", "was", "were"], "answer": 1 },
+      { "type": "mcq", "prompt": "«Книга написана Толкином»: The book was written ___ Tolkien.", "options": ["from", "of", "by"], "answer": 2 },
+      { "type": "mcq", "prompt": "«Эти машины делают в Германии»:", "options": ["These cars are made in Germany.", "These cars make in Germany.", "These cars made in Germany."], "answer": 0 },
+      { "type": "fill", "prompt": "English ___ spoken all over the world. (is/are)", "answer": "is", "hint": "English — ед. число" },
+      { "type": "fill", "prompt": "The letters ___ sent yesterday. (was/were)", "answer": "were", "hint": "letters — мн. число" },
+      { "type": "fill", "prompt": "make → V3: This watch is ___ in Japan.", "answer": "made", "hint": "m___" },
+      { "type": "order", "prompt": "Собери: «Этот дом был построен в 1990»", "words": ["This", "house", "was", "built", "in", "1990"], "answer": ["This", "house", "was", "built", "in", "1990"] }
+    ]
+  },
+  {
+    "title": "Should, could, might — советы и вероятность",
+    "level": "B1",
+    "order": 9,
+    "theory": [
+      { "type": "paragraph", "text": "Три модальных глагола на каждый день: should — совет («стоит»), could — вежливая просьба или возможность («мог бы»), might — вероятность («может быть»). Все три не меняются по лицам, и после них глагол без to." },
+      { "type": "table", "headers": ["Глагол", "Смысл", "Пример", "Перевод"], "rows": [["should", "совет: стоит, следует", "You should see a doctor.", "Тебе стоит сходить к врачу."], ["shouldn't", "не стоит", "You shouldn't eat so fast.", "Не стоит есть так быстро."], ["could", "вежливая просьба; возможность", "Could you help me?", "Не могли бы вы мне помочь?"], ["might", "может быть (50/50)", "It might rain later.", "Позже, возможно, будет дождь."]] },
+      { "type": "example", "en": "You should sleep more.", "ru": "Тебе стоит больше спать." },
+      { "type": "example", "en": "Could you open the window, please?", "ru": "Не могли бы вы открыть окно?" },
+      { "type": "example", "en": "She might come, but I'm not sure.", "ru": "Она, может, и придёт, но я не уверен." },
+      { "type": "paragraph", "text": "Ступени уверенности: will (точно будет) → might (может быть) → won't (точно нет). ⚠️ Ошибки: should to go ✗, he shoulds ✗ — модальные никогда не меняются и не дружат с to." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "You ___ see a doctor. (совет)", "options": ["should", "might", "must to"], "answer": 0 },
+      { "type": "mcq", "prompt": "___ you pass me the salt, please? (вежливо)", "options": ["Should", "Could", "Might"], "answer": 1 },
+      { "type": "mcq", "prompt": "It ___ rain — take an umbrella just in case.", "options": ["should", "might", "must"], "answer": 1 },
+      { "type": "mcq", "prompt": "You ___ smoke so much. (не стоит)", "options": ["shouldn't", "couldn't", "might not to"], "answer": 0 },
+      { "type": "fill", "prompt": "You ___ read this book — it's great! (стоит)", "answer": "should", "hint": "совет" },
+      { "type": "fill", "prompt": "She ___ be late — the traffic is bad. (возможно)", "answer": "might", "hint": "50/50" },
+      { "type": "fill", "prompt": "___ you help me with this bag? (не мог бы)", "answer": "could", "hint": "вежливая просьба" },
+      { "type": "order", "prompt": "Собери: «Тебе стоит больше спать»", "words": ["You", "should", "sleep", "more"], "answer": ["You", "should", "sleep", "more"] }
+    ]
+  },
+  {
+    "title": "Used to — раньше делал, а теперь нет",
+    "level": "B1",
+    "order": 10,
+    "theory": [
+      { "type": "paragraph", "text": "«Раньше я курил», «в детстве мы жили в деревне» — для привычек и состояний прошлого, которых больше нет, английский использует used to + глагол." },
+      { "type": "table", "headers": ["Тип", "Формула", "Пример"], "rows": [["+", "used to + глагол", "I used to smoke. — Раньше я курил."], ["−", "didn't use to", "She didn't use to like coffee."], ["?", "Did … use to…?", "Did you use to play football?"]] },
+      { "type": "example", "en": "I used to play the guitar at school.", "ru": "В школе я играл на гитаре. (сейчас — нет)" },
+      { "type": "example", "en": "We used to live in a small town.", "ru": "Раньше мы жили в маленьком городе." },
+      { "type": "example", "en": "He didn't use to wear glasses.", "ru": "Раньше он не носил очки." },
+      { "type": "paragraph", "text": "⚠️ Не путай: used to (раньше делал) и be used to doing (привык к чему-то). I used to get up early — раньше вставал рано. I am used to getting up early — я привык рано вставать. И в вопросах/отрицаниях после did пишется use to (без d): Did you USE to…?" }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "I ___ smoke, but I stopped.", "options": ["used to", "use to", "am used to"], "answer": 0 },
+      { "type": "mcq", "prompt": "Did you ___ play football at school?", "options": ["used to", "use to", "using to"], "answer": 1 },
+      { "type": "mcq", "prompt": "«Раньше она не любила кофе»:", "options": ["She didn't use to like coffee.", "She didn't used to like coffee.", "She used to not like coffee."], "answer": 0 },
+      { "type": "mcq", "prompt": "«Я привык рано вставать»:", "options": ["I used to get up early.", "I am used to getting up early.", "I use to get up early."], "answer": 1 },
+      { "type": "fill", "prompt": "We ___ to live in the country. (раньше жили)", "answer": "used", "hint": "___ to + глагол" },
+      { "type": "fill", "prompt": "He used to ___ (wear) glasses. (начальная форма)", "answer": "wear", "hint": "после used to — инфинитив" },
+      { "type": "fill", "prompt": "Did she ___ to work here? (без d!)", "answer": "use", "hint": "после did" },
+      { "type": "order", "prompt": "Собери: «Раньше я играл на гитаре»", "words": ["I", "used", "to", "play", "the", "guitar"], "answer": ["I", "used", "to", "play", "the", "guitar"] }
+    ]
+  },
+  {
+    "title": "Who, which, that — который",
+    "level": "B1",
+    "order": 11,
+    "theory": [
+      { "type": "paragraph", "text": "«Человек, КОТОРЫЙ звонил», «книга, КОТОРУЮ я читаю» — придаточные с «который» строятся через who, which и that. Выбор зависит от того, о ком речь: о человеке или предмете." },
+      { "type": "table", "headers": ["Слово", "О ком/чём", "Пример"], "rows": [["who", "люди", "the man who called — человек, который звонил"], ["which", "предметы, животные", "the book which I'm reading"], ["that", "универсальное (и люди, и предметы)", "the film that we watched"]] },
+      { "type": "example", "en": "The woman who lives next door is a doctor.", "ru": "Женщина, которая живёт по соседству, — врач." },
+      { "type": "example", "en": "This is the phone which I bought yesterday.", "ru": "Это телефон, который я вчера купил." },
+      { "type": "example", "en": "I know a place that serves great coffee.", "ru": "Я знаю место, где (которое) подают отличный кофе." },
+      { "type": "paragraph", "text": "Бонус разговорного стиля: если «который» — дополнение («книга, которую я читаю»), слово можно вообще опустить: the book I'm reading. ⚠️ Ошибка: the man WHICH ✗ — про людей which не говорят, только who/that." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "The man ___ called you is my boss.", "options": ["which", "who", "what"], "answer": 1 },
+      { "type": "mcq", "prompt": "The book ___ is on the table is mine.", "options": ["who", "which", "whose"], "answer": 1 },
+      { "type": "mcq", "prompt": "Универсальное слово для людей и предметов:", "options": ["who", "which", "that"], "answer": 2 },
+      { "type": "mcq", "prompt": "Найди ошибку:", "options": ["The girl who sings is my sister.", "The man which lives here is old.", "The car that I bought is red."], "answer": 1 },
+      { "type": "fill", "prompt": "The woman ___ lives next door is a teacher. (о человеке)", "answer": "who", "hint": "люди" },
+      { "type": "fill", "prompt": "The film ___ we watched was boring. (о предмете)", "answer": "which", "hint": "или that, но впиши which" },
+      { "type": "fill", "prompt": "I have a friend ___ speaks five languages.", "answer": "who", "hint": "друг — человек" },
+      { "type": "order", "prompt": "Собери: «Человек, который звонил, — мой босс»", "words": ["The", "man", "who", "called", "is", "my", "boss"], "answer": ["The", "man", "who", "called", "is", "my", "boss"] }
+    ]
+  },
+  {
+    "title": "Stop doing или stop to do? Герундий и инфинитив",
+    "level": "B1",
+    "order": 12,
+    "theory": [
+      { "type": "paragraph", "text": "На A2 мы выучили: like + doing, want + to do. Теперь расширим список — какие глаголы требуют -ing, какие to, и пара коварных, где смысл меняется от выбора формы." },
+      { "type": "table", "headers": ["Группа", "Глаголы", "Пример"], "rows": [["+ -ing", "enjoy, finish, mind, keep, suggest", "I enjoy swimming. He kept talking."], ["+ to", "want, decide, hope, plan, promise, learn", "She decided to move. I hope to see you."], ["меняют смысл", "stop, remember, forget, try", "см. ниже"]] },
+      { "type": "example", "en": "He stopped smoking.", "ru": "Он бросил курить. (прекратил привычку)" },
+      { "type": "example", "en": "He stopped to smoke.", "ru": "Он остановился, ЧТОБЫ покурить. (сделал паузу ради этого)" },
+      { "type": "example", "en": "Remember to lock the door!", "ru": "Не забудь запереть дверь! (сначала помнишь — потом делаешь)" },
+      { "type": "example", "en": "I remember locking the door.", "ru": "Я помню, что запирал дверь. (сначала сделал — потом помнишь)" },
+      { "type": "paragraph", "text": "Мнемоника для stop/remember/forget: to = «чтобы, впереди» (действие ещё предстоит), -ing = «позади» (действие уже было или шло). ⚠️ finish to do ✗ → finish doING ✓." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "I enjoy ___ books.", "options": ["to read", "reading", "read"], "answer": 1 },
+      { "type": "mcq", "prompt": "She decided ___ a new job.", "options": ["finding", "to find", "find"], "answer": 1 },
+      { "type": "mcq", "prompt": "«Он бросил курить»:", "options": ["He stopped to smoke.", "He stopped smoking.", "He stopped smoke."], "answer": 1 },
+      { "type": "mcq", "prompt": "«Не забудь позвонить маме!»:", "options": ["Remember calling your mum!", "Remember to call your mum!", "Remember call your mum!"], "answer": 1 },
+      { "type": "fill", "prompt": "Have you finished ___ (work)? (закончил работать)", "answer": "working", "hint": "finish + ing" },
+      { "type": "fill", "prompt": "We plan ___ visit Spain. (частица)", "answer": "to", "hint": "plan + ?" },
+      { "type": "fill", "prompt": "Keep ___ (go) — you're almost there! (продолжай)", "answer": "going", "hint": "keep + ing" },
+      { "type": "order", "prompt": "Собери: «Она решила выучить английский»", "words": ["She", "decided", "to", "learn", "English"], "answer": ["She", "decided", "to", "learn", "English"] }
+    ]
+  },
+  {
+    "title": "Косвенная речь: He said that…",
+    "level": "B1",
+    "order": 13,
+    "theory": [
+      { "type": "paragraph", "text": "Передать чужие слова можно цитатой («Я устал», — сказал он) или косвенной речью (Он сказал, ЧТО устал). В английском при этом время сдвигается на шаг назад: настоящее → прошедшее." },
+      { "type": "table", "headers": ["Прямая речь", "Косвенная речь"], "rows": [["\"I am tired.\"", "He said (that) he was tired."], ["\"I work here.\"", "She said she worked there."], ["\"I will call you.\"", "He said he would call me."], ["\"I can help.\"", "She said she could help."]] },
+      { "type": "example", "en": "He said that he was busy.", "ru": "Он сказал, что занят." },
+      { "type": "example", "en": "She told me she would come later.", "ru": "Она сказала мне, что придёт позже." },
+      { "type": "example", "en": "They said they couldn't find the place.", "ru": "Они сказали, что не могут найти это место." },
+      { "type": "paragraph", "text": "say или tell? say — просто «сказать» (said that…), tell — «сказать КОМУ-то», всегда с адресатом: told ME, told her. ⚠️ He said me ✗ → He TOLD me ✓ или He said TO me ✓." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "\"I am happy\" → He said he ___ happy.", "options": ["is", "was", "were"], "answer": 1 },
+      { "type": "mcq", "prompt": "\"I will help\" → She said she ___ help.", "options": ["will", "would", "can"], "answer": 1 },
+      { "type": "mcq", "prompt": "He ___ me that he was tired.", "options": ["said", "told", "spoke"], "answer": 1 },
+      { "type": "mcq", "prompt": "Найди ошибку:", "options": ["He said that he was busy.", "She told me she would come.", "He said me he was late."], "answer": 2 },
+      { "type": "fill", "prompt": "\"I can swim\" → He said he ___ swim.", "answer": "could", "hint": "can → ?" },
+      { "type": "fill", "prompt": "\"I work here\" → She said she ___ there. (сдвинь время)", "answer": "worked", "hint": "Present → Past" },
+      { "type": "fill", "prompt": "He ___ me about the meeting. (сказал мне)", "answer": "told", "hint": "с адресатом" },
+      { "type": "order", "prompt": "Собери: «Он сказал, что устал»", "words": ["He", "said", "that", "he", "was", "tired"], "answer": ["He", "said", "that", "he", "was", "tired"] }
+    ]
+  },
+  {
+    "title": "Question tags: …isn't it? …don't you?",
+    "level": "B1",
+    "order": 14,
+    "theory": [
+      { "type": "paragraph", "text": "«Хорошая погода, правда?», «Ты же придёшь, да?» — эти хвостики в конце предложения по-английски называются question tags. Правило-качели: утверждение положительное → хвостик отрицательный, и наоборот." },
+      { "type": "table", "headers": ["Предложение", "Хвостик", "Перевод"], "rows": [["It's a nice day,", "isn't it?", "Хороший день, правда?"], ["You like coffee,", "don't you?", "Ты же любишь кофе?"], ["She works here,", "doesn't she?", "Она ведь здесь работает?"], ["You didn't call,", "did you?", "Ты ведь не звонил?"], ["He can swim,", "can't he?", "Он же умеет плавать?"]] },
+      { "type": "example", "en": "The film was great, wasn't it?", "ru": "Фильм был отличный, правда?" },
+      { "type": "example", "en": "You haven't seen my keys, have you?", "ru": "Ты не видел мои ключи, а?" },
+      { "type": "example", "en": "We're late, aren't we?", "ru": "Мы опаздываем, да?" },
+      { "type": "paragraph", "text": "Как построить: берёшь помощника из предложения (is, do, did, can, have…) и переворачиваешь знак. Нет видимого помощника (You like coffee) — значит, он прятался: don't you? ⚠️ Особый случай: I'm right, AREN'T I? (не amn't)." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "It's cold today, ___ ?", "options": ["is it", "isn't it", "doesn't it"], "answer": 1 },
+      { "type": "mcq", "prompt": "You like pizza, ___ ?", "options": ["don't you", "do you", "aren't you"], "answer": 0 },
+      { "type": "mcq", "prompt": "She didn't call, ___ ?", "options": ["didn't she", "did she", "does she"], "answer": 1 },
+      { "type": "mcq", "prompt": "He can drive, ___ ?", "options": ["can he", "doesn't he", "can't he"], "answer": 2 },
+      { "type": "fill", "prompt": "You're from Kazakhstan, ___ you? (хвостик: отрицание are)", "answer": "aren't", "hint": "are + n't" },
+      { "type": "fill", "prompt": "She works here, ___ she? (хвостик)", "answer": "doesn't", "hint": "works → скрытый does" },
+      { "type": "fill", "prompt": "The film was good, ___ it? (хвостик)", "answer": "wasn't", "hint": "was + n't" },
+      { "type": "order", "prompt": "Собери: «Хороший день, не правда ли?»", "words": ["It's", "a", "nice", "day", "isn't", "it"], "answer": ["It's", "a", "nice", "day", "isn't", "it"] }
+    ]
+  }
+]
