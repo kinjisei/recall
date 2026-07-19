@@ -80,3 +80,21 @@ a,
 * {
   scrollbar-width: thin;
 }
+
+/* ============================================================================
+   Печать материалов (фича Materials, фаза C): PrintSheet рендерится порталом
+   в body вне #root; при печати прячем приложение целиком, остаётся только лист.
+   ========================================================================== */
+@media print {
+  body:has(.print-sheet) #root {
+    display: none !important;
+  }
+  .print-sheet {
+    position: static !important;
+    inset: auto !important;
+    overflow: visible !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+}

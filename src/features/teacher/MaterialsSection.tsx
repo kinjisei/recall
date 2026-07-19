@@ -21,6 +21,7 @@ import {
 } from '../../lib/materials'
 import type { StudentInfo } from '../../lib/teacher'
 import { ReviewScreen } from './ReviewScreen'
+import { PrintSheet } from './PrintSheet'
 import type {
   AppLang,
   CEFRLevel,
@@ -518,6 +519,7 @@ function MaterialDetail({
   const [error, setError] = useState<string | null>(null)
   const [showBody, setShowBody] = useState(false)
   const [reviewing, setReviewing] = useState<{ a: MaterialAssignment; name: string } | null>(null)
+  const [printMode, setPrintMode] = useState<'student' | 'teacher' | null>(null)
 
   const reload = useCallback(() => {
     listMaterialAssignments(material.id).then(setAssignments).catch(() => setAssignments([]))
@@ -593,7 +595,31 @@ function MaterialDetail({
             {material.body}
           </p>
         )}
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button
+            variant="secondary"
+            className="px-3 py-1.5 text-sm"
+            onClick={() => setPrintMode('student')}
+          >
+            🖨 Для ученика
+          </Button>
+          <Button
+            variant="secondary"
+            className="px-3 py-1.5 text-sm"
+            onClick={() => setPrintMode('teacher')}
+          >
+            🖨 С ответами
+          </Button>
+        </div>
       </Card>
+
+      {printMode && (
+        <PrintSheet
+          material={material}
+          withAnswers={printMode === 'teacher'}
+          onClose={() => setPrintMode(null)}
+        />
+      )}
 
       <Card className="flex flex-col gap-2">
         <p className="text-sm font-semibold">Назначить ученицам</p>
