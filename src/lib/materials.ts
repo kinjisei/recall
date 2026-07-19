@@ -361,7 +361,7 @@ export async function generateAiReview(
     JSON.stringify(items),
   ].join('\n')
 
-  const raw = await chat([{ role: 'user', content: userMsg }], { system })
+  const raw = await chat([{ role: 'user', content: userMsg }], { system, light: true })
   const parsed = parseJson<{ items: ReviewItem[] }>(raw)
   if (!Array.isArray(parsed.items)) throw new Error('AI вернул неполный разбор.')
   // страховка: вердикт на каждое упражнение (чего нет — берём авто-результат)

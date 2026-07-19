@@ -2,7 +2,7 @@ import { defineConfig, loadEnv, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
-import { callGemini, DEFAULT_GEMINI_MODEL } from './api/_core'
+import { ALLOWED_MODELS, callGemini, DEFAULT_GEMINI_MODEL } from './api/_core'
 import type { ChatTurn } from './src/types'
 
 /**
@@ -35,16 +35,19 @@ function geminiDevEndpoint(apiKey: string | undefined, model: string): Plugin {
                   'GEMINI_API_KEY не задан: добавь строку GEMINI_API_KEY=... в .env.local и перезапусти npm run dev',
                 )
               }
-              const { messages, system } = JSON.parse(raw || '{}') as {
+              const { messages, system, model: reqModel } = JSON.parse(raw || '{}') as {
                 messages?: ChatTurn[]
                 system?: string
+                model?: string
               }
               if (!Array.isArray(messages) || messages.length === 0) {
                 res.statusCode = 400
                 res.end(JSON.stringify({ error: 'Нужно поле messages (непустой массив)' }))
                 return
               }
-              const text = await callGemini(messages, system, apiKey, model)
+              const chosen =
+                reqModel && ALLOWED_MODELS.includes(reqModel) ? reqModel : model
+              const text = await callGemini(messages, system, apiKey, chosen)
               res.end(JSON.stringify({ text }))
             } catch (e) {
               const msg = e instanceof Error ? e.message : 'Ошибка Gemini'

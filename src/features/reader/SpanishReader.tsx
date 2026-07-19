@@ -1,15 +1,13 @@
-// ============================================================================
+﻿// ============================================================================
 // «Ввод» на испанском: тексты и диалоги из приложения spanish.
-// Тап по слову → перевод (локальные паки → Gemini) → «в колоду».
+// Тап по слову → контекстный перевод (общая шторка WordSheet) → «в колоду».
 // У каждого абзаца/реплики можно открыть русский перевод.
 // ============================================================================
-import { useEffect, useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
-import { addCard } from '../../lib/cards'
-import { logActivity } from '../../lib/activity'
 import { speak } from '../../lib/speech'
-import { lookupSpanish, type SpanishLookupResult } from '../../lib/spanishDict'
+import { TappableText, WordSheet, type WordPick } from '../../components/WordSheet'
 import {
   spanishDialogues,
   spanishLevels,
@@ -117,7 +115,7 @@ function ReadingView({
   reading: SpanishReading
   onBack: () => void
 }) {
-  const [selected, setSelected] = useState<string | null>(null)
+  const [selected, setSelected] = useState<WordPick | null>(null)
   const [openRu, setOpenRu] = useState<Set<number>>(new Set())
 
   const toggleRu = (i: number) =>
@@ -144,7 +142,7 @@ function ReadingView({
         {reading.paragraphs.map((p, i) => (
           <div key={i}>
             <p className="text-lg leading-relaxed">
-              <TappableText text={p.es} onWord={setSelected} />
+              <TappableText text={p.es} onSelect={setSelected} />
             </p>
             <button
               onClick={() => toggleRu(i)}
@@ -162,7 +160,7 @@ function ReadingView({
       </Card>
 
       {selected && (
-        <SpanishWordSheet word={selected} onClose={() => setSelected(null)} />
+        <WordSheet word={selected.word} sentence={selected.sentence} lang="es" onClose={() => setSelected(null)} />
       )}
     </div>
   )
@@ -179,7 +177,7 @@ function DialogueView({
   dialogue: SpanishDialogue
   onBack: () => void
 }) {
-  const [selected, setSelected] = useState<string | null>(null)
+  const [selected, setSelected] = useState<WordPick | null>(null)
   const [showRu, setShowRu] = useState(false)
 
   return (
@@ -209,7 +207,7 @@ function DialogueView({
                   {line.speaker}
                 </p>
                 <p className="mt-0.5 leading-relaxed">
-                  <TappableText text={line.es} onWord={setSelected} />
+                  <TappableText text={line.es} onSelect={setSelected} />
                 </p>
                 {showRu && (
                   <p className="mt-1 text-sm text-slate-500">{line.ru}</p>
@@ -228,7 +226,7 @@ function DialogueView({
       </div>
 
       {selected && (
-        <SpanishWordSheet word={selected} onClose={() => setSelected(null)} />
+        <WordSheet word={selected.word} sentence={selected.sentence} lang="es" onClose={() => setSelected(null)} />
       )}
     </div>
   )
@@ -237,130 +235,3 @@ function DialogueView({
 // ---------------------------------------------------------------------------
 // Общее: разбивка испанского текста на тап-слова + карточка слова.
 // ---------------------------------------------------------------------------
-
-function TappableText({
-  text,
-  onWord,
-}: {
-  text: string
-  onWord: (w: string) => void
-}) {
-  const tokens = useMemo(() => text.split(/(\s+)/), [text])
-  return (
-    <>
-      {tokens.map((tok, i) => {
-        const isWord = /[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/.test(tok)
-        if (!isWord) return <span key={i}>{tok}</span>
-        return (
-          <span
-            key={i}
-            onClick={() => onWord(tok)}
-            className="cursor-pointer rounded px-0.5 hover:bg-sky-100 active:bg-sky-200 dark:hover:bg-sky-900/50"
-          >
-            {tok}
-          </span>
-        )
-      })}
-    </>
-  )
-}
-
-function SpanishWordSheet({
-  word,
-  onClose,
-}: {
-  word: string
-  onClose: () => void
-}) {
-  const [loading, setLoading] = useState(true)
-  const [result, setResult] = useState<SpanishLookupResult | null>(null)
-  const [added, setAdded] = useState(false)
-  const [busy, setBusy] = useState(false)
-  const [addError, setAddError] = useState<string | null>(null)
-
-  const shown = result?.word ?? word.toLowerCase().replace(/[^a-záéíóúüñ'-]/gi, '')
-
-  useEffect(() => {
-    setLoading(true)
-    setAdded(false)
-    lookupSpanish(word)
-      .then(setResult)
-      .finally(() => setLoading(false))
-  }, [word])
-
-  const addToDeck = async () => {
-    setBusy(true)
-    setAddError(null)
-    try {
-      await addCard({
-        front: shown,
-        back: result?.translation,
-        example: result?.example,
-        lang: 'es',
-        source: 'reader',
-      })
-      void logActivity('reader')
-      setAdded(true)
-    } catch (e) {
-      setAddError(e instanceof Error ? e.message : 'Не удалось добавить слово')
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  return (
-    <div className="fixed inset-0 z-20 flex items-end bg-black/40" onClick={onClose}>
-      <div
-        className="w-full rounded-t-3xl bg-white p-5 dark:bg-slate-800"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-slate-300 dark:bg-slate-600" />
-        <div className="flex items-center justify-between">
-          <h3 className="text-xl font-bold">{shown}</h3>
-          <button
-            onClick={() => speak(shown, { lang: 'es' })}
-            className="rounded-full bg-slate-100 px-3 py-1 text-lg dark:bg-slate-700"
-            aria-label="Озвучить"
-          >
-            🔊
-          </button>
-        </div>
-
-        {loading ? (
-          <p className="mt-3 text-slate-500">Ищу перевод…</p>
-        ) : result?.translation ? (
-          <div className="mt-3">
-            <p className="text-slate-700 dark:text-slate-200">{result.translation}</p>
-            {result.example && (
-              <p className="mt-2 text-sm italic text-slate-500">«{result.example}»</p>
-            )}
-            {result.exampleRu && (
-              <p className="mt-1 text-xs text-slate-400">{result.exampleRu}</p>
-            )}
-          </div>
-        ) : (
-          <p className="mt-3 text-slate-500">
-            Перевод не найден, но слово всё равно можно добавить в колоду.
-          </p>
-        )}
-
-        {addError && <p className="mt-3 text-sm text-red-500">{addError}</p>}
-
-        <div className="mt-5 flex gap-3">
-          {added ? (
-            <Button variant="secondary" className="flex-1" disabled>
-              Добавлено ✓
-            </Button>
-          ) : (
-            <Button className="flex-1" onClick={addToDeck} disabled={busy}>
-              {busy ? 'Добавляю…' : '+ В колоду'}
-            </Button>
-          )}
-          <Button variant="ghost" onClick={onClose}>
-            Закрыть
-          </Button>
-        </div>
-      </div>
-    </div>
-  )
-}

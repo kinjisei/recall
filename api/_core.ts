@@ -8,6 +8,12 @@ import type { ChatTurn } from '../src/types'
 
 export const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash'
 
+/** Лёгкая модель для простых массовых задач (отдельная дневная квота). */
+export const LIGHT_GEMINI_MODEL = 'gemini-3.1-flash-lite'
+
+/** Разрешённые модели (клиент может попросить только их). */
+export const ALLOWED_MODELS = [DEFAULT_GEMINI_MODEL, LIGHT_GEMINI_MODEL]
+
 interface GeminiResponse {
   candidates?: { content?: { parts?: { text?: string }[] } }[]
 }
