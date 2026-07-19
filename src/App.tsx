@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { LanguageProvider } from './context/LanguageContext'
@@ -5,15 +6,41 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 import { Layout } from './components/Layout'
 import { LoginPage } from './features/auth/LoginPage'
 import { DashboardPage } from './features/dashboard/DashboardPage'
-import { FlashcardsPage } from './features/flashcards/FlashcardsPage'
-import { ReaderPage } from './features/reader/ReaderPage'
-import { PronunciationPage } from './features/pronunciation/PronunciationPage'
-import { ConversationPage } from './features/conversation/ConversationPage'
-import { GrammarPage } from './features/grammar/GrammarPage'
-import { PracticePage } from './features/practice/PracticePage'
-import { PlacementTest } from './features/onboarding/PlacementTest'
-import { TeacherPage } from './features/teacher/TeacherPage'
-import { AssignmentsPage } from './features/teacher/AssignmentsPage'
+
+// Роуты — лениво: каждая страница (и её данные) грузится при переходе, а не
+// в стартовом бандле. Особенно важно для «Ввода» и грамматики — они тянут
+// сотни КБ контента, который не нужен на старте.
+const FlashcardsPage = lazy(() =>
+  import('./features/flashcards/FlashcardsPage').then((m) => ({ default: m.FlashcardsPage })),
+)
+const ReaderPage = lazy(() =>
+  import('./features/reader/ReaderPage').then((m) => ({ default: m.ReaderPage })),
+)
+const PronunciationPage = lazy(() =>
+  import('./features/pronunciation/PronunciationPage').then((m) => ({ default: m.PronunciationPage })),
+)
+const ConversationPage = lazy(() =>
+  import('./features/conversation/ConversationPage').then((m) => ({ default: m.ConversationPage })),
+)
+const GrammarPage = lazy(() =>
+  import('./features/grammar/GrammarPage').then((m) => ({ default: m.GrammarPage })),
+)
+const PracticePage = lazy(() =>
+  import('./features/practice/PracticePage').then((m) => ({ default: m.PracticePage })),
+)
+const PlacementTest = lazy(() =>
+  import('./features/onboarding/PlacementTest').then((m) => ({ default: m.PlacementTest })),
+)
+const TeacherPage = lazy(() =>
+  import('./features/teacher/TeacherPage').then((m) => ({ default: m.TeacherPage })),
+)
+const AssignmentsPage = lazy(() =>
+  import('./features/teacher/AssignmentsPage').then((m) => ({ default: m.AssignmentsPage })),
+)
+
+function PageFallback() {
+  return <p className="p-6 text-center text-slate-400">Загрузка…</p>
+}
 
 export default function App() {
   return (
@@ -30,15 +57,78 @@ export default function App() {
               }
             >
               <Route path="/" element={<DashboardPage />} />
-              <Route path="/flashcards" element={<FlashcardsPage />} />
-              <Route path="/reader" element={<ReaderPage />} />
-              <Route path="/pronunciation" element={<PronunciationPage />} />
-              <Route path="/conversation" element={<ConversationPage />} />
-              <Route path="/grammar" element={<GrammarPage />} />
-              <Route path="/practice" element={<PracticePage />} />
-              <Route path="/placement" element={<PlacementTest />} />
-              <Route path="/teacher" element={<TeacherPage />} />
-              <Route path="/assignments" element={<AssignmentsPage />} />
+              <Route
+                path="/flashcards"
+                element={
+                  <Suspense fallback={<PageFallback />}>
+                    <FlashcardsPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/reader"
+                element={
+                  <Suspense fallback={<PageFallback />}>
+                    <ReaderPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/pronunciation"
+                element={
+                  <Suspense fallback={<PageFallback />}>
+                    <PronunciationPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/conversation"
+                element={
+                  <Suspense fallback={<PageFallback />}>
+                    <ConversationPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/grammar"
+                element={
+                  <Suspense fallback={<PageFallback />}>
+                    <GrammarPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/practice"
+                element={
+                  <Suspense fallback={<PageFallback />}>
+                    <PracticePage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/placement"
+                element={
+                  <Suspense fallback={<PageFallback />}>
+                    <PlacementTest />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/teacher"
+                element={
+                  <Suspense fallback={<PageFallback />}>
+                    <TeacherPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/assignments"
+                element={
+                  <Suspense fallback={<PageFallback />}>
+                    <AssignmentsPage />
+                  </Suspense>
+                }
+              />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
