@@ -1,31 +1,40 @@
+// ============================================================================
+// «Колода» — FSRS-повторение свайпами: карточка на весь экран, тап — перевод,
+// свайп вправо «знаю» (good) / влево «не знаю» (again). «Не знаю» возвращает
+// карточку в конец текущей очереди. Плюс перепроверка слов от преподавателя
+// (плашка → печатание слов по переводу) и обучающая подсказка для новичка.
+// ============================================================================
 import { useCallback, useEffect, useState } from 'react'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { addCard } from '../../lib/cards'
 import { getDueCards, reviewCard, type DueCard } from '../../lib/fsrs'
 import { logActivity } from '../../lib/activity'
-import { speak } from '../../lib/speech'
+import { getMyPendingWordChecks } from '../../lib/wordChecks'
 import { useLanguage } from '../../context/LanguageContext'
 import { PacksSheet } from './PacksSheet'
-import type { AppLang, Rating } from '../../types'
+import { SwipeCard, SwipeTutorial } from './SwipeCard'
+import { WordCheckRunner } from './WordCheckRunner'
+import type { AppLang, Card as CardType, WordCheck } from '../../types'
 
-const ratingButtons: { rating: Rating; label: string; className: string }[] = [
-  { rating: 'again', label: 'Снова', className: 'bg-red-500 hover:bg-red-400 text-white' },
-  { rating: 'hard', label: 'Трудно', className: 'bg-orange-500 hover:bg-orange-400 text-white' },
-  { rating: 'good', label: 'Хорошо', className: 'bg-emerald-600 hover:bg-emerald-500 text-white' },
-  { rating: 'easy', label: 'Легко', className: 'bg-sky-600 hover:bg-sky-500 text-white' },
-]
+const TUTORIAL_KEY = 'recall.deck_tutorial_seen'
 
 export function FlashcardsPage() {
   const { lang } = useLanguage()
   const [queue, setQueue] = useState<DueCard[]>([])
   const [index, setIndex] = useState(0)
-  const [revealed, setRevealed] = useState(false)
+  const [flipped, setFlipped] = useState(false)
   const [loading, setLoading] = useState(true)
   const [reviewedCount, setReviewedCount] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [showAdd, setShowAdd] = useState(false)
   const [showPacks, setShowPacks] = useState(false)
+  const [showTutorial, setShowTutorial] = useState(false)
+  const [checks, setChecks] = useState<{ check: WordCheck; cards: CardType[] }[]>([])
+  const [activeCheck, setActiveCheck] = useState<{
+    check: WordCheck
+    cards: CardType[]
+  } | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -34,7 +43,7 @@ export function FlashcardsPage() {
       const due = await getDueCards(50, lang)
       setQueue(due)
       setIndex(0)
-      setRevealed(false)
+      setFlipped(false)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Ошибка загрузки')
     } finally {
@@ -42,25 +51,63 @@ export function FlashcardsPage() {
     }
   }, [lang])
 
+  const loadChecks = useCallback(() => {
+    getMyPendingWordChecks().then(setChecks).catch(() => setChecks([]))
+  }, [])
+
   useEffect(() => {
     setShowPacks(false)
     setReviewedCount(0)
     void load()
-  }, [load])
+    loadChecks()
+  }, [load, loadChecks])
 
   const current = queue[index]
 
-  const onRate = async (rating: Rating) => {
+  // обучающая подсказка — один раз, когда впервые появилась карточка
+  useEffect(() => {
+    if (current && !localStorage.getItem(TUTORIAL_KEY)) setShowTutorial(true)
+  }, [current])
+
+  const dismissTutorial = () => {
+    localStorage.setItem(TUTORIAL_KEY, '1')
+    setShowTutorial(false)
+  }
+
+  const onSwipe = async (dir: 'left' | 'right') => {
     if (!current) return
+    const rating = dir === 'right' ? 'good' : 'again'
+    setFlipped(false)
+    setIndex((i) => i + 1)
+    setReviewedCount((c) => c + 1)
     try {
-      await reviewCard(current.card, current.state, rating)
+      const newState = await reviewCard(current.card, current.state, rating)
       void logActivity('flashcards')
-      setReviewedCount((c) => c + 1)
-      setRevealed(false)
-      setIndex((i) => i + 1)
+      if (rating === 'again') {
+        // «не знаю» — карточка вернётся в конец текущей сессии
+        setQueue((q) => [...q, { card: current.card, state: newState }])
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Не удалось сохранить оценку')
     }
+  }
+
+  if (activeCheck) {
+    return (
+      <div className="flex flex-col gap-4">
+        <h1 className="text-2xl font-bold">🎴 Колода</h1>
+        <WordCheckRunner
+          check={activeCheck.check}
+          cards={activeCheck.cards}
+          lang={lang}
+          onDone={() => {
+            setActiveCheck(null)
+            loadChecks()
+            void load()
+          }}
+        />
+      </div>
+    )
   }
 
   return (
@@ -91,6 +138,29 @@ export function FlashcardsPage() {
         </div>
       </header>
 
+      {/* Плашка перепроверки от преподавателя */}
+      {checks.map(({ check, cards }) => (
+        <button
+          key={check.id}
+          onClick={() => setActiveCheck({ check, cards })}
+          className="text-left"
+        >
+          <Card className="flex items-center justify-between border-amber-300 bg-amber-50 transition-transform active:scale-[0.99] dark:border-amber-700 dark:bg-amber-950/30">
+            <div>
+              <p className="font-semibold text-amber-900 dark:text-amber-200">
+                🔁 Перепроверка от преподавателя
+              </p>
+              <p className="text-sm text-amber-700/80 dark:text-amber-300/80">
+                Напиши по памяти: слов — {cards.length}
+              </p>
+            </div>
+            <span className="rounded-full bg-amber-400 px-2.5 py-1 text-sm font-bold text-amber-950">
+              {cards.length}
+            </span>
+          </Card>
+        </button>
+      ))}
+
       {showAdd && <AddCardForm lang={lang} onAdded={load} />}
       {showPacks && <PacksSheet lang={lang} onAdded={load} />}
 
@@ -107,53 +177,31 @@ export function FlashcardsPage() {
           <p className="text-center text-sm text-slate-500">
             Осталось: {queue.length - index}
           </p>
-          <Card className="min-h-[220px] flex-col items-center justify-center text-center">
-            <div className="flex min-h-[180px] flex-col items-center justify-center gap-3">
-              <div className="flex items-center gap-2">
-                <p className="text-3xl font-bold">{current.card.front}</p>
-                <button
-                  onClick={() => speak(current.card.front, { lang })}
-                  className="rounded-full bg-slate-100 px-2.5 py-1 text-lg dark:bg-slate-700"
-                  aria-label="Озвучить"
-                >
-                  🔊
-                </button>
-              </div>
-              {current.card.ipa && (
-                <p className="text-slate-400">/{current.card.ipa}/</p>
-              )}
-              {revealed && (
-                <div className="mt-2 border-t border-slate-200 pt-3 dark:border-slate-700">
-                  {current.card.back && (
-                    <p className="text-lg text-slate-700 dark:text-slate-200">
-                      {current.card.back}
-                    </p>
-                  )}
-                  {current.card.example && (
-                    <p className="mt-2 text-sm italic text-slate-500">
-                      «{current.card.example}»
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-          </Card>
-
-          {!revealed ? (
-            <Button onClick={() => setRevealed(true)}>Показать ответ</Button>
-          ) : (
-            <div className="grid grid-cols-4 gap-2">
-              {ratingButtons.map((b) => (
-                <button
-                  key={b.rating}
-                  onClick={() => onRate(b.rating)}
-                  className={`rounded-xl py-3 text-sm font-semibold transition-colors ${b.className}`}
-                >
-                  {b.label}
-                </button>
-              ))}
+          <SwipeCard
+            key={`${current.card.id}-${index}`}
+            card={current.card}
+            lang={lang}
+            flipped={flipped}
+            onFlip={() => setFlipped(true)}
+            onSwipe={onSwipe}
+          />
+          {flipped && (
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => onSwipe('left')}
+                className="rounded-xl bg-red-500 py-3 text-sm font-semibold text-white hover:bg-red-400"
+              >
+                ✗ Не знаю
+              </button>
+              <button
+                onClick={() => onSwipe('right')}
+                className="rounded-xl bg-emerald-600 py-3 text-sm font-semibold text-white hover:bg-emerald-500"
+              >
+                ✓ Знаю
+              </button>
             </div>
           )}
+          {showTutorial && <SwipeTutorial onDismiss={dismissTutorial} />}
         </>
       ) : (
         <Card className="text-center">

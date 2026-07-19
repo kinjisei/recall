@@ -129,31 +129,37 @@ export async function getDueCards(limit = 50, lang?: AppLang): Promise<DueCard[]
   return due.slice(0, limit)
 }
 
-/** Записать оценку по карточке и вычислить следующий показ (FSRS). */
+/** Записать оценку по карточке и вычислить следующий показ (FSRS).
+ *  Возвращает обновлённое расписание (нужно для повтора в той же сессии). */
 export async function reviewCard(
   card: Card,
   existing: ReviewState | null,
   rating: Rating,
-): Promise<void> {
+): Promise<ReviewState> {
   const userId = await requireUserId()
   const now = new Date()
 
   const fsrsCard = toFsrsCard(existing, now)
   const { card: next } = scheduler.next(fsrsCard, now, ratingMap[rating])
 
-  const { error } = await supabase.from('review_states').upsert(
-    {
-      card_id: card.id,
-      user_id: userId,
-      stability: next.stability,
-      difficulty: next.difficulty,
-      due: next.due.toISOString(),
-      last_review: (next.last_review ?? now).toISOString(),
-      reps: next.reps,
-      lapses: next.lapses,
-      state: stateEnumToName(next.state),
-    },
-    { onConflict: 'card_id,user_id' },
-  )
+  const { data, error } = await supabase
+    .from('review_states')
+    .upsert(
+      {
+        card_id: card.id,
+        user_id: userId,
+        stability: next.stability,
+        difficulty: next.difficulty,
+        due: next.due.toISOString(),
+        last_review: (next.last_review ?? now).toISOString(),
+        reps: next.reps,
+        lapses: next.lapses,
+        state: stateEnumToName(next.state),
+      },
+      { onConflict: 'card_id,user_id' },
+    )
+    .select()
+    .single()
   if (error) throw error
+  return data as ReviewState
 }

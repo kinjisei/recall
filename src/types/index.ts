@@ -346,3 +346,27 @@ export interface MaterialAssignment {
   note: string | null
   created_at: string
 }
+
+// ---------------------------------------------------------------------------
+// Перепроверка слов: учитель выбирает слова ученицы, она печатает их по памяти.
+// ---------------------------------------------------------------------------
+
+/** Результат по одному слову перепроверки. */
+export interface WordCheckResult {
+  card_id: string
+  front: string // слово (для отчёта учителю, даже если карточку удалят)
+  back: string | null
+  given: string // что напечатала ученица
+  ok: boolean
+}
+
+/** Назначение перепроверки слов (таблица word_checks). */
+export interface WordCheck {
+  id: string
+  teacher_id: string
+  student_id: string
+  card_ids: string[]
+  results: WordCheckResult[] | null
+  created_at: string
+  completed_at: string | null
+}

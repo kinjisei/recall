@@ -13,6 +13,7 @@ import {
   type StudentInfo,
 } from '../../lib/teacher'
 import { MaterialsSection } from './MaterialsSection'
+import { StudentWordsSection } from './StudentWordsSection'
 import { countSubmittedWorks } from '../../lib/materials'
 import type { Deck, Profile } from '../../types'
 
@@ -199,6 +200,7 @@ function StudentCard({
   onChanged: () => void
 }) {
   const [showDecks, setShowDecks] = useState(false)
+  const [showWords, setShowWords] = useState(false)
   const [busyDeck, setBusyDeck] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const p = student.profile
@@ -274,6 +276,14 @@ function StudentCard({
           {error && <p className="text-sm text-red-500">{error}</p>}
         </div>
       )}
+
+      <button
+        onClick={() => setShowWords((v) => !v)}
+        className="text-left text-sm font-medium text-sky-600 hover:underline dark:text-sky-400"
+      >
+        {showWords ? '▾ Скрыть слова' : '▸ Слова и перепроверка'}
+      </button>
+      {showWords && <StudentWordsSection studentId={p.id} />}
     </Card>
   )
 }

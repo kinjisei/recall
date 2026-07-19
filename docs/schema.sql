@@ -413,3 +413,48 @@ create policy "student updates own material assignments" on public.material_assi
 -- Материалы: переназначение с историей попыток (2026-07-19)
 alter table public.material_assignments add column if not exists attempts jsonb;
 alter table public.material_assignments add column if not exists note text;
+
+-- ============================================================================
+-- ПЕРЕПРОВЕРКА СЛОВ (учитель → ученица) + доступ учителя к словам учениц.
+-- Блок idempotent — можно запускать повторно.
+-- ============================================================================
+
+create table if not exists public.word_checks (
+  id uuid primary key default gen_random_uuid(),
+  teacher_id uuid not null references public.profiles(id) on delete cascade,
+  student_id uuid not null references public.profiles(id) on delete cascade,
+  card_ids jsonb not null,
+  results jsonb,
+  created_at timestamptz default now(),
+  completed_at timestamptz
+);
+
+alter table public.word_checks enable row level security;
+
+drop policy if exists "teacher manages word checks" on public.word_checks;
+create policy "teacher manages word checks" on public.word_checks
+  for all using (auth.uid() = teacher_id)
+  with check (auth.uid() = teacher_id and public.is_student_of(auth.uid(), student_id));
+drop policy if exists "student sees word checks" on public.word_checks;
+create policy "student sees word checks" on public.word_checks
+  for select using (auth.uid() = student_id);
+drop policy if exists "student updates word checks" on public.word_checks;
+create policy "student updates word checks" on public.word_checks
+  for update using (auth.uid() = student_id) with check (auth.uid() = student_id);
+
+-- Учителю видны (только чтение) колоды, карточки и расписания привязанных учениц
+create or replace function public.deck_owned_by_student_of(d_id uuid, t_id uuid)
+returns boolean language sql security definer set search_path = public as
+$$ select exists (select 1 from decks d
+                  join teacher_students ts on ts.student_id = d.owner_id
+                  where d.id = d_id and ts.teacher_id = t_id) $$;
+
+drop policy if exists "teacher reads student decks" on public.decks;
+create policy "teacher reads student decks" on public.decks
+  for select using (public.is_student_of(auth.uid(), owner_id));
+drop policy if exists "teacher reads student cards" on public.cards;
+create policy "teacher reads student cards" on public.cards
+  for select using (public.deck_owned_by_student_of(deck_id, auth.uid()));
+drop policy if exists "teacher reads student review states" on public.review_states;
+create policy "teacher reads student review states" on public.review_states
+  for select using (public.is_student_of(auth.uid(), user_id));
