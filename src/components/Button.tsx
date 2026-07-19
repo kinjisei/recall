@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import type { ButtonHTMLAttributes, PointerEvent, ReactNode } from 'react'
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger'
 
@@ -33,18 +33,37 @@ function Spinner() {
   )
 }
 
+/** Волна от точки нажатия; узел удаляет себя по окончании анимации. */
+function spawnRipple(e: PointerEvent<HTMLButtonElement>) {
+  const btn = e.currentTarget
+  const rect = btn.getBoundingClientRect()
+  const d = Math.max(rect.width, rect.height) * 2
+  const span = document.createElement('span')
+  span.className = 'ripple'
+  span.style.width = span.style.height = `${d}px`
+  span.style.left = `${e.clientX - rect.left - d / 2}px`
+  span.style.top = `${e.clientY - rect.top - d / 2}px`
+  btn.appendChild(span)
+  span.addEventListener('animationend', () => span.remove())
+}
+
 export function Button({
   children,
   variant = 'primary',
   loading = false,
   className = '',
   disabled,
+  onPointerDown,
   ...props
 }: ButtonProps) {
   return (
     <button
-      className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-base font-semibold transition-[transform,filter,background-color] duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100 ${styles[variant]} ${className}`}
+      className={`relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl px-4 py-3 text-base font-semibold transition-[transform,filter,background-color] duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100 ${styles[variant]} ${className}`}
       disabled={disabled || loading}
+      onPointerDown={(e) => {
+        spawnRipple(e)
+        onPointerDown?.(e)
+      }}
       {...props}
     >
       {loading && <Spinner />}

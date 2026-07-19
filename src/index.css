@@ -65,6 +65,23 @@ a,
   animation: fade-in 0.22s ease-out both;
 }
 
+/* Волна от точки нажатия (Button её создаёт на pointerdown). */
+@keyframes ripple {
+  to {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  background: currentColor;
+  opacity: 0.3;
+  transform: scale(0);
+  animation: ripple 0.55s ease-out forwards;
+}
+
 /* Уважаем настройку «уменьшить движение». */
 @media (prefers-reduced-motion: reduce) {
   *,
