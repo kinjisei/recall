@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { joinTeacher, getMyTeachers } from '../../lib/teacher'
-import { getMyAssignments } from '../../lib/materials'
+import { countSubmittedWorks, getMyAssignments } from '../../lib/materials'
 import type { Profile } from '../../types'
 
 /**
@@ -14,25 +14,44 @@ import type { Profile } from '../../types'
 export function TeacherBlock({ profile }: { profile: Profile | null }) {
   if (!profile) return null
   if (profile.role === 'teacher') {
-    return (
-      <Link to="/teacher">
-        <Card className="flex items-center justify-between transition-transform active:scale-[0.99]">
-          <div>
-            <p className="font-semibold">👩‍🏫 Мои ученицы</p>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              Код-приглашение, колоды, прогресс
-            </p>
-          </div>
-          <span className="text-slate-400">→</span>
-        </Card>
-      </Link>
-    )
+    return <TeacherCard />
   }
   return (
     <>
       <AssignmentsCard />
       <JoinTeacherBlock />
     </>
+  )
+}
+
+/** Карточка преподавателя: ссылка на экран + уведомление о сданных работах. */
+function TeacherCard() {
+  const [pending, setPending] = useState(0)
+
+  useEffect(() => {
+    countSubmittedWorks().then(setPending).catch(() => {})
+  }, [])
+
+  return (
+    <Link to="/teacher">
+      <Card className="flex items-center justify-between transition-transform active:scale-[0.99]">
+        <div>
+          <p className="font-semibold">👩‍🏫 Мои ученицы</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            {pending > 0
+              ? `Работ на проверку: ${pending}`
+              : 'Код-приглашение, колоды, материалы, прогресс'}
+          </p>
+        </div>
+        {pending > 0 ? (
+          <span className="rounded-full bg-amber-100 px-2.5 py-1 text-sm font-bold text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">
+            {pending}
+          </span>
+        ) : (
+          <span className="text-slate-400">→</span>
+        )}
+      </Card>
+    </Link>
   )
 }
 

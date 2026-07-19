@@ -20,6 +20,7 @@ import {
   type MaterialRequest,
 } from '../../lib/materials'
 import type { StudentInfo } from '../../lib/teacher'
+import { ReviewScreen } from './ReviewScreen'
 import type {
   AppLang,
   CEFRLevel,
@@ -516,6 +517,7 @@ function MaterialDetail({
   const [busyStudent, setBusyStudent] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [showBody, setShowBody] = useState(false)
+  const [reviewing, setReviewing] = useState<{ a: MaterialAssignment; name: string } | null>(null)
 
   const reload = useCallback(() => {
     listMaterialAssignments(material.id).then(setAssignments).catch(() => setAssignments([]))
@@ -549,6 +551,21 @@ function MaterialDetail({
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Не удалось удалить')
     }
+  }
+
+  if (reviewing) {
+    return (
+      <ReviewScreen
+        material={material}
+        assignment={reviewing.a}
+        studentName={reviewing.name}
+        onDone={() => {
+          setReviewing(null)
+          reload()
+        }}
+        onBack={() => setReviewing(null)}
+      />
+    )
   }
 
   return (
@@ -585,31 +602,43 @@ function MaterialDetail({
         ) : (
           students.map((s) => {
             const a = (assignments ?? []).find((x) => x.student_id === s.profile.id)
+            const name = s.profile.display_name ?? 'Без имени'
+            const teacherOk = (a?.teacher_review ?? []).filter((r) => r.ok).length
             return (
               <div
                 key={s.profile.id}
                 className="flex items-center justify-between gap-2 rounded-xl border border-slate-200 px-3 py-2 dark:border-slate-700"
               >
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">
-                    {s.profile.display_name ?? 'Без имени'}
-                  </p>
+                  <p className="truncate text-sm font-medium">{name}</p>
                   {a && (
                     <p className="text-xs text-slate-400">
                       {a.status === 'assigned'
                         ? 'ещё не выполнено'
-                        : `выполнено: ${a.auto_score}/${a.auto_total} (авто)`}
+                        : a.status === 'submitted'
+                          ? `⏳ на проверке · авто ${a.auto_score}/${a.auto_total}`
+                          : `✓ проверено: ${teacherOk}/${a.auto_total}`}
                     </p>
                   )}
                 </div>
-                <Button
-                  variant={a ? 'ghost' : 'secondary'}
-                  className="shrink-0 px-3 py-1.5 text-sm"
-                  disabled={busyStudent !== null}
-                  onClick={() => toggle(s.profile.id)}
-                >
-                  {busyStudent === s.profile.id ? '…' : a ? 'Убрать ✓' : 'Назначить'}
-                </Button>
+                <div className="flex shrink-0 gap-1.5">
+                  {a && a.status !== 'assigned' && (
+                    <Button
+                      className="px-3 py-1.5 text-sm"
+                      onClick={() => setReviewing({ a, name })}
+                    >
+                      {a.status === 'submitted' ? 'Проверить' : 'Разбор'}
+                    </Button>
+                  )}
+                  <Button
+                    variant={a ? 'ghost' : 'secondary'}
+                    className="px-3 py-1.5 text-sm"
+                    disabled={busyStudent !== null}
+                    onClick={() => toggle(s.profile.id)}
+                  >
+                    {busyStudent === s.profile.id ? '…' : a ? 'Убрать ✓' : 'Назначить'}
+                  </Button>
+                </div>
               </div>
             )
           })

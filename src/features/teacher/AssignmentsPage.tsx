@@ -34,6 +34,10 @@ export function AssignmentsPage() {
   }, [reload])
 
   if (active) {
+    // проверенная работа — сначала разбор от преподавателя
+    if (active.status === 'reviewed') {
+      return <ReviewedView row={active} onBack={() => setActive(null)} />
+    }
     return (
       <AssignmentRunner
         row={active}
@@ -108,14 +112,88 @@ function AssignmentCard({ row, onOpen }: { row: Row; onOpen: () => void }) {
             <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">
               новое
             </span>
+          ) : row.status === 'submitted' ? (
+            <span className="text-slate-400">⏳ на проверке</span>
           ) : (
-            <span className="text-emerald-600 dark:text-emerald-400">
-              {row.auto_score}/{row.auto_total}
+            <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+              ✓ {(row.teacher_review ?? []).filter((r) => r.ok).length}/{row.auto_total}
             </span>
           )}
         </span>
       </Card>
     </button>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Разбор проверенной работы: вердикты и комментарии преподавателя.
+// ---------------------------------------------------------------------------
+
+function ReviewedView({ row, onBack }: { row: Row; onBack: () => void }) {
+  const m = row.material
+  const review = row.teacher_review ?? []
+  const answers = row.answers ?? []
+  const okCount = review.filter((r) => r.ok).length
+  const percent = row.auto_total ? Math.round((okCount / row.auto_total) * 100) : 0
+  const [showBody, setShowBody] = useState(false)
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" className="px-2 py-1 text-sm" onClick={onBack}>
+          ← Задания
+        </Button>
+        <h1 className="min-w-0 truncate text-xl font-bold">{m.title ?? m.topic}</h1>
+      </div>
+
+      <Card className="text-center">
+        <p className="text-4xl">{percent >= 80 ? '🎉' : percent >= 50 ? '👍' : '💪'}</p>
+        <p className="mt-2 text-lg font-bold">
+          Проверено преподавателем: {okCount} из {row.auto_total}
+        </p>
+        <p className="mt-1 text-sm text-slate-500">Разбор по каждому упражнению ниже.</p>
+      </Card>
+
+      <button
+        onClick={() => setShowBody((s) => !s)}
+        className="self-start text-sm font-medium text-sky-600 hover:underline dark:text-sky-400"
+      >
+        {showBody ? '▾ Скрыть текст' : '▸ Перечитать текст'}
+      </button>
+      {showBody && (
+        <Card>
+          <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700 dark:text-slate-200">
+            {m.body}
+          </p>
+        </Card>
+      )}
+
+      {m.exercises.map((ex, i) => {
+        const item = review.find((r) => r.index === i)
+        const given = answers.find((a) => a.index === i)?.given ?? '(нет ответа)'
+        const correct =
+          ex.type === 'mcq' ? ex.options[ex.answer] : ex.type === 'fill' ? ex.answer : ''
+        const ok = item?.ok ?? false
+        return (
+          <Card key={i} className="flex flex-col gap-1.5">
+            <p className="text-xs text-slate-400">{i + 1}</p>
+            <p className="text-sm font-medium">{ex.prompt}</p>
+            <p className="text-sm">
+              Твой ответ:{' '}
+              <span className={ok ? 'font-semibold text-emerald-600 dark:text-emerald-400' : 'font-semibold text-red-500'}>
+                {given} {ok ? '✓' : '✗'}
+              </span>
+              {!ok && correct && <span className="text-slate-400"> · правильно: {correct}</span>}
+            </p>
+            {item?.comment && (
+              <p className="rounded-lg bg-sky-50 px-3 py-2 text-sm text-slate-700 dark:bg-sky-950/40 dark:text-slate-200">
+                💬 {item.comment}
+              </p>
+            )}
+          </Card>
+        )
+      })}
+    </div>
   )
 }
 

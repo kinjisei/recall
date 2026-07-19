@@ -13,6 +13,7 @@ import {
   type StudentInfo,
 } from '../../lib/teacher'
 import { MaterialsSection } from './MaterialsSection'
+import { countSubmittedWorks } from '../../lib/materials'
 import type { Deck, Profile } from '../../types'
 
 export function TeacherPage() {
@@ -66,6 +67,7 @@ function TeacherDashboard() {
   const [copied, setCopied] = useState(false)
   const [students, setStudents] = useState<StudentInfo[]>([])
   const [decks, setDecks] = useState<Deck[]>([])
+  const [pendingWorks, setPendingWorks] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -82,6 +84,7 @@ function TeacherDashboard() {
       setCode(c)
       setStudents(s)
       setDecks(d)
+      countSubmittedWorks().then(setPendingWorks)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Ошибка загрузки')
     } finally {
@@ -132,6 +135,11 @@ function TeacherDashboard() {
             }`}
           >
             {label}
+            {id === 'materials' && pendingWorks > 0 && (
+              <span className="ml-1.5 rounded-full bg-amber-400 px-1.5 py-0.5 text-xs font-bold text-amber-950">
+                {pendingWorks}
+              </span>
+            )}
           </button>
         ))}
       </div>

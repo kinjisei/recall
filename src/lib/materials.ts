@@ -13,6 +13,7 @@ import type {
   MaterialAssignment,
   MaterialExercise,
   MaterialPlan,
+  ReviewItem,
 } from '../types'
 
 /** Заявка преподавателя (форма создания материала). */
@@ -299,6 +300,101 @@ export async function submitAssignment(
       auto_score: autoScore,
       auto_total: autoTotal,
       submitted_at: new Date().toISOString(),
+    })
+    .eq('id', assignmentId)
+  if (error) throw error
+}
+
+// ---------------------------------------------------------------------------
+// Фаза B: проверка работ (AI-разбор → вердикты преподавателя).
+// ---------------------------------------------------------------------------
+
+/** Сколько сданных работ ждут проверки (для бейджа преподавателя). */
+export async function countSubmittedWorks(): Promise<number> {
+  // RLS отдаёт преподавателю только назначения его материалов
+  const { count, error } = await supabase
+    .from('material_assignments')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'submitted')
+  if (error) return 0
+  return count ?? 0
+}
+
+/** AI-разбор сданной работы: вердикт и комментарий по каждому упражнению. */
+export async function generateAiReview(
+  material: Material,
+  assignment: MaterialAssignment,
+): Promise<ReviewItem[]> {
+  const answers = assignment.answers ?? []
+  const items = material.exercises.map((ex, i) => {
+    const a = answers.find((x) => x.index === i)
+    return {
+      index: i,
+      kind: ex.kind,
+      prompt: ex.prompt,
+      correct: ex.type === 'mcq' ? ex.options[ex.answer] : ex.type === 'fill' ? ex.answer : '',
+      options: ex.type === 'mcq' ? ex.options : undefined,
+      given: a?.given ?? '(нет ответа)',
+      auto_ok: a?.auto_ok ?? false,
+    }
+  })
+
+  const system = [
+    'Ты — ассистент преподавателя иностранного языка: делаешь ПЕРВИЧНУЮ проверку работы ученика.',
+    'Отвечай ТОЛЬКО валидным JSON без markdown:',
+    '{"items":[{"index":0,"ok":true,"comment":"..."}]}',
+    '',
+    'Правила:',
+    '- comment по-русски, 1-2 предложения;',
+    '- если ответ НЕВЕРНЫЙ: объясни, что именно не так, и приведи правильный вариант;',
+    '- если ответ верный: пустая строка или короткая похвала;',
+    '- ok=true можно поставить даже там, где авто-проверка сочла ошибкой, если ответ по сути верен (мелкая опечатка, другой регистр, допустимый синоним) — поясни это в comment;',
+    '- index — как в присланном списке; верни вердикт по КАЖДОМУ упражнению.',
+  ].join('\n')
+
+  const userMsg = [
+    'Текст материала:',
+    material.body,
+    '',
+    'Упражнения и ответы ученика:',
+    JSON.stringify(items),
+  ].join('\n')
+
+  const raw = await chat([{ role: 'user', content: userMsg }], { system })
+  const parsed = parseJson<{ items: ReviewItem[] }>(raw)
+  if (!Array.isArray(parsed.items)) throw new Error('AI вернул неполный разбор.')
+  // страховка: вердикт на каждое упражнение (чего нет — берём авто-результат)
+  return material.exercises.map((_, i) => {
+    const found = parsed.items.find((x) => x.index === i)
+    if (found) return { index: i, ok: Boolean(found.ok), comment: found.comment ?? '' }
+    const a = answers.find((x) => x.index === i)
+    return { index: i, ok: a?.auto_ok ?? false, comment: '' }
+  })
+}
+
+/** Сохранить черновик AI-разбора (чтобы не генерировать повторно). */
+export async function saveAiReview(
+  assignmentId: string,
+  review: ReviewItem[],
+): Promise<void> {
+  const { error } = await supabase
+    .from('material_assignments')
+    .update({ ai_review: review })
+    .eq('id', assignmentId)
+  if (error) throw error
+}
+
+/** Финал проверки: вердикты преподавателя, статус reviewed. */
+export async function finishReview(
+  assignmentId: string,
+  review: ReviewItem[],
+): Promise<void> {
+  const { error } = await supabase
+    .from('material_assignments')
+    .update({
+      teacher_review: review,
+      status: 'reviewed',
+      reviewed_at: new Date().toISOString(),
     })
     .eq('id', assignmentId)
   if (error) throw error
