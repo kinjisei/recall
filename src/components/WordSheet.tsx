@@ -7,6 +7,7 @@
 // видны (safe-area учтён).
 // ============================================================================
 import { useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Button } from './Button'
 import { addCard } from '../lib/cards'
 import { lookup } from '../lib/dictionary'
@@ -157,10 +158,12 @@ export function WordSheet({
   const baseDiffers =
     ctx && ctx.base.toLowerCase() !== word.toLowerCase().replace(/[’]/g, "'")
 
-  return (
+  // Портал в body: внутри <main> любой предок с transform/filter «приватизирует»
+  // fixed-позиционирование, и шторка уезжает за навигацию на длинных текстах.
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-end bg-black/40" onClick={onClose}>
       <div
-        className="flex max-h-[85vh] w-full flex-col rounded-t-3xl bg-white dark:bg-slate-800"
+        className="flex max-h-[85dvh] w-full flex-col rounded-t-3xl bg-white dark:bg-slate-800"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mx-auto mb-1 mt-3 h-1.5 w-10 shrink-0 rounded-full bg-slate-300 dark:bg-slate-600" />
@@ -229,6 +232,7 @@ export function WordSheet({
           </Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

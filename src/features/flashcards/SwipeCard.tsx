@@ -5,6 +5,7 @@
 // наклоняется, подсвечивает направление и улетает за порогом.
 // ============================================================================
 import { useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { speak } from '../../lib/speech'
 import type { AppLang, Card as CardType } from '../../types'
 
@@ -146,7 +147,8 @@ export function SwipeCard({
  * со стрелками и покачивающейся рукой. Показывается один раз.
  */
 export function SwipeTutorial({ onDismiss }: { onDismiss: () => void }) {
-  return (
+  // Портал в body — fixed-оверлей не должен зависеть от предков внутри <main>.
+  return createPortal(
     <div
       className="fixed inset-0 z-40 flex flex-col items-center justify-center gap-6 bg-black/60 px-8 backdrop-blur-[2px]"
       onClick={onDismiss}
@@ -174,6 +176,7 @@ export function SwipeTutorial({ onDismiss }: { onDismiss: () => void }) {
       <p className="mt-2 text-sm text-white/60">
         «Не знаю» — слово скоро вернётся. Нажми, чтобы начать.
       </p>
-    </div>
+    </div>,
+    document.body,
   )
 }
