@@ -409,3 +409,7 @@ create policy "student sees own material assignments" on public.material_assignm
 drop policy if exists "student updates own material assignments" on public.material_assignments;
 create policy "student updates own material assignments" on public.material_assignments
   for update using (auth.uid() = student_id) with check (auth.uid() = student_id);
+
+-- Материалы: переназначение с историей попыток (2026-07-19)
+alter table public.material_assignments add column if not exists attempts jsonb;
+alter table public.material_assignments add column if not exists note text;

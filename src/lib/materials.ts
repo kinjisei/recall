@@ -98,7 +98,7 @@ export async function generateMaterialPlan(
     '  "exercise_plan": [',
     '    {"kind":"comprehension","type":"mcq","count":N,"note":"вопросы по смыслу текста"},',
     '    {"kind":"grammar","type":"fill","count":N,"note":"что именно тренируем"},',
-    '    {"kind":"vocab","type":"fill","count":N,"note":"что именно тренируем"}',
+    '    {"kind":"vocab","type":"mcq","count":N,"note":"матч: определение слова → выбор из 4 слов"}',
     '  ]',
     '}',
     '',
@@ -145,7 +145,7 @@ export async function generateMaterialContent(
     '  "exercises": [',
     '    {"kind":"comprehension","type":"mcq","prompt":"вопрос по смыслу на целевом языке","options":["A","B","C","D"],"answer":0},',
     '    {"kind":"grammar","type":"fill","prompt":"предложение ИЗ текста с пропуском ___","answer":"пропущенная часть","hint":"подсказка по-русски"},',
-    '    {"kind":"vocab","type":"fill","prompt":"предложение из текста с пропущенным целевым словом ___","answer":"слово","hint":"русский перевод слова"}',
+    '    {"kind":"vocab","type":"mcq","prompt":"определение/объяснение целевого слова НА ЦЕЛЕВОМ ЯЗЫКЕ (само слово не называть!)","options":["слово1","слово2","слово3","слово4"],"answer":0}',
     '  ]',
     '}',
     '',
@@ -153,10 +153,11 @@ export async function generateMaterialContent(
     `1. Длина текста — строго ${req.lengthRange} слов, уровень языка — строго ${req.level}.`,
     '2. Все целевые слова из плана должны встретиться в тексте.',
     '3. Если задана грамматическая тема — конструкция используется в тексте несколько раз.',
-    '4. ВСЕ упражнения строго по содержанию текста. Вопросы mcq — смысловые (не «какое слово было в тексте»), неправильные варианты правдоподобны, ровно 4 options, answer — индекс 0-3.',
+    '4. ВСЕ упражнения строго по содержанию текста. Вопросы comprehension — смысловые (не «какое слово было в тексте»), неправильные варианты правдоподобны, ровно 4 options, answer — индекс 0-3.',
     '5. Количество упражнений каждого вида — по плану.',
     '6. В fill ответ (answer) — ровно то, что пропущено в prompt на месте ___.',
-    '7. Порядок упражнений: сначала comprehension, потом grammar, потом vocab.',
+    '7. Словарные (vocab) — матч по определению: prompt — простое определение слова на целевом языке (уровня ученика, БЕЗ самого слова), options — 4 слова: правильное + 3 других слова из текста или того же уровня, answer — индекс правильного.',
+    '8. Порядок упражнений: сначала comprehension, потом grammar, потом vocab.',
   ].join('\n')
 
   const userMsg = [
@@ -397,5 +398,41 @@ export async function finishReview(
       reviewed_at: new Date().toISOString(),
     })
     .eq('id', assignmentId)
+  if (error) throw error
+}
+
+/**
+ * Переназначить проверенный материал той же ученице: текущая работа уходит
+ * в историю (attempts), назначение сбрасывается в assigned, note — комментарий
+ * преподавателя «на что обратить внимание в этот раз».
+ */
+export async function reassignAssignment(
+  assignment: MaterialAssignment,
+  note: string,
+): Promise<void> {
+  const snapshot = {
+    answers: assignment.answers,
+    auto_score: assignment.auto_score,
+    auto_total: assignment.auto_total,
+    teacher_review: assignment.teacher_review,
+    submitted_at: assignment.submitted_at,
+    reviewed_at: assignment.reviewed_at,
+    note: assignment.note ?? null,
+  }
+  const { error } = await supabase
+    .from('material_assignments')
+    .update({
+      attempts: [...(assignment.attempts ?? []), snapshot],
+      status: 'assigned',
+      answers: null,
+      auto_score: null,
+      auto_total: null,
+      ai_review: null,
+      teacher_review: null,
+      submitted_at: null,
+      reviewed_at: null,
+      note: note.trim() || null,
+    })
+    .eq('id', assignment.id)
   if (error) throw error
 }

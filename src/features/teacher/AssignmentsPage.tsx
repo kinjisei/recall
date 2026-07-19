@@ -3,17 +3,22 @@
 // Прохождение: чтение → упражнения (общий движок) → сдача (авто-балл, статус
 // submitted). Проверка преподавателем — следующая фаза фичи.
 // ============================================================================
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { ExerciseView } from '../../components/exercises'
 import { logActivity } from '../../lib/activity'
+import { addCard } from '../../lib/cards'
+import { lookup } from '../../lib/dictionary'
+import { lookupSpanish } from '../../lib/spanishDict'
+import { speak } from '../../lib/speech'
 import {
   getMyAssignments,
   submitAssignment,
 } from '../../lib/materials'
 import type {
+  AppLang,
   AssignmentAnswer,
   Material,
   MaterialAssignment,
@@ -105,6 +110,11 @@ function AssignmentCard({ row, onOpen }: { row: Row; onOpen: () => void }) {
           <p className="truncate font-medium">{m.title ?? m.topic}</p>
           <p className="text-xs text-slate-400">
             {m.lang.toUpperCase()} · {m.level} · {m.format} · {m.exercises.length} упр.
+            {(row.attempts?.length ?? 0) > 0 && row.status === 'assigned' && (
+              <span className="ml-1 font-semibold text-amber-600 dark:text-amber-400">
+                · повторно
+              </span>
+            )}
           </p>
         </div>
         <span className="shrink-0 text-sm">
@@ -268,13 +278,21 @@ function AssignmentRunner({
           </Button>
           <h1 className="min-w-0 truncate text-xl font-bold">{m.title ?? m.topic}</h1>
         </div>
+
+        {row.note && row.status === 'assigned' && (
+          <Card className="border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-950/30">
+            <p className="text-sm text-amber-900 dark:text-amber-200">
+              💬 Комментарий преподавателя: {row.note}
+            </p>
+          </Card>
+        )}
+
         <Card>
           <p className="text-xs text-slate-400">
-            {m.level} · {m.format} · прочитай внимательно — упражнения по тексту
+            {m.level} · {m.format} · прочитай внимательно — упражнения по тексту.
+            Нажимай на незнакомые слова, чтобы добавить их в колоду.
           </p>
-          <p className="mt-3 whitespace-pre-wrap leading-relaxed text-slate-700 dark:text-slate-200">
-            {m.body}
-          </p>
+          <TappableBody body={m.body} lang={m.lang} />
         </Card>
         <Button onClick={() => setStage('exercises')}>
           {alreadyDone ? 'Пройти ещё раз (без пересдачи) →' : `К упражнениям (${total}) →`}
@@ -330,6 +348,174 @@ function AssignmentRunner({
         onNext={next}
         isLast={index + 1 >= total}
       />
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Текст задания с кликабельными словами: тап → словарь → «в колоду».
+// EN — Free Dictionary API (определение + транскрипция), ES — паки → Gemini.
+// ---------------------------------------------------------------------------
+
+function TappableBody({ body, lang }: { body: string; lang: AppLang }) {
+  const [selected, setSelected] = useState<string | null>(null)
+  const tokens = useMemo(() => body.split(/(\s+)/), [body])
+
+  return (
+    <>
+      <p className="mt-3 whitespace-pre-wrap leading-relaxed text-slate-700 dark:text-slate-200">
+        {tokens.map((tok, i) => {
+          const isWord = /[A-Za-zÀ-ÿ]/.test(tok)
+          if (!isWord) return <span key={i}>{tok}</span>
+          return (
+            <span
+              key={i}
+              onClick={() => setSelected(tok.replace(/[^A-Za-zÀ-ÿ'-]/g, ''))}
+              className="cursor-pointer rounded px-0.5 hover:bg-sky-100 active:bg-sky-200 dark:hover:bg-sky-900/50"
+            >
+              {tok}
+            </span>
+          )
+        })}
+      </p>
+      {selected && (
+        <WordSheet word={selected} lang={lang} onClose={() => setSelected(null)} />
+      )}
+    </>
+  )
+}
+
+interface WordInfo {
+  word: string
+  back?: string
+  example?: string
+  ipa?: string
+  audio_url?: string
+}
+
+function WordSheet({
+  word,
+  lang,
+  onClose,
+}: {
+  word: string
+  lang: AppLang
+  onClose: () => void
+}) {
+  const [loading, setLoading] = useState(true)
+  const [info, setInfo] = useState<WordInfo | null>(null)
+  const [added, setAdded] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    setLoading(true)
+    setAdded(false)
+    setError(null)
+    const load = async (): Promise<WordInfo | null> => {
+      if (lang === 'es') {
+        const r = await lookupSpanish(word)
+        if (!r) return null
+        return { word: r.word, back: r.translation, example: r.example }
+      }
+      const r = await lookup(word)
+      if (!r) return null
+      return {
+        word: r.word,
+        back: r.definition,
+        example: r.example,
+        ipa: r.ipa,
+        audio_url: r.audio_url,
+      }
+    }
+    load()
+      .then(setInfo)
+      .catch(() => setInfo(null))
+      .finally(() => setLoading(false))
+  }, [word, lang])
+
+  const playAudio = () => {
+    if (info?.audio_url) {
+      new Audio(info.audio_url).play().catch(() => speak(word, { lang }))
+    } else {
+      speak(info?.word ?? word, { lang })
+    }
+  }
+
+  const addToDeck = async () => {
+    setBusy(true)
+    setError(null)
+    try {
+      await addCard({
+        front: info?.word ?? word.toLowerCase(),
+        back: info?.back,
+        example: info?.example,
+        ipa: info?.ipa,
+        audio_url: info?.audio_url,
+        lang,
+        source: 'reader',
+      })
+      setAdded(true)
+      void logActivity('reader')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Не удалось добавить слово')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-40 flex items-end bg-black/40" onClick={onClose}>
+      <div
+        className="w-full rounded-t-3xl bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] dark:bg-slate-800"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-slate-300 dark:bg-slate-600" />
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-bold">{info?.word ?? word.toLowerCase()}</h3>
+          <button
+            onClick={playAudio}
+            className="rounded-full bg-slate-100 px-3 py-1 text-lg dark:bg-slate-700"
+            aria-label="Озвучить"
+          >
+            🔊
+          </button>
+        </div>
+
+        {info?.ipa && <p className="mt-1 text-slate-400">/{info.ipa}/</p>}
+
+        {loading ? (
+          <p className="mt-3 text-slate-500">Ищу в словаре…</p>
+        ) : info?.back ? (
+          <div className="mt-3">
+            <p className="text-slate-700 dark:text-slate-200">{info.back}</p>
+            {info.example && (
+              <p className="mt-2 text-sm italic text-slate-500">«{info.example}»</p>
+            )}
+          </div>
+        ) : (
+          <p className="mt-3 text-slate-500">
+            Перевод не найден, но слово всё равно можно добавить в колоду.
+          </p>
+        )}
+
+        {error && <p className="mt-3 text-sm text-red-500">{error}</p>}
+
+        <div className="mt-5 flex gap-3">
+          {added ? (
+            <Button variant="secondary" className="flex-1" disabled>
+              Добавлено ✓
+            </Button>
+          ) : (
+            <Button className="flex-1" onClick={addToDeck} disabled={busy}>
+              {busy ? 'Добавляю…' : '+ В колоду'}
+            </Button>
+          )}
+          <Button variant="ghost" onClick={onClose}>
+            Закрыть
+          </Button>
+        </div>
+      </div>
     </div>
   )
 }

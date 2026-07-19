@@ -318,6 +318,17 @@ export interface ReviewItem {
   comment: string
 }
 
+/** Снимок прошлой попытки (при переназначении материала). */
+export interface AttemptSnapshot {
+  answers: AssignmentAnswer[] | null
+  auto_score: number | null
+  auto_total: number | null
+  teacher_review: ReviewItem[] | null
+  submitted_at: string | null
+  reviewed_at: string | null
+  note: string | null
+}
+
 /** Назначение материала ученице + её работа (таблица material_assignments). */
 export interface MaterialAssignment {
   id: string
@@ -331,5 +342,7 @@ export interface MaterialAssignment {
   teacher_review: ReviewItem[] | null
   submitted_at: string | null
   reviewed_at: string | null
+  attempts: AttemptSnapshot[] | null
+  note: string | null
   created_at: string
 }

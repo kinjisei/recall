@@ -18,7 +18,7 @@ export function TeacherBlock({ profile }: { profile: Profile | null }) {
   }
   return (
     <>
-      <AssignmentsCard />
+      <AssignmentsNotice placement="bottom" />
       <JoinTeacherBlock />
     </>
   )
@@ -55,8 +55,13 @@ function TeacherCard() {
   )
 }
 
-/** Карточка «Задания» — видна ученице, если ей что-то назначали. */
-function AssignmentsCard() {
+/**
+ * Уведомление «Задания от преподавателя» у ученицы.
+ * placement="top" — заметная плашка под стриком, ТОЛЬКО пока есть несданные;
+ * placement="bottom" — спокойная карточка внизу, когда всё сдано (для доступа
+ * к выполненным работам и разборам).
+ */
+export function AssignmentsNotice({ placement }: { placement: 'top' | 'bottom' }) {
   const [counts, setCounts] = useState<{ total: number; pending: number } | null>(null)
 
   useEffect(() => {
@@ -71,6 +76,30 @@ function AssignmentsCard() {
   }, [])
 
   if (!counts || counts.total === 0) return null
+  if (placement === 'top' && counts.pending === 0) return null
+  if (placement === 'bottom' && counts.pending > 0) return null
+
+  if (placement === 'top') {
+    return (
+      <Link to="/assignments">
+        <Card className="flex items-center justify-between border-amber-300 bg-amber-50 transition-transform active:scale-[0.99] dark:border-amber-700 dark:bg-amber-950/30">
+          <div>
+            <p className="font-semibold text-amber-900 dark:text-amber-200">
+              📝 Новое задание от преподавателя
+            </p>
+            <p className="text-sm text-amber-700/80 dark:text-amber-300/80">
+              {counts.pending === 1
+                ? 'Тебя ждёт 1 задание'
+                : `Тебя ждут задания: ${counts.pending}`}
+            </p>
+          </div>
+          <span className="rounded-full bg-amber-400 px-2.5 py-1 text-sm font-bold text-amber-950">
+            {counts.pending}
+          </span>
+        </Card>
+      </Link>
+    )
+  }
 
   return (
     <Link to="/assignments">
@@ -78,18 +107,10 @@ function AssignmentsCard() {
         <div>
           <p className="font-semibold">📝 Задания от преподавателя</p>
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            {counts.pending > 0
-              ? `Новых: ${counts.pending}`
-              : 'Все задания выполнены ✓'}
+            Все задания выполнены ✓
           </p>
         </div>
-        {counts.pending > 0 ? (
-          <span className="rounded-full bg-amber-100 px-2.5 py-1 text-sm font-bold text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">
-            {counts.pending}
-          </span>
-        ) : (
-          <span className="text-slate-400">→</span>
-        )}
+        <span className="text-slate-400">→</span>
       </Card>
     </Link>
   )

@@ -9,6 +9,7 @@ import { Button } from '../../components/Button'
 import {
   finishReview,
   generateAiReview,
+  reassignAssignment,
   saveAiReview,
 } from '../../lib/materials'
 import type {
@@ -40,6 +41,9 @@ export function ReviewScreen({
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [showBody, setShowBody] = useState(false)
+  const [reassignOpen, setReassignOpen] = useState(false)
+  const [reassignNote, setReassignNote] = useState('')
+  const [reassignBusy, setReassignBusy] = useState(false)
 
   // Первичный AI-разбор, если его ещё нет
   useEffect(() => {
@@ -77,6 +81,20 @@ export function ReviewScreen({
     }
   }
 
+  const reassign = async () => {
+    setReassignBusy(true)
+    setError(null)
+    try {
+      await reassignAssignment(assignment, reassignNote)
+      onDone()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Не удалось переназначить')
+      setReassignBusy(false)
+    }
+  }
+
+  const attempts = assignment.attempts ?? []
+
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-3">
@@ -105,6 +123,24 @@ export function ReviewScreen({
           <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700 dark:text-slate-200">
             {material.body}
           </p>
+        </Card>
+      )}
+
+      {attempts.length > 0 && (
+        <Card>
+          <p className="text-sm font-semibold">Прошлые попытки</p>
+          {attempts.map((at, i) => {
+            const tOk = (at.teacher_review ?? []).filter((r) => r.ok).length
+            return (
+              <p key={i} className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                {i + 1}-я: авто {at.auto_score}/{at.auto_total}
+                {at.teacher_review ? ` · учитель ${tOk}/${at.auto_total}` : ''}
+                {at.submitted_at
+                  ? ` · ${new Date(at.submitted_at).toLocaleDateString('ru-RU')}`
+                  : ''}
+              </p>
+            )
+          })}
         </Card>
       )}
 
@@ -176,7 +212,7 @@ export function ReviewScreen({
                       </button>
                     </div>
                     <textarea
-                      className="min-h-[52px] w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-sky-500 dark:border-slate-600 dark:bg-slate-900"
+                      className="min-h-[120px] w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm leading-relaxed outline-none focus:border-sky-500 dark:border-slate-600 dark:bg-slate-900"
                       placeholder="Комментарий для ученицы: что не так и как правильно…"
                       value={item.comment}
                       onChange={(e) => setItem(i, { comment: e.target.value })}
@@ -193,6 +229,38 @@ export function ReviewScreen({
                 ? 'Сохраняю…'
                 : `Завершить проверку (${okCount}/${material.exercises.length}) ✓`}
             </Button>
+          )}
+
+          {alreadyReviewed && (
+            <Card className="flex flex-col gap-2">
+              {!reassignOpen ? (
+                <button
+                  onClick={() => setReassignOpen(true)}
+                  className="text-left text-sm font-medium text-sky-600 hover:underline dark:text-sky-400"
+                >
+                  ↻ Переназначить этот материал (текущий результат сохранится в истории)
+                </button>
+              ) : (
+                <>
+                  <p className="text-sm font-semibold">Переназначить материал</p>
+                  <textarea
+                    className="min-h-[100px] w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm leading-relaxed outline-none focus:border-sky-500 dark:border-slate-600 dark:bg-slate-900"
+                    placeholder="Комментарий для ученицы: на что обратить внимание в этот раз…"
+                    value={reassignNote}
+                    onChange={(e) => setReassignNote(e.target.value)}
+                    disabled={reassignBusy}
+                  />
+                  <div className="flex gap-2">
+                    <Button className="flex-1" onClick={reassign} disabled={reassignBusy}>
+                      {reassignBusy ? 'Переназначаю…' : '↻ Переназначить'}
+                    </Button>
+                    <Button variant="ghost" onClick={() => setReassignOpen(false)} disabled={reassignBusy}>
+                      Отмена
+                    </Button>
+                  </div>
+                </>
+              )}
+            </Card>
           )}
         </>
       )}

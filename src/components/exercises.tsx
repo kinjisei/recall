@@ -55,10 +55,13 @@ export function McqExercise({
     onGiven?.(exercise.options[i] ?? '')
   }
 
+  // короткие варианты (слова) — сеткой 2×2, длинные фразы — столбиком
+  const compact = exercise.options.every((o) => o.length <= 16)
+
   return (
     <Card className="flex flex-col gap-3">
       <p className="text-lg font-medium">{exercise.prompt}</p>
-      <div className="flex flex-col gap-2">
+      <div className={compact ? 'grid grid-cols-2 gap-2' : 'flex flex-col gap-2'}>
         {exercise.options.map((opt, i) => {
           const isAnswer = i === exercise.answer
           const isPicked = i === picked

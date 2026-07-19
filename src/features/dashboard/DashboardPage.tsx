@@ -21,7 +21,7 @@ import {
   IconChevronRight,
   IconSparkles,
 } from '../../components/icons'
-import { TeacherBlock } from '../teacher/TeacherBlock'
+import { AssignmentsNotice, TeacherBlock } from '../teacher/TeacherBlock'
 import type { ActivityType, Profile } from '../../types'
 
 type Tone = 'sky' | 'violet' | 'rose' | 'amber' | 'emerald' | 'cyan'
@@ -137,6 +137,9 @@ export function DashboardPage() {
           <p className="max-w-[52%] text-right text-sm text-white/90">{streakHint}</p>
         </div>
       </div>
+
+      {/* Новые задания от преподавателя — заметно, сразу под стриком */}
+      <AssignmentsNotice placement="top" />
 
       {/* Тест уровня — показываем в ES-режиме, пока уровень не определён */}
       {lang === 'es' && !esLevel && (
