@@ -336,3 +336,76 @@ begin
   return t_name;
 end;
 $$;
+
+-- ============================================================================
+-- МАТЕРИАЛЫ ПРЕПОДАВАТЕЛЯ: сгенерированные тексты с упражнениями.
+-- Блок idempotent — можно запускать повторно.
+-- ============================================================================
+
+create table if not exists public.materials (
+  id uuid primary key default gen_random_uuid(),
+  teacher_id uuid not null references public.profiles(id) on delete cascade,
+  lang text not null check (lang in ('en','es')) default 'en',
+  level text not null check (level in ('A1','A2','B1','B2','C1','C2')),
+  topic text not null,
+  format text not null,
+  length_range text not null,
+  title text,
+  body text not null,
+  exercises jsonb not null,
+  plan jsonb,
+  created_at timestamptz default now()
+);
+
+create table if not exists public.material_assignments (
+  id uuid primary key default gen_random_uuid(),
+  material_id uuid not null references public.materials(id) on delete cascade,
+  student_id uuid not null references public.profiles(id) on delete cascade,
+  status text not null check (status in ('assigned','submitted','reviewed')) default 'assigned',
+  answers jsonb,
+  auto_score int,
+  auto_total int,
+  ai_review jsonb,
+  teacher_review jsonb,
+  submitted_at timestamptz,
+  reviewed_at timestamptz,
+  created_at timestamptz default now(),
+  unique (material_id, student_id)
+);
+
+alter table public.materials enable row level security;
+alter table public.material_assignments enable row level security;
+
+-- Хелперы security definer (обход взаимных ссылок политик, как у колод)
+create or replace function public.material_owned_by(m_id uuid, u_id uuid)
+returns boolean language sql security definer set search_path = public as
+$$ select exists (select 1 from materials where id = m_id and teacher_id = u_id) $$;
+
+create or replace function public.material_assigned_to(m_id uuid, s_id uuid)
+returns boolean language sql security definer set search_path = public as
+$$ select exists (select 1 from material_assignments
+                  where material_id = m_id and student_id = s_id) $$;
+
+-- materials: преподаватель распоряжается своими; ученице назначенные — на чтение
+drop policy if exists "own materials" on public.materials;
+create policy "own materials" on public.materials
+  for all using (auth.uid() = teacher_id) with check (auth.uid() = teacher_id);
+drop policy if exists "assigned materials readable" on public.materials;
+create policy "assigned materials readable" on public.materials
+  for select using (public.material_assigned_to(id, auth.uid()));
+
+-- material_assignments: преподаватель управляет назначениями своих материалов
+-- (и назначает только СВОИМ ученицам); ученица видит и обновляет свои
+drop policy if exists "teacher manages material assignments" on public.material_assignments;
+create policy "teacher manages material assignments" on public.material_assignments
+  for all using (public.material_owned_by(material_id, auth.uid()))
+  with check (
+    public.material_owned_by(material_id, auth.uid())
+    and public.is_student_of(auth.uid(), student_id)
+  );
+drop policy if exists "student sees own material assignments" on public.material_assignments;
+create policy "student sees own material assignments" on public.material_assignments
+  for select using (auth.uid() = student_id);
+drop policy if exists "student updates own material assignments" on public.material_assignments;
+create policy "student updates own material assignments" on public.material_assignments
+  for update using (auth.uid() = student_id) with check (auth.uid() = student_id);

@@ -192,6 +192,16 @@ deck_assignments(id uuid pk, deck_id uuid -> decks, student_id uuid -> profiles,
 -- привязанных учениц. Политики decks<->deck_assignments используют функции
 -- security definer (deck_assigned_to, deck_owned_by, is_student_of) — иначе
 -- взаимные ссылки политик дают «infinite recursion detected in policy».
+
+-- Материалы преподавателя (генератор текстов с упражнениями, фича Materials)
+materials(id uuid pk, teacher_id -> profiles, lang 'en'|'es', level A1..C2,
+  topic, format, length_range, title, body, exercises jsonb, plan jsonb, created_at)
+material_assignments(id uuid pk, material_id -> materials, student_id -> profiles,
+  status 'assigned'|'submitted'|'reviewed', answers jsonb, auto_score, auto_total,
+  ai_review jsonb, teacher_review jsonb, submitted_at, reviewed_at,
+  unique(material_id, student_id))
+-- RLS по образцу колод: material_owned_by / material_assigned_to (security definer);
+-- ученица может читать назначенные материалы и обновлять свои assignments.
 ```
 
 ## 6. Общие TypeScript-типы (`src/types/index.ts`)
@@ -258,6 +268,16 @@ getMyTeachers(): Promise<Profile[]>
 getMyStudents(): Promise<StudentInfo[]>         // профиль + стрик + неделя + назначенные колоды
 getMyDecks(): Promise<Deck[]>
 assignDeck(deckId, studentId) / unassignDeck(deckId, studentId): Promise<void>
+
+// lib/materials.ts — генератор материалов (двухшаговый: план → материал)
+generateMaterialPlan(req: MaterialRequest, feedback?): Promise<MaterialPlan>
+generateMaterialContent(req, plan, feedback?): Promise<MaterialContent>
+saveMaterial(req, plan, content): Promise<Material>
+listMyMaterials() / deleteMaterial(id)
+assignMaterial(materialId, studentId) / unassignMaterial(...)
+listMaterialAssignments(materialId): Promise<MaterialAssignment[]>   // преподаватель
+getMyAssignments(): Promise<(MaterialAssignment & {material})[]>     // ученица
+submitAssignment(id, answers, autoScore, autoTotal): Promise<void>   // сдача работы
 ```
 
 ## 8. Дизайн (минимум для согласованности)

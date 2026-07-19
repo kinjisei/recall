@@ -12,6 +12,7 @@ import {
   unassignDeck,
   type StudentInfo,
 } from '../../lib/teacher'
+import { MaterialsSection } from './MaterialsSection'
 import type { Deck, Profile } from '../../types'
 
 export function TeacherPage() {
@@ -57,7 +58,10 @@ export function TeacherPage() {
   return <TeacherDashboard />
 }
 
+type TeacherTab = 'students' | 'materials'
+
 function TeacherDashboard() {
+  const [tab, setTab] = useState<TeacherTab>('students')
   const [code, setCode] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [students, setStudents] = useState<StudentInfo[]>([])
@@ -103,46 +107,75 @@ function TeacherDashboard() {
   return (
     <div className="flex flex-col gap-4">
       <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">👩‍🏫 Мои ученицы</h1>
-        <Button variant="ghost" className="px-3 py-1 text-sm" onClick={load}>
-          Обновить
-        </Button>
+        <h1 className="text-2xl font-bold">👩‍🏫 Преподаватель</h1>
+        {tab === 'students' && (
+          <Button variant="ghost" className="px-3 py-1 text-sm" onClick={load}>
+            Обновить
+          </Button>
+        )}
       </header>
 
-      <Card>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Код-приглашение — ученица вводит его у себя на Главной:
-        </p>
-        <div className="mt-2 flex items-center gap-3">
-          <span className="rounded-xl bg-slate-100 px-4 py-2 font-mono text-2xl font-bold tracking-widest dark:bg-slate-700">
-            {code ?? '……'}
-          </span>
-          <Button variant="secondary" className="px-3 py-2 text-sm" onClick={copyCode}>
-            {copied ? 'Скопирован ✓' : 'Скопировать'}
-          </Button>
-        </div>
-      </Card>
+      <div className="flex gap-2">
+        {(
+          [
+            ['students', '👥 Ученицы'],
+            ['materials', '📝 Материалы'],
+          ] as [TeacherTab, string][]
+        ).map(([id, label]) => (
+          <button
+            key={id}
+            onClick={() => setTab(id)}
+            className={`rounded-lg px-4 py-2 text-sm font-semibold ${
+              tab === id
+                ? 'bg-sky-600 text-white'
+                : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
 
-      {error && (
-        <Card className="border-red-300 bg-red-50 dark:bg-red-950/30">
-          <p className="text-sm text-red-600 dark:text-red-300">{error}</p>
-        </Card>
-      )}
-
-      {loading ? (
-        <p className="text-slate-500">Загрузка…</p>
-      ) : students.length === 0 ? (
-        <Card className="text-center">
-          <p className="text-4xl">🎓</p>
-          <p className="mt-2 font-semibold">Пока ни одной ученицы</p>
-          <p className="mt-1 text-sm text-slate-500">
-            Отправь код-приглашение — после ввода кода ученица появится здесь.
-          </p>
-        </Card>
+      {tab === 'materials' ? (
+        <MaterialsSection students={students} />
       ) : (
-        students.map((s) => (
-          <StudentCard key={s.profile.id} student={s} decks={decks} onChanged={load} />
-        ))
+        <>
+          <Card>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Код-приглашение — ученица вводит его у себя на Главной:
+            </p>
+            <div className="mt-2 flex items-center gap-3">
+              <span className="rounded-xl bg-slate-100 px-4 py-2 font-mono text-2xl font-bold tracking-widest dark:bg-slate-700">
+                {code ?? '……'}
+              </span>
+              <Button variant="secondary" className="px-3 py-2 text-sm" onClick={copyCode}>
+                {copied ? 'Скопирован ✓' : 'Скопировать'}
+              </Button>
+            </div>
+          </Card>
+
+          {error && (
+            <Card className="border-red-300 bg-red-50 dark:bg-red-950/30">
+              <p className="text-sm text-red-600 dark:text-red-300">{error}</p>
+            </Card>
+          )}
+
+          {loading ? (
+            <p className="text-slate-500">Загрузка…</p>
+          ) : students.length === 0 ? (
+            <Card className="text-center">
+              <p className="text-4xl">🎓</p>
+              <p className="mt-2 font-semibold">Пока ни одной ученицы</p>
+              <p className="mt-1 text-sm text-slate-500">
+                Отправь код-приглашение — после ввода кода ученица появится здесь.
+              </p>
+            </Card>
+          ) : (
+            students.map((s) => (
+              <StudentCard key={s.profile.id} student={s} decks={decks} onChanged={load} />
+            ))
+          )}
+        </>
       )}
     </div>
   )

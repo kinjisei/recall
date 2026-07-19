@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { joinTeacher, getMyTeachers } from '../../lib/teacher'
+import { getMyAssignments } from '../../lib/materials'
 import type { Profile } from '../../types'
 
 /**
@@ -27,7 +28,52 @@ export function TeacherBlock({ profile }: { profile: Profile | null }) {
       </Link>
     )
   }
-  return <JoinTeacherBlock />
+  return (
+    <>
+      <AssignmentsCard />
+      <JoinTeacherBlock />
+    </>
+  )
+}
+
+/** Карточка «Задания» — видна ученице, если ей что-то назначали. */
+function AssignmentsCard() {
+  const [counts, setCounts] = useState<{ total: number; pending: number } | null>(null)
+
+  useEffect(() => {
+    getMyAssignments()
+      .then((rows) =>
+        setCounts({
+          total: rows.length,
+          pending: rows.filter((r) => r.status === 'assigned').length,
+        }),
+      )
+      .catch(() => setCounts({ total: 0, pending: 0 }))
+  }, [])
+
+  if (!counts || counts.total === 0) return null
+
+  return (
+    <Link to="/assignments">
+      <Card className="flex items-center justify-between transition-transform active:scale-[0.99]">
+        <div>
+          <p className="font-semibold">📝 Задания от преподавателя</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            {counts.pending > 0
+              ? `Новых: ${counts.pending}`
+              : 'Все задания выполнены ✓'}
+          </p>
+        </div>
+        {counts.pending > 0 ? (
+          <span className="rounded-full bg-amber-100 px-2.5 py-1 text-sm font-bold text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">
+            {counts.pending}
+          </span>
+        ) : (
+          <span className="text-slate-400">→</span>
+        )}
+      </Card>
+    </Link>
+  )
 }
 
 function JoinTeacherBlock() {

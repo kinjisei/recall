@@ -38,7 +38,7 @@ export async function callGemini(
     contents,
     generationConfig: {
       temperature: 0.7,
-      maxOutputTokens: 2048,
+      maxOutputTokens: 4096,
       // у 2.5-моделей отключаем «размышления»: быстрее и экономит бесплатные токены
       ...(model.startsWith('gemini-2.5')
         ? { thinkingConfig: { thinkingBudget: 0 } }
