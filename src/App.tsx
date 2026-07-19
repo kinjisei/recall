@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { LanguageProvider } from './context/LanguageContext'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { Layout } from './components/Layout'
 import { LoginPage } from './features/auth/LoginPage'
@@ -44,7 +45,8 @@ function PageFallback() {
 
 export default function App() {
   return (
-    <AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
       <LanguageProvider>
         <BrowserRouter>
           <Routes>
@@ -134,6 +136,7 @@ export default function App() {
           </Routes>
         </BrowserRouter>
       </LanguageProvider>
-    </AuthProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   )
 }

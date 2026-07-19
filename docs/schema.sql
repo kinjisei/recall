@@ -638,3 +638,130 @@ create policy "teacher reads word checks" on public.word_checks
   for select using (
     auth.uid() = teacher_id and public.is_student_of(auth.uid(), student_id)
   );
+
+-- ============================================================================
+-- ЗАЩИТА ОТ ПОДДЕЛКИ, второй проход (2026-07-20, по итогам второго ревью).
+-- Блок idempotent — можно запускать повторно.
+-- ============================================================================
+
+-- ---- profiles: закрыть эскалацию роли через пересоздание строки ----
+-- RLS-политика "own profile" (for all) разрешала INSERT/DELETE своей строки, а
+-- стандартные гранты Supabase давали authenticated эти права. В связке это
+-- позволяло: DELETE своего профиля → INSERT новой строки с role='teacher' и
+-- любым invite_code. Профиль и так создаётся триггером handle_new_user
+-- (security definer) и удаляется каскадом от auth.users — клиенту INSERT/DELETE
+-- на profiles не нужны.
+revoke insert, delete on public.profiles from authenticated;
+
+-- ---- content_items: убрать глобальную запись ----
+-- Политика "write content" позволяла любому вошедшему вставлять строки в общую
+-- таблицу, которую читают все (потенциальный спам/вредоносный контент). Таблица
+-- в приложении пока не используется — снимаем право записи до появления фичи.
+revoke insert on public.content_items from authenticated;
+
+-- ---- assign_word_check: проверять принадлежность карточек ученице ----
+-- Раньше учитель мог назначить перепроверку по ЛЮБЫМ card_id (в т.ч. чужим).
+-- Теперь требуем, чтобы все карточки принадлежали колодам именно этой ученицы.
+create or replace function public.assign_word_check(p_student_id uuid, p_card_ids jsonb)
+returns void language plpgsql security definer set search_path = public as $fn$
+begin
+  if not public.is_student_of(auth.uid(), p_student_id) then
+    raise exception 'Это не ваша ученица.';
+  end if;
+  if exists (
+    select 1 from jsonb_array_elements_text(p_card_ids) cid
+    where not exists (
+      select 1 from cards c join decks d on d.id = c.deck_id
+      where c.id = cid::uuid and d.owner_id = p_student_id
+    )
+  ) then
+    raise exception 'Среди слов есть карточки, не принадлежащие этой ученице.';
+  end if;
+  insert into word_checks (teacher_id, student_id, card_ids)
+  values (auth.uid(), p_student_id, p_card_ids);
+end $fn$;
+
+-- ---- submit_material: пересчитывать авто-балл на сервере ----
+-- Клиент присылал auto_score/auto_total — их можно было подделать. Теперь балл
+-- считается на сервере из ответов ученицы и правильных ответов материала.
+-- (Это НЕ мешает «подглядыванию»: правильные ответы всё ещё уходят на клиент
+--  в exercises. Полностью закрыть — только не отдавать ответы и проверять на
+--  сервере; это отдельная бо́льшая переделка. Пока — защита от прямой подделки.)
+
+-- Нормализация ответа под клиентскую (lower + trim + снятие диакритики en/es +
+-- схлопывание пробелов). Без расширения unaccent — явным translate по буквам.
+create or replace function public.norm_answer(s text)
+returns text language sql stable as $fn$
+  select regexp_replace(
+    lower(translate(trim(coalesce(s, '')),
+      'áàäâãéèëêíìïîóòöôõúùüûñçÁÀÄÂÃÉÈËÊÍÌÏÎÓÒÖÔÕÚÙÜÛÑÇ',
+      'aaaaaeeeeiiiiooooouuuuncAAAAAEEEEIIIIOOOOOUUUUNC')),
+    '\s+', ' ', 'g')
+$fn$;
+
+create or replace function public.submit_material(
+  p_id uuid, p_answers jsonb, p_auto_score int, p_auto_total int
+) returns void language plpgsql security definer set search_path = public as $fn$
+declare
+  m_exercises jsonb;
+  ex jsonb;
+  ans jsonb;
+  idx int := 0;
+  score int := 0;
+  total int := 0;
+  given_text text;
+  correct_text text;
+  ex_type text;
+begin
+  -- упражнения берём из материала; клиентские p_auto_score/p_auto_total игнорируем
+  select mat.exercises into m_exercises
+    from material_assignments ma
+    join materials mat on mat.id = ma.material_id
+   where ma.id = p_id and ma.student_id = auth.uid() and ma.status = 'assigned';
+  if m_exercises is null then
+    raise exception 'Работа не найдена или уже сдана.';
+  end if;
+
+  for ex in select value from jsonb_array_elements(m_exercises) loop
+    total := total + 1;
+    ex_type := ex->>'type';
+    select value into ans
+      from jsonb_array_elements(coalesce(p_answers, '[]'::jsonb))
+     where (value->>'index')::int = idx
+     limit 1;
+    given_text := ans->>'given';
+    if ex_type = 'mcq' then
+      correct_text := ex->'options'->>((ex->>'answer')::int);
+    elsif ex_type = 'fill' then
+      correct_text := ex->>'answer';
+    else
+      correct_text := null;
+    end if;
+    if given_text is not null and correct_text is not null
+       and public.norm_answer(given_text) = public.norm_answer(correct_text) then
+      score := score + 1;
+    end if;
+    idx := idx + 1;
+  end loop;
+
+  update material_assignments
+     set answers = p_answers, auto_score = score, auto_total = total,
+         status = 'submitted', submitted_at = now()
+   where id = p_id and student_id = auth.uid() and status = 'assigned';
+  if not found then raise exception 'Работа не найдена или уже сдана.'; end if;
+end $fn$;
+
+-- ---- review_states: расписание только для ДОСТУПНОЙ карточки ----
+-- Раньше with check проверял только user_id — можно было создать review_state
+-- для любого чужого card_id (мусор/ломка инварианта). Теперь карточка обязана
+-- быть из своей колоды или назначенной преподавателем.
+drop policy if exists "own review states" on public.review_states;
+create policy "own review states" on public.review_states
+  for all using (auth.uid() = user_id)
+  with check (
+    auth.uid() = user_id and exists (
+      select 1 from public.cards c join public.decks d on d.id = c.deck_id
+      where c.id = review_states.card_id
+        and (d.owner_id = auth.uid() or public.deck_assigned_to(d.id, auth.uid()))
+    )
+  );

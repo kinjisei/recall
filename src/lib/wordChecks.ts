@@ -143,6 +143,10 @@ export async function submitWordCheck(
     supabase.from('cards').select('*').in('id', ids),
     supabase.from('review_states').select('*').eq('user_id', userId).in('card_id', ids),
   ])
+  // если карточки/расписания не выбрались — не молчим: иначе слово не вернётся
+  // в очередь, а перепроверка уже помечена завершённой
+  if (cardsRes.error) throw cardsRes.error
+  if (statesRes.error) throw statesRes.error
   const cards = (cardsRes.data ?? []) as Card[]
   const states = new Map(
     ((statesRes.data ?? []) as ReviewState[]).map((s) => [s.card_id, s]),

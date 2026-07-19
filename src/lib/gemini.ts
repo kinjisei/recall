@@ -4,6 +4,7 @@
 // Контракт: docs/ARCHITECTURE.md §7 — chat(messages, opts).
 // ============================================================================
 import type { ChatTurn } from '../types'
+import { supabase } from './supabase'
 
 /**
  * Отправляет переписку в /api/gemini и возвращает текст ответа AI.
@@ -14,11 +15,19 @@ export async function chat(
   messages: ChatTurn[],
   opts?: { system?: string; light?: boolean },
 ): Promise<string> {
+  // токен сессии — прокси пускает только вошедших (защита квоты от абьюза)
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+
   let res: Response
   try {
     res = await fetch('/api/gemini', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}),
+      },
       body: JSON.stringify({
         messages,
         system: opts?.system,

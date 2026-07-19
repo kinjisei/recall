@@ -231,8 +231,9 @@ addCardsBulk(deckId: string, cards: { front; back?; example? }[]): Promise<numbe
 interface DueCard { card: Card; state: ReviewState | null }   // state=null — новая карточка
 getDueCards(limit?: number, lang?: AppLang): Promise<DueCard[]>
   // новые + просроченные; lang — только карточки колод этого языка
-reviewCard(card: Card, existing: ReviewState | null, rating: Rating): Promise<void>
-  // записывает оценку в review_states (upsert) и вычисляет следующий показ по FSRS
+reviewCard(card: Card, existing: ReviewState | null, rating: Rating): Promise<ReviewState>
+  // записывает оценку в review_states (upsert), вычисляет следующий показ по FSRS
+  // и ВОЗВРАЩАЕТ новое расписание (нужно колоде для повтора «не знаю» в сессии)
 
 // lib/dictionary.ts  (Worker 2) — только английский
 lookup(word: string): Promise<{ word: string; definition?: string; example?: string;
@@ -278,7 +279,29 @@ assignMaterial(materialId, studentId) / unassignMaterial(...)
 listMaterialAssignments(materialId): Promise<MaterialAssignment[]>   // преподаватель
 getMyAssignments(): Promise<(MaterialAssignment & {material})[]>     // ученица
 submitAssignment(id, answers, autoScore, autoTotal): Promise<void>   // сдача работы
+// проверка работ (фаза B): generateAiReview, saveAiReview, finishReview,
+// reassignAssignment, countSubmittedWorks
+
+// lib/wordChecks.ts — перепроверка слов учителем
+getStudentWords(studentId): Promise<StudentWord[]>   // слова ученицы + статус FSRS
+assignWordCheck(studentId, cardIds) / getWordChecks(studentId)
+getMyPendingWordChecks(): Promise<{check, cards}[]>  // у ученицы
+submitWordCheck(check, results): Promise<void>       // неверные → again в колоду
+
+// lib/contextDict.ts — контекстный перевод слова через Gemini (lite-модель)
+lookupInContext(word, sentence, lang): Promise<{ base; translation; note }>
 ```
+
+> Безопасность (2026-07-20): RLS-строки защищают от ЧТЕНИЯ чужого, но не от
+> записи в свою строку любых колонок. Поэтому все чувствительные записи (оценки,
+> вердикты, роль, invite_code) идут через security-definer RPC (см. блоки
+> «ЗАЩИТА ОТ ПОДДЕЛКИ» в schema.sql), а прямая запись из клиента запрещена
+> (revoke). Балл авто-проверки материала пересчитывается на сервере
+> (submit_material). /api/gemini требует Supabase-JWT (иначе публичный прокси
+> жёг бы квоту). Известный остаток: правильные ответы упражнений всё ещё уходят
+> на клиент (проверка на клиенте) — «подглядывание» через DevTools возможно,
+> но балл серверный, а учитель видит ответы; полностью закрыть — не отдавать
+> answer и проверять на сервере (бо́льшая переделка).
 
 ## 8. Дизайн (минимум для согласованности)
 - Мобайл-фёрст. Нижняя навигация: Главная / Колода / Ввод / Речь / Диалог.

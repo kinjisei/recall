@@ -75,7 +75,10 @@ export async function callGemini(
         'Дневной лимит бесплатных запросов Gemini исчерпан. Попробуй позже.',
       )
     }
-    throw new Error(`Gemini ответил ошибкой ${res.status}. ${detail}`.trim())
+    // детали Google пишем в лог сервера (Vercel), клиенту — обобщённый текст,
+    // чтобы не раскрывать внутренности провайдера
+    if (detail) console.error(`Gemini error ${res.status}: ${detail}`)
+    throw new Error(`Сервис AI временно недоступен (${res.status}). Попробуй позже.`)
   }
 
   const data = (await res.json()) as GeminiResponse

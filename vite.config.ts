@@ -74,6 +74,8 @@ export default defineConfig(({ mode }) => {
       geminiDevEndpoint(env.GEMINI_API_KEY, env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL),
       VitePWA({
         registerType: 'autoUpdate',
+        // не отдавать /api/* из офлайн-кэша SPA (иначе прокси ломается офлайн)
+        workbox: { navigateFallbackDenylist: [/^\/api\//] },
         includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
         manifest: {
           name: 'Recall — английский',
