@@ -224,8 +224,9 @@ function AssignmentRunner({
   const m = row.material
   const [stage, setStage] = useState<'read' | 'exercises' | 'result'>('read')
   const [index, setIndex] = useState(0)
-  const [answers, setAnswers] = useState<AssignmentAnswer[]>([])
-  const [correct, setCorrect] = useState(0)
+  // ответы по индексу упражнения (а не push) — повторный ответ на то же
+  // упражнение перезаписывает запись, не задваивая балл и не плодя дубли.
+  const [answerMap, setAnswerMap] = useState<Record<number, AssignmentAnswer>>({})
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
@@ -233,19 +234,17 @@ function AssignmentRunner({
   const total = m.exercises.length
   const current = m.exercises[index]
 
-  // ответ на текущее упражнение (ok приходит из onAnswered, given — из onGiven)
-  const pendingRef = useState<{ ok: boolean; given: string }>({ ok: false, given: '' })[0]
+  const answers = Object.values(answerMap)
+  const correct = answers.filter((a) => a.auto_ok).length
+
+  // ok приходит из onAnswered, given — из onGiven; собираем в одну запись по index
+  const pendingRef = useState<{ ok: boolean }>({ ok: false })[0]
 
   const onAnswered = (ok: boolean) => {
     pendingRef.ok = ok
-    if (ok) setCorrect((c) => c + 1)
   }
   const onGiven = (given: string) => {
-    pendingRef.given = given
-    setAnswers((arr) => [
-      ...arr,
-      { index, given, auto_ok: pendingRef.ok },
-    ])
+    setAnswerMap((m) => ({ ...m, [index]: { index, given, auto_ok: pendingRef.ok } }))
   }
 
   const next = () => {

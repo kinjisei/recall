@@ -4,7 +4,7 @@
 // карточку в конец текущей очереди. Плюс перепроверка слов от преподавателя
 // (плашка → печатание слов по переводу) и обучающая подсказка для новичка.
 // ============================================================================
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { addCard } from '../../lib/cards'
@@ -35,6 +35,8 @@ export function FlashcardsPage() {
     check: WordCheck
     cards: CardType[]
   } | null>(null)
+  const swiping = useRef(false)
+  const handledKey = useRef<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -75,20 +77,34 @@ export function FlashcardsPage() {
   }
 
   const onSwipe = async (dir: 'left' | 'right') => {
-    if (!current) return
+    // guard: свайп-анимация держит кнопки видимыми ~220мс; повторный клик/свайп
+    // или отложенный таймаут анимации ставил двойную оценку и пропускал карточку.
+    // swiping — от параллельных вызовов; handledKey — от повторной обработки
+    // той же позиции (если запрос завершился быстрее анимации).
+    const key = `${current?.card.id}-${index}`
+    if (!current || swiping.current || handledKey.current === key) return
+    swiping.current = true
+    handledKey.current = key
+    const card = current.card
+    const state = current.state
     const rating = dir === 'right' ? 'good' : 'again'
-    setFlipped(false)
-    setIndex((i) => i + 1)
-    setReviewedCount((c) => c + 1)
+    setError(null)
     try {
-      const newState = await reviewCard(current.card, current.state, rating)
+      // сохраняем ДО сдвига очереди — при ошибке карточка не потеряется
+      const newState = await reviewCard(card, state, rating)
       void logActivity('flashcards')
+      setFlipped(false)
+      setIndex((i) => i + 1)
+      setReviewedCount((c) => c + 1)
       if (rating === 'again') {
         // «не знаю» — карточка вернётся в конец текущей сессии
-        setQueue((q) => [...q, { card: current.card, state: newState }])
+        setQueue((q) => [...q, { card, state: newState }])
       }
     } catch (e) {
+      // карточка остаётся на месте — оценка не сохранилась, показываем ошибку
       setError(e instanceof Error ? e.message : 'Не удалось сохранить оценку')
+    } finally {
+      swiping.current = false
     }
   }
 

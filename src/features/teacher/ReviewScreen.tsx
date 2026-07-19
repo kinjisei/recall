@@ -3,7 +3,7 @@
 // преподаватель по каждому упражнению соглашается или ставит свой вердикт
 // с комментарием, затем завершает проверку (статус reviewed).
 // ============================================================================
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import {
@@ -45,10 +45,13 @@ export function ReviewScreen({
   const [reassignNote, setReassignNote] = useState('')
   const [reassignBusy, setReassignBusy] = useState(false)
 
-  // Первичный AI-разбор, если его ещё нет
-  useEffect(() => {
-    if (review !== null || aiBusy) return
+  // Первичный AI-разбор (один раз). requestedRef защищает от двойного вызова
+  // Gemini в StrictMode/dev; runAiReview можно вызвать повторно как ретрай.
+  const requestedRef = useRef(false)
+  const runAiReview = () => {
+    if (aiBusy) return
     setAiBusy(true)
+    setError(null)
     generateAiReview(material, assignment)
       .then((r) => {
         setReview(r)
@@ -56,6 +59,12 @@ export function ReviewScreen({
       })
       .catch((e) => setError(e instanceof Error ? e.message : 'Ошибка AI-разбора'))
       .finally(() => setAiBusy(false))
+  }
+
+  useEffect(() => {
+    if (review !== null || requestedRef.current) return
+    requestedRef.current = true
+    runAiReview()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -149,7 +158,16 @@ export function ReviewScreen({
           <p className="text-sm text-slate-500">🤖 AI разбирает работу…</p>
         </Card>
       )}
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && (
+        <Card className="border-red-300 bg-red-50 dark:bg-red-950/30">
+          <p className="text-sm text-red-600 dark:text-red-300">{error}</p>
+          {!review && (
+            <Button variant="secondary" className="mt-2 px-3 py-1.5 text-sm" onClick={runAiReview}>
+              Повторить разбор
+            </Button>
+          )}
+        </Card>
+      )}
 
       {review && (
         <>

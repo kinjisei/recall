@@ -91,7 +91,10 @@ export function WordSheet({
   const [error, setError] = useState<string | null>(null)
 
   // Контекстный перевод (Gemini) и — для английского — транскрипция/аудио.
+  // alive-флаг: при быстрой смене слова медленный ответ по прошлому слову
+  // не должен перезаписать данные актуального.
   useEffect(() => {
+    let alive = true
     setCtx(null)
     setCtxError(false)
     setAdded(false)
@@ -100,18 +103,22 @@ export function WordSheet({
     setAudioUrl(undefined)
 
     lookupInContext(word, sentence, lang)
-      .then(setCtx)
-      .catch(() => setCtxError(true))
+      .then((r) => alive && setCtx(r))
+      .catch(() => alive && setCtxError(true))
 
     if (lang === 'en') {
       lookup(word)
         .then((r) => {
-          if (r) {
+          if (alive && r) {
             setIpa(r.ipa)
             setAudioUrl(r.audio_url)
           }
         })
         .catch(() => {})
+    }
+
+    return () => {
+      alive = false
     }
   }, [word, sentence, lang])
 

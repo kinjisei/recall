@@ -126,26 +126,32 @@ export async function submitWordCheck(
 ): Promise<void> {
   const userId = await requireUserId()
 
-  // неверные слова → again (вернутся в колоду; FSRS сожмёт интервал)
-  const wrong = results.filter((r) => !r.ok)
-  if (wrong.length > 0) {
-    const ids = wrong.map((r) => r.card_id)
-    const [cardsRes, statesRes] = await Promise.all([
-      supabase.from('cards').select('*').in('id', ids),
-      supabase.from('review_states').select('*').eq('user_id', userId).in('card_id', ids),
-    ])
-    const cards = (cardsRes.data ?? []) as Card[]
-    const states = new Map(
-      ((statesRes.data ?? []) as ReviewState[]).map((s) => [s.card_id, s]),
-    )
-    for (const card of cards) {
-      await reviewCard(card, states.get(card.id) ?? null, 'again')
-    }
-  }
-
-  const { error } = await supabase
+  // Сначала АТОМАРНО помечаем перепроверку завершённой — с условием, что она
+  // ещё не завершена. Если строк не затронуто (0), значит кто-то/ретрай уже
+  // завершил её — выходим, НЕ начисляя again повторно (иначе двойной штраф FSRS).
+  const { data: marked, error } = await supabase
     .from('word_checks')
     .update({ results, completed_at: new Date().toISOString() })
     .eq('id', check.id)
+    .is('completed_at', null)
+    .select('id')
   if (error) throw error
+  if (!marked || marked.length === 0) return // уже завершена — идемпотентно
+
+  // неверные слова → again (вернутся в колоду; FSRS сожмёт интервал)
+  const wrong = results.filter((r) => !r.ok)
+  if (wrong.length === 0) return
+
+  const ids = wrong.map((r) => r.card_id)
+  const [cardsRes, statesRes] = await Promise.all([
+    supabase.from('cards').select('*').in('id', ids),
+    supabase.from('review_states').select('*').eq('user_id', userId).in('card_id', ids),
+  ])
+  const cards = (cardsRes.data ?? []) as Card[]
+  const states = new Map(
+    ((statesRes.data ?? []) as ReviewState[]).map((s) => [s.card_id, s]),
+  )
+  for (const card of cards) {
+    await reviewCard(card, states.get(card.id) ?? null, 'again')
+  }
 }

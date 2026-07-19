@@ -42,7 +42,12 @@ export async function lookupInContext(
   const start = raw.indexOf('{')
   const end = raw.lastIndexOf('}')
   if (start === -1 || end <= start) throw new Error('Словарь AI вернул не-JSON')
-  const parsed = JSON.parse(raw.slice(start, end + 1)) as ContextLookup
+  let parsed: ContextLookup
+  try {
+    parsed = JSON.parse(raw.slice(start, end + 1)) as ContextLookup
+  } catch {
+    throw new Error('Словарь AI вернул повреждённый JSON')
+  }
   if (!parsed.translation) throw new Error('Пустой перевод')
 
   const result: ContextLookup = {
@@ -50,6 +55,8 @@ export async function lookupInContext(
     translation: parsed.translation,
     note: parsed.note ?? '',
   }
+  // ограничиваем кэш, чтобы память не росла бесконечно за долгую сессию
+  if (cache.size >= 300) cache.delete(cache.keys().next().value as string)
   cache.set(key, result)
   return result
 }
