@@ -47,35 +47,13 @@ function streakFromDays(days: Set<string>): number {
 }
 
 /**
- * Код-приглашение текущего преподавателя. Если кода ещё нет — генерирует
- * (6 символов без похожих букв) и сохраняет в профиль.
+ * Код-приглашение текущего преподавателя (генерирует при первом вызове).
+ * Прямая запись invite_code в профиль запрещена RLS — только через RPC.
  */
 export async function getOrCreateInviteCode(): Promise<string> {
-  const userId = await requireUserId()
-
-  const { data: me, error } = await supabase
-    .from('profiles')
-    .select('invite_code')
-    .eq('id', userId)
-    .single()
-  if (error) throw error
-  if (me?.invite_code) return me.invite_code as string
-
-  const alphabet = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
-  for (let attempt = 0; attempt < 5; attempt++) {
-    const code = Array.from(
-      { length: 6 },
-      () => alphabet[Math.floor(Math.random() * alphabet.length)],
-    ).join('')
-    const { error: upErr } = await supabase
-      .from('profiles')
-      .update({ invite_code: code })
-      .eq('id', userId)
-    if (!upErr) return code
-    // 23505 = unique violation: код занят, пробуем другой
-    if (!upErr.message.includes('duplicate')) throw upErr
-  }
-  throw new Error('Не удалось сгенерировать код. Попробуй ещё раз.')
+  const { data, error } = await supabase.rpc('ensure_invite_code')
+  if (error) throw new Error(error.message)
+  return data as string
 }
 
 /** Ученица вводит код → привязка. Возвращает имя преподавателя. */

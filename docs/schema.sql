@@ -458,3 +458,183 @@ create policy "teacher reads student cards" on public.cards
 drop policy if exists "teacher reads student review states" on public.review_states;
 create policy "teacher reads student review states" on public.review_states
   for select using (public.is_student_of(auth.uid(), user_id));
+
+-- ============================================================================
+-- ЗАЩИТА ОТ ПОДДЕЛКИ (2026-07-20, по итогам ревью безопасности).
+-- Прямая запись оценок/вердиктов/роли из клиента запрещена; всё — через
+-- security-definer функции, которые проверяют права. RLS-строки защищают ОТ
+-- чтения чужого, но НЕ от записи в свою строку любых колонок — поэтому оценки
+-- (teacher_review, status, results) и роль пишутся только этими функциями.
+-- Блок idempotent.
+-- ============================================================================
+
+-- ---- profiles: запрет менять role и invite_code напрямую ----
+-- (роль выдаётся администратором через SQL Editor = роль postgres, обходит grant;
+--  invite_code — через функцию ensure_invite_code)
+revoke update on public.profiles from authenticated;
+grant update (display_name, level, native_lang) on public.profiles to authenticated;
+
+-- Код-приглашение: генерирует и возвращает (только для преподавателя)
+create or replace function public.ensure_invite_code()
+returns text language plpgsql security definer set search_path = public as $fn$
+declare
+  existing text;
+  new_code text;
+  alphabet text := 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  i int;
+  attempt int;
+begin
+  select invite_code into existing from profiles where id = auth.uid() and role = 'teacher';
+  if existing is not null then return existing; end if;
+  if not exists (select 1 from profiles where id = auth.uid() and role = 'teacher') then
+    raise exception 'Код-приглашение доступен только преподавателю.';
+  end if;
+  for attempt in 1..6 loop
+    new_code := '';
+    for i in 1..6 loop
+      new_code := new_code || substr(alphabet, 1 + floor(random() * length(alphabet))::int, 1);
+    end loop;
+    begin
+      update profiles set invite_code = new_code where id = auth.uid();
+      return new_code;
+    exception when unique_violation then
+      -- код занят, пробуем ещё
+    end;
+  end loop;
+  raise exception 'Не удалось сгенерировать код, попробуйте ещё раз.';
+end $fn$;
+
+-- ---- material_assignments: запись только через функции ----
+revoke insert, update, delete on public.material_assignments from authenticated;
+
+-- Ученица сдаёт работу (только свою, только из статуса assigned)
+create or replace function public.submit_material(
+  p_id uuid, p_answers jsonb, p_auto_score int, p_auto_total int
+) returns void language plpgsql security definer set search_path = public as $fn$
+begin
+  update material_assignments
+     set answers = p_answers, auto_score = p_auto_score, auto_total = p_auto_total,
+         status = 'submitted', submitted_at = now()
+   where id = p_id and student_id = auth.uid() and status = 'assigned';
+  if not found then raise exception 'Работа не найдена или уже сдана.'; end if;
+end $fn$;
+
+-- Преподаватель назначает материал своей ученице
+create or replace function public.assign_material(p_material_id uuid, p_student_id uuid)
+returns void language plpgsql security definer set search_path = public as $fn$
+begin
+  if not public.material_owned_by(p_material_id, auth.uid())
+     or not public.is_student_of(auth.uid(), p_student_id) then
+    raise exception 'Нет прав назначить этот материал этой ученице.';
+  end if;
+  insert into material_assignments (material_id, student_id)
+  values (p_material_id, p_student_id)
+  on conflict (material_id, student_id) do nothing;
+end $fn$;
+
+create or replace function public.unassign_material(p_material_id uuid, p_student_id uuid)
+returns void language plpgsql security definer set search_path = public as $fn$
+begin
+  if not public.material_owned_by(p_material_id, auth.uid()) then
+    raise exception 'Нет прав.';
+  end if;
+  delete from material_assignments where material_id = p_material_id and student_id = p_student_id;
+end $fn$;
+
+-- Преподаватель сохраняет черновик AI-разбора
+create or replace function public.save_material_ai_review(p_id uuid, p_review jsonb)
+returns void language plpgsql security definer set search_path = public as $fn$
+begin
+  if not exists (
+    select 1 from material_assignments ma
+    where ma.id = p_id and public.material_owned_by(ma.material_id, auth.uid())
+  ) then raise exception 'Нет прав.'; end if;
+  update material_assignments set ai_review = p_review where id = p_id;
+end $fn$;
+
+-- Преподаватель завершает проверку
+create or replace function public.finish_material_review(p_id uuid, p_review jsonb)
+returns void language plpgsql security definer set search_path = public as $fn$
+begin
+  if not exists (
+    select 1 from material_assignments ma
+    where ma.id = p_id and public.material_owned_by(ma.material_id, auth.uid())
+      and public.is_student_of(auth.uid(), ma.student_id)
+  ) then raise exception 'Нет прав проверять эту работу.'; end if;
+  update material_assignments
+     set teacher_review = p_review, status = 'reviewed', reviewed_at = now()
+   where id = p_id;
+end $fn$;
+
+-- Преподаватель переназначает материал (текущая работа → в историю)
+create or replace function public.reassign_material(p_id uuid, p_note text)
+returns void language plpgsql security definer set search_path = public as $fn$
+declare snap jsonb;
+begin
+  if not exists (
+    select 1 from material_assignments ma
+    where ma.id = p_id and public.material_owned_by(ma.material_id, auth.uid())
+      and public.is_student_of(auth.uid(), ma.student_id)
+  ) then raise exception 'Нет прав.'; end if;
+  select jsonb_build_object(
+    'answers', answers, 'auto_score', auto_score, 'auto_total', auto_total,
+    'teacher_review', teacher_review, 'submitted_at', submitted_at,
+    'reviewed_at', reviewed_at, 'note', note
+  ) into snap from material_assignments where id = p_id;
+  update material_assignments
+     set attempts = coalesce(attempts, '[]'::jsonb) || jsonb_build_array(snap),
+         status = 'assigned', answers = null, auto_score = null, auto_total = null,
+         ai_review = null, teacher_review = null, submitted_at = null,
+         reviewed_at = null, note = nullif(trim(p_note), '')
+   where id = p_id;
+end $fn$;
+
+-- ---- word_checks: запись только через функции ----
+revoke insert, update, delete on public.word_checks from authenticated;
+
+create or replace function public.assign_word_check(p_student_id uuid, p_card_ids jsonb)
+returns void language plpgsql security definer set search_path = public as $fn$
+begin
+  if not public.is_student_of(auth.uid(), p_student_id) then
+    raise exception 'Это не ваша ученица.';
+  end if;
+  insert into word_checks (teacher_id, student_id, card_ids)
+  values (auth.uid(), p_student_id, p_card_ids);
+end $fn$;
+
+-- Ученица сдаёт перепроверку (идемпотентно: только если ещё не завершена)
+create or replace function public.submit_word_check(p_id uuid, p_results jsonb)
+returns boolean language plpgsql security definer set search_path = public as $fn$
+declare done boolean;
+begin
+  update word_checks set results = p_results, completed_at = now()
+   where id = p_id and student_id = auth.uid() and completed_at is null;
+  get diagnostics done = row_count;
+  return done > 0; -- true = засчитано сейчас (клиент начислит again неверным словам)
+end $fn$;
+
+-- ---- USING-фиксы: экс-преподаватель после отвязки теряет доступ ----
+drop policy if exists "teacher manages assignments" on public.deck_assignments;
+create policy "teacher manages assignments" on public.deck_assignments
+  for all using (
+    public.deck_owned_by(deck_id, auth.uid())
+    and public.is_student_of(auth.uid(), student_id)
+  ) with check (
+    public.deck_owned_by(deck_id, auth.uid())
+    and public.is_student_of(auth.uid(), student_id)
+  );
+
+drop policy if exists "teacher manages material assignments" on public.material_assignments;
+drop policy if exists "teacher reads material assignments" on public.material_assignments;
+create policy "teacher reads material assignments" on public.material_assignments
+  for select using (
+    public.material_owned_by(material_id, auth.uid())
+    and public.is_student_of(auth.uid(), student_id)
+  );
+
+drop policy if exists "teacher manages word checks" on public.word_checks;
+drop policy if exists "teacher reads word checks" on public.word_checks;
+create policy "teacher reads word checks" on public.word_checks
+  for select using (
+    auth.uid() = teacher_id and public.is_student_of(auth.uid(), student_id)
+  );

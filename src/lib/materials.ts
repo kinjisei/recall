@@ -243,19 +243,19 @@ export async function deleteMaterial(id: string): Promise<void> {
 }
 
 export async function assignMaterial(materialId: string, studentId: string): Promise<void> {
-  const { error } = await supabase
-    .from('material_assignments')
-    .insert({ material_id: materialId, student_id: studentId })
-  if (error && !error.message.includes('duplicate')) throw error
+  const { error } = await supabase.rpc('assign_material', {
+    p_material_id: materialId,
+    p_student_id: studentId,
+  })
+  if (error) throw new Error(error.message)
 }
 
 export async function unassignMaterial(materialId: string, studentId: string): Promise<void> {
-  const { error } = await supabase
-    .from('material_assignments')
-    .delete()
-    .eq('material_id', materialId)
-    .eq('student_id', studentId)
-  if (error) throw error
+  const { error } = await supabase.rpc('unassign_material', {
+    p_material_id: materialId,
+    p_student_id: studentId,
+  })
+  if (error) throw new Error(error.message)
 }
 
 /** Назначения одного материала (для карточки материала у преподавателя). */
@@ -286,24 +286,20 @@ export async function getMyAssignments(): Promise<
     .map(({ materials, ...a }) => ({ ...(a as MaterialAssignment), material: materials as Material }))
 }
 
-/** Ученица сдаёт работу: ответы + авто-балл, статус submitted. */
+/** Ученица сдаёт работу: ответы + авто-балл, статус submitted (через RPC). */
 export async function submitAssignment(
   assignmentId: string,
   answers: AssignmentAnswer[],
   autoScore: number,
   autoTotal: number,
 ): Promise<void> {
-  const { error } = await supabase
-    .from('material_assignments')
-    .update({
-      status: 'submitted',
-      answers,
-      auto_score: autoScore,
-      auto_total: autoTotal,
-      submitted_at: new Date().toISOString(),
-    })
-    .eq('id', assignmentId)
-  if (error) throw error
+  const { error } = await supabase.rpc('submit_material', {
+    p_id: assignmentId,
+    p_answers: answers,
+    p_auto_score: autoScore,
+    p_auto_total: autoTotal,
+  })
+  if (error) throw new Error(error.message)
 }
 
 // ---------------------------------------------------------------------------
@@ -373,66 +369,43 @@ export async function generateAiReview(
   })
 }
 
-/** Сохранить черновик AI-разбора (чтобы не генерировать повторно). */
+/** Сохранить черновик AI-разбора (чтобы не генерировать повторно; через RPC). */
 export async function saveAiReview(
   assignmentId: string,
   review: ReviewItem[],
 ): Promise<void> {
-  const { error } = await supabase
-    .from('material_assignments')
-    .update({ ai_review: review })
-    .eq('id', assignmentId)
-  if (error) throw error
+  const { error } = await supabase.rpc('save_material_ai_review', {
+    p_id: assignmentId,
+    p_review: review,
+  })
+  if (error) throw new Error(error.message)
 }
 
-/** Финал проверки: вердикты преподавателя, статус reviewed. */
+/** Финал проверки: вердикты преподавателя, статус reviewed (через RPC). */
 export async function finishReview(
   assignmentId: string,
   review: ReviewItem[],
 ): Promise<void> {
-  const { error } = await supabase
-    .from('material_assignments')
-    .update({
-      teacher_review: review,
-      status: 'reviewed',
-      reviewed_at: new Date().toISOString(),
-    })
-    .eq('id', assignmentId)
-  if (error) throw error
+  const { error } = await supabase.rpc('finish_material_review', {
+    p_id: assignmentId,
+    p_review: review,
+  })
+  if (error) throw new Error(error.message)
 }
 
 /**
  * Переназначить проверенный материал той же ученице: текущая работа уходит
  * в историю (attempts), назначение сбрасывается в assigned, note — комментарий
- * преподавателя «на что обратить внимание в этот раз».
+ * преподавателя «на что обратить внимание в этот раз». Снимок и сброс — на
+ * сервере (RPC), чтобы клиент не мог подделать историю.
  */
 export async function reassignAssignment(
   assignment: MaterialAssignment,
   note: string,
 ): Promise<void> {
-  const snapshot = {
-    answers: assignment.answers,
-    auto_score: assignment.auto_score,
-    auto_total: assignment.auto_total,
-    teacher_review: assignment.teacher_review,
-    submitted_at: assignment.submitted_at,
-    reviewed_at: assignment.reviewed_at,
-    note: assignment.note ?? null,
-  }
-  const { error } = await supabase
-    .from('material_assignments')
-    .update({
-      attempts: [...(assignment.attempts ?? []), snapshot],
-      status: 'assigned',
-      answers: null,
-      auto_score: null,
-      auto_total: null,
-      ai_review: null,
-      teacher_review: null,
-      submitted_at: null,
-      reviewed_at: null,
-      note: note.trim() || null,
-    })
-    .eq('id', assignment.id)
-  if (error) throw error
+  const { error } = await supabase.rpc('reassign_material', {
+    p_id: assignment.id,
+    p_note: note,
+  })
+  if (error) throw new Error(error.message)
 }

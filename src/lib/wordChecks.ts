@@ -63,15 +63,13 @@ export async function getStudentWords(studentId: string): Promise<StudentWord[]>
   return words
 }
 
-/** Назначить перепроверку выбранных слов. */
+/** Назначить перепроверку выбранных слов (через RPC — проверяет связь). */
 export async function assignWordCheck(studentId: string, cardIds: string[]): Promise<void> {
-  const userId = await requireUserId()
-  const { error } = await supabase.from('word_checks').insert({
-    teacher_id: userId,
-    student_id: studentId,
-    card_ids: cardIds,
+  const { error } = await supabase.rpc('assign_word_check', {
+    p_student_id: studentId,
+    p_card_ids: cardIds,
   })
-  if (error) throw error
+  if (error) throw new Error(error.message)
 }
 
 /** Перепроверки, назначенные ученице (для отчёта у преподавателя). */
@@ -126,17 +124,15 @@ export async function submitWordCheck(
 ): Promise<void> {
   const userId = await requireUserId()
 
-  // Сначала АТОМАРНО помечаем перепроверку завершённой — с условием, что она
-  // ещё не завершена. Если строк не затронуто (0), значит кто-то/ретрай уже
-  // завершил её — выходим, НЕ начисляя again повторно (иначе двойной штраф FSRS).
-  const { data: marked, error } = await supabase
-    .from('word_checks')
-    .update({ results, completed_at: new Date().toISOString() })
-    .eq('id', check.id)
-    .is('completed_at', null)
-    .select('id')
-  if (error) throw error
-  if (!marked || marked.length === 0) return // уже завершена — идемпотентно
+  // Помечаем перепроверку завершённой через RPC (атомарно, только если ещё не
+  // завершена). Возвращает true только тому, кто засчитал её сейчас — иначе
+  // (ретрай/повтор) НЕ начисляем again повторно (двойной штраф FSRS).
+  const { data: didComplete, error } = await supabase.rpc('submit_word_check', {
+    p_id: check.id,
+    p_results: results,
+  })
+  if (error) throw new Error(error.message)
+  if (!didComplete) return // уже завершена — идемпотентно
 
   // неверные слова → again (вернутся в колоду; FSRS сожмёт интервал)
   const wrong = results.filter((r) => !r.ok)
