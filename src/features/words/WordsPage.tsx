@@ -15,9 +15,19 @@
 // ============================================================================
 import { lazy, Suspense, useEffect, useState } from 'react'
 import type { ComponentType, SVGProps } from 'react'
+import {
+  LinkSimpleIcon,
+  TextAaIcon,
+  PuzzlePieceIcon,
+  HeadphonesIcon,
+  CardsThreeIcon,
+  BookOpenTextIcon,
+  ListBulletsIcon,
+  type Icon,
+} from '@phosphor-icons/react'
 import { Card } from '../../components/Card'
-import { IconLink, IconType, IconBlocks, IconHeadphones, IconDeck, IconBook } from '../../components/icons'
 import { useLanguage } from '../../context/LanguageContext'
+import { countMyWords } from '../../lib/cards'
 import { getDueCards } from '../../lib/fsrs'
 import { currentGuidedStep } from '../../lib/guided'
 import { DeckReview } from '../flashcards/DeckReview'
@@ -33,33 +43,33 @@ const ListeningMode = lazy(() =>
 const SentenceBuilder = lazy(() =>
   import('./SentenceBuilder').then((m) => ({ default: m.SentenceBuilder })),
 )
+const MyWords = lazy(() => import('./MyWords').then((m) => ({ default: m.MyWords })))
 
-type Mode = 'hub' | 'review' | 'match' | 'gap' | 'translate' | 'listening' | 'sentence'
-type Tone = 'sky' | 'violet' | 'amber' | 'emerald' | 'rose'
+type Mode =
+  | 'hub'
+  | 'review'
+  | 'mywords'
+  | 'match'
+  | 'gap'
+  | 'translate'
+  | 'listening'
+  | 'sentence'
 
 interface ModeDef {
-  id: Exclude<Mode, 'hub'>
-  Icon: ComponentType<SVGProps<SVGSVGElement>>
-  tone: Tone
+  id: Exclude<Mode, 'hub' | 'review'>
+  Icon: Icon
   title: string
   desc: string
   esOnly?: boolean
 }
 
-const toneChip: Record<Tone, string> = {
-  sky: 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]',
-  violet: 'bg-violet-100 text-violet-600 dark:bg-violet-950/60 dark:text-violet-400',
-  amber: 'bg-amber-100 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400',
-  emerald: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400',
-  rose: 'bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400',
-}
-
 const modes: ModeDef[] = [
-  { id: 'match', Icon: IconLink, tone: 'violet', title: 'Значения', desc: 'Слово ↔ значение' },
-  { id: 'gap', Icon: IconBook, tone: 'amber', title: 'Пропуск', desc: 'Слово в предложении' },
-  { id: 'translate', Icon: IconType, tone: 'emerald', title: 'Перевод', desc: 'На скорость' },
-  { id: 'listening', Icon: IconHeadphones, tone: 'rose', title: 'Аудирование', desc: 'Услышь и выбери' },
-  { id: 'sentence', Icon: IconBlocks, tone: 'sky', title: 'Собери фразу', desc: 'Фраза из слов', esOnly: true },
+  { id: 'mywords', Icon: ListBulletsIcon, title: 'Мои слова', desc: 'Список, поиск, правка' },
+  { id: 'match', Icon: LinkSimpleIcon, title: 'Значения', desc: 'Слово ↔ значение' },
+  { id: 'gap', Icon: BookOpenTextIcon, title: 'Пропуск', desc: 'Слово в предложении' },
+  { id: 'translate', Icon: TextAaIcon, title: 'Перевод', desc: 'На скорость' },
+  { id: 'listening', Icon: HeadphonesIcon, title: 'Аудирование', desc: 'Услышь и выбери' },
+  { id: 'sentence', Icon: PuzzlePieceIcon, title: 'Собери фразу', desc: 'Фраза из слов', esOnly: true },
 ]
 
 export function WordsPage() {
@@ -70,25 +80,35 @@ export function WordsPage() {
     currentGuidedStep() === 'flashcards' ? 'review' : 'hub',
   )
   const [due, setDue] = useState<number | null>(null)
+  const [total, setTotal] = useState<number | null>(null)
 
-  // сколько карточек ждёт повторения — показываем на плитке
+  // счётчики для плиток: сколько к повторению и сколько слов всего
   useEffect(() => {
     let alive = true
     setMode(currentGuidedStep() === 'flashcards' ? 'review' : 'hub')
     getDueCards(50, lang)
       .then((d) => alive && setDue(d.length))
       .catch(() => alive && setDue(null))
+    countMyWords(lang)
+      .then((n) => alive && setTotal(n))
+      .catch(() => alive && setTotal(null))
     return () => {
       alive = false
     }
   }, [lang])
 
-  const back = () => setMode('hub')
+  // после удаления/добавления слов счётчики устарели — обновим при возврате
+  const back = () => {
+    setMode('hub')
+    countMyWords(lang).then(setTotal).catch(() => {})
+    getDueCards(50, lang).then((d) => setDue(d.length)).catch(() => {})
+  }
 
   if (mode === 'review') return <DeckReview onBack={back} />
   if (mode !== 'hub') {
     return (
       <Suspense fallback={<p className="text-[var(--night-text-40)]">Загрузка…</p>}>
+        {mode === 'mywords' && <MyWords lang={lang} onBack={back} />}
         {mode === 'match' && <MatchMode lang={lang} onBack={back} />}
         {mode === 'gap' && <GapMode lang={lang} onBack={back} />}
         {mode === 'translate' && <TranslateMode lang={lang} onBack={back} />}
@@ -102,25 +122,26 @@ export function WordsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-bold">🗂 Слова</h1>
+      <h1 className="text-2xl font-medium tracking-tight">Слова</h1>
 
       {/* Повторение — главный режим, широкой плиткой */}
-      <button onClick={() => setMode('review')} className="text-left focus-visible:outline-none">
-        <Card interactive className="flex items-center gap-4">
-          <div className="bg-brand-gradient flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-white">
-            <IconDeck className="h-7 w-7" />
-          </div>
-          <div className="min-w-0">
-            <p className="font-semibold">Повторение</p>
-            <p className="text-sm text-[var(--night-text-40)]">
-              {due === null
-                ? 'Карточки по расписанию'
-                : due > 0
-                  ? `К повторению: ${due}`
-                  : 'На сегодня всё повторено'}
-            </p>
-          </div>
-        </Card>
+      <button
+        onClick={() => setMode('review')}
+        className="lift animate-fade-up flex items-center gap-4 rounded-2xl border border-[var(--night-accent-45)] bg-[linear-gradient(135deg,rgba(145,132,217,.20),rgba(145,132,217,.08))] px-4 py-4 text-left"
+      >
+        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[var(--night-accent-900)] text-[var(--night-accent-100)]">
+          <CardsThreeIcon size={28} weight="fill" />
+        </span>
+        <span className="min-w-0">
+          <span className="block font-medium">Повторение</span>
+          <span className="block text-sm text-[var(--night-text-40)]">
+            {due === null
+              ? 'Карточки по расписанию'
+              : due > 0
+                ? `К повторению: ${due}`
+                : 'На сегодня всё повторено'}
+          </span>
+        </span>
       </button>
 
       <p className="text-sm text-[var(--night-text-40)]">
@@ -129,18 +150,21 @@ export function WordsPage() {
       </p>
 
       <div className="grid grid-cols-2 gap-3">
-        {visible.map((m) => (
+        {visible.map((m, i) => (
           <button
             key={m.id}
             onClick={() => setMode(m.id)}
-            className="text-left focus-visible:outline-none"
+            className="animate-fade-up text-left focus-visible:outline-none"
+            style={{ animationDelay: `${0.05 + i * 0.05}s` }}
           >
-            <Card interactive className="flex h-full flex-col">
-              <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${toneChip[m.tone]}`}>
-                <m.Icon className="h-6 w-6" />
-              </div>
-              <div className="mt-3 font-semibold">{m.title}</div>
-              <div className="text-sm text-[var(--night-text-40)]">{m.desc}</div>
+            <Card interactive className="flex h-full flex-col p-4">
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--night-accent-900)] text-[var(--night-accent-100)]">
+                <m.Icon size={22} />
+              </span>
+              <span className="mt-3 font-medium">{m.title}</span>
+              <span className="text-sm text-[var(--night-text-40)]">
+                {m.id === 'mywords' && total !== null ? `${total} слов · поиск, правка` : m.desc}
+              </span>
             </Card>
           </button>
         ))}

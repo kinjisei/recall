@@ -25,7 +25,7 @@ export interface StudentWord {
   intervalDays: number // текущий интервал повторения (0 для новых)
 }
 
-function statusOf(state: ReviewState | null): { status: WordStatus; intervalDays: number } {
+export function statusOf(state: ReviewState | null): { status: WordStatus; intervalDays: number } {
   if (!state || state.state === 'new') return { status: 'new', intervalDays: 0 }
   const last = state.last_review ? new Date(state.last_review).getTime() : Date.now()
   const days = Math.max(0, Math.round((new Date(state.due).getTime() - last) / 86400000))

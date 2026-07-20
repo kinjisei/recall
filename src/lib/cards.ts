@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
-import type { AppLang, Card, Deck } from '../types'
+import type { AppLang, Card, Deck, ReviewState } from '../types'
+import { statusOf, type WordStatus } from './wordChecks'
 
 /**
  * Возвращает «колоду по умолчанию» текущего пользователя для языка
@@ -111,4 +112,85 @@ export async function addCardsBulk(
   )
   if (error) throw error
   return fresh.length
+}
+
+// ---------------------------------------------------------------------------
+// «Мои слова»: просмотр, правка и удаление собственных карточек.
+// RLS-политика «cards via own deck» разрешает владельцу колоды всё, поэтому
+// отдельных RPC не нужно. Расписание повторений (review_states) удаляется
+// каскадом вместе с карточкой — см. docs/schema.sql.
+// ---------------------------------------------------------------------------
+
+/** Карточка вместе с её расписанием и статусом изученности. */
+export interface MyWord {
+  card: Card
+  state: ReviewState | null
+  status: WordStatus
+  intervalDays: number
+}
+
+/** Все слова пользователя выбранного языка: свежие сверху. */
+export async function listMyWords(lang: AppLang): Promise<MyWord[]> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('Нет авторизации')
+
+  const deckIds = await getDeckIds(lang)
+  if (deckIds.length === 0) return []
+
+  const [cardsRes, statesRes] = await Promise.all([
+    supabase
+      .from('cards')
+      .select('*')
+      .in('deck_id', deckIds)
+      .order('created_at', { ascending: false }),
+    supabase.from('review_states').select('*').eq('user_id', user.id),
+  ])
+  if (cardsRes.error) throw cardsRes.error
+  if (statesRes.error) throw statesRes.error
+
+  const byCard = new Map<string, ReviewState>()
+  for (const s of (statesRes.data ?? []) as ReviewState[]) byCard.set(s.card_id, s)
+
+  return ((cardsRes.data ?? []) as Card[]).map((card) => {
+    const state = byCard.get(card.id) ?? null
+    return { card, state, ...statusOf(state) }
+  })
+}
+
+/** Правка карточки: слово, перевод, пример. */
+export async function updateCard(
+  id: string,
+  fields: { front?: string; back?: string | null; example?: string | null },
+): Promise<void> {
+  const patch: Record<string, string | null> = {}
+  if (fields.front !== undefined) {
+    const front = fields.front.trim()
+    if (!front) throw new Error('Слово не может быть пустым')
+    patch.front = front
+  }
+  if (fields.back !== undefined) patch.back = fields.back?.trim() || null
+  if (fields.example !== undefined) patch.example = fields.example?.trim() || null
+
+  const { error } = await supabase.from('cards').update(patch).eq('id', id)
+  if (error) throw error
+}
+
+/** Удаление карточки (расписание уйдёт каскадом). */
+export async function deleteCard(id: string): Promise<void> {
+  const { error } = await supabase.from('cards').delete().eq('id', id)
+  if (error) throw error
+}
+
+/** Сколько всего своих слов на языке (для счётчика на плитке). */
+export async function countMyWords(lang: AppLang): Promise<number> {
+  const deckIds = await getDeckIds(lang)
+  if (deckIds.length === 0) return 0
+  const { count, error } = await supabase
+    .from('cards')
+    .select('id', { count: 'exact', head: true })
+    .in('deck_id', deckIds)
+  if (error) throw error
+  return count ?? 0
 }
