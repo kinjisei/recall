@@ -9,6 +9,10 @@ import type { ChatTurn } from '../src/types'
 // не находит модуль без расширения (FUNCTION_INVOCATION_FAILED при старте)
 import { ALLOWED_MODELS, callGemini, DEFAULT_GEMINI_MODEL } from './_core.js'
 
+// Генерация материала занимает 20–40 с (два запроса к Gemini), плюс повторы
+// при 503. Дефолтные 10 с Vercel обрывали её раньше времени.
+export const config = { maxDuration: 60 }
+
 // CORS: только известные origin'ы (реальный фронт ходит same-origin — заголовки
 // нужны лишь на случай браузерного кросс-доступа; `*` раздавал прокси всему миру).
 const ALLOWED_ORIGINS = [

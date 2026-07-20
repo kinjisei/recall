@@ -57,7 +57,8 @@ function EnglishReaderPage({ title, header }: { title: string; header?: ReactNod
       </div>
 
       <p className="text-sm text-[var(--night-text-40)]">
-        Выбери текст и нажимай на незнакомые слова — добавляй их в колоду.
+        Выбери текст и нажимай на незнакомые слова. Долгое нажатие и протяжка
+        по словам — перевод целой фразы.
       </p>
 
       <div className="flex flex-col gap-3">

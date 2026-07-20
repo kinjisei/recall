@@ -18,7 +18,19 @@ interface GeminiResponse {
   candidates?: { content?: { parts?: { text?: string }[] } }[]
 }
 
-/** Вызывает Gemini и возвращает текст ответа. Бросает Error с понятным сообщением. */
+/** Коды, при которых имеет смысл повторить: модель перегружена или сбой у Google. */
+const RETRIABLE = [500, 502, 503, 504]
+const RETRY_DELAYS_MS = [900, 2500]
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
+/**
+ * Вызывает Gemini и возвращает текст ответа. Бросает Error с понятным сообщением.
+ *
+ * На бесплатном тарифе Gemini регулярно отвечает 503 «model is overloaded» —
+ * это временно, поэтому такие ответы повторяем с нарастающей паузой, а не
+ * показываем пользователю ошибку с первого раза.
+ */
 export async function callGemini(
   messages: ChatTurn[],
   system: string | undefined,
@@ -53,14 +65,22 @@ export async function callGemini(
   }
   if (systemText) body.systemInstruction = { parts: [{ text: systemText }] }
 
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-      body: JSON.stringify(body),
-    },
-  )
+  let res: Response | null = null
+  for (let attempt = 0; ; attempt++) {
+    res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+        body: JSON.stringify(body),
+      },
+    )
+    if (res.ok) break
+    const canRetry = RETRIABLE.includes(res.status) && attempt < RETRY_DELAYS_MS.length
+    if (!canRetry) break
+    console.warn(`Gemini ${res.status}, повтор ${attempt + 1}/${RETRY_DELAYS_MS.length}`)
+    await sleep(RETRY_DELAYS_MS[attempt])
+  }
 
   if (!res.ok) {
     let detail = ''
@@ -78,6 +98,12 @@ export async function callGemini(
     // детали Google пишем в лог сервера (Vercel), клиенту — обобщённый текст,
     // чтобы не раскрывать внутренности провайдера
     if (detail) console.error(`Gemini error ${res.status}: ${detail}`)
+    if (RETRIABLE.includes(res.status)) {
+      throw new Error(
+        'Gemini сейчас перегружен — это бывает в часы пик на бесплатном тарифе. ' +
+          'Мы попробовали трижды; подожди минуту и нажми ещё раз.',
+      )
+    }
     throw new Error(`Сервис AI временно недоступен (${res.status}). Попробуй позже.`)
   }
 

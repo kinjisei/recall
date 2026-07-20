@@ -6,7 +6,7 @@
 // Шторка выше нижней навигации (z-50), контент прокручивается, кнопки всегда
 // видны (safe-area учтён).
 // ============================================================================
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Button } from './Button'
 import { addCard } from '../lib/cards'
@@ -37,6 +37,11 @@ export function sentenceAround(text: string, word: string): string {
 /**
  * Текст с кликабельными словами. Длинные тире (— –) и многоточия — разделители,
  * чтобы «exposure—reading» не склеивалось в одно слово.
+ *
+ * Тап по слову открывает его перевод. Долгое нажатие включает выделение
+ * ФРАЗЫ: тянешь по соседним словам и получаешь перевод всего выражения
+ * целиком («make up my mind»), а не по одному слову — по словам такие
+ * идиомы не переводятся.
  */
 export function TappableText({
   text,
@@ -46,25 +51,97 @@ export function TappableText({
   onSelect: (pick: WordPick) => void
 }) {
   const tokens = useMemo(() => text.split(/([\s—–…]+)/), [text])
+  // индексы токенов-слов, которые входят в выделяемую фразу
+  const [range, setRange] = useState<{ from: number; to: number } | null>(null)
+  const [selecting, setSelecting] = useState(false)
+  const longPress = useRef<number | null>(null)
+
+  const isWordToken = (tok: string) => /[A-Za-zÀ-ÿ]/.test(tok)
+
+  /** Собирает фразу из выделенного диапазона токенов. */
+  const phraseOf = (from: number, to: number) => {
+    const [a, b] = from <= to ? [from, to] : [to, from]
+    return tokens
+      .slice(a, b + 1)
+      .join('')
+      .trim()
+      .replace(/\s+/g, ' ')
+  }
+
+  const cancelLongPress = () => {
+    if (longPress.current !== null) {
+      window.clearTimeout(longPress.current)
+      longPress.current = null
+    }
+  }
+
+  const finishSelection = () => {
+    cancelLongPress()
+    if (!selecting || !range) {
+      setSelecting(false)
+      setRange(null)
+      return
+    }
+    const phrase = phraseOf(range.from, range.to)
+    const cleaned = phrase.replace(/^[^A-Za-zÀ-ÿ]+|[^A-Za-zÀ-ÿ'’-]+$/g, '')
+    setSelecting(false)
+    setRange(null)
+    if (cleaned) onSelect({ word: cleaned, sentence: sentenceAround(text, cleaned) })
+  }
+
+  const inRange = (i: number) =>
+    range !== null && i >= Math.min(range.from, range.to) && i <= Math.max(range.from, range.to)
+
   return (
-    <>
+    <span
+      onPointerUp={finishSelection}
+      onPointerLeave={() => selecting && finishSelection()}
+      className={selecting ? 'select-none' : undefined}
+    >
       {tokens.map((tok, i) => {
-        const isWord = /[A-Za-zÀ-ÿ]/.test(tok)
-        if (!isWord) return <span key={i}>{tok}</span>
+        if (!isWordToken(tok)) {
+          // пробелы внутри выделения тоже подсвечиваем — фраза выглядит цельной
+          return (
+            <span key={i} className={inRange(i) ? 'bg-[rgba(145,132,217,.28)]' : undefined}>
+              {tok}
+            </span>
+          )
+        }
+        const highlighted = inRange(i)
         return (
           <span
             key={i}
-            onClick={() => {
-              const word = cleanWord(tok)
-              if (word) onSelect({ word, sentence: sentenceAround(text, word) })
+            onPointerDown={() => {
+              cancelLongPress()
+              // удержание ~350 мс — включаем режим выделения фразы
+              longPress.current = window.setTimeout(() => {
+                setSelecting(true)
+                setRange({ from: i, to: i })
+              }, 350)
             }}
-            className="cursor-pointer rounded px-0.5 hover:bg-sky-100 active:bg-sky-200 dark:hover:bg-sky-900/50"
+            onPointerEnter={() => {
+              if (selecting) setRange((r) => (r ? { ...r, to: i } : { from: i, to: i }))
+            }}
+            onPointerUp={(e) => {
+              // обычный тап (без удержания) — перевод одного слова
+              if (!selecting) {
+                e.stopPropagation()
+                cancelLongPress()
+                const word = cleanWord(tok)
+                if (word) onSelect({ word, sentence: sentenceAround(text, word) })
+              }
+            }}
+            className={`cursor-pointer rounded px-0.5 transition-colors ${
+              highlighted
+                ? 'bg-[rgba(145,132,217,.28)]'
+                : 'hover:bg-[rgba(145,132,217,.18)] active:bg-[rgba(145,132,217,.28)]'
+            }`}
           >
             {tok}
           </span>
         )
       })}
-    </>
+    </span>
   )
 }
 

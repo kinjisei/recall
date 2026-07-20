@@ -144,8 +144,9 @@ export function Layout() {
   return (
     <div className="min-h-[100dvh] bg-[var(--night-bg)] text-[var(--night-text)]">
       <TopBar />
-      {/* pb — место под плавающую навигацию (её высота + отступ + safe-area) */}
-      <main className="mx-auto min-h-[60vh] max-w-screen-sm animate-fade-in px-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] pt-5">
+      {/* pb — ровно под плавающую навигацию: её высота (~69px) + отступ снизу
+          (16px) + safe-area. Больше — и внизу зияет пустота. */}
+      <main className="mx-auto min-h-[60vh] max-w-screen-sm animate-fade-in px-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-5">
         <Outlet />
       </main>
       <BottomNav />
