@@ -19,6 +19,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { supabase } from '../../lib/supabase'
 import { setEsLevel } from '../../lib/esLevel'
+import { markOnboarded } from '../../lib/onboarding'
 import { celebrate } from '../../components/Confetti'
 import type { AppLang, CEFRLevel } from '../../types'
 
@@ -42,7 +43,7 @@ export function OnboardingFlow() {
         )
       }
     }
-    localStorage.setItem('recall.onboarded', '1')
+    markOnboarded()
     celebrate()
     setTimeout(() => navigate('/', { replace: true }), 600)
   }
@@ -273,30 +274,4 @@ function Heading({
       <p className="text-sm text-[var(--night-text-40)]">{desc}</p>
     </div>
   )
-}
-
-/**
- * Новичок ли это: онбординг ещё не пройден и в приложении пока нет активности.
- * Проверка активности защищает существующих пользователей (девушка, ученицы) —
- * им онбординг не покажется.
- */
-export async function shouldOnboard(): Promise<boolean> {
-  if (localStorage.getItem('recall.onboarded')) return false
-  try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (!user) return false
-    const { count } = await supabase
-      .from('activity_log')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', user.id)
-    if ((count ?? 0) > 0) {
-      localStorage.setItem('recall.onboarded', '1')
-      return false
-    }
-    return true
-  } catch {
-    return false
-  }
 }

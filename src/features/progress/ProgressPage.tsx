@@ -31,8 +31,9 @@ interface Metrics {
 /** Метрики по колоде текущего языка: выучено, точность, к повторению завтра. */
 async function loadMetrics(lang: 'en' | 'es'): Promise<Omit<Metrics, 'best'>> {
   const {
-    data: { user },
-  } = await supabase.auth.getUser()
+    data: { session },
+  } = await supabase.auth.getSession()
+  const user = session?.user ?? null
   if (!user) return { learned: 0, accuracy: null, tomorrow: 0 }
 
   const deckIds = await getDeckIds(lang)

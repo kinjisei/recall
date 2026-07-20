@@ -3,7 +3,7 @@
 // Прохождение: чтение → упражнения (общий движок) → сдача (авто-балл, статус
 // submitted). Проверка преподавателем — следующая фаза фичи.
 // ============================================================================
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
@@ -267,13 +267,15 @@ function AssignmentRunner({
   const correct = answers.filter((a) => a.auto_ok).length
 
   // ok приходит из onAnswered, given — из onGiven; собираем в одну запись по index
-  const pendingRef = useState<{ ok: boolean }>({ ok: false })[0]
+  // именно ref, а не состояние: значение живёт между двумя колбэками одного
+  // упражнения (onAnswered → onGiven) и не должно вызывать перерисовку
+  const pendingRef = useRef<{ ok: boolean }>({ ok: false })
 
   const onAnswered = (ok: boolean) => {
-    pendingRef.ok = ok
+    pendingRef.current.ok = ok
   }
   const onGiven = (given: string) => {
-    setAnswerMap((m) => ({ ...m, [index]: { index, given, auto_ok: pendingRef.ok } }))
+    setAnswerMap((m) => ({ ...m, [index]: { index, given, auto_ok: pendingRef.current.ok } }))
   }
 
   const next = () => {

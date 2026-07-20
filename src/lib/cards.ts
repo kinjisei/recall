@@ -8,8 +8,9 @@ import { statusOf, type WordStatus } from './wordChecks'
  */
 export async function getDefaultDeck(lang: AppLang = 'en'): Promise<Deck> {
   const {
-    data: { user },
-  } = await supabase.auth.getUser()
+    data: { session },
+  } = await supabase.auth.getSession()
+  const user = session?.user ?? null
   if (!user) throw new Error('Нет авторизации')
 
   const { data, error } = await supabase
@@ -32,8 +33,9 @@ export async function getDefaultDeck(lang: AppLang = 'en'): Promise<Deck> {
  */
 export async function getDeckIds(lang: AppLang): Promise<string[]> {
   const {
-    data: { user },
-  } = await supabase.auth.getUser()
+    data: { session },
+  } = await supabase.auth.getSession()
+  const user = session?.user ?? null
   if (!user) throw new Error('Нет авторизации')
 
   const { data, error } = await supabase
@@ -132,8 +134,9 @@ export interface MyWord {
 /** Все слова пользователя выбранного языка: свежие сверху. */
 export async function listMyWords(lang: AppLang): Promise<MyWord[]> {
   const {
-    data: { user },
-  } = await supabase.auth.getUser()
+    data: { session },
+  } = await supabase.auth.getSession()
+  const user = session?.user ?? null
   if (!user) throw new Error('Нет авторизации')
 
   const deckIds = await getDeckIds(lang)

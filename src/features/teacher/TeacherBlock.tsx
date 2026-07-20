@@ -6,6 +6,25 @@ import { joinTeacher, getMyTeachers } from '../../lib/teacher'
 import { countSubmittedWorks, getMyAssignments } from '../../lib/materials'
 import type { Profile } from '../../types'
 
+/** Сколько заданий у ученицы всего и сколько ещё не сдано. */
+export interface AssignmentCounts {
+  total: number
+  pending: number
+}
+
+/** Загрузка счётчиков для Главной (см. AssignmentsNotice — она их только рисует). */
+export async function loadAssignmentCounts(): Promise<AssignmentCounts> {
+  try {
+    const rows = await getMyAssignments()
+    return {
+      total: rows.length,
+      pending: rows.filter((r) => r.status === 'assigned').length,
+    }
+  } catch {
+    return { total: 0, pending: 0 }
+  }
+}
+
 /**
  * Блок «Преподаватель» на Главной (Фаза 4).
  * Преподавателю — ссылка на экран учениц; ученице — привязка по коду
@@ -16,12 +35,9 @@ export function TeacherBlock({ profile }: { profile: Profile | null }) {
   if (profile.role === 'teacher') {
     return <TeacherCard />
   }
-  return (
-    <>
-      <AssignmentsNotice placement="bottom" />
-      <JoinTeacherBlock />
-    </>
-  )
+  // AssignmentsNotice здесь больше нет: Главная рендерит её сама, и раньше
+  // плашка «Все задания выполнены» показывалась дважды подряд.
+  return <JoinTeacherBlock />
 }
 
 /** Карточка преподавателя: ссылка на экран + уведомление о сданных работах. */
@@ -61,20 +77,15 @@ function TeacherCard() {
  * placement="bottom" — спокойная карточка внизу, когда всё сдано (для доступа
  * к выполненным работам и разборам).
  */
-export function AssignmentsNotice({ placement }: { placement: 'top' | 'bottom' }) {
-  const [counts, setCounts] = useState<{ total: number; pending: number } | null>(null)
-
-  useEffect(() => {
-    getMyAssignments()
-      .then((rows) =>
-        setCounts({
-          total: rows.length,
-          pending: rows.filter((r) => r.status === 'assigned').length,
-        }),
-      )
-      .catch(() => setCounts({ total: 0, pending: 0 }))
-  }, [])
-
+export function AssignmentsNotice({
+  placement,
+  counts,
+}: {
+  placement: 'top' | 'bottom'
+  /** Считает и передаёт родитель: компонент рендерится дважды (top и bottom),
+   *  и своя загрузка означала два одинаковых запроса на каждой Главной. */
+  counts: AssignmentCounts | null
+}) {
   if (!counts || counts.total === 0) return null
   if (placement === 'top' && counts.pending === 0) return null
   if (placement === 'bottom' && counts.pending > 0) return null

@@ -32,8 +32,9 @@ export async function logActivity(
 ): Promise<void> {
   try {
     const {
-      data: { user },
-    } = await supabase.auth.getUser()
+      data: { session },
+    } = await supabase.auth.getSession()
+    const user = session?.user ?? null
     if (!user) return
     const day = localDay()
 
@@ -74,8 +75,9 @@ export async function logActivity(
  */
 export async function getStreak(): Promise<number> {
   const {
-    data: { user },
-  } = await supabase.auth.getUser()
+    data: { session },
+  } = await supabase.auth.getSession()
+  const user = session?.user ?? null
   if (!user) return 0
 
   const { data, error } = await supabase
@@ -117,8 +119,9 @@ const WEEKDAY_LABELS = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб']
  */
 export async function getWeek(): Promise<WeekDay[]> {
   const {
-    data: { user },
-  } = await supabase.auth.getUser()
+    data: { session },
+  } = await supabase.auth.getSession()
+  const user = session?.user ?? null
 
   const today = new Date()
   // понедельник как первый день недели (в JS воскресенье = 0)
@@ -161,8 +164,9 @@ export async function getWeek(): Promise<WeekDay[]> {
 /** Самая длинная серия за всю историю (для экрана прогресса). */
 export async function getBestStreak(): Promise<number> {
   const {
-    data: { user },
-  } = await supabase.auth.getUser()
+    data: { session },
+  } = await supabase.auth.getSession()
+  const user = session?.user ?? null
   if (!user) return 0
 
   const { data, error } = await supabase
@@ -191,8 +195,9 @@ export async function getBestStreak(): Promise<number> {
 /** Какие типы занятий уже засчитаны сегодня. */
 export async function getTodayTypes(): Promise<Set<ActivityType>> {
   const {
-    data: { user },
-  } = await supabase.auth.getUser()
+    data: { session },
+  } = await supabase.auth.getSession()
+  const user = session?.user ?? null
   if (!user) return new Set()
 
   const { data, error } = await supabase

@@ -77,7 +77,30 @@ export default defineConfig(({ mode }) => {
         // регистрируем SW сами в main.tsx (проверка обновлений при возврате в приложение)
         injectRegister: false,
         // не отдавать /api/* из офлайн-кэша SPA (иначе прокси ломается офлайн)
-        workbox: { navigateFallbackDenylist: [/^\/api\//] },
+        workbox: {
+          // не отдавать /api/* из офлайн-кэша SPA (иначе прокси ломается офлайн)
+          navigateFallbackDenylist: [/^\/api\//],
+          // По умолчанию в precache попадали ВСЕ чанки — 2.39 МБ, включая
+          // ~1.3 МБ испанских данных, которые не нужны учащему английский.
+          // Шрифты при этом не попадали вовсе, и офлайн интерфейс падал на
+          // системный. Кладём каркас и шрифты; языковые данные докачиваются
+          // по факту обращения (runtime-кэш ниже).
+          globPatterns: [
+            '**/*.{css,html,ico,svg,png,webmanifest,woff2}',
+            'assets/index-*.js',
+            'assets/jsx-runtime-*.js',
+            'assets/supabase-*.js',
+          ],
+          runtimeCaching: [
+            {
+              // остальные чанки (испанский словарь, грамматика, игры) —
+              // кэшируются после первого реального открытия раздела
+              urlPattern: /\/assets\/.*\.js$/,
+              handler: 'StaleWhileRevalidate',
+              options: { cacheName: 'recall-chunks' },
+            },
+          ],
+        },
         includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
         manifest: {
           name: 'Recall — английский',

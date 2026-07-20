@@ -6,7 +6,7 @@
 // на повторениях; теперь его можно исправить или удалить (расписание уходит
 // каскадом, см. lib/cards.ts).
 // ============================================================================
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   MagnifyingGlassIcon,
   PencilSimpleIcon,
@@ -49,15 +49,29 @@ export function MyWords({ lang, onBack }: { lang: AppLang; onBack: () => void })
   const [editing, setEditing] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
 
-  const load = () => {
-    setWords(null)
-    setError(null)
-    listMyWords(lang)
-      .then(setWords)
-      .catch((e) => setError(e instanceof Error ? e.message : 'Не удалось загрузить слова'))
-  }
+  // useRef, чтобы перезагрузка после правки/удаления не спорила с эффектом
+  const reloadRef = useRef<() => void>(() => {})
 
-  useEffect(load, [lang])
+  useEffect(() => {
+    // alive: ответ по прежнему языку не должен перетереть новый список
+    let alive = true
+    const run = () => {
+      setWords(null)
+      setError(null)
+      listMyWords(lang)
+        .then((w) => alive && setWords(w))
+        .catch(
+          (e) =>
+            alive &&
+            setError(e instanceof Error ? e.message : 'Не удалось загрузить слова'),
+        )
+    }
+    reloadRef.current = run
+    run()
+    return () => {
+      alive = false
+    }
+  }, [lang])
 
   const shown = useMemo(() => {
     if (!words) return []

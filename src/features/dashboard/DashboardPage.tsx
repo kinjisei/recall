@@ -29,7 +29,12 @@ import { getEsLevel } from '../../lib/esLevel'
 import { startGuided } from '../../lib/guided'
 import { speak } from '../../lib/speech'
 import { RowCard } from '../../components/RowCard'
-import { AssignmentsNotice, TeacherBlock } from '../teacher/TeacherBlock'
+import {
+  AssignmentsNotice,
+  TeacherBlock,
+  loadAssignmentCounts,
+  type AssignmentCounts,
+} from '../teacher/TeacherBlock'
 import type { ActivityType, Card as CardType, Profile } from '../../types'
 
 interface PlanItem {
@@ -57,6 +62,8 @@ export function DashboardPage() {
   const [doneToday, setDoneToday] = useState<Set<ActivityType>>(new Set())
   const [dueCount, setDueCount] = useState<number | null>(null)
   const [wordOfDay, setWordOfDay] = useState<CardType | null>(null)
+  // один запрос на обе плашки заданий (top и bottom)
+  const [assignments, setAssignments] = useState<AssignmentCounts | null>(null)
 
   useEffect(() => {
     if (!user) return
@@ -69,18 +76,26 @@ export function DashboardPage() {
     getStreak().then(setStreak).catch(() => {})
     getTodayTypes().then(setDoneToday).catch(() => {})
     getWeek().then(setWeek).catch(() => {})
+    loadAssignmentCounts().then(setAssignments).catch(() => {})
   }, [user])
 
   useEffect(() => {
     if (!user) return
+    // alive: при быстром переключении EN/ES ответ по старому языку не должен
+    // перетирать данные нового
+    let alive = true
     setDueCount(null)
     setWordOfDay(null)
     getDueCards(99, lang)
       .then((d) => {
+        if (!alive) return
         setDueCount(d.length)
         setWordOfDay(d[0]?.card ?? null)
       })
       .catch(() => {})
+    return () => {
+      alive = false
+    }
   }, [user, lang])
 
   const name = profile?.display_name || user?.email?.split('@')[0] || 'друг'
@@ -113,7 +128,7 @@ export function DashboardPage() {
       <StreakHero streak={streak} week={week} didToday={didToday} />
 
       {/* 3. Новое задание от преподавателя */}
-      <AssignmentsNotice placement="top" />
+      <AssignmentsNotice placement="top" counts={assignments} />
 
       {/* 4. Начать занятие */}
       <button
@@ -171,7 +186,7 @@ export function DashboardPage() {
       {wordOfDay && <WordOfDay card={wordOfDay} lang={lang} />}
 
       {/* 7. Сданное задание уезжает вниз + блок преподавателя */}
-      <AssignmentsNotice placement="bottom" />
+      <AssignmentsNotice placement="bottom" counts={assignments} />
       <TeacherBlock profile={profile} />
     </div>
   )

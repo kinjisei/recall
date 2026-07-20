@@ -41,8 +41,9 @@ export const MATERIAL_LENGTHS = ['50-100', '100-250', '250-350'] as const
 
 async function requireUserId(): Promise<string> {
   const {
-    data: { user },
-  } = await supabase.auth.getUser()
+    data: { session },
+  } = await supabase.auth.getSession()
+  const user = session?.user ?? null
   if (!user) throw new Error('Нет авторизации')
   return user.id
 }

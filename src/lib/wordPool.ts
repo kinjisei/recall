@@ -33,8 +33,9 @@ async function targetLevel(lang: AppLang): Promise<string> {
   if (lang === 'es') return getEsLevel() ?? 'A1'
   try {
     const {
-      data: { user },
-    } = await supabase.auth.getUser()
+      data: { session },
+    } = await supabase.auth.getSession()
+    const user = session?.user ?? null
     if (!user) return 'B1'
     const { data } = await supabase.from('profiles').select('level').eq('id', user.id).single()
     return ((data as { level?: string } | null)?.level as string) ?? 'B1'

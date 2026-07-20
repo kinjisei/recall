@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { shouldOnboard } from '../features/onboarding/OnboardingFlow'
+import { isOnboarded, shouldOnboard } from '../lib/onboarding'
 import { isBlocked } from '../lib/access'
 import { BlockedScreen } from './BlockedScreen'
 
@@ -18,7 +18,7 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
   // флаг «уже прошёл» читаем синхронно: иначе после завершения онбординга
   // редирект успевал вернуть пользователя обратно на первый шаг
   const [needsOnboarding, setNeedsOnboarding] = useState<boolean | null>(() =>
-    localStorage.getItem('recall.onboarded') ? false : null,
+    isOnboarded() ? false : null,
   )
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
       setNeedsOnboarding(false)
       return
     }
-    if (localStorage.getItem('recall.onboarded')) {
+    if (isOnboarded()) {
       setNeedsOnboarding(false)
       return
     }
@@ -70,7 +70,7 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
 
   // Флаг читаем синхронно при каждом рендере: сразу после завершения
   // онбординга состояние ещё «нужен», и редирект возвращал на первый шаг.
-  const onboarded = localStorage.getItem('recall.onboarded') !== null
+  const onboarded = isOnboarded()
   if (!onboarded && needsOnboarding && pathname !== '/onboarding') {
     return <Navigate to="/onboarding" replace />
   }

@@ -36,18 +36,30 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
   const swiping = useRef(false)
   const handledKey = useRef<string | null>(null)
 
+  // alive: смена языка на середине загрузки не должна подставить чужую очередь
+  const aliveRef = useRef(true)
+  useEffect(() => {
+    aliveRef.current = true
+    return () => {
+      aliveRef.current = false
+    }
+  }, [lang])
+
   const load = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
       const due = await getDueCards(50, lang)
+      if (!aliveRef.current) return
       setQueue(due)
       setIndex(0)
       setFlipped(false)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Ошибка загрузки')
+      if (aliveRef.current) {
+        setError(e instanceof Error ? e.message : 'Ошибка загрузки')
+      }
     } finally {
-      setLoading(false)
+      if (aliveRef.current) setLoading(false)
     }
   }, [lang])
 
