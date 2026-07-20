@@ -1,0 +1,152 @@
+[
+  {
+    "title": "Present Perfect Continuous: I have been doing",
+    "level": "B2",
+    "order": 1,
+    "theory": [
+      { "type": "paragraph", "text": "Present Perfect Continuous отвечает на вопрос «как давно ты этим занят?». Действие началось в прошлом и продолжается до сих пор — или только что закончилось, но его следы видны: I have been running (вот почему я запыхался)." },
+      { "type": "table", "headers": ["Тип", "Формула", "Пример"], "rows": [["+", "have/has been + V-ing", "I have been waiting for an hour."], ["−", "haven't / hasn't been + V-ing", "She hasn't been sleeping well."], ["?", "Have/Has + кто + been + V-ing?", "How long have you been learning English?"]] },
+      { "type": "paragraph", "text": "Разница с Present Perfect: Continuous подчёркивает ПРОЦЕСС и длительность, Perfect — РЕЗУЛЬТАТ и количество. I have been reading all day (процесс) vs I have read three books (результат: три книги)." },
+      { "type": "example", "en": "I have been learning English for two years.", "ru": "Я учу английский два года. (начал и продолжаю)" },
+      { "type": "example", "en": "She has been crying — her eyes are red.", "ru": "Она плакала — у неё красные глаза. (следы видны сейчас)" },
+      { "type": "example", "en": "How long have you been waiting?", "ru": "Как давно ты ждёшь?" },
+      { "type": "paragraph", "text": "⚠️ Типичная ошибка русскоговорящего: «Я живу здесь 5 лет» → I live here for 5 years ✗. Если действие тянется С ПРОШЛОГО, нужен перфект: I have been living here for 5 years ✓. И помни: глаголы состояния (know, like, have=иметь) в Continuous не ставят — I have known him for years ✓, не have been knowing ✗." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "I ___ for you for two hours!", "options": ["am waiting", "have been waiting", "wait"], "answer": 1 },
+      { "type": "mcq", "prompt": "«Я знаю его 10 лет»:", "options": ["I have been knowing him for 10 years.", "I have known him for 10 years.", "I know him for 10 years."], "answer": 1 },
+      { "type": "mcq", "prompt": "У него грязные руки. He ___ the car.", "options": ["has repaired", "has been repairing", "repairs"], "answer": 1 },
+      { "type": "mcq", "prompt": "Результат, а не процесс: «Я прочитал три книги за отпуск»:", "options": ["I have read three books.", "I have been reading three books.", "I am reading three books."], "answer": 0 },
+      { "type": "fill", "prompt": "She has ___ working here since 2020. (be)", "answer": "been", "hint": "have/has + ___ + V-ing" },
+      { "type": "fill", "prompt": "I have been ___ English for three years. (learn)", "answer": "learning", "hint": "V-ing" },
+      { "type": "fill", "prompt": "How long ___ you been living in Astana?", "answer": "have", "hint": "you → ?" },
+      { "type": "fill", "prompt": "It has been ___ all day — the streets are wet. (rain)", "answer": "raining", "hint": "V-ing" },
+      { "type": "order", "prompt": "Собери: «Как давно ты ждёшь?»", "words": ["How", "long", "have", "you", "been", "waiting"], "answer": ["How", "long", "have", "you", "been", "waiting"] }
+    ]
+  },
+  {
+    "title": "Past Perfect: I had done — прошлое до прошлого",
+    "level": "B2",
+    "order": 2,
+    "theory": [
+      { "type": "paragraph", "text": "Past Perfect нужен, когда в рассказе о прошлом есть событие, случившееся ЕЩЁ РАНЬШЕ. «Когда мы пришли, фильм уже начался»: пришли — Past Simple, а начался ДО этого — Past Perfect: When we arrived, the film had started." },
+      { "type": "table", "headers": ["Тип", "Формула", "Пример"], "rows": [["+", "had + V3", "The train had left."], ["−", "hadn't + V3", "I hadn't seen him before."], ["?", "Had + кто + V3?", "Had she finished by then?"]] },
+      { "type": "paragraph", "text": "Слова-спутники: by the time (к тому моменту), already, just, before, after, never…before. By the time we got there, everyone had gone home." },
+      { "type": "example", "en": "When we arrived, the film had started.", "ru": "Когда мы пришли, фильм уже начался." },
+      { "type": "example", "en": "I had never seen the sea before that trip.", "ru": "До той поездки я никогда не видел моря." },
+      { "type": "example", "en": "She was tired because she hadn't slept.", "ru": "Она устала, потому что не спала (до этого)." },
+      { "type": "paragraph", "text": "⚠️ Типичная ошибка русскоговорящего — пихать Past Perfect везде, где по-русски «уже» или «давно». Он нужен ТОЛЬКО когда есть два прошлых события и важно, что одно случилось раньше другого. Обычный рассказ по порядку — это Past Simple: I woke up, had breakfast and went to work." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "When I got home, my family ___ dinner.", "options": ["already ate", "had already eaten", "have already eaten"], "answer": 1 },
+      { "type": "mcq", "prompt": "Рассказ по порядку: «Я проснулся и позавтракал»:", "options": ["I had woken up and had had breakfast.", "I woke up and had breakfast.", "I have woken up and had breakfast."], "answer": 1 },
+      { "type": "mcq", "prompt": "The train ___ before we reached the station.", "options": ["left", "had left", "has left"], "answer": 1 },
+      { "type": "mcq", "prompt": "By the time the police arrived, the thief ___.", "options": ["had escaped", "escaped", "has escaped"], "answer": 0 },
+      { "type": "fill", "prompt": "She was happy because she ___ passed the exam.", "answer": "had", "hint": "прошлое ДО прошлого" },
+      { "type": "fill", "prompt": "I had never ___ sushi before I came to the city. (eat, V3)", "answer": "eaten", "hint": "eat → V3" },
+      { "type": "fill", "prompt": "Had you ___ him before that day? (meet, V3)", "answer": "met", "hint": "meet → V3" },
+      { "type": "fill", "prompt": "By 10 o'clock everyone ___ gone home.", "answer": "had", "hint": "by = к моменту" },
+      { "type": "order", "prompt": "Собери: «Фильм уже начался»", "words": ["The", "film", "had", "already", "started"], "answer": ["The", "film", "had", "already", "started"] }
+    ]
+  },
+  {
+    "title": "Future Continuous и Future Perfect",
+    "level": "B2",
+    "order": 3,
+    "theory": [
+      { "type": "paragraph", "text": "Два «продвинутых» будущих. Future Continuous (will be doing) — «буду в процессе» в конкретный момент: This time tomorrow I will be flying to Madrid. Future Perfect (will have done) — «будет сделано К моменту»: By Friday I will have finished the report." },
+      { "type": "table", "headers": ["Время", "Формула", "Смысл"], "rows": [["Future Continuous", "will be + V-ing", "буду в процессе в тот момент"], ["Future Perfect", "will have + V3", "будет уже сделано к моменту"]] },
+      { "type": "paragraph", "text": "Ключевое слово Future Perfect — by (к): by Friday, by the end of the year, by then. Ключ Future Continuous — точный момент: this time tomorrow, at 8 pm tonight." },
+      { "type": "example", "en": "This time tomorrow I will be lying on the beach.", "ru": "Завтра в это время я буду лежать на пляже." },
+      { "type": "example", "en": "By next summer we will have saved enough money.", "ru": "К следующему лету мы накопим достаточно денег." },
+      { "type": "example", "en": "Don't call at nine — I will be driving.", "ru": "Не звони в девять — я буду за рулём." },
+      { "type": "paragraph", "text": "⚠️ Типичная ошибка русскоговорящего: любое «я буду делать» переводить как will be doing. Обычное будущее — просто will: I will help you завтра, а will be doing — только про процесс В КОНКРЕТНЫЙ момент. И в Future Perfect не забывай have: By Monday I will finished ✗ → will have finished ✓." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "By 2030 they ___ the new metro line.", "options": ["will build", "will be building", "will have built"], "answer": 2 },
+      { "type": "mcq", "prompt": "At 8 pm tonight I ___ football with friends.", "options": ["will have played", "will be playing", "play"], "answer": 1 },
+      { "type": "mcq", "prompt": "«К пятнице я закончу отчёт»:", "options": ["By Friday I will have finished the report.", "By Friday I will be finishing the report.", "By Friday I finish the report."], "answer": 0 },
+      { "type": "mcq", "prompt": "Обычное обещание, без процесса и дедлайна: «Я помогу тебе завтра»:", "options": ["I will be helping you tomorrow.", "I will have helped you tomorrow.", "I will help you tomorrow."], "answer": 2 },
+      { "type": "fill", "prompt": "This time next week we will ___ flying to London. (be)", "answer": "be", "hint": "will + ___ + V-ing" },
+      { "type": "fill", "prompt": "By the end of the year I will ___ read 20 books.", "answer": "have", "hint": "will + ___ + V3" },
+      { "type": "fill", "prompt": "She will have ___ dinner by the time you arrive. (cook, V3)", "answer": "cooked", "hint": "V3" },
+      { "type": "fill", "prompt": "Don't call at nine — I will be ___. (drive)", "answer": "driving", "hint": "V-ing" },
+      { "type": "order", "prompt": "Собери: «К пятнице я закончу работу»", "words": ["By", "Friday", "I", "will", "have", "finished", "the", "work"], "answer": ["By", "Friday", "I", "will", "have", "finished", "the", "work"] }
+    ]
+  },
+  {
+    "title": "Third Conditional: If I had known…",
+    "level": "B2",
+    "order": 4,
+    "theory": [
+      { "type": "paragraph", "text": "Third Conditional — сожаления о прошлом, которое уже не изменить. «Если бы я знал (но не знал), я бы пришёл (но не пришёл)»: If I had known, I would have come." },
+      { "type": "table", "headers": ["Часть", "Формула", "Пример"], "rows": [["if-часть", "if + Past Perfect (had + V3)", "If I had studied…"], ["результат", "would have + V3", "…I would have passed."]] },
+      { "type": "paragraph", "text": "Сравни три условных: First — реально в будущем (If it rains, I will stay). Second — фантазия о настоящем (If I had a car, I would drive). Third — упущенное прошлое (If I had left earlier, I wouldn't have missed the train)." },
+      { "type": "example", "en": "If I had studied harder, I would have passed the exam.", "ru": "Если бы я учился усерднее, я бы сдал экзамен. (но не учился и не сдал)" },
+      { "type": "example", "en": "She would have come if you had invited her.", "ru": "Она бы пришла, если бы ты её пригласил." },
+      { "type": "example", "en": "If we hadn't taken a taxi, we would have been late.", "ru": "Если бы мы не взяли такси, мы бы опоздали." },
+      { "type": "paragraph", "text": "⚠️ Типичная ошибка русскоговорящего: ставить would в if-часть — If I would have known ✗. В if-части ТОЛЬКО had + V3: If I had known ✓. Would have живёт во второй половине предложения." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "If you ___ me, I would have helped.", "options": ["would have asked", "had asked", "asked"], "answer": 1 },
+      { "type": "mcq", "prompt": "If I had seen the sign, I ___.", "options": ["would have stopped", "had stopped", "would stop"], "answer": 0 },
+      { "type": "mcq", "prompt": "Сожаление о прошлом: «Если бы я взял зонт, я бы не промок»:", "options": ["If I took an umbrella, I wouldn't get wet.", "If I had taken an umbrella, I wouldn't have got wet.", "If I take an umbrella, I won't get wet."], "answer": 1 },
+      { "type": "mcq", "prompt": "Что НЕПРАВИЛЬНО?", "options": ["If I had known, I would have come.", "If I would have known, I would have come.", "I would have come if I had known."], "answer": 1 },
+      { "type": "fill", "prompt": "If she ___ studied, she would have passed.", "answer": "had", "hint": "if + ___ + V3" },
+      { "type": "fill", "prompt": "I would ___ called you if I had had your number.", "answer": "have", "hint": "would + ___ + V3" },
+      { "type": "fill", "prompt": "If we had left earlier, we wouldn't have ___ the train. (miss, V3)", "answer": "missed", "hint": "V3" },
+      { "type": "fill", "prompt": "If you had told me, I would have ___ you. (help, V3)", "answer": "helped", "hint": "V3" },
+      { "type": "order", "prompt": "Собери: «Если бы я знал, я бы пришёл»", "words": ["If", "I", "had", "known", "I", "would", "have", "come"], "answer": ["If", "I", "had", "known", "I", "would", "have", "come"] }
+    ]
+  },
+  {
+    "title": "Wish и If only — как жаль, что…",
+    "level": "B2",
+    "order": 5,
+    "theory": [
+      { "type": "paragraph", "text": "I wish — способ сказать «как жаль, что всё не так». Хитрость: после wish время сдвигается НАЗАД. Жалеешь о настоящем — ставь прошедшее: I wish I knew (жаль, что не знаю). Жалеешь о прошлом — ставь Past Perfect: I wish I had gone (жаль, что не пошёл)." },
+      { "type": "table", "headers": ["О чём жалеем", "Формула", "Пример"], "rows": [["о настоящем", "wish + Past Simple", "I wish I had more time."], ["о прошлом", "wish + Past Perfect", "I wish I had studied more."], ["раздражает чужое поведение", "wish + would", "I wish you would stop shouting."]] },
+      { "type": "paragraph", "text": "If only — то же самое, но эмоциональнее: If only I knew! (Ах, если бы я только знал!). Про to be в книжном варианте говорят were для всех лиц: I wish I were taller." },
+      { "type": "example", "en": "I wish I had more free time.", "ru": "Жаль, что у меня мало свободного времени." },
+      { "type": "example", "en": "I wish I had gone to the party.", "ru": "Жаль, что я не пошёл на вечеринку." },
+      { "type": "example", "en": "I wish you would listen to me.", "ru": "Хоть бы ты меня слушал! (раздражение)" },
+      { "type": "paragraph", "text": "⚠️ Типичная ошибка русскоговорящего: копировать русское настоящее время — I wish I know ✗. После wish настоящего не бывает: I wish I knew ✓. И не путай с hope: hope — про реальную надежду (I hope you pass), wish — про то, что уже не так, как хочется." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "Жаль, что я не знаю ответа. I wish I ___ the answer.", "options": ["know", "knew", "had known"], "answer": 1 },
+      { "type": "mcq", "prompt": "Жаль, что я не пошёл вчера. I wish I ___ yesterday.", "options": ["went", "would go", "had gone"], "answer": 2 },
+      { "type": "mcq", "prompt": "Сосед шумит каждую ночь. I wish he ___ making noise.", "options": ["would stop", "stopped to", "stops"], "answer": 0 },
+      { "type": "mcq", "prompt": "Реальная надежда на экзамен друга:", "options": ["I wish you pass.", "I hope you pass.", "I wish you would pass."], "answer": 1 },
+      { "type": "fill", "prompt": "I wish I ___ taller. (be — книжная форма)", "answer": "were", "hint": "для всех лиц" },
+      { "type": "fill", "prompt": "I wish I ___ bought that car. (сожаление о прошлом)", "answer": "had", "hint": "wish + ___ + V3" },
+      { "type": "fill", "prompt": "If only I ___ speak French! (жаль, что не говорю)", "answer": "could", "hint": "мочь в прошедшем" },
+      { "type": "fill", "prompt": "I wish you ___ stop smoking. (раздражение)", "answer": "would", "hint": "чужое поведение" },
+      { "type": "order", "prompt": "Собери: «Жаль, что у меня мало времени»", "words": ["I", "wish", "I", "had", "more", "time"], "answer": ["I", "wish", "I", "had", "more", "time"] }
+    ]
+  },
+  {
+    "title": "Must have, might have, should have — о прошлом",
+    "level": "B2",
+    "order": 6,
+    "theory": [
+      { "type": "paragraph", "text": "Модальный глагол + have + V3 — способ рассуждать о прошлом: делать выводы, предполагать, упрекать. She must have left — «она, должно быть, ушла» (вывод по уликам: сумки нет)." },
+      { "type": "table", "headers": ["Формула", "Смысл", "Пример"], "rows": [["must have + V3", "наверняка было", "He must have forgotten."], ["can't have + V3", "не могло быть", "She can't have said that!"], ["might/may have + V3", "возможно, было", "They might have got lost."], ["should have + V3", "надо было (а не сделал)", "You should have called me."]] },
+      { "type": "paragraph", "text": "should have — любимая форма для упрёков и самокритики: I should have listened to you (надо было тебя послушать). Обратное — shouldn't have: You shouldn't have said that (зря ты это сказал)." },
+      { "type": "example", "en": "The lights are off — they must have gone to bed.", "ru": "Свет выключен — они, должно быть, легли спать." },
+      { "type": "example", "en": "You should have told me earlier!", "ru": "Надо было сказать мне раньше!" },
+      { "type": "example", "en": "She might have missed the bus.", "ru": "Возможно, она опоздала на автобус." },
+      { "type": "paragraph", "text": "⚠️ Типичная ошибка русскоговорящего: «должен был» переводить как must have. Но must have — это ВЫВОД («наверняка»), а упрёк «надо было» — это should have. «Ты должен был позвонить» (упрёк) = You should have called, не must have called." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "Улицы мокрые. It ___ rained at night.", "options": ["must have", "should have", "can't have"], "answer": 0 },
+      { "type": "mcq", "prompt": "Упрёк: «Надо было меня предупредить!» You ___ warned me!", "options": ["must have", "should have", "might have"], "answer": 1 },
+      { "type": "mcq", "prompt": "«Она не могла такое сказать!» She ___ said that!", "options": ["mustn't have", "can't have", "shouldn't have"], "answer": 1 },
+      { "type": "mcq", "prompt": "Их долго нет. Возможно, заблудились. They ___ got lost.", "options": ["must have", "should have", "might have"], "answer": 2 },
+      { "type": "fill", "prompt": "He must ___ forgotten about the meeting.", "answer": "have", "hint": "модальный + ___ + V3" },
+      { "type": "fill", "prompt": "You should have ___ me the truth. (tell, V3)", "answer": "told", "hint": "tell → V3" },
+      { "type": "fill", "prompt": "I shouldn't have ___ so much cake. (eat, V3)", "answer": "eaten", "hint": "eat → V3" },
+      { "type": "fill", "prompt": "She might have ___ the early train. (take, V3)", "answer": "taken", "hint": "take → V3" },
+      { "type": "order", "prompt": "Собери: «Надо было позвонить мне»", "words": ["You", "should", "have", "called", "me"], "answer": ["You", "should", "have", "called", "me"] }
+    ]
+  }
+]

@@ -1,0 +1,101 @@
+[
+  {
+    "title": "Нереальное прошлое: It's time we went",
+    "level": "C1",
+    "order": 5,
+    "theory": [
+      { "type": "paragraph", "text": "Английский использует прошедшее время для НЕреальных ситуаций в настоящем — мы уже видели это в wish и втором условном. На C1 добавляются ещё четыре конструкции с тем же трюком." },
+      { "type": "table", "headers": ["Конструкция", "Пример", "Смысл"], "rows": [["It's (high) time + past", "It's time we went home.", "пора бы уже (а мы ещё тут)"], ["would rather + кто-то + past", "I'd rather you didn't smoke here.", "я бы предпочёл, чтобы ты не…"], ["suppose / what if + past", "Suppose you won the lottery?", "а представь, что…"], ["as if / as though + past", "He talks as if he knew everything.", "как будто (а на деле нет)"]] },
+      { "type": "paragraph", "text": "Ключ: прошедшее время здесь НЕ про прошлое, а про «не так, как есть». It's time we went — мы ещё не ушли; as if he knew — на самом деле не знает. Для прошлого сдвигаемся ещё глубже, в Past Perfect: He talks as if he had seen it himself." },
+      { "type": "example", "en": "It's high time you found a job.", "ru": "Давно пора тебе найти работу." },
+      { "type": "example", "en": "I'd rather you told me the truth.", "ru": "Я бы предпочёл, чтобы ты сказал мне правду." },
+      { "type": "example", "en": "She looks as though she hadn't slept for days.", "ru": "Она выглядит так, будто не спала несколько дней." },
+      { "type": "paragraph", "text": "⚠️ Типичная ошибка русскоговорящего: ставить to после it's time — It's time to we go ✗. Либо it's time TO GO (просто пора), либо it's time WE WENT (пора бы, с лёгким упрёком). И в would rather про другого человека — прошедшее, не инфинитив: I'd rather you CAME, не I'd rather you to come ✗." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "It's time we ___ — the last bus is at 11.", "options": ["go", "went", "will go"], "answer": 1 },
+      { "type": "mcq", "prompt": "I'd rather you ___ me first.", "options": ["ask", "asked", "to ask"], "answer": 1 },
+      { "type": "mcq", "prompt": "He spends money as if he ___ a millionaire.", "options": ["is", "were", "will be"], "answer": 1 },
+      { "type": "mcq", "prompt": "«Пора идти» (нейтрально, без упрёка):", "options": ["It's time to go.", "It's time we go.", "It's time going."], "answer": 0 },
+      { "type": "fill", "prompt": "It's high time you ___ smoking. (stop, прош.)", "answer": "stopped", "hint": "past" },
+      { "type": "fill", "prompt": "I'd rather you ___ tell anyone about this. (отрицание)", "answer": "didn't", "hint": "прошедшее отрицание" },
+      { "type": "fill", "prompt": "She acts as ___ she owned the place. (будто)", "answer": "if", "hint": "as ___" },
+      { "type": "fill", "prompt": "He talks as if he ___ seen it himself. (про прошлое — глубже)", "answer": "had", "hint": "Past Perfect" },
+      { "type": "order", "prompt": "Собери: «Пора бы нам пойти домой»", "words": ["It's", "time", "we", "went", "home"], "answer": ["It's", "time", "we", "went", "home"] }
+    ]
+  },
+  {
+    "title": "Would и will: привычки и характер",
+    "level": "C1",
+    "order": 6,
+    "theory": [
+      { "type": "paragraph", "text": "would и will умеют больше, чем строить будущее и условные. Would описывает повторявшиеся действия в прошлом (ностальгия): Every summer we would swim in the river. Will — типичное, предсказуемое поведение сейчас: He will leave his socks everywhere (вечно он разбрасывает носки)." },
+      { "type": "table", "headers": ["Форма", "Смысл", "Пример"], "rows": [["would + глагол", "бывало, делали (действия в прошлом)", "My grandfather would tell us stories."], ["used to + глагол", "раньше делал/был (действия И состояния)", "I used to live in Omsk. I used to be shy."], ["will + глагол", "вечно он… (типичное поведение)", "She will interrupt people."], ["be used to + V-ing", "привык к", "I'm used to getting up early."]] },
+      { "type": "paragraph", "text": "Тонкость: would — только для ДЕЙСТВИЙ. Для состояний (жить, быть, любить, иметь) — used to: I used to have a dog ✓, I would have a dog ✗. А be used to — вообще другое: не «раньше делал», а «привык»." },
+      { "type": "example", "en": "As a child, I would spend hours reading.", "ru": "В детстве я, бывало, часами читал." },
+      { "type": "example", "en": "He will always find an excuse.", "ru": "Он вечно найдёт отговорку. (предсказуемо)" },
+      { "type": "example", "en": "After a year in London, I'm used to the rain.", "ru": "После года в Лондоне я привык к дождю." },
+      { "type": "paragraph", "text": "⚠️ Типичная ошибка русскоговорящего: путать used to do и be used to doing. I used to work at night = раньше работал (а теперь нет). I'm used to working at night = привык работать по ночам (и работаю). Смысл противоположный по отношению к настоящему!" }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "Every winter we ___ skate on the frozen lake.", "options": ["would", "will", "are used to"], "answer": 0 },
+      { "type": "mcq", "prompt": "Состояние, не действие: «Раньше у меня была машина»:", "options": ["I would have a car.", "I used to have a car.", "I'm used to having a car."], "answer": 1 },
+      { "type": "mcq", "prompt": "«Вечно он опаздывает!» (типичное поведение): He ___ be late!", "options": ["would", "will", "used to"], "answer": 1 },
+      { "type": "mcq", "prompt": "«Я привык вставать в 6»:", "options": ["I used to get up at 6.", "I'm used to getting up at 6.", "I would get up at 6."], "answer": 1 },
+      { "type": "fill", "prompt": "My mother ___ sing to us every night when we were small.", "answer": "would", "hint": "бывало, действие" },
+      { "type": "fill", "prompt": "I ___ to be afraid of dogs, but not anymore.", "answer": "used", "hint": "раньше был" },
+      { "type": "fill", "prompt": "She is used to ___ in a big city. (live)", "answer": "living", "hint": "be used to + V-ing" },
+      { "type": "fill", "prompt": "Don't worry, he ___ always complain — that's just him.", "answer": "will", "hint": "типичное поведение" },
+      { "type": "order", "prompt": "Собери: «В детстве я, бывало, часами играл»", "words": ["As", "a", "child", "I", "would", "play", "for", "hours"], "answer": ["As", "a", "child", "I", "would", "play", "for", "hours"] }
+    ]
+  },
+  {
+    "title": "Needn't have или didn't need to?",
+    "level": "C1",
+    "order": 7,
+    "theory": [
+      { "type": "paragraph", "text": "Тонкая, но важная пара. needn't have done — сделал, А ЗРЯ (не нужно было): I needn't have taken an umbrella (взял зонт, а дождя не было). didn't need to do — делать было не нужно, и скорее всего НЕ делал: I didn't need to buy bread (хлеб был, не покупал)." },
+      { "type": "table", "headers": ["Форма", "Сделал?", "Пример"], "rows": [["needn't have + V3", "сделал (зря)", "You needn't have cooked — I'd already eaten."], ["didn't need to + глагол", "скорее не делал", "I didn't need to pay — it was free."], ["could have + V3", "мог, но не сделал", "You could have called me!"], ["might as well + глагол", "почему бы и нет (без энтузиазма)", "We might as well go home."]] },
+      { "type": "paragraph", "text": "could have — ещё и про упущенные возможности с лёгким упрёком: You could have told me! (мог бы и сказать!). might as well — «раз уж всё равно»: The bus is gone. We might as well walk." },
+      { "type": "example", "en": "You needn't have brought a gift — but thank you!", "ru": "Не стоило приносить подарок (но принёс) — спасибо!" },
+      { "type": "example", "en": "I didn't need to wait long — the doctor saw me at once.", "ru": "Долго ждать не пришлось — врач принял сразу." },
+      { "type": "example", "en": "We might as well start without them.", "ru": "Что ж, можем начинать без них." },
+      { "type": "paragraph", "text": "⚠️ Типичная ошибка русскоговорящего: переводить «не нужно было» всегда одинаково. Сначала спроси себя: действие БЫЛО или нет? Зонт взял (зря) → needn't have taken. Платить не пришлось (и не платил) → didn't need to pay. Английский кодирует эту разницу грамматикой." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "Взял зонт, дождя не было: I ___ an umbrella.", "options": ["didn't need to take", "needn't have taken", "couldn't have taken"], "answer": 1 },
+      { "type": "mcq", "prompt": "Вход был бесплатный, не платил: I ___ pay.", "options": ["needn't have", "didn't need to", "shouldn't have"], "answer": 1 },
+      { "type": "mcq", "prompt": "Упрёк «мог бы и позвонить!»: You ___ me!", "options": ["could have called", "must have called", "needn't have called"], "answer": 0 },
+      { "type": "mcq", "prompt": "Автобус ушёл. «Что ж, пойдём пешком»: We ___ walk.", "options": ["might as well", "needn't have", "would rather"], "answer": 0 },
+      { "type": "fill", "prompt": "You needn't ___ worried — everything went fine.", "answer": "have", "hint": "needn't + ___ + V3" },
+      { "type": "fill", "prompt": "She needn't have ___ so early — the meeting was cancelled. (come, V3)", "answer": "come", "hint": "come → V3" },
+      { "type": "fill", "prompt": "We didn't need ___ book a table — the café was empty.", "answer": "to", "hint": "didn't need ___ + глагол" },
+      { "type": "fill", "prompt": "You could ___ told me about the change of plans!", "answer": "have", "hint": "could + ___ + V3" },
+      { "type": "order", "prompt": "Собери: «Не стоило тебе готовить» (а ты приготовил)", "words": ["You", "needn't", "have", "cooked"], "answer": ["You", "needn't", "have", "cooked"] }
+    ]
+  },
+  {
+    "title": "However hard he tried… — уступка по-взрослому",
+    "level": "C1",
+    "order": 8,
+    "theory": [
+      { "type": "paragraph", "text": "Финальный набор уступительных конструкций — то, что делает речь по-настоящему богатой. However hard he tried, he couldn't open the door — «как ни старался, не смог». Whatever happens, I'll support you — «что бы ни случилось»." },
+      { "type": "table", "headers": ["Конструкция", "Пример", "Перевод"], "rows": [["however + прилаг./нареч.", "However tired you are, finish the report.", "каким бы уставшим ты ни был"], ["whatever / whoever / wherever", "Whatever you decide, tell me first.", "что бы ты ни решил"], ["no matter + what/how/where", "No matter how hard it rains, the match is on.", "как бы ни…"], ["much as", "Much as I admire him, I disagree.", "как я ни восхищаюсь им"], ["adjective + as/though + кто", "Tired as he was, he kept walking.", "хоть он и устал"]] },
+      { "type": "example", "en": "However hard I try, I can't roll my R's.", "ru": "Как я ни стараюсь, не могу выговорить раскатистое «р»." },
+      { "type": "example", "en": "No matter what they say, follow your plan.", "ru": "Что бы они ни говорили, следуй своему плану." },
+      { "type": "example", "en": "Strange as it sounds, I miss my exams.", "ru": "Как ни странно это звучит, я скучаю по экзаменам." },
+      { "type": "paragraph", "text": "⚠️ Типичная ошибка русскоговорящего: however + прилагательное разрывать нельзя — However he tried hard ✗ → However hard he tried ✓ (however и hard ходят парой в начале). И no matter не требует ни if, ни will в придаточной части: No matter what happens ✓, не no matter what will happen ✗." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "___ expensive it is, she'll buy it.", "options": ["However", "Whatever", "No matter"], "answer": 0 },
+      { "type": "mcq", "prompt": "___ you go, I'll find you.", "options": ["However", "Wherever", "Whichever"], "answer": 1 },
+      { "type": "mcq", "prompt": "No matter ___ hard he works, the boss isn't happy.", "options": ["how", "what", "which"], "answer": 0 },
+      { "type": "mcq", "prompt": "«Хоть он и устал, он продолжил» (книжно):", "options": ["Tired as he was, he continued.", "As tired he was, he continued.", "He tired as was, he continued."], "answer": 0 },
+      { "type": "fill", "prompt": "___ happens, stay calm. (что бы ни)", "answer": "whatever", "hint": "одно слово" },
+      { "type": "fill", "prompt": "However ___ you are, always say hello. (каким бы занятым)", "answer": "busy", "hint": "прилагательное" },
+      { "type": "fill", "prompt": "No ___ what people think, be yourself.", "answer": "matter", "hint": "no ___" },
+      { "type": "fill", "prompt": "Much ___ I love this city, I have to leave. (как ни)", "answer": "as", "hint": "much ___" },
+      { "type": "order", "prompt": "Собери: «Как ни старался, он не смог уснуть»", "words": ["However", "hard", "he", "tried", "he", "couldn't", "sleep"], "answer": ["However", "hard", "he", "tried", "he", "couldn't", "sleep"] }
+    ]
+  }
+]

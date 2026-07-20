@@ -1,0 +1,100 @@
+[
+  {
+    "title": "Инверсия: Never have I seen…",
+    "level": "C1",
+    "order": 1,
+    "theory": [
+      { "type": "paragraph", "text": "В выразительной, книжной речи отрицательное слово можно вынести в начало — и тогда порядок слов меняется на вопросительный: Never have I seen such beauty (Никогда я не видел такой красоты). Это инверсия — приём эмфазы, украшение эссе и публичной речи." },
+      { "type": "table", "headers": ["Начало фразы", "Пример", "Перевод"], "rows": [["Never / Rarely / Seldom", "Never have I felt so happy.", "Никогда я не был так счастлив."], ["Not only… but also", "Not only did he win, but he also set a record.", "Он не только победил, но и поставил рекорд."], ["Hardly… when", "Hardly had I sat down when the phone rang.", "Едва я сел, как зазвонил телефон."], ["No sooner… than", "No sooner had we left than it started raining.", "Не успели мы выйти, как пошёл дождь."], ["Under no circumstances", "Under no circumstances should you open this door.", "Ни при каких обстоятельствах не открывай эту дверь."]] },
+      { "type": "paragraph", "text": "Механика простая: после отрицательного начала ставь вспомогательный глагол ПЕРЕД подлежащим, как в вопросе. Если вспомогательного нет — добавь do/does/did: Rarely does she complain." },
+      { "type": "example", "en": "Not only did she pass the exam, but she also got the highest score.", "ru": "Она не только сдала экзамен, но и получила высший балл." },
+      { "type": "example", "en": "Hardly had I closed my eyes when the alarm went off.", "ru": "Едва я закрыл глаза, как сработал будильник." },
+      { "type": "paragraph", "text": "⚠️ Типичная ошибка русскоговорящего: сделать инверсию наполовину — Never I have seen ✗ (слова переставлены, а глагол забыт). Правило: отрицание в начале → сразу вспомогательный глагол → потом подлежащее: Never HAVE I seen ✓. Без выноса в начало инверсии нет: I have never seen — тоже правильно, просто нейтрально." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "Never ___ such a beautiful sunset.", "options": ["I have seen", "have I seen", "I saw"], "answer": 1 },
+      { "type": "mcq", "prompt": "Not only ___ late, but he also forgot the documents.", "options": ["he was", "was he", "he is"], "answer": 1 },
+      { "type": "mcq", "prompt": "Hardly ___ down when the doorbell rang.", "options": ["had I sat", "I had sat", "I sat"], "answer": 0 },
+      { "type": "mcq", "prompt": "Rarely ___ so well in a hotel. (вспомогательного нет — добавь)", "options": ["I sleep", "do I sleep", "I do sleep"], "answer": 1 },
+      { "type": "fill", "prompt": "No sooner ___ we arrived than the show began.", "answer": "had", "hint": "No sooner + ___ + кто + V3" },
+      { "type": "fill", "prompt": "Under no circumstances ___ you tell her the secret.", "answer": "should", "hint": "модальный перед подлежащим" },
+      { "type": "fill", "prompt": "Seldom ___ he visit his hometown now.", "answer": "does", "hint": "нет вспомогательного → do/does" },
+      { "type": "fill", "prompt": "Never in my life ___ I been so scared.", "answer": "have", "hint": "перфект" },
+      { "type": "order", "prompt": "Собери: «Никогда я не чувствовал себя таким счастливым»", "words": ["Never", "have", "I", "felt", "so", "happy"], "answer": ["Never", "have", "I", "felt", "so", "happy"] }
+    ]
+  },
+  {
+    "title": "Had I known… — условные без if",
+    "level": "C1",
+    "order": 2,
+    "theory": [
+      { "type": "paragraph", "text": "В формальной речи if можно убрать, перевернув начало условия: If I had known → Had I known (знай я…). Работает с тремя формами: had, were и should." },
+      { "type": "table", "headers": ["С if", "Без if (инверсия)", "Перевод"], "rows": [["If I had known…", "Had I known…", "Знай я… / Если бы я знал…"], ["If I were you…", "Were I you…", "Будь я тобой…"], ["If you should need help…", "Should you need help…", "Если вдруг понадобится помощь…"]] },
+      { "type": "paragraph", "text": "Второй сюжет урока — смешанные условные (mixed conditionals): прошлое условие с настоящим результатом. If I had studied medicine (тогда), I would be a doctor now (сейчас) — «если бы я тогда выучился, сейчас был бы врачом». Формула: if + Past Perfect, а во второй части would + глагол (не would have!)." },
+      { "type": "example", "en": "Had I known about the traffic, I would have left earlier.", "ru": "Знай я о пробках, я бы выехал раньше." },
+      { "type": "example", "en": "Should you have any questions, feel free to ask.", "ru": "Если вдруг возникнут вопросы — спрашивайте. (вежливая формула писем)" },
+      { "type": "example", "en": "If I had saved money in my twenties, I would be rich now.", "ru": "Если бы я копил деньги в двадцать, сейчас я был бы богат." },
+      { "type": "paragraph", "text": "⚠️ Типичная ошибка русскоговорящего: сохранять if вместе с инверсией — If had I known ✗. Либо if, либо инверсия: If I had known ✓ / Had I known ✓. В отрицании частица not НЕ сокращается: Had I not seen it ✓, Hadn't I seen it ✗." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "___ I known you were coming, I would have cooked more.", "options": ["If had", "Had", "Have"], "answer": 1 },
+      { "type": "mcq", "prompt": "___ you need anything, just call me. (вежливое письмо)", "options": ["Should", "Would", "Had"], "answer": 0 },
+      { "type": "mcq", "prompt": "Смешанное: «Если бы я тогда не бросил спорт, сейчас был бы в форме»:", "options": ["If I hadn't quit sport, I would be fit now.", "If I didn't quit sport, I would have been fit now.", "If I wouldn't quit sport, I would be fit now."], "answer": 0 },
+      { "type": "mcq", "prompt": "«Будь я тобой, я бы согласился»:", "options": ["Were I you, I would agree.", "Was I you, I would agree.", "If were I you, I would agree."], "answer": 0 },
+      { "type": "fill", "prompt": "___ we left earlier, we wouldn't have missed the plane. (без if)", "answer": "had", "hint": "инверсия третьего условного" },
+      { "type": "fill", "prompt": "Had I ___ seen the photo, I wouldn't have believed it. (отрицание)", "answer": "not", "hint": "not не сокращается" },
+      { "type": "fill", "prompt": "If she had taken that job, she ___ be living in London now. (смешанное)", "answer": "would", "hint": "результат в настоящем" },
+      { "type": "fill", "prompt": "___ you change your mind, let me know. (если вдруг)", "answer": "should", "hint": "вежливая формула" },
+      { "type": "order", "prompt": "Собери: «Знай я правду, я бы сказал тебе»", "words": ["Had", "I", "known", "the", "truth", "I", "would", "have", "told", "you"], "answer": ["Had", "I", "known", "the", "truth", "I", "would", "have", "told", "you"] }
+    ]
+  },
+  {
+    "title": "Cleft sentences: What I need is coffee",
+    "level": "C1",
+    "order": 3,
+    "theory": [
+      { "type": "paragraph", "text": "Cleft sentence («расщеплённое предложение») — способ выделить главное. Вместо нейтрального I need coffee — What I need is coffee («что мне нужно, так это кофе»). Слушатель сразу понимает, где фокус." },
+      { "type": "table", "headers": ["Конструкция", "Пример", "Что выделяем"], "rows": [["What… is…", "What I love about autumn is the colours.", "предмет/явление"], ["It was… who/that…", "It was Anna who broke the vase.", "кто именно (не кто-то другой)"], ["It was… that…", "It was in 2019 that we met.", "время, место"], ["The reason why… is…", "The reason why I called is your email.", "причина"], ["All I want is…", "All I want is some peace.", "«всё, чего я хочу» — единственное"]] },
+      { "type": "example", "en": "What surprises me is his patience.", "ru": "Что меня удивляет, так это его терпение." },
+      { "type": "example", "en": "It was my brother who taught me to swim, not my father.", "ru": "Плавать меня научил именно брат, а не отец." },
+      { "type": "example", "en": "All I need is five more minutes.", "ru": "Всё, что мне нужно, — ещё пять минут." },
+      { "type": "paragraph", "text": "⚠️ Типичная ошибка русскоговорящего: калька «что мне нужно — это…» со словом that: That I need is ✗. Начало — только What: What I need is ✓. И в конструкции It was… who глагол после who согласуется с выделенным: It was they who WERE late." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "___ I need right now is a holiday.", "options": ["That", "What", "Which"], "answer": 1 },
+      { "type": "mcq", "prompt": "It was Tom ___ suggested the idea.", "options": ["which", "who", "whom"], "answer": 1 },
+      { "type": "mcq", "prompt": "Выделяем время: «Именно в Париже мы познакомились»:", "options": ["It was in Paris that we met.", "What was in Paris we met.", "In Paris it was we met."], "answer": 0 },
+      { "type": "mcq", "prompt": "«Всё, чего я хочу, — это спать»:", "options": ["All I want is to sleep.", "All what I want is to sleep.", "That all I want is to sleep."], "answer": 0 },
+      { "type": "fill", "prompt": "___ I like about this city is the parks.", "answer": "what", "hint": "начало cleft" },
+      { "type": "fill", "prompt": "It was my mother ___ taught me to cook.", "answer": "who", "hint": "человек" },
+      { "type": "fill", "prompt": "The reason ___ I'm late is the traffic.", "answer": "why", "hint": "the reason + ?" },
+      { "type": "fill", "prompt": "It was only yesterday ___ I found out the news.", "answer": "that", "hint": "время → ?" },
+      { "type": "order", "prompt": "Собери: «Что мне нужно, так это отпуск»", "words": ["What", "I", "need", "is", "a", "holiday"], "answer": ["What", "I", "need", "is", "a", "holiday"] }
+    ]
+  },
+  {
+    "title": "Причастные обороты: Having finished the work…",
+    "level": "C1",
+    "order": 4,
+    "theory": [
+      { "type": "paragraph", "text": "Причастные обороты сжимают два предложения в одно — признак зрелой письменной речи. Вместо After I had finished the work, I went home — Having finished the work, I went home (Закончив работу, я пошёл домой)." },
+      { "type": "table", "headers": ["Форма", "Смысл", "Пример"], "rows": [["V-ing", "одновременно / причина", "Feeling tired, she went to bed early."], ["Having + V3", "сделав (раньше главного действия)", "Having read the letter, he smiled."], ["V3 (пассив)", "будучи сделанным", "Built in 1900, the bridge still stands."], ["Not + V-ing", "не делая / так как не", "Not knowing the answer, I kept silent."]] },
+      { "type": "paragraph", "text": "Золотое правило: у оборота и главного предложения должно быть ОДНО подлежащее. Having finished the work, I went home — закончил работу «I», и домой пошёл тоже «I»." },
+      { "type": "example", "en": "Having lived in Spain, she speaks Spanish fluently.", "ru": "Пожив в Испании, она свободно говорит по-испански." },
+      { "type": "example", "en": "Written in simple English, the book is easy to read.", "ru": "Написанная простым языком, книга легко читается." },
+      { "type": "example", "en": "Not wanting to wake the baby, we whispered.", "ru": "Не желая разбудить малыша, мы говорили шёпотом." },
+      { "type": "paragraph", "text": "⚠️ Типичная ошибка (её делают и носители) — «висячее причастие»: Walking home, the rain started ✗ — получилось, что дождь шёл домой. У оборота и главной части должен совпадать деятель: Walking home, I got caught in the rain ✓." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "___ the report, she sent it to the boss.", "options": ["Having finished", "Finished", "Being finished"], "answer": 0 },
+      { "type": "mcq", "prompt": "___ in 1850, the house needs serious repairs.", "options": ["Building", "Built", "Having built"], "answer": 1 },
+      { "type": "mcq", "prompt": "«Не зная дороги, я спросил прохожего»:", "options": ["Not knowing the way, I asked a passer-by.", "Don't knowing the way, I asked a passer-by.", "Not known the way, I asked a passer-by."], "answer": 0 },
+      { "type": "mcq", "prompt": "Где «висячее причастие» (ошибка)?", "options": ["Having lost the keys, I called a locksmith.", "Driving to work, the phone rang.", "Feeling cold, she put on a coat."], "answer": 1 },
+      { "type": "fill", "prompt": "___ finished dinner, we went for a walk. (сделав раньше)", "answer": "having", "hint": "___ + V3" },
+      { "type": "fill", "prompt": "___ tired, he decided to take a break. (feel — одновременно)", "answer": "feeling", "hint": "V-ing" },
+      { "type": "fill", "prompt": "___ from the plane, the city looks tiny. (see — пассив, V3)", "answer": "seen", "hint": "see → V3" },
+      { "type": "fill", "prompt": "Not ___ what to say, I stayed quiet. (know)", "answer": "knowing", "hint": "not + V-ing" },
+      { "type": "order", "prompt": "Собери: «Закончив работу, я пошёл домой»", "words": ["Having", "finished", "the", "work", "I", "went", "home"], "answer": ["Having", "finished", "the", "work", "I", "went", "home"] }
+    ]
+  }
+]

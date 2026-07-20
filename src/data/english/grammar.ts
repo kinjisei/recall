@@ -13,6 +13,10 @@ import grammarA2 from './grammar/grammar_a2.json'
 import grammarA2Extra from './grammar/grammar_a2_extra.json'
 import grammarB1 from './grammar/grammar_b1.json'
 import grammarB1Extra from './grammar/grammar_b1_extra.json'
+import grammarB2 from './grammar/grammar_b2.json'
+import grammarB2Extra from './grammar/grammar_b2_extra.json'
+import grammarC1 from './grammar/grammar_c1.json'
+import grammarC1Extra from './grammar/grammar_c1_extra.json'
 
 // Тип без поля id (в JSON его нет — присваиваем ниже).
 type RawTopic = Omit<GrammarTopic, 'id'>
@@ -24,6 +28,10 @@ const files: RawTopic[][] = [
   grammarA2Extra,
   grammarB1,
   grammarB1Extra,
+  grammarB2,
+  grammarB2Extra,
+  grammarC1,
+  grammarC1Extra,
 ] as RawTopic[][]
 
 const levelRank: Record<string, number> = { A1: 0, A2: 1, B1: 2, B2: 3, C1: 4 }

@@ -175,10 +175,17 @@ npm run build    # проверка типов (tsc -b) + сборка
   **B1 — 14 уроков** (Present Perfect ×3: формы/спутники/vs Past Simple,
   for/since, Past Continuous, условные 0-1-2, пассив, should/could/might,
   used to, who/which/that, герундий vs инфинитив, косвенная речь, question tags).
+  **B2 — 12 уроков (2026-07-20)** (Present Perfect Continuous, Past Perfect,
+  Future Continuous/Perfect, Third Conditional, wish/if only, модальные+have+V3,
+  пассив во всех временах, have sth done, косвенные вопросы/просьбы, relative
+  clauses с запятыми, although/despite/however, remember doing vs to do).
+  **C1 — 8 уроков (2026-07-20)** (инверсия Never have I…, условные без if +
+  mixed, cleft-предложения, причастные обороты, нереальное прошлое it's time,
+  would/will привычки, needn't have vs didn't need to, however hard/no matter).
   Стандарт качества: простой русский, таблица форм, озвучиваемые примеры,
   блок «⚠️ типичная ошибка русскоговорящего», 8–9 упражнений.
-  План дальше: Этап 4 — B2 (~12 уроков), Этап 5 — C1 (~8);
-  опционально тренажёр неправильных глаголов.
+  **ВСЕ 5 ЭТАПОВ ГОТОВЫ: 62 урока A1–C1, 180 упражнений в B2/C1.**
+  Опционально дальше: тренажёр неправильных глаголов.
 
 - 🔶 **Материалы преподавателя, фаза A (2026-07-19)** — генератор текстов с
   упражнениями: `lib/materials.ts` (двухшаговая генерация через /api/gemini:

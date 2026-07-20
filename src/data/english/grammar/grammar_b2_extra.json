@@ -1,0 +1,151 @@
+[
+  {
+    "title": "Пассив во всех временах: is being done, has been done",
+    "level": "B2",
+    "order": 7,
+    "theory": [
+      { "type": "paragraph", "text": "В B1 был простой пассив (is made, was built). Теперь полная картина: пассив существует во всех временах — меняется только форма be, а смысловой глагол всегда в V3." },
+      { "type": "table", "headers": ["Время", "Формула", "Пример"], "rows": [["Present Simple", "is/are + V3", "Coffee is grown in Brazil."], ["Present Continuous", "is/are being + V3", "The road is being repaired."], ["Present Perfect", "has/have been + V3", "The letter has been sent."], ["Past Simple", "was/were + V3", "The house was built in 1990."], ["Future", "will be + V3", "The results will be published."]] },
+      { "type": "paragraph", "text": "is being repaired — «прямо сейчас ремонтируют», has been sent — «уже отправлено (результат)». Выбор времени — тот же, что и в активе, просто добавь be." },
+      { "type": "example", "en": "The road is being repaired, so take another way.", "ru": "Дорогу ремонтируют (сейчас), поезжай другим путём." },
+      { "type": "example", "en": "Your order has been shipped.", "ru": "Ваш заказ отправлен." },
+      { "type": "example", "en": "The winners will be announced tomorrow.", "ru": "Победителей объявят завтра." },
+      { "type": "paragraph", "text": "⚠️ Типичная ошибка русскоговорящего — терять be: The house built in 1990 ✗ (получилось «дом построил») → The house was built in 1990 ✓. Если предмет НЕ делает действие сам — обязательно нужна форма be + V3." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "The bridge ___ right now — the street is closed.", "options": ["is repaired", "is being repaired", "has been repaired"], "answer": 1 },
+      { "type": "mcq", "prompt": "«Письмо уже отправлено»:", "options": ["The letter has been sent.", "The letter is being sent.", "The letter sent."], "answer": 0 },
+      { "type": "mcq", "prompt": "This house ___ in 1985.", "options": ["built", "was built", "is built"], "answer": 1 },
+      { "type": "mcq", "prompt": "The results ___ next week.", "options": ["will announce", "will be announced", "are announcing"], "answer": 1 },
+      { "type": "fill", "prompt": "English ___ spoken all over the world.", "answer": "is", "hint": "Present Simple, ед. число" },
+      { "type": "fill", "prompt": "My car is ___ washed at the moment. (процесс сейчас)", "answer": "being", "hint": "is + ___ + V3" },
+      { "type": "fill", "prompt": "The tickets have already been ___. (sell, V3)", "answer": "sold", "hint": "sell → V3" },
+      { "type": "fill", "prompt": "The window was ___ by the wind. (break, V3)", "answer": "broken", "hint": "break → V3" },
+      { "type": "order", "prompt": "Собери: «Дорогу сейчас ремонтируют»", "words": ["The", "road", "is", "being", "repaired"], "answer": ["The", "road", "is", "being", "repaired"] }
+    ]
+  },
+  {
+    "title": "Have something done: I had my hair cut",
+    "level": "B2",
+    "order": 8,
+    "theory": [
+      { "type": "paragraph", "text": "Когда что-то делают ДЛЯ тебя (парикмахер стрижёт, мастер чинит), англичане говорят have + предмет + V3: I had my hair cut — «мне подстригли волосы». Сказать I cut my hair — значит «я сам себя подстриг»." },
+      { "type": "table", "headers": ["Кто делает", "Формула", "Пример"], "rows": [["сам", "подлежащее + глагол", "I repaired my car. (сам чинил)"], ["кто-то для меня", "have + предмет + V3", "I had my car repaired. (мне починили)"], ["разговорный вариант", "get + предмет + V3", "I got my phone fixed."]] },
+      { "type": "paragraph", "text": "Время меняем у have: I'm having my flat painted (сейчас красят) · I've just had my eyes tested (только что проверили) · I need to get my visa extended (нужно продлить)." },
+      { "type": "example", "en": "I had my hair cut yesterday.", "ru": "Я вчера подстригся (в парикмахерской)." },
+      { "type": "example", "en": "We're having our kitchen renovated.", "ru": "Нам сейчас делают ремонт на кухне." },
+      { "type": "example", "en": "Where can I get my shoes repaired?", "ru": "Где можно починить ботинки?" },
+      { "type": "paragraph", "text": "⚠️ Типичная ошибка русскоговорящего: «Я починил телефон» (в сервисе) → I repaired my phone ✗ — это значит, что ты сам паял. Правильно: I had my phone repaired ✓. Порядок жёсткий: have + ЧТО + V3, не have repaired my phone." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "«Я подстригся в салоне»:", "options": ["I cut my hair.", "I had my hair cut.", "My hair cut."], "answer": 1 },
+      { "type": "mcq", "prompt": "We ___ our house painted last month.", "options": ["had", "did", "made"], "answer": 0 },
+      { "type": "mcq", "prompt": "«Мне сейчас чинят машину»:", "options": ["I'm repairing my car.", "I'm having my car repaired.", "My car is repairing."], "answer": 1 },
+      { "type": "mcq", "prompt": "Сам, своими руками: «Я сам починил кран»:", "options": ["I had the tap fixed.", "I fixed the tap myself.", "I got the tap fixed."], "answer": 1 },
+      { "type": "fill", "prompt": "I had my photo ___ for the passport. (take, V3)", "answer": "taken", "hint": "take → V3" },
+      { "type": "fill", "prompt": "She is having her dress ___. (make, V3)", "answer": "made", "hint": "make → V3" },
+      { "type": "fill", "prompt": "You should ___ your eyes tested.", "answer": "have", "hint": "___ + предмет + V3" },
+      { "type": "fill", "prompt": "Where did you get your watch ___? (repair, V3)", "answer": "repaired", "hint": "V3" },
+      { "type": "order", "prompt": "Собери: «Мне вчера подстригли волосы»", "words": ["I", "had", "my", "hair", "cut", "yesterday"], "answer": ["I", "had", "my", "hair", "cut", "yesterday"] }
+    ]
+  },
+  {
+    "title": "Косвенная речь: вопросы и просьбы",
+    "level": "B2",
+    "order": 9,
+    "theory": [
+      { "type": "paragraph", "text": "В B1 мы передавали утверждения (He said that he was tired). Теперь — вопросы и просьбы. Главное правило пересказа вопроса: он ПЕРЕСТАЁТ быть вопросом. Порядок слов становится обычным, do/does/did исчезают." },
+      { "type": "table", "headers": ["Прямая речь", "Косвенная", "Что изменилось"], "rows": [["Where do you live?", "He asked where I lived.", "нет do, порядок обычный"], ["Are you ready?", "She asked if I was ready.", "yes/no-вопрос → if/whether"], ["Open the window, please.", "He asked me to open the window.", "просьба → ask + to do"], ["Don't be late!", "She told me not to be late.", "запрет → not to do"]] },
+      { "type": "paragraph", "text": "ask — попросили, tell — велели: He asked me to wait (попросил подождать) · The doctor told me to rest (велел отдыхать). Времена сдвигаются как обычно: live → lived, can → could, will → would." },
+      { "type": "example", "en": "He asked where I was from.", "ru": "Он спросил, откуда я." },
+      { "type": "example", "en": "She asked if I could help her.", "ru": "Она спросила, могу ли я ей помочь." },
+      { "type": "example", "en": "The teacher told us not to use phones.", "ru": "Учитель велел нам не пользоваться телефонами." },
+      { "type": "paragraph", "text": "⚠️ Типичная ошибка русскоговорящего: оставлять вопросительный порядок — He asked where do I live ✗. Пересказ — не вопрос: He asked where I lived ✓. И «спросил, есть ли…» — это if: She asked if I had time (не asked what I have time)." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "«Where do you work?» → He asked ___", "options": ["where do I work.", "where I worked.", "where did I work."], "answer": 1 },
+      { "type": "mcq", "prompt": "«Are you tired?» → She asked ___", "options": ["if I was tired.", "was I tired.", "that I was tired."], "answer": 0 },
+      { "type": "mcq", "prompt": "«Please wait for me.» → He ___", "options": ["asked me to wait for him.", "asked me wait for him.", "said me to wait."], "answer": 0 },
+      { "type": "mcq", "prompt": "«Don't touch it!» → She told me ___", "options": ["don't touch it.", "not to touch it.", "to not touching it."], "answer": 1 },
+      { "type": "fill", "prompt": "He asked ___ I had ever been to London. (ли)", "answer": "if", "hint": "yes/no-вопрос" },
+      { "type": "fill", "prompt": "She asked me ___ close the door. (просьба)", "answer": "to", "hint": "ask + кого + ___ + глагол" },
+      { "type": "fill", "prompt": "«Can you help?» → She asked if I ___ help.", "answer": "could", "hint": "can → ?" },
+      { "type": "fill", "prompt": "The doctor ___ me to drink more water. (велел)", "answer": "told", "hint": "ask или tell?" },
+      { "type": "order", "prompt": "Собери: «Он спросил, где я живу»", "words": ["He", "asked", "where", "I", "lived"], "answer": ["He", "asked", "where", "I", "lived"] }
+    ]
+  },
+  {
+    "title": "Relative clauses: запятые меняют смысл",
+    "level": "B2",
+    "order": 10,
+    "theory": [
+      { "type": "paragraph", "text": "Придаточные с who/which бывают двух видов. БЕЗ запятых — определяющее: говорит, О КОТОРОМ ИМЕННО предмете речь (The girl who lives next door is a doctor). С запятыми — просто добавка, скобки с бонусной информацией (My sister, who lives in Almaty, is a doctor — сестра одна, просто дополняем)." },
+      { "type": "table", "headers": ["Вид", "Пример", "Правила"], "rows": [["без запятых (который именно)", "The film that we saw was great.", "можно that, можно опустить"], ["с запятыми (кстати говоря)", "The film, which we saw yesterday, won an award.", "только who/which, that нельзя"]] },
+      { "type": "paragraph", "text": "Ещё три полезных слова: whose — чей (a friend whose car broke down), where — где (the town where I grew up), whom — книжное «кого/кому» после предлогов (the person to whom I spoke)." },
+      { "type": "example", "en": "My brother, who lives in Astana, is visiting us.", "ru": "Мой брат — он, к слову, живёт в Астане — приезжает к нам." },
+      { "type": "example", "en": "That's the café where we first met.", "ru": "Это то кафе, где мы впервые встретились." },
+      { "type": "example", "en": "I have a friend whose dog understands commands in two languages.", "ru": "У меня есть друг, чья собака понимает команды на двух языках." },
+      { "type": "paragraph", "text": "⚠️ Типичная ошибка русскоговорящего: ставить that после запятой — My mother, that lives in Omsk ✗. С запятыми только who (люди) и which (вещи): My mother, who lives in Omsk ✓. И проверяй смысл: London, which is the capital… (запятые: столица одна) vs the city which I love most (без запятых: какой именно город)." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "My father, ___ works as an engineer, loves fishing.", "options": ["that", "who", "which"], "answer": 1 },
+      { "type": "mcq", "prompt": "The book ___ you gave me is fantastic.", "options": ["who", "that", "whose"], "answer": 1 },
+      { "type": "mcq", "prompt": "«Чей»: a student ___ phone rang during the lesson.", "options": ["who", "which", "whose"], "answer": 2 },
+      { "type": "mcq", "prompt": "Где НУЖНЫ запятые?", "options": ["The man who called you is here.", "Astana which is the capital of Kazakhstan is growing fast.", "The car that I bought is red."], "answer": 1 },
+      { "type": "fill", "prompt": "That's the town ___ I was born. (где)", "answer": "where", "hint": "место" },
+      { "type": "fill", "prompt": "I met a woman ___ son studies with you. (чей)", "answer": "whose", "hint": "принадлежность" },
+      { "type": "fill", "prompt": "My laptop, ___ I bought last year, is already slow. (вещь, с запятыми)", "answer": "which", "hint": "that нельзя" },
+      { "type": "fill", "prompt": "The people ___ live upstairs are very quiet. (люди)", "answer": "who", "hint": "кто?" },
+      { "type": "order", "prompt": "Собери: «Это кафе, где мы встретились»", "words": ["This", "is", "the", "café", "where", "we", "met"], "answer": ["This", "is", "the", "café", "where", "we", "met"] }
+    ]
+  },
+  {
+    "title": "Although, despite, however — «хотя» и «несмотря на»",
+    "level": "B2",
+    "order": 11,
+    "theory": [
+      { "type": "paragraph", "text": "Три способа выразить контраст, и все требуют разной конструкции. Although + целое предложение: Although it was raining, we went out. Despite / in spite of + существительное или -ing: Despite the rain, we went out. However — начинает НОВОЕ предложение и отделяется запятой: It was raining. However, we went out." },
+      { "type": "table", "headers": ["Слово", "Что после него", "Пример"], "rows": [["although / even though", "подлежащее + глагол", "Although he was tired, he kept working."], ["despite / in spite of", "существительное / V-ing", "Despite being tired, he kept working."], ["however", "новое предложение, запятая", "He was tired. However, he kept working."]] },
+      { "type": "paragraph", "text": "even though — усиленное although («даже несмотря на то, что»). А despite the fact that + предложение — костыль, когда хочется despite, но дальше идёт целая фраза." },
+      { "type": "example", "en": "Although the test was hard, everyone passed.", "ru": "Хотя тест был сложным, все сдали." },
+      { "type": "example", "en": "Despite the high price, the phone sells well.", "ru": "Несмотря на высокую цену, телефон хорошо продаётся." },
+      { "type": "example", "en": "I was exhausted. However, I finished the report.", "ru": "Я был вымотан. Тем не менее, я закончил отчёт." },
+      { "type": "paragraph", "text": "⚠️ Типичные ошибки русскоговорящего: despite of ✗ (либо despite, либо in spite OF — не смешивать) и despite + предложение: Despite it was raining ✗ → Despite the rain ✓ или Although it was raining ✓." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "___ the bad weather, the match took place.", "options": ["Although", "Despite", "However"], "answer": 1 },
+      { "type": "mcq", "prompt": "___ it was late, she kept studying.", "options": ["Despite", "In spite of", "Although"], "answer": 2 },
+      { "type": "mcq", "prompt": "Что ПРАВИЛЬНО?", "options": ["Despite of the rain, we walked.", "Despite the rain, we walked.", "Despite it rained, we walked."], "answer": 1 },
+      { "type": "mcq", "prompt": "The hotel was expensive. ___, the service was poor.", "options": ["Although", "Despite", "However"], "answer": 2 },
+      { "type": "fill", "prompt": "___ being ill, he came to work. (несмотря на)", "answer": "despite", "hint": "одно слово, после — V-ing" },
+      { "type": "fill", "prompt": "Although she ___ tired, she cooked dinner. (be, прош.)", "answer": "was", "hint": "although + предложение" },
+      { "type": "fill", "prompt": "In spite ___ the noise, the baby slept well.", "answer": "of", "hint": "in spite ___" },
+      { "type": "fill", "prompt": "Even ___ he apologized, she was still angry. (даже хотя)", "answer": "though", "hint": "even + ?" },
+      { "type": "order", "prompt": "Собери: «Хотя шёл дождь, мы гуляли»", "words": ["Although", "it", "was", "raining", "we", "walked"], "answer": ["Although", "it", "was", "raining", "we", "walked"] }
+    ]
+  },
+  {
+    "title": "Remember doing или remember to do?",
+    "level": "B2",
+    "order": 12,
+    "theory": [
+      { "type": "paragraph", "text": "Некоторые глаголы меняют смысл в зависимости от того, что после них: -ing или to + глагол. Классика: remember doing — помню, КАК делал (воспоминание о прошлом), remember to do — не забудь СДЕЛАТЬ (дело в будущем)." },
+      { "type": "table", "headers": ["Глагол", "+ V-ing (про прошлое/процесс)", "+ to do (про цель/будущее)"], "rows": [["remember", "помню, как делал: I remember locking the door.", "не забыть сделать: Remember to lock the door!"], ["forget", "не забуду, как это было: I'll never forget seeing the ocean.", "забыл сделать: I forgot to buy bread."], ["stop", "бросил делать: He stopped smoking.", "остановился, ЧТОБЫ: He stopped to smoke."], ["try", "попробуй как вариант: Try restarting the phone.", "постарайся: Try to stay calm."], ["regret", "жалею, что сделал: I regret saying that.", "с сожалением сообщаю: We regret to inform you…"]] },
+      { "type": "example", "en": "I remember visiting this place as a child.", "ru": "Помню, как бывал здесь в детстве." },
+      { "type": "example", "en": "Remember to turn off the oven!", "ru": "Не забудь выключить духовку!" },
+      { "type": "example", "en": "He stopped drinking coffee — now he sleeps better.", "ru": "Он бросил пить кофе — теперь лучше спит." },
+      { "type": "paragraph", "text": "⚠️ Типичная ошибка русскоговорящего: stop to smoke в смысле «бросил курить» ✗. stop to do = остановился, ЧТОБЫ сделать. Бросил привычку — stop doing: He stopped smoking ✓. Разница огромная, а по-русски обе фразы звучат похоже." }
+    ],
+    "exercises": [
+      { "type": "mcq", "prompt": "«Он бросил курить»:", "options": ["He stopped to smoke.", "He stopped smoking.", "He stopped smoke."], "answer": 1 },
+      { "type": "mcq", "prompt": "«Не забудь купить молоко»: Remember ___ milk.", "options": ["buying", "to buy", "buy"], "answer": 1 },
+      { "type": "mcq", "prompt": "«Помню, как запирал дверь»: I remember ___ the door.", "options": ["to lock", "locking", "lock"], "answer": 1 },
+      { "type": "mcq", "prompt": "Телефон завис. «Попробуй перезагрузить как вариант»: Try ___ it.", "options": ["restarting", "to restart", "restart"], "answer": 0 },
+      { "type": "fill", "prompt": "I forgot ___ send the email — sorry! (забыл сделать)", "answer": "to", "hint": "дело не сделано" },
+      { "type": "fill", "prompt": "I'll never forget ___ the northern lights. (see — незабываемое воспоминание)", "answer": "seeing", "hint": "V-ing" },
+      { "type": "fill", "prompt": "He stopped ___ ask for directions. (остановился, чтобы спросить)", "answer": "to", "hint": "цель остановки" },
+      { "type": "fill", "prompt": "I regret ___ so rude yesterday. (be — жалею, что был)", "answer": "being", "hint": "V-ing" },
+      { "type": "order", "prompt": "Собери: «Не забудь запереть дверь»", "words": ["Remember", "to", "lock", "the", "door"], "answer": ["Remember", "to", "lock", "the", "door"] }
+    ]
+  }
+]
