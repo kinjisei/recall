@@ -14,6 +14,7 @@ import {
 } from '../../lib/teacher'
 import { MaterialsSection } from './MaterialsSection'
 import { StudentWordsSection } from './StudentWordsSection'
+import { QuestSection } from './QuestSection'
 import { countSubmittedWorks } from '../../lib/materials'
 import type { Deck, Profile } from '../../types'
 
@@ -201,6 +202,7 @@ function StudentCard({
 }) {
   const [showDecks, setShowDecks] = useState(false)
   const [showWords, setShowWords] = useState(false)
+  const [showQuests, setShowQuests] = useState(false)
   const [busyDeck, setBusyDeck] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const p = student.profile
@@ -284,6 +286,14 @@ function StudentCard({
         {showWords ? '▾ Скрыть слова' : '▸ Слова и перепроверка'}
       </button>
       {showWords && <StudentWordsSection studentId={p.id} />}
+
+      <button
+        onClick={() => setShowQuests((v) => !v)}
+        className="text-left text-sm font-medium text-[var(--night-accent-text)] hover:underline dark:text-[var(--night-accent-text)]"
+      >
+        {showQuests ? '▾ Скрыть AI-квесты' : '▸ AI-квесты по грамматике'}
+      </button>
+      {showQuests && <QuestSection studentId={p.id} />}
     </Card>
   )
 }

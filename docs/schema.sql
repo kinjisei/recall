@@ -1005,3 +1005,103 @@
   alter table public.profiles drop constraint if exists profiles_level_check;
   alter table public.profiles add constraint profiles_level_check
     check (level in ('A1','A2','B1','B2','C1','C2'));
+
+  -- ============================================================================
+  -- AI-КВЕСТЫ ПО ГРАММАТИКЕ (2026-07-21): текстовые игры с целевой грамматикой
+  -- в стиле Talkpal. Учитель назначает ученице сценарий («побег из комнаты»,
+  -- «собеседование»…) + грамматическую тему + порог верных ответов; AI ведёт
+  -- историю и пропускает дальше только при правильной грамматике.
+  -- Блок idempotent — можно запускать повторно.
+  -- ============================================================================
+
+  create table if not exists public.grammar_quests (
+    id uuid primary key default gen_random_uuid(),
+    teacher_id uuid not null references public.profiles(id) on delete cascade,
+    student_id uuid not null references public.profiles(id) on delete cascade,
+    lang text not null check (lang in ('en','es')) default 'en',
+    level text not null check (level in ('A1','A2','B1','B2','C1','C2')) default 'B1',
+    topic text not null,        -- грамматическая тема («Past Simple», «Conditionals»)
+    scenario text not null,     -- сценарий квеста
+    target int not null default 10 check (target between 3 and 50),
+    progress int not null default 0,
+    status text not null check (status in ('assigned','completed')) default 'assigned',
+    messages jsonb,             -- переписка: возобновление + проверка учителем
+    created_at timestamptz not null default now(),
+    completed_at timestamptz
+  );
+
+  alter table public.grammar_quests enable row level security;
+
+  -- Чтение: ученица — свои; учитель — своих привязанных учениц (отвязка
+  -- отбирает доступ). Запись — ТОЛЬКО через RPC ниже.
+  drop policy if exists "teacher reads quests" on public.grammar_quests;
+  create policy "teacher reads quests" on public.grammar_quests
+    for select using (
+      auth.uid() = teacher_id and public.is_student_of(auth.uid(), student_id)
+    );
+  drop policy if exists "student reads quests" on public.grammar_quests;
+  create policy "student reads quests" on public.grammar_quests
+    for select using (auth.uid() = student_id);
+  revoke insert, update, delete on public.grammar_quests from authenticated;
+
+  -- Учитель назначает квест своей ученице
+  create or replace function public.assign_grammar_quest(
+    p_student_id uuid, p_lang text, p_level text,
+    p_topic text, p_scenario text, p_target int
+  ) returns uuid language plpgsql security definer set search_path = public as $fn$
+  declare qid uuid;
+  begin
+    if not public.is_student_of(auth.uid(), p_student_id) then
+      raise exception 'Это не ваша ученица.';
+    end if;
+    if trim(coalesce(p_topic, '')) = '' or trim(coalesce(p_scenario, '')) = '' then
+      raise exception 'Укажите тему и сценарий.';
+    end if;
+    insert into grammar_quests (teacher_id, student_id, lang, level, topic, scenario, target)
+    values (auth.uid(), p_student_id, p_lang, p_level,
+            trim(p_topic), trim(p_scenario), p_target)
+    returning id into qid;
+    return qid;
+  end $fn$;
+
+  -- Учитель снимает квест
+  create or replace function public.delete_grammar_quest(p_id uuid)
+  returns void language plpgsql security definer set search_path = public as $fn$
+  begin
+    delete from grammar_quests where id = p_id and teacher_id = auth.uid();
+    if not found then raise exception 'Квест не найден.'; end if;
+  end $fn$;
+
+  -- Ученица засчитывает ОДИН верный ответ; возвращает новый progress.
+  -- Достигнут порог → квест completed.
+  -- ⚠️ Осознанный компромисс: вердикт «верно» ставит AI на клиенте, поэтому
+  -- технически прогресс можно накрутить прямым вызовом RPC. Вся переписка
+  -- сохраняется (messages) — учитель видит реальные ответы при проверке.
+  create or replace function public.quest_correct_answer(p_id uuid)
+  returns int language plpgsql security definer set search_path = public as $fn$
+  declare cur int; tgt int;
+  begin
+    select progress, target into cur, tgt from grammar_quests
+      where id = p_id and student_id = auth.uid() and status = 'assigned'
+      for update;
+    if not found then raise exception 'Квест не найден или уже завершён.'; end if;
+    update grammar_quests
+      set progress = least(cur + 1, tgt),
+          status = case when cur + 1 >= tgt then 'completed' else 'assigned' end,
+          completed_at = case when cur + 1 >= tgt then now() else null end
+    where id = p_id;
+    return least(cur + 1, tgt);
+  end $fn$;
+
+  -- Ученица сохраняет переписку (возобновление на другом устройстве,
+  -- проверка учителем). Ограничиваем размер, чтобы не раздувать строку.
+  create or replace function public.save_quest_messages(p_id uuid, p_messages jsonb)
+  returns void language plpgsql security definer set search_path = public as $fn$
+  begin
+    if pg_column_size(p_messages) > 200000 then
+      raise exception 'Переписка слишком большая.';
+    end if;
+    update grammar_quests set messages = p_messages
+    where id = p_id and student_id = auth.uid();
+    if not found then raise exception 'Квест не найден.'; end if;
+  end $fn$;

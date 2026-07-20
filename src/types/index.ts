@@ -79,6 +79,27 @@ export interface ChatTurn {
   content: string
 }
 
+/** AI-квест по грамматике: учитель назначает, ученица играет с AI. */
+export interface GrammarQuest {
+  id: string
+  teacher_id: string
+  student_id: string
+  lang: AppLang
+  level: string
+  /** Целевая грамматическая тема («Past Simple», «Conditionals»…). */
+  topic: string
+  /** Сценарий («Побег из комнаты», «Собеседование»…). */
+  scenario: string
+  /** Сколько верных ответов нужно для завершения. */
+  target: number
+  progress: number
+  status: 'assigned' | 'completed'
+  /** Переписка (сырые реплики, включая служебные строки вердиктов). */
+  messages: ChatTurn[] | null
+  created_at: string
+  completed_at: string | null
+}
+
 // ---------------------------------------------------------------------------
 // Испанский контент (перенесён из приложения spanish; лежит в src/data/spanish).
 // Это встроенные данные, не таблицы БД.

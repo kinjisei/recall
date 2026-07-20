@@ -205,6 +205,7 @@ const SCREENS = [
   { name: 'Прогресс', path: '/progress' },
   { name: 'Настройки', path: '/settings' },
   { name: 'Placement', path: '/placement' },
+  { name: 'AI-квесты', path: '/quests' },
   { name: 'Учёба ES', path: '/study', lang: 'es' },
   { name: 'Грамматика ES', path: '/grammar', lang: 'es' },
   { name: 'Практика ES', path: '/practice', lang: 'es' },

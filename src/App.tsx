@@ -45,6 +45,9 @@ const TeacherPage = lazy(() =>
 const AssignmentsPage = lazy(() =>
   import('./features/teacher/AssignmentsPage').then((m) => ({ default: m.AssignmentsPage })),
 )
+const QuestsPage = lazy(() =>
+  import('./features/quests/QuestsPage').then((m) => ({ default: m.QuestsPage })),
+)
 
 function PageFallback() {
   return <p className="p-6 text-center text-[var(--night-text-40)]">Загрузка…</p>
@@ -160,6 +163,14 @@ export default function App() {
                 element={
                   <Suspense fallback={<PageFallback />}>
                     <AssignmentsPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/quests"
+                element={
+                  <Suspense fallback={<PageFallback />}>
+                    <QuestsPage />
                   </Suspense>
                 }
               />

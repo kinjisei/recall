@@ -14,6 +14,7 @@ import {
   BookOpenIcon,
   CardsThreeIcon,
   CompassIcon,
+  GameControllerIcon,
   GraduationCapIcon,
   ListBulletsIcon,
   NotePencilIcon,
@@ -28,6 +29,7 @@ import { useLanguage } from '../../context/LanguageContext'
 import { supabase } from '../../lib/supabase'
 import { getEsLevel } from '../../lib/esLevel'
 import { getMyAssignments } from '../../lib/materials'
+import { listMyQuests } from '../../lib/quests'
 import { currentGuidedStep } from '../../lib/guided'
 import { ReaderPage } from '../reader/ReaderPage'
 import { PacksSheet } from '../flashcards/PacksSheet'
@@ -50,6 +52,7 @@ export function StudyPage() {
   // null — уровень не задан; undefined — ещё грузится
   const [enLevel, setEnLevel] = useState<string | null | undefined>(undefined)
   const [assignments, setAssignments] = useState<{ total: number; pending: number } | null>(null)
+  const [quests, setQuests] = useState<{ total: number; active: number } | null>(null)
 
   // уровень испанского хранится локально, английского — в профиле
   useEffect(() => {
@@ -75,6 +78,14 @@ export function StudyPage() {
         }),
       )
       .catch(() => setAssignments(null)) // строка просто не появится
+    listMyQuests()
+      .then((rows) =>
+        setQuests({
+          total: rows.length,
+          active: rows.filter((r) => r.status === 'assigned').length,
+        }),
+      )
+      .catch(() => setQuests(null)) // до выполнения SQL таблицы нет — строку прячем
   }, [])
 
   if (view === 'reader') {
@@ -110,6 +121,27 @@ export function StudyPage() {
               assignments.pending > 0 ? (
                 <span className="flex-none rounded-full bg-[var(--night-accent)] px-2 py-0.5 text-xs font-medium text-white">
                   {assignments.pending}
+                </span>
+              ) : undefined
+            }
+            className="animate-fade-up"
+          />
+        )}
+        {quests && quests.total > 0 && (
+          <RowCard
+            Icon={GameControllerIcon}
+            title="AI-квесты"
+            desc={
+              quests.active > 0
+                ? `Активных: ${quests.active} — AI ждёт твоего хода`
+                : 'Все квесты пройдены ✓'
+            }
+            to="/quests"
+            active={quests.active > 0}
+            trailing={
+              quests.active > 0 ? (
+                <span className="flex-none rounded-full bg-[var(--night-accent)] px-2 py-0.5 text-xs font-medium text-white">
+                  {quests.active}
                 </span>
               ) : undefined
             }
