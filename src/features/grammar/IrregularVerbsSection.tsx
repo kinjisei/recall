@@ -47,7 +47,7 @@ export function IrregularVerbsSection() {
           <button
             key={id}
             onClick={() => setMode(id)}
-            className={`rounded-lg px-4 py-2 text-sm font-semibold ${
+            className={`min-h-[44px] rounded-lg px-4 text-sm font-semibold ${
               mode === id
                 ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
                 : 'bg-white/[0.07] text-[var(--night-text-70)]'

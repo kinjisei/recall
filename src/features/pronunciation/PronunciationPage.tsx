@@ -149,7 +149,7 @@ export function PronunciationPage() {
       <div className="flex flex-col items-center gap-5 pt-1">
         <button
           onClick={() => speak(current.text, { lang })}
-          className="lift flex items-center gap-2 rounded-full border border-white/[0.10] px-4 py-2 text-sm text-[var(--night-text-70)]"
+          className="lift flex min-h-[44px] items-center gap-2 rounded-full border border-white/[0.10] px-5 text-sm text-[var(--night-text-70)]"
         >
           <SpeakerHighIcon size={16} /> Прослушать
         </button>

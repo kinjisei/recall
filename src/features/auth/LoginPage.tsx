@@ -119,9 +119,12 @@ export function LoginPage() {
               required
             />
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium">Пароль</label>
+              <label htmlFor="f-password" className="text-sm font-medium">
+                Пароль
+              </label>
               <div className="relative">
                 <input
+                  id="f-password"
                   className={`${inputClass} pr-12`}
                   type={showPw ? 'text' : 'password'}
                   placeholder="••••••••"
@@ -135,7 +138,7 @@ export function LoginPage() {
                   type="button"
                   aria-label={showPw ? 'Скрыть пароль' : 'Показать пароль'}
                   onClick={() => setShowPw(!showPw)}
-                  className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center text-[var(--night-text-40)] hover:text-[var(--night-text)]"
+                  className="absolute right-1 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center text-[var(--night-text-40)] hover:text-[var(--night-text)]"
                 >
                   <EyeIcon off={showPw} />
                 </button>
@@ -247,10 +250,14 @@ function InputGroup({
   autoComplete?: string
   required?: boolean
 }) {
+  const fieldId = 'f-' + label.toLowerCase().replace(/[^a-zа-я0-9]+/gi, '-')
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-sm font-medium">{label}</label>
+      <label htmlFor={fieldId} className="text-sm font-medium">
+        {label}
+      </label>
       <input
+        id={fieldId}
         className={inputClass}
         type={type}
         placeholder={placeholder}

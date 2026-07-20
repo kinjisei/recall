@@ -45,7 +45,7 @@ function EnglishReaderPage({ title, header }: { title: string; header?: ReactNod
           <button
             key={l}
             onClick={() => setLevel(l)}
-            className={`rounded-lg px-4 py-2 text-sm font-semibold ${
+            className={`min-h-[44px] rounded-lg px-4 text-sm font-semibold ${
               level === l
                 ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
                 : 'bg-white/[0.07] text-[var(--night-text-70)]'

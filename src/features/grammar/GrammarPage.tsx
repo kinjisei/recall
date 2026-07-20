@@ -49,7 +49,7 @@ export function GrammarPage() {
             <button
               key={s.id}
               onClick={() => setSection(s.id)}
-              className={`rounded-lg px-4 py-2 text-sm font-semibold ${
+              className={`min-h-[44px] rounded-lg px-4 text-sm font-semibold ${
                 section === s.id
                   ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
                   : 'bg-white/[0.07] text-[var(--night-text-70)]'
@@ -181,7 +181,7 @@ function TopicScreen({
       <div className="flex gap-2">
         <button
           onClick={() => setMode('theory')}
-          className={`rounded-lg px-4 py-2 text-sm font-semibold ${
+          className={`min-h-[44px] rounded-lg px-4 text-sm font-semibold ${
             mode === 'theory'
               ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
               : 'bg-white/[0.07] text-[var(--night-text-70)]'
@@ -192,7 +192,7 @@ function TopicScreen({
         {topic.exercises.length > 0 && (
           <button
             onClick={() => setMode('exercises')}
-            className={`rounded-lg px-4 py-2 text-sm font-semibold ${
+            className={`min-h-[44px] rounded-lg px-4 text-sm font-semibold ${
               mode === 'exercises'
                 ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
                 : 'bg-white/[0.07] text-[var(--night-text-70)]'

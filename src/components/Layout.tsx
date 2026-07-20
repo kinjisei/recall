@@ -71,7 +71,7 @@ function AvatarMenu() {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Меню профиля"
-        className="lift flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.08] bg-[var(--night-surface)] text-sm font-medium text-[var(--night-accent-100)]"
+        className="lift flex h-11 w-11 items-center justify-center rounded-full border border-white/[0.08] bg-[var(--night-surface)] text-sm font-medium text-[var(--night-accent-100)]"
       >
         {initial}
       </button>
@@ -107,7 +107,7 @@ function TopBar() {
   return (
     <header className="sticky top-0 z-20 border-b border-white/[0.06] bg-[rgba(22,24,38,.82)] pt-[env(safe-area-inset-top)] backdrop-blur-xl">
       <div className="mx-auto flex max-w-screen-sm items-center justify-between px-4 py-3">
-        <Link to="/" className="flex items-center gap-2">
+        <Link to="/" className="flex min-h-[44px] items-center gap-2">
           <BrandMark size={26} />
           <span className="text-lg font-medium tracking-tight">Recall</span>
         </Link>
@@ -123,7 +123,7 @@ function TopBar() {
                 key={t.id}
                 onClick={() => setLang(t.id)}
                 aria-pressed={lang === t.id}
-                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                className={`min-h-[44px] min-w-[48px] rounded-full px-4 text-xs font-medium transition-colors ${
                   lang === t.id
                     ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
                     : 'text-[var(--night-text-40)] hover:text-[var(--night-text-70)]'

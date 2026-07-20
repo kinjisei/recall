@@ -52,7 +52,7 @@ export function ConversationPage() {
           <button
             key={m.id}
             onClick={() => setMode(m.id)}
-            className={`rounded-lg px-4 py-2 text-sm font-semibold ${
+            className={`min-h-[44px] rounded-lg px-4 text-sm font-semibold ${
               mode === m.id
                 ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
                 : 'bg-white/[0.07] text-[var(--night-text-70)]'
@@ -231,6 +231,7 @@ function ChatSection({ level, lang }: { level: CEFRLevel; lang: AppLang }) {
 
       <form onSubmit={send} className="flex gap-2">
         <input
+          aria-label={lang === 'es' ? 'Сообщение по-испански' : 'Сообщение по-английски'}
           className="min-w-0 flex-1 rounded-xl border border-white/[0.10] bg-[var(--night-surface)] px-4 py-3 text-base outline-none focus:border-[var(--night-accent-45)] dark:border-white/[0.10] dark:bg-slate-900"
           placeholder={lang === 'es' ? 'Escribe en español…' : 'Write in English…'}
           value={input}

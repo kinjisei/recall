@@ -240,7 +240,7 @@ function StreakHero({
             />
             <span
               className={`text-[10px] ${
-                d.isToday ? 'text-[var(--night-accent-text)]' : 'text-[var(--night-text-25)]'
+                d.isToday ? 'text-[var(--night-accent-text)]' : 'text-[var(--night-text-40)]'
               }`}
             >
               {d.label}
@@ -251,7 +251,7 @@ function StreakHero({
 
       <Link
         to="/progress"
-        className="relative mt-4 inline-flex items-center gap-1 text-sm text-[var(--night-accent-text)] hover:underline"
+        className="relative mt-3 inline-flex min-h-[44px] items-center gap-1 text-sm text-[var(--night-accent-text)] hover:underline"
       >
         Мой прогресс <CaretRightIcon size={14} />
       </Link>
@@ -281,7 +281,7 @@ function WordOfDay({ card, lang }: { card: CardType; lang: 'en' | 'es' }) {
       <button
         onClick={() => speak(card.front, { lang })}
         aria-label="Озвучить"
-        className="lift flex h-9 w-9 flex-none items-center justify-center rounded-full border border-white/[0.08] text-[var(--night-text-70)]"
+        className="lift flex h-11 w-11 flex-none items-center justify-center rounded-full border border-white/[0.08] text-[var(--night-text-70)]"
       >
         <SpeakerHighIcon size={18} />
       </button>

@@ -93,7 +93,7 @@ export function SettingsPage() {
         <button
           onClick={() => navigate(-1)}
           aria-label="Назад"
-          className="lift -ml-2 flex h-9 w-9 items-center justify-center rounded-full text-[var(--night-text-70)]"
+          className="lift -ml-2 flex h-11 w-11 items-center justify-center rounded-full text-[var(--night-text-70)]"
         >
           <CaretLeftIcon size={20} />
         </button>
@@ -102,8 +102,11 @@ export function SettingsPage() {
 
       {/* Профиль */}
       <Section title="Профиль" delay=".05s">
-        <label className="block text-sm text-[var(--night-text-40)]">Как тебя зовут</label>
+        <label htmlFor="settings-name" className="block text-sm text-[var(--night-text-40)]">
+          Как тебя зовут
+        </label>
         <input
+          id="settings-name"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Имя"
@@ -118,7 +121,7 @@ export function SettingsPage() {
             <button
               key={l}
               onClick={() => setLevel(l)}
-              className={`rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
+              className={`min-h-[44px] rounded-xl px-4 text-sm font-medium transition-colors ${
                 level === l
                   ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
                   : 'bg-white/[0.06] text-[var(--night-text-40)]'
@@ -152,7 +155,7 @@ export function SettingsPage() {
             <button
               key={s.id}
               onClick={() => patchLocal({ speechRate: s.id })}
-              className={`flex-1 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
+              className={`min-h-[44px] flex-1 rounded-xl px-3 text-sm font-medium transition-colors ${
                 local.speechRate === s.id
                   ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
                   : 'bg-white/[0.06] text-[var(--night-text-40)]'
@@ -169,7 +172,7 @@ export function SettingsPage() {
               rate: SPEECH_RATES[local.speechRate],
             })
           }
-          className="lift mt-3 flex items-center gap-2 rounded-full border border-white/[0.10] px-4 py-2 text-sm text-[var(--night-text-70)]"
+          className="lift mt-3 flex min-h-[44px] items-center gap-2 rounded-full border border-white/[0.10] px-4 text-sm text-[var(--night-text-70)]"
         >
           <SpeakerHighIcon size={16} /> Проверить
         </button>
@@ -185,7 +188,7 @@ export function SettingsPage() {
             <button
               key={s.id}
               onClick={() => patchLocal({ readerSize: s.id })}
-              className={`flex-1 rounded-xl px-3 py-2.5 font-medium transition-colors ${
+              className={`min-h-[44px] flex-1 rounded-xl px-3 font-medium transition-colors ${
                 s.id === 'small' ? 'text-sm' : s.id === 'large' ? 'text-lg' : 'text-base'
               } ${
                 local.readerSize === s.id
@@ -199,7 +202,7 @@ export function SettingsPage() {
         </div>
       </Section>
 
-      <p className="px-1 text-xs text-[var(--night-text-25)]">
+      <p className="px-1 text-xs text-[var(--night-text-40)]">
         Скорость озвучки и размер текста сохраняются на этом устройстве.
         Имя и уровень — в аккаунте.
       </p>

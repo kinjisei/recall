@@ -149,7 +149,7 @@ export function MyWords({ lang, onBack }: { lang: AppLang; onBack: () => void })
           <button
             key={f.id}
             onClick={() => setFilter(f.id)}
-            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+            className={`shrink-0 min-h-[44px] rounded-full px-4 text-xs font-medium transition-colors ${
               filter === f.id
                 ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
                 : 'bg-white/[0.06] text-[var(--night-text-40)]'

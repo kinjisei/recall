@@ -171,7 +171,7 @@ function JoinTeacherBlock() {
       {!open ? (
         <button
           onClick={() => setOpen(true)}
-          className="text-left text-sm text-[var(--night-accent-text)] hover:underline dark:text-[var(--night-accent-text)]"
+          className="flex min-h-[44px] items-center text-left text-sm text-[var(--night-accent-text)] hover:underline"
         >
           У меня есть код преподавателя →
         </button>

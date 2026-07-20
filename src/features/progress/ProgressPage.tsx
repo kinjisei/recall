@@ -96,7 +96,7 @@ export function ProgressPage() {
         <button
           onClick={() => navigate(-1)}
           aria-label="Назад"
-          className="lift -ml-2 flex h-9 w-9 items-center justify-center rounded-full text-[var(--night-text-70)]"
+          className="lift -ml-2 flex h-11 w-11 items-center justify-center rounded-full text-[var(--night-text-70)]"
         >
           <CaretLeftIcon size={20} />
         </button>
@@ -133,7 +133,7 @@ export function ProgressPage() {
                 </div>
                 <span
                   className={`text-[11px] ${
-                    d.isToday ? 'text-[var(--night-accent-text)]' : 'text-[var(--night-text-25)]'
+                    d.isToday ? 'text-[var(--night-accent-text)]' : 'text-[var(--night-text-40)]'
                   }`}
                 >
                   {d.label}
