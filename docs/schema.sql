@@ -765,3 +765,208 @@
           and (d.owner_id = auth.uid() or public.deck_assigned_to(d.id, auth.uid()))
       )
     );
+
+  -- ============================================================================
+  -- КОНТРОЛЬ ДОСТУПА (2026-07-20): белый список email + флаг блокировки.
+  -- Блок idempotent — можно запускать повторно.
+  -- Подробное описание и готовые команды: docs/ACCESS-CONTROL.md
+  -- ============================================================================
+
+  -- ---- 1. Белый список приглашённых ----
+  -- Регистрация в приложении остаётся открытой, но триггер handle_new_user
+  -- пропускает только тех, чей email заранее внесён сюда. Гейт стоит в БД,
+  -- поэтому обойти его с клиента (DevTools, прямой REST, подмена запроса)
+  -- невозможно: проверка выполняется внутри транзакции создания пользователя.
+  create table if not exists public.allowed_emails (
+    email    text primary key,
+    note     text,
+    added_at timestamptz not null default now()
+  );
+
+  alter table public.allowed_emails enable row level security;
+
+  -- Политик намеренно НЕ создаём: RLS без политик = отказ во всём. Плюс явный
+  -- revoke, чтобы право не пришло из дефолтных грантов Supabase. В итоге список
+  -- невидим для приложения — ни прочитать, ни узнать, есть ли в нём адрес.
+  -- Управление только из SQL Editor (роль postgres) или ключом service_role.
+  revoke all on public.allowed_emails from anon, authenticated;
+
+  -- Нормализация: храним email в нижнем регистре и без пробелов по краям,
+  -- чтобы 'Ivan@Mail.ru ' и 'ivan@mail.ru' были одной и той же записью.
+  create or replace function public.normalize_allowed_email()
+  returns trigger language plpgsql as $fn$
+  begin
+    new.email := lower(trim(new.email));
+    return new;
+  end $fn$;
+
+  drop trigger if exists allowed_emails_normalize on public.allowed_emails;
+  create trigger allowed_emails_normalize
+    before insert or update on public.allowed_emails
+    for each row execute function public.normalize_allowed_email();
+
+  -- ---- 2. Флаг блокировки ----
+  -- Снять блокировку с себя пользователь не может: выше по файлу выполнены
+  -- `revoke update on public.profiles from authenticated` и
+  -- `grant update (display_name, level, native_lang)`, то есть UPDATE разрешён
+  -- ровно на три колонки, и blocked в их число не входит.
+  --
+  -- ВАЖНО про модель угроз: этот флаг управляет тем, что показывает приложение,
+  -- и закрывает доступ к платному AI-прокси (api/gemini.ts). Он НЕ отзывает уже
+  -- выданный JWT — чтение своих данных через прямой REST у заблокированного
+  -- останется до истечения токена. Жёсткая блокировка — «Ban user» в
+  -- Supabase (Authentication → Users), она мгновенно убивает все токены.
+  alter table public.profiles add column if not exists blocked boolean not null default false;
+
+  -- ---- 3. Гейт на регистрацию ----
+  -- Триггер AFTER INSERT на auth.users: raise внутри него откатывает всю
+  -- транзакцию регистрации, поэтому запись в auth.users не остаётся —
+  -- «полурегистрации» без профиля возникнуть не может.
+  -- Тело функции ниже полностью повторяет прежнее (профиль + две колоды),
+  -- добавлена только проверка белого списка в начале.
+  create or replace function public.handle_new_user()
+  returns trigger
+  language plpgsql
+  security definer
+  set search_path = public
+  as $$
+  begin
+    if not exists (
+      select 1 from public.allowed_emails a
+      where a.email = lower(trim(new.email))
+    ) then
+      -- Текст ловится клиентом (src/lib/access.ts) и заменяется на понятный.
+      raise exception 'RECALL_NOT_INVITED'
+        using errcode = 'check_violation';
+    end if;
+
+    insert into public.profiles (id, display_name)
+    values (
+      new.id,
+      coalesce(new.raw_user_meta_data->>'display_name', split_part(new.email, '@', 1))
+    )
+    on conflict (id) do nothing;
+
+    insert into public.decks (owner_id, title, description, lang)
+    values
+      (new.id, 'Мои слова',    'Английские слова из чтения и добавленные вручную', 'en'),
+      (new.id, 'Mis palabras', 'Испанские слова из паков, чтения и добавленные вручную', 'es');
+
+    return new;
+  end;
+  $$;
+
+  -- ---- 4. Обзор доступа (для владельца проекта) ----
+  -- Показывает разом: кто приглашён, кто уже зарегистрировался, кто заблокирован.
+  -- Смотреть из SQL Editor: select * from public.access_overview;
+  -- Клиенту недоступно — гранты не выдаются.
+  create or replace view public.access_overview as
+    select
+      a.email,
+      a.note,
+      a.added_at,
+      u.id                       as user_id,
+      u.created_at               as registered_at,
+      u.last_sign_in_at,
+      u.banned_until,
+      coalesce(p.blocked, false) as blocked,
+      p.display_name,
+      p.role
+    from public.allowed_emails a
+    left join auth.users u on lower(u.email) = a.email
+    left join public.profiles p on p.id = u.id
+    order by a.added_at;
+
+  revoke all on public.access_overview from anon, authenticated;
+
+  -- ============================================================================
+  -- ЛИМИТЫ НА AI (2026-07-20): защита квоты Gemini от сжигания одним аккаунтом.
+  -- Блок idempotent — можно запускать повторно.
+  -- ============================================================================
+
+  -- Журнал обращений к /api/gemini. Пишется только через RPC ниже (клиенту
+  -- таблица недоступна), поэтому подделать счётчик нельзя.
+  create table if not exists public.ai_calls (
+    id        bigserial primary key,
+    user_id   uuid not null references public.profiles(id) on delete cascade,
+    called_at timestamptz not null default now()
+  );
+
+  create index if not exists ai_calls_user_time
+    on public.ai_calls (user_id, called_at desc);
+
+  alter table public.ai_calls enable row level security;
+  revoke all on public.ai_calls from anon, authenticated;
+  revoke all on sequence public.ai_calls_id_seq from anon, authenticated;
+
+  -- Единая проверка перед каждым обращением к Gemini: бан → блокировка → лимиты.
+  -- Вызывается сервером (api/gemini.ts) с JWT пользователя, поэтому auth.uid()
+  -- здесь — это именно тот, кто послал запрос, а подменить его нельзя.
+  --
+  -- Лимиты подобраны под живое использование одним человеком: типичное занятие
+  -- (диалог + разбор пары текстов) укладывается в 10-20 обращений. Менять здесь.
+  create or replace function public.consume_ai_quota()
+  returns void
+  language plpgsql
+  security definer
+  set search_path = public
+  as $fn$
+  declare
+    max_per_hour constant int := 40;
+    max_per_day  constant int := 200;
+    uid uuid := auth.uid();
+    n int;
+  begin
+    if uid is null then
+      raise exception 'RECALL_NO_AUTH';
+    end if;
+
+    -- Бан в Supabase (Authentication → Users → Ban user). PostgREST сам его не
+    -- проверяет: подписанный JWT остаётся валидным до истечения срока, поэтому
+    -- смотрим banned_until явно — иначе забаненный ещё час жёг бы квоту.
+    if exists (
+      select 1 from auth.users
+      where id = uid and banned_until is not null and banned_until > now()
+    ) then
+      raise exception 'RECALL_BLOCKED';
+    end if;
+
+    if exists (select 1 from profiles where id = uid and blocked) then
+      raise exception 'RECALL_BLOCKED';
+    end if;
+
+    -- Чистим старое, чтобы таблица не росла бесконечно.
+    delete from ai_calls where called_at < now() - interval '3 days';
+
+    select count(*) into n from ai_calls
+    where user_id = uid and called_at > now() - interval '1 hour';
+    if n >= max_per_hour then
+      raise exception 'RECALL_RATE_HOUR';
+    end if;
+
+    select count(*) into n from ai_calls
+    where user_id = uid and called_at > now() - interval '24 hours';
+    if n >= max_per_day then
+      raise exception 'RECALL_RATE_DAY';
+    end if;
+
+    insert into ai_calls (user_id) values (uid);
+  end $fn$;
+
+  grant execute on function public.consume_ai_quota() to authenticated;
+
+  -- Сколько уже потрачено — для владельца проекта (из SQL Editor).
+  create or replace view public.ai_usage_overview as
+    select
+      p.display_name,
+      u.email,
+      count(*) filter (where c.called_at > now() - interval '1 hour')   as last_hour,
+      count(*) filter (where c.called_at > now() - interval '24 hours') as last_day,
+      max(c.called_at)                                                  as last_call
+    from public.ai_calls c
+    join public.profiles p on p.id = c.user_id
+    join auth.users u on u.id = c.user_id
+    group by p.display_name, u.email
+    order by last_day desc;
+
+  revoke all on public.ai_usage_overview from anon, authenticated;
