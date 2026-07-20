@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { BrandLogo, BrandMark } from '../../components/Brand'
+import { describeSignUpError } from '../../lib/access'
 
 /**
  * Экран входа/регистрации Recall — тёмная версия «Nocturne».
@@ -38,7 +39,9 @@ export function LoginPage() {
       if (signup) {
         const displayName = `${firstName} ${lastName}`.trim()
         const { error } = await signUp(email, password, displayName)
-        if (error) setError(error)
+        // Отказ по белому списку приходит из БД технической формулировкой —
+        // переводим его в человеческую (см. lib/access.ts)
+        if (error) setError(describeSignUpError(error))
         else
           setInfo(
             'Аккаунт создан. Если включено подтверждение почты — проверь email, иначе просто войди.',
@@ -97,7 +100,7 @@ export function LoginPage() {
             </h2>
             <p className="text-sm text-[var(--night-text-40)]">
               {signup
-                ? 'Введи основные данные, чтобы начать путь.'
+                ? 'Recall сейчас в закрытом тесте — зарегистрироваться можно только по приглашению.'
                 : 'Войди, чтобы продолжить занятия.'}
             </p>
           </div>
