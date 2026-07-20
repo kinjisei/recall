@@ -3,7 +3,8 @@
 // spanish) и английские (авторские, пополняются). Список тем по уровням →
 // теория (paragraph/table/example) → интерактивные упражнения (mcq/fill/order)
 // с проверкой. Завершение упражнений засчитывается в стрик (logActivity).
-// Раздел «Глаголы» (спряжения) — только для испанского.
+// Раздел «Глаголы»: ES — спряжения (ConjugationSection), EN — неправильные
+// глаголы (IrregularVerbsSection).
 // ============================================================================
 import { useEffect, useMemo, useState } from 'react'
 import { Card } from '../../components/Card'
@@ -13,6 +14,7 @@ import { logActivity } from '../../lib/activity'
 import { useLanguage } from '../../context/LanguageContext'
 import { ExerciseView } from '../../components/exercises'
 import { ConjugationSection } from './ConjugationSection'
+import { IrregularVerbsSection } from './IrregularVerbsSection'
 import type {
   AppLang,
   GrammarTheoryBlock,
@@ -28,24 +30,22 @@ const sections: { id: Section; label: string }[] = [
   { id: 'verbs', label: '🔀 Глаголы' },
 ]
 
-/** «Грамматика»: уроки (EN и ES) + спряжения глаголов (только ES). */
+/** «Грамматика»: уроки (EN и ES) + глаголы (ES — спряжения, EN — неправильные). */
 export function GrammarPage() {
   const { lang } = useLanguage()
   const [section, setSection] = useState<Section>('lessons')
 
-  // при переключении на английский раздел «Глаголы» недоступен
+  // при смене языка возвращаемся к урокам (контент «Глаголов» разный)
   useEffect(() => {
-    if (lang !== 'es') setSection('lessons')
+    setSection('lessons')
   }, [lang])
-
-  const visibleSections = lang === 'es' ? sections : sections.filter((s) => s.id === 'lessons')
 
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-bold">📚 Грамматика</h1>
-      {visibleSections.length > 1 && (
+      {
         <div className="flex gap-2">
-          {visibleSections.map((s) => (
+          {sections.map((s) => (
             <button
               key={s.id}
               onClick={() => setSection(s.id)}
@@ -59,9 +59,15 @@ export function GrammarPage() {
             </button>
           ))}
         </div>
-      )}
+      }
 
-      {section === 'lessons' ? <LessonsSection key={lang} lang={lang} /> : <ConjugationSection />}
+      {section === 'lessons' ? (
+        <LessonsSection key={lang} lang={lang} />
+      ) : lang === 'es' ? (
+        <ConjugationSection />
+      ) : (
+        <IrregularVerbsSection />
+      )}
     </div>
   )
 }
