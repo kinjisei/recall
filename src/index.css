@@ -1,18 +1,50 @@
 @import 'tailwindcss';
+/* Шрифт Onest — локально (PWA работает офлайн, без запросов к Google Fonts).
+   Variable-начертание: один файл на все веса 100–900, кириллица включена. */
+@import '@fontsource-variable/onest';
+
+/* Тема «Nocturne» — единственная (светлой нет), поэтому dark:-классы старых
+   экранов должны срабатывать ВСЕГДА. Переопределяем вариант на класс, который
+   висит на <html> (см. index.html), вместо системного prefers-color-scheme. */
+@custom-variant dark (&:where(.dark, .dark *));
 
 /* ==========================================================================
-   Recall — базовые стили и токены дизайн-системы.
-   Акцент: sky (голубой) + индиго-градиент для «геройских» элементов.
-   Всё адаптивно, поддерживает светлую/тёмную тему и prefers-reduced-motion.
+   Recall — базовые стили и токены дизайн-системы «Nocturne».
+   Тёмный сине-серый фон, один акцент (blurple), шрифт Onest.
+   Всё адаптивно и уважает prefers-reduced-motion.
    ========================================================================== */
 
 :root {
-  color-scheme: light dark;
-  /* Семантические токены акцента (используются в градиентах и кольцах фокуса) */
-  --brand-500: #0ea5e9; /* sky-500 */
-  --brand-600: #0284c7; /* sky-600 */
-  --brand-700: #0369a1; /* sky-700 */
-  --accent-500: #6366f1; /* indigo-500 — второй цвет градиента */
+  color-scheme: dark;
+
+  /* --- Nocturne: основная палитра --- */
+  --night-bg: #161826; /* фон страницы */
+  --night-text: #e9e9ed; /* основной текст */
+  --night-surface: #1e2030; /* карточки-строки, панели */
+  --night-input: #262939; /* фон полей ввода */
+  --night-step: rgba(30, 32, 46, 0.72); /* неактивный шаг поверх авроры */
+  --night-glass: rgba(22, 24, 38, 0.74); /* glass-панели (форма, навигация) */
+  --night-accent: #9184d9; /* акцент: линии, рамки, метки */
+  --night-accent-text: #b9b0e8; /* акцент для мелкого текста/ссылок */
+  --night-accent-900: #2b2450; /* подложка активной иконки */
+  --night-accent-100: #cfc8f0; /* иконка/текст на подложке */
+  --night-font: 'Onest Variable', 'Onest', system-ui, sans-serif;
+
+  /* Прозрачные производные */
+  --night-text-70: rgba(233, 233, 237, 0.72);
+  --night-text-60: rgba(233, 233, 237, 0.62);
+  --night-text-40: rgba(233, 233, 237, 0.42);
+  --night-text-25: rgba(233, 233, 237, 0.25);
+  --night-text-10: rgba(233, 233, 237, 0.1);
+  --night-accent-45: rgba(145, 132, 217, 0.45);
+  --night-accent-30: rgba(145, 132, 217, 0.3);
+
+  /* Старые токены акцента — пока используются неперекрашенными экранами
+     (этап 7 их заменит). Переведены в тон Nocturne, чтобы не спорили с фоном. */
+  --brand-500: #9184d9;
+  --brand-600: #8878d4;
+  --brand-700: #6f63b8;
+  --accent-500: #6f63b8;
 }
 
 html,
@@ -26,8 +58,9 @@ body {
   min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
-    Helvetica, Arial, sans-serif;
+  font-family: var(--night-font);
+  background: var(--night-bg);
+  color: var(--night-text);
 }
 
 /* Убираем серую вспышку при тапе на мобильных и лишнюю задержку. */
@@ -83,6 +116,91 @@ a,
   transform: scale(0);
   animation: ripple 0.55s ease-out forwards;
 }
+
+/* ==========================================================================
+   Nocturne: анимации и утилиты редизайна.
+   fade-up — появление снизу (для блоков БЕЗ fixed-потомков, см.fade-in выше).
+   ========================================================================== */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-fade-up {
+  animation: fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Аврора экрана входа: дрейф пятен и медленный блик. */
+@keyframes blob-a {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(14%, 10%) scale(1.25); }
+  100% { transform: translate(-6%, 18%) scale(0.95); }
+}
+@keyframes blob-b {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-16%, -8%) scale(1.15); }
+  100% { transform: translate(10%, -14%) scale(1.3); }
+}
+@keyframes blob-c {
+  0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+  100% { transform: translate(8%, -10%) scale(1.2) rotate(40deg); }
+}
+@keyframes sheen {
+  0% { opacity: 0.25; transform: rotate(0deg) scale(1.4); }
+  100% { opacity: 0.5; transform: rotate(180deg) scale(1.4); }
+}
+.animate-blob-a { animation: blob-a 16s ease-in-out infinite alternate; }
+.animate-blob-b { animation: blob-b 20s ease-in-out infinite alternate; }
+.animate-blob-c { animation: blob-c 24s ease-in-out infinite alternate; }
+.animate-sheen { animation: sheen 26s linear infinite alternate; }
+
+/* Живые элементы: пламя стрика, появление числа, растущие полоски, пульс мика. */
+@keyframes flame {
+  0%, 100% { transform: scale(1) rotate(-3deg); }
+  50% { transform: scale(1.14) rotate(4deg); }
+}
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes bar-grow {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+@keyframes grow-bar {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes pulse-ring {
+  0%, 100% { box-shadow: 0 0 0 8px rgba(145, 132, 217, 0.12); }
+  50% { box-shadow: 0 0 0 18px rgba(145, 132, 217, 0.05); }
+}
+@keyframes confetti-fall {
+  0% { transform: translateY(-60px) rotate(0deg); opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translateY(105vh) rotate(560deg); opacity: 0; }
+}
+.animate-flame { animation: flame 2.4s ease-in-out infinite; transform-origin: 50% 80%; }
+.animate-pop-in { animation: pop-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-bar-grow { animation: bar-grow 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; transform-origin: bottom; }
+.animate-grow-bar { animation: grow-bar 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; transform-origin: left; }
+.animate-pulse-ring { animation: pulse-ring 2s ease-in-out infinite; }
+
+/* Подъём карточек-строк на ховер и «вдавливание» на тап. */
+.lift {
+  transition:
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.25s,
+    background 0.25s,
+    box-shadow 0.3s;
+}
+.lift:hover { transform: translateY(-2px); }
+.lift:active { transform: scale(0.97); transition-duration: 0.1s; }
 
 /* Уважаем настройку «уменьшить движение». */
 @media (prefers-reduced-motion: reduce) {

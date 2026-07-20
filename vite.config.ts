@@ -84,8 +84,8 @@ export default defineConfig(({ mode }) => {
           short_name: 'Recall',
           lang: 'ru',
           description: 'Учим и поддерживаем английский язык',
-          theme_color: '#0ea5e9',
-          background_color: '#0b1220',
+          theme_color: '#161826',
+          background_color: '#161826',
           display: 'standalone',
           start_url: '/',
           icons: [
