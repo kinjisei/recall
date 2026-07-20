@@ -6,7 +6,7 @@
 //       начинающего нет смысла показывать).
 // Ошибка по слову из колоды возвращает карточку на повтор (FSRS «again»).
 // ============================================================================
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { logActivity } from '../../lib/activity'
@@ -163,55 +163,53 @@ function MatchRound({
           : 'Нажми слово слева, затем его перевод справа.'}
       </p>
 
-      <div className="grid grid-cols-2 gap-2.5">
-        <div className="flex flex-col gap-2">
-          {left.map((p) => {
-            const done = matched.has(p.id)
-            const sel = selected === p.id
-            return (
+      {/* Одна сетка на оба столбца: слово и значение стоят в ОДНОМ ряду,
+          поэтому короткое слово растягивается по высоте длинного значения
+          и пары не разъезжаются по вертикали. */}
+      <div className="grid grid-cols-[minmax(28%,34%)_1fr] gap-x-2.5 gap-y-2">
+        {left.map((l, row) => {
+          const r = right[row]
+          const lDone = matched.has(l.id)
+          const rDone = matched.has(r.id)
+          const sel = selected === l.id
+          const isWrong = wrong === r.id
+          const doneCls =
+            'border-emerald-500/60 bg-emerald-500/12 text-emerald-300'
+          return (
+            <Fragment key={l.id}>
               <button
-                key={p.id}
                 onClick={() => {
-                  if (done) return
-                  setSelected(p.id)
-                  speak(p.item.term, { lang })
+                  if (lDone) return
+                  setSelected(l.id)
+                  speak(l.item.term, { lang })
                 }}
-                disabled={done}
-                className={`${cellBase} font-medium ${
-                  done
-                    ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
+                disabled={lDone}
+                className={`${cellBase} flex items-center font-medium ${
+                  lDone
+                    ? doneCls
                     : sel
                       ? 'border-[var(--night-accent-45)] bg-[rgba(145,132,217,.14)]'
                       : 'border-white/[0.10]'
                 }`}
               >
-                {p.item.term}
+                <span className="break-words">{l.item.term}</span>
               </button>
-            )
-          })}
-        </div>
-        <div className="flex flex-col gap-2">
-          {right.map((p) => {
-            const done = matched.has(p.id)
-            const isWrong = wrong === p.id
-            return (
               <button
-                key={p.id}
-                onClick={() => pickRight(p.id)}
-                disabled={done}
-                className={`${cellBase} leading-snug ${
-                  done
-                    ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
+                onClick={() => pickRight(r.id)}
+                disabled={rDone}
+                className={`${cellBase} flex items-center text-[13px] leading-snug ${
+                  rDone
+                    ? doneCls
                     : isWrong
-                      ? 'border-red-500 bg-red-50 dark:bg-red-950/40'
+                      ? 'border-red-500/70 bg-red-500/12'
                       : 'border-white/[0.10]'
                 }`}
               >
-                {p.meaning}
+                <span>{r.meaning}</span>
               </button>
-            )
-          })}
-        </div>
+            </Fragment>
+          )
+        })}
       </div>
 
       <p className="text-center text-sm text-[var(--night-text-40)]">

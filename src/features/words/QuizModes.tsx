@@ -75,6 +75,58 @@ function optionsFor(item: PoolItem, pool: PoolItem[], pick: (i: PoolItem) => str
   return { options, answer: options.indexOf(right) }
 }
 
+/**
+ * Похожесть слов на слух — для аудирования. Если варианты начинаются с
+ * разных букв («think» против «apple», «orange»), задание решается без
+ * прослушивания: услышал «т» — ответ очевиден. Поэтому подбираем обманки,
+ * похожие по началу, концу и длине.
+ */
+function soundScore(a: string, b: string): number {
+  const x = a.toLowerCase()
+  const y = b.toLowerCase()
+  let score = 0
+  if (x[0] === y[0]) score += 4
+  if (x.slice(0, 2) === y.slice(0, 2)) score += 3
+  if (x.slice(-2) === y.slice(-2)) score += 2
+  score -= Math.min(3, Math.abs(x.length - y.length))
+  return score
+}
+
+/**
+ * Варианты для аудирования: похожие на ответ, а не случайные.
+ * Приоритет — слова на ту же букву: если слышно «t», а остальные варианты
+ * начинаются с гласных, задание решается вообще без прослушивания.
+ * Уровень дистракторов не важен — их не учат, они лишь мешают угадывать.
+ */
+function listeningOptions(
+  item: PoolItem,
+  pool: PoolItem[],
+): { options: string[]; answer: number } {
+  const right = item.term
+  const first = right[0]?.toLowerCase()
+  const candidates = pool.filter(
+    (p) => p.term && p.term.toLowerCase() !== right.toLowerCase(),
+  )
+
+  const sameLetter = shuffle(candidates.filter((p) => p.term[0]?.toLowerCase() === first))
+  const others: string[] = sameLetter.slice(0, OPTIONS - 1).map((p) => p.term)
+
+  // не хватило слов на ту же букву — добираем самыми похожими по звучанию
+  if (others.length < OPTIONS - 1) {
+    const ranked = candidates
+      .filter((p) => !others.includes(p.term))
+      .map((p) => ({ term: p.term, score: soundScore(right, p.term) }))
+      .sort((a, b) => b.score - a.score)
+    for (const r of ranked) {
+      others.push(r.term)
+      if (others.length === OPTIONS - 1) break
+    }
+  }
+
+  const options = shuffle([right, ...others])
+  return { options, answer: options.indexOf(right) }
+}
+
 // --- Пропущенное слово -----------------------------------------------------
 
 export function GapMode({ lang, onBack }: { lang: AppLang; onBack: () => void }) {
@@ -145,7 +197,7 @@ export function ListeningMode({ lang, onBack }: { lang: AppLang; onBack: () => v
   const build = useCallback((pool: GamePool): Question[] => {
     const picked = pickWords(pool, ROUND)
     return picked.map((item) => {
-      const { options, answer } = optionsFor(item, pool.items, (p) => p.term)
+      const { options, answer } = listeningOptions(item, pool.items)
       return { prompt: '', options, answer, item, say: item.term }
     })
   }, [])

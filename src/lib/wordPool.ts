@@ -10,6 +10,7 @@
 // ============================================================================
 import { supabase } from './supabase'
 import { getDeckIds } from './cards'
+import { getEsLevel } from './esLevel'
 import type { AppLang, Card, ReviewState } from '../types'
 
 /** Слово для игры: термин + перевод (+ пример и связь с карточкой колоды). */
@@ -17,9 +18,29 @@ export interface PoolItem {
   term: string
   translation: string
   example?: string
+  /** Уровень слова из пака (у карточек пользователя его нет). */
+  level?: string
   /** Есть, только если слово взято из колоды пользователя. */
   card?: Card
   state?: ReviewState | null
+}
+
+/** Шкала CEFR — для сортировки слов по близости к уровню пользователя. */
+const LEVEL_ORDER = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
+
+/** Уровень изучаемого языка: EN — из профиля, ES — из placement (локально). */
+async function targetLevel(lang: AppLang): Promise<string> {
+  if (lang === 'es') return getEsLevel() ?? 'A1'
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) return 'B1'
+    const { data } = await supabase.from('profiles').select('level').eq('id', user.id).single()
+    return ((data as { level?: string } | null)?.level as string) ?? 'B1'
+  } catch {
+    return 'B1'
+  }
 }
 
 export interface GamePool {
@@ -103,7 +124,7 @@ async function loadDeckItems(lang: AppLang): Promise<PoolItem[]> {
   return items
 }
 
-/** Слова из готовых паков уровня (ленивый импорт — в стартовый бандл не идут). */
+/** Слова из готовых паков (ленивый импорт — в стартовый бандл не идут). */
 async function loadPackItems(lang: AppLang): Promise<PoolItem[]> {
   const items: PoolItem[] = []
   if (lang === 'es') {
@@ -112,7 +133,7 @@ async function loadPackItems(lang: AppLang): Promise<PoolItem[]> {
       const term = w.spanish?.trim() ?? ''
       const translation = w.russian?.trim() ?? ''
       if (!isPlayable(term, translation)) continue
-      items.push({ term, translation, example: w.example_es ?? undefined })
+      items.push({ term, translation, example: w.example_es ?? undefined, level: w.level })
     }
   } else {
     const m = await import('../data/english/words')
@@ -120,10 +141,28 @@ async function loadPackItems(lang: AppLang): Promise<PoolItem[]> {
       const term = w.english?.trim() ?? ''
       const translation = w.russian?.trim() ?? ''
       if (!isPlayable(term, translation)) continue
-      items.push({ term, translation, example: w.example_en ?? undefined })
+      items.push({ term, translation, example: w.example_en ?? undefined, level: w.level })
     }
   }
   return items
+}
+
+/**
+ * Сортирует слова паков по близости к уровню пользователя: сначала его
+ * уровень, потом соседние. Без этого игрок уровня B1 получал слова C1
+ * вперемешку — учить их рано, а угадывать бессмысленно.
+ */
+function sortByLevelCloseness(items: PoolItem[], target: string): PoolItem[] {
+  const t = LEVEL_ORDER.indexOf(target)
+  if (t < 0) return items
+  return items
+    .map((item) => {
+      const i = LEVEL_ORDER.indexOf(item.level ?? '')
+      // неизвестный уровень — считаем «далёким», но не отбрасываем
+      return { item, distance: i < 0 ? 9 : Math.abs(i - t) }
+    })
+    .sort((a, b) => a.distance - b.distance)
+    .map((x) => x.item)
 }
 
 /**
@@ -132,17 +171,23 @@ async function loadPackItems(lang: AppLang): Promise<PoolItem[]> {
  * хватало на варианты-обманки.
  */
 export async function loadGamePool(lang: AppLang, need = 24): Promise<GamePool> {
-  const deckItems = await loadDeckItems(lang).catch(() => [])
+  const [deckItems, level] = await Promise.all([
+    loadDeckItems(lang).catch(() => []),
+    targetLevel(lang),
+  ])
   const seen = new Set(deckItems.map((i) => i.term.toLowerCase()))
   const items = [...deckItems]
 
   if (items.length < need) {
     const packs = await loadPackItems(lang).catch(() => [])
-    for (const it of packs) {
+    // добираем словами СВОЕГО уровня, а не первыми попавшимися
+    for (const it of sortByLevelCloseness(packs, level)) {
       const key = it.term.toLowerCase()
       if (seen.has(key)) continue
       seen.add(key)
       items.push(it)
+      // берём с запасом на обманки, но не тащим весь словарь
+      if (items.length >= Math.max(need * 4, 80)) break
     }
   }
 
