@@ -30,6 +30,8 @@ type Row = MaterialAssignment & { material: Material }
 export function AssignmentsPage() {
   const [rows, setRows] = useState<Row[] | null>(null)
   const [active, setActive] = useState<Row | null>(null)
+  // повторное прохождение проверенной работы — тренировка без пересдачи
+  const [retry, setRetry] = useState(false)
 
   const reload = useCallback(() => {
     getMyAssignments().then(setRows).catch(() => setRows([]))
@@ -39,19 +41,25 @@ export function AssignmentsPage() {
     reload()
   }, [reload])
 
+  const close = () => {
+    setActive(null)
+    setRetry(false)
+  }
+
   if (active) {
-    // проверенная работа — сначала разбор от преподавателя
-    if (active.status === 'reviewed') {
-      return <ReviewedView row={active} onBack={() => setActive(null)} />
+    // проверенная работа — сначала разбор от преподавателя;
+    // «Пройти заново» переключает на упражнения (без пересдачи)
+    if (active.status === 'reviewed' && !retry) {
+      return <ReviewedView row={active} onBack={close} onRetry={() => setRetry(true)} />
     }
     return (
       <AssignmentRunner
         row={active}
         onDone={() => {
-          setActive(null)
+          close()
           reload()
         }}
-        onBack={() => setActive(null)}
+        onBack={close}
       />
     )
   }
@@ -140,7 +148,15 @@ function AssignmentCard({ row, onOpen }: { row: Row; onOpen: () => void }) {
 // Разбор проверенной работы: вердикты и комментарии преподавателя.
 // ---------------------------------------------------------------------------
 
-function ReviewedView({ row, onBack }: { row: Row; onBack: () => void }) {
+function ReviewedView({
+  row,
+  onBack,
+  onRetry,
+}: {
+  row: Row
+  onBack: () => void
+  onRetry: () => void
+}) {
   const m = row.material
   const review = row.teacher_review ?? []
   const answers = row.answers ?? []
@@ -165,17 +181,30 @@ function ReviewedView({ row, onBack }: { row: Row; onBack: () => void }) {
         <p className="mt-1 text-sm text-[var(--night-text-40)]">Разбор по каждому упражнению ниже.</p>
       </Card>
 
-      <button
-        onClick={() => setShowBody((s) => !s)}
-        className="self-start text-sm font-medium text-[var(--night-accent-text)] hover:underline dark:text-[var(--night-accent-text)]"
-      >
-        {showBody ? '▾ Скрыть текст' : '▸ Перечитать текст'}
-      </button>
+      <div className="flex flex-wrap gap-2">
+        <Button
+          variant="secondary"
+          className="min-h-[44px] px-4 text-sm"
+          onClick={() => setShowBody((s) => !s)}
+        >
+          {showBody ? 'Скрыть текст' : 'Перечитать текст'}
+        </Button>
+        <Button
+          variant="ghost"
+          className="min-h-[44px] px-4 text-sm"
+          onClick={onRetry}
+        >
+          Пройти упражнения заново
+        </Button>
+      </div>
       {showBody && (
         <Card>
-          <p className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--night-text-70)]">
-            {m.body}
+          {/* тот же тап по словам, что и в «Учёбе»: разобранный текст —
+              лучший источник слов для колоды */}
+          <p className="text-xs text-[var(--night-text-40)]">
+            Нажми на незнакомое слово, чтобы посмотреть перевод и добавить в колоду.
           </p>
+          <TappableBody body={m.body} lang={m.lang} />
         </Card>
       )}
 
