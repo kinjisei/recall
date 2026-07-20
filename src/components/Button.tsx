@@ -8,15 +8,16 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean
 }
 
+// Тема «Nocturne»: главная кнопка — светлая заливка с тёмным текстом,
+// вторичная — акцентная outline, ghost — только текст акцентом.
 const styles: Record<Variant, string> = {
   primary:
-    'bg-brand-gradient text-white shadow-sm shadow-sky-600/20 hover:brightness-105 active:brightness-95',
+    'bg-[var(--night-text)] text-[var(--night-bg)] hover:brightness-95 active:brightness-90',
   secondary:
-    'bg-slate-200 text-slate-900 hover:bg-slate-300 active:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600',
+    'border border-[var(--night-accent-45)] bg-[rgba(145,132,217,.14)] text-[var(--night-text)] hover:bg-[rgba(145,132,217,.22)]',
   ghost:
-    'bg-transparent text-sky-700 hover:bg-sky-50 active:bg-sky-100 dark:text-sky-400 dark:hover:bg-slate-800',
-  danger:
-    'bg-red-600 text-white hover:bg-red-500 active:bg-red-700',
+    'bg-transparent text-[var(--night-accent-text)] hover:bg-white/[0.06]',
+  danger: 'bg-red-500/90 text-white hover:bg-red-500',
 }
 
 function Spinner() {

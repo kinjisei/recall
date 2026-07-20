@@ -109,7 +109,7 @@ export function PacksSheet({ lang, onAdded }: { lang: AppLang; onAdded: () => vo
   if (!data) {
     return (
       <Card>
-        <p className="text-sm text-slate-500">Загружаю словарь…</p>
+        <p className="text-sm text-[var(--night-text-40)]">Загружаю словарь…</p>
       </Card>
     )
   }
@@ -119,14 +119,14 @@ export function PacksSheet({ lang, onAdded }: { lang: AppLang; onAdded: () => vo
 
   return (
     <Card className="flex flex-col gap-3">
-      <p className="text-sm text-slate-500">
+      <p className="text-sm text-[var(--night-text-40)]">
         Готовые наборы {lang === 'es' ? 'испанских' : 'английских'} слов по темам
         ({totalTopics} тем, {totalWords} слов). Добавленные слова появятся в колоде
         как новые карточки (дубликаты пропускаются).
       </p>
 
       <input
-        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-sky-500 dark:border-slate-600 dark:bg-slate-900"
+        className="w-full rounded-lg border border-white/[0.10] bg-[var(--night-surface)] px-3 py-2 text-sm outline-none focus:border-[var(--night-accent-45)] dark:border-white/[0.10] dark:bg-slate-900"
         placeholder="🔍 Поиск темы…"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
@@ -140,15 +140,15 @@ export function PacksSheet({ lang, onAdded }: { lang: AppLang; onAdded: () => vo
           <div key={level}>
             <button
               onClick={() => setOpenLevel((cur) => (cur === level ? null : level))}
-              className="flex w-full items-center justify-between rounded-lg bg-slate-100 px-3 py-2 text-left dark:bg-slate-800"
+              className="flex w-full items-center justify-between rounded-lg bg-white/[0.06] px-3 py-2 text-left dark:bg-[var(--night-surface)]"
             >
               <span className="text-sm font-bold">
                 Уровень {level}{' '}
-                <span className="font-normal text-slate-400">
+                <span className="font-normal text-[var(--night-text-40)]">
                   · {topics.length} тем
                 </span>
               </span>
-              <span className="text-slate-400">{isOpen ? '▾' : '▸'}</span>
+              <span className="text-[var(--night-text-40)]">{isOpen ? '▾' : '▸'}</span>
             </button>
 
             {isOpen && (
@@ -159,11 +159,11 @@ export function PacksSheet({ lang, onAdded }: { lang: AppLang; onAdded: () => vo
                   return (
                     <div
                       key={t.id}
-                      className="flex items-center justify-between gap-2 rounded-xl border border-slate-200 px-3 py-2 dark:border-slate-700"
+                      className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.08] px-3 py-2 dark:border-white/[0.08]"
                     >
                       <div className="min-w-0">
                         <p className="truncate font-medium">{t.name}</p>
-                        <p className="text-xs text-slate-400">{count} слов</p>
+                        <p className="text-xs text-[var(--night-text-40)]">{count} слов</p>
                       </div>
                       {note ? (
                         <span className="shrink-0 text-sm text-emerald-600 dark:text-emerald-400">

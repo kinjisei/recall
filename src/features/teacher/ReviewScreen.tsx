@@ -114,7 +114,7 @@ export function ReviewScreen({
           <p className="truncate font-semibold">
             {alreadyReviewed ? 'Разбор работы' : 'Проверка работы'}: {studentName}
           </p>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-[var(--night-text-40)]">
             {material.title ?? material.topic} · авто-результат {assignment.auto_score}/
             {assignment.auto_total}
           </p>
@@ -123,13 +123,13 @@ export function ReviewScreen({
 
       <button
         onClick={() => setShowBody((s) => !s)}
-        className="self-start text-sm font-medium text-sky-600 hover:underline dark:text-sky-400"
+        className="self-start text-sm font-medium text-[var(--night-accent-text)] hover:underline dark:text-[var(--night-accent-text)]"
       >
         {showBody ? '▾ Скрыть текст материала' : '▸ Текст материала'}
       </button>
       {showBody && (
         <Card>
-          <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700 dark:text-slate-200">
+          <p className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--night-text-70)]">
             {material.body}
           </p>
         </Card>
@@ -141,7 +141,7 @@ export function ReviewScreen({
           {attempts.map((at, i) => {
             const tOk = (at.teacher_review ?? []).filter((r) => r.ok).length
             return (
-              <p key={i} className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+              <p key={i} className="mt-1 text-sm text-[var(--night-text-40)]">
                 {i + 1}-я: авто {at.auto_score}/{at.auto_total}
                 {at.teacher_review ? ` · учитель ${tOk}/${at.auto_total}` : ''}
                 {at.submitted_at
@@ -155,7 +155,7 @@ export function ReviewScreen({
 
       {aiBusy && (
         <Card>
-          <p className="text-sm text-slate-500">🤖 AI разбирает работу…</p>
+          <p className="text-sm text-[var(--night-text-40)]">🤖 AI разбирает работу…</p>
         </Card>
       )}
       {error && (
@@ -171,7 +171,7 @@ export function ReviewScreen({
 
       {review && (
         <>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-[var(--night-text-40)]">
             {alreadyReviewed
               ? `Итог проверки: ${okCount} из ${material.exercises.length}.`
               : `AI предлагает засчитать ${okCount} из ${material.exercises.length}. Проверь вердикты — каждый можно изменить.`}
@@ -185,7 +185,7 @@ export function ReviewScreen({
             if (!item) return null
             return (
               <Card key={i} className="flex flex-col gap-2">
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-[var(--night-text-40)]">
                   {i + 1} · {kindLabel[ex.kind] ?? ex.kind}
                 </p>
                 <p className="text-sm font-medium">{ex.prompt}</p>
@@ -195,13 +195,13 @@ export function ReviewScreen({
                     {given}
                   </span>
                   {!item.ok && correct && (
-                    <span className="text-slate-400"> · правильно: {correct}</span>
+                    <span className="text-[var(--night-text-40)]"> · правильно: {correct}</span>
                   )}
                 </p>
 
                 {alreadyReviewed ? (
                   item.comment && (
-                    <p className="rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                    <p className="rounded-lg bg-white/[0.06] px-3 py-2 text-sm text-[var(--night-text-70)] dark:bg-[var(--night-surface)] dark:text-[var(--night-text-25)]">
                       {item.comment}
                     </p>
                   )
@@ -213,7 +213,7 @@ export function ReviewScreen({
                         className={`rounded-lg px-3 py-1.5 text-sm font-semibold ${
                           item.ok
                             ? 'bg-emerald-600 text-white'
-                            : 'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
+                            : 'bg-white/[0.07] text-[var(--night-text-70)] dark:bg-white/[0.08] dark:text-[var(--night-text-25)]'
                         }`}
                       >
                         ✓ Правильно
@@ -223,14 +223,14 @@ export function ReviewScreen({
                         className={`rounded-lg px-3 py-1.5 text-sm font-semibold ${
                           !item.ok
                             ? 'bg-red-500 text-white'
-                            : 'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
+                            : 'bg-white/[0.07] text-[var(--night-text-70)] dark:bg-white/[0.08] dark:text-[var(--night-text-25)]'
                         }`}
                       >
                         ✗ Ошибка
                       </button>
                     </div>
                     <textarea
-                      className="min-h-[120px] w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm leading-relaxed outline-none focus:border-sky-500 dark:border-slate-600 dark:bg-slate-900"
+                      className="min-h-[120px] w-full rounded-lg border border-white/[0.10] bg-[var(--night-surface)] px-3 py-2 text-sm leading-relaxed outline-none focus:border-[var(--night-accent-45)] dark:border-white/[0.10] dark:bg-slate-900"
                       placeholder="Комментарий для ученицы: что не так и как правильно…"
                       value={item.comment}
                       onChange={(e) => setItem(i, { comment: e.target.value })}
@@ -254,7 +254,7 @@ export function ReviewScreen({
               {!reassignOpen ? (
                 <button
                   onClick={() => setReassignOpen(true)}
-                  className="text-left text-sm font-medium text-sky-600 hover:underline dark:text-sky-400"
+                  className="text-left text-sm font-medium text-[var(--night-accent-text)] hover:underline dark:text-[var(--night-accent-text)]"
                 >
                   ↻ Переназначить этот материал (текущий результат сохранится в истории)
                 </button>
@@ -262,7 +262,7 @@ export function ReviewScreen({
                 <>
                   <p className="text-sm font-semibold">Переназначить материал</p>
                   <textarea
-                    className="min-h-[100px] w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm leading-relaxed outline-none focus:border-sky-500 dark:border-slate-600 dark:bg-slate-900"
+                    className="min-h-[100px] w-full rounded-lg border border-white/[0.10] bg-[var(--night-surface)] px-3 py-2 text-sm leading-relaxed outline-none focus:border-[var(--night-accent-45)] dark:border-white/[0.10] dark:bg-slate-900"
                     placeholder="Комментарий для ученицы: на что обратить внимание в этот раз…"
                     value={reassignNote}
                     onChange={(e) => setReassignNote(e.target.value)}

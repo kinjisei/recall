@@ -79,7 +79,7 @@ export function WordCheckRunner({
         </p>
         {wrong.length > 0 && (
           <div className="text-left">
-            <p className="text-sm font-semibold text-slate-500">
+            <p className="text-sm font-semibold text-[var(--night-text-40)]">
               Эти слова вернулись в колоду на повторение:
             </p>
             {wrong.map((r) => (
@@ -89,12 +89,12 @@ export function WordCheckRunner({
                 <span className="font-semibold text-emerald-600 dark:text-emerald-400">
                   {r.front}
                 </span>
-                {r.back && <span className="text-slate-400"> ({r.back})</span>}
+                {r.back && <span className="text-[var(--night-text-40)]"> ({r.back})</span>}
               </p>
             ))}
           </div>
         )}
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-[var(--night-text-40)]">
           {saving
             ? 'Сохраняю результат…'
             : saveError ?? 'Результат отправлен преподавателю ✓'}
@@ -108,7 +108,7 @@ export function WordCheckRunner({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between text-sm text-slate-400">
+      <div className="flex items-center justify-between text-sm text-[var(--night-text-40)]">
         <span>🔁 Перепроверка от преподавателя</span>
         <span>
           {index + 1} / {total}
@@ -116,8 +116,8 @@ export function WordCheckRunner({
       </div>
 
       <Card className="flex flex-col items-center gap-3 py-8 text-center">
-        <p className="text-sm text-slate-400">Как пишется это слово?</p>
-        <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+        <p className="text-sm text-[var(--night-text-40)]">Как пишется это слово?</p>
+        <p className="text-2xl font-bold text-[var(--night-text)]">
           {current.back ?? '(без перевода)'}
         </p>
 
@@ -127,7 +127,7 @@ export function WordCheckRunner({
               ? ok
                 ? 'border-emerald-500'
                 : 'border-red-500'
-              : 'border-slate-300 focus:border-sky-500 dark:border-slate-600'
+              : 'border-white/[0.10] focus:border-[var(--night-accent-45)] dark:border-white/[0.10]'
           }`}
           placeholder={lang === 'es' ? 'слово по-испански…' : 'слово по-английски…'}
           value={value}
@@ -154,7 +154,7 @@ export function WordCheckRunner({
             )}
             <button
               onClick={() => speak(current.front, { lang })}
-              className="rounded-full bg-slate-100 px-3 py-1 text-lg dark:bg-slate-700"
+              className="rounded-full bg-white/[0.06] px-3 py-1 text-lg dark:bg-white/[0.08]"
               aria-label="Озвучить"
             >
               🔊

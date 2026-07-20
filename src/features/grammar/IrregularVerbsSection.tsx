@@ -33,7 +33,7 @@ export function IrregularVerbsSection() {
     }
   }, [])
 
-  if (!groups) return <p className="text-slate-500">Загрузка…</p>
+  if (!groups) return <p className="text-[var(--night-text-40)]">Загрузка…</p>
 
   return (
     <div className="flex flex-col gap-4">
@@ -49,8 +49,8 @@ export function IrregularVerbsSection() {
             onClick={() => setMode(id)}
             className={`rounded-lg px-4 py-2 text-sm font-semibold ${
               mode === id
-                ? 'bg-sky-600 text-white'
-                : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
+                ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
+                : 'bg-white/[0.07] text-[var(--night-text-70)]'
             }`}
           >
             {label}
@@ -89,7 +89,7 @@ function Reference({ groups }: { groups: IrregularGroup[] }) {
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm text-slate-500">
+      <p className="text-sm text-[var(--night-text-40)]">
         {total} самых нужных неправильных глаголов, сгруппированных по типу изменения —
         так закономерности видны и запоминаются легче.
       </p>
@@ -97,7 +97,7 @@ function Reference({ groups }: { groups: IrregularGroup[] }) {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Поиск: go, went, идти…"
-        className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 dark:border-slate-600 dark:bg-slate-800"
+        className="rounded-xl border border-white/[0.10] bg-[var(--night-surface)] px-4 py-2.5 dark:border-white/[0.10] dark:bg-[var(--night-surface)]"
       />
 
       {filtered.map((g) => {
@@ -106,21 +106,21 @@ function Reference({ groups }: { groups: IrregularGroup[] }) {
           <div key={g.title}>
             <button
               onClick={() => setOpen((cur) => (cur === g.title ? null : g.title))}
-              className="flex w-full items-center justify-between rounded-lg bg-slate-100 px-3 py-2 text-left dark:bg-slate-800"
+              className="flex w-full items-center justify-between rounded-lg bg-white/[0.06] px-3 py-2 text-left dark:bg-[var(--night-surface)]"
             >
               <span className="text-sm font-bold">
                 {g.title}{' '}
-                <span className="font-normal text-slate-400">· {g.verbs.length}</span>
+                <span className="font-normal text-[var(--night-text-40)]">· {g.verbs.length}</span>
               </span>
-              <span className="text-slate-400">{isOpen ? '▾' : '▸'}</span>
+              <span className="text-[var(--night-text-40)]">{isOpen ? '▾' : '▸'}</span>
             </button>
 
             {isOpen && (
               <Card className="mt-2 overflow-x-auto p-0">
-                <p className="px-3 pt-3 text-xs text-slate-500">{g.note}</p>
+                <p className="px-3 pt-3 text-xs text-[var(--night-text-40)]">{g.note}</p>
                 <table className="mt-2 min-w-full text-sm">
                   <thead>
-                    <tr className="text-left text-xs text-slate-400">
+                    <tr className="text-left text-xs text-[var(--night-text-40)]">
                       <th className="px-3 py-1.5 font-semibold">V1</th>
                       <th className="px-3 py-1.5 font-semibold">V2</th>
                       <th className="px-3 py-1.5 font-semibold">V3</th>
@@ -134,7 +134,7 @@ function Reference({ groups }: { groups: IrregularGroup[] }) {
                         <td className="px-3 py-1.5 font-semibold">{v.base}</td>
                         <td className="px-3 py-1.5">{v.past}</td>
                         <td className="px-3 py-1.5">{v.part}</td>
-                        <td className="px-3 py-1.5 text-slate-500">{v.ru}</td>
+                        <td className="px-3 py-1.5 text-[var(--night-text-40)]">{v.ru}</td>
                         <td className="px-1 py-1.5">
                           <button
                             onClick={() =>
@@ -249,8 +249,8 @@ function Trainer({ groups }: { groups: IrregularGroup[] }) {
           onClick={() => pickScope(id)}
           className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
             scope === id
-              ? 'bg-sky-600 text-white'
-              : 'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
+              ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
+              : 'bg-white/[0.07] text-[var(--night-text-70)] dark:bg-white/[0.08] dark:text-[var(--night-text-25)]'
           }`}
         >
           {label}
@@ -272,15 +272,15 @@ function Trainer({ groups }: { groups: IrregularGroup[] }) {
           <p className="mt-2 text-lg font-bold">
             {correct} из {round.length} верно ({percent}%)
           </p>
-          <p className="mt-1 text-sm text-slate-500">Раунд засчитан в серию дня.</p>
+          <p className="mt-1 text-sm text-[var(--night-text-40)]">Раунд засчитан в серию дня.</p>
         </div>
         {wrong.length > 0 && (
-          <div className="rounded-xl bg-slate-100 p-3 text-sm dark:bg-slate-800">
+          <div className="rounded-xl bg-white/[0.06] p-3 text-sm dark:bg-[var(--night-surface)]">
             <p className="mb-1 font-semibold">Повтори:</p>
             {wrong.map(({ verb: v }) => (
               <p key={v.base}>
                 {v.base} — {v.past} — {v.part}{' '}
-                <span className="text-slate-500">({v.ru})</span>
+                <span className="text-[var(--night-text-40)]">({v.ru})</span>
               </p>
             ))}
           </div>
@@ -294,9 +294,9 @@ function Trainer({ groups }: { groups: IrregularGroup[] }) {
   const pastOk = checked && matches(past, verb.past)
   const partOk = checked && matches(part, verb.part)
   const inputCls = (ok: boolean) =>
-    `rounded-xl border px-4 py-2.5 dark:bg-slate-800 ${
+    `rounded-xl border px-4 py-2.5 dark:bg-[var(--night-surface)] ${
       !checked
-        ? 'border-slate-300 bg-white dark:border-slate-600'
+        ? 'border-white/[0.10] bg-[var(--night-surface)] dark:border-white/[0.10]'
         : ok
           ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40'
           : 'border-red-400 bg-red-50 dark:bg-red-950/40'
@@ -305,7 +305,7 @@ function Trainer({ groups }: { groups: IrregularGroup[] }) {
   return (
     <div className="flex flex-col gap-3">
       {scopeChips}
-      <div className="flex items-center justify-between text-sm text-slate-400">
+      <div className="flex items-center justify-between text-sm text-[var(--night-text-40)]">
         <span>
           Глагол {index + 1} / {round.length}
         </span>
@@ -315,7 +315,7 @@ function Trainer({ groups }: { groups: IrregularGroup[] }) {
       <Card className="flex flex-col gap-3">
         <div className="text-center">
           <p className="text-2xl font-bold">{verb.base}</p>
-          <p className="text-sm text-slate-500">{verb.ru}</p>
+          <p className="text-sm text-[var(--night-text-40)]">{verb.ru}</p>
         </div>
 
         <form

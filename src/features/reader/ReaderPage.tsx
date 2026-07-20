@@ -38,8 +38,8 @@ function EnglishReaderPage() {
             onClick={() => setLevel(l)}
             className={`rounded-lg px-4 py-2 text-sm font-semibold ${
               level === l
-                ? 'bg-sky-600 text-white'
-                : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
+                ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
+                : 'bg-white/[0.07] text-[var(--night-text-70)]'
             }`}
           >
             {l}
@@ -47,7 +47,7 @@ function EnglishReaderPage() {
         ))}
       </div>
 
-      <p className="text-sm text-slate-500">
+      <p className="text-sm text-[var(--night-text-40)]">
         Выбери текст и нажимай на незнакомые слова — добавляй их в колоду.
       </p>
 
@@ -56,7 +56,7 @@ function EnglishReaderPage() {
           <button key={t.id} onClick={() => setActive(t)} className="text-left">
             <Card className="transition-transform active:scale-[0.99]">
               <p className="font-semibold">{t.title}</p>
-              <p className="mt-1 line-clamp-2 text-sm text-slate-500">{t.body}</p>
+              <p className="mt-1 line-clamp-2 text-sm text-[var(--night-text-40)]">{t.body}</p>
             </Card>
           </button>
         ))}

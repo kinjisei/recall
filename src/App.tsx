@@ -47,7 +47,7 @@ const AssignmentsPage = lazy(() =>
 )
 
 function PageFallback() {
-  return <p className="p-6 text-center text-slate-400">Загрузка…</p>
+  return <p className="p-6 text-center text-[var(--night-text-40)]">Загрузка…</p>
 }
 
 export default function App() {

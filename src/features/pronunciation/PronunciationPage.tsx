@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { GuidedNext } from '../../components/GuidedNext'
+import { MicrophoneIcon, SpeakerHighIcon } from '@phosphor-icons/react'
 import { supabase } from '../../lib/supabase'
 import { getDeckIds } from '../../lib/cards'
 import { logActivity } from '../../lib/activity'
@@ -98,7 +99,7 @@ export function PronunciationPage() {
     return (
       <div className="flex flex-col gap-4">
         <h1 className="text-2xl font-bold">🎙 Речь</h1>
-        <p className="text-slate-500">Загрузка…</p>
+        <p className="text-[var(--night-text-40)]">Загрузка…</p>
       </div>
     )
   }
@@ -116,7 +117,7 @@ export function PronunciationPage() {
         </Card>
       )}
 
-      <p className="text-sm text-slate-500">
+      <p className="text-sm text-[var(--night-text-40)]">
         Послушай фразу, затем повтори её вслух — приложение оценит, насколько точно.
       </p>
 
@@ -140,25 +141,34 @@ export function PronunciationPage() {
           )}
         </p>
         {current.hint && !score && (
-          <p className="mt-2 text-sm text-slate-400">{current.hint}</p>
+          <p className="mt-2 text-sm text-[var(--night-text-40)]">{current.hint}</p>
         )}
       </Card>
 
-      <div className="flex gap-3">
-        <Button
-          variant="secondary"
-          className="flex-1"
+      {/* чип «Прослушать» + крупный микрофон, который пульсирует при записи */}
+      <div className="flex flex-col items-center gap-5 pt-1">
+        <button
           onClick={() => speak(current.text, { lang })}
+          className="lift flex items-center gap-2 rounded-full border border-white/[0.10] px-4 py-2 text-sm text-[var(--night-text-70)]"
         >
-          🔊 Слушать
-        </Button>
-        <Button
-          className="flex-1"
+          <SpeakerHighIcon size={16} /> Прослушать
+        </button>
+
+        <button
           onClick={onListen}
           disabled={!supported || listening}
+          aria-label={listening ? 'Слушаю…' : 'Повторить вслух'}
+          className={`flex h-20 w-20 items-center justify-center rounded-full transition-colors disabled:opacity-40 ${
+            listening
+              ? 'animate-pulse-ring bg-[var(--night-accent)] text-white'
+              : 'lift bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
+          }`}
         >
-          {listening ? '🎤 Слушаю…' : '🎤 Повторить'}
-        </Button>
+          <MicrophoneIcon size={32} weight="fill" />
+        </button>
+        <p className="text-xs text-[var(--night-text-40)]">
+          {listening ? 'Слушаю — говори' : 'Нажми и повтори фразу вслух'}
+        </p>
       </div>
 
       {error && <p className="text-sm text-red-500">{error}</p>}
@@ -172,16 +182,16 @@ export function PronunciationPage() {
             </span>
           </p>
           {heard && (
-            <p className="mt-2 text-sm text-slate-500">Услышано: «{heard}»</p>
+            <p className="mt-2 text-sm text-[var(--night-text-40)]">Услышано: «{heard}»</p>
           )}
-          <p className="mt-1 text-xs text-slate-400">
+          <p className="mt-1 text-xs text-[var(--night-text-40)]">
             Зелёные слова распознаны верно, красные — стоит повторить.
           </p>
         </Card>
       )}
 
       <div className="flex items-center justify-between">
-        <span className="text-sm text-slate-400">
+        <span className="text-sm text-[var(--night-text-40)]">
           {index + 1} / {phrases.length}
         </span>
         <Button variant="ghost" onClick={next}>

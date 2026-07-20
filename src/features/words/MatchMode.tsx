@@ -140,7 +140,7 @@ function MatchRound({
             {mistakes === 0 ? 'Все пары с первого раза!' : `Готово, ошибок: ${mistakes}`}
           </p>
           {mistakes > 0 && (
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-[var(--night-text-40)]">
               Слова с ошибками вернутся в ближайшее повторение.
             </p>
           )}
@@ -157,7 +157,7 @@ function MatchRound({
   return (
     <div className="flex flex-col gap-4">
       <GameHeader title="🧩 Значения" onBack={onBack} />
-      <p className="text-sm text-slate-500">
+      <p className="text-sm text-[var(--night-text-40)]">
         {lang === 'en'
           ? 'Нажми слово слева, затем его значение справа — по-английски.'
           : 'Нажми слово слева, затем его перевод справа.'}
@@ -181,8 +181,8 @@ function MatchRound({
                   done
                     ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
                     : sel
-                      ? 'border-sky-500 bg-sky-50 dark:bg-sky-950/40'
-                      : 'border-slate-300 dark:border-slate-600'
+                      ? 'border-[var(--night-accent-45)] bg-[rgba(145,132,217,.14)]'
+                      : 'border-white/[0.10]'
                 }`}
               >
                 {p.item.term}
@@ -204,7 +204,7 @@ function MatchRound({
                     ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
                     : isWrong
                       ? 'border-red-500 bg-red-50 dark:bg-red-950/40'
-                      : 'border-slate-300 dark:border-slate-600'
+                      : 'border-white/[0.10]'
                 }`}
               >
                 {p.meaning}
@@ -214,7 +214,7 @@ function MatchRound({
         </div>
       </div>
 
-      <p className="text-center text-sm text-slate-400">
+      <p className="text-center text-sm text-[var(--night-text-40)]">
         Найдено: {matched.size} / {pairs.length}
       </p>
     </div>

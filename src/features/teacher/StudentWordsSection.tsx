@@ -13,7 +13,7 @@ import {
 import type { WordCheck } from '../../types'
 
 const statusChip = {
-  new: { label: 'новое', cls: 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-300' },
+  new: { label: 'новое', cls: 'bg-white/[0.06] text-[var(--night-text-40)] dark:bg-white/[0.08] dark:text-[var(--night-text-25)]' },
   learning: { label: 'учится', cls: 'bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300' },
   learned: { label: 'изучено', cls: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' },
 } as const
@@ -61,7 +61,7 @@ export function StudentWordsSection({ studentId }: { studentId: string }) {
     }
   }
 
-  if (words === null) return <p className="text-sm text-slate-400">Загружаю слова…</p>
+  if (words === null) return <p className="text-sm text-[var(--night-text-40)]">Загружаю слова…</p>
 
   return (
     <div className="flex flex-col gap-2">
@@ -73,7 +73,7 @@ export function StudentWordsSection({ studentId }: { studentId: string }) {
             const wrong = (c.results ?? []).filter((r) => !r.ok)
             const date = new Date(c.created_at).toLocaleDateString('ru-RU')
             return (
-              <div key={c.id} className="rounded-lg bg-slate-100 px-3 py-2 text-sm dark:bg-slate-800">
+              <div key={c.id} className="rounded-lg bg-white/[0.06] px-3 py-2 text-sm dark:bg-[var(--night-surface)]">
                 {c.completed_at ? (
                   <>
                     <button
@@ -85,14 +85,14 @@ export function StudentWordsSection({ studentId }: { studentId: string }) {
                         {okCount}/{c.card_ids.length}
                       </span>
                       {wrong.length > 0 && (
-                        <span className="text-slate-400"> · показать провалы {openCheck === c.id ? '▾' : '▸'}</span>
+                        <span className="text-[var(--night-text-40)]"> · показать провалы {openCheck === c.id ? '▾' : '▸'}</span>
                       )}
                     </button>
                     {openCheck === c.id &&
                       wrong.map((r) => (
-                        <p key={r.card_id} className="mt-1 pl-4 text-xs text-slate-500">
+                        <p key={r.card_id} className="mt-1 pl-4 text-xs text-[var(--night-text-40)]">
                           «{r.given || '—'}» →{' '}
-                          <span className="font-semibold text-slate-700 dark:text-slate-200">
+                          <span className="font-semibold text-[var(--night-text-70)]">
                             {r.front}
                           </span>
                           {r.back && ` (${r.back})`}
@@ -100,7 +100,7 @@ export function StudentWordsSection({ studentId }: { studentId: string }) {
                       ))}
                   </>
                 ) : (
-                  <span className="text-slate-500">
+                  <span className="text-[var(--night-text-40)]">
                     🔁 {date}: назначена, ещё не пройдена ({c.card_ids.length} слов)
                   </span>
                 )}
@@ -111,10 +111,10 @@ export function StudentWordsSection({ studentId }: { studentId: string }) {
       )}
 
       {words.length === 0 ? (
-        <p className="text-sm text-slate-400">У ученицы пока нет слов в колоде.</p>
+        <p className="text-sm text-[var(--night-text-40)]">У ученицы пока нет слов в колоде.</p>
       ) : (
         <>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-[var(--night-text-40)]">
             Отметь слова для перепроверки (сверху — с самым большим интервалом):
           </p>
           <div className="flex max-h-72 flex-col gap-1 overflow-y-auto pr-1">
@@ -123,7 +123,7 @@ export function StudentWordsSection({ studentId }: { studentId: string }) {
               return (
                 <label
                   key={w.card.id}
-                  className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-2.5 py-1.5 dark:border-slate-700"
+                  className="flex cursor-pointer items-center gap-2 rounded-lg border border-white/[0.08] px-2.5 py-1.5 dark:border-white/[0.08]"
                 >
                   <input
                     type="checkbox"
@@ -133,7 +133,7 @@ export function StudentWordsSection({ studentId }: { studentId: string }) {
                   />
                   <span className="min-w-0 flex-1 truncate text-sm">
                     <span className="font-medium">{w.card.front}</span>
-                    {w.card.back && <span className="text-slate-400"> — {w.card.back}</span>}
+                    {w.card.back && <span className="text-[var(--night-text-40)]"> — {w.card.back}</span>}
                   </span>
                   <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${chip.cls}`}>
                     {chip.label}

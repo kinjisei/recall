@@ -51,8 +51,8 @@ export function GrammarPage() {
               onClick={() => setSection(s.id)}
               className={`rounded-lg px-4 py-2 text-sm font-semibold ${
                 section === s.id
-                  ? 'bg-sky-600 text-white'
-                  : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
+                  ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
+                  : 'bg-white/[0.07] text-[var(--night-text-70)]'
               }`}
             >
               {s.label}
@@ -106,14 +106,14 @@ function LessonsSection({ lang }: { lang: AppLang }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-sm text-slate-500">
+      <p className="text-sm text-[var(--night-text-40)]">
         {lang === 'es'
           ? 'Уроки испанской грамматики от A1 до B2: короткая теория и упражнения с проверкой.'
           : 'Уроки английской грамматики: короткая теория и упражнения с проверкой. Разделы пополняются.'}
       </p>
 
       {!topics ? (
-        <p className="text-slate-500">Загрузка…</p>
+        <p className="text-[var(--night-text-40)]">Загрузка…</p>
       ) : (
         LEVELS.map((level) => {
           const list = byLevel[level] ?? []
@@ -123,13 +123,13 @@ function LessonsSection({ lang }: { lang: AppLang }) {
             <div key={level}>
               <button
                 onClick={() => setOpenLevel((cur) => (cur === level ? null : level))}
-                className="flex w-full items-center justify-between rounded-lg bg-slate-100 px-3 py-2 text-left dark:bg-slate-800"
+                className="flex w-full items-center justify-between rounded-lg bg-white/[0.06] px-3 py-2 text-left dark:bg-[var(--night-surface)]"
               >
                 <span className="text-sm font-bold">
                   Уровень {level}{' '}
-                  <span className="font-normal text-slate-400">· {list.length} тем</span>
+                  <span className="font-normal text-[var(--night-text-40)]">· {list.length} тем</span>
                 </span>
-                <span className="text-slate-400">{isOpen ? '▾' : '▸'}</span>
+                <span className="text-[var(--night-text-40)]">{isOpen ? '▾' : '▸'}</span>
               </button>
 
               {isOpen && (
@@ -138,7 +138,7 @@ function LessonsSection({ lang }: { lang: AppLang }) {
                     <button key={t.id} onClick={() => setSelected(t)} className="text-left">
                       <Card className="flex items-center justify-between gap-2 transition-transform active:scale-[0.99]">
                         <span className="min-w-0 truncate font-medium">{t.title}</span>
-                        <span className="shrink-0 text-xs text-slate-400">
+                        <span className="shrink-0 text-xs text-[var(--night-text-40)]">
                           {t.exercises.length} упр.
                         </span>
                       </Card>
@@ -183,8 +183,8 @@ function TopicScreen({
           onClick={() => setMode('theory')}
           className={`rounded-lg px-4 py-2 text-sm font-semibold ${
             mode === 'theory'
-              ? 'bg-sky-600 text-white'
-              : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
+              ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
+              : 'bg-white/[0.07] text-[var(--night-text-70)]'
           }`}
         >
           📖 Теория
@@ -194,8 +194,8 @@ function TopicScreen({
             onClick={() => setMode('exercises')}
             className={`rounded-lg px-4 py-2 text-sm font-semibold ${
               mode === 'exercises'
-                ? 'bg-sky-600 text-white'
-                : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
+                ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
+                : 'bg-white/[0.07] text-[var(--night-text-70)]'
             }`}
           >
             ✍️ Упражнения ({topic.exercises.length})
@@ -241,24 +241,24 @@ function TheoryView({
 
 function TheoryBlock({ block, lang }: { block: GrammarTheoryBlock; lang: AppLang }) {
   if (block.type === 'paragraph') {
-    return <p className="leading-relaxed text-slate-700 dark:text-slate-200">{block.text}</p>
+    return <p className="leading-relaxed text-[var(--night-text-70)]">{block.text}</p>
   }
   if (block.type === 'example') {
     // текст примера: испанские уроки хранят его в es, английские — в en
     const sample = block.es ?? block.en ?? ''
     return (
-      <div className="rounded-xl bg-slate-100 px-3 py-2 dark:bg-slate-800">
+      <div className="rounded-xl bg-white/[0.06] px-3 py-2 dark:bg-[var(--night-surface)]">
         <div className="flex items-center gap-2">
-          <p className="font-medium text-slate-800 dark:text-slate-100">{sample}</p>
+          <p className="font-medium text-[var(--night-text)]">{sample}</p>
           <button
             onClick={() => speak(sample, { lang })}
-            className="rounded-full bg-white px-2 py-0.5 text-sm dark:bg-slate-700"
+            className="rounded-full bg-[var(--night-surface)] px-2 py-0.5 text-sm dark:bg-white/[0.08]"
             aria-label="Озвучить"
           >
             🔊
           </button>
         </div>
-        <p className="mt-0.5 text-sm text-slate-500">{block.ru}</p>
+        <p className="mt-0.5 text-sm text-[var(--night-text-40)]">{block.ru}</p>
       </div>
     )
   }
@@ -271,7 +271,7 @@ function TheoryBlock({ block, lang }: { block: GrammarTheoryBlock; lang: AppLang
             {block.headers.map((h, i) => (
               <th
                 key={i}
-                className="border border-slate-200 bg-slate-100 px-2 py-1 text-left font-semibold dark:border-slate-700 dark:bg-slate-800"
+                className="border border-white/[0.08] bg-white/[0.06] px-2 py-1 text-left font-semibold dark:border-white/[0.08] dark:bg-[var(--night-surface)]"
               >
                 {h}
               </th>
@@ -284,7 +284,7 @@ function TheoryBlock({ block, lang }: { block: GrammarTheoryBlock; lang: AppLang
               {row.map((cell, ci) => (
                 <td
                   key={ci}
-                  className="border border-slate-200 px-2 py-1 dark:border-slate-700"
+                  className="border border-white/[0.08] px-2 py-1 dark:border-white/[0.08]"
                 >
                   {cell}
                 </td>
@@ -336,7 +336,7 @@ function ExercisesRunner({
         <p className="mt-2 text-lg font-bold">
           {correct} из {total} верно ({percent}%)
         </p>
-        <p className="mt-1 text-sm text-slate-500">Тема засчитана в серию дня.</p>
+        <p className="mt-1 text-sm text-[var(--night-text-40)]">Тема засчитана в серию дня.</p>
         <div className="mt-4 flex justify-center gap-3">
           <Button
             variant="secondary"
@@ -358,7 +358,7 @@ function ExercisesRunner({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between text-sm text-slate-400">
+      <div className="flex items-center justify-between text-sm text-[var(--night-text-40)]">
         <span>
           Упражнение {index + 1} / {total}
         </span>

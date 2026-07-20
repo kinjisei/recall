@@ -24,7 +24,7 @@ export function GameLoading({ title, onBack }: { title: string; onBack: () => vo
   return (
     <div className="flex flex-col gap-4">
       <GameHeader title={title} onBack={onBack} />
-      <p className="text-slate-500">Готовлю раунд…</p>
+      <p className="text-[var(--night-text-40)]">Готовлю раунд…</p>
     </div>
   )
 }
@@ -36,7 +36,7 @@ export function EmptyPool({ title, onBack }: { title: string; onBack: () => void
       <Card className="text-center">
         <p className="text-4xl">📭</p>
         <p className="mt-2 font-semibold">Пока мало слов для игры</p>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-[var(--night-text-40)]">
           Добавь слова кнопкой «📦 Паки» в повторении или тапая по словам в разделе «Ввод».
         </p>
       </Card>
@@ -100,7 +100,7 @@ export function QuizRunner({
             {correct} из {questions.length} верно ({percent}%)
           </p>
           {correct < questions.length && (
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-[var(--night-text-40)]">
               Слова с ошибками вернутся в ближайшее повторение.
             </p>
           )}
@@ -130,7 +130,7 @@ export function QuizRunner({
   return (
     <div className="flex flex-col gap-4">
       <GameHeader title={title} onBack={onBack} />
-      <div className="flex items-center justify-between text-sm text-slate-400">
+      <div className="flex items-center justify-between text-sm text-[var(--night-text-40)]">
         <span>
           {index + 1} / {questions.length}
         </span>
@@ -149,7 +149,7 @@ export function QuizRunner({
         ) : (
           <p className="text-lg leading-relaxed">{q.prompt}</p>
         )}
-        {q.say && q.prompt && <p className="text-center text-sm text-slate-500">{q.prompt}</p>}
+        {q.say && q.prompt && <p className="text-center text-sm text-[var(--night-text-40)]">{q.prompt}</p>}
 
         <div className="grid gap-2">
           {q.options.map((opt, i) => {
@@ -157,12 +157,12 @@ export function QuizRunner({
             const isPicked = picked === i
             const cls =
               picked === null
-                ? 'border-slate-300 dark:border-slate-600'
+                ? 'border-white/[0.10]'
                 : isAnswer
                   ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
                   : isPicked
                     ? 'border-red-500 bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300'
-                    : 'border-slate-200 opacity-60 dark:border-slate-700'
+                    : 'border-white/[0.08] opacity-60 dark:border-white/[0.08]'
             return (
               <button
                 key={i}
@@ -188,7 +188,7 @@ export function QuizRunner({
         )}
       </Card>
 
-      {picked === null && <p className="text-center text-sm text-slate-400">{hint}</p>}
+      {picked === null && <p className="text-center text-sm text-[var(--night-text-40)]">{hint}</p>}
     </div>
   )
 }

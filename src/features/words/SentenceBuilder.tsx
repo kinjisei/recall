@@ -79,7 +79,7 @@ export function SentenceBuilder({ onBack }: { onBack: () => void }) {
   return (
     <div className="flex flex-col gap-4">
       <Header title="🧱 Собери предложение" onBack={onBack} />
-      <div className="flex items-center justify-between text-sm text-slate-400">
+      <div className="flex items-center justify-between text-sm text-[var(--night-text-40)]">
         <span>
           {index + 1} / {tasks.length}
         </span>
@@ -119,12 +119,12 @@ function BuildTask({
 
   return (
     <Card className="flex flex-col gap-3">
-      <p className="text-sm text-slate-400">Переведите на испанский:</p>
+      <p className="text-sm text-[var(--night-text-40)]">Переведите на испанский:</p>
       <p className="text-lg font-medium">{task.ru}</p>
 
       <div
         className={`min-h-[48px] rounded-lg border-2 border-dashed p-2 ${
-          checked ? (ok ? 'border-emerald-500' : 'border-red-500') : 'border-slate-300 dark:border-slate-600'
+          checked ? (ok ? 'border-emerald-500' : 'border-red-500') : 'border-white/[0.10]'
         }`}
       >
         <div className="flex flex-wrap gap-2">
@@ -133,13 +133,13 @@ function BuildTask({
               key={i}
               onClick={() => !checked && setBuilt((arr) => arr.filter((_, j) => j !== i))}
               disabled={checked}
-              className="rounded-lg bg-sky-600 px-3 py-1.5 text-sm text-white"
+              className="rounded-lg bg-[var(--night-accent)] px-3 py-1.5 text-sm text-white"
             >
               {b.w}
             </button>
           ))}
           {built.length === 0 && (
-            <span className="px-1 py-1 text-sm text-slate-400">нажимайте слова снизу по порядку</span>
+            <span className="px-1 py-1 text-sm text-[var(--night-text-40)]">нажимайте слова снизу по порядку</span>
           )}
         </div>
       </div>
@@ -152,8 +152,8 @@ function BuildTask({
             disabled={checked || used.has(item.i)}
             className={`rounded-lg border px-3 py-1.5 text-sm ${
               used.has(item.i)
-                ? 'border-slate-200 text-slate-300 dark:border-slate-800 dark:text-slate-600'
-                : 'border-slate-300 dark:border-slate-600'
+                ? 'border-white/[0.08] text-[var(--night-text-25)] dark:border-slate-800 dark:text-[var(--night-text-70)]'
+                : 'border-white/[0.10]'
             }`}
           >
             {item.w}
@@ -173,7 +173,7 @@ function BuildTask({
           )}
           <button
             onClick={() => speak(task.es, { lang: 'es' })}
-            className="rounded-full bg-slate-100 px-2 py-0.5 dark:bg-slate-700"
+            className="rounded-full bg-white/[0.06] px-2 py-0.5 dark:bg-white/[0.08]"
             aria-label="Озвучить"
           >
             🔊

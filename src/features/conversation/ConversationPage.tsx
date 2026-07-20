@@ -42,7 +42,7 @@ export function ConversationPage() {
     <div className="flex flex-col gap-4">
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">💬 Диалог</h1>
-        <span className="text-sm text-slate-400">
+        <span className="text-sm text-[var(--night-text-40)]">
           {lang === 'es' ? `испанский · ${level}` : `уровень ${level}`}
         </span>
       </header>
@@ -54,8 +54,8 @@ export function ConversationPage() {
             onClick={() => setMode(m.id)}
             className={`rounded-lg px-4 py-2 text-sm font-semibold ${
               mode === m.id
-                ? 'bg-sky-600 text-white'
-                : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
+                ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
+                : 'bg-white/[0.07] text-[var(--night-text-70)]'
             }`}
           >
             {m.label}
@@ -193,12 +193,12 @@ function ChatSection({ level, lang }: { level: CEFRLevel; lang: AppLang }) {
     <div className="flex flex-col gap-3">
       {msgs.length === 0 && (
         <Card>
-          <p className="text-slate-600 dark:text-slate-300">
+          <p className="text-[var(--night-text-70)]">
             {lang === 'es'
               ? 'Напиши что-нибудь по-испански — AI ответит просто, поддержит разговор и поправит ошибки (строкой с ✏️).'
               : 'Напиши что-нибудь по-английски — AI ответит, поддержит разговор и поправит ошибки (строкой с ✏️).'}
           </p>
-          <p className="mt-2 text-sm text-slate-400">
+          <p className="mt-2 text-sm text-[var(--night-text-40)]">
             {lang === 'es'
               ? 'Например: «¡Hola! Me llamo Iván. ¿Cómo estás?»'
               : 'Например: «Hi! I want to talk about travelling.»'}
@@ -212,15 +212,15 @@ function ChatSection({ level, lang }: { level: CEFRLevel; lang: AppLang }) {
             key={i}
             className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-[15px] leading-relaxed ${
               m.role === 'user'
-                ? 'self-end rounded-br-md bg-sky-600 text-white'
-                : 'self-start rounded-bl-md border border-slate-200 bg-white text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100'
+                ? 'self-end rounded-br-md border border-[var(--night-accent-45)] bg-[rgba(145,132,217,.18)] text-[var(--night-text)]'
+                : 'self-start rounded-bl-md border border-white/[0.08] bg-[var(--night-surface)] text-[var(--night-text)]'
             }`}
           >
             {m.content}
           </div>
         ))}
         {busy && (
-          <div className="self-start rounded-2xl rounded-bl-md border border-slate-200 bg-white px-4 py-2.5 text-slate-400 dark:border-slate-700 dark:bg-slate-800">
+          <div className="self-start rounded-2xl rounded-bl-md border border-white/[0.08] bg-[var(--night-surface)] px-4 py-2.5 text-[var(--night-text-40)] dark:border-white/[0.08] dark:bg-[var(--night-surface)]">
             печатает…
           </div>
         )}
@@ -231,7 +231,7 @@ function ChatSection({ level, lang }: { level: CEFRLevel; lang: AppLang }) {
 
       <form onSubmit={send} className="flex gap-2">
         <input
-          className="min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-4 py-3 text-base outline-none focus:border-sky-500 dark:border-slate-600 dark:bg-slate-900"
+          className="min-w-0 flex-1 rounded-xl border border-white/[0.10] bg-[var(--night-surface)] px-4 py-3 text-base outline-none focus:border-[var(--night-accent-45)] dark:border-white/[0.10] dark:bg-slate-900"
           placeholder={lang === 'es' ? 'Escribe en español…' : 'Write in English…'}
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -320,7 +320,7 @@ function WritingSection({ level, lang }: { level: CEFRLevel; lang: AppLang }) {
   return (
     <div className="flex flex-col gap-3">
       <Card>
-        <p className="text-slate-600 dark:text-slate-300">
+        <p className="text-[var(--night-text-70)]">
           {lang === 'es'
             ? 'Напиши несколько предложений по-испански — AI разберёт ошибки, предложит улучшенную версию и даст совет.'
             : 'Напиши несколько предложений по-английски — AI разберёт ошибки, предложит улучшенную версию и даст совет.'}
@@ -328,7 +328,7 @@ function WritingSection({ level, lang }: { level: CEFRLevel; lang: AppLang }) {
       </Card>
 
       <textarea
-        className="min-h-[140px] w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base leading-relaxed outline-none focus:border-sky-500 dark:border-slate-600 dark:bg-slate-900"
+        className="min-h-[140px] w-full rounded-xl border border-white/[0.10] bg-[var(--night-surface)] px-4 py-3 text-base leading-relaxed outline-none focus:border-[var(--night-accent-45)] dark:border-white/[0.10] dark:bg-slate-900"
         placeholder={
           lang === 'es'
             ? 'Hola. Me gusta mucho la música española…'
@@ -347,7 +347,7 @@ function WritingSection({ level, lang }: { level: CEFRLevel; lang: AppLang }) {
 
       {feedback && (
         <Card>
-          <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-slate-800 dark:text-slate-100">
+          <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-[var(--night-text)]">
             {feedback}
           </p>
           <Button

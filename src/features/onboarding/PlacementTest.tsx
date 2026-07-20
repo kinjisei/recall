@@ -77,7 +77,7 @@ export function PlacementTest() {
     return (
       <div className="flex flex-col gap-4">
         <TopBack onBack={back} />
-        <p className="text-slate-500">Загрузка…</p>
+        <p className="text-[var(--night-text-40)]">Загрузка…</p>
       </div>
     )
   }
@@ -92,7 +92,7 @@ export function PlacementTest() {
             <IconSparkles className="h-8 w-8" />
           </div>
           <h1 className="text-2xl font-bold">Тест уровня испанского</h1>
-          <p className="max-w-sm text-slate-500 dark:text-slate-400">
+          <p className="max-w-sm text-[var(--night-text-40)]">
             {LEVELS.length * PER_LEVEL} коротких вопросов от простого к сложному.
             Определим твой уровень (A1–B2) — он подстроит «Диалог» под тебя.
           </p>
@@ -109,9 +109,9 @@ export function PlacementTest() {
       <div className="flex flex-col gap-4">
         <TopBack onBack={back} />
         <Card className="items-center text-center">
-          <p className="text-sm text-slate-500 dark:text-slate-400">Твой уровень</p>
-          <p className="my-2 text-5xl font-bold text-sky-600 dark:text-sky-400">{level}</p>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <p className="text-sm text-[var(--night-text-40)]">Твой уровень</p>
+          <p className="my-2 text-5xl font-bold text-[var(--night-accent-text)]">{level}</p>
+          <p className="text-sm text-[var(--night-text-40)]">
             {level === 'A1'
               ? 'Начинаем с самых основ — это нормально!'
               : level === 'B2'
@@ -157,11 +157,11 @@ export function PlacementTest() {
 
       {/* Прогресс */}
       <div>
-        <div className="mb-1 flex justify-between text-xs text-slate-400">
+        <div className="mb-1 flex justify-between text-xs text-[var(--night-text-40)]">
           <span>Вопрос {index + 1} из {total}</span>
           <span>{q.level}</span>
         </div>
-        <div className="h-1.5 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+        <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.07]">
           <div
             className="h-full rounded-full bg-brand-gradient transition-all duration-300"
             style={{ width: `${((index + 1) / total) * 100}%` }}
@@ -176,7 +176,7 @@ export function PlacementTest() {
             <button
               key={i}
               onClick={() => choose(i)}
-              className="rounded-xl border border-slate-300 px-4 py-2.5 text-left transition-colors hover:border-sky-400 hover:bg-sky-50 dark:border-slate-600 dark:hover:bg-sky-950/40"
+              className="rounded-xl border border-white/[0.10] px-4 py-2.5 text-left transition-colors hover:border-sky-400 hover:bg-sky-50 dark:border-white/[0.10] dark:hover:bg-sky-950/40"
             >
               {opt}
             </button>
@@ -191,7 +191,7 @@ function TopBack({ onBack }: { onBack: () => void }) {
   return (
     <button
       onClick={onBack}
-      className="flex w-fit items-center gap-1 text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+      className="flex w-fit items-center gap-1 text-sm font-medium text-[var(--night-text-40)] hover:text-[var(--night-text-70)] dark:text-[var(--night-text-40)] dark:hover:text-slate-200"
     >
       <IconArrowLeft className="h-4 w-4" /> На главную
     </button>

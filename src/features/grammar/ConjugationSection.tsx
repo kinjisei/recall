@@ -39,7 +39,7 @@ export function ConjugationSection() {
     }
   }, [])
 
-  if (!data) return <p className="text-slate-500">Загрузка…</p>
+  if (!data) return <p className="text-[var(--night-text-40)]">Загрузка…</p>
 
   return (
     <div className="flex flex-col gap-4">
@@ -75,8 +75,8 @@ function SubTab({
       onClick={onClick}
       className={`rounded-lg px-4 py-2 text-sm font-semibold ${
         active
-          ? 'bg-sky-600 text-white'
-          : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
+          ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
+          : 'bg-white/[0.07] text-[var(--night-text-70)]'
       }`}
     >
       {children}
@@ -121,13 +121,13 @@ function ReferenceView({ reference }: { reference: ConjugationReference }) {
           <div key={level}>
             <button
               onClick={() => setOpenLevel((cur) => (cur === level ? null : level))}
-              className="flex w-full items-center justify-between rounded-lg bg-slate-100 px-3 py-2 text-left dark:bg-slate-800"
+              className="flex w-full items-center justify-between rounded-lg bg-white/[0.06] px-3 py-2 text-left dark:bg-[var(--night-surface)]"
             >
               <span className="text-sm font-bold">
                 Уровень {level}{' '}
-                <span className="font-normal text-slate-400">· {list.length} времён</span>
+                <span className="font-normal text-[var(--night-text-40)]">· {list.length} времён</span>
               </span>
-              <span className="text-slate-400">{isOpen ? '▾' : '▸'}</span>
+              <span className="text-[var(--night-text-40)]">{isOpen ? '▾' : '▸'}</span>
             </button>
 
             {isOpen && (
@@ -136,7 +136,7 @@ function ReferenceView({ reference }: { reference: ConjugationReference }) {
                   <button key={t.id} onClick={() => setSelected(t)} className="text-left">
                     <Card className="transition-transform active:scale-[0.99]">
                       <p className="font-medium">{t.nameRu}</p>
-                      <p className="text-xs text-slate-400">{t.name}</p>
+                      <p className="text-xs text-[var(--night-text-40)]">{t.name}</p>
                     </Card>
                   </button>
                 ))}
@@ -166,24 +166,24 @@ function TenseDetail({
         </Button>
         <div className="min-w-0">
           <h2 className="truncate text-lg font-bold">{tense.nameRu}</h2>
-          <p className="truncate text-sm text-slate-400">{tense.name}</p>
+          <p className="truncate text-sm text-[var(--night-text-40)]">{tense.name}</p>
         </div>
       </div>
 
       <Card className="flex flex-col gap-2">
-        <p className="text-sm text-slate-600 dark:text-slate-300">{tense.usage}</p>
-        <div className="rounded-lg bg-slate-100 px-3 py-2 dark:bg-slate-800">
+        <p className="text-sm text-[var(--night-text-70)]">{tense.usage}</p>
+        <div className="rounded-lg bg-white/[0.06] px-3 py-2 dark:bg-[var(--night-surface)]">
           <div className="flex items-center gap-2">
             <p className="font-medium">{tense.example}</p>
             <button
               onClick={() => speak(tense.example, { lang: 'es' })}
-              className="rounded-full bg-white px-2 py-0.5 text-sm dark:bg-slate-700"
+              className="rounded-full bg-[var(--night-surface)] px-2 py-0.5 text-sm dark:bg-white/[0.08]"
               aria-label="Озвучить"
             >
               🔊
             </button>
           </div>
-          <p className="mt-0.5 text-sm text-slate-500">{tense.exampleRu}</p>
+          <p className="mt-0.5 text-sm text-[var(--night-text-40)]">{tense.exampleRu}</p>
         </div>
       </Card>
 
@@ -209,7 +209,7 @@ function TenseDetail({
             cells: v.forms,
           }))}
         />
-        <p className="mt-1 text-xs text-slate-400">⚠️ — неправильный глагол</p>
+        <p className="mt-1 text-xs text-[var(--night-text-40)]">⚠️ — неправильный глагол</p>
       </div>
     </div>
   )
@@ -230,13 +230,13 @@ function ConjTable({
       <table className="min-w-full border-collapse text-sm">
         <thead>
           <tr>
-            <th className="border border-slate-200 bg-slate-100 px-2 py-1 text-left font-semibold dark:border-slate-700 dark:bg-slate-800">
+            <th className="border border-white/[0.08] bg-white/[0.06] px-2 py-1 text-left font-semibold dark:border-white/[0.08] dark:bg-[var(--night-surface)]">
               {firstHeader}
             </th>
             {persons.map((p, i) => (
               <th
                 key={i}
-                className="whitespace-nowrap border border-slate-200 bg-slate-100 px-2 py-1 text-left font-semibold dark:border-slate-700 dark:bg-slate-800"
+                className="whitespace-nowrap border border-white/[0.08] bg-white/[0.06] px-2 py-1 text-left font-semibold dark:border-white/[0.08] dark:bg-[var(--night-surface)]"
               >
                 {p}
               </th>
@@ -246,10 +246,10 @@ function ConjTable({
         <tbody>
           {rows.map((row, ri) => (
             <tr key={ri}>
-              <td className="whitespace-nowrap border border-slate-200 px-2 py-1 font-medium dark:border-slate-700">
+              <td className="whitespace-nowrap border border-white/[0.08] px-2 py-1 font-medium dark:border-white/[0.08]">
                 {row.head}
                 {row.sub && (
-                  <span className="block text-xs font-normal text-slate-400">
+                  <span className="block text-xs font-normal text-[var(--night-text-40)]">
                     {row.sub}
                   </span>
                 )}
@@ -257,7 +257,7 @@ function ConjTable({
               {row.cells.map((c, ci) => (
                 <td
                   key={ci}
-                  className="whitespace-nowrap border border-slate-200 px-2 py-1 dark:border-slate-700"
+                  className="whitespace-nowrap border border-white/[0.08] px-2 py-1 dark:border-white/[0.08]"
                 >
                   {c}
                 </td>
@@ -291,8 +291,8 @@ function TrainerView({ exercises }: { exercises: EndingsExercise[] }) {
             onClick={() => setLevel(l)}
             className={`rounded-lg px-3 py-1.5 text-sm font-semibold ${
               level === l
-                ? 'bg-sky-600 text-white'
-                : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
+                ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
+                : 'bg-white/[0.07] text-[var(--night-text-70)]'
             }`}
           >
             {l === 'all' ? 'Все' : l}
@@ -326,7 +326,7 @@ function TrainerRunner({ pool }: { pool: EndingsExercise[] }) {
         <p className="mt-2 text-lg font-bold">
           {correct} из {total} верно ({percent}%)
         </p>
-        <p className="mt-1 text-sm text-slate-500">Засчитано в серию дня.</p>
+        <p className="mt-1 text-sm text-[var(--night-text-40)]">Засчитано в серию дня.</p>
         <Button
           variant="secondary"
           className="mt-4"
@@ -361,7 +361,7 @@ function TrainerRunner({ pool }: { pool: EndingsExercise[] }) {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between text-sm text-slate-400">
+      <div className="flex items-center justify-between text-sm text-[var(--night-text-40)]">
         <span>
           {index + 1} / {total}
         </span>
@@ -369,11 +369,11 @@ function TrainerRunner({ pool }: { pool: EndingsExercise[] }) {
       </div>
 
       <Card className="flex flex-col gap-3">
-        <p className="text-xs font-semibold uppercase tracking-wide text-sky-600 dark:text-sky-400">
+        <p className="text-xs font-semibold uppercase tracking-wide text-[var(--night-accent-text)]">
           {current.rule}
         </p>
         <p className="text-lg font-medium">{current.prompt}</p>
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-[var(--night-text-40)]">
           глагол: <b>{current.infinitive}</b>
         </p>
 
@@ -381,11 +381,11 @@ function TrainerRunner({ pool }: { pool: EndingsExercise[] }) {
           {current.options.map((opt, i) => {
             const isAnswer = i === current.answer
             const isPicked = i === picked
-            let cls = 'border-slate-300 dark:border-slate-600 hover:border-sky-400'
+            let cls = 'border-white/[0.10] hover:border-sky-400'
             if (picked !== null) {
               if (isAnswer) cls = 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40'
               else if (isPicked) cls = 'border-red-500 bg-red-50 dark:bg-red-950/40'
-              else cls = 'border-slate-200 dark:border-slate-700 opacity-60'
+              else cls = 'border-white/[0.08] opacity-60'
             }
             return (
               <button
@@ -402,7 +402,7 @@ function TrainerRunner({ pool }: { pool: EndingsExercise[] }) {
 
         {picked !== null && (
           <>
-            <p className="rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+            <p className="rounded-lg bg-white/[0.06] px-3 py-2 text-sm text-[var(--night-text-70)] dark:bg-[var(--night-surface)] dark:text-[var(--night-text-25)]">
               {current.explanation}
             </p>
             <Button onClick={next}>

@@ -196,10 +196,10 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
       )}
 
       {loading ? (
-        <p className="text-slate-500">Загрузка…</p>
+        <p className="text-[var(--night-text-40)]">Загрузка…</p>
       ) : current ? (
         <>
-          <p className="text-center text-sm text-slate-500">
+          <p className="text-center text-sm text-[var(--night-text-40)]">
             Осталось: {queue.length - index}
           </p>
           <SwipeCard
@@ -211,18 +211,18 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
             onSwipe={onSwipe}
           />
           {flipped && (
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2.5">
               <button
                 onClick={() => onSwipe('left')}
-                className="rounded-xl bg-red-500 py-3 text-sm font-semibold text-white hover:bg-red-400"
+                className="lift rounded-2xl border border-white/[0.12] py-3.5 text-sm font-medium text-[var(--night-text-70)]"
               >
-                ✗ Не знаю
+                Ещё раз
               </button>
               <button
                 onClick={() => onSwipe('right')}
-                className="rounded-xl bg-emerald-600 py-3 text-sm font-semibold text-white hover:bg-emerald-500"
+                className="lift rounded-2xl border border-[var(--night-accent-45)] bg-[rgba(145,132,217,.18)] py-3.5 text-sm font-medium text-[var(--night-text)]"
               >
-                ✓ Знаю
+                Помню
               </button>
             </div>
           )}
@@ -237,7 +237,7 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
                 ? `Готово! Повторено карточек: ${reviewedCount}`
                 : 'Карточек к повторению нет'}
             </p>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-[var(--night-text-40)]">
               Добавь слова кнопкой «📦 Паки», «+ Слово» или из раздела «Ввод».
             </p>
             <Button variant="secondary" className="mt-4" onClick={load}>
@@ -260,7 +260,7 @@ function AddCardForm({ lang, onAdded }: { lang: AppLang; onAdded: () => void }) 
   const [msg, setMsg] = useState<string | null>(null)
 
   const inputClass =
-    'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-sky-500 dark:border-slate-600 dark:bg-slate-900'
+    'w-full rounded-lg border border-white/[0.10] bg-[var(--night-surface)] px-3 py-2 text-sm outline-none focus:border-[var(--night-accent-45)] dark:border-white/[0.10] dark:bg-slate-900'
 
   const submit = async () => {
     if (!front.trim()) return
@@ -310,7 +310,7 @@ function AddCardForm({ lang, onAdded }: { lang: AppLang; onAdded: () => void }) 
         <Button onClick={submit} disabled={busy || !front.trim()}>
           {busy ? 'Добавляю…' : 'Добавить в колоду'}
         </Button>
-        {msg && <span className="text-sm text-slate-500">{msg}</span>}
+        {msg && <span className="text-sm text-[var(--night-text-40)]">{msg}</span>}
       </div>
     </Card>
   )

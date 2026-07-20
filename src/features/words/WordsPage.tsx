@@ -47,7 +47,7 @@ interface ModeDef {
 }
 
 const toneChip: Record<Tone, string> = {
-  sky: 'bg-sky-100 text-sky-600 dark:bg-sky-950/60 dark:text-sky-400',
+  sky: 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]',
   violet: 'bg-violet-100 text-violet-600 dark:bg-violet-950/60 dark:text-violet-400',
   amber: 'bg-amber-100 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400',
   emerald: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400',
@@ -88,7 +88,7 @@ export function WordsPage() {
   if (mode === 'review') return <DeckReview onBack={back} />
   if (mode !== 'hub') {
     return (
-      <Suspense fallback={<p className="text-slate-500">Загрузка…</p>}>
+      <Suspense fallback={<p className="text-[var(--night-text-40)]">Загрузка…</p>}>
         {mode === 'match' && <MatchMode lang={lang} onBack={back} />}
         {mode === 'gap' && <GapMode lang={lang} onBack={back} />}
         {mode === 'translate' && <TranslateMode lang={lang} onBack={back} />}
@@ -112,7 +112,7 @@ export function WordsPage() {
           </div>
           <div className="min-w-0">
             <p className="font-semibold">Повторение</p>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
+            <p className="text-sm text-[var(--night-text-40)]">
               {due === null
                 ? 'Карточки по расписанию'
                 : due > 0
@@ -123,7 +123,7 @@ export function WordsPage() {
         </Card>
       </button>
 
-      <p className="text-sm text-slate-500">
+      <p className="text-sm text-[var(--night-text-40)]">
         Тренировки на твоих словах — если карточек мало, добираем из паков уровня.
         Ошибка в игре вернёт слово в ближайшее повторение.
       </p>
@@ -140,7 +140,7 @@ export function WordsPage() {
                 <m.Icon className="h-6 w-6" />
               </div>
               <div className="mt-3 font-semibold">{m.title}</div>
-              <div className="text-sm text-slate-500 dark:text-slate-400">{m.desc}</div>
+              <div className="text-sm text-[var(--night-text-40)]">{m.desc}</div>
             </Card>
           </button>
         ))}

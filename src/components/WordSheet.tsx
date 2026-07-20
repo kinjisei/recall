@@ -163,7 +163,7 @@ export function WordSheet({
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-end bg-black/40" onClick={onClose}>
       <div
-        className="flex max-h-[85dvh] w-full flex-col rounded-t-3xl bg-white dark:bg-slate-800"
+        className="flex max-h-[85dvh] w-full flex-col rounded-t-3xl bg-[var(--night-surface)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mx-auto mb-1 mt-3 h-1.5 w-10 shrink-0 rounded-full bg-slate-300 dark:bg-slate-600" />
@@ -174,42 +174,42 @@ export function WordSheet({
             <h3 className="min-w-0 text-xl font-bold">
               {word.toLowerCase()}
               {baseDiffers && (
-                <span className="ml-2 text-base font-normal text-slate-400">
+                <span className="ml-2 text-base font-normal text-[var(--night-text-40)]">
                   → {ctx.base}
                 </span>
               )}
             </h3>
             <button
               onClick={playAudio}
-              className="shrink-0 rounded-full bg-slate-100 px-3 py-1 text-lg dark:bg-slate-700"
+              className="shrink-0 rounded-full bg-white/[0.06] px-3 py-1 text-lg dark:bg-white/[0.08]"
               aria-label="Озвучить"
             >
               🔊
             </button>
           </div>
 
-          {ipa && <p className="mt-1 text-slate-400">/{ipa}/</p>}
+          {ipa && <p className="mt-1 text-[var(--night-text-40)]">/{ipa}/</p>}
 
           {!ctx && !ctxError && (
-            <p className="mt-3 text-slate-500">Перевожу в контексте…</p>
+            <p className="mt-3 text-[var(--night-text-40)]">Перевожу в контексте…</p>
           )}
           {ctx && (
             <div className="mt-3">
-              <p className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+              <p className="text-lg font-semibold text-[var(--night-text)]">
                 {ctx.translation}
               </p>
               {ctx.note && (
-                <p className="mt-1 text-sm text-slate-500">💡 {ctx.note}</p>
+                <p className="mt-1 text-sm text-[var(--night-text-40)]">💡 {ctx.note}</p>
               )}
             </div>
           )}
           {ctxError && (
-            <p className="mt-3 text-slate-500">
+            <p className="mt-3 text-[var(--night-text-40)]">
               Перевод сейчас недоступен — слово всё равно можно добавить в колоду.
             </p>
           )}
 
-          <p className="mt-3 rounded-lg bg-slate-100 px-3 py-2 text-sm italic text-slate-500 dark:bg-slate-700/60 dark:text-slate-400">
+          <p className="mt-3 rounded-lg bg-white/[0.06] px-3 py-2 text-sm italic text-[var(--night-text-40)] dark:bg-slate-700/60 dark:text-[var(--night-text-40)]">
             «{sentence}»
           </p>
 

@@ -37,7 +37,7 @@ function TeacherCard() {
       <Card className="flex items-center justify-between transition-transform active:scale-[0.99]">
         <div>
           <p className="font-semibold">👩‍🏫 Мои ученицы</p>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <p className="text-sm text-[var(--night-text-40)]">
             {pending > 0
               ? `Работ на проверку: ${pending}`
               : 'Код-приглашение, колоды, материалы, прогресс'}
@@ -48,7 +48,7 @@ function TeacherCard() {
             {pending}
           </span>
         ) : (
-          <span className="text-slate-400">→</span>
+          <span className="text-[var(--night-text-40)]">→</span>
         )}
       </Card>
     </Link>
@@ -106,11 +106,11 @@ export function AssignmentsNotice({ placement }: { placement: 'top' | 'bottom' }
       <Card className="flex items-center justify-between transition-transform active:scale-[0.99]">
         <div>
           <p className="font-semibold">📝 Задания от преподавателя</p>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <p className="text-sm text-[var(--night-text-40)]">
             Все задания выполнены ✓
           </p>
         </div>
-        <span className="text-slate-400">→</span>
+        <span className="text-[var(--night-text-40)]">→</span>
       </Card>
     </Link>
   )
@@ -155,9 +155,9 @@ function JoinTeacherBlock() {
   if (teachers.length > 0 && !open) {
     return (
       <Card className="flex items-center justify-between">
-        <p className="text-sm text-slate-500 dark:text-slate-400">
+        <p className="text-sm text-[var(--night-text-40)]">
           👩‍🏫 Преподаватель:{' '}
-          <span className="font-semibold text-slate-700 dark:text-slate-200">
+          <span className="font-semibold text-[var(--night-text-70)]">
             {teachers.map((t) => t.display_name ?? 'Без имени').join(', ')}
           </span>
         </p>
@@ -171,14 +171,14 @@ function JoinTeacherBlock() {
       {!open ? (
         <button
           onClick={() => setOpen(true)}
-          className="text-left text-sm text-sky-600 hover:underline dark:text-sky-400"
+          className="text-left text-sm text-[var(--night-accent-text)] hover:underline dark:text-[var(--night-accent-text)]"
         >
           У меня есть код преподавателя →
         </button>
       ) : (
         <form onSubmit={submit} className="flex gap-2">
           <input
-            className="min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono text-sm uppercase tracking-widest outline-none focus:border-sky-500 dark:border-slate-600 dark:bg-slate-900"
+            className="min-w-0 flex-1 rounded-lg border border-white/[0.10] bg-[var(--night-surface)] px-3 py-2 font-mono text-sm uppercase tracking-widest outline-none focus:border-[var(--night-accent-45)] dark:border-white/[0.10] dark:bg-slate-900"
             placeholder="КОД (6 символов)"
             value={code}
             maxLength={6}

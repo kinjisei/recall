@@ -13,10 +13,9 @@ export function Card({
   className?: string
   interactive?: boolean
 }) {
+  // Тема «Nocturne»: поверхность surface + тонкая светлая рамка, без теней.
   const base =
-    'rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm shadow-slate-900/[0.04] dark:border-slate-700/70 dark:bg-slate-800'
-  const press = interactive
-    ? 'transition-transform duration-150 hover:-translate-y-0.5 active:scale-[0.98]'
-    : ''
+    'rounded-2xl border border-white/[0.08] bg-[var(--night-surface)] p-5 text-[var(--night-text)]'
+  const press = interactive ? 'lift hover:border-white/[0.14]' : ''
   return <div className={`${base} ${press} ${className}`}>{children}</div>
 }

@@ -62,19 +62,19 @@ export function AssignmentsPage() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-3">
-        <Link to="/" className="text-sm font-medium text-sky-600 hover:underline dark:text-sky-400">
+        <Link to="/" className="text-sm font-medium text-[var(--night-accent-text)] hover:underline dark:text-[var(--night-accent-text)]">
           ← Главная
         </Link>
         <h1 className="text-2xl font-bold">📝 Задания</h1>
       </div>
 
       {rows === null ? (
-        <p className="text-slate-500">Загрузка…</p>
+        <p className="text-[var(--night-text-40)]">Загрузка…</p>
       ) : rows.length === 0 ? (
         <Card className="text-center">
           <p className="text-4xl">🌤</p>
           <p className="mt-2 font-semibold">Заданий пока нет</p>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-[var(--night-text-40)]">
             Когда преподаватель назначит задание, оно появится здесь.
           </p>
         </Card>
@@ -82,7 +82,7 @@ export function AssignmentsPage() {
         <>
           {pending.length > 0 && (
             <section className="flex flex-col gap-2">
-              <h2 className="text-sm font-semibold text-slate-500">Новые</h2>
+              <h2 className="text-sm font-semibold text-[var(--night-text-40)]">Новые</h2>
               {pending.map((r) => (
                 <AssignmentCard key={r.id} row={r} onOpen={() => setActive(r)} />
               ))}
@@ -90,7 +90,7 @@ export function AssignmentsPage() {
           )}
           {done.length > 0 && (
             <section className="flex flex-col gap-2">
-              <h2 className="text-sm font-semibold text-slate-500">Выполненные</h2>
+              <h2 className="text-sm font-semibold text-[var(--night-text-40)]">Выполненные</h2>
               {done.map((r) => (
                 <AssignmentCard key={r.id} row={r} onOpen={() => setActive(r)} />
               ))}
@@ -109,7 +109,7 @@ function AssignmentCard({ row, onOpen }: { row: Row; onOpen: () => void }) {
       <Card className="flex items-center justify-between gap-2 transition-transform active:scale-[0.99]">
         <div className="min-w-0">
           <p className="truncate font-medium">{m.title ?? m.topic}</p>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-[var(--night-text-40)]">
             {m.lang.toUpperCase()} · {m.level} · {m.format} · {m.exercises.length} упр.
             {(row.attempts?.length ?? 0) > 0 && row.status === 'assigned' && (
               <span className="ml-1 font-semibold text-amber-600 dark:text-amber-400">
@@ -124,7 +124,7 @@ function AssignmentCard({ row, onOpen }: { row: Row; onOpen: () => void }) {
               новое
             </span>
           ) : row.status === 'submitted' ? (
-            <span className="text-slate-400">⏳ на проверке</span>
+            <span className="text-[var(--night-text-40)]">⏳ на проверке</span>
           ) : (
             <span className="font-semibold text-emerald-600 dark:text-emerald-400">
               ✓ {(row.teacher_review ?? []).filter((r) => r.ok).length}/{row.auto_total}
@@ -162,18 +162,18 @@ function ReviewedView({ row, onBack }: { row: Row; onBack: () => void }) {
         <p className="mt-2 text-lg font-bold">
           Проверено преподавателем: {okCount} из {row.auto_total}
         </p>
-        <p className="mt-1 text-sm text-slate-500">Разбор по каждому упражнению ниже.</p>
+        <p className="mt-1 text-sm text-[var(--night-text-40)]">Разбор по каждому упражнению ниже.</p>
       </Card>
 
       <button
         onClick={() => setShowBody((s) => !s)}
-        className="self-start text-sm font-medium text-sky-600 hover:underline dark:text-sky-400"
+        className="self-start text-sm font-medium text-[var(--night-accent-text)] hover:underline dark:text-[var(--night-accent-text)]"
       >
         {showBody ? '▾ Скрыть текст' : '▸ Перечитать текст'}
       </button>
       {showBody && (
         <Card>
-          <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700 dark:text-slate-200">
+          <p className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--night-text-70)]">
             {m.body}
           </p>
         </Card>
@@ -187,17 +187,17 @@ function ReviewedView({ row, onBack }: { row: Row; onBack: () => void }) {
         const ok = item?.ok ?? false
         return (
           <Card key={i} className="flex flex-col gap-1.5">
-            <p className="text-xs text-slate-400">{i + 1}</p>
+            <p className="text-xs text-[var(--night-text-40)]">{i + 1}</p>
             <p className="text-sm font-medium">{ex.prompt}</p>
             <p className="text-sm">
               Твой ответ:{' '}
               <span className={ok ? 'font-semibold text-emerald-600 dark:text-emerald-400' : 'font-semibold text-red-500'}>
                 {given} {ok ? '✓' : '✗'}
               </span>
-              {!ok && correct && <span className="text-slate-400"> · правильно: {correct}</span>}
+              {!ok && correct && <span className="text-[var(--night-text-40)]"> · правильно: {correct}</span>}
             </p>
             {item?.comment && (
-              <p className="rounded-lg bg-sky-50 px-3 py-2 text-sm text-slate-700 dark:bg-sky-950/40 dark:text-slate-200">
+              <p className="rounded-lg bg-sky-50 px-3 py-2 text-sm text-[var(--night-text-70)] dark:bg-sky-950/40 dark:text-slate-200">
                 💬 {item.comment}
               </p>
             )}
@@ -288,7 +288,7 @@ function AssignmentRunner({
         )}
 
         <Card>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-[var(--night-text-40)]">
             {m.level} · {m.format} · прочитай внимательно — упражнения по тексту.
             Нажимай на незнакомые слова, чтобы добавить их в колоду.
           </p>
@@ -298,7 +298,7 @@ function AssignmentRunner({
           {alreadyDone ? 'Пройти ещё раз (без пересдачи) →' : `К упражнениям (${total}) →`}
         </Button>
         {alreadyDone && (
-          <p className="text-center text-xs text-slate-400">
+          <p className="text-center text-xs text-[var(--night-text-40)]">
             Работа уже сдана ({row.auto_score}/{row.auto_total}) — повторное прохождение не отправляется.
           </p>
         )}
@@ -315,7 +315,7 @@ function AssignmentRunner({
           {correct} из {total} верно ({percent}%)
         </p>
         {!alreadyDone && (
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-[var(--night-text-40)]">
             {saving
               ? 'Отправляю работу преподавателю…'
               : saveError
@@ -332,8 +332,8 @@ function AssignmentRunner({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between text-sm text-slate-400">
-        <button onClick={() => setStage('read')} className="font-medium text-sky-600 hover:underline dark:text-sky-400">
+      <div className="flex items-center justify-between text-sm text-[var(--night-text-40)]">
+        <button onClick={() => setStage('read')} className="font-medium text-[var(--night-accent-text)] hover:underline dark:text-[var(--night-accent-text)]">
           ↑ перечитать текст
         </button>
         <span>
@@ -362,7 +362,7 @@ function TappableBody({ body, lang }: { body: string; lang: AppLang }) {
 
   return (
     <>
-      <p className="mt-3 whitespace-pre-wrap leading-relaxed text-slate-700 dark:text-slate-200">
+      <p className="mt-3 whitespace-pre-wrap leading-relaxed text-[var(--night-text-70)]">
         <TappableText text={body} onSelect={setPick} />
       </p>
       {pick && (

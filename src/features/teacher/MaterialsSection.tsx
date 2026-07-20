@@ -33,7 +33,7 @@ import type {
 const LEVELS: CEFRLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
 
 const inputClass =
-  'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-sky-500 dark:border-slate-600 dark:bg-slate-900'
+  'w-full rounded-lg border border-white/[0.10] bg-[var(--night-surface)] px-3 py-2 text-sm outline-none focus:border-[var(--night-accent-45)] dark:border-white/[0.10] dark:bg-slate-900'
 
 type Mode =
   | { name: 'list' }
@@ -105,7 +105,7 @@ export function MaterialsSection({ students }: { students: StudentInfo[] }) {
   return (
     <div className="flex flex-col gap-3">
       <Card>
-        <p className="text-sm text-slate-600 dark:text-slate-300">
+        <p className="text-sm text-[var(--night-text-70)]">
           Генератор учебных текстов: тема, уровень, формат — AI составит план,
           сгенерирует текст и упражнения. Материал можно назначить ученицам или
           просто хранить в библиотеке.
@@ -116,21 +116,21 @@ export function MaterialsSection({ students }: { students: StudentInfo[] }) {
       </Card>
 
       {materials === null ? (
-        <p className="text-slate-500">Загрузка…</p>
+        <p className="text-[var(--night-text-40)]">Загрузка…</p>
       ) : materials.length === 0 ? (
-        <p className="text-sm text-slate-400">Пока нет сохранённых материалов.</p>
+        <p className="text-sm text-[var(--night-text-40)]">Пока нет сохранённых материалов.</p>
       ) : (
         materials.map((m) => (
           <button key={m.id} onClick={() => setMode({ name: 'detail', material: m })} className="text-left">
             <Card className="flex items-center justify-between gap-2 transition-transform active:scale-[0.99]">
               <div className="min-w-0">
                 <p className="truncate font-medium">{m.title ?? m.topic}</p>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-[var(--night-text-40)]">
                   {m.lang.toUpperCase()} · {m.level} · {m.format} · {m.length_range} слов ·{' '}
                   {m.exercises.length} упр.
                 </p>
               </div>
-              <span className="shrink-0 text-slate-400">›</span>
+              <span className="shrink-0 text-[var(--night-text-40)]">›</span>
             </Card>
           </button>
         ))
@@ -186,8 +186,8 @@ function RequestForm({
   const chip = (active: boolean) =>
     `rounded-lg px-3 py-1.5 text-sm font-semibold ${
       active
-        ? 'bg-sky-600 text-white'
-        : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
+        ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
+        : 'bg-white/[0.07] text-[var(--night-text-70)]'
     }`
 
   return (
@@ -195,7 +195,7 @@ function RequestForm({
       <p className="font-semibold">Новый материал</p>
 
       <div>
-        <p className="mb-1 text-xs font-semibold text-slate-500">Язык</p>
+        <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">Язык</p>
         <div className="flex gap-2">
           <button className={chip(lang === 'en')} onClick={() => setLang('en')}>Английский</button>
           <button className={chip(lang === 'es')} onClick={() => setLang('es')}>Испанский</button>
@@ -203,7 +203,7 @@ function RequestForm({
       </div>
 
       <div>
-        <p className="mb-1 text-xs font-semibold text-slate-500">Уровень ученика</p>
+        <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">Уровень ученика</p>
         <div className="flex flex-wrap gap-2">
           {LEVELS.map((l) => (
             <button key={l} className={chip(level === l)} onClick={() => setLevel(l)}>{l}</button>
@@ -212,7 +212,7 @@ function RequestForm({
       </div>
 
       <div>
-        <p className="mb-1 text-xs font-semibold text-slate-500">Тема текста *</p>
+        <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">Тема текста *</p>
         <input
           className={inputClass}
           placeholder="Например: Путешествие в горы"
@@ -222,7 +222,7 @@ function RequestForm({
       </div>
 
       <div>
-        <p className="mb-1 text-xs font-semibold text-slate-500">Формат</p>
+        <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">Формат</p>
         <div className="flex flex-wrap gap-2">
           {MATERIAL_FORMATS.map((f) => (
             <button key={f} className={chip(format === f)} onClick={() => setFormat(f)}>{f}</button>
@@ -231,7 +231,7 @@ function RequestForm({
       </div>
 
       <div>
-        <p className="mb-1 text-xs font-semibold text-slate-500">Длина (слов)</p>
+        <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">Длина (слов)</p>
         <div className="flex gap-2">
           {MATERIAL_LENGTHS.map((l) => (
             <button key={l} className={chip(lengthRange === l)} onClick={() => setLengthRange(l)}>{l}</button>
@@ -240,7 +240,7 @@ function RequestForm({
       </div>
 
       <div>
-        <p className="mb-1 text-xs font-semibold text-slate-500">
+        <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">
           Слова через запятую или тема словаря (необязательно)
         </p>
         <input
@@ -252,7 +252,7 @@ function RequestForm({
       </div>
 
       <div>
-        <p className="mb-1 text-xs font-semibold text-slate-500">
+        <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">
           Грамматическая тема (необязательно)
         </p>
         <input
@@ -333,12 +333,12 @@ function PlanScreen({
       </div>
 
       <Card className="flex flex-col gap-3">
-        <p className="whitespace-pre-wrap text-sm text-slate-700 dark:text-slate-200">
+        <p className="whitespace-pre-wrap text-sm text-[var(--night-text-70)]">
           {plan.comments}
         </p>
 
         <div>
-          <p className="mb-1 text-xs font-semibold text-slate-500">Целевые слова</p>
+          <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">Целевые слова</p>
           <div className="flex flex-wrap gap-1.5">
             {plan.vocabulary.map((w, i) => (
               <span key={i} className="rounded-full bg-sky-100 px-2.5 py-0.5 text-sm text-sky-700 dark:bg-sky-950/60 dark:text-sky-300">
@@ -350,15 +350,15 @@ function PlanScreen({
 
         {plan.grammar_focus && (
           <p className="text-sm">
-            <span className="text-xs font-semibold text-slate-500">Грамматика: </span>
+            <span className="text-xs font-semibold text-[var(--night-text-40)]">Грамматика: </span>
             {plan.grammar_focus}
           </p>
         )}
 
         <div>
-          <p className="mb-1 text-xs font-semibold text-slate-500">Упражнения</p>
+          <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">Упражнения</p>
           {plan.exercise_plan.map((p, i) => (
-            <p key={i} className="text-sm text-slate-600 dark:text-slate-300">
+            <p key={i} className="text-sm text-[var(--night-text-70)]">
               • {p.kind === 'comprehension' ? 'Понимание текста' : p.kind === 'grammar' ? 'Грамматика' : 'Словарь'}:{' '}
               {p.count} шт. — {p.note}
             </p>
@@ -448,10 +448,10 @@ function PreviewScreen({
 
       <Card>
         <p className="text-lg font-bold">{content.title}</p>
-        <p className="mt-1 text-xs text-slate-400">
+        <p className="mt-1 text-xs text-[var(--night-text-40)]">
           {req.level} · {req.format} · ~{wordCount} слов
         </p>
-        <p className="mt-3 whitespace-pre-wrap leading-relaxed text-slate-700 dark:text-slate-200">
+        <p className="mt-3 whitespace-pre-wrap leading-relaxed text-[var(--night-text-70)]">
           {content.body}
         </p>
       </Card>
@@ -459,15 +459,15 @@ function PreviewScreen({
       <Card className="flex flex-col gap-2">
         <p className="text-sm font-semibold">Упражнения ({content.exercises.length}) — с ответами</p>
         {content.exercises.map((e, i) => (
-          <div key={i} className="rounded-lg bg-slate-100 px-3 py-2 text-sm dark:bg-slate-800">
-            <p className="text-xs text-slate-400">
+          <div key={i} className="rounded-lg bg-white/[0.06] px-3 py-2 text-sm dark:bg-[var(--night-surface)]">
+            <p className="text-xs text-[var(--night-text-40)]">
               {i + 1}. {e.kind === 'comprehension' ? 'понимание' : e.kind === 'grammar' ? 'грамматика' : 'словарь'}
             </p>
             <p className="mt-0.5">{e.prompt}</p>
             {e.type === 'mcq' && (
               <p className="mt-0.5 text-emerald-600 dark:text-emerald-400">
                 ✓ {e.options[e.answer]}
-                <span className="text-slate-400"> (из: {e.options.join(' · ')})</span>
+                <span className="text-[var(--night-text-40)]"> (из: {e.options.join(' · ')})</span>
               </p>
             )}
             {e.type === 'fill' && (
@@ -580,18 +580,18 @@ function MaterialDetail({
       </div>
 
       <Card>
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-[var(--night-text-40)]">
           {material.lang.toUpperCase()} · {material.level} · {material.format} ·{' '}
           {material.length_range} слов · {material.exercises.length} упр.
         </p>
         <button
           onClick={() => setShowBody((s) => !s)}
-          className="mt-2 text-sm font-medium text-sky-600 hover:underline dark:text-sky-400"
+          className="mt-2 text-sm font-medium text-[var(--night-accent-text)] hover:underline dark:text-[var(--night-accent-text)]"
         >
           {showBody ? '▾ Скрыть текст' : '▸ Показать текст'}
         </button>
         {showBody && (
-          <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate-700 dark:text-slate-200">
+          <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-[var(--night-text-70)]">
             {material.body}
           </p>
         )}
@@ -624,7 +624,7 @@ function MaterialDetail({
       <Card className="flex flex-col gap-2">
         <p className="text-sm font-semibold">Назначить ученицам</p>
         {students.length === 0 ? (
-          <p className="text-sm text-slate-400">Пока нет привязанных учениц.</p>
+          <p className="text-sm text-[var(--night-text-40)]">Пока нет привязанных учениц.</p>
         ) : (
           students.map((s) => {
             const a = (assignments ?? []).find((x) => x.student_id === s.profile.id)
@@ -633,12 +633,12 @@ function MaterialDetail({
             return (
               <div
                 key={s.profile.id}
-                className="flex items-center justify-between gap-2 rounded-xl border border-slate-200 px-3 py-2 dark:border-slate-700"
+                className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.08] px-3 py-2 dark:border-white/[0.08]"
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium">{name}</p>
                   {a && (
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-[var(--night-text-40)]">
                       {a.status === 'assigned'
                         ? 'ещё не выполнено'
                         : a.status === 'submitted'

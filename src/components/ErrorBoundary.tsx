@@ -38,12 +38,12 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-slate-50 px-6 text-center dark:bg-slate-950">
+        <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[var(--night-bg)] px-6 text-center dark:bg-slate-950">
           <p className="text-4xl">😕</p>
-          <p className="font-semibold text-slate-700 dark:text-slate-200">
+          <p className="font-semibold text-[var(--night-text-70)]">
             Что-то пошло не так
           </p>
-          <p className="max-w-sm text-sm text-slate-500">
+          <p className="max-w-sm text-sm text-[var(--night-text-40)]">
             Попробуй обновить страницу — обычно это помогает.
           </p>
           <button
@@ -51,7 +51,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
               sessionStorage.removeItem(RELOAD_FLAG)
               window.location.reload()
             }}
-            className="rounded-xl bg-sky-600 px-5 py-2.5 font-semibold text-white hover:bg-sky-500"
+            className="rounded-xl bg-[var(--night-accent)] px-5 py-2.5 font-semibold text-white hover:bg-sky-500"
           >
             Обновить
           </button>

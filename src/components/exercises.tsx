@@ -65,11 +65,11 @@ export function McqExercise({
         {exercise.options.map((opt, i) => {
           const isAnswer = i === exercise.answer
           const isPicked = i === picked
-          let cls = 'border-slate-300 dark:border-slate-600 hover:border-sky-400'
+          let cls = 'border-white/[0.10] hover:border-sky-400'
           if (picked !== null) {
             if (isAnswer) cls = 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40'
             else if (isPicked) cls = 'border-red-500 bg-red-50 dark:bg-red-950/40'
-            else cls = 'border-slate-200 dark:border-slate-700 opacity-60'
+            else cls = 'border-white/[0.08] opacity-60'
           }
           return (
             <button
@@ -112,12 +112,12 @@ export function FillExercise({
     <Card className="flex flex-col gap-3">
       <p className="text-lg font-medium">{exercise.prompt}</p>
       <input
-        className={`w-full rounded-lg border bg-white px-3 py-2 outline-none dark:bg-slate-900 ${
+        className={`w-full rounded-lg border bg-[var(--night-surface)] px-3 py-2 outline-none dark:bg-slate-900 ${
           checked
             ? ok
               ? 'border-emerald-500'
               : 'border-red-500'
-            : 'border-slate-300 focus:border-sky-500 dark:border-slate-600'
+            : 'border-white/[0.10] focus:border-[var(--night-accent-45)] dark:border-white/[0.10]'
         }`}
         placeholder="Ваш ответ…"
         value={value}
@@ -132,13 +132,13 @@ export function FillExercise({
       {!checked && exercise.hint && (
         <button
           onClick={() => setShowHint((s) => !s)}
-          className="self-start text-xs font-semibold text-sky-600 dark:text-sky-400"
+          className="self-start text-xs font-semibold text-[var(--night-accent-text)]"
         >
           {showHint ? 'скрыть подсказку' : '💡 подсказка'}
         </button>
       )}
       {!checked && showHint && exercise.hint && (
-        <p className="text-sm text-slate-500">{exercise.hint}</p>
+        <p className="text-sm text-[var(--night-text-40)]">{exercise.hint}</p>
       )}
 
       {checked && !ok && (
@@ -209,7 +209,7 @@ export function OrderExercise({
             ? ok
               ? 'border-emerald-500'
               : 'border-red-500'
-            : 'border-slate-300 dark:border-slate-600'
+            : 'border-white/[0.10]'
         }`}
       >
         <div className="flex flex-wrap gap-2">
@@ -218,13 +218,13 @@ export function OrderExercise({
               key={i}
               onClick={() => !checked && setBuilt((arr) => arr.filter((_, j) => j !== i))}
               disabled={checked}
-              className="rounded-lg bg-sky-600 px-3 py-1.5 text-sm text-white"
+              className="rounded-lg bg-[var(--night-accent)] px-3 py-1.5 text-sm text-white"
             >
               {b.w}
             </button>
           ))}
           {built.length === 0 && (
-            <span className="px-1 py-1 text-sm text-slate-400">
+            <span className="px-1 py-1 text-sm text-[var(--night-text-40)]">
               нажимайте слова снизу по порядку
             </span>
           )}
@@ -240,8 +240,8 @@ export function OrderExercise({
             disabled={checked || usedIdx.has(item.i)}
             className={`rounded-lg border px-3 py-1.5 text-sm ${
               usedIdx.has(item.i)
-                ? 'border-slate-200 text-slate-300 dark:border-slate-800 dark:text-slate-600'
-                : 'border-slate-300 dark:border-slate-600'
+                ? 'border-white/[0.08] text-[var(--night-text-25)] dark:border-slate-800 dark:text-[var(--night-text-70)]'
+                : 'border-white/[0.10]'
             }`}
           >
             {item.w}

@@ -49,8 +49,8 @@ export function SpanishReaderPage() {
             onClick={() => setKind(k.id)}
             className={`rounded-lg px-4 py-2 text-sm font-semibold ${
               kind === k.id
-                ? 'bg-sky-600 text-white'
-                : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
+                ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
+                : 'bg-white/[0.07] text-[var(--night-text-70)]'
             }`}
           >
             {k.label}
@@ -65,8 +65,8 @@ export function SpanishReaderPage() {
             onClick={() => setLevel(l)}
             className={`rounded-lg px-3 py-1.5 text-sm font-semibold ${
               level === l
-                ? 'bg-sky-600 text-white'
-                : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
+                ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
+                : 'bg-white/[0.07] text-[var(--night-text-70)]'
             }`}
           >
             {l}
@@ -74,7 +74,7 @@ export function SpanishReaderPage() {
         ))}
       </div>
 
-      <p className="text-sm text-slate-500">
+      <p className="text-sm text-[var(--night-text-40)]">
         Выбери {kind === 'texts' ? 'текст' : 'диалог'} и нажимай на незнакомые
         слова — добавляй их в колоду.
       </p>
@@ -85,7 +85,7 @@ export function SpanishReaderPage() {
               <button key={r.id} onClick={() => setReading(r)} className="text-left">
                 <Card className="transition-transform active:scale-[0.99]">
                   <p className="font-semibold">{r.title}</p>
-                  <p className="mt-1 text-sm text-slate-500">{r.titleRu}</p>
+                  <p className="mt-1 text-sm text-[var(--night-text-40)]">{r.titleRu}</p>
                 </Card>
               </button>
             ))
@@ -93,7 +93,7 @@ export function SpanishReaderPage() {
               <button key={d.id} onClick={() => setDialogue(d)} className="text-left">
                 <Card className="transition-transform active:scale-[0.99]">
                   <p className="font-semibold">{d.title}</p>
-                  <p className="mt-1 text-sm text-slate-500">
+                  <p className="mt-1 text-sm text-[var(--night-text-40)]">
                     {d.lines.length} реплик
                   </p>
                 </Card>
@@ -134,7 +134,7 @@ function ReadingView({
         </Button>
         <div className="min-w-0">
           <h1 className="truncate text-xl font-bold">{reading.title}</h1>
-          <p className="truncate text-sm text-slate-500">{reading.titleRu}</p>
+          <p className="truncate text-sm text-[var(--night-text-40)]">{reading.titleRu}</p>
         </div>
       </div>
 
@@ -146,12 +146,12 @@ function ReadingView({
             </p>
             <button
               onClick={() => toggleRu(i)}
-              className="mt-1 text-xs font-semibold text-sky-600 dark:text-sky-400"
+              className="mt-1 text-xs font-semibold text-[var(--night-accent-text)]"
             >
               {openRu.has(i) ? 'скрыть перевод' : '🇷🇺 перевод'}
             </button>
             {openRu.has(i) && (
-              <p className="mt-1 rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+              <p className="mt-1 rounded-lg bg-white/[0.06] px-3 py-2 text-sm text-[var(--night-text-70)] dark:bg-[var(--night-surface)] dark:text-[var(--night-text-25)]">
                 {p.ru}
               </p>
             )}
@@ -203,19 +203,19 @@ function DialogueView({
           <Card key={i} className="py-3">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="text-xs font-bold uppercase tracking-wide text-sky-600 dark:text-sky-400">
+                <p className="text-xs font-bold uppercase tracking-wide text-[var(--night-accent-text)]">
                   {line.speaker}
                 </p>
                 <p className="mt-0.5 leading-relaxed">
                   <TappableText text={line.es} onSelect={setSelected} />
                 </p>
                 {showRu && (
-                  <p className="mt-1 text-sm text-slate-500">{line.ru}</p>
+                  <p className="mt-1 text-sm text-[var(--night-text-40)]">{line.ru}</p>
                 )}
               </div>
               <button
                 onClick={() => speak(line.es, { lang: 'es' })}
-                className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-base dark:bg-slate-700"
+                className="shrink-0 rounded-full bg-white/[0.06] px-2 py-0.5 text-base dark:bg-white/[0.08]"
                 aria-label="Озвучить реплику"
               >
                 🔊

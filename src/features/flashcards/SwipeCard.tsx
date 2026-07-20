@@ -79,7 +79,7 @@ export function SwipeCard({
 
   return (
     <div
-      className="relative touch-pan-y select-none"
+      className="relative touch-pan-y select-none [perspective:1200px]"
       style={{
         transform: `translateX(${x}px) rotate(${rotate}deg)`,
         transition:
@@ -91,7 +91,17 @@ export function SwipeCard({
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
     >
-      <div className="flex min-h-[55vh] cursor-pointer flex-col items-center justify-center gap-3 rounded-3xl border border-slate-200 bg-white p-6 text-center shadow-lg dark:border-slate-700 dark:bg-slate-800">
+      <div
+        className="flex min-h-[55vh] cursor-pointer flex-col items-center justify-center gap-3 rounded-3xl border border-white/[0.08] p-6 text-center transition-[transform,box-shadow] duration-300 [transition-timing-function:cubic-bezier(.22,1,.36,1)] [transform-style:preserve-3d]"
+        style={{
+          // лёгкий 3D-разворот при переводе: карточка «поворачивается» к ответу
+          transform: flipped ? 'rotateY(4deg) rotateX(2deg)' : 'none',
+          background: flipped
+            ? 'linear-gradient(150% 120% at 20% 0%, #262845, #1e2030 60%)'
+            : 'var(--night-surface)',
+          boxShadow: flipped ? '0 18px 40px -24px rgba(145,132,217,.5)' : 'none',
+        }}
+      >
         {/* индикаторы направления */}
         <span
           className="absolute left-4 top-4 rounded-xl border-2 border-emerald-500 px-3 py-1 text-lg font-bold text-emerald-500"
@@ -114,28 +124,28 @@ export function SwipeCard({
               speak(card.front, { lang })
             }}
             onPointerDown={(e) => e.stopPropagation()}
-            className="rounded-full bg-slate-100 px-2.5 py-1 text-lg dark:bg-slate-700"
+            className="rounded-full bg-white/[0.06] px-2.5 py-1 text-lg dark:bg-white/[0.08]"
             aria-label="Озвучить"
           >
             🔊
           </button>
         </div>
-        {card.ipa && <p className="text-slate-400">/{card.ipa}/</p>}
+        {card.ipa && <p className="text-[var(--night-text-40)]">/{card.ipa}/</p>}
 
         {flipped ? (
-          <div className="mt-3 w-full border-t border-slate-200 pt-4 dark:border-slate-700">
+          <div className="mt-3 w-full border-t border-white/[0.08] pt-4 dark:border-white/[0.08]">
             {card.back && (
-              <p className="text-xl text-slate-700 dark:text-slate-200">{card.back}</p>
+              <p className="text-xl text-[var(--night-text-70)]">{card.back}</p>
             )}
             {card.example && (
-              <p className="mt-3 text-sm italic text-slate-500">«{card.example}»</p>
+              <p className="mt-3 text-sm italic text-[var(--night-text-40)]">«{card.example}»</p>
             )}
-            <p className="mt-5 text-xs text-slate-400">
+            <p className="mt-5 text-xs text-[var(--night-text-40)]">
               ⇦ не знаю&nbsp;&nbsp;·&nbsp;&nbsp;знаю ⇨
             </p>
           </div>
         ) : (
-          <p className="mt-6 text-sm text-slate-400">тапни — увидишь перевод</p>
+          <p className="mt-6 text-sm text-[var(--night-text-40)]">тапни — увидишь перевод</p>
         )}
       </div>
     </div>
