@@ -25,7 +25,10 @@ import {
   ListBulletsIcon,
   type Icon,
 } from '@phosphor-icons/react'
+import { Button } from '../../components/Button'
 import { Card } from '../../components/Card'
+import { PacksSheet } from '../flashcards/PacksSheet'
+import { AddCardForm } from './AddCardForm'
 import { useLanguage } from '../../context/LanguageContext'
 import { countMyWords } from '../../lib/cards'
 import { getDueCards } from '../../lib/fsrs'
@@ -81,11 +84,13 @@ export function WordsPage() {
   )
   const [due, setDue] = useState<number | null>(null)
   const [total, setTotal] = useState<number | null>(null)
+  const [sheet, setSheet] = useState<null | 'add' | 'packs'>(null)
 
   // счётчики для плиток: сколько к повторению и сколько слов всего
   useEffect(() => {
     let alive = true
     setMode(currentGuidedStep() === 'flashcards' ? 'review' : 'hub')
+    setSheet(null)
     getDueCards(50, lang)
       .then((d) => alive && setDue(d.length))
       .catch(() => alive && setDue(null))
@@ -97,11 +102,15 @@ export function WordsPage() {
     }
   }, [lang])
 
-  // после удаления/добавления слов счётчики устарели — обновим при возврате
-  const back = () => {
-    setMode('hub')
+  /** Счётчики устаревают после добавления/удаления слов. */
+  const refreshCounts = () => {
     countMyWords(lang).then(setTotal).catch(() => {})
     getDueCards(50, lang).then((d) => setDue(d.length)).catch(() => {})
+  }
+
+  const back = () => {
+    setMode('hub')
+    refreshCounts()
   }
 
   if (mode === 'review') return <DeckReview onBack={back} />
@@ -122,7 +131,34 @@ export function WordsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-medium tracking-tight">Слова</h1>
+      {/* Добавление слов — на уровне хаба: оно нужно из любого режима,
+          а не только из повторения, где кнопки лежали раньше. */}
+      <header className="flex items-center justify-between gap-2">
+        <h1 className="text-2xl font-medium tracking-tight">Слова</h1>
+        <div className="flex gap-2">
+          <Button
+            variant="secondary"
+            className="px-3 py-2 text-sm"
+            onClick={() => {
+              setSheet((s) => (s === 'packs' ? null : 'packs'))
+            }}
+          >
+            {sheet === 'packs' ? 'Закрыть' : '📦 Паки'}
+          </Button>
+          <Button
+            variant="secondary"
+            className="px-3 py-2 text-sm"
+            onClick={() => {
+              setSheet((s) => (s === 'add' ? null : 'add'))
+            }}
+          >
+            {sheet === 'add' ? 'Закрыть' : '+ Слово'}
+          </Button>
+        </div>
+      </header>
+
+      {sheet === 'add' && <AddCardForm lang={lang} onAdded={refreshCounts} />}
+      {sheet === 'packs' && <PacksSheet lang={lang} onAdded={refreshCounts} />}
 
       {/* Повторение — главный режим, широкой плиткой */}
       <button

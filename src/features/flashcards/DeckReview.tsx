@@ -8,13 +8,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
-import { addCard } from '../../lib/cards'
 import { getDueCards, reviewCard, type DueCard } from '../../lib/fsrs'
 import { logActivity } from '../../lib/activity'
 import { getMyPendingWordChecks } from '../../lib/wordChecks'
 import { useLanguage } from '../../context/LanguageContext'
 import { GuidedNext } from '../../components/GuidedNext'
-import { PacksSheet } from './PacksSheet'
 import { SwipeCard, SwipeTutorial } from './SwipeCard'
 import { WordCheckRunner } from './WordCheckRunner'
 import type { AppLang, Card as CardType, WordCheck } from '../../types'
@@ -29,8 +27,6 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
   const [loading, setLoading] = useState(true)
   const [reviewedCount, setReviewedCount] = useState(0)
   const [error, setError] = useState<string | null>(null)
-  const [showAdd, setShowAdd] = useState(false)
-  const [showPacks, setShowPacks] = useState(false)
   const [showTutorial, setShowTutorial] = useState(false)
   const [checks, setChecks] = useState<{ check: WordCheck; cards: CardType[] }[]>([])
   const [activeCheck, setActiveCheck] = useState<{
@@ -60,7 +56,6 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
   }, [])
 
   useEffect(() => {
-    setShowPacks(false)
     setReviewedCount(0)
     void load()
     loadChecks()
@@ -137,29 +132,7 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
               ←
             </Button>
           )}
-          <h1 className="truncate text-xl font-bold">🔁 Повторение</h1>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="secondary"
-            className="px-3 py-2 text-sm"
-            onClick={() => {
-              setShowPacks((s) => !s)
-              setShowAdd(false)
-            }}
-          >
-            {showPacks ? 'Закрыть' : '📦 Паки'}
-          </Button>
-          <Button
-            variant="secondary"
-            className="px-3 py-2 text-sm"
-            onClick={() => {
-              setShowAdd((s) => !s)
-              setShowPacks(false)
-            }}
-          >
-            {showAdd ? 'Закрыть' : '+ Слово'}
-          </Button>
+          <h1 className="truncate text-xl font-medium tracking-tight">Повторение</h1>
         </div>
       </header>
 
@@ -185,9 +158,6 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
           </Card>
         </button>
       ))}
-
-      {showAdd && <AddCardForm lang={lang} onAdded={load} />}
-      {showPacks && <PacksSheet lang={lang} onAdded={load} />}
 
       {error && (
         <Card className="border-red-300 bg-red-50 dark:bg-red-950/30">
@@ -238,7 +208,7 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
                 : 'Карточек к повторению нет'}
             </p>
             <p className="mt-1 text-sm text-[var(--night-text-40)]">
-              Добавь слова кнопкой «📦 Паки», «+ Слово» или из раздела «Ввод».
+              Добавь слова кнопками «Паки» и «+ Слово» в разделе «Слова» или тапом по слову в «Учёбе».
             </p>
             <Button variant="secondary" className="mt-4" onClick={load}>
               Обновить
@@ -249,69 +219,5 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
         </>
       )}
     </div>
-  )
-}
-
-function AddCardForm({ lang, onAdded }: { lang: AppLang; onAdded: () => void }) {
-  const [front, setFront] = useState('')
-  const [back, setBack] = useState('')
-  const [example, setExample] = useState('')
-  const [busy, setBusy] = useState(false)
-  const [msg, setMsg] = useState<string | null>(null)
-
-  const inputClass =
-    'w-full rounded-lg border border-white/[0.10] bg-[var(--night-surface)] px-3 py-2 text-sm outline-none focus:border-[var(--night-accent-45)] dark:border-white/[0.10] dark:bg-slate-900'
-
-  const submit = async () => {
-    if (!front.trim()) return
-    setBusy(true)
-    setMsg(null)
-    try {
-      await addCard({
-        front: front.trim(),
-        back: back.trim() || undefined,
-        example: example.trim() || undefined,
-        lang,
-        source: 'manual',
-      })
-      setFront('')
-      setBack('')
-      setExample('')
-      setMsg('Добавлено ✓')
-      onAdded()
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : 'Ошибка')
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  return (
-    <Card className="flex flex-col gap-2">
-      <input
-        className={inputClass}
-        placeholder={lang === 'es' ? 'Слово / фраза (исп.)' : 'Слово / фраза (англ.)'}
-        value={front}
-        onChange={(e) => setFront(e.target.value)}
-      />
-      <input
-        className={inputClass}
-        placeholder="Перевод / значение"
-        value={back}
-        onChange={(e) => setBack(e.target.value)}
-      />
-      <input
-        className={inputClass}
-        placeholder="Пример в контексте (необязательно)"
-        value={example}
-        onChange={(e) => setExample(e.target.value)}
-      />
-      <div className="flex items-center gap-3">
-        <Button onClick={submit} disabled={busy || !front.trim()}>
-          {busy ? 'Добавляю…' : 'Добавить в колоду'}
-        </Button>
-        {msg && <span className="text-sm text-[var(--night-text-40)]">{msg}</span>}
-      </div>
-    </Card>
   )
 }

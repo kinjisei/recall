@@ -15,9 +15,6 @@ import { DashboardPage } from './features/dashboard/DashboardPage'
 const WordsPage = lazy(() =>
   import('./features/words/WordsPage').then((m) => ({ default: m.WordsPage })),
 )
-const ReaderPage = lazy(() =>
-  import('./features/reader/ReaderPage').then((m) => ({ default: m.ReaderPage })),
-)
 const PronunciationPage = lazy(() =>
   import('./features/pronunciation/PronunciationPage').then((m) => ({ default: m.PronunciationPage })),
 )
@@ -87,14 +84,8 @@ export default function App() {
                   </Suspense>
                 }
               />
-              <Route
-                path="/reader"
-                element={
-                  <Suspense fallback={<PageFallback />}>
-                    <ReaderPage />
-                  </Suspense>
-                }
-              />
+              {/* «Ввод» слился с «Учёбой»: один экран, старая ссылка ведёт туда же */}
+              <Route path="/reader" element={<Navigate to="/study" replace />} />
               <Route
                 path="/pronunciation"
                 element={

@@ -2,7 +2,10 @@
 // Каркас приложения в теме «Nocturne»: шапка (бренд, EN/ES, аватар → прогресс)
 // и плавающая нижняя навигация. Контент — Outlet.
 // ============================================================================
+import { useEffect, useRef, useState } from 'react'
 import { Link, Outlet } from 'react-router-dom'
+import { ChartLineUpIcon, ChalkboardTeacherIcon, SignOutIcon } from '@phosphor-icons/react'
+import { supabase } from '../lib/supabase'
 import { BottomNav } from './BottomNav'
 import { BrandMark } from './Brand'
 import { useLanguage } from '../context/LanguageContext'
@@ -14,19 +17,80 @@ const langTabs: { id: AppLang; label: string }[] = [
   { id: 'es', label: 'ES' },
 ]
 
-/** Кружок с инициалом — вход на экран прогресса. */
-function Avatar() {
-  const { user } = useAuth()
+/**
+ * Кружок с инициалом → меню: прогресс, ученицы (у преподавателя), выход.
+ * Раньше вёл только на прогресс, а вход в режим преподавателя был лишь
+ * карточкой внизу Главной — теперь всё «служебное» собрано в одном месте.
+ */
+function AvatarMenu() {
+  const { user, signOut } = useAuth()
+  const [open, setOpen] = useState(false)
+  const [isTeacher, setIsTeacher] = useState(false)
+  const boxRef = useRef<HTMLDivElement>(null)
+
   const name = (user?.user_metadata?.display_name as string | undefined) ?? user?.email ?? '?'
   const initial = name.trim().charAt(0).toUpperCase() || '?'
+
+  useEffect(() => {
+    if (!user) return
+    supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+      .then(({ data }) => setIsTeacher((data as { role?: string } | null)?.role === 'teacher'))
+  }, [user])
+
+  // закрытие по клику мимо меню и по Escape
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e: MouseEvent) => {
+      if (!boxRef.current?.contains(e.target as Node)) setOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
+  const itemCls =
+    'flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-[var(--night-text-70)] hover:bg-white/[0.06] hover:text-[var(--night-text)]'
+
   return (
-    <Link
-      to="/progress"
-      aria-label="Мой прогресс"
-      className="lift flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.08] bg-[var(--night-surface)] text-sm font-medium text-[var(--night-accent-100)]"
-    >
-      {initial}
-    </Link>
+    <div className="relative" ref={boxRef}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label="Меню профиля"
+        className="lift flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.08] bg-[var(--night-surface)] text-sm font-medium text-[var(--night-accent-100)]"
+      >
+        {initial}
+      </button>
+
+      {open && (
+        <div
+          role="menu"
+          className="animate-fade-up absolute right-0 top-11 z-30 w-56 overflow-hidden rounded-2xl border border-white/[0.10] bg-[rgba(30,32,48,.96)] py-1 backdrop-blur-xl"
+        >
+          <p className="truncate px-4 pb-2 pt-1.5 text-xs text-[var(--night-text-40)]">{name}</p>
+          <Link to="/progress" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
+            <ChartLineUpIcon size={17} /> Мой прогресс
+          </Link>
+          {isTeacher && (
+            <Link to="/teacher" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
+              <ChalkboardTeacherIcon size={17} /> Мои ученицы
+            </Link>
+          )}
+          <button role="menuitem" onClick={() => void signOut()} className={itemCls}>
+            <SignOutIcon size={17} /> Выйти
+          </button>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -61,7 +125,7 @@ function TopBar() {
               </button>
             ))}
           </div>
-          <Avatar />
+          <AvatarMenu />
         </div>
       </div>
     </header>

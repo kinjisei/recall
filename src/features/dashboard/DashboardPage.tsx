@@ -42,7 +42,7 @@ interface PlanItem {
 
 const planItems: PlanItem[] = [
   { to: '/flashcards', Icon: CardsThreeIcon, title: 'Слова', desc: 'Повторить и потренировать', types: ['flashcards', 'practice'] },
-  { to: '/reader', Icon: BookOpenTextIcon, title: 'Чтение', desc: 'Текст и новые слова', types: ['reader'] },
+  { to: '/study', Icon: BookOpenTextIcon, title: 'Чтение', desc: 'Текст и новые слова', types: ['reader'] },
   { to: '/pronunciation', Icon: MicrophoneIcon, title: 'Речь', desc: 'Произношение вслух', types: ['pronunciation'] },
   { to: '/conversation', Icon: ChatCircleDotsIcon, title: 'Диалог', desc: 'Поговорить с AI', types: ['conversation', 'writing'] },
 ]

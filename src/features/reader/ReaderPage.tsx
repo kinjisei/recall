@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+﻿import { useState, type ReactNode } from 'react'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { GuidedNext } from '../../components/GuidedNext'
@@ -11,13 +11,19 @@ import type { CEFRLevel } from '../../types'
 const levels: CEFRLevel[] = ['B1', 'B2', 'C1']
 
 /** «Ввод»: английский — тексты + словарь; испанский — свой раздел. */
-export function ReaderPage() {
+export function ReaderPage({
+  title = 'Учёба',
+  header,
+}: {
+  title?: string
+  header?: ReactNode
+}) {
   const { lang } = useLanguage()
-  if (lang === 'es') return <SpanishReaderPage />
-  return <EnglishReaderPage />
+  if (lang === 'es') return <SpanishReaderPage title={title} header={header} />
+  return <EnglishReaderPage title={title} header={header} />
 }
 
-function EnglishReaderPage() {
+function EnglishReaderPage({ title, header }: { title: string; header?: ReactNode }) {
   const [level, setLevel] = useState<CEFRLevel>('B1')
   const [active, setActive] = useState<SampleText | null>(null)
 
@@ -29,7 +35,9 @@ function EnglishReaderPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-bold">📖 Ввод</h1>
+      <h1 className="text-2xl font-medium tracking-tight">{title}</h1>
+
+      {header}
 
       <div className="flex gap-2">
         {levels.map((l) => (

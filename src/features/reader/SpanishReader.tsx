@@ -3,7 +3,7 @@
 // Тап по слову → контекстный перевод (общая шторка WordSheet) → «в колоду».
 // У каждого абзаца/реплики можно открыть русский перевод.
 // ============================================================================
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { speak } from '../../lib/speech'
@@ -22,7 +22,7 @@ const kinds: { id: Kind; label: string }[] = [
   { id: 'dialogues', label: '🎭 Диалоги' },
 ]
 
-export function SpanishReaderPage() {
+export function SpanishReaderPage({ title = 'Учёба', header }: { title?: string; header?: ReactNode }) {
   const [kind, setKind] = useState<Kind>('texts')
   const [level, setLevel] = useState<string>('A1')
   const [reading, setReading] = useState<SpanishReading | null>(null)
@@ -40,7 +40,9 @@ export function SpanishReaderPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-bold">📖 Ввод</h1>
+      <h1 className="text-2xl font-medium tracking-tight">{title}</h1>
+
+      {header}
 
       <div className="flex gap-2">
         {kinds.map((k) => (

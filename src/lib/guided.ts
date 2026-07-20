@@ -13,7 +13,7 @@ export type GuidedStep = (typeof GUIDED_STEPS)[number]
 
 const ROUTES: Record<GuidedStep, string> = {
   flashcards: '/flashcards',
-  reader: '/reader',
+  reader: '/study',
   pronunciation: '/pronunciation',
 }
 
