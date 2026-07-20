@@ -4,6 +4,7 @@
 // У каждого абзаца/реплики можно открыть русский перевод.
 // ============================================================================
 import { useState, type ReactNode } from 'react'
+import { getSettings, READER_CLASSES } from '../../lib/settings'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { speak } from '../../lib/speech'
@@ -143,7 +144,7 @@ function ReadingView({
       <Card className="flex flex-col gap-4">
         {reading.paragraphs.map((p, i) => (
           <div key={i}>
-            <p className="text-lg leading-relaxed">
+            <p className={READER_CLASSES[getSettings().readerSize]}>
               <TappableText text={p.es} onSelect={setSelected} />
             </p>
             <button

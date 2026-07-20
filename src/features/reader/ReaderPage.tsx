@@ -4,6 +4,7 @@ import { Button } from '../../components/Button'
 import { GuidedNext } from '../../components/GuidedNext'
 import { TappableText, WordSheet, type WordPick } from '../../components/WordSheet'
 import { useLanguage } from '../../context/LanguageContext'
+import { getSettings, READER_CLASSES } from '../../lib/settings'
 import { SpanishReaderPage } from './SpanishReader'
 import { sampleTexts, type SampleText } from './sampleTexts'
 import type { CEFRLevel } from '../../types'
@@ -86,7 +87,7 @@ function Reader({ text, onBack }: { text: SampleText; onBack: () => void }) {
       </div>
 
       <Card>
-        <p className="text-lg leading-relaxed">
+        <p className={READER_CLASSES[getSettings().readerSize]}>
           <TappableText text={text.body} onSelect={setPick} />
         </p>
       </Card>

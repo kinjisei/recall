@@ -27,6 +27,9 @@ const GrammarPage = lazy(() =>
 const StudyPage = lazy(() =>
   import('./features/study/StudyPage').then((m) => ({ default: m.StudyPage })),
 )
+const SettingsPage = lazy(() =>
+  import('./features/settings/SettingsPage').then((m) => ({ default: m.SettingsPage })),
+)
 const ProgressPage = lazy(() =>
   import('./features/progress/ProgressPage').then((m) => ({ default: m.ProgressPage })),
 )
@@ -99,6 +102,14 @@ export default function App() {
                 element={
                   <Suspense fallback={<PageFallback />}>
                     <ConversationPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <Suspense fallback={<PageFallback />}>
+                    <SettingsPage />
                   </Suspense>
                 }
               />

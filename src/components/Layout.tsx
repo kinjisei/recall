@@ -4,7 +4,12 @@
 // ============================================================================
 import { useEffect, useRef, useState } from 'react'
 import { Link, Outlet } from 'react-router-dom'
-import { ChartLineUpIcon, ChalkboardTeacherIcon, SignOutIcon } from '@phosphor-icons/react'
+import {
+  ChartLineUpIcon,
+  ChalkboardTeacherIcon,
+  GearSixIcon,
+  SignOutIcon,
+} from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase'
 import { BottomNav } from './BottomNav'
 import { BrandMark } from './Brand'
@@ -85,6 +90,9 @@ function AvatarMenu() {
               <ChalkboardTeacherIcon size={17} /> Мои ученицы
             </Link>
           )}
+          <Link to="/settings" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
+            <GearSixIcon size={17} /> Настройки
+          </Link>
           <button role="menuitem" onClick={() => void signOut()} className={itemCls}>
             <SignOutIcon size={17} /> Выйти
           </button>

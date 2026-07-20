@@ -5,6 +5,7 @@
 // Поддерживает английский (en-US) и испанский (es-ES).
 // Контракт: docs/ARCHITECTURE.md §7.
 // ============================================================================
+import { currentSpeechRate } from './settings'
 import type { AppLang } from '../types'
 
 export interface ListenResult {
@@ -52,7 +53,8 @@ export function speak(
 
   const u = new SpeechSynthesisUtterance(text)
   u.lang = bcp
-  u.rate = opts?.rate ?? 1
+  // без явного rate берём скорость из настроек пользователя
+  u.rate = opts?.rate ?? currentSpeechRate()
 
   const voices = getVoices(lang)
   const chosen =
