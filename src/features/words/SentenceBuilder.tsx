@@ -2,6 +2,7 @@
 import { useMemo, useState } from 'react'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
+import { RoundResult, RoundProgress } from '../../components/RoundResult'
 import { logActivity } from '../../lib/activity'
 import { speak } from '../../lib/speech'
 import { spanishSentences } from '../../data/spanish'
@@ -51,27 +52,20 @@ export function SentenceBuilder({ onBack }: { onBack: () => void }) {
   }
 
   if (done) {
-    const percent = Math.round((correct / tasks.length) * 100)
     return (
       <div className="flex flex-col gap-4">
         <Header title="🧱 Собери предложение" onBack={onBack} />
-        <Card className="text-center">
-          <p className="text-4xl">{percent >= 80 ? '🎉' : percent >= 50 ? '👍' : '💪'}</p>
-          <p className="mt-2 text-lg font-bold">
-            {correct} из {tasks.length} ({percent}%)
-          </p>
-          <Button
-            className="mt-4"
-            onClick={() => {
-              setIndex(0)
-              setCorrect(0)
-              setDone(false)
-              setSeed((s) => s + 1)
-            }}
-          >
-            Ещё раз
-          </Button>
-        </Card>
+        <RoundResult
+          correct={correct}
+          total={tasks.length}
+          restartLabel="Ещё раз"
+          onRestart={() => {
+            setIndex(0)
+            setCorrect(0)
+            setDone(false)
+            setSeed((s) => s + 1)
+          }}
+        />
       </div>
     )
   }
@@ -79,12 +73,7 @@ export function SentenceBuilder({ onBack }: { onBack: () => void }) {
   return (
     <div className="flex flex-col gap-4">
       <Header title="🧱 Собери предложение" onBack={onBack} />
-      <div className="flex items-center justify-between text-sm text-[var(--night-text-40)]">
-        <span>
-          {index + 1} / {tasks.length}
-        </span>
-        <span>верно: {correct}</span>
-      </div>
+      <RoundProgress index={index + 1} total={tasks.length} correct={correct} />
       <BuildTask key={index} task={task} onResult={onResult} onNext={next} isLast={index + 1 >= tasks.length} />
     </div>
   )

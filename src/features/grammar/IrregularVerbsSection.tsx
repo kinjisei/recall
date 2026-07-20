@@ -8,6 +8,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
+import { RoundResult } from '../../components/RoundResult'
 import { speak } from '../../lib/speech'
 import { logActivity } from '../../lib/activity'
 import type {
@@ -261,32 +262,28 @@ function Trainer({ groups }: { groups: IrregularGroup[] }) {
 
   if (done) {
     const correct = results.filter((r) => r.ok).length
-    const percent = Math.round((correct / round.length) * 100)
     const wrong = results.filter((r) => !r.ok)
     return (
       <div className="flex flex-col gap-3">
         {scopeChips}
-        <Card className="flex flex-col gap-3">
-        <div className="text-center">
-          <p className="text-4xl">{percent >= 80 ? '🎉' : percent >= 50 ? '👍' : '💪'}</p>
-          <p className="mt-2 text-lg font-bold">
-            {correct} из {round.length} верно ({percent}%)
-          </p>
-          <p className="mt-1 text-sm text-[var(--night-text-40)]">Раунд засчитан в серию дня.</p>
-        </div>
-        {wrong.length > 0 && (
-          <div className="rounded-xl bg-white/[0.06] p-3 text-sm dark:bg-[var(--night-surface)]">
-            <p className="mb-1 font-semibold">Повтори:</p>
-            {wrong.map(({ verb: v }) => (
-              <p key={v.base}>
-                {v.base} — {v.past} — {v.part}{' '}
-                <span className="text-[var(--night-text-40)]">({v.ru})</span>
-              </p>
-            ))}
-          </div>
-        )}
-        <Button onClick={() => restart()}>Ещё раунд</Button>
-        </Card>
+        <RoundResult
+          correct={correct}
+          total={round.length}
+          note="Раунд засчитан в серию дня."
+          onRestart={() => restart()}
+        >
+          {wrong.length > 0 && (
+            <div className="rounded-xl bg-white/[0.06] p-3 text-left text-sm dark:bg-[var(--night-surface)]">
+              <p className="mb-1 font-semibold">Повтори:</p>
+              {wrong.map(({ verb: v }) => (
+                <p key={v.base}>
+                  {v.base} — {v.past} — {v.part}{' '}
+                  <span className="text-[var(--night-text-40)]">({v.ru})</span>
+                </p>
+              ))}
+            </div>
+          )}
+        </RoundResult>
       </div>
     )
   }

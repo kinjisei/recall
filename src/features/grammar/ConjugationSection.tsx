@@ -7,6 +7,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
+import { RoundResult, RoundProgress } from '../../components/RoundResult'
 import { speak } from '../../lib/speech'
 import { logActivity } from '../../lib/activity'
 import type {
@@ -319,27 +320,19 @@ function TrainerRunner({ pool }: { pool: EndingsExercise[] }) {
   }
 
   if (done) {
-    const percent = Math.round((correct / total) * 100)
     return (
-      <Card className="text-center">
-        <p className="text-4xl">{percent >= 80 ? '🎉' : percent >= 50 ? '👍' : '💪'}</p>
-        <p className="mt-2 text-lg font-bold">
-          {correct} из {total} верно ({percent}%)
-        </p>
-        <p className="mt-1 text-sm text-[var(--night-text-40)]">Засчитано в серию дня.</p>
-        <Button
-          variant="secondary"
-          className="mt-4"
-          onClick={() => {
-            setIndex(0)
-            setCorrect(0)
-            setPicked(null)
-            setDone(false)
-          }}
-        >
-          Ещё раз
-        </Button>
-      </Card>
+      <RoundResult
+        correct={correct}
+        total={total}
+        note="Засчитано в серию дня."
+        restartLabel="Ещё раз"
+        onRestart={() => {
+          setIndex(0)
+          setCorrect(0)
+          setPicked(null)
+          setDone(false)
+        }}
+      />
     )
   }
 
@@ -361,12 +354,7 @@ function TrainerRunner({ pool }: { pool: EndingsExercise[] }) {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between text-sm text-[var(--night-text-40)]">
-        <span>
-          {index + 1} / {total}
-        </span>
-        <span>верно: {correct}</span>
-      </div>
+      <RoundProgress index={index + 1} total={total} correct={correct} />
 
       <Card className="flex flex-col gap-3">
         <p className="text-xs font-semibold uppercase tracking-wide text-[var(--night-accent-text)]">

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
+import { RoundResult, RoundProgress } from '../../components/RoundResult'
 import { logActivity } from '../../lib/activity'
 import { speak } from '../../lib/speech'
 import { markWrong } from './gameUtils'
@@ -90,32 +91,24 @@ export function QuizRunner({
   }, [done])
 
   if (done) {
-    const percent = Math.round((correct / questions.length) * 100)
     return (
       <div className="flex flex-col gap-4">
         <GameHeader title={title} onBack={onBack} />
-        <Card className="text-center">
-          <p className="text-4xl">{percent >= 80 ? '🎉' : percent >= 50 ? '👍' : '💪'}</p>
-          <p className="mt-2 text-lg font-bold">
-            {correct} из {questions.length} верно ({percent}%)
-          </p>
-          {correct < questions.length && (
-            <p className="mt-1 text-sm text-[var(--night-text-40)]">
-              Слова с ошибками вернутся в ближайшее повторение.
-            </p>
-          )}
-          <Button
-            className="mt-4"
-            onClick={() => {
-              setIndex(0)
-              setPicked(null)
-              setCorrect(0)
-              onRestart()
-            }}
-          >
-            Ещё раунд
-          </Button>
-        </Card>
+        <RoundResult
+          correct={correct}
+          total={questions.length}
+          note={
+            correct < questions.length
+              ? 'Слова с ошибками вернутся в ближайшее повторение.'
+              : undefined
+          }
+          onRestart={() => {
+            setIndex(0)
+            setPicked(null)
+            setCorrect(0)
+            onRestart()
+          }}
+        />
       </div>
     )
   }
@@ -130,12 +123,7 @@ export function QuizRunner({
   return (
     <div className="flex flex-col gap-4">
       <GameHeader title={title} onBack={onBack} />
-      <div className="flex items-center justify-between text-sm text-[var(--night-text-40)]">
-        <span>
-          {index + 1} / {questions.length}
-        </span>
-        <span>верно: {correct}</span>
-      </div>
+      <RoundProgress index={index + 1} total={questions.length} correct={correct} />
 
       <Card className="flex flex-col gap-3">
         {q.say ? (

@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
+import { RoundResult } from '../../components/RoundResult'
 import { ExerciseView } from '../../components/exercises'
 import { TappableText, WordSheet, type WordPick } from '../../components/WordSheet'
 import { logActivity } from '../../lib/activity'
@@ -342,26 +343,22 @@ function AssignmentRunner({
   }
 
   if (stage === 'result') {
-    const percent = total ? Math.round((correct / total) * 100) : 0
     return (
-      <Card className="text-center">
-        <p className="text-4xl">{percent >= 80 ? '🎉' : percent >= 50 ? '👍' : '💪'}</p>
-        <p className="mt-2 text-lg font-bold">
-          {correct} из {total} верно ({percent}%)
-        </p>
-        {!alreadyDone && (
-          <p className="mt-1 text-sm text-[var(--night-text-40)]">
-            {saving
+      <RoundResult
+        correct={correct}
+        total={total}
+        note={
+          alreadyDone
+            ? undefined
+            : saving
               ? 'Отправляю работу преподавателю…'
               : saveError
                 ? saveError
-                : 'Работа отправлена преподавателю на проверку ✓'}
-          </p>
-        )}
-        <Button className="mt-4" onClick={onDone}>
-          К заданиям
-        </Button>
-      </Card>
+                : 'Работа отправлена преподавателю на проверку ✓'
+        }
+        restartLabel="К заданиям"
+        onRestart={onDone}
+      />
     )
   }
 

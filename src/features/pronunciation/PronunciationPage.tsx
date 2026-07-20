@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Card } from '../../components/Card'
+import { scoreEmoji } from '../../components/RoundResult'
 import { Button } from '../../components/Button'
 import { GuidedNext } from '../../components/GuidedNext'
 import { MicrophoneIcon, SpeakerHighIcon } from '@phosphor-icons/react'
@@ -178,7 +179,7 @@ export function PronunciationPage() {
           <p className="text-4xl font-bold">
             {score.percent}%
             <span className="ml-2">
-              {score.percent >= 80 ? '🎉' : score.percent >= 50 ? '👍' : '💪'}
+              {scoreEmoji(score.percent)}
             </span>
           </p>
           {heard && (

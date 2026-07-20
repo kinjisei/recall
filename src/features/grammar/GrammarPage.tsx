@@ -9,6 +9,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
+import { RoundResult, RoundProgress } from '../../components/RoundResult'
 import { speak } from '../../lib/speech'
 import { logActivity } from '../../lib/activity'
 import { useLanguage } from '../../context/LanguageContext'
@@ -329,41 +330,29 @@ function ExercisesRunner({
   }
 
   if (done) {
-    const percent = total ? Math.round((correct / total) * 100) : 0
     return (
-      <Card className="text-center">
-        <p className="text-4xl">{percent >= 80 ? '🎉' : percent >= 50 ? '👍' : '💪'}</p>
-        <p className="mt-2 text-lg font-bold">
-          {correct} из {total} верно ({percent}%)
-        </p>
-        <p className="mt-1 text-sm text-[var(--night-text-40)]">Тема засчитана в серию дня.</p>
-        <div className="mt-4 flex justify-center gap-3">
-          <Button
-            variant="secondary"
-            onClick={() => {
-              setIndex(0)
-              setCorrect(0)
-              setDone(false)
-            }}
-          >
-            Ещё раз
-          </Button>
+      <RoundResult
+        correct={correct}
+        total={total}
+        note="Тема засчитана в серию дня."
+        restartLabel="Ещё раз"
+        onRestart={() => {
+          setIndex(0)
+          setCorrect(0)
+          setDone(false)
+        }}
+        extra={
           <Button variant="ghost" onClick={onBackToTheory}>
             К теории
           </Button>
-        </div>
-      </Card>
+        }
+      />
     )
   }
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between text-sm text-[var(--night-text-40)]">
-        <span>
-          Упражнение {index + 1} / {total}
-        </span>
-        <span>верно: {correct}</span>
-      </div>
+      <RoundProgress index={index + 1} total={total} correct={correct} progressLabel="Упражнение" />
       <ExerciseView
         key={index}
         exercise={current}
