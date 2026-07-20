@@ -10,19 +10,10 @@
 import { reviewCard } from '../../lib/fsrs'
 import type { PoolItem } from '../../lib/wordPool'
 
-// shuffle/sample/pickWords живут рядом с пулом (lib) — здесь только реэкспорт,
-// чтобы игры импортировали всё нужное из одного места.
+// shuffle/sample/pickWords живут рядом с пулом (lib), normalize — в lib/text;
+// здесь только реэкспорт, чтобы игры брали всё нужное из одного места.
 export { shuffle, sample, pickWords } from '../../lib/wordPool'
-
-/** Нормализация ответа: без регистра, диакритики и лишних пробелов. */
-export function normalize(s: string): string {
-  return s
-    .trim()
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/\s+/g, ' ')
-}
+export { normalizeAnswer as normalize } from '../../lib/text'
 
 /**
  * Ошибка в игре: если слово из колоды — вернуть карточку на повтор (again).

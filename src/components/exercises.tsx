@@ -7,17 +7,8 @@
 import { useMemo, useState } from 'react'
 import { Card } from './Card'
 import { Button } from './Button'
+import { normalizeAnswer } from '../lib/text'
 import type { GrammarExercise } from '../types'
-
-/** Нормализация ответа: без регистра, диакритики и лишних пробелов. */
-export function normalize(s: string): string {
-  return s
-    .trim()
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/\s+/g, ' ')
-}
 
 export interface ExerciseCallbacks {
   onAnswered: (ok: boolean) => void
@@ -99,7 +90,7 @@ export function FillExercise({
   const [checked, setChecked] = useState(false)
   const [showHint, setShowHint] = useState(false)
 
-  const ok = normalize(value) === normalize(exercise.answer)
+  const ok = normalizeAnswer(value) === normalizeAnswer(exercise.answer)
 
   const check = () => {
     if (checked || !value.trim()) return

@@ -831,9 +831,14 @@
   set search_path = public
   as $$
   begin
+    -- Пропускаем, если в списке есть либо точный адрес, либо доменная запись
+    -- вида '@example.com' (тогда проходит любой адрес на этом домене).
+    -- ⚠️ НЕ вписывать публичные домены (@gmail.com и т.п.) — это открыло бы
+    -- регистрацию всему миру. Доменная запись — для своей команды/тестов.
     if not exists (
       select 1 from public.allowed_emails a
       where a.email = lower(trim(new.email))
+         or a.email = '@' || split_part(lower(trim(new.email)), '@', 2)
     ) then
       -- Текст ловится клиентом (src/lib/access.ts) и заменяется на понятный.
       raise exception 'RECALL_NOT_INVITED'

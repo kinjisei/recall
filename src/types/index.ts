@@ -17,7 +17,6 @@ export type CardSource = 'manual' | 'reader' | 'ai'
 
 export type ReviewStateName = 'new' | 'learning' | 'review' | 'relearning'
 
-export type ContentType = 'reading' | 'listening'
 
 /** Тип занятия для activity_log (стрик и статистика). */
 export type ActivityType =
@@ -74,45 +73,10 @@ export interface ReviewState {
   state: ReviewStateName
 }
 
-export interface ContentItem {
-  id: string
-  level: CEFRLevel | null
-  title: string | null
-  body: string | null
-  type: ContentType
-  audio_url: string | null
-  source: string
-  created_at: string
-}
-
-export interface ActivityLog {
-  id: string
-  user_id: string
-  day: string
-  type: string
-  items_done: number
-  duration_sec: number
-  created_at: string
-}
-
 /** Реплика для AI-чата (то, что летит в /api/gemini; не таблица БД). */
 export interface ChatTurn {
   role: 'user' | 'assistant' | 'system'
   content: string
-}
-
-export interface Conversation {
-  id: string
-  user_id: string
-  started_at: string
-}
-
-export interface Message {
-  id: string
-  conversation_id: string
-  role: 'user' | 'assistant' | 'system'
-  content: string
-  created_at: string
 }
 
 // ---------------------------------------------------------------------------
@@ -239,34 +203,9 @@ export interface EndingsExercise {
   explanation: string
 }
 
-export interface WritingSubmission {
-  id: string
-  user_id: string
-  prompt: string | null
-  text: string
-  feedback: unknown | null
-  created_at: string
-}
-
 // ---------------------------------------------------------------------------
 // Фаза 4: режим «Преподаватель».
 // ---------------------------------------------------------------------------
-
-/** Связь преподаватель — ученица (создаётся вводом кода-приглашения). */
-export interface TeacherStudent {
-  id: string
-  teacher_id: string
-  student_id: string
-  created_at: string
-}
-
-/** Назначение колоды преподавателя ученице (только чтение карточек). */
-export interface DeckAssignment {
-  id: string
-  deck_id: string
-  student_id: string
-  created_at: string
-}
 
 // ---------------------------------------------------------------------------
 // Материалы преподавателя: сгенерированный текст + упражнения (фича Materials).

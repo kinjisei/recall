@@ -5,7 +5,7 @@
 import { useState } from 'react'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
-import { normalize } from '../../components/exercises'
+import { normalizeAnswer as normalize } from '../../lib/text'
 import { logActivity } from '../../lib/activity'
 import { submitWordCheck } from '../../lib/wordChecks'
 import { speak } from '../../lib/speech'

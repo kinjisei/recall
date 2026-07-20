@@ -7,7 +7,6 @@
 // ============================================================================
 
 const KEY = 'recall.settings'
-const EVENT = 'recall:settings'
 
 export type SpeechRate = 'slow' | 'normal' | 'fast'
 export type ReaderSize = 'small' | 'normal' | 'large'
@@ -46,7 +45,8 @@ export function getSettings(): Settings {
   return cache
 }
 
-/** Сохранить изменения и оповестить открытые экраны. */
+/** Сохранить изменения. Экран настроек держит своё состояние сам, поэтому
+ *  событие-оповещение здесь не нужно (подписчиков нет). */
 export function setSettings(patch: Partial<Settings>): Settings {
   const next = { ...getSettings(), ...patch }
   cache = next
@@ -55,14 +55,7 @@ export function setSettings(patch: Partial<Settings>): Settings {
   } catch {
     // приватный режим — настройки просто не переживут перезагрузку
   }
-  window.dispatchEvent(new CustomEvent(EVENT))
   return next
-}
-
-/** Подписка на изменения (для React-хука ниже). */
-export function onSettingsChange(fn: () => void): () => void {
-  window.addEventListener(EVENT, fn)
-  return () => window.removeEventListener(EVENT, fn)
 }
 
 /** Текущая скорость озвучки числом — использует lib/speech. */
