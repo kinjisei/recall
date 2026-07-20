@@ -4,6 +4,7 @@
 // ============================================================================
 import { Link, Outlet } from 'react-router-dom'
 import { BottomNav } from './BottomNav'
+import { BrandMark } from './Brand'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
 import type { AppLang } from '../types'
@@ -34,8 +35,8 @@ function TopBar() {
   return (
     <header className="sticky top-0 z-20 border-b border-white/[0.06] bg-[rgba(22,24,38,.82)] pt-[env(safe-area-inset-top)] backdrop-blur-xl">
       <div className="mx-auto flex max-w-screen-sm items-center justify-between px-4 py-3">
-        <Link to="/" className="flex items-center gap-2.5">
-          <span className="h-4 w-4 rounded-full bg-[var(--night-text)]" aria-hidden="true" />
+        <Link to="/" className="flex items-center gap-2">
+          <BrandMark size={26} />
           <span className="text-lg font-medium tracking-tight">Recall</span>
         </Link>
 

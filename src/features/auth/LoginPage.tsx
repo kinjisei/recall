@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { BrandLogo, BrandMark } from '../../components/Brand'
 
 /**
  * Экран входа/регистрации Recall — тёмная версия «Nocturne».
@@ -62,9 +63,8 @@ export function LoginPage() {
       <div className="relative hidden h-full w-[52%] flex-col items-center justify-end overflow-hidden rounded-3xl px-12 pb-24 shadow-2xl lg:flex">
         <AuroraBg />
         <div className="relative z-10 flex w-full max-w-[340px] animate-fade-in flex-col gap-8">
-          <div className="flex animate-fade-up items-center justify-center gap-2.5 [animation-delay:.2s]">
-            <BrandMark size={20} />
-            <span className="text-xl font-medium tracking-tight">Recall</span>
+          <div className="flex animate-fade-up items-center justify-center [animation-delay:.2s]">
+            <BrandLogo width={210} />
           </div>
           <div className="flex animate-fade-up flex-col gap-3 text-center [animation-delay:.35s]">
             <h1 className="whitespace-nowrap text-4xl font-medium tracking-tight">
@@ -86,8 +86,8 @@ export function LoginPage() {
       <div className="relative z-10 flex flex-1 flex-col items-center justify-center overflow-y-auto px-2 py-8 sm:px-12 lg:overflow-hidden lg:px-16 lg:py-6 xl:px-24">
         <div className="flex w-full max-w-xl animate-fade-in flex-col gap-7 rounded-3xl border border-[var(--night-text-10)] bg-[var(--night-glass)] p-6 backdrop-blur-2xl lg:border-none lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
           {/* Бренд над формой — только на мобильных (hero скрыт) */}
-          <div className="-mb-2 flex items-center gap-2.5 lg:hidden">
-            <BrandMark size={18} />
+          <div className="-mb-2 flex items-center gap-2 lg:hidden">
+            <BrandMark size={22} />
             <span className="text-lg font-medium tracking-tight">Recall</span>
           </div>
 
@@ -193,14 +193,6 @@ function AuroraBg() {
       <div className="absolute left-[20%] top-[30%] aspect-square w-[55%] animate-blob-c rounded-full bg-[radial-gradient(circle,rgba(120,105,205,.35),transparent_60%)] blur-[60px]" />
       <div className="absolute -inset-[20%] animate-sheen bg-[conic-gradient(from_0deg_at_50%_50%,transparent_0deg,rgba(145,132,217,.08)_90deg,transparent_180deg,rgba(145,132,217,.06)_270deg,transparent_360deg)]" />
     </div>
-  )
-}
-
-function BrandMark({ size }: { size: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 20 20" aria-hidden="true">
-      <circle cx="10" cy="10" r="9" fill="var(--night-text)" />
-    </svg>
   )
 }
 

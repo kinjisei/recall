@@ -7,6 +7,11 @@
 
 ## Дизайн-система «Nocturne» (общая для всех экранов)
 
+**Логотип** (`handoff/logo/`): `recall-logo.svg` — полный лого (слово на флеш-карточке,
+«ll» — две карточки: контурная и залитая) — на экране входа; `recall-mark.svg` —
+компактный знак (карточки-«ll» на карте) — шапка, favicon, иконка PWA. Старый синий
+логотип с буквой «Р» убрать; смайлик/спарклы из TopBar заменить знаком.
+
 Токены и keyframes — `handoff/index.css.additions.css` (дописать в `src/index.css`).
 Шрифт: **Inter** (400/500/600, Google Fonts, подключить в `index.html`).
 `--night-font: 'Inter', ui-sans-serif, system-ui, sans-serif`.
