@@ -1,6 +1,7 @@
 ﻿import { useState } from 'react'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
+import { GuidedNext } from '../../components/GuidedNext'
 import { TappableText, WordSheet, type WordPick } from '../../components/WordSheet'
 import { useLanguage } from '../../context/LanguageContext'
 import { SpanishReaderPage } from './SpanishReader'
@@ -81,6 +82,9 @@ function Reader({ text, onBack }: { text: SampleText; onBack: () => void }) {
           <TappableText text={text.body} onSelect={setPick} />
         </p>
       </Card>
+
+      {/* ведомая сессия: после текста предложить следующий шаг */}
+      <GuidedNext step="reader" />
 
       {pick && (
         <WordSheet

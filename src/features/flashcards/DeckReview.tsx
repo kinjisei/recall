@@ -13,6 +13,7 @@ import { getDueCards, reviewCard, type DueCard } from '../../lib/fsrs'
 import { logActivity } from '../../lib/activity'
 import { getMyPendingWordChecks } from '../../lib/wordChecks'
 import { useLanguage } from '../../context/LanguageContext'
+import { GuidedNext } from '../../components/GuidedNext'
 import { PacksSheet } from './PacksSheet'
 import { SwipeCard, SwipeTutorial } from './SwipeCard'
 import { WordCheckRunner } from './WordCheckRunner'
@@ -228,20 +229,24 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
           {showTutorial && <SwipeTutorial onDismiss={dismissTutorial} />}
         </>
       ) : (
-        <Card className="text-center">
-          <p className="text-4xl">🎉</p>
-          <p className="mt-2 font-semibold">
-            {reviewedCount > 0
-              ? `Готово! Повторено карточек: ${reviewedCount}`
-              : 'Карточек к повторению нет'}
-          </p>
-          <p className="mt-1 text-sm text-slate-500">
-            Добавь слова кнопкой «📦 Паки», «+ Слово» или из раздела «Ввод».
-          </p>
-          <Button variant="secondary" className="mt-4" onClick={load}>
-            Обновить
-          </Button>
-        </Card>
+        <>
+          <Card className="text-center">
+            <p className="text-4xl">🎉</p>
+            <p className="mt-2 font-semibold">
+              {reviewedCount > 0
+                ? `Готово! Повторено карточек: ${reviewedCount}`
+                : 'Карточек к повторению нет'}
+            </p>
+            <p className="mt-1 text-sm text-slate-500">
+              Добавь слова кнопкой «📦 Паки», «+ Слово» или из раздела «Ввод».
+            </p>
+            <Button variant="secondary" className="mt-4" onClick={load}>
+              Обновить
+            </Button>
+          </Card>
+          {/* ведомая сессия: предложить следующий шаг */}
+          <GuidedNext step="flashcards" />
+        </>
       )}
     </div>
   )

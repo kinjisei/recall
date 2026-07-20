@@ -19,6 +19,7 @@ import { Card } from '../../components/Card'
 import { IconLink, IconType, IconBlocks, IconHeadphones, IconDeck, IconBook } from '../../components/icons'
 import { useLanguage } from '../../context/LanguageContext'
 import { getDueCards } from '../../lib/fsrs'
+import { currentGuidedStep } from '../../lib/guided'
 import { DeckReview } from '../flashcards/DeckReview'
 
 const MatchMode = lazy(() => import('./MatchMode').then((m) => ({ default: m.MatchMode })))
@@ -63,13 +64,17 @@ const modes: ModeDef[] = [
 
 export function WordsPage() {
   const { lang } = useLanguage()
-  const [mode, setMode] = useState<Mode>('hub')
+  // во время ведомой сессии («Начать занятие» на Главной) открываем сразу
+  // повторение — пользователь ждёт карточки, а не меню режимов
+  const [mode, setMode] = useState<Mode>(() =>
+    currentGuidedStep() === 'flashcards' ? 'review' : 'hub',
+  )
   const [due, setDue] = useState<number | null>(null)
 
   // сколько карточек ждёт повторения — показываем на плитке
   useEffect(() => {
     let alive = true
-    setMode('hub')
+    setMode(currentGuidedStep() === 'flashcards' ? 'review' : 'hub')
     getDueCards(50, lang)
       .then((d) => alive && setDue(d.length))
       .catch(() => alive && setDue(null))

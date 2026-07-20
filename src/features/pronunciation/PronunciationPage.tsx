@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
+import { GuidedNext } from '../../components/GuidedNext'
 import { supabase } from '../../lib/supabase'
 import { getDeckIds } from '../../lib/cards'
 import { logActivity } from '../../lib/activity'
@@ -187,6 +188,9 @@ export function PronunciationPage() {
           Дальше →
         </Button>
       </div>
+
+      {/* ведомая сессия: речь — последний шаг, покажем поздравление */}
+      {score && <GuidedNext step="pronunciation" />}
     </div>
   )
 }

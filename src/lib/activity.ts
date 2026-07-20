@@ -3,6 +3,8 @@
 //   logActivity()   — засчитать занятие (никогда не бросает ошибок)
 //   getStreak()     — сколько дней подряд занимался
 //   getTodayTypes() — какие типы занятий уже сделаны сегодня
+//   getWeek()       — 7 дней (пн→вс) для полосок стрика и графика прогресса
+//   getBestStreak() — самая длинная серия за всю историю
 // День считается в МЕСТНОМ времени пользователя, а не в UTC, чтобы вечерние
 // занятия не «уезжали» на другую дату.
 // ============================================================================
@@ -95,6 +97,95 @@ export async function getStreak(): Promise<number> {
     offset--
   }
   return streak
+}
+
+/** День недели: активность и объём (для полосок на Главной и графика прогресса). */
+export interface WeekDay {
+  day: string // YYYY-MM-DD
+  label: string // «пн», «вт» …
+  active: boolean
+  items: number
+  minutes: number
+  isToday: boolean
+}
+
+const WEEKDAY_LABELS = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб']
+
+/**
+ * Текущая неделя с понедельника по воскресенье.
+ * Возвращает все 7 дней (даже будущие) — полоски рисуются всегда.
+ */
+export async function getWeek(): Promise<WeekDay[]> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const today = new Date()
+  // понедельник как первый день недели (в JS воскресенье = 0)
+  const shiftToMonday = (today.getDay() + 6) % 7
+  const days: WeekDay[] = []
+  for (let i = 0; i < 7; i++) {
+    const day = localDay(i - shiftToMonday)
+    const d = new Date()
+    d.setDate(d.getDate() + (i - shiftToMonday))
+    days.push({
+      day,
+      label: WEEKDAY_LABELS[d.getDay()],
+      active: false,
+      items: 0,
+      minutes: 0,
+      isToday: day === localDay(),
+    })
+  }
+  if (!user) return days
+
+  const { data, error } = await supabase
+    .from('activity_log')
+    .select('day, items_done, duration_sec')
+    .eq('user_id', user.id)
+    .gte('day', days[0].day)
+    .lte('day', days[6].day)
+  if (error) throw error
+
+  const byDay = new Map(days.map((d) => [d.day, d]))
+  for (const row of data ?? []) {
+    const d = byDay.get(row.day as string)
+    if (!d) continue
+    d.active = true
+    d.items += (row.items_done as number) ?? 0
+    d.minutes += Math.round(((row.duration_sec as number) ?? 0) / 60)
+  }
+  return days
+}
+
+/** Самая длинная серия за всю историю (для экрана прогресса). */
+export async function getBestStreak(): Promise<number> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return 0
+
+  const { data, error } = await supabase
+    .from('activity_log')
+    .select('day')
+    .eq('user_id', user.id)
+    .order('day', { ascending: true })
+    .limit(2000)
+  if (error) throw error
+
+  const days = [...new Set((data ?? []).map((r) => r.day as string))].sort()
+  let best = 0
+  let run = 0
+  let prev: Date | null = null
+  for (const day of days) {
+    const d = new Date(day + 'T00:00:00')
+    const isNext =
+      prev !== null && Math.round((d.getTime() - prev.getTime()) / 86_400_000) === 1
+    run = isNext ? run + 1 : 1
+    if (run > best) best = run
+    prev = d
+  }
+  return best
 }
 
 /** Какие типы занятий уже засчитаны сегодня. */
