@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { supabase, requireUserId } from './supabase'
 import type { AppLang, Card, Deck, ReviewState } from '../types'
 import { statusOf, type WordStatus } from './wordChecks'
 
@@ -7,11 +7,7 @@ import { statusOf, type WordStatus } from './wordChecks'
  * (en и es создаются автоматически при регистрации — см. docs/schema.sql).
  */
 export async function getDefaultDeck(lang: AppLang = 'en'): Promise<Deck> {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-  const user = session?.user ?? null
-  if (!user) throw new Error('Нет авторизации')
+  const user = { id: await requireUserId() }
 
   const { data, error } = await supabase
     .from('decks')
@@ -32,11 +28,7 @@ export async function getDefaultDeck(lang: AppLang = 'en'): Promise<Deck> {
  * преподавателем (Фаза 4) — так задания попадают в очередь ученицы.
  */
 export async function getDeckIds(lang: AppLang): Promise<string[]> {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-  const user = session?.user ?? null
-  if (!user) throw new Error('Нет авторизации')
+  const user = { id: await requireUserId() }
 
   const { data, error } = await supabase
     .from('decks')
@@ -133,11 +125,7 @@ export interface MyWord {
 
 /** Все слова пользователя выбранного языка: свежие сверху. */
 export async function listMyWords(lang: AppLang): Promise<MyWord[]> {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-  const user = session?.user ?? null
-  if (!user) throw new Error('Нет авторизации')
+  const user = { id: await requireUserId() }
 
   const deckIds = await getDeckIds(lang)
   if (deckIds.length === 0) return []

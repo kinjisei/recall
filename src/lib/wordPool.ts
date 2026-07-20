@@ -8,9 +8,10 @@
 //
 // Контракт: docs/ARCHITECTURE.md §7.
 // ============================================================================
-import { supabase } from './supabase'
+import { supabase, currentUserId } from './supabase'
 import { getDeckIds } from './cards'
 import { getEsLevel } from './esLevel'
+import { sample } from './random'
 import type { AppLang, Card, ReviewState } from '../types'
 
 /** Слово для игры: термин + перевод (+ пример и связь с карточкой колоды). */
@@ -32,12 +33,9 @@ const LEVEL_ORDER = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
 async function targetLevel(lang: AppLang): Promise<string> {
   if (lang === 'es') return getEsLevel() ?? 'A1'
   try {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-    const user = session?.user ?? null
-    if (!user) return 'B1'
-    const { data } = await supabase.from('profiles').select('level').eq('id', user.id).single()
+    const userId = await currentUserId()
+    if (!userId) return 'B1'
+    const { data } = await supabase.from('profiles').select('level').eq('id', userId).single()
     return ((data as { level?: string } | null)?.level as string) ?? 'B1'
   } catch {
     return 'B1'
@@ -50,20 +48,8 @@ export interface GamePool {
   fromDeck: number
 }
 
-/** Возвращает НОВЫЙ массив в случайном порядке (Фишер–Йейтс). */
-export function shuffle<T>(arr: readonly T[]): T[] {
-  const a = arr.slice()
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[a[i], a[j]] = [a[j], a[i]]
-  }
-  return a
-}
-
-/** n случайных элементов без повторов. */
-export function sample<T>(arr: readonly T[], n: number): T[] {
-  return shuffle(arr).slice(0, n)
-}
+// shuffle/sample — в lib/random (чистые), здесь реэкспорт + внутреннее использование
+export { shuffle, sample } from './random'
 
 /**
  * Участники раунда: СНАЧАЛА слова из колоды пользователя (он их реально учит,

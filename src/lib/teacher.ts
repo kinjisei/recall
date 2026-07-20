@@ -4,7 +4,7 @@
 //   Ученица: привязка по коду (RPC join_teacher), список своих преподавателей.
 // Доступы разруливает RLS (docs/schema.sql, блок «ФАЗА 4»).
 // ============================================================================
-import { supabase } from './supabase'
+import { supabase, requireUserId } from './supabase'
 import type { Deck, Profile } from '../types'
 
 /** Сводка по ученице для экрана преподавателя. */
@@ -14,15 +14,6 @@ export interface StudentInfo {
   doneToday: boolean
   weekItems: number
   assignedDeckIds: string[]
-}
-
-async function requireUserId(): Promise<string> {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-  const user = session?.user ?? null
-  if (!user) throw new Error('Нет авторизации')
-  return user.id
 }
 
 /** YYYY-MM-DD в местном времени (offsetDays: 0 — сегодня, -1 — вчера…). */

@@ -3,7 +3,7 @@
 // (двухшаговая: план → материал) + хранение и назначение (Supabase).
 // Таблицы materials / material_assignments, RLS — docs/schema.sql.
 // ============================================================================
-import { supabase } from './supabase'
+import { supabase, requireUserId } from './supabase'
 import { chat } from './gemini'
 import type {
   AppLang,
@@ -38,15 +38,6 @@ export const MATERIAL_FORMATS = [
 ] as const
 
 export const MATERIAL_LENGTHS = ['50-100', '100-250', '250-350'] as const
-
-async function requireUserId(): Promise<string> {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-  const user = session?.user ?? null
-  if (!user) throw new Error('Нет авторизации')
-  return user.id
-}
 
 /** Достаёт JSON из ответа модели (терпит ```-обёртки и болтовню вокруг). */
 function parseJson<T>(raw: string): T {

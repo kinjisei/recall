@@ -3,18 +3,9 @@
 // печатает их по памяти (рус → англ/исп). Неверные возвращаются в колоду
 // оценкой «again». Таблица word_checks, RLS — docs/schema.sql.
 // ============================================================================
-import { supabase } from './supabase'
+import { supabase, requireUserId } from './supabase'
 import { reviewCard } from './fsrs'
 import type { Card, ReviewState, WordCheck, WordCheckResult } from '../types'
-
-async function requireUserId(): Promise<string> {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-  const user = session?.user ?? null
-  if (!user) throw new Error('Нет авторизации')
-  return user.id
-}
 
 /** Статус изученности слова (по интервалу FSRS). */
 export type WordStatus = 'new' | 'learning' | 'learned'

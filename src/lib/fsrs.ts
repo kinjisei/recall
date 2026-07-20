@@ -13,7 +13,7 @@ import {
   type Card as FsrsCard,
   type Grade,
 } from 'ts-fsrs'
-import { supabase } from './supabase'
+import { supabase, requireUserId } from './supabase'
 import { getDeckIds } from './cards'
 import type { AppLang, Card, ReviewState, ReviewStateName, Rating } from '../types'
 
@@ -65,15 +65,6 @@ function toFsrsCard(state: ReviewState | null, now: Date): FsrsCard {
 export interface DueCard {
   card: Card
   state: ReviewState | null
-}
-
-async function requireUserId(): Promise<string> {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-  const user = session?.user ?? null
-  if (!user) throw new Error('Нет авторизации')
-  return user.id
 }
 
 /**

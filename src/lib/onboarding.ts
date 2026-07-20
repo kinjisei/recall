@@ -7,7 +7,7 @@
 // в главный бандл и обнулял его lazy() — сборка ругалась
 // INEFFECTIVE_DYNAMIC_IMPORT.
 // ============================================================================
-import { supabase } from './supabase'
+import { supabase, currentUserId } from './supabase'
 
 const KEY = 'recall.onboarded'
 
@@ -33,11 +33,7 @@ export function markOnboarded(): void {
 export async function shouldOnboard(): Promise<boolean> {
   if (isOnboarded()) return false
   try {
-    // getSession читает локально (getUser ходил бы в сеть на каждом рендере)
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-    const userId = session?.user?.id
+    const userId = await currentUserId()
     if (!userId) return false
 
     const { count, error } = await supabase

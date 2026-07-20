@@ -17,7 +17,7 @@ import {
 } from '@phosphor-icons/react'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
-import { supabase } from '../../lib/supabase'
+import { supabase, currentUserId } from '../../lib/supabase'
 import { getBestStreak, getStreak, getWeek, type WeekDay } from '../../lib/activity'
 import { getDeckIds } from '../../lib/cards'
 
@@ -30,11 +30,8 @@ interface Metrics {
 
 /** Метрики по колоде текущего языка: выучено, точность, к повторению завтра. */
 async function loadMetrics(lang: 'en' | 'es'): Promise<Omit<Metrics, 'best'>> {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-  const user = session?.user ?? null
-  if (!user) return { learned: 0, accuracy: null, tomorrow: 0 }
+  const userId = await currentUserId()
+  if (!userId) return { learned: 0, accuracy: null, tomorrow: 0 }
 
   const deckIds = await getDeckIds(lang)
   if (deckIds.length === 0) return { learned: 0, accuracy: null, tomorrow: 0 }
@@ -42,7 +39,7 @@ async function loadMetrics(lang: 'en' | 'es'): Promise<Omit<Metrics, 'best'>> {
   const { data } = await supabase
     .from('review_states')
     .select('state, reps, lapses, due, cards!inner(deck_id)')
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
     .in('cards.deck_id', deckIds)
 
   const rows = data ?? []

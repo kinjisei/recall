@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { ArrowLeftIcon, SparkleIcon } from '@phosphor-icons/react'
+import { shuffle } from '../../lib/random'
 import { setEsLevel } from '../../lib/esLevel'
 import type { CEFRLevel, PlacementQuestion } from '../../types'
 
@@ -16,14 +17,6 @@ const LEVELS: CEFRLevel[] = ['A1', 'A2', 'B1', 'B2']
 const PER_LEVEL = 5
 const PASS = 0.6
 
-function shuffle<T>(arr: readonly T[]): T[] {
-  const a = arr.slice()
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[a[i], a[j]] = [a[j], a[i]]
-  }
-  return a
-}
 
 /** Считает уровень: высший, где доля верных >= 60% и все нижние тоже пройдены. */
 function scoreLevel(
