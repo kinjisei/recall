@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { LanguageProvider } from './context/LanguageContext'
+import { ConfettiLayer } from './components/Confetti'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { Layout } from './components/Layout'
@@ -29,8 +30,14 @@ const GrammarPage = lazy(() =>
 const StudyPage = lazy(() =>
   import('./features/study/StudyPage').then((m) => ({ default: m.StudyPage })),
 )
+const ProgressPage = lazy(() =>
+  import('./features/progress/ProgressPage').then((m) => ({ default: m.ProgressPage })),
+)
 const PlacementTest = lazy(() =>
   import('./features/onboarding/PlacementTest').then((m) => ({ default: m.PlacementTest })),
+)
+const OnboardingFlow = lazy(() =>
+  import('./features/onboarding/OnboardingFlow').then((m) => ({ default: m.OnboardingFlow })),
 )
 const TeacherPage = lazy(() =>
   import('./features/teacher/TeacherPage').then((m) => ({ default: m.TeacherPage })),
@@ -48,9 +55,22 @@ export default function App() {
     <ErrorBoundary>
       <AuthProvider>
       <LanguageProvider>
+        {/* слой празднования: слушает celebrate() из любого экрана */}
+        <ConfettiLayer />
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
+            {/* онбординг — без Layout: свои шаги на весь экран */}
+            <Route
+              path="/onboarding"
+              element={
+                <ProtectedRoute>
+                  <Suspense fallback={<PageFallback />}>
+                    <OnboardingFlow />
+                  </Suspense>
+                </ProtectedRoute>
+              }
+            />
             <Route
               element={
                 <ProtectedRoute>
@@ -88,6 +108,14 @@ export default function App() {
                 element={
                   <Suspense fallback={<PageFallback />}>
                     <ConversationPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/progress"
+                element={
+                  <Suspense fallback={<PageFallback />}>
+                    <ProgressPage />
                   </Suspense>
                 }
               />
