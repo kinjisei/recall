@@ -34,7 +34,7 @@ export function StudyPage() {
           pending: rows.filter((r) => r.status === 'assigned').length,
         }),
       )
-      .catch(() => setAssignments(null))
+      .catch(() => setAssignments(null)) // строка просто не появится — не вводим в заблуждение цифрой
   }, [])
 
   const showPlacement = lang === 'es' && !esLevel

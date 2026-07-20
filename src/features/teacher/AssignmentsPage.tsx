@@ -3,13 +3,15 @@
 // Прохождение: чтение → упражнения (общий движок) → сдача (авто-балл, статус
 // submitted). Проверка преподавателем — следующая фаза фичи.
 // ============================================================================
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { ExerciseView } from '../../components/exercises'
 import { TappableText, WordSheet, type WordPick } from '../../components/WordSheet'
 import { logActivity } from '../../lib/activity'
+import { useAsyncData } from '../../lib/useAsyncData'
+import { LoadError } from '../../components/LoadError'
 import { addCard } from '../../lib/cards'
 import { lookup } from '../../lib/dictionary'
 import { lookupSpanish } from '../../lib/spanishDict'
@@ -28,18 +30,18 @@ import type {
 type Row = MaterialAssignment & { material: Material }
 
 export function AssignmentsPage() {
-  const [rows, setRows] = useState<Row[] | null>(null)
   const [active, setActive] = useState<Row | null>(null)
   // повторное прохождение проверенной работы — тренировка без пересдачи
   const [retry, setRetry] = useState(false)
 
-  const reload = useCallback(() => {
-    getMyAssignments().then(setRows).catch(() => setRows([]))
-  }, [])
-
-  useEffect(() => {
-    reload()
-  }, [reload])
+  // при сбое показываем ошибку, а не «Заданий пока нет»: раньше ученица
+  // думала, что работы нет, и не повторяла попытку
+  const {
+    data: rows,
+    error,
+    loading,
+    reload,
+  } = useAsyncData<Row[]>(() => getMyAssignments(), [], 'Не удалось загрузить задания')
 
   const close = () => {
     setActive(null)
@@ -76,9 +78,11 @@ export function AssignmentsPage() {
         <h1 className="text-2xl font-bold">📝 Задания</h1>
       </div>
 
-      {rows === null ? (
+      {loading ? (
         <p className="text-[var(--night-text-40)]">Загрузка…</p>
-      ) : rows.length === 0 ? (
+      ) : error ? (
+        <LoadError message={error} onRetry={reload} />
+      ) : (rows ?? []).length === 0 ? (
         <Card className="text-center">
           <p className="text-4xl">🌤</p>
           <p className="mt-2 font-semibold">Заданий пока нет</p>

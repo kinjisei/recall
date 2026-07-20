@@ -5,6 +5,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
+import { LoadError } from '../../components/LoadError'
+import { useAsyncData } from '../../lib/useAsyncData'
 import {
   MATERIAL_FORMATS,
   MATERIAL_LENGTHS,
@@ -44,15 +46,13 @@ type Mode =
 
 export function MaterialsSection({ students }: { students: StudentInfo[] }) {
   const [mode, setMode] = useState<Mode>({ name: 'list' })
-  const [materials, setMaterials] = useState<Material[] | null>(null)
-
-  const reload = useCallback(() => {
-    listMyMaterials().then(setMaterials).catch(() => setMaterials([]))
-  }, [])
-
-  useEffect(() => {
-    reload()
-  }, [reload])
+  // ошибка RLS/сети не должна выглядеть как «материалов нет»
+  const {
+    data: materials,
+    error: loadError,
+    loading: loadingMaterials,
+    reload,
+  } = useAsyncData<Material[]>(() => listMyMaterials(), [], 'Не удалось загрузить материалы')
 
   if (mode.name === 'form') {
     return (
@@ -115,12 +115,14 @@ export function MaterialsSection({ students }: { students: StudentInfo[] }) {
         </Button>
       </Card>
 
-      {materials === null ? (
+      {loadingMaterials ? (
         <p className="text-[var(--night-text-40)]">Загрузка…</p>
-      ) : materials.length === 0 ? (
+      ) : loadError ? (
+        <LoadError message={loadError} onRetry={reload} />
+      ) : (materials ?? []).length === 0 ? (
         <p className="text-sm text-[var(--night-text-40)]">Пока нет сохранённых материалов.</p>
       ) : (
-        materials.map((m) => (
+        (materials ?? []).map((m) => (
           <button key={m.id} onClick={() => setMode({ name: 'detail', material: m })} className="text-left">
             <Card className="flex items-center justify-between gap-2 transition-transform active:scale-[0.99]">
               <div className="min-w-0">

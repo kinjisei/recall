@@ -4,6 +4,7 @@
 // ============================================================================
 import { useCallback, useEffect, useState } from 'react'
 import { Button } from '../../components/Button'
+import { LoadError } from '../../components/LoadError'
 import {
   assignWordCheck,
   getStudentWords,
@@ -26,10 +27,17 @@ export function StudentWordsSection({ studentId }: { studentId: string }) {
   const [msg, setMsg] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [openCheck, setOpenCheck] = useState<string | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
+  // «Слов: 0» при сбое вводило преподавателя в заблуждение — теперь ошибка видна
   const reload = useCallback(() => {
-    getStudentWords(studentId).then(setWords).catch(() => setWords([]))
-    getWordChecks(studentId).then(setChecks).catch(() => setChecks([]))
+    setLoadError(null)
+    getStudentWords(studentId)
+      .then(setWords)
+      .catch((e) => setLoadError(e instanceof Error ? e.message : 'Не удалось загрузить слова'))
+    getWordChecks(studentId)
+      .then(setChecks)
+      .catch(() => setChecks([]))
   }, [studentId])
 
   useEffect(() => {
@@ -61,6 +69,9 @@ export function StudentWordsSection({ studentId }: { studentId: string }) {
     }
   }
 
+  // ошибка загрузки — отдельно от «слов нет»: иначе преподаватель видел бы
+  // пустой список у ученицы, у которой слова есть
+  if (loadError) return <LoadError message={loadError} onRetry={reload} />
   if (words === null) return <p className="text-sm text-[var(--night-text-40)]">Загружаю слова…</p>
 
   return (
