@@ -3,9 +3,17 @@
 // Контракт: docs/ARCHITECTURE.md §7 — lookup(word).
 // ============================================================================
 
+/** Значение слова вместе с частью речи (noun/verb/adjective…). */
+export interface DictionarySense {
+  text: string
+  pos: string
+}
+
 export interface DictionaryResult {
   word: string
   definition?: string
+  /** Все найденные значения (для режима «Значения»: первое не всегда годится). */
+  definitions?: DictionarySense[]
   example?: string
   ipa?: string
   audio_url?: string
@@ -48,18 +56,24 @@ export async function lookup(word: string): Promise<DictionaryResult | null> {
 
     let definition: string | undefined
     let example: string | undefined
+    const definitions: DictionarySense[] = []
     for (const meaning of entry.meanings ?? []) {
-      const def = (meaning.definitions ?? [])[0]
-      if (def) {
-        definition = def.definition
-        example = def.example
-        break
+      for (const def of meaning.definitions ?? []) {
+        if (!def?.definition) continue
+        if (!definition) {
+          definition = def.definition
+          example = def.example
+        }
+        definitions.push({ text: def.definition, pos: meaning.partOfSpeech ?? '' })
+        if (definitions.length >= 12) break
       }
+      if (definitions.length >= 12) break
     }
 
     return {
       word: clean,
       definition,
+      definitions,
       example,
       ipa: ipa ? ipa.replace(/\//g, '') : undefined,
       audio_url: normalizeAudio(audio),

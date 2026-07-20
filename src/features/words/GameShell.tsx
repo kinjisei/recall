@@ -1,0 +1,194 @@
+// Общие кусочки интерфейса мини-игр: шапка со «← Назад», загрузка,
+// заглушка «мало слов» и универсальный движок вопросов с 4 вариантами.
+import { useEffect, useState } from 'react'
+import { Card } from '../../components/Card'
+import { Button } from '../../components/Button'
+import { logActivity } from '../../lib/activity'
+import { speak } from '../../lib/speech'
+import { markWrong } from './gameUtils'
+import type { PoolItem } from '../../lib/wordPool'
+import type { AppLang } from '../../types'
+
+export function GameHeader({ title, onBack }: { title: string; onBack: () => void }) {
+  return (
+    <div className="flex items-center gap-3">
+      <Button variant="ghost" className="px-2 py-1 text-sm" onClick={onBack}>
+        ← Назад
+      </Button>
+      <h1 className="text-xl font-bold">{title}</h1>
+    </div>
+  )
+}
+
+export function GameLoading({ title, onBack }: { title: string; onBack: () => void }) {
+  return (
+    <div className="flex flex-col gap-4">
+      <GameHeader title={title} onBack={onBack} />
+      <p className="text-slate-500">Готовлю раунд…</p>
+    </div>
+  )
+}
+
+export function EmptyPool({ title, onBack }: { title: string; onBack: () => void }) {
+  return (
+    <div className="flex flex-col gap-4">
+      <GameHeader title={title} onBack={onBack} />
+      <Card className="text-center">
+        <p className="text-4xl">📭</p>
+        <p className="mt-2 font-semibold">Пока мало слов для игры</p>
+        <p className="mt-1 text-sm text-slate-500">
+          Добавь слова кнопкой «📦 Паки» в повторении или тапая по словам в разделе «Ввод».
+        </p>
+      </Card>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Универсальный раунд «вопрос + 4 варианта» (Пропуск, Перевод, Аудирование).
+// ---------------------------------------------------------------------------
+
+export interface Question {
+  /** Текст задания; для аудирования пустой — вместо него кнопка «слушать». */
+  prompt: string
+  options: string[]
+  answer: number
+  item: PoolItem
+  /** Что произносить вслух (аудирование). */
+  say?: string
+}
+
+export function QuizRunner({
+  title,
+  hint,
+  questions,
+  lang,
+  onBack,
+  onRestart,
+}: {
+  title: string
+  hint: string
+  questions: Question[]
+  lang: AppLang
+  onBack: () => void
+  onRestart: () => void
+}) {
+  const [index, setIndex] = useState(0)
+  const [picked, setPicked] = useState<number | null>(null)
+  const [correct, setCorrect] = useState(0)
+
+  const q = questions[index]
+  const done = index >= questions.length
+
+  // аудирование: произносим слово при появлении вопроса
+  useEffect(() => {
+    if (q?.say) speak(q.say, { lang })
+  }, [q, lang])
+
+  useEffect(() => {
+    if (done) void logActivity('practice')
+  }, [done])
+
+  if (done) {
+    const percent = Math.round((correct / questions.length) * 100)
+    return (
+      <div className="flex flex-col gap-4">
+        <GameHeader title={title} onBack={onBack} />
+        <Card className="text-center">
+          <p className="text-4xl">{percent >= 80 ? '🎉' : percent >= 50 ? '👍' : '💪'}</p>
+          <p className="mt-2 text-lg font-bold">
+            {correct} из {questions.length} верно ({percent}%)
+          </p>
+          {correct < questions.length && (
+            <p className="mt-1 text-sm text-slate-500">
+              Слова с ошибками вернутся в ближайшее повторение.
+            </p>
+          )}
+          <Button
+            className="mt-4"
+            onClick={() => {
+              setIndex(0)
+              setPicked(null)
+              setCorrect(0)
+              onRestart()
+            }}
+          >
+            Ещё раунд
+          </Button>
+        </Card>
+      </div>
+    )
+  }
+
+  const choose = (i: number) => {
+    if (picked !== null) return
+    setPicked(i)
+    if (i === q.answer) setCorrect((c) => c + 1)
+    else markWrong(q.item)
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <GameHeader title={title} onBack={onBack} />
+      <div className="flex items-center justify-between text-sm text-slate-400">
+        <span>
+          {index + 1} / {questions.length}
+        </span>
+        <span>верно: {correct}</span>
+      </div>
+
+      <Card className="flex flex-col gap-3">
+        {q.say ? (
+          <button
+            onClick={() => speak(q.say!, { lang })}
+            className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-sky-100 text-4xl dark:bg-sky-950/60"
+            aria-label="Прослушать ещё раз"
+          >
+            🔊
+          </button>
+        ) : (
+          <p className="text-lg leading-relaxed">{q.prompt}</p>
+        )}
+        {q.say && q.prompt && <p className="text-center text-sm text-slate-500">{q.prompt}</p>}
+
+        <div className="grid gap-2">
+          {q.options.map((opt, i) => {
+            const isAnswer = i === q.answer
+            const isPicked = picked === i
+            const cls =
+              picked === null
+                ? 'border-slate-300 dark:border-slate-600'
+                : isAnswer
+                  ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
+                  : isPicked
+                    ? 'border-red-500 bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300'
+                    : 'border-slate-200 opacity-60 dark:border-slate-700'
+            return (
+              <button
+                key={i}
+                onClick={() => choose(i)}
+                disabled={picked !== null}
+                className={`rounded-xl border px-3 py-2.5 text-left transition-colors ${cls}`}
+              >
+                {opt}
+              </button>
+            )
+          })}
+        </div>
+
+        {picked !== null && (
+          <Button
+            onClick={() => {
+              setIndex((i) => i + 1)
+              setPicked(null)
+            }}
+          >
+            {index + 1 >= questions.length ? 'Итоги' : 'Дальше →'}
+          </Button>
+        )}
+      </Card>
+
+      {picked === null && <p className="text-center text-sm text-slate-400">{hint}</p>}
+    </div>
+  )
+}

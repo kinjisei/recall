@@ -1,8 +1,9 @@
 // ============================================================================
-// «Колода» — FSRS-повторение свайпами: карточка на весь экран, тап — перевод,
-// свайп вправо «знаю» (good) / влево «не знаю» (again). «Не знаю» возвращает
-// карточку в конец текущей очереди. Плюс перепроверка слов от преподавателя
-// (плашка → печатание слов по переводу) и обучающая подсказка для новичка.
+// «Повторение» — режим FSRS внутри хаба «Слова» (features/words/WordsPage).
+// Карточка на весь экран, тап — перевод, свайп вправо «знаю» (good) / влево
+// «не знаю» (again). «Не знаю» возвращает карточку в конец текущей очереди.
+// Плюс перепроверка слов от преподавателя (плашка → печатание слов по
+// переводу) и обучающая подсказка для новичка.
 // ============================================================================
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Card } from '../../components/Card'
@@ -19,7 +20,7 @@ import type { AppLang, Card as CardType, WordCheck } from '../../types'
 
 const TUTORIAL_KEY = 'recall.deck_tutorial_seen'
 
-export function FlashcardsPage() {
+export function DeckReview({ onBack }: { onBack?: () => void }) {
   const { lang } = useLanguage()
   const [queue, setQueue] = useState<DueCard[]>([])
   const [index, setIndex] = useState(0)
@@ -111,7 +112,7 @@ export function FlashcardsPage() {
   if (activeCheck) {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="text-2xl font-bold">🎴 Колода</h1>
+        <h1 className="text-xl font-bold">🔁 Повторение</h1>
         <WordCheckRunner
           check={activeCheck.check}
           cards={activeCheck.cards}
@@ -128,8 +129,15 @@ export function FlashcardsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">🎴 Колода</h1>
+      <header className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2">
+          {onBack && (
+            <Button variant="ghost" className="px-2 py-1 text-sm" onClick={onBack}>
+              ←
+            </Button>
+          )}
+          <h1 className="truncate text-xl font-bold">🔁 Повторение</h1>
+        </div>
         <div className="flex gap-2">
           <Button
             variant="secondary"

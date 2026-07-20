@@ -5,8 +5,8 @@ import { Button } from '../../components/Button'
 import { logActivity } from '../../lib/activity'
 import { speak } from '../../lib/speech'
 import { spanishSentences } from '../../data/spanish'
-import { Header } from './MatchGame'
-import { normalize, sample, shuffle } from './util'
+import { GameHeader as Header } from './GameShell'
+import { normalize, sample } from './gameUtils'
 
 const ROUNDS = 8
 

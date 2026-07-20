@@ -11,8 +11,8 @@ import { DashboardPage } from './features/dashboard/DashboardPage'
 // Роуты — лениво: каждая страница (и её данные) грузится при переходе, а не
 // в стартовом бандле. Особенно важно для «Ввода» и грамматики — они тянут
 // сотни КБ контента, который не нужен на старте.
-const FlashcardsPage = lazy(() =>
-  import('./features/flashcards/FlashcardsPage').then((m) => ({ default: m.FlashcardsPage })),
+const WordsPage = lazy(() =>
+  import('./features/words/WordsPage').then((m) => ({ default: m.WordsPage })),
 )
 const ReaderPage = lazy(() =>
   import('./features/reader/ReaderPage').then((m) => ({ default: m.ReaderPage })),
@@ -25,9 +25,6 @@ const ConversationPage = lazy(() =>
 )
 const GrammarPage = lazy(() =>
   import('./features/grammar/GrammarPage').then((m) => ({ default: m.GrammarPage })),
-)
-const PracticePage = lazy(() =>
-  import('./features/practice/PracticePage').then((m) => ({ default: m.PracticePage })),
 )
 const PlacementTest = lazy(() =>
   import('./features/onboarding/PlacementTest').then((m) => ({ default: m.PlacementTest })),
@@ -63,7 +60,7 @@ export default function App() {
                 path="/flashcards"
                 element={
                   <Suspense fallback={<PageFallback />}>
-                    <FlashcardsPage />
+                    <WordsPage />
                   </Suspense>
                 }
               />
@@ -99,14 +96,8 @@ export default function App() {
                   </Suspense>
                 }
               />
-              <Route
-                path="/practice"
-                element={
-                  <Suspense fallback={<PageFallback />}>
-                    <PracticePage />
-                  </Suspense>
-                }
-              />
+              {/* «Практика» переехала в хаб «Слова» — старые ссылки не ломаем */}
+              <Route path="/practice" element={<Navigate to="/flashcards" replace />} />
               <Route
                 path="/placement"
                 element={

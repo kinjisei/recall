@@ -20,7 +20,7 @@ interface Tab {
 
 const tabs: Tab[] = [
   { to: '/', label: 'Главная', Icon: IconHome, end: true },
-  { to: '/flashcards', label: 'Колода', Icon: IconDeck, end: false },
+  { to: '/flashcards', label: 'Слова', Icon: IconDeck, end: false },
   { to: '/reader', label: 'Ввод', Icon: IconBook, end: false },
   { to: '/pronunciation', label: 'Речь', Icon: IconMic, end: false },
   { to: '/grammar', label: 'Грам.', Icon: IconGrammar, end: false },

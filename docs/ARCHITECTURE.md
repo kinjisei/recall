@@ -51,7 +51,17 @@ recall-app/
     lib/
       supabase.ts             <- клиент Supabase (Foundation)
       fsrs.ts                 <- обёртка над ts-fsrs (Worker 1)
-      dictionary.ts           <- Free Dictionary API, только EN (Worker 2)
+      dictionary.ts           <- Free Dictionary API, только EN (Worker 2).
+                                 lookup() отдаёт ipa/audio/example и ВСЕ значения
+                                 (definitions: {text, pos}[]) — нужно для «Значений»
+      definitions.ts          <- англ. определения для режима Match: кэш
+                                 (localStorage) -> Free Dictionary -> Gemini(light).
+                                 Выбирает не первое, а самое учебное значение:
+                                 часть речи подсказывает русский перевод карточки
+                                 («храбрый» -> adjective), маскирует само слово
+      wordPool.ts             <- общий пул слов для игр (EN+ES): карточки колоды
+                                 (с ReviewState) + добор из паков; pickWords()
+                                 отдаёт СНАЧАЛА карточки пользователя
       spanishDict.ts          <- перевод исп. слов: локальные паки -> Gemini
       esLevel.ts              <- уровень испанского (placement) в localStorage
       speech.ts               <- Web Speech API: TTS+STT, en-US/es-ES (Worker 3)
@@ -74,16 +84,23 @@ recall-app/
     components/               <- общие UI (Button, Card, Layout c шапкой EN/ES, Nav)
     features/
       dashboard/              <- главный экран, стрик, дневная сессия (Foundation+Worker4)
-      flashcards/             <- блок «Колода» + PacksSheet (паки исп. слов)
+      words/                  <- ХАБ «Слова» (роут /flashcards, EN+ES): WordsPage —
+                                 плитка «Повторение» + мини-игры. MatchMode
+                                 («слово ↔ значение»: EN — англ. определение,
+                                 ES — перевод), QuizModes (Пропуск/Перевод/
+                                 Аудирование на общем QuizRunner), GameShell
+                                 (шапка, заглушки, движок вопросов),
+                                 SentenceBuilder (ES), gameUtils (markWrong → FSRS)
+      flashcards/             <- DeckReview: режим FSRS-повторения внутри хаба
+                                 (свайпы, SwipeCard, PacksSheet, WordCheckRunner)
       reader/                 <- блок «Ввод»: EN тексты; ES тексты+диалоги (SpanishReader)
       pronunciation/          <- блок «Произношение», обе речи
       conversation/           <- AI-диалог + проверка письма, EN/ES промпты
       grammar/                <- «Грамматика» (только ES): GrammarPage (2 раздела) —
                                  «Уроки» (теория + упражнения) и «Глаголы»
                                  (ConjugationSection: справочник времён + тренажёр)
-      practice/               <- «Практика» (только ES): PracticePage-хаб + 4 мини-игры
-                                 (Match, Translation, SentenceBuilder, Listening);
-                                 util.ts — shuffle/sample/пул слов
+      (practice/ удалён)       <- мини-игры переехали в words/; роут /practice
+                                 редиректит на /flashcards
       onboarding/             <- PlacementTest: тест уровня ES (роут /placement)
     components/icons.tsx      <- инлайн-SVG-иконки (Lucide-стиль) для навигации/кнопок
   .env.local                  <- VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
