@@ -15,3 +15,14 @@ export function normalizeAnswer(s: string): string {
     .replace(/[̀-ͯ]/g, '') // диакритические знаки
     .replace(/\s+/g, ' ')
 }
+
+/**
+ * Проверка ответа с поддержкой вариантов через «/»: answer «was/were»
+ * принимает и «was», и «were». Каждый вариант сравнивается нормализованно.
+ * Серверный пересчёт балла заданий (submit_material в schema.sql) обязан
+ * считать так же — при изменении правила менять оба места.
+ */
+export function answerMatches(given: string, expected: string): boolean {
+  const g = normalizeAnswer(given)
+  return expected.split('/').some((variant) => normalizeAnswer(variant) === g)
+}

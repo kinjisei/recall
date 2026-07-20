@@ -1,6 +1,7 @@
 // Общие кусочки интерфейса мини-игр: шапка со «← Назад», загрузка,
 // заглушка «мало слов» и универсальный движок вопросов с 4 вариантами.
 import { useEffect, useState } from 'react'
+import { SpeakerHighIcon, TrayIcon } from '@phosphor-icons/react'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { RoundResult, RoundProgress } from '../../components/RoundResult'
@@ -16,7 +17,7 @@ export function GameHeader({ title, onBack }: { title: string; onBack: () => voi
       <Button variant="ghost" className="px-2 py-1 text-sm" onClick={onBack}>
         ← Назад
       </Button>
-      <h1 className="text-xl font-bold">{title}</h1>
+      <h1 className="text-xl font-medium tracking-tight">{title}</h1>
     </div>
   )
 }
@@ -34,11 +35,11 @@ export function EmptyPool({ title, onBack }: { title: string; onBack: () => void
   return (
     <div className="flex flex-col gap-4">
       <GameHeader title={title} onBack={onBack} />
-      <Card className="text-center">
-        <p className="text-4xl">📭</p>
+      <Card className="items-center text-center">
+        <TrayIcon size={40} className="text-[var(--night-text-25)]" />
         <p className="mt-2 font-semibold">Пока мало слов для игры</p>
         <p className="mt-1 text-sm text-[var(--night-text-40)]">
-          Добавь слова кнопкой «📦 Паки» в повторении или тапая по словам в разделе «Ввод».
+          Добавь слова кнопкой «Паки» в шапке раздела «Слова» или тапая по словам в «Учёбе».
         </p>
       </Card>
     </div>
@@ -129,10 +130,10 @@ export function QuizRunner({
         {q.say ? (
           <button
             onClick={() => speak(q.say!, { lang })}
-            className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-sky-100 text-4xl dark:bg-sky-950/60"
+            className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[var(--night-accent-900)] text-[var(--night-accent-100)]"
             aria-label="Прослушать ещё раз"
           >
-            🔊
+            <SpeakerHighIcon size={32} weight="fill" />
           </button>
         ) : (
           <p className="text-lg leading-relaxed">{q.prompt}</p>

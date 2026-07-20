@@ -1,37 +1,44 @@
-// «Собери предложение»: по русскому переводу собери испанскую фразу из слов.
+// «Собери фразу»: по русскому переводу собери фразу из слов (EN и ES).
+// Материал — встроенные фразы «Речи» (60 английских / 135 испанских).
 import { useMemo, useState } from 'react'
+import { SpeakerHighIcon } from '@phosphor-icons/react'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { RoundResult, RoundProgress } from '../../components/RoundResult'
 import { logActivity } from '../../lib/activity'
 import { speak } from '../../lib/speech'
 import { spanishSentences } from '../../data/spanish'
+import { englishSentences } from '../../data/english'
 import { GameHeader as Header } from './GameShell'
 import { normalize, sample } from './gameUtils'
+import type { AppLang } from '../../types'
 
 const ROUNDS = 8
+const TITLE = 'Собери фразу'
 
 interface Task {
   ru: string
-  es: string
+  target: string
   words: string[]
 }
 
-export function SentenceBuilder({ onBack }: { onBack: () => void }) {
+export function SentenceBuilder({ lang, onBack }: { lang: AppLang; onBack: () => void }) {
   const [seed, setSeed] = useState(0)
 
   const tasks = useMemo<Task[]>(() => {
     // Берём короткие фразы (до 8 слов) — их приятнее собирать.
-    const pool = spanishSentences.filter(
-      (s) => s.es.trim().split(/\s+/).length <= 8,
-    )
+    const source =
+      lang === 'es'
+        ? spanishSentences.map((s) => ({ ru: s.ru, target: s.es }))
+        : englishSentences.map((s) => ({ ru: s.ru, target: s.en }))
+    const pool = source.filter((s) => s.target.trim().split(/\s+/).length <= 8)
     return sample(pool, ROUNDS).map((s) => ({
       ru: s.ru,
-      es: s.es,
-      words: s.es.trim().split(/\s+/),
+      target: s.target,
+      words: s.target.trim().split(/\s+/),
     }))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [seed])
+  }, [seed, lang])
 
   const [index, setIndex] = useState(0)
   const [correct, setCorrect] = useState(0)
@@ -54,7 +61,7 @@ export function SentenceBuilder({ onBack }: { onBack: () => void }) {
   if (done) {
     return (
       <div className="flex flex-col gap-4">
-        <Header title="🧱 Собери предложение" onBack={onBack} />
+        <Header title={TITLE} onBack={onBack} />
         <RoundResult
           correct={correct}
           total={tasks.length}
@@ -72,20 +79,29 @@ export function SentenceBuilder({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <Header title="🧱 Собери предложение" onBack={onBack} />
+      <Header title={TITLE} onBack={onBack} />
       <RoundProgress index={index + 1} total={tasks.length} correct={correct} />
-      <BuildTask key={index} task={task} onResult={onResult} onNext={next} isLast={index + 1 >= tasks.length} />
+      <BuildTask
+        key={`${lang}-${index}`}
+        task={task}
+        lang={lang}
+        onResult={onResult}
+        onNext={next}
+        isLast={index + 1 >= tasks.length}
+      />
     </div>
   )
 }
 
 function BuildTask({
   task,
+  lang,
   onResult,
   onNext,
   isLast,
 }: {
   task: Task
+  lang: AppLang
   onResult: (ok: boolean) => void
   onNext: () => void
   isLast: boolean
@@ -98,7 +114,7 @@ function BuildTask({
   const [checked, setChecked] = useState(false)
 
   const used = new Set(built.map((b) => b.i))
-  const ok = normalize(built.map((b) => b.w).join(' ')) === normalize(task.es)
+  const ok = normalize(built.map((b) => b.w).join(' ')) === normalize(task.target)
 
   const check = () => {
     if (checked || built.length !== task.words.length) return
@@ -108,7 +124,9 @@ function BuildTask({
 
   return (
     <Card className="flex flex-col gap-3">
-      <p className="text-sm text-[var(--night-text-40)]">Переведите на испанский:</p>
+      <p className="text-sm text-[var(--night-text-40)]">
+        Переведи на {lang === 'es' ? 'испанский' : 'английский'}:
+      </p>
       <p className="text-lg font-medium">{task.ru}</p>
 
       <div
@@ -141,7 +159,7 @@ function BuildTask({
             disabled={checked || used.has(item.i)}
             className={`rounded-lg border px-3 py-1.5 text-sm ${
               used.has(item.i)
-                ? 'border-white/[0.08] text-[var(--night-text-25)] dark:border-slate-800 dark:text-[var(--night-text-70)]'
+                ? 'border-white/[0.08] text-[var(--night-text-25)]'
                 : 'border-white/[0.10]'
             }`}
           >
@@ -153,19 +171,19 @@ function BuildTask({
       {checked && (
         <div className="flex items-center gap-2 text-sm">
           {ok ? (
-            <span className="font-semibold text-emerald-600 dark:text-emerald-400">Верно! ✓</span>
+            <span className="font-semibold text-emerald-400">Верно! ✓</span>
           ) : (
             <span>
               <span className="text-red-500">Правильно: </span>
-              <span className="font-semibold text-emerald-600 dark:text-emerald-400">{task.es}</span>
+              <span className="font-semibold text-emerald-400">{task.target}</span>
             </span>
           )}
           <button
-            onClick={() => speak(task.es, { lang: 'es' })}
-            className="rounded-full bg-white/[0.06] px-2 py-0.5 dark:bg-white/[0.08]"
+            onClick={() => speak(task.target, { lang })}
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-white/[0.08] text-[var(--night-text-70)]"
             aria-label="Озвучить"
           >
-            🔊
+            <SpeakerHighIcon size={18} />
           </button>
         </div>
       )}

@@ -176,7 +176,7 @@ export function LoginPage() {
                 setError(null)
                 setInfo(null)
               }}
-              className="font-medium text-[var(--night-accent-text)] hover:underline"
+              className="-m-3 p-3 font-medium text-[var(--night-accent-text)] hover:underline"
             >
               {signup ? 'Войти' : 'Зарегистрироваться'}
             </button>

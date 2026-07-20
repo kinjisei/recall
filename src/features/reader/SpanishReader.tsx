@@ -4,6 +4,13 @@
 // У каждого абзаца/реплики можно открыть русский перевод.
 // ============================================================================
 import { useState, type ReactNode } from 'react'
+import {
+  ChatsCircleIcon,
+  FileTextIcon,
+  SpeakerHighIcon,
+  TranslateIcon,
+  type Icon,
+} from '@phosphor-icons/react'
 import { getSettings, READER_CLASSES } from '../../lib/settings'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
@@ -18,9 +25,9 @@ import type { SpanishDialogue, SpanishReading } from '../../types'
 
 type Kind = 'texts' | 'dialogues'
 
-const kinds: { id: Kind; label: string }[] = [
-  { id: 'texts', label: '📄 Тексты' },
-  { id: 'dialogues', label: '🎭 Диалоги' },
+const kinds: { id: Kind; label: string; Icon: Icon }[] = [
+  { id: 'texts', label: 'Тексты', Icon: FileTextIcon },
+  { id: 'dialogues', label: 'Диалоги', Icon: ChatsCircleIcon },
 ]
 
 export function SpanishReaderPage({ title = 'Учёба', header }: { title?: string; header?: ReactNode }) {
@@ -50,12 +57,13 @@ export function SpanishReaderPage({ title = 'Учёба', header }: { title?: st
           <button
             key={k.id}
             onClick={() => setKind(k.id)}
-            className={`rounded-lg px-4 py-2 text-sm font-semibold ${
+            className={`flex min-h-[44px] items-center gap-1.5 rounded-lg px-4 text-sm font-semibold ${
               kind === k.id
                 ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
                 : 'bg-white/[0.07] text-[var(--night-text-70)]'
             }`}
           >
+            <k.Icon size={16} weight={kind === k.id ? 'fill' : 'regular'} />
             {k.label}
           </button>
         ))}
@@ -66,7 +74,7 @@ export function SpanishReaderPage({ title = 'Учёба', header }: { title?: st
           <button
             key={l}
             onClick={() => setLevel(l)}
-            className={`rounded-lg px-3 py-1.5 text-sm font-semibold ${
+            className={`min-h-[44px] rounded-lg px-4 text-sm font-semibold ${
               level === l
                 ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
                 : 'bg-white/[0.07] text-[var(--night-text-70)]'
@@ -136,7 +144,7 @@ function ReadingView({
           ← Назад
         </Button>
         <div className="min-w-0">
-          <h1 className="truncate text-xl font-bold">{reading.title}</h1>
+          <h1 className="truncate text-xl font-medium tracking-tight">{reading.title}</h1>
           <p className="truncate text-sm text-[var(--night-text-40)]">{reading.titleRu}</p>
         </div>
       </div>
@@ -149,9 +157,10 @@ function ReadingView({
             </p>
             <button
               onClick={() => toggleRu(i)}
-              className="mt-1 text-xs font-semibold text-[var(--night-accent-text)]"
+              className="mt-1 inline-flex min-h-[44px] items-center gap-1 text-xs font-semibold text-[var(--night-accent-text)]"
             >
-              {openRu.has(i) ? 'скрыть перевод' : '🇷🇺 перевод'}
+              <TranslateIcon size={14} />
+              {openRu.has(i) ? 'Скрыть перевод' : 'Перевод'}
             </button>
             {openRu.has(i) && (
               <p className="mt-1 rounded-lg bg-white/[0.06] px-3 py-2 text-sm text-[var(--night-text-70)] dark:bg-[var(--night-surface)] dark:text-[var(--night-text-25)]">
@@ -190,14 +199,15 @@ function DialogueView({
           <Button variant="ghost" className="px-2 py-1 text-sm" onClick={onBack}>
             ← Назад
           </Button>
-          <h1 className="truncate text-xl font-bold">{dialogue.title}</h1>
+          <h1 className="truncate text-xl font-medium tracking-tight">{dialogue.title}</h1>
         </div>
         <Button
           variant="secondary"
-          className="shrink-0 px-3 py-1.5 text-xs"
+          className="min-h-[44px] shrink-0 px-3 py-1.5 text-xs"
           onClick={() => setShowRu((s) => !s)}
         >
-          {showRu ? 'Скрыть перевод' : '🇷🇺 Перевод'}
+          <TranslateIcon size={14} />
+          {showRu ? 'Скрыть перевод' : 'Перевод'}
         </Button>
       </div>
 
@@ -218,10 +228,10 @@ function DialogueView({
               </div>
               <button
                 onClick={() => speak(line.es, { lang: 'es' })}
-                className="shrink-0 rounded-full bg-white/[0.06] px-2 py-0.5 text-base dark:bg-white/[0.08]"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/[0.08] text-[var(--night-text-70)]"
                 aria-label="Озвучить реплику"
               >
-                🔊
+                <SpeakerHighIcon size={18} />
               </button>
             </div>
           </Card>

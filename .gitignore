@@ -12,3 +12,6 @@ npm-debug.log*
 
 # архивы (не исходники — и ломают файловый watcher Vite, если открыты)
 *.zip
+
+# отчёт UX-аудита (генерируется scripts/ux-audit.mjs при каждом прогоне)
+ux-audit-report.md

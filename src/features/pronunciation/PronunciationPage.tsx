@@ -99,7 +99,7 @@ export function PronunciationPage() {
   if (!current) {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="text-2xl font-bold">🎙 Речь</h1>
+        <h1 className="text-2xl font-medium tracking-tight">Речь</h1>
         <p className="text-[var(--night-text-40)]">Загрузка…</p>
       </div>
     )
@@ -107,7 +107,7 @@ export function PronunciationPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-bold">🎙 Речь</h1>
+      <h1 className="text-2xl font-medium tracking-tight">Речь</h1>
 
       {!supported && (
         <Card className="border-orange-300 bg-orange-50 dark:bg-orange-950/30">

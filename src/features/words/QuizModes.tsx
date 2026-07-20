@@ -151,11 +151,11 @@ export function GapMode({ lang, onBack }: { lang: AppLang; onBack: () => void })
   }, [])
   const { questions, empty, restart } = useRound(lang, build)
 
-  if (empty) return <EmptyPool title="✏️ Пропущенное слово" onBack={onBack} />
-  if (!questions) return <GameLoading title="✏️ Пропущенное слово" onBack={onBack} />
+  if (empty) return <EmptyPool title="Пропущенное слово" onBack={onBack} />
+  if (!questions) return <GameLoading title="Пропущенное слово" onBack={onBack} />
   return (
     <QuizRunner
-      title="✏️ Пропущенное слово"
+      title="Пропущенное слово"
       hint="Какое слово подходит по смыслу?"
       questions={questions}
       lang={lang}
@@ -177,11 +177,11 @@ export function TranslateMode({ lang, onBack }: { lang: AppLang; onBack: () => v
   }, [])
   const { questions, empty, restart } = useRound(lang, build)
 
-  if (empty) return <EmptyPool title="⚡ Быстрый перевод" onBack={onBack} />
-  if (!questions) return <GameLoading title="⚡ Быстрый перевод" onBack={onBack} />
+  if (empty) return <EmptyPool title="Быстрый перевод" onBack={onBack} />
+  if (!questions) return <GameLoading title="Быстрый перевод" onBack={onBack} />
   return (
     <QuizRunner
-      title="⚡ Быстрый перевод"
+      title="Быстрый перевод"
       hint="Выбери перевод слова"
       questions={questions}
       lang={lang}
@@ -203,12 +203,12 @@ export function ListeningMode({ lang, onBack }: { lang: AppLang; onBack: () => v
   }, [])
   const { questions, empty, restart } = useRound(lang, build)
 
-  if (empty) return <EmptyPool title="🎧 Аудирование" onBack={onBack} />
-  if (!questions) return <GameLoading title="🎧 Аудирование" onBack={onBack} />
+  if (empty) return <EmptyPool title="Аудирование" onBack={onBack} />
+  if (!questions) return <GameLoading title="Аудирование" onBack={onBack} />
   return (
     <QuizRunner
-      title="🎧 Аудирование"
-      hint="Нажми 🔊 ещё раз, если не расслышал"
+      title="Аудирование"
+      hint="Нажми на динамик ещё раз, если не расслышал"
       questions={questions}
       lang={lang}
       onBack={onBack}

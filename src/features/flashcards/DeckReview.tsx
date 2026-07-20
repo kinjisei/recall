@@ -6,8 +6,10 @@
 // переводу) и обучающая подсказка для новичка.
 // ============================================================================
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { ArrowsClockwiseIcon, SealCheckIcon } from '@phosphor-icons/react'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
+import { celebrate } from '../../components/Confetti'
 import { getDueCards, reviewCard, type DueCard } from '../../lib/fsrs'
 import { logActivity } from '../../lib/activity'
 import { getMyPendingWordChecks } from '../../lib/wordChecks'
@@ -117,10 +119,16 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
     }
   }
 
+  // финал очереди — конфетти (по ТЗ «Nocturne»: seal-check + празднование)
+  const finished = !loading && !current && reviewedCount > 0
+  useEffect(() => {
+    if (finished) celebrate()
+  }, [finished])
+
   if (activeCheck) {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="text-xl font-bold">🔁 Повторение</h1>
+        <h1 className="text-xl font-medium tracking-tight">Повторение</h1>
         <WordCheckRunner
           check={activeCheck.check}
           cards={activeCheck.cards}
@@ -157,8 +165,8 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
         >
           <Card className="flex items-center justify-between border-amber-300 bg-amber-50 transition-transform active:scale-[0.99] dark:border-amber-700 dark:bg-amber-950/30">
             <div>
-              <p className="font-semibold text-amber-900 dark:text-amber-200">
-                🔁 Перепроверка от преподавателя
+              <p className="flex items-center gap-1.5 font-semibold text-amber-900 dark:text-amber-200">
+                <ArrowsClockwiseIcon size={16} /> Перепроверка от преподавателя
               </p>
               <p className="text-sm text-amber-700/80 dark:text-amber-300/80">
                 Напиши по памяти: слов — {cards.length}
@@ -181,9 +189,21 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
         <p className="text-[var(--night-text-40)]">Загрузка…</p>
       ) : current ? (
         <>
-          <p className="text-center text-sm text-[var(--night-text-40)]">
-            Осталось: {queue.length - index}
-          </p>
+          {/* прогресс раунда: полоска + счётчик (очередь растёт от «ещё раз») */}
+          <div>
+            <div className="mb-1 flex justify-between text-xs text-[var(--night-text-40)]">
+              <span>
+                {index} / {queue.length}
+              </span>
+              <span>осталось: {queue.length - index}</span>
+            </div>
+            <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.07]">
+              <div
+                className="h-full rounded-full bg-[var(--night-accent)] transition-all duration-300"
+                style={{ width: `${(index / Math.max(queue.length, 1)) * 100}%` }}
+              />
+            </div>
+          </div>
           <SwipeCard
             key={`${current.card.id}-${index}`}
             card={current.card}
@@ -212,8 +232,12 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
         </>
       ) : (
         <>
-          <Card className="text-center">
-            <p className="text-4xl">🎉</p>
+          <Card className="items-center text-center">
+            <SealCheckIcon
+              size={44}
+              weight="fill"
+              className="animate-pop-in text-[var(--night-accent-text)]"
+            />
             <p className="mt-2 font-semibold">
               {reviewedCount > 0
                 ? `Готово! Повторено карточек: ${reviewedCount}`

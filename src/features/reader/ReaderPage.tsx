@@ -84,7 +84,7 @@ function Reader({ text, onBack }: { text: SampleText; onBack: () => void }) {
         <Button variant="ghost" className="px-2 py-1 text-sm" onClick={onBack}>
           ← Назад
         </Button>
-        <h1 className="text-xl font-bold">{text.title}</h1>
+        <h1 className="text-xl font-medium tracking-tight">{text.title}</h1>
       </div>
 
       <Card>

@@ -150,7 +150,7 @@ function StepLevel({
           onClick={onPlacement}
           className="lift animate-fade-up rounded-2xl border border-[var(--night-accent-45)] bg-[linear-gradient(135deg,rgba(145,132,217,.22),rgba(145,132,217,.10))] px-4 py-4 text-left"
         >
-          <span className="block text-[15px] font-medium">Пройти тест · 48 вопросов</span>
+          <span className="block text-[15px] font-medium">Пройти тест · до 40 вопросов</span>
           <span className="block text-[13px] text-[var(--night-text-40)]">
             ~5 минут, результат сразу
           </span>

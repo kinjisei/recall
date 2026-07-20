@@ -9,20 +9,35 @@
 import { useEffect, useState } from 'react'
 import { GraduationCapIcon, CompassIcon, NotePencilIcon } from '@phosphor-icons/react'
 import { RowCard } from '../../components/RowCard'
+import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
+import { supabase } from '../../lib/supabase'
 import { getEsLevel } from '../../lib/esLevel'
 import { getMyAssignments } from '../../lib/materials'
 import { ReaderPage } from '../reader/ReaderPage'
 
 export function StudyPage() {
+  const { user } = useAuth()
   const { lang } = useLanguage()
   const [esLevel, setEsLevel] = useState<string | null>(null)
+  // null — уровень не задан (показываем тест); undefined — ещё грузится
+  const [enLevel, setEnLevel] = useState<string | null | undefined>(undefined)
   const [assignments, setAssignments] = useState<{ total: number; pending: number } | null>(null)
 
-  // уровень испанского хранится локально; на EN подсказка не нужна
+  // уровень испанского хранится локально, английского — в профиле
   useEffect(() => {
     setEsLevel(getEsLevel())
   }, [lang])
+
+  useEffect(() => {
+    if (lang !== 'en' || !user) return
+    supabase
+      .from('profiles')
+      .select('level')
+      .eq('id', user.id)
+      .single()
+      .then(({ data }) => setEnLevel((data?.level as string | null) ?? null))
+  }, [lang, user])
 
   // задания от преподавателя раньше можно было найти только карточкой
   // на Главной — и только пока они новые
@@ -37,7 +52,7 @@ export function StudyPage() {
       .catch(() => setAssignments(null)) // строка просто не появится — не вводим в заблуждение цифрой
   }, [])
 
-  const showPlacement = lang === 'es' && !esLevel
+  const showPlacement = lang === 'es' ? !esLevel : enLevel === null
 
   return (
     <ReaderPage
@@ -80,7 +95,7 @@ export function StudyPage() {
             <RowCard
               Icon={CompassIcon}
               title="Определи свой уровень"
-              desc="48 вопросов — подстроим диалог и подсказки"
+              desc={`До ${lang === 'es' ? 40 : 50} вопросов — подстроим диалог и подсказки`}
               to="/placement"
               dashed
               className="animate-fade-up"

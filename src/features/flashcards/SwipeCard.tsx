@@ -1,15 +1,37 @@
 // ============================================================================
-// Свайп-карточка колоды: тап — переворот (появляется перевод и пример),
-// свайп вправо — «знаю» (good), влево — «не знаю» (again).
+// Свайп-карточка колоды: тап — 3D-переворот (обратная грань с переводом и
+// примером), свайп вправо — «Помню» (good), влево — «Ещё раз» (again).
 // Анимация на pointer-событиях: карточка тянется за пальцем/мышью,
-// наклоняется, подсвечивает направление и улетает за порогом.
+// наклоняется, показывает штамп направления и улетает за порогом.
 // ============================================================================
 import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import {
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  HandTapIcon,
+  SpeakerHighIcon,
+} from '@phosphor-icons/react'
 import { speak } from '../../lib/speech'
 import type { AppLang, Card as CardType } from '../../types'
 
 const SWIPE_THRESHOLD = 90 // px до «улёта»
+
+function SpeakButton({ text, lang }: { text: string; lang: AppLang }) {
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation()
+        speak(text, { lang })
+      }}
+      onPointerDown={(e) => e.stopPropagation()}
+      className="flex h-11 w-11 items-center justify-center rounded-full bg-white/[0.08] text-[var(--night-text-70)]"
+      aria-label="Озвучить"
+    >
+      <SpeakerHighIcon size={18} />
+    </button>
+  )
+}
 
 export function SwipeCard({
   card,
@@ -63,6 +85,7 @@ export function SwipeCard({
     }
     if (Math.abs(dx) >= SWIPE_THRESHOLD) {
       const dir = dx > 0 ? 'right' : 'left'
+      navigator.vibrate?.(10)
       setFlying(dir)
       // даём карточке улететь, потом сообщаем родителю
       setTimeout(() => onSwipe(dir), 220)
@@ -74,8 +97,11 @@ export function SwipeCard({
   const fly = flying === 'right' ? 480 : flying === 'left' ? -480 : 0
   const x = flying ? fly : dx
   const rotate = x / 18
-  const knowOpacity = Math.min(1, Math.max(0, x) / SWIPE_THRESHOLD)
-  const dontOpacity = Math.min(1, Math.max(0, -x) / SWIPE_THRESHOLD)
+  const rememberOpacity = Math.min(1, Math.max(0, x) / SWIPE_THRESHOLD)
+  const againOpacity = Math.min(1, Math.max(0, -x) / SWIPE_THRESHOLD)
+
+  const faceCls =
+    'absolute inset-0 flex cursor-pointer flex-col items-center justify-center gap-3 rounded-3xl border border-white/[0.08] p-6 text-center [backface-visibility:hidden]'
 
   return (
     <div
@@ -91,70 +117,68 @@ export function SwipeCard({
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
     >
+      {/* переворачивающаяся плоскость: две грани спина к спине */}
       <div
-        className="flex min-h-[55vh] cursor-pointer flex-col items-center justify-center gap-3 rounded-3xl border border-white/[0.08] p-6 text-center transition-[transform,box-shadow] duration-300 [transition-timing-function:cubic-bezier(.22,1,.36,1)] [transform-style:preserve-3d]"
-        style={{
-          // лёгкий 3D-разворот при переводе: карточка «поворачивается» к ответу
-          transform: flipped ? 'rotateY(4deg) rotateX(2deg)' : 'none',
-          background: flipped
-            ? 'linear-gradient(150% 120% at 20% 0%, #262845, #1e2030 60%)'
-            : 'var(--night-surface)',
-          boxShadow: flipped ? '0 18px 40px -24px rgba(145,132,217,.5)' : 'none',
-        }}
+        className="relative min-h-[55vh] transition-transform duration-[650ms] [transform-style:preserve-3d] [transition-timing-function:cubic-bezier(.22,1,.36,1)]"
+        style={{ transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }}
       >
-        {/* индикаторы направления */}
-        <span
-          className="absolute left-4 top-4 rounded-xl border-2 border-emerald-500 px-3 py-1 text-lg font-bold text-emerald-500"
-          style={{ opacity: knowOpacity, transform: 'rotate(-12deg)' }}
-        >
-          ЗНАЮ ✓
-        </span>
-        <span
-          className="absolute right-4 top-4 rounded-xl border-2 border-red-500 px-3 py-1 text-lg font-bold text-red-500"
-          style={{ opacity: dontOpacity, transform: 'rotate(12deg)' }}
-        >
-          ✗ НЕ ЗНАЮ
-        </span>
-
-        <div className="flex items-center gap-2">
-          <p className="text-3xl font-bold">{card.front}</p>
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              speak(card.front, { lang })
-            }}
-            onPointerDown={(e) => e.stopPropagation()}
-            className="rounded-full bg-white/[0.06] px-2.5 py-1 text-lg dark:bg-white/[0.08]"
-            aria-label="Озвучить"
-          >
-            🔊
-          </button>
-        </div>
-        {card.ipa && <p className="text-[var(--night-text-40)]">/{card.ipa}/</p>}
-
-        {flipped ? (
-          <div className="mt-3 w-full border-t border-white/[0.08] pt-4 dark:border-white/[0.08]">
-            {card.back && (
-              <p className="text-xl text-[var(--night-text-70)]">{card.back}</p>
-            )}
-            {card.example && (
-              <p className="mt-3 text-sm italic text-[var(--night-text-40)]">«{card.example}»</p>
-            )}
-            <p className="mt-5 text-xs text-[var(--night-text-40)]">
-              ⇦ не знаю&nbsp;&nbsp;·&nbsp;&nbsp;знаю ⇨
-            </p>
+        {/* лицевая грань — слово */}
+        <div className={faceCls} style={{ background: 'var(--night-surface)' }}>
+          <div className="flex items-center gap-2">
+            <p className="text-3xl font-bold">{card.front}</p>
+            <SpeakButton text={card.front} lang={lang} />
           </div>
-        ) : (
-          <p className="mt-6 text-sm text-[var(--night-text-40)]">тапни — увидишь перевод</p>
-        )}
+          {card.ipa && <p className="text-[var(--night-text-40)]">/{card.ipa}/</p>}
+          <p className="mt-6 flex items-center gap-1.5 text-sm text-[var(--night-text-40)]">
+            <HandTapIcon size={16} /> тапни — увидишь перевод
+          </p>
+        </div>
+
+        {/* обратная грань — перевод и пример (заранее повёрнута на 180°) */}
+        <div
+          className={faceCls}
+          style={{
+            transform: 'rotateY(180deg)',
+            background: 'linear-gradient(150% 120% at 20% 0%, #262845, #1e2030 60%)',
+            boxShadow: '0 18px 40px -24px rgba(145,132,217,.5)',
+          }}
+        >
+          <div className="flex items-center gap-2">
+            <p className="text-2xl font-bold">{card.front}</p>
+            <SpeakButton text={card.front} lang={lang} />
+          </div>
+          {card.back && (
+            <p className="text-xl text-[var(--night-text-70)]">{card.back}</p>
+          )}
+          {card.example && (
+            <p className="mt-2 text-sm italic text-[var(--night-text-40)]">«{card.example}»</p>
+          )}
+          <p className="mt-5 flex items-center gap-2 text-xs text-[var(--night-text-40)]">
+            <ArrowLeftIcon size={14} /> ещё раз&nbsp;·&nbsp;помню <ArrowRightIcon size={14} />
+          </p>
+        </div>
       </div>
+
+      {/* штампы направления — поверх, не участвуют во вращении */}
+      <span
+        className="absolute left-4 top-4 z-10 rounded-xl border-2 border-[var(--night-accent)] px-3 py-1 text-lg font-bold text-[var(--night-accent-text)]"
+        style={{ opacity: rememberOpacity, transform: 'rotate(-12deg)' }}
+      >
+        Помню
+      </span>
+      <span
+        className="absolute right-4 top-4 z-10 rounded-xl border-2 border-white/40 px-3 py-1 text-lg font-bold text-white/70"
+        style={{ opacity: againOpacity, transform: 'rotate(12deg)' }}
+      >
+        Ещё раз
+      </span>
     </div>
   )
 }
 
 /**
  * Обучающая подсказка для нового пользователя: полупрозрачный оверлей
- * со стрелками и покачивающейся рукой. Показывается один раз.
+ * со стрелками и «тапающей» рукой. Показывается один раз.
  */
 export function SwipeTutorial({ onDismiss }: { onDismiss: () => void }) {
   // Портал в body — fixed-оверлей не должен зависеть от предков внутри <main>.
@@ -163,28 +187,28 @@ export function SwipeTutorial({ onDismiss }: { onDismiss: () => void }) {
       className="fixed inset-0 z-40 flex flex-col items-center justify-center gap-6 bg-black/60 px-8 backdrop-blur-[2px]"
       onClick={onDismiss}
     >
-      <p className="animate-pulse text-6xl">👆</p>
+      <HandTapIcon size={56} className="animate-pulse text-white" />
       <p className="text-center text-lg font-semibold text-white">
         Тапни по карточке — увидишь перевод
       </p>
       <div className="flex w-full max-w-xs items-center justify-between text-white/90">
         <div className="flex flex-col items-center gap-1">
-          <span className="animate-pulse text-4xl">⇦</span>
-          <span className="text-sm">свайп влево
+          <ArrowLeftIcon size={36} className="animate-pulse" />
+          <span className="text-center text-sm">свайп влево
             <br />
-            <span className="font-bold text-red-300">не знаю</span>
+            <span className="font-bold text-white/80">ещё раз</span>
           </span>
         </div>
-        <div className="flex flex-col items-center gap-1 text-right">
-          <span className="animate-pulse text-4xl">⇨</span>
-          <span className="text-sm">свайп вправо
+        <div className="flex flex-col items-center gap-1">
+          <ArrowRightIcon size={36} className="animate-pulse" />
+          <span className="text-center text-sm">свайп вправо
             <br />
-            <span className="font-bold text-emerald-300">знаю</span>
+            <span className="font-bold text-[var(--night-accent-text)]">помню</span>
           </span>
         </div>
       </div>
       <p className="mt-2 text-sm text-white/60">
-        «Не знаю» — слово скоро вернётся. Нажми, чтобы начать.
+        «Ещё раз» — слово скоро вернётся. Нажми, чтобы начать.
       </p>
     </div>,
     document.body,

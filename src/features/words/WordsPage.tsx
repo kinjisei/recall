@@ -21,7 +21,11 @@ import {
   HeadphonesIcon,
   CardsThreeIcon,
   BookOpenTextIcon,
+  KeyboardIcon,
   ListBulletsIcon,
+  PackageIcon,
+  PlusIcon,
+  TimerIcon,
   type Icon,
 } from '@phosphor-icons/react'
 import { Button } from '../../components/Button'
@@ -45,6 +49,10 @@ const ListeningMode = lazy(() =>
 const SentenceBuilder = lazy(() =>
   import('./SentenceBuilder').then((m) => ({ default: m.SentenceBuilder })),
 )
+const SprintMode = lazy(() => import('./SprintMode').then((m) => ({ default: m.SprintMode })))
+const DictationMode = lazy(() =>
+  import('./DictationMode').then((m) => ({ default: m.DictationMode })),
+)
 const MyWords = lazy(() => import('./MyWords').then((m) => ({ default: m.MyWords })))
 
 type Mode =
@@ -56,13 +64,14 @@ type Mode =
   | 'translate'
   | 'listening'
   | 'sentence'
+  | 'sprint'
+  | 'dictation'
 
 interface ModeDef {
   id: Exclude<Mode, 'hub' | 'review'>
   Icon: Icon
   title: string
   desc: string
-  esOnly?: boolean
 }
 
 const modes: ModeDef[] = [
@@ -71,7 +80,9 @@ const modes: ModeDef[] = [
   { id: 'gap', Icon: BookOpenTextIcon, title: 'Пропуск', desc: 'Слово в предложении' },
   { id: 'translate', Icon: TextAaIcon, title: 'Перевод', desc: 'На скорость' },
   { id: 'listening', Icon: HeadphonesIcon, title: 'Аудирование', desc: 'Услышь и выбери' },
-  { id: 'sentence', Icon: PuzzlePieceIcon, title: 'Собери фразу', desc: 'Фраза из слов', esOnly: true },
+  { id: 'sprint', Icon: TimerIcon, title: 'Спринт', desc: 'Верно или нет · 60 сек' },
+  { id: 'dictation', Icon: KeyboardIcon, title: 'Диктант', desc: 'Услышь и напиши' },
+  { id: 'sentence', Icon: PuzzlePieceIcon, title: 'Собери фразу', desc: 'Фраза из слов' },
 ]
 
 export function WordsPage() {
@@ -121,12 +132,14 @@ export function WordsPage() {
         {mode === 'gap' && <GapMode lang={lang} onBack={back} />}
         {mode === 'translate' && <TranslateMode lang={lang} onBack={back} />}
         {mode === 'listening' && <ListeningMode lang={lang} onBack={back} />}
-        {mode === 'sentence' && <SentenceBuilder onBack={back} />}
+        {mode === 'sprint' && <SprintMode lang={lang} onBack={back} />}
+        {mode === 'dictation' && <DictationMode lang={lang} onBack={back} />}
+        {mode === 'sentence' && <SentenceBuilder lang={lang} onBack={back} />}
       </Suspense>
     )
   }
 
-  const visible = modes.filter((m) => !m.esOnly || lang === 'es')
+  const visible = modes
 
   return (
     <div className="flex flex-col gap-4">
@@ -142,7 +155,13 @@ export function WordsPage() {
               setSheet((s) => (s === 'packs' ? null : 'packs'))
             }}
           >
-            {sheet === 'packs' ? 'Закрыть' : '📦 Паки'}
+            {sheet === 'packs' ? (
+              'Закрыть'
+            ) : (
+              <>
+                <PackageIcon size={16} /> Паки
+              </>
+            )}
           </Button>
           <Button
             variant="secondary"
@@ -151,7 +170,13 @@ export function WordsPage() {
               setSheet((s) => (s === 'add' ? null : 'add'))
             }}
           >
-            {sheet === 'add' ? 'Закрыть' : '+ Слово'}
+            {sheet === 'add' ? (
+              'Закрыть'
+            ) : (
+              <>
+                <PlusIcon size={16} /> Слово
+              </>
+            )}
           </Button>
         </div>
       </header>

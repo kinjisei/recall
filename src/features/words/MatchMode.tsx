@@ -39,9 +39,9 @@ export function MatchMode({ lang, onBack }: { lang: AppLang; onBack: () => void 
     }
   }, [lang])
 
-  if (error) return <EmptyPool title="🧩 Значения" onBack={onBack} />
-  if (!pool) return <GameLoading title="🧩 Значения" onBack={onBack} />
-  if (pool.items.length < PAIRS) return <EmptyPool title="🧩 Значения" onBack={onBack} />
+  if (error) return <EmptyPool title="Значения" onBack={onBack} />
+  if (!pool) return <GameLoading title="Значения" onBack={onBack} />
+  if (pool.items.length < PAIRS) return <EmptyPool title="Значения" onBack={onBack} />
   return <MatchRound pool={pool} lang={lang} onBack={onBack} />
 }
 
@@ -113,7 +113,7 @@ function MatchRound({
     if (complete) void logActivity('practice')
   }, [complete])
 
-  if (!pairs) return <GameLoading title="🧩 Значения" onBack={onBack} />
+  if (!pairs) return <GameLoading title="Значения" onBack={onBack} />
 
   const pickRight = (id: number) => {
     if (selected === null || matched.has(id)) return
@@ -133,7 +133,7 @@ function MatchRound({
   if (complete) {
     return (
       <div className="flex flex-col gap-4">
-        <GameHeader title="🧩 Значения" onBack={onBack} />
+        <GameHeader title="Значения" onBack={onBack} />
         <Card className="text-center">
           <p className="text-4xl">{mistakes === 0 ? '🎉' : '👍'}</p>
           <p className="mt-2 font-semibold">
@@ -156,7 +156,7 @@ function MatchRound({
 
   return (
     <div className="flex flex-col gap-4">
-      <GameHeader title="🧩 Значения" onBack={onBack} />
+      <GameHeader title="Значения" onBack={onBack} />
       <p className="text-sm text-[var(--night-text-40)]">
         {lang === 'en'
           ? 'Нажми слово слева, затем его значение справа — по-английски.'

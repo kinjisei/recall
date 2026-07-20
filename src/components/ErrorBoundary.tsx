@@ -51,7 +51,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
               sessionStorage.removeItem(RELOAD_FLAG)
               window.location.reload()
             }}
-            className="rounded-xl bg-[var(--night-accent)] px-5 py-2.5 font-semibold text-white hover:bg-sky-500"
+            className="rounded-xl bg-[var(--night-accent)] px-5 py-2.5 font-semibold text-white hover:brightness-110"
           >
             Обновить
           </button>

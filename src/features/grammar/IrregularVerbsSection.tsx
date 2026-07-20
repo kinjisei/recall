@@ -11,6 +11,7 @@ import { Button } from '../../components/Button'
 import { RoundResult } from '../../components/RoundResult'
 import { speak } from '../../lib/speech'
 import { logActivity } from '../../lib/activity'
+import { answerMatches } from '../../lib/text'
 import type {
   IrregularGroup,
   IrregularVerb,
@@ -167,10 +168,7 @@ function Reference({ groups }: { groups: IrregularGroup[] }) {
 // ---------------------------------------------------------------------------
 
 /** Ответ верен, если совпал с любым из вариантов через «/» (was/were). */
-function matches(given: string, expected: string): boolean {
-  const norm = given.trim().toLowerCase()
-  return expected.split('/').some((alt) => alt.trim().toLowerCase() === norm)
-}
+const matches = answerMatches
 
 function sampleRound(all: IrregularVerb[]): IrregularVerb[] {
   const pool = [...all]

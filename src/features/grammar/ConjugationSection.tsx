@@ -369,7 +369,7 @@ function TrainerRunner({ pool }: { pool: EndingsExercise[] }) {
           {current.options.map((opt, i) => {
             const isAnswer = i === current.answer
             const isPicked = i === picked
-            let cls = 'border-white/[0.10] hover:border-sky-400'
+            let cls = 'border-white/[0.10] hover:border-[var(--night-accent-45)]'
             if (picked !== null) {
               if (isAnswer) cls = 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40'
               else if (isPicked) cls = 'border-red-500 bg-red-50 dark:bg-red-950/40'

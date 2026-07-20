@@ -7,7 +7,7 @@
 import { useMemo, useState } from 'react'
 import { Card } from './Card'
 import { Button } from './Button'
-import { normalizeAnswer } from '../lib/text'
+import { answerMatches, normalizeAnswer } from '../lib/text'
 import type { GrammarExercise } from '../types'
 
 export interface ExerciseCallbacks {
@@ -56,7 +56,7 @@ export function McqExercise({
         {exercise.options.map((opt, i) => {
           const isAnswer = i === exercise.answer
           const isPicked = i === picked
-          let cls = 'border-white/[0.10] hover:border-sky-400'
+          let cls = 'border-white/[0.10] hover:border-[var(--night-accent-45)]'
           if (picked !== null) {
             if (isAnswer) cls = 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40'
             else if (isPicked) cls = 'border-red-500 bg-red-50 dark:bg-red-950/40'
@@ -90,7 +90,8 @@ export function FillExercise({
   const [checked, setChecked] = useState(false)
   const [showHint, setShowHint] = useState(false)
 
-  const ok = normalizeAnswer(value) === normalizeAnswer(exercise.answer)
+  // варианты через «/» («was/were») принимаются любым из значений
+  const ok = answerMatches(value, exercise.answer)
 
   const check = () => {
     if (checked || !value.trim()) return
@@ -103,7 +104,7 @@ export function FillExercise({
     <Card className="flex flex-col gap-3">
       <p className="text-lg font-medium">{exercise.prompt}</p>
       <input
-        className={`w-full rounded-lg border bg-[var(--night-surface)] px-3 py-2 outline-none dark:bg-slate-900 ${
+        className={`w-full rounded-lg border bg-[var(--night-input)] px-3 py-2 outline-none ${
           checked
             ? ok
               ? 'border-emerald-500'
@@ -178,9 +179,11 @@ export function OrderExercise({
   const [checked, setChecked] = useState(false)
 
   const usedIdx = new Set(built.map((b) => b.i))
+  // сравниваем нормализованно: расхождение регистра/диакритики в данных
+  // не должно превращать верный порядок в «неверно»
   const ok =
     built.length === exercise.answer.length &&
-    built.every((b, i) => b.w === exercise.answer[i])
+    built.every((b, i) => normalizeAnswer(b.w) === normalizeAnswer(exercise.answer[i]))
 
   const check = () => {
     if (checked || built.length !== exercise.words.length) return

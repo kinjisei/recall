@@ -704,6 +704,10 @@
       '\s+', ' ', 'g')
   $fn$;
 
+  -- 2026-07-21: правила сверки согласованы с клиентом (lib/text.ts answerMatches):
+  --   fill — ответ с вариантами через «/» («was/were») принимает любой вариант;
+  --   order — given (собранное предложение) сверяется с join(answer, ' ')
+  --           (раньше order вообще не приносил балл — correct_text был null).
   create or replace function public.submit_material(
     p_id uuid, p_answers jsonb, p_auto_score int, p_auto_total int
   ) returns void language plpgsql security definer set search_path = public as $fn$
@@ -717,6 +721,7 @@
     given_text text;
     correct_text text;
     ex_type text;
+    is_correct boolean;
   begin
     -- упражнения берём из материала; клиентские p_auto_score/p_auto_total игнорируем
     select mat.exercises into m_exercises
@@ -735,15 +740,26 @@
       where (value->>'index')::int = idx
       limit 1;
       given_text := ans->>'given';
-      if ex_type = 'mcq' then
-        correct_text := ex->'options'->>((ex->>'answer')::int);
-      elsif ex_type = 'fill' then
-        correct_text := ex->>'answer';
-      else
-        correct_text := null;
+      is_correct := false;
+      if given_text is not null then
+        if ex_type = 'mcq' then
+          correct_text := ex->'options'->>((ex->>'answer')::int);
+          is_correct := correct_text is not null
+            and public.norm_answer(given_text) = public.norm_answer(correct_text);
+        elsif ex_type = 'fill' then
+          -- варианты через «/»: верен любой из них
+          select bool_or(public.norm_answer(v) = public.norm_answer(given_text))
+            into is_correct
+            from unnest(string_to_array(ex->>'answer', '/')) as v;
+          is_correct := coalesce(is_correct, false);
+        elsif ex_type = 'order' then
+          select string_agg(value#>>'{}', ' ' order by ordinality) into correct_text
+            from jsonb_array_elements(ex->'answer') with ordinality;
+          is_correct := correct_text is not null
+            and public.norm_answer(given_text) = public.norm_answer(correct_text);
+        end if;
       end if;
-      if given_text is not null and correct_text is not null
-        and public.norm_answer(given_text) = public.norm_answer(correct_text) then
+      if is_correct then
         score := score + 1;
       end if;
       idx := idx + 1;

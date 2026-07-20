@@ -1,4 +1,10 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import {
+  ChatCircleIcon,
+  PaperPlaneRightIcon,
+  PencilSimpleLineIcon,
+  type Icon,
+} from '@phosphor-icons/react'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { supabase } from '../../lib/supabase'
@@ -11,9 +17,9 @@ import type { AppLang, CEFRLevel, ChatTurn } from '../../types'
 
 type Mode = 'chat' | 'writing'
 
-const modes: { id: Mode; label: string }[] = [
-  { id: 'chat', label: '💬 Чат' },
-  { id: 'writing', label: '✍️ Письмо' },
+const modes: { id: Mode; label: string; Icon: Icon }[] = [
+  { id: 'chat', label: 'Чат', Icon: ChatCircleIcon },
+  { id: 'writing', label: 'Письмо', Icon: PencilSimpleLineIcon },
 ]
 
 export function ConversationPage() {
@@ -41,7 +47,7 @@ export function ConversationPage() {
   return (
     <div className="flex flex-col gap-4">
       <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">💬 Диалог</h1>
+        <h1 className="text-2xl font-medium tracking-tight">Диалог</h1>
         <span className="text-sm text-[var(--night-text-40)]">
           {lang === 'es' ? `испанский · ${level}` : `уровень ${level}`}
         </span>
@@ -52,12 +58,13 @@ export function ConversationPage() {
           <button
             key={m.id}
             onClick={() => setMode(m.id)}
-            className={`min-h-[44px] rounded-lg px-4 text-sm font-semibold ${
+            className={`flex min-h-[44px] items-center gap-1.5 rounded-lg px-4 text-sm font-semibold ${
               mode === m.id
                 ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
                 : 'bg-white/[0.07] text-[var(--night-text-70)]'
             }`}
           >
+            <m.Icon size={16} weight={mode === m.id ? 'fill' : 'regular'} />
             {m.label}
           </button>
         ))}
@@ -113,6 +120,33 @@ function chatSystemPrompt(level: CEFRLevel, lang: AppLang): string {
     '- If the learner asks about grammar or a word, explain in Russian with 2-3 examples before continuing.',
     '- Plain text only, no markdown formatting. Never skip part 1.',
   ].join('\n')
+}
+
+/**
+ * Текст ответа AI с подсветкой служебных строк (по ТЗ «Nocturne» исправления
+ * выделяются акцентом): «✏️ …» — исправление ошибки, «✅ …» — ошибок нет,
+ * «📚 …» — предложение потренировать тему.
+ */
+function AssistantText({ content }: { content: string }) {
+  return (
+    <>
+      {content.split('\n').map((line, i) => {
+        const cls = line.startsWith('✏️')
+          ? 'text-[var(--night-accent-text)]'
+          : line.startsWith('✅')
+            ? 'text-emerald-400'
+            : line.startsWith('📚')
+              ? 'font-medium text-[var(--night-accent-text)]'
+              : undefined
+        return (
+          <span key={i} className={cls}>
+            {line}
+            {'\n'}
+          </span>
+        )
+      })}
+    </>
+  )
 }
 
 function ChatSection({ level, lang }: { level: CEFRLevel; lang: AppLang }) {
@@ -216,7 +250,7 @@ function ChatSection({ level, lang }: { level: CEFRLevel; lang: AppLang }) {
                 : 'self-start rounded-bl-md border border-white/[0.08] bg-[var(--night-surface)] text-[var(--night-text)]'
             }`}
           >
-            {m.content}
+            {m.role === 'assistant' ? <AssistantText content={m.content} /> : m.content}
           </div>
         ))}
         {busy && (
@@ -232,14 +266,14 @@ function ChatSection({ level, lang }: { level: CEFRLevel; lang: AppLang }) {
       <form onSubmit={send} className="flex gap-2">
         <input
           aria-label={lang === 'es' ? 'Сообщение по-испански' : 'Сообщение по-английски'}
-          className="min-w-0 flex-1 rounded-xl border border-white/[0.10] bg-[var(--night-surface)] px-4 py-3 text-base outline-none focus:border-[var(--night-accent-45)] dark:border-white/[0.10] dark:bg-slate-900"
+          className="min-w-0 flex-1 rounded-xl border border-white/[0.10] bg-[var(--night-input)] px-4 py-3 text-base outline-none focus:border-[var(--night-accent-45)]"
           placeholder={lang === 'es' ? 'Escribe en español…' : 'Write in English…'}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           disabled={busy}
         />
-        <Button type="submit" disabled={busy || !input.trim()}>
-          ➤
+        <Button type="submit" aria-label="Отправить" disabled={busy || !input.trim()}>
+          <PaperPlaneRightIcon size={20} weight="fill" />
         </Button>
       </form>
 
@@ -329,7 +363,7 @@ function WritingSection({ level, lang }: { level: CEFRLevel; lang: AppLang }) {
       </Card>
 
       <textarea
-        className="min-h-[140px] w-full rounded-xl border border-white/[0.10] bg-[var(--night-surface)] px-4 py-3 text-base leading-relaxed outline-none focus:border-[var(--night-accent-45)] dark:border-white/[0.10] dark:bg-slate-900"
+        className="min-h-[140px] w-full rounded-xl border border-white/[0.10] bg-[var(--night-input)] px-4 py-3 text-base leading-relaxed outline-none focus:border-[var(--night-accent-45)]"
         placeholder={
           lang === 'es'
             ? 'Hola. Me gusta mucho la música española…'
