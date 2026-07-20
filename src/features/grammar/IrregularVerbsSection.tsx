@@ -186,7 +186,12 @@ interface Result {
 }
 
 function Trainer({ groups }: { groups: IrregularGroup[] }) {
-  const all = useMemo(() => groups.flatMap((g) => g.verbs), [groups])
+  // тренировать все глаголы или только одну группу (при 147 глаголах полезно)
+  const [scope, setScope] = useState<string>('all')
+  const all = useMemo(() => {
+    const src = scope === 'all' ? groups : groups.filter((g) => g.title === scope)
+    return src.flatMap((g) => g.verbs)
+  }, [groups, scope])
   const [round, setRound] = useState<IrregularVerb[]>(() => sampleRound(all))
   const [index, setIndex] = useState(0)
   const [past, setPast] = useState('')
@@ -217,8 +222,8 @@ function Trainer({ groups }: { groups: IrregularGroup[] }) {
     setChecked(false)
   }
 
-  const restart = () => {
-    setRound(sampleRound(all))
+  const restart = (pool: IrregularVerb[] = all) => {
+    setRound(sampleRound(pool))
     setIndex(0)
     setPast('')
     setPart('')
@@ -226,12 +231,42 @@ function Trainer({ groups }: { groups: IrregularGroup[] }) {
     setResults([])
   }
 
+  /** Смена набора начинает новый раунд из выбранной группы. */
+  const pickScope = (next: string) => {
+    if (next === scope) return
+    setScope(next)
+    const src = next === 'all' ? groups : groups.filter((g) => g.title === next)
+    restart(src.flatMap((g) => g.verbs))
+  }
+
+  const scopeChips = (
+    <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
+      {[['all', 'Все'] as [string, string]].concat(
+        groups.map((g) => [g.title, g.title.split(':')[0]] as [string, string]),
+      ).map(([id, label]) => (
+        <button
+          key={id}
+          onClick={() => pickScope(id)}
+          className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
+            scope === id
+              ? 'bg-sky-600 text-white'
+              : 'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
+          }`}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  )
+
   if (done) {
     const correct = results.filter((r) => r.ok).length
     const percent = Math.round((correct / round.length) * 100)
     const wrong = results.filter((r) => !r.ok)
     return (
-      <Card className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3">
+        {scopeChips}
+        <Card className="flex flex-col gap-3">
         <div className="text-center">
           <p className="text-4xl">{percent >= 80 ? '🎉' : percent >= 50 ? '👍' : '💪'}</p>
           <p className="mt-2 text-lg font-bold">
@@ -250,8 +285,9 @@ function Trainer({ groups }: { groups: IrregularGroup[] }) {
             ))}
           </div>
         )}
-        <Button onClick={restart}>Ещё раунд</Button>
-      </Card>
+        <Button onClick={() => restart()}>Ещё раунд</Button>
+        </Card>
+      </div>
     )
   }
 
@@ -268,6 +304,7 @@ function Trainer({ groups }: { groups: IrregularGroup[] }) {
 
   return (
     <div className="flex flex-col gap-3">
+      {scopeChips}
       <div className="flex items-center justify-between text-sm text-slate-400">
         <span>
           Глагол {index + 1} / {round.length}
