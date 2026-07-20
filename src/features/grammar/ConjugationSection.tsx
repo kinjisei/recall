@@ -5,6 +5,7 @@
 // Данные грузятся лениво (../../data/spanish/conjugation).
 // ============================================================================
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { BackButton } from '../../components/BackButton'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { RoundResult, RoundProgress } from '../../components/RoundResult'
@@ -162,11 +163,9 @@ function TenseDetail({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" className="px-2 py-1 text-sm" onClick={onBack}>
-          ← Назад
-        </Button>
+        <BackButton onClick={onBack} />
         <div className="min-w-0">
-          <h2 className="truncate text-lg font-bold">{tense.nameRu}</h2>
+          <h2 className="truncate text-lg font-medium tracking-tight">{tense.nameRu}</h2>
           <p className="truncate text-sm text-[var(--night-text-40)]">{tense.name}</p>
         </div>
       </div>

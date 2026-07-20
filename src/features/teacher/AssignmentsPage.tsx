@@ -4,7 +4,8 @@
 // submitted). Проверка преподавателем — следующая фаза фичи.
 // ============================================================================
 import { useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
+import { BackHeader } from '../../components/BackButton'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { RoundResult } from '../../components/RoundResult'
@@ -27,6 +28,7 @@ import type {
 type Row = MaterialAssignment & { material: Material }
 
 export function AssignmentsPage() {
+  const navigate = useNavigate()
   const [active, setActive] = useState<Row | null>(null)
   // повторное прохождение проверенной работы — тренировка без пересдачи
   const [retry, setRetry] = useState(false)
@@ -68,12 +70,7 @@ export function AssignmentsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-3">
-        <Link to="/" className="text-sm font-medium text-[var(--night-accent-text)] hover:underline dark:text-[var(--night-accent-text)]">
-          ← Главная
-        </Link>
-        <h1 className="text-2xl font-bold">📝 Задания</h1>
-      </div>
+      <BackHeader onBack={() => navigate('/study')} title="Задания" label="К учёбе" />
 
       {loading ? (
         <p className="text-[var(--night-text-40)]">Загрузка…</p>
@@ -127,17 +124,23 @@ function AssignmentCard({ row, onOpen }: { row: Row; onOpen: () => void }) {
             )}
           </p>
         </div>
-        <span className="shrink-0 text-sm">
+        <span className="shrink-0 text-right text-sm">
           {row.status === 'assigned' ? (
             <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">
               новое
             </span>
           ) : row.status === 'submitted' ? (
-            <span className="text-[var(--night-text-40)]">⏳ на проверке</span>
+            <>
+              <span className="block text-[var(--night-text-40)]">на проверке</span>
+              <span className="block text-xs text-[var(--night-accent-text)]">тренироваться →</span>
+            </>
           ) : (
-            <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-              ✓ {(row.teacher_review ?? []).filter((r) => r.ok).length}/{row.auto_total}
-            </span>
+            <>
+              <span className="block font-semibold text-emerald-400">
+                ✓ {(row.teacher_review ?? []).filter((r) => r.ok).length}/{row.auto_total}
+              </span>
+              <span className="block text-xs text-[var(--night-accent-text)]">тренироваться →</span>
+            </>
           )}
         </span>
       </Card>

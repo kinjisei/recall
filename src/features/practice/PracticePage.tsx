@@ -1,12 +1,12 @@
 // ============================================================================
 // «Практика» — хаб всех тренировок (вкладка нижней навигации, роут /practice).
-// Развитие прежнего хаба «Слова»: сюда же влиты грамматические тренажёры и
-// «Речь», чтобы новичок видел все способы практиковаться в одном месте.
+// ТОЛЬКО игры и повторение — добавление слов и паки живут в «Учёба → Слова».
 //
 //   Повторение      — FSRS-колода свайпами (features/flashcards/DeckReview)
-//   СЛОВА           — Мои слова · Значения · Пропуск · Перевод · Аудирование ·
+//   СЛОВА           — Значения · Пропуск · Перевод · Аудирование ·
 //                     Спринт · Диктант · Собери фразу (features/words/*)
-//   ГРАММАТИКА      — Микс упражнений (случайные из уроков под уровень) ·
+//   ГРАММАТИКА      — Выбери форму · Впиши слово · Собери предложение
+//                     (GrammarMixMode по типам заданий, всё — под уровень) ·
 //                     Мои ошибки (банк из lib/mistakes) · Глаголы
 //   РЕЧЬ            — шэдоуинг (features/pronunciation)
 // ============================================================================
@@ -16,26 +16,21 @@ import {
   ArrowsClockwiseIcon,
   BookOpenTextIcon,
   CardsThreeIcon,
-  GraduationCapIcon,
+  CheckSquareIcon,
   HeadphonesIcon,
   KeyboardIcon,
   LinkSimpleIcon,
-  ListBulletsIcon,
   MicrophoneIcon,
-  PackageIcon,
-  PlusIcon,
+  PencilSimpleLineIcon,
   PuzzlePieceIcon,
+  RowsIcon,
   ShuffleIcon,
   TextAaIcon,
   TimerIcon,
   type Icon,
 } from '@phosphor-icons/react'
-import { Button } from '../../components/Button'
 import { Card } from '../../components/Card'
-import { PacksSheet } from '../flashcards/PacksSheet'
-import { AddCardForm } from '../words/AddCardForm'
 import { useLanguage } from '../../context/LanguageContext'
-import { countMyWords } from '../../lib/cards'
 import { getDueCards } from '../../lib/fsrs'
 import { currentGuidedStep } from '../../lib/guided'
 import { getMistakes } from '../../lib/mistakes'
@@ -56,7 +51,6 @@ const SprintMode = lazy(() => import('../words/SprintMode').then((m) => ({ defau
 const DictationMode = lazy(() =>
   import('../words/DictationMode').then((m) => ({ default: m.DictationMode })),
 )
-const MyWords = lazy(() => import('../words/MyWords').then((m) => ({ default: m.MyWords })))
 const GrammarMixMode = lazy(() =>
   import('./GrammarMixMode').then((m) => ({ default: m.GrammarMixMode })),
 )
@@ -64,7 +58,6 @@ const GrammarMixMode = lazy(() =>
 type Mode =
   | 'hub'
   | 'review'
-  | 'mywords'
   | 'match'
   | 'gap'
   | 'translate'
@@ -72,7 +65,9 @@ type Mode =
   | 'sentence'
   | 'sprint'
   | 'dictation'
-  | 'grammix'
+  | 'gr-mcq'
+  | 'gr-fill'
+  | 'gr-order'
 
 interface Tile {
   Icon: Icon
@@ -93,41 +88,28 @@ export function PracticePage() {
     currentGuidedStep() === 'flashcards' ? 'review' : 'hub',
   )
   const [due, setDue] = useState<number | null>(null)
-  const [total, setTotal] = useState<number | null>(null)
-  const [sheet, setSheet] = useState<null | 'add' | 'packs'>(null)
 
-  // счётчики для плиток: сколько к повторению и сколько слов всего
+  // счётчик для плитки: сколько к повторению
   useEffect(() => {
     let alive = true
     setMode(currentGuidedStep() === 'flashcards' ? 'review' : 'hub')
-    setSheet(null)
     getDueCards(50, lang)
       .then((d) => alive && setDue(d.length))
       .catch(() => alive && setDue(null))
-    countMyWords(lang)
-      .then((n) => alive && setTotal(n))
-      .catch(() => alive && setTotal(null))
     return () => {
       alive = false
     }
   }, [lang])
 
-  /** Счётчики устаревают после добавления/удаления слов. */
-  const refreshCounts = () => {
-    countMyWords(lang).then(setTotal).catch(() => {})
-    getDueCards(50, lang).then((d) => setDue(d.length)).catch(() => {})
-  }
-
   const back = () => {
     setMode('hub')
-    refreshCounts()
+    getDueCards(50, lang).then((d) => setDue(d.length)).catch(() => {})
   }
 
   if (mode === 'review') return <DeckReview onBack={back} />
   if (mode !== 'hub') {
     return (
       <Suspense fallback={<p className="text-[var(--night-text-40)]">Загрузка…</p>}>
-        {mode === 'mywords' && <MyWords lang={lang} onBack={back} />}
         {mode === 'match' && <MatchMode lang={lang} onBack={back} />}
         {mode === 'gap' && <GapMode lang={lang} onBack={back} />}
         {mode === 'translate' && <TranslateMode lang={lang} onBack={back} />}
@@ -135,13 +117,14 @@ export function PracticePage() {
         {mode === 'sprint' && <SprintMode lang={lang} onBack={back} />}
         {mode === 'dictation' && <DictationMode lang={lang} onBack={back} />}
         {mode === 'sentence' && <SentenceBuilder lang={lang} onBack={back} />}
-        {mode === 'grammix' && <GrammarMixMode lang={lang} onBack={back} />}
+        {mode === 'gr-mcq' && <GrammarMixMode lang={lang} kind="mcq" onBack={back} />}
+        {mode === 'gr-fill' && <GrammarMixMode lang={lang} kind="fill" onBack={back} />}
+        {mode === 'gr-order' && <GrammarMixMode lang={lang} kind="order" onBack={back} />}
       </Suspense>
     )
   }
 
   const wordTiles: Tile[] = [
-    { mode: 'mywords', Icon: ListBulletsIcon, title: 'Мои слова', desc: total !== null ? `${total} слов · поиск, правка` : 'Список, поиск, правка' },
     { mode: 'match', Icon: LinkSimpleIcon, title: 'Значения', desc: 'Слово ↔ значение' },
     { mode: 'gap', Icon: BookOpenTextIcon, title: 'Пропуск', desc: 'Слово в предложении' },
     { mode: 'translate', Icon: TextAaIcon, title: 'Перевод', desc: 'Выбери верный' },
@@ -153,7 +136,9 @@ export function PracticePage() {
 
   const mistakes = getMistakes(lang).length
   const grammarTiles: Tile[] = [
-    { mode: 'grammix', Icon: GraduationCapIcon, title: 'Микс упражнений', desc: 'Случайные из уроков' },
+    { mode: 'gr-mcq', Icon: CheckSquareIcon, title: 'Выбери форму', desc: 'Тест с вариантами' },
+    { mode: 'gr-fill', Icon: PencilSimpleLineIcon, title: 'Впиши слово', desc: 'Заполни пропуск' },
+    { mode: 'gr-order', Icon: RowsIcon, title: 'Собери предложение', desc: 'Порядок слов' },
     {
       to: '/grammar?mistakes=1',
       Icon: ArrowsClockwiseIcon,
@@ -212,41 +197,7 @@ export function PracticePage() {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Добавление слов — на уровне хаба: нужно из любого режима */}
-      <header className="flex items-center justify-between gap-2">
-        <h1 className="text-2xl font-medium tracking-tight">Практика</h1>
-        <div className="flex gap-2">
-          <Button
-            variant="secondary"
-            className="px-3 py-2 text-sm"
-            onClick={() => setSheet((s) => (s === 'packs' ? null : 'packs'))}
-          >
-            {sheet === 'packs' ? (
-              'Закрыть'
-            ) : (
-              <>
-                <PackageIcon size={16} /> Паки
-              </>
-            )}
-          </Button>
-          <Button
-            variant="secondary"
-            className="px-3 py-2 text-sm"
-            onClick={() => setSheet((s) => (s === 'add' ? null : 'add'))}
-          >
-            {sheet === 'add' ? (
-              'Закрыть'
-            ) : (
-              <>
-                <PlusIcon size={16} /> Слово
-              </>
-            )}
-          </Button>
-        </div>
-      </header>
-
-      {sheet === 'add' && <AddCardForm lang={lang} onAdded={refreshCounts} />}
-      {sheet === 'packs' && <PacksSheet lang={lang} onAdded={refreshCounts} />}
+      <h1 className="text-2xl font-medium tracking-tight">Практика</h1>
 
       {/* Повторение — главный режим, широкой плиткой */}
       <button
@@ -269,8 +220,8 @@ export function PracticePage() {
       </button>
 
       <p className="text-sm text-[var(--night-text-40)]">
-        Игры используют твои слова (если их мало — добираем из паков уровня).
-        Ошибка вернёт слово или упражнение на повтор.
+        Игры используют твои слова и уроки твоего уровня. Ошибка вернёт слово
+        или упражнение на повтор. Добавить слова — в «Учёба → Слова».
       </p>
 
       <SectionTitle>Слова</SectionTitle>

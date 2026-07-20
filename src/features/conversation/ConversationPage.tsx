@@ -46,29 +46,36 @@ export function ConversationPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-medium tracking-tight">Диалог</h1>
-        <span className="text-sm text-[var(--night-text-40)]">
-          {lang === 'es' ? `испанский · ${level}` : `уровень ${level}`}
-        </span>
+      {/* как в макете: заголовок + сегмент-переключатель капсулой справа */}
+      <header className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-medium tracking-tight">Диалог</h1>
+          <p className="text-xs text-[var(--night-text-40)]">
+            {lang === 'es' ? `испанский · ${level}` : `уровень ${level}`}
+          </p>
+        </div>
+        <div
+          role="group"
+          aria-label="Режим"
+          className="flex gap-0.5 rounded-full bg-white/[0.07] p-0.5"
+        >
+          {modes.map((m) => (
+            <button
+              key={m.id}
+              onClick={() => setMode(m.id)}
+              aria-pressed={mode === m.id}
+              className={`flex min-h-[44px] items-center gap-1.5 rounded-full px-4 text-xs font-semibold transition-colors ${
+                mode === m.id
+                  ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
+                  : 'text-[var(--night-text-40)] hover:text-[var(--night-text-70)]'
+              }`}
+            >
+              <m.Icon size={14} weight={mode === m.id ? 'fill' : 'regular'} />
+              {m.label}
+            </button>
+          ))}
+        </div>
       </header>
-
-      <div className="flex gap-2">
-        {modes.map((m) => (
-          <button
-            key={m.id}
-            onClick={() => setMode(m.id)}
-            className={`flex min-h-[44px] items-center gap-1.5 rounded-lg px-4 text-sm font-semibold ${
-              mode === m.id
-                ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
-                : 'bg-white/[0.07] text-[var(--night-text-70)]'
-            }`}
-          >
-            <m.Icon size={16} weight={mode === m.id ? 'fill' : 'regular'} />
-            {m.label}
-          </button>
-        ))}
-      </div>
 
       {/* key={lang}: при смене языка начинаем чат/проверку заново */}
       {mode === 'chat' ? (
@@ -266,18 +273,24 @@ function ChatSection({ level, lang }: { level: CEFRLevel; lang: AppLang }) {
 
       {error && <p className="text-sm text-red-500">{error}</p>}
 
-      <form onSubmit={send} className="flex gap-2">
+      {/* как в макете: поле без рамки + квадратная accent-кнопка отправки */}
+      <form onSubmit={send} className="flex items-center gap-2.5">
         <input
           aria-label={lang === 'es' ? 'Сообщение по-испански' : 'Сообщение по-английски'}
-          className="min-w-0 flex-1 rounded-xl border border-white/[0.10] bg-[var(--night-input)] px-4 py-3 text-base outline-none focus:border-[var(--night-accent-45)]"
+          className="h-12 min-w-0 flex-1 rounded-[14px] border-none bg-[var(--night-input)] px-4 text-[15px] outline-none placeholder:text-[var(--night-text-25)] focus:ring-2 focus:ring-[var(--night-accent-45)]"
           placeholder={lang === 'es' ? 'Escribe en español…' : 'Write in English…'}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           disabled={busy}
         />
-        <Button type="submit" aria-label="Отправить" disabled={busy || !input.trim()}>
-          <PaperPlaneRightIcon size={20} weight="fill" />
-        </Button>
+        <button
+          type="submit"
+          aria-label="Отправить"
+          disabled={busy || !input.trim()}
+          className="lift flex h-12 w-12 flex-none items-center justify-center rounded-[14px] border border-[var(--night-accent-45)] bg-[rgba(145,132,217,.14)] text-[var(--night-accent-100)] transition-colors hover:bg-[rgba(145,132,217,.22)] disabled:opacity-40"
+        >
+          <PaperPlaneRightIcon size={20} />
+        </button>
       </form>
 
       {msgs.length > 0 && (

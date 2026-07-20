@@ -157,6 +157,28 @@ function sortByLevelCloseness(items: PoolItem[], target: string): PoolItem[] {
  * `need` — сколько слов минимально нужно игре; добираем с запасом, чтобы
  * хватало на варианты-обманки.
  */
+/**
+ * «Слово дня» для Главной: НОВОЕ слово из пака уровня пользователя, которого
+ * ещё нет в колоде (пользователь может добавить его кнопкой «В колоду»).
+ * Стабильно в течение дня: индекс = номер дня % размер выборки.
+ * null — паки кончились (всё уже в колоде) или не загрузились.
+ */
+export async function newWordOfDay(lang: AppLang): Promise<PoolItem | null> {
+  const [packs, level, deckItems] = await Promise.all([
+    loadPackItems(lang).catch(() => []),
+    targetLevel(lang),
+    loadDeckItems(lang).catch(() => []),
+  ])
+  const have = new Set(deckItems.map((i) => i.term.toLowerCase()))
+  // ближайшие к уровню ~60 кандидатов: слово по силам, но меняется день ото дня
+  const candidates = sortByLevelCloseness(packs, level)
+    .filter((p) => !have.has(p.term.toLowerCase()))
+    .slice(0, 60)
+  if (candidates.length === 0) return null
+  const day = Math.floor(Date.now() / 86_400_000)
+  return candidates[day % candidates.length]
+}
+
 export async function loadGamePool(lang: AppLang, need = 24): Promise<GamePool> {
   const [deckItems, level] = await Promise.all([
     loadDeckItems(lang).catch(() => []),

@@ -14,6 +14,7 @@ import {
 import { getSettings, READER_CLASSES } from '../../lib/settings'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
+import { BackButton, BackHeader } from '../../components/BackButton'
 import { speak } from '../../lib/speech'
 import { TappableText, WordSheet, type WordPick } from '../../components/WordSheet'
 import {
@@ -30,7 +31,15 @@ const kinds: { id: Kind; label: string; Icon: Icon }[] = [
   { id: 'dialogues', label: 'Диалоги', Icon: ChatsCircleIcon },
 ]
 
-export function SpanishReaderPage({ title = 'Учёба', header }: { title?: string; header?: ReactNode }) {
+export function SpanishReaderPage({
+  title = 'Тексты и диалоги',
+  header,
+  onBack,
+}: {
+  title?: string
+  header?: ReactNode
+  onBack?: () => void
+}) {
   const [kind, setKind] = useState<Kind>('texts')
   const [level, setLevel] = useState<string>('A1')
   const [reading, setReading] = useState<SpanishReading | null>(null)
@@ -48,7 +57,11 @@ export function SpanishReaderPage({ title = 'Учёба', header }: { title?: st
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-medium tracking-tight">{title}</h1>
+      {onBack ? (
+        <BackHeader onBack={onBack} title={title} />
+      ) : (
+        <h1 className="text-2xl font-medium tracking-tight">{title}</h1>
+      )}
 
       {header}
 
@@ -140,9 +153,7 @@ function ReadingView({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" className="px-2 py-1 text-sm" onClick={onBack}>
-          ← Назад
-        </Button>
+        <BackButton onClick={onBack} />
         <div className="min-w-0">
           <h1 className="truncate text-xl font-medium tracking-tight">{reading.title}</h1>
           <p className="truncate text-sm text-[var(--night-text-40)]">{reading.titleRu}</p>
@@ -196,9 +207,7 @@ function DialogueView({
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          <Button variant="ghost" className="px-2 py-1 text-sm" onClick={onBack}>
-            ← Назад
-          </Button>
+          <BackButton onClick={onBack} />
           <h1 className="truncate text-xl font-medium tracking-tight">{dialogue.title}</h1>
         </div>
         <Button

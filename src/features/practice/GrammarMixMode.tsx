@@ -1,7 +1,9 @@
 // ============================================================================
-// «Микс упражнений» — быстрый раунд грамматики: 8 случайных упражнений из
-// уроков не выше уровня пользователя (ES — уровень из placement/localStorage,
-// EN — из профиля; уровень неизвестен — берём A1–A2, чтобы не пугать новичка).
+// Грамматические мини-игры: раунд из 8 случайных упражнений из уроков не выше
+// уровня пользователя (ES — placement/localStorage, EN — профиль; уровень
+// неизвестен — берём A1–A2, чтобы не пугать новичка).
+// kind делит игры по типу задания: mcq — «Выбери форму», fill — «Впиши слово»,
+// order — «Собери предложение»; без kind — микс всех типов.
 // Ошибка кладёт упражнение в банк «Мои ошибки», верный ответ — убирает.
 // ============================================================================
 import { useEffect, useState } from 'react'
@@ -17,8 +19,16 @@ import { GameHeader } from '../words/GameShell'
 import type { AppLang, GrammarExercise, GrammarTopic } from '../../types'
 
 const ROUND = 8
-const TITLE = 'Микс упражнений'
 const CEFR = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
+
+export type GrammarGameKind = 'mcq' | 'fill' | 'order'
+
+const TITLES: Record<GrammarGameKind | 'mix', string> = {
+  mcq: 'Выбери форму',
+  fill: 'Впиши слово',
+  order: 'Собери предложение',
+  mix: 'Микс упражнений',
+}
 
 interface Item {
   topicId: number
@@ -27,7 +37,11 @@ interface Item {
   exercise: GrammarExercise
 }
 
-function buildRound(topics: GrammarTopic[], level: string | null): Item[] {
+function buildRound(
+  topics: GrammarTopic[],
+  level: string | null,
+  kind?: GrammarGameKind,
+): Item[] {
   // не выше уровня пользователя; без уровня — только базовые A1–A2
   const cap = CEFR.indexOf(level ?? 'A2')
   const usable = topics.filter((t) => {
@@ -42,10 +56,20 @@ function buildRound(topics: GrammarTopic[], level: string | null): Item[] {
       exercise,
     })),
   )
-  return shuffle(all).slice(0, ROUND)
+  const filtered = kind ? all.filter((i) => i.exercise.type === kind) : all
+  return shuffle(filtered).slice(0, ROUND)
 }
 
-export function GrammarMixMode({ lang, onBack }: { lang: AppLang; onBack: () => void }) {
+export function GrammarMixMode({
+  lang,
+  kind,
+  onBack,
+}: {
+  lang: AppLang
+  kind?: GrammarGameKind
+  onBack: () => void
+}) {
+  const title = TITLES[kind ?? 'mix']
   const [topics, setTopics] = useState<GrammarTopic[] | null>(null)
   const [level, setLevel] = useState<string | null | undefined>(undefined)
   const [items, setItems] = useState<Item[] | null>(null)
@@ -65,8 +89,8 @@ export function GrammarMixMode({ lang, onBack }: { lang: AppLang; onBack: () => 
   }, [lang])
 
   useEffect(() => {
-    if (topics && level !== undefined && !items) setItems(buildRound(topics, level))
-  }, [topics, level, items])
+    if (topics && level !== undefined && !items) setItems(buildRound(topics, level, kind))
+  }, [topics, level, items, kind])
 
   useEffect(() => {
     if (done) void logActivity('grammar')
@@ -75,7 +99,7 @@ export function GrammarMixMode({ lang, onBack }: { lang: AppLang; onBack: () => 
   if (!items) {
     return (
       <div className="flex flex-col gap-4">
-        <GameHeader title={TITLE} onBack={onBack} />
+        <GameHeader title={title} onBack={onBack} />
         <p className="text-[var(--night-text-40)]">Готовлю раунд…</p>
       </div>
     )
@@ -84,7 +108,7 @@ export function GrammarMixMode({ lang, onBack }: { lang: AppLang; onBack: () => 
   if (items.length === 0) {
     return (
       <div className="flex flex-col gap-4">
-        <GameHeader title={TITLE} onBack={onBack} />
+        <GameHeader title={title} onBack={onBack} />
         <Card className="text-center">
           <p className="font-semibold">Уроков для этого уровня пока нет</p>
           <p className="mt-1 text-sm text-[var(--night-text-40)]">
@@ -115,7 +139,7 @@ export function GrammarMixMode({ lang, onBack }: { lang: AppLang; onBack: () => 
   if (done) {
     return (
       <div className="flex flex-col gap-4">
-        <GameHeader title={TITLE} onBack={onBack} />
+        <GameHeader title={title} onBack={onBack} />
         <RoundResult
           correct={correct}
           total={items.length}
@@ -138,7 +162,7 @@ export function GrammarMixMode({ lang, onBack }: { lang: AppLang; onBack: () => 
 
   return (
     <div className="flex flex-col gap-3">
-      <GameHeader title={TITLE} onBack={onBack} />
+      <GameHeader title={title} onBack={onBack} />
       <RoundProgress index={index + 1} total={items.length} correct={correct} progressLabel="Упражнение" />
       <p className="text-sm text-[var(--night-text-40)]">Тема: {current.topicTitle}</p>
       <ExerciseView

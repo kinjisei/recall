@@ -12,10 +12,12 @@ import {
   PlayCircleIcon,
   CardsThreeIcon,
   BookOpenTextIcon,
+  CheckIcon,
   MicrophoneIcon,
   ChatCircleDotsIcon,
   CheckCircleIcon,
   LightbulbFilamentIcon,
+  PlusIcon,
   SpeakerHighIcon,
   CaretRightIcon,
   type Icon,
@@ -25,6 +27,8 @@ import { useLanguage } from '../../context/LanguageContext'
 import { supabase } from '../../lib/supabase'
 import { getStreak, getTodayTypes, getWeek, type WeekDay } from '../../lib/activity'
 import { getDueCards } from '../../lib/fsrs'
+import { newWordOfDay, type PoolItem } from '../../lib/wordPool'
+import { addCard } from '../../lib/cards'
 import { getEsLevel } from '../../lib/esLevel'
 import { startGuided } from '../../lib/guided'
 import { speak } from '../../lib/speech'
@@ -35,7 +39,7 @@ import {
   loadAssignmentCounts,
   type AssignmentCounts,
 } from '../teacher/TeacherBlock'
-import type { ActivityType, Card as CardType, Profile } from '../../types'
+import type { ActivityType, Profile } from '../../types'
 
 interface PlanItem {
   to: string
@@ -61,7 +65,7 @@ export function DashboardPage() {
   const [week, setWeek] = useState<WeekDay[]>([])
   const [doneToday, setDoneToday] = useState<Set<ActivityType>>(new Set())
   const [dueCount, setDueCount] = useState<number | null>(null)
-  const [wordOfDay, setWordOfDay] = useState<CardType | null>(null)
+  const [wordOfDay, setWordOfDay] = useState<PoolItem | null>(null)
   // один запрос на обе плашки заданий (top и bottom)
   const [assignments, setAssignments] = useState<AssignmentCounts | null>(null)
 
@@ -87,11 +91,11 @@ export function DashboardPage() {
     setDueCount(null)
     setWordOfDay(null)
     getDueCards(99, lang)
-      .then((d) => {
-        if (!alive) return
-        setDueCount(d.length)
-        setWordOfDay(d[0]?.card ?? null)
-      })
+      .then((d) => alive && setDueCount(d.length))
+      .catch(() => {})
+    // слово дня — НОВОЕ слово из пака уровня с кнопкой «В колоду»
+    newWordOfDay(lang)
+      .then((w) => alive && setWordOfDay(w))
       .catch(() => {})
     return () => {
       alive = false
@@ -182,8 +186,8 @@ export function DashboardPage() {
         </div>
       </section>
 
-      {/* 6. Слово дня */}
-      {wordOfDay && <WordOfDay card={wordOfDay} lang={lang} />}
+      {/* 6. Слово дня — новое слово уровня, можно сразу добавить в колоду */}
+      {wordOfDay && <WordOfDay word={wordOfDay} lang={lang} />}
 
       {/* 7. Сданное задание уезжает вниз + блок преподавателя */}
       <AssignmentsNotice placement="bottom" counts={assignments} />
@@ -274,8 +278,26 @@ function StreakHero({
   )
 }
 
-function WordOfDay({ card, lang }: { card: CardType; lang: 'en' | 'es' }) {
-  const back = (card.back ?? '').split('·')[0].trim()
+function WordOfDay({ word, lang }: { word: PoolItem; lang: 'en' | 'es' }) {
+  const [state, setState] = useState<'idle' | 'busy' | 'added' | 'error'>('idle')
+
+  const add = async () => {
+    if (state === 'busy' || state === 'added') return
+    setState('busy')
+    try {
+      await addCard({
+        front: word.term,
+        back: word.translation,
+        example: word.example,
+        lang,
+        source: 'manual',
+      })
+      setState('added')
+    } catch {
+      setState('error')
+    }
+  }
+
   return (
     <div
       className="animate-fade-up flex items-center gap-3.5 rounded-2xl border border-white/[0.08] bg-[var(--night-surface)] px-4 py-3.5"
@@ -289,16 +311,31 @@ function WordOfDay({ card, lang }: { card: CardType; lang: 'en' | 'es' }) {
           Слово дня
         </p>
         <p className="truncate text-[15px] font-medium">
-          {card.front}
-          {back && <span className="text-[var(--night-text-40)]"> — {back}</span>}
+          {word.term}
+          <span className="text-[var(--night-text-40)]"> — {word.translation}</span>
         </p>
+        {state === 'error' && (
+          <p className="text-xs text-red-400">Не удалось добавить — попробуй ещё раз</p>
+        )}
       </div>
       <button
-        onClick={() => speak(card.front, { lang })}
+        onClick={() => speak(word.term, { lang })}
         aria-label="Озвучить"
         className="lift flex h-11 w-11 flex-none items-center justify-center rounded-full border border-white/[0.08] text-[var(--night-text-70)]"
       >
         <SpeakerHighIcon size={18} />
+      </button>
+      <button
+        onClick={add}
+        disabled={state === 'busy' || state === 'added'}
+        aria-label={state === 'added' ? 'Слово в колоде' : 'Добавить в колоду'}
+        className={`lift flex h-11 w-11 flex-none items-center justify-center rounded-full border ${
+          state === 'added'
+            ? 'border-emerald-500/60 text-emerald-400'
+            : 'border-[var(--night-accent-45)] bg-[rgba(145,132,217,.14)] text-[var(--night-accent-100)]'
+        }`}
+      >
+        {state === 'added' ? <CheckIcon size={18} /> : <PlusIcon size={18} />}
       </button>
     </div>
   )

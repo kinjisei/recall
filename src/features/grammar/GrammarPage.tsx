@@ -17,6 +17,7 @@ import {
   SpeakerHighIcon,
   type Icon,
 } from '@phosphor-icons/react'
+import { BackHeader } from '../../components/BackButton'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { RoundResult, RoundProgress } from '../../components/RoundResult'
@@ -227,12 +228,7 @@ function TopicScreen({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" className="px-2 py-1 text-sm" onClick={onBack}>
-          ← Назад
-        </Button>
-        <h1 className="min-w-0 truncate text-xl font-medium tracking-tight">{topic.title}</h1>
-      </div>
+      <BackHeader onBack={onBack} title={topic.title} />
 
       <div className="flex gap-2">
         <button
@@ -488,9 +484,7 @@ function MistakesScreen({
   if (total === 0 || done) {
     return (
       <div className="flex flex-col gap-4">
-        <Button variant="ghost" className="self-start px-2 py-1 text-sm" onClick={onBack}>
-          ← Назад
-        </Button>
+        <BackHeader onBack={onBack} title="Мои ошибки" />
         {total === 0 ? (
           <Card className="text-center">
             <p className="font-semibold">Ошибок на повтор нет</p>
@@ -513,9 +507,7 @@ function MistakesScreen({
 
   return (
     <div className="flex flex-col gap-3">
-      <Button variant="ghost" className="self-start px-2 py-1 text-sm" onClick={onBack}>
-        ← Назад
-      </Button>
+      <BackHeader onBack={onBack} title="Мои ошибки" />
       <RoundProgress index={index + 1} total={total} correct={correct} progressLabel="Ошибка" />
       <p className="text-sm text-[var(--night-text-40)]">Тема: {current.topicTitle}</p>
       <ExerciseView

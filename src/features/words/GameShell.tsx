@@ -2,6 +2,7 @@
 // заглушка «мало слов» и универсальный движок вопросов с 4 вариантами.
 import { useEffect, useState } from 'react'
 import { SpeakerHighIcon, TrayIcon } from '@phosphor-icons/react'
+import { BackHeader } from '../../components/BackButton'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { RoundResult, RoundProgress } from '../../components/RoundResult'
@@ -12,14 +13,7 @@ import type { PoolItem } from '../../lib/wordPool'
 import type { AppLang } from '../../types'
 
 export function GameHeader({ title, onBack }: { title: string; onBack: () => void }) {
-  return (
-    <div className="flex items-center gap-3">
-      <Button variant="ghost" className="px-2 py-1 text-sm" onClick={onBack}>
-        ← Назад
-      </Button>
-      <h1 className="text-xl font-medium tracking-tight">{title}</h1>
-    </div>
-  )
+  return <BackHeader onBack={onBack} title={title} />
 }
 
 export function GameLoading({ title, onBack }: { title: string; onBack: () => void }) {

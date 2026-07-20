@@ -7,6 +7,7 @@
 // ============================================================================
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ArrowsClockwiseIcon, SealCheckIcon } from '@phosphor-icons/react'
+import { BackButton } from '../../components/BackButton'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { celebrate } from '../../components/Confetti'
@@ -145,15 +146,9 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <header className="flex items-center justify-between gap-2">
-        <div className="flex min-w-0 items-center gap-2">
-          {onBack && (
-            <Button variant="ghost" className="px-2 py-1 text-sm" onClick={onBack}>
-              ←
-            </Button>
-          )}
-          <h1 className="truncate text-xl font-medium tracking-tight">Повторение</h1>
-        </div>
+      <header className="flex min-w-0 items-center gap-3">
+        {onBack && <BackButton onClick={onBack} />}
+        <h1 className="truncate text-xl font-medium tracking-tight">Повторение</h1>
       </header>
 
       {/* Плашка перепроверки от преподавателя */}

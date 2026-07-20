@@ -132,14 +132,73 @@ async function main() {
     })
     check('Хаб Практика: секции Слова/Грамматика/Речь', hubSections)
 
-    // ---- 0b. Микс упражнений ----
-    const mixOpened = await clickByText(page, 'button', 'Микс упражнений')
+    // ---- 0b. Грамматическая игра «Выбери форму» (mcq по уровню) ----
+    const mixOpened = await clickByText(page, 'button', 'Выбери форму')
     await sleep(2000)
     const mixState = await page.evaluate(() => ({
       theme: (document.body.textContent || '').includes('Тема:'),
-      exercise: !!document.querySelector('button.rounded-xl.text-left, input[placeholder="Ваш ответ…"], .border-dashed'),
+      exercise: !!document.querySelector('button.rounded-xl.text-left'),
     }))
-    check('Микс упражнений работает', mixOpened && mixState.theme && mixState.exercise, JSON.stringify(mixState))
+    check('«Выбери форму» работает', mixOpened && mixState.theme && mixState.exercise, JSON.stringify(mixState))
+
+    // ---- 0c. Учёба-хаб: тексты спрятаны, «Практики» нет, «Слова» есть ----
+    await page.goto(BASE + '/study', { waitUntil: 'networkidle2' })
+    await sleep(800)
+    const studyState = await page.evaluate(() => {
+      const rows = [...document.querySelectorAll('main a.lift, main button.lift')].map((b) =>
+        (b.textContent || '').trim(),
+      )
+      return {
+        rows: rows.map((r) => r.slice(0, 20)),
+        hasReader: rows.some((r) => r.includes('Тексты и диалоги')),
+        hasWords: rows.some((r) => r.startsWith('Слова')),
+        hasGrammar: rows.some((r) => r.includes('Грамматика')),
+        noPractice: !rows.some((r) => r.includes('мини-игры')),
+        noTextList: !(document.body.textContent || '').includes('Выбери текст'),
+      }
+    })
+    check(
+      'Учёба-хаб: Тексты/Грамматика/Слова, без «Практики», тексты спрятаны',
+      studyState.hasReader && studyState.hasWords && studyState.hasGrammar && studyState.noPractice && studyState.noTextList,
+      JSON.stringify(studyState),
+    )
+    await clickByText(page, 'button', 'Тексты и диалоги')
+    await sleep(800)
+    const readerOpened = await page.evaluate(() => ({
+      list: (document.body.textContent || '').includes('Выбери текст'),
+      back: !!document.querySelector('button[aria-label="Назад"]'),
+    }))
+    check('Тексты открываются за тапом, кнопка «Назад» на месте', readerOpened.list && readerOpened.back, JSON.stringify(readerOpened))
+    // «Слова» в Учёбе: паки/своё слово/мои слова/колода
+    await page.evaluate(() => document.querySelector('button[aria-label="Назад"]').click())
+    await sleep(500)
+    await clickByText(page, 'button', 'Слова')
+    await sleep(600)
+    const wordsState = await page.evaluate(() => {
+      const b = document.body.textContent || ''
+      return {
+        packs: b.includes('Паки слов'),
+        add: b.includes('Своё слово'),
+        my: b.includes('Мои слова'),
+        deck: b.includes('Повторение колоды'),
+      }
+    })
+    check('Учёба → Слова: паки, своё слово, мои слова, колода', Object.values(wordsState).every(Boolean), JSON.stringify(wordsState))
+
+    // ---- 0d. Слово дня с кнопкой «В колоду» ----
+    await page.goto(BASE + '/', { waitUntil: 'networkidle2' })
+    await sleep(1500)
+    const wodBefore = await page.evaluate(() => ({
+      shown: (document.body.textContent || '').includes('Слово дня'),
+      addBtn: !!document.querySelector('button[aria-label="Добавить в колоду"]'),
+    }))
+    check('Слово дня: новое слово с кнопкой добавления', wodBefore.shown && wodBefore.addBtn, JSON.stringify(wodBefore))
+    if (wodBefore.addBtn) {
+      await page.evaluate(() => document.querySelector('button[aria-label="Добавить в колоду"]').click())
+      await sleep(1500)
+      const added = await page.evaluate(() => !!document.querySelector('button[aria-label="Слово в колоде"]'))
+      check('Слово дня добавляется в колоду', added)
+    }
 
     // ---- 1. Спринт ----
     await page.goto(BASE + '/practice', { waitUntil: 'networkidle2' })
@@ -269,7 +328,7 @@ async function main() {
       } else break
     }
     // выходим к списку уроков
-    await clickByText(page, 'button', '← Назад')
+    await page.evaluate(() => document.querySelector('button[aria-label="Назад"]')?.click())
     await sleep(800)
     const bodyAfter = await page.evaluate(() => document.body.textContent || '')
     const mistakesRow = bodyAfter.includes('Мои ошибки')
@@ -282,11 +341,11 @@ async function main() {
       const body = document.body.textContent || ''
       return {
         noEmoji: !body.includes('💬') && !body.includes('✍️'),
-        tabs: body.includes('Чат') && body.includes('Письмо'),
-        svgIcons: document.querySelectorAll('svg').length > 2,
+        segment: !!document.querySelector('[role="group"][aria-label="Режим"]'),
+        send: !!document.querySelector('button[aria-label="Отправить"].h-12'),
       }
     })
-    check('Диалог: вкладки с иконками, без эмодзи', convState.noEmoji && convState.tabs && convState.svgIcons, JSON.stringify(convState))
+    check('Диалог по макету: сегмент Чат/Письмо + кнопка отправки 48×48', convState.noEmoji && convState.segment && convState.send, JSON.stringify(convState))
 
     if (errors.length) {
       console.log('\nJS-ошибки на страницах:')

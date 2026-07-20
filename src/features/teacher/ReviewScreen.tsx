@@ -4,6 +4,7 @@
 // с комментарием, затем завершает проверку (статус reviewed).
 // ============================================================================
 import { useEffect, useRef, useState } from 'react'
+import { BackButton } from '../../components/BackButton'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import {
@@ -107,9 +108,7 @@ export function ReviewScreen({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" className="px-2 py-1 text-sm" onClick={onBack}>
-          ← Назад
-        </Button>
+        <BackButton onClick={onBack} />
         <div className="min-w-0">
           <p className="truncate font-semibold">
             {alreadyReviewed ? 'Разбор работы' : 'Проверка работы'}: {studentName}

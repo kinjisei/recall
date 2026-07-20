@@ -13,7 +13,7 @@ export type GuidedStep = (typeof GUIDED_STEPS)[number]
 
 const ROUTES: Record<GuidedStep, string> = {
   flashcards: '/practice', // хаб «Практика» откроет повторение сам (guided-шаг)
-  reader: '/study',
+  reader: '/study?view=reader', // сразу к текстам, минуя хаб «Учёбы»
   pronunciation: '/pronunciation',
 }
 

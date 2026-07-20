@@ -1,7 +1,7 @@
 ﻿import { useState, type ReactNode } from 'react'
 import { Card } from '../../components/Card'
-import { Button } from '../../components/Button'
 import { GuidedNext } from '../../components/GuidedNext'
+import { BackHeader } from '../../components/BackButton'
 import { TappableText, WordSheet, type WordPick } from '../../components/WordSheet'
 import { useLanguage } from '../../context/LanguageContext'
 import { getSettings, READER_CLASSES } from '../../lib/settings'
@@ -11,20 +11,30 @@ import type { CEFRLevel } from '../../types'
 
 const levels: CEFRLevel[] = ['B1', 'B2', 'C1']
 
-/** «Ввод»: английский — тексты + словарь; испанский — свой раздел. */
+/** Читалка: английский — тексты + словарь; испанский — свой раздел. */
 export function ReaderPage({
-  title = 'Учёба',
+  title = 'Тексты и диалоги',
   header,
+  onBack,
 }: {
   title?: string
   header?: ReactNode
+  onBack?: () => void
 }) {
   const { lang } = useLanguage()
-  if (lang === 'es') return <SpanishReaderPage title={title} header={header} />
-  return <EnglishReaderPage title={title} header={header} />
+  if (lang === 'es') return <SpanishReaderPage title={title} header={header} onBack={onBack} />
+  return <EnglishReaderPage title={title} header={header} onBack={onBack} />
 }
 
-function EnglishReaderPage({ title, header }: { title: string; header?: ReactNode }) {
+function EnglishReaderPage({
+  title,
+  header,
+  onBack,
+}: {
+  title: string
+  header?: ReactNode
+  onBack?: () => void
+}) {
   const [level, setLevel] = useState<CEFRLevel>('B1')
   const [active, setActive] = useState<SampleText | null>(null)
 
@@ -36,7 +46,11 @@ function EnglishReaderPage({ title, header }: { title: string; header?: ReactNod
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-medium tracking-tight">{title}</h1>
+      {onBack ? (
+        <BackHeader onBack={onBack} title={title} />
+      ) : (
+        <h1 className="text-2xl font-medium tracking-tight">{title}</h1>
+      )}
 
       {header}
 
@@ -80,12 +94,7 @@ function Reader({ text, onBack }: { text: SampleText; onBack: () => void }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" className="px-2 py-1 text-sm" onClick={onBack}>
-          ← Назад
-        </Button>
-        <h1 className="text-xl font-medium tracking-tight">{text.title}</h1>
-      </div>
+      <BackHeader onBack={onBack} title={text.title} />
 
       <Card>
         <p className={READER_CLASSES[getSettings().readerSize]}>
