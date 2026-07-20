@@ -3,7 +3,7 @@
 // Прохождение: чтение → упражнения (общий движок) → сдача (авто-балл, статус
 // submitted). Проверка преподавателем — следующая фаза фичи.
 // ============================================================================
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
@@ -13,10 +13,6 @@ import { TappableText, WordSheet, type WordPick } from '../../components/WordShe
 import { logActivity } from '../../lib/activity'
 import { useAsyncData } from '../../lib/useAsyncData'
 import { LoadError } from '../../components/LoadError'
-import { addCard } from '../../lib/cards'
-import { lookup } from '../../lib/dictionary'
-import { lookupSpanish } from '../../lib/spanishDict'
-import { speak } from '../../lib/speech'
 import {
   getMyAssignments,
   submitAssignment,

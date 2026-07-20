@@ -57,6 +57,11 @@
     unique (card_id, user_id)
   );
 
+  -- ⚠️ УСТАРЕЛО (не используется приложением). Задумывалась как хранилище
+  -- текстов для «Ввода», но контент переехал в статические JSON
+  -- (src/data/*/sampleTexts.ts и т.п.), а материалы преподавателя — в
+  -- таблицу materials. Ни один запрос клиента к content_items не идёт.
+  -- Оставлена только чтобы не ломать существующую БД; в новой можно не создавать.
   create table if not exists public.content_items (
     id uuid primary key default gen_random_uuid(),
     level text,

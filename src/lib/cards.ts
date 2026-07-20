@@ -28,7 +28,7 @@ export async function getDefaultDeck(lang: AppLang = 'en'): Promise<Deck> {
  * преподавателем (Фаза 4) — так задания попадают в очередь ученицы.
  */
 export async function getDeckIds(lang: AppLang): Promise<string[]> {
-  const user = { id: await requireUserId() }
+  await requireUserId() // ранний отказ без сессии; сам список фильтрует RLS
 
   const { data, error } = await supabase
     .from('decks')

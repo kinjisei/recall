@@ -6,7 +6,7 @@
 //   3) «Твой план готов» + конфетти и переход на Главную.
 // Показывается только новичку: см. useIsNewUser ниже.
 // ============================================================================
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   SealCheckIcon,

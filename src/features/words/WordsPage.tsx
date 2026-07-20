@@ -14,7 +14,6 @@
 // повтор (см. gameUtils.markWrong).
 // ============================================================================
 import { lazy, Suspense, useEffect, useState } from 'react'
-import type { ComponentType, SVGProps } from 'react'
 import {
   LinkSimpleIcon,
   TextAaIcon,

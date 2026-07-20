@@ -15,7 +15,7 @@ import { useLanguage } from '../../context/LanguageContext'
 import { GuidedNext } from '../../components/GuidedNext'
 import { SwipeCard, SwipeTutorial } from './SwipeCard'
 import { WordCheckRunner } from './WordCheckRunner'
-import type { AppLang, Card as CardType, WordCheck } from '../../types'
+import type { Card as CardType, WordCheck } from '../../types'
 
 const TUTORIAL_KEY = 'recall.deck_tutorial_seen'
 
