@@ -1,17 +1,18 @@
 // ============================================================================
-// Нижняя навигация «Nocturne»: плавающая glass-капсула с пятью постоянными
+// Нижняя навигация «Nocturne»: плавающая glass-капсула с четырьмя постоянными
 // вкладками. Активная — мягкая акцентная подсветка и залитая (fill) иконка.
 //
-// Пять вкладок вместо шести: «Грамматика» и «Тексты» переехали в хаб «Учёба»,
-// поэтому состав больше не прыгает при переключении EN/ES.
+// Четыре вкладки вместо пяти (2026-07-21): новичок терялся между «Слова»,
+// «Учёба» и «Речь». Теперь смысловое деление: Учёба — изучаю новое (тексты,
+// уроки грамматики, тест уровня), Практика — тренируюсь (повторение колоды,
+// все мини-игры, речь), Диалог — общаюсь с AI.
 // ============================================================================
 import { Link, useLocation } from 'react-router-dom'
 import type { Icon } from '@phosphor-icons/react'
 import {
   HouseIcon,
-  CardsThreeIcon,
+  BarbellIcon,
   BooksIcon,
-  MicrophoneIcon,
   ChatCircleDotsIcon,
 } from '@phosphor-icons/react'
 
@@ -28,7 +29,6 @@ interface Tab {
 // оказывался «нигде»: ни одна вкладка не была активной.
 const tabs: Tab[] = [
   { to: '/', label: 'Главная', Icon: HouseIcon, end: true, also: ['/progress', '/settings', '/teacher'] },
-  { to: '/flashcards', label: 'Слова', Icon: CardsThreeIcon, end: false },
   {
     to: '/study',
     label: 'Учёба',
@@ -36,7 +36,13 @@ const tabs: Tab[] = [
     end: false,
     also: ['/grammar', '/placement', '/assignments', '/reader'],
   },
-  { to: '/pronunciation', label: 'Речь', Icon: MicrophoneIcon, end: false },
+  {
+    to: '/practice',
+    label: 'Практика',
+    Icon: BarbellIcon,
+    end: false,
+    also: ['/flashcards', '/pronunciation'],
+  },
   { to: '/conversation', label: 'Диалог', Icon: ChatCircleDotsIcon, end: false },
 ]
 

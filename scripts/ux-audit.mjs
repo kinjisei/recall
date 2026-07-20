@@ -197,7 +197,7 @@ function auditPage() {
 const SCREENS = [
   { name: 'Вход', path: '/login', public: true },
   { name: 'Главная', path: '/' },
-  { name: 'Слова (хаб)', path: '/flashcards' },
+  { name: 'Практика (хаб)', path: '/practice' },
   { name: 'Учёба', path: '/study' },
   { name: 'Грамматика', path: '/grammar' },
   { name: 'Речь', path: '/pronunciation' },
@@ -207,7 +207,7 @@ const SCREENS = [
   { name: 'Placement', path: '/placement' },
   { name: 'Учёба ES', path: '/study', lang: 'es' },
   { name: 'Грамматика ES', path: '/grammar', lang: 'es' },
-  { name: 'Слова ES', path: '/flashcards', lang: 'es' },
+  { name: 'Практика ES', path: '/practice', lang: 'es' },
   { name: 'Диалог ES', path: '/conversation', lang: 'es' },
   { name: 'Placement ES', path: '/placement', lang: 'es' },
 ]

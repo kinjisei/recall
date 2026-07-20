@@ -15,3 +15,6 @@ npm-debug.log*
 
 # отчёт UX-аудита (генерируется scripts/ux-audit.mjs при каждом прогоне)
 ux-audit-report.md
+
+# прототипы Omelette (референсы дизайна, не исходники)
+*.dc.html

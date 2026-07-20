@@ -46,7 +46,7 @@ interface PlanItem {
 }
 
 const planItems: PlanItem[] = [
-  { to: '/flashcards', Icon: CardsThreeIcon, title: 'Слова', desc: 'Повторить и потренировать', types: ['flashcards', 'practice'] },
+  { to: '/practice', Icon: CardsThreeIcon, title: 'Слова', desc: 'Повторить и потренировать', types: ['flashcards', 'practice'] },
   { to: '/study', Icon: BookOpenTextIcon, title: 'Чтение', desc: 'Текст и новые слова', types: ['reader'] },
   { to: '/pronunciation', Icon: MicrophoneIcon, title: 'Речь', desc: 'Произношение вслух', types: ['pronunciation'] },
   { to: '/conversation', Icon: ChatCircleDotsIcon, title: 'Диалог', desc: 'Поговорить с AI', types: ['conversation', 'writing'] },
@@ -161,7 +161,7 @@ export function DashboardPage() {
                 key={p.to}
                 Icon={p.Icon}
                 title={p.title}
-                desc={done ? 'Готово · засчитано в серию' : p.to === '/flashcards' ? dueLabel : p.desc}
+                desc={done ? 'Готово · засчитано в серию' : p.to === '/practice' ? dueLabel : p.desc}
                 to={p.to}
                 muted={done}
                 active={!done && i === 0}

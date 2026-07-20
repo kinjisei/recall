@@ -93,12 +93,14 @@ function chatSystemPrompt(level: CEFRLevel, lang: AppLang): string {
         : 'Use natural Spanish with varied tenses and richer vocabulary, but stay clear.'
       : level === 'C1' || level === 'C2'
         ? 'Use rich, natural, idiomatic English and occasionally introduce advanced vocabulary.'
-        : 'Use clear, simple English that matches this level: short sentences, common words.'
+        : level === 'A1' || level === 'A2'
+          ? 'Use VERY simple English: sentences of 6-10 words, present tense mostly, only the most common everyday words.'
+          : 'Use clear, simple English that matches this level: short sentences, common words.'
   // В ES-режиме в приложении есть настоящие уроки грамматики (вкладка «Грам.»)
   const grammarRef =
     lang === 'es'
-      ? 'The app has a "Грам." tab with Spanish grammar lessons (A1-B2: ser/estar, артикли, Presente, Pretérito Indefinido, Imperfecto, Subjuntivo, предлоги и др.). When suggesting a topic, add: "В приложении есть урок на эту тему — открой вкладку Грам., а потом возвращайся потренироваться".'
-      : 'There are no built-in English grammar lessons in the app, so YOU are the lesson: when the learner agrees to practise, first give a 3-4 line mini-explanation of the rule in Russian with examples, then start the exercises.'
+      ? 'The app has grammar lessons in the «Учёба» tab (A1-B2: ser/estar, артикли, Presente, Pretérito Indefinido, Imperfecto, Subjuntivo, предлоги и др.). When suggesting a topic, add: "В приложении есть урок на эту тему — открой Учёба → Грамматика, а потом возвращайся потренироваться".'
+      : 'The app has English grammar lessons in the «Учёба» tab (A1-C1). When suggesting a topic, add: "В приложении есть урок на эту тему — открой Учёба → Грамматика". You can also give a 3-4 line mini-explanation of the rule in Russian with examples before the exercises.'
 
   return [
     `You are a friendly ${language} conversation partner AND a patient ${language} teacher in the language-learning app "Recall".`,
@@ -118,6 +120,7 @@ function chatSystemPrompt(level: CEFRLevel, lang: AppLang): string {
     grammarRef,
     '- If the learner agrees (давай, да, ok, yes), switch to practice mode: give ONE short exercise at a time (перевод короткой фразы с русского or fill-the-gap), wait for the answer, check it with a one-line explanation, 3-5 exercises total. Then praise the learner and return to the conversation with a new question.',
     '- If the learner asks about grammar or a word, explain in Russian with 2-3 examples before continuing.',
+    `- ALL explanations (in Russian) must match a ${level} learner: short, simple everyday words, no linguistic or academic jargon. Explain the way you would to a school student, e.g. chair = «стул — то, на чём сидят», NOT a dictionary-style scientific definition.`,
     '- Plain text only, no markdown formatting. Never skip part 1.',
   ].join('\n')
 }
@@ -301,6 +304,8 @@ function writingSystemPrompt(level: CEFRLevel, lang: AppLang): string {
     `Ты — доброжелательный преподаватель ${subject}.`,
     levelNote,
     'Ответь по-русски, без markdown-разметки, строго по разделам:',
+    '',
+    'Объясняй просто и коротко, под уровень ученика — без научных терминов.',
     '',
     'ОШИБКИ',
     'нумерованный список: «цитата» → исправление — короткое объяснение.',

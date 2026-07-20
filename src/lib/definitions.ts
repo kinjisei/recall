@@ -121,12 +121,17 @@ function pickDefinition(
 }
 
 /** Определения от Gemini для слов, которых нет в словаре (одним запросом). */
-async function fromGemini(words: string[]): Promise<Record<string, string>> {
+async function fromGemini(words: string[], simple: boolean): Promise<Record<string, string>> {
   if (words.length === 0) return {}
   const system =
     'Ты англо-английский словарь для изучающих язык. Отвечай ТОЛЬКО JSON-объектом ' +
-    'вида {"слово": "определение"}. Определение — простой английский (уровень B1), ' +
-    'одна короткая фраза до 12 слов, БЕЗ использования самого слова.'
+    'вида {"слово": "определение"}. ' +
+    (simple
+      ? 'Определение — ОЧЕНЬ простой английский для новичка (A1–A2): максимум 8 слов, ' +
+        'только самые частотные слова, как объяснил бы ребёнку. Пример: chair → ' +
+        '"you sit on it". Никаких научных или энциклопедических формулировок. '
+      : 'Определение — простой английский (уровень B1), одна короткая фраза до 12 слов. ') +
+    'БЕЗ использования самого слова.'
   try {
     const raw = await chat([{ role: 'user', content: `Words: ${words.join(', ')}` }], {
       system,
@@ -149,10 +154,19 @@ async function fromGemini(words: string[]): Promise<Record<string, string>> {
 /**
  * Определения для набора слов. Возвращает только те, что удалось найти,
  * ключ — слово в нижнем регистре.
+ *
+ * level — уровень ученика: для A1/A2 словарные определения (часто взрослые и
+ * «энциклопедичные») не годятся, поэтому Free Dictionary пропускается и все
+ * определения пишет Gemini сверхпростым английским. Кэш у простых определений
+ * отдельный (префикс "s:"), чтобы уровни не перемешивались.
  */
 export async function getDefinitions(
   requests: DefinitionRequest[],
+  level?: string | null,
 ): Promise<Record<string, string>> {
+  const simple = level === 'A1' || level === 'A2'
+  const ck = (w: string) => (simple ? 's:' + w : w)
+
   const byWord = new Map<string, DefinitionRequest>()
   for (const r of requests) {
     const key = r.word.trim().toLowerCase()
@@ -164,29 +178,37 @@ export async function getDefinitions(
   const missing: DefinitionRequest[] = []
 
   for (const [key, req] of byWord) {
-    if (cached[key]) out[key] = cached[key]
+    if (cached[ck(key)]) out[key] = cached[ck(key)]
     else missing.push({ ...req, word: key })
   }
   if (missing.length === 0) return out
 
-  // Free Dictionary — параллельно, он бесплатный и быстрый
   const fresh: Record<string, string> = {}
-  const results = await Promise.all(
-    missing.map((req) =>
-      lookup(req.word)
-        .then((r) => [req.word, pickDefinition(r?.definitions, req.word, req.translation)] as const)
-        .catch(() => [req.word, undefined] as const),
-    ),
-  )
-  const stillMissing: string[] = []
-  for (const [w, def] of results) {
-    // pickDefinition уже вернул готовый (обрезанный и замаскированный) текст
-    if (def) fresh[w] = def
-    else stillMissing.push(w)
+  let stillMissing: string[] = []
+
+  if (simple) {
+    // новичку — только простые AI-определения
+    stillMissing = missing.map((r) => r.word)
+  } else {
+    // Free Dictionary — параллельно, он бесплатный и быстрый
+    const results = await Promise.all(
+      missing.map((req) =>
+        lookup(req.word)
+          .then((r) => [req.word, pickDefinition(r?.definitions, req.word, req.translation)] as const)
+          .catch(() => [req.word, undefined] as const),
+      ),
+    )
+    for (const [w, def] of results) {
+      // pickDefinition уже вернул готовый (обрезанный и замаскированный) текст
+      if (def) fresh[w] = def
+      else stillMissing.push(w)
+    }
   }
 
-  Object.assign(fresh, await fromGemini(stillMissing))
+  Object.assign(fresh, await fromGemini(stillMissing, simple))
 
-  if (Object.keys(fresh).length > 0) writeCache(fresh)
+  if (Object.keys(fresh).length > 0) {
+    writeCache(Object.fromEntries(Object.entries(fresh).map(([w, d]) => [ck(w), d])))
+  }
   return { ...out, ...fresh }
 }

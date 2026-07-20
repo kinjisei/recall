@@ -12,7 +12,7 @@ export const GUIDED_STEPS = ['flashcards', 'reader', 'pronunciation'] as const
 export type GuidedStep = (typeof GUIDED_STEPS)[number]
 
 const ROUTES: Record<GuidedStep, string> = {
-  flashcards: '/flashcards',
+  flashcards: '/practice', // хаб «Практика» откроет повторение сам (guided-шаг)
   reader: '/study',
   pronunciation: '/pronunciation',
 }

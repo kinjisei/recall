@@ -39,7 +39,7 @@ export function EmptyPool({ title, onBack }: { title: string; onBack: () => void
         <TrayIcon size={40} className="text-[var(--night-text-25)]" />
         <p className="mt-2 font-semibold">Пока мало слов для игры</p>
         <p className="mt-1 text-sm text-[var(--night-text-40)]">
-          Добавь слова кнопкой «Паки» в шапке раздела «Слова» или тапая по словам в «Учёбе».
+          Добавь слова кнопкой «Паки» в шапке раздела «Практика» или тапая по словам в «Учёбе».
         </p>
       </Card>
     </div>

@@ -996,3 +996,12 @@
     order by last_day desc;
 
   revoke all on public.ai_usage_overview from anon, authenticated;
+
+  -- ============================================================================
+  -- PLACEMENT 2.0 (2026-07-21): profiles.level разрешает A1.
+  -- EN-тест уровня может дать результат A1 — прежний check ('A2'…'C2') молча
+  -- не давал его сохранить. Блок idempotent — можно запускать повторно.
+  -- ============================================================================
+  alter table public.profiles drop constraint if exists profiles_level_check;
+  alter table public.profiles add constraint profiles_level_check
+    check (level in ('A1','A2','B1','B2','C1','C2'));

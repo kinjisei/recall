@@ -12,8 +12,8 @@ import { DashboardPage } from './features/dashboard/DashboardPage'
 // Роуты — лениво: каждая страница (и её данные) грузится при переходе, а не
 // в стартовом бандле. Особенно важно для «Ввода» и грамматики — они тянут
 // сотни КБ контента, который не нужен на старте.
-const WordsPage = lazy(() =>
-  import('./features/words/WordsPage').then((m) => ({ default: m.WordsPage })),
+const PracticePage = lazy(() =>
+  import('./features/practice/PracticePage').then((m) => ({ default: m.PracticePage })),
 )
 const PronunciationPage = lazy(() =>
   import('./features/pronunciation/PronunciationPage').then((m) => ({ default: m.PronunciationPage })),
@@ -79,14 +79,8 @@ export default function App() {
               }
             >
               <Route path="/" element={<DashboardPage />} />
-              <Route
-                path="/flashcards"
-                element={
-                  <Suspense fallback={<PageFallback />}>
-                    <WordsPage />
-                  </Suspense>
-                }
-              />
+              {/* хаб «Слова» вырос в «Практику» — старые ссылки не ломаем */}
+              <Route path="/flashcards" element={<Navigate to="/practice" replace />} />
               {/* «Ввод» слился с «Учёбой»: один экран, старая ссылка ведёт туда же */}
               <Route path="/reader" element={<Navigate to="/study" replace />} />
               <Route
@@ -137,8 +131,14 @@ export default function App() {
                   </Suspense>
                 }
               />
-              {/* «Практика» переехала в хаб «Слова» — старые ссылки не ломаем */}
-              <Route path="/practice" element={<Navigate to="/flashcards" replace />} />
+              <Route
+                path="/practice"
+                element={
+                  <Suspense fallback={<PageFallback />}>
+                    <PracticePage />
+                  </Suspense>
+                }
+              />
               <Route
                 path="/placement"
                 element={

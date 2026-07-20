@@ -7,7 +7,7 @@
 // ежедневная активность, держать её в двух тапах было неправильно.
 // ============================================================================
 import { useEffect, useState } from 'react'
-import { GraduationCapIcon, CompassIcon, NotePencilIcon } from '@phosphor-icons/react'
+import { BarbellIcon, GraduationCapIcon, CompassIcon, NotePencilIcon } from '@phosphor-icons/react'
 import { RowCard } from '../../components/RowCard'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
@@ -52,7 +52,10 @@ export function StudyPage() {
       .catch(() => setAssignments(null)) // строка просто не появится — не вводим в заблуждение цифрой
   }, [])
 
-  const showPlacement = lang === 'es' ? !esLevel : enLevel === null
+  // тест уровня доступен ВСЕГДА (ученик — когда захочет, преподаватель может
+  // попросить пройти заново); меняется только подача строки
+  const level = lang === 'es' ? esLevel : (enLevel ?? null)
+  const levelLoading = lang === 'en' && enLevel === undefined
 
   return (
     <ReaderPage
@@ -91,15 +94,27 @@ export function StudyPage() {
             to="/grammar"
             className="animate-fade-up"
           />
-          {showPlacement && (
+          <RowCard
+            Icon={BarbellIcon}
+            title="Практика"
+            desc="Все мини-игры: слова, грамматика, речь"
+            to="/practice"
+            className="animate-fade-up"
+            style={{ animationDelay: '.04s' }}
+          />
+          {!levelLoading && (
             <RowCard
               Icon={CompassIcon}
-              title="Определи свой уровень"
-              desc={`До ${lang === 'es' ? 40 : 50} вопросов — подстроим диалог и подсказки`}
+              title={level ? `Твой уровень: ${level}` : 'Определи свой уровень'}
+              desc={
+                level
+                  ? 'Пройти тест заново — вдруг уже вырос?'
+                  : `До ${lang === 'es' ? 40 : 50} вопросов — подстроим диалог и подсказки`
+              }
               to="/placement"
-              dashed
+              dashed={!level}
               className="animate-fade-up"
-              style={{ animationDelay: '.06s' }}
+              style={{ animationDelay: '.08s' }}
             />
           )}
         </div>

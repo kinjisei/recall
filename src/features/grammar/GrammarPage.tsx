@@ -7,6 +7,7 @@
 // глаголы (IrregularVerbsSection).
 // ============================================================================
 import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   ArrowsClockwiseIcon,
   BookOpenIcon,
@@ -42,14 +43,22 @@ const sections: { id: Section; label: string; Icon: Icon }[] = [
   { id: 'verbs', label: 'Глаголы', Icon: ShuffleIcon },
 ]
 
-/** «Грамматика»: уроки (EN и ES) + глаголы (ES — спряжения, EN — неправильные). */
+/**
+ * «Грамматика»: уроки (EN и ES) + глаголы (ES — спряжения, EN — неправильные).
+ * Query-параметры для входа из «Практики»: ?verbs=1 — сразу раздел «Глаголы»,
+ * ?mistakes=1 — сразу повтор банка «Мои ошибки».
+ */
 export function GrammarPage() {
   const { lang } = useLanguage()
-  const [section, setSection] = useState<Section>('lessons')
+  const [params] = useSearchParams()
+  const [section, setSection] = useState<Section>(() =>
+    params.get('verbs') ? 'verbs' : 'lessons',
+  )
 
   // при смене языка возвращаемся к урокам (контент «Глаголов» разный)
   useEffect(() => {
-    setSection('lessons')
+    setSection(params.get('verbs') ? 'verbs' : 'lessons')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lang])
 
   return (
@@ -75,7 +84,7 @@ export function GrammarPage() {
       }
 
       {section === 'lessons' ? (
-        <LessonsSection key={lang} lang={lang} />
+        <LessonsSection key={lang} lang={lang} initialMistakes={params.get('mistakes') === '1'} />
       ) : lang === 'es' ? (
         <ConjugationSection />
       ) : (
@@ -85,11 +94,17 @@ export function GrammarPage() {
   )
 }
 
-function LessonsSection({ lang }: { lang: AppLang }) {
+function LessonsSection({
+  lang,
+  initialMistakes = false,
+}: {
+  lang: AppLang
+  initialMistakes?: boolean
+}) {
   const [topics, setTopics] = useState<GrammarTopic[] | null>(null)
   const [openLevel, setOpenLevel] = useState<string | null>('A1')
   const [selected, setSelected] = useState<GrammarTopic | null>(null)
-  const [reviewMistakes, setReviewMistakes] = useState(false)
+  const [reviewMistakes, setReviewMistakes] = useState(initialMistakes)
   // пересчитываем счётчик при каждом возврате к списку
   const mistakeCount = useMemo(
     () => (topics ? collectMistakes(lang, topics).length : 0),

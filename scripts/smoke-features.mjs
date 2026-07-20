@@ -113,8 +113,36 @@ async function main() {
     await page.waitForFunction(() => location.pathname !== '/login', { timeout: 20000 })
     check('логин', true)
 
-    // ---- 1. Спринт ----
+    // ---- 0. Навигация: 4 вкладки, редирект /flashcards → /practice ----
     await page.goto(BASE + '/flashcards', { waitUntil: 'networkidle2' })
+    await sleep(600)
+    const navState = await page.evaluate(() => ({
+      path: location.pathname,
+      tabs: [...document.querySelectorAll('nav a span')].map((s) => s.textContent.trim()),
+    }))
+    check(
+      'Навигация: 4 вкладки + редирект на /practice',
+      navState.path === '/practice' &&
+        JSON.stringify(navState.tabs) === JSON.stringify(['Главная', 'Учёба', 'Практика', 'Диалог']),
+      JSON.stringify(navState),
+    )
+    const hubSections = await page.evaluate(() => {
+      const b = document.body.textContent || ''
+      return b.includes('Повторение') && b.includes('Слова') && b.includes('Грамматика') && b.includes('Речь')
+    })
+    check('Хаб Практика: секции Слова/Грамматика/Речь', hubSections)
+
+    // ---- 0b. Микс упражнений ----
+    const mixOpened = await clickByText(page, 'button', 'Микс упражнений')
+    await sleep(2000)
+    const mixState = await page.evaluate(() => ({
+      theme: (document.body.textContent || '').includes('Тема:'),
+      exercise: !!document.querySelector('button.rounded-xl.text-left, input[placeholder="Ваш ответ…"], .border-dashed'),
+    }))
+    check('Микс упражнений работает', mixOpened && mixState.theme && mixState.exercise, JSON.stringify(mixState))
+
+    // ---- 1. Спринт ----
+    await page.goto(BASE + '/practice', { waitUntil: 'networkidle2' })
     await sleep(800)
     const sprintOpened = await clickByText(page, 'button', 'Спринт')
     await sleep(2500) // пул слов грузится
@@ -134,7 +162,7 @@ async function main() {
     }
 
     // ---- 2. Диктант ----
-    await page.goto(BASE + '/flashcards', { waitUntil: 'networkidle2' })
+    await page.goto(BASE + '/practice', { waitUntil: 'networkidle2' })
     await sleep(800)
     const dictOpened = await clickByText(page, 'button', 'Диктант')
     await sleep(2500)
@@ -151,7 +179,7 @@ async function main() {
     }
 
     // ---- 3. Собери фразу (EN) ----
-    await page.goto(BASE + '/flashcards', { waitUntil: 'networkidle2' })
+    await page.goto(BASE + '/practice', { waitUntil: 'networkidle2' })
     await sleep(800)
     const sbOpened = await clickByText(page, 'button', 'Собери фразу')
     await sleep(1500)

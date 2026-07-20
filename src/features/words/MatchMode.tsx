@@ -12,6 +12,7 @@ import { Button } from '../../components/Button'
 import { logActivity } from '../../lib/activity'
 import { speak } from '../../lib/speech'
 import { getDefinitions } from '../../lib/definitions'
+import { getUserLevel } from '../../lib/level'
 import { loadGamePool, type GamePool, type PoolItem } from '../../lib/wordPool'
 import { markWrong, pickWords, shuffle } from './gameUtils'
 import { GameHeader, GameLoading, EmptyPool } from './GameShell'
@@ -78,8 +79,11 @@ function MatchRound({
       // берём с запасом — у части слов определения не найдётся;
       // перевод передаём как подсказку по части речи (см. lib/definitions)
       const candidates = pickWords(pool, PAIRS * 3)
+      // уровень ученика: новичку — сверхпростые определения (см. lib/definitions)
+      const level = await getUserLevel('en')
       const defs = await getDefinitions(
         candidates.map((c) => ({ word: c.term, translation: c.translation })),
+        level,
       )
       const out: Pair[] = []
       for (const item of candidates) {
