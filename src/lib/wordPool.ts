@@ -21,6 +21,8 @@ export interface PoolItem {
   example?: string
   /** Уровень слова из пака (у карточек пользователя его нет). */
   level?: string
+  /** Тема пака (topic_id) — для подбора однотемных обманок в играх. */
+  topic?: number
   /** Есть, только если слово взято из колоды пользователя. */
   card?: Card
   state?: ReviewState | null
@@ -120,7 +122,7 @@ async function loadPackItems(lang: AppLang): Promise<PoolItem[]> {
       const term = w.spanish?.trim() ?? ''
       const translation = w.russian?.trim() ?? ''
       if (!isPlayable(term, translation)) continue
-      items.push({ term, translation, example: w.example_es ?? undefined, level: w.level })
+      items.push({ term, translation, example: w.example_es ?? undefined, level: w.level, topic: w.topic_id })
     }
   } else {
     const m = await import('../data/english/words')
@@ -128,7 +130,7 @@ async function loadPackItems(lang: AppLang): Promise<PoolItem[]> {
       const term = w.english?.trim() ?? ''
       const translation = w.russian?.trim() ?? ''
       if (!isPlayable(term, translation)) continue
-      items.push({ term, translation, example: w.example_en ?? undefined, level: w.level })
+      items.push({ term, translation, example: w.example_en ?? undefined, level: w.level, topic: w.topic_id })
     }
   }
   return items

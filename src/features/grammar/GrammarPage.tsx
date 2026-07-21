@@ -107,6 +107,12 @@ function LessonsSection({
   const [openLevel, setOpenLevel] = useState<string | null>('A1')
   const [selected, setSelected] = useState<GrammarTopic | null>(null)
   const [reviewMistakes, setReviewMistakes] = useState(initialMistakes)
+
+  // При открытии темы (и возврате к списку) прокручиваем наверх — иначе
+  // урок открывался на прежней прокрутке списка, показывая свою нижнюю часть.
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [selected])
   // пересчитываем счётчик при каждом возврате к списку
   const mistakeCount = useMemo(
     () => (topics ? collectMistakes(lang, topics).length : 0),
@@ -226,6 +232,11 @@ function TopicScreen({
   onBack: () => void
 }) {
   const [mode, setMode] = useState<'theory' | 'exercises'>('theory')
+
+  // при переключении теория↔упражнения — тоже наверх
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [mode])
 
   return (
     <div className="flex flex-col gap-4">

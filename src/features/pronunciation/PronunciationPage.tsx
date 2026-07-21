@@ -402,20 +402,24 @@ export function PronunciationPage() {
         </Card>
       )}
 
-      {/* Навигация по раунду */}
-      <div className="flex items-center justify-between gap-3">
-        {score ? (
-          <Button variant="secondary" onClick={retryPhrase}>
-            <IconRefresh size={18} className="mr-1 inline" />
-            Повторить
+      {/* Навигация по раунду: до записи кнопок нет (только микрофон) — «Дальше»
+          появляется после оценки. В режиме без микрофона (iPhone) «Дальше»
+          нужен всегда, иначе фразы не пролистать. */}
+      {(score || !supported) && (
+        <div className="flex items-center justify-between gap-3">
+          {score ? (
+            <Button variant="secondary" onClick={retryPhrase}>
+              <IconRefresh size={18} className="mr-1 inline" />
+              Повторить
+            </Button>
+          ) : (
+            <span />
+          )}
+          <Button onClick={advance}>
+            {index + 1 >= round.length ? 'Завершить раунд' : 'Дальше →'}
           </Button>
-        ) : (
-          <span />
-        )}
-        <Button onClick={advance}>
-          {index + 1 >= round.length ? 'Завершить раунд' : 'Дальше →'}
-        </Button>
-      </div>
+        </div>
+      )}
     </div>
   )
 }

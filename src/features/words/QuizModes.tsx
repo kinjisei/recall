@@ -76,6 +76,24 @@ function optionsFor(item: PoolItem, pool: PoolItem[], pick: (i: PoolItem) => str
 }
 
 /**
+ * Варианты для «Пропуска»: обманки берём СНАЧАЛА из той же темы пака
+ * (topic_id), потом добираем любыми. Раньше подставлялись случайные слова —
+ * «he ___ his job» с вариантами landlord/bake/headache решалось по части речи,
+ * без чтения. Слова одной темы («Работа»: hire, salary…) правдоподобнее.
+ */
+function gapOptions(item: PoolItem, pool: PoolItem[]): { options: string[]; answer: number } {
+  const right = item.term
+  const cand = pool.filter((p) => p.term && p.term !== right)
+  const sameTopic = shuffle(
+    cand.filter((p) => item.topic != null && p.topic === item.topic),
+  )
+  const rest = shuffle(cand.filter((p) => item.topic == null || p.topic !== item.topic))
+  const others = [...sameTopic, ...rest].slice(0, OPTIONS - 1).map((p) => p.term)
+  const options = shuffle([right, ...others])
+  return { options, answer: options.indexOf(right) }
+}
+
+/**
  * Похожесть слов на слух — для аудирования. Если варианты начинаются с
  * разных букв («think» против «apple», «orange»), задание решается без
  * прослушивания: услышал «т» — ответ очевиден. Поэтому подбираем обманки,
@@ -140,7 +158,7 @@ export function GapMode({ lang, onBack }: { lang: AppLang; onBack: () => void })
     }
     const picked = pickWords(usable, ROUND)
     return picked.map((item) => {
-      const { options, answer } = optionsFor(item, pool.items, (p) => p.term)
+      const { options, answer } = gapOptions(item, pool.items)
       return {
         prompt: blankOut(item.example!, item.term)!,
         options,

@@ -259,7 +259,7 @@ function WordsStudy({ onBack }: { onBack: () => void }) {
         <RowCard
           Icon={IconCards}
           title="Повторение колоды"
-          desc="Карточки по расписанию FSRS"
+          desc="Карточки к повторению — по умному расписанию"
           onClick={() => setSub('review')}
           active
           className="animate-fade-up"

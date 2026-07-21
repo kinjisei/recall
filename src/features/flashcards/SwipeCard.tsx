@@ -64,8 +64,8 @@ export function SwipeCard({
     if (!drag.current.active || flying) return
     const delta = e.clientX - drag.current.startX
     if (Math.abs(delta) > 6) drag.current.moved = true
-    // свайпать можно только после переворота — сначала проверь себя
-    if (flipped) setDx(delta)
+    // свайпать можно и без переворота: знаешь слово — свайпни сразу
+    setDx(delta)
   }
 
   const onPointerUp = () => {
@@ -74,12 +74,8 @@ export function SwipeCard({
     drag.current.active = false
 
     if (!wasDrag) {
-      // это был тап
+      // это был тап — переворачиваем (проверить себя)
       if (!flipped) onFlip()
-      setDx(0)
-      return
-    }
-    if (!flipped) {
       setDx(0)
       return
     }
@@ -130,7 +126,7 @@ export function SwipeCard({
           </div>
           {card.ipa && <p className="text-[var(--night-text-40)]">/{card.ipa}/</p>}
           <p className="mt-6 flex items-center gap-1.5 text-sm text-[var(--night-text-40)]">
-            <IconHint size={16} /> тапни — увидишь перевод
+            <IconHint size={16} /> тап — перевод · свайп, если знаешь
           </p>
         </div>
 
