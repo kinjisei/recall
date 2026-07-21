@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { BrandLogo, BrandMark } from '../../components/Brand'
+import { IconEye } from '../../components/icons'
 import { describeSignUpError } from '../../lib/access'
 
 /**
@@ -12,7 +13,7 @@ import { describeSignUpError } from '../../lib/access'
  */
 
 const inputClass =
-  'h-11 w-full rounded-xl border-none bg-[var(--night-input)] px-4 text-sm text-[var(--night-text)] placeholder:text-[var(--night-text-25)] outline-none focus:ring-2 focus:ring-[var(--night-accent-45)]'
+  'h-11 w-full rounded-xl border-none bg-[var(--night-input)] px-4 text-sm text-[var(--night-text)] placeholder:text-[var(--night-text-40)] outline-none focus:ring-2 focus:ring-[var(--night-accent-45)]'
 
 export function LoginPage() {
   const { user, signIn, signUp } = useAuth()
@@ -273,14 +274,14 @@ function InputGroup({
   )
 }
 
+/** Фирменный IconEye; в состоянии «скрыть» поверх — диагональная черта. */
 function EyeIcon({ off }: { off: boolean }) {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      {off ? (
-        <path d="M3 3l18 18M10.6 10.6a3 3 0 0 0 4.2 4.2M9.9 4.2A10.9 10.9 0 0 1 12 4c7 0 10 8 10 8a17.6 17.6 0 0 1-3.2 4.3M6.1 6.1A17.4 17.4 0 0 0 2 12s3 8 10 8a10.6 10.6 0 0 0 5.9-1.9" />
-      ) : (
-        <path d="M2 12s3-8 10-8 10 8 10 8-3 8-10 8-10-8-10-8Z M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+    <span className="relative inline-flex" aria-hidden="true">
+      <IconEye size={18} />
+      {off && (
+        <span className="absolute left-1/2 top-1/2 h-[1.75px] w-[20px] -translate-x-1/2 -translate-y-1/2 rotate-45 rounded-full bg-current" />
       )}
-    </svg>
+    </span>
   )
 }

@@ -1,6 +1,7 @@
 // Общие кусочки интерфейса мини-игр: шапка со «← Назад», загрузка,
 // заглушка «мало слов» и универсальный движок вопросов с 4 вариантами.
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { IconSpeaker, IconTray } from '../../components/icons'
 import { BackHeader } from '../../components/BackButton'
 import { Card } from '../../components/Card'
@@ -26,6 +27,7 @@ export function GameLoading({ title, onBack }: { title: string; onBack: () => vo
 }
 
 export function EmptyPool({ title, onBack }: { title: string; onBack: () => void }) {
+  const navigate = useNavigate()
   return (
     <div className="flex flex-col gap-4">
       <GameHeader title={title} onBack={onBack} />
@@ -33,8 +35,12 @@ export function EmptyPool({ title, onBack }: { title: string; onBack: () => void
         <IconTray size={40} className="text-[var(--night-text-25)]" />
         <p className="mt-2 font-semibold">Пока мало слов для игры</p>
         <p className="mt-1 text-sm text-[var(--night-text-40)]">
-          Добавь слова кнопкой «Паки» в шапке раздела «Практика» или тапая по словам в «Учёбе».
+          Добавляй слова в разделе «Учёба» → «Слова» (кнопка «Паки слов») или
+          тапая по словам в текстах.
         </p>
+        <Button className="mt-4" onClick={() => navigate('/study')}>
+          Добавить первые слова
+        </Button>
       </Card>
     </div>
   )

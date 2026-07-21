@@ -168,7 +168,7 @@ function BuildTask({
             </button>
           ))}
           {built.length === 0 && (
-            <span className="px-1 py-1 text-sm text-[var(--night-text-40)]">нажимайте слова снизу по порядку</span>
+            <span className="px-1 py-1 text-sm text-[var(--night-text-40)]">нажимай слова снизу по порядку</span>
           )}
         </div>
       </div>

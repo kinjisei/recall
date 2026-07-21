@@ -302,7 +302,7 @@ function ChatSection({ level, lang }: { level: CEFRLevel; lang: AppLang }) {
         <form onSubmit={send} className="flex items-center gap-2.5">
           <input
             aria-label={lang === 'es' ? 'Сообщение по-испански' : 'Сообщение по-английски'}
-            className="h-12 min-w-0 flex-1 rounded-[14px] border-none bg-[var(--night-input)] px-4 text-[15px] outline-none placeholder:text-[var(--night-text-25)] focus:ring-2 focus:ring-[var(--night-accent-45)]"
+            className="h-12 min-w-0 flex-1 rounded-[14px] border-none bg-[var(--night-input)] px-4 text-[15px] outline-none placeholder:text-[var(--night-text-40)] focus:ring-2 focus:ring-[var(--night-accent-45)]"
             placeholder={lang === 'es' ? 'Escribe en español…' : 'Write in English…'}
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -338,10 +338,10 @@ function ChatSection({ level, lang }: { level: CEFRLevel; lang: AppLang }) {
 function writingSystemPrompt(level: CEFRLevel, lang: AppLang): string {
   const subject = lang === 'es' ? 'испанского' : 'английского'
   const textLang = lang === 'es' ? 'испанском' : 'английском'
-  const levelNote =
-    lang === 'es'
-      ? 'Ученик — носитель русского, начинающий (A1–A2). Он пришлёт текст на испанском.'
-      : `Ученик — носитель русского, уровень ${level}. Он пришлёт текст на английском.`
+  // Реальный уровень (для ES — из placement-теста), как в промпте чата:
+  // раньше испанский всегда считался A1–A2, и B1/B2-ученику разбор был занижен.
+  const beginner = level === 'A1' || level === 'A2' ? ' (начинающий)' : ''
+  const levelNote = `Ученик — носитель русского, уровень ${level}${beginner}. Он пришлёт текст на ${textLang}.`
   return [
     `Ты — доброжелательный преподаватель ${subject}.`,
     levelNote,

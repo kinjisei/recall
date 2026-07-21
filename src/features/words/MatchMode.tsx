@@ -73,9 +73,28 @@ function MatchRound({
     setMistakes(0)
 
     const build = async () => {
+      // Два слова с ОДИНАКОВЫМ значением в одном раунде (bonito/lindo →
+      // «красивый») дают две неразличимые ячейки справа: игрок тыкает
+      // «не ту» из двух одинаковых и получает ложный штраф FSRS. Поэтому
+      // значения в раунде должны быть уникальны (нормализованно).
+      const usedMeanings = new Set<string>()
+      const takeMeaning = (meaning: string): boolean => {
+        const key = meaning.trim().toLowerCase()
+        if (usedMeanings.has(key)) return false
+        usedMeanings.add(key)
+        return true
+      }
+
       if (lang === 'es') {
-        const picked = pickWords(pool, PAIRS)
-        return picked.map((item, id) => ({ id, item, meaning: item.translation }))
+        // берём с запасом: кандидаты с повторным переводом отсеиваются
+        const candidates = pickWords(pool, PAIRS * 3)
+        const out: Pair[] = []
+        for (const item of candidates) {
+          if (!takeMeaning(item.translation)) continue
+          out.push({ id: out.length, item, meaning: item.translation })
+          if (out.length === PAIRS) break
+        }
+        return out
       }
       // берём с запасом — у части слов определения не найдётся;
       // перевод передаём как подсказку по части речи (см. lib/definitions)
@@ -89,7 +108,7 @@ function MatchRound({
       const out: Pair[] = []
       for (const item of candidates) {
         const meaning = defs[item.term.toLowerCase()]
-        if (!meaning) continue
+        if (!meaning || !takeMeaning(meaning)) continue
         out.push({ id: out.length, item, meaning })
         if (out.length === PAIRS) break
       }
@@ -97,6 +116,7 @@ function MatchRound({
       if (out.length < PAIRS) {
         for (const item of candidates) {
           if (out.some((p) => p.item.term === item.term)) continue
+          if (!takeMeaning(item.translation)) continue
           out.push({ id: out.length, item, meaning: item.translation })
           if (out.length === PAIRS) break
         }

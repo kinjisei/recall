@@ -157,11 +157,19 @@ export default defineConfig(({ mode }) => {
           // Шрифты при этом не попадали вовсе, и офлайн интерфейс падал на
           // системный. Кладём каркас и шрифты; языковые данные докачиваются
           // по факту обращения (runtime-кэш ниже).
+          // Каркас в текущей сборке (Vite 8/Rolldown) — три чанка:
+          //   index-*.js          — стартовый бандл приложения;
+          //   icons-*.js          — общий чанк (иконки + КЛИЕНТ SUPABASE —
+          //                         без него auth-гейт не пройти, офлайн-старт
+          //                         зависал бы на пустом экране);
+          //   workbox-window*.js  — регистрация SW из main.tsx.
+          // Прежние glob'ы jsx-runtime-*.js / supabase-*.js были мёртвыми:
+          // Rolldown такие чанки больше не выделяет (2 warning'а при сборке).
           globPatterns: [
             '**/*.{css,html,ico,svg,png,webmanifest,woff2}',
             'assets/index-*.js',
-            'assets/jsx-runtime-*.js',
-            'assets/supabase-*.js',
+            'assets/icons-*.js',
+            'assets/workbox-window*.js',
           ],
           runtimeCaching: [
             {

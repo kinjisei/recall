@@ -6,12 +6,14 @@
 // переводу) и обучающая подсказка для новичка.
 // ============================================================================
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { IconRefresh, IconBadgeCheck } from '../../components/icons'
 import { BackButton } from '../../components/BackButton'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { celebrate } from '../../components/Confetti'
 import { getDueCards, reviewCard, type DueCard } from '../../lib/fsrs'
+import { countMyWords } from '../../lib/cards'
 import { logActivity } from '../../lib/activity'
 import { getMyPendingWordChecks } from '../../lib/wordChecks'
 import { useLanguage } from '../../context/LanguageContext'
@@ -23,8 +25,11 @@ import type { Card as CardType, WordCheck } from '../../types'
 const TUTORIAL_KEY = 'recall.deck_tutorial_seen'
 
 export function DeckReview({ onBack }: { onBack?: () => void }) {
+  const navigate = useNavigate()
   const { lang } = useLanguage()
   const [queue, setQueue] = useState<DueCard[]>([])
+  // сколько слов вообще: отличать «слов ещё нет» от «на сегодня всё повторено»
+  const [totalWords, setTotalWords] = useState<number | null>(null)
   const [index, setIndex] = useState(0)
   const [flipped, setFlipped] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -57,6 +62,13 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
       setQueue(due)
       setIndex(0)
       setFlipped(false)
+      // очередь пуста: узнаём, есть ли слова вообще (пустая колода новичка)
+      if (due.length === 0) {
+        const n = await countMyWords(lang).catch(() => null)
+        if (aliveRef.current) setTotalWords(n)
+      } else {
+        setTotalWords(null)
+      }
     } catch (e) {
       if (aliveRef.current) {
         setError(e instanceof Error ? e.message : 'Ошибка загрузки')
@@ -113,7 +125,10 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
         setQueue((q) => [...q, { card, state: newState }])
       }
     } catch (e) {
-      // карточка остаётся на месте — оценка не сохранилась, показываем ошибку
+      // карточка остаётся на месте — оценка не сохранилась, показываем ошибку.
+      // handledKey сбрасываем, иначе тот же key навсегда блокировал бы повторный
+      // свайп (защита от двойной оценки нужна только после УСПЕШНОГО сохранения)
+      handledKey.current = null
       setError(e instanceof Error ? e.message : 'Не удалось сохранить оценку')
     } finally {
       swiping.current = false
@@ -234,15 +249,24 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
             />
             <p className="mt-2 font-semibold">
               {reviewedCount > 0
-                ? `Готово! Повторено карточек: ${reviewedCount}`
-                : 'Карточек к повторению нет'}
+                ? `Готово! Повторено слов: ${reviewedCount}`
+                : totalWords === 0
+                  ? 'У тебя пока нет слов'
+                  : 'Слов к повторению нет'}
             </p>
             <p className="mt-1 text-sm text-[var(--night-text-40)]">
-              Добавь слова кнопками «Паки» и «+ Слово» в разделе «Практика» или тапом по слову в «Учёбе».
+              Добавляй слова в разделе «Учёба» → «Слова» (кнопки «Паки слов» и
+              «Своё слово») или тапом по слову в любом тексте.
             </p>
-            <Button variant="secondary" className="mt-4" onClick={load}>
-              Обновить
-            </Button>
+            {totalWords === 0 ? (
+              <Button className="mt-4" onClick={() => navigate('/study')}>
+                Добавить первые слова
+              </Button>
+            ) : (
+              <Button variant="secondary" className="mt-4" onClick={load}>
+                Обновить
+              </Button>
+            )}
           </Card>
           {/* ведомая сессия: предложить следующий шаг */}
           <GuidedNext step="flashcards" />

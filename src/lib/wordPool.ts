@@ -11,6 +11,7 @@
 import { supabase, currentUserId } from './supabase'
 import { getDeckIds } from './cards'
 import { getEsLevel } from './esLevel'
+import { getProfile } from './profile'
 import { sample } from './random'
 import type { AppLang, Card, ReviewState } from '../types'
 
@@ -37,8 +38,9 @@ async function targetLevel(lang: AppLang): Promise<string> {
   try {
     const userId = await currentUserId()
     if (!userId) return 'B1'
-    const { data } = await supabase.from('profiles').select('level').eq('id', userId).single()
-    return ((data as { level?: string } | null)?.level as string) ?? 'B1'
+    // профиль — из общего кэша (lib/profile), а не отдельным запросом
+    const profile = await getProfile(userId)
+    return profile?.level ?? 'B1'
   } catch {
     return 'B1'
   }
@@ -159,13 +161,55 @@ function sortByLevelCloseness(items: PoolItem[], target: string): PoolItem[] {
  * `need` — сколько слов минимально нужно игре; добираем с запасом, чтобы
  * хватало на варианты-обманки.
  */
+// --- кэш «слова дня» --------------------------------------------------------
+// Вычисление тянет ленивый чанк словаря (для ES ~836 КБ) — поэтому готовый
+// результат храним в localStorage до конца дня: повторные открытия Главной
+// словарь вообще не грузят.
+const WOD_KEY = 'recall.word_of_day'
+
+interface WodCache {
+  day: number
+  word: PoolItem | null
+}
+
+function todayNumber(): number {
+  return Math.floor(Date.now() / 86_400_000)
+}
+
+/** Слово дня из кэша на сегодня (синхронно, без загрузки словаря).
+ *  undefined — кэша нет (нужен полный newWordOfDay). */
+export function cachedWordOfDay(lang: AppLang): PoolItem | null | undefined {
+  try {
+    const raw = localStorage.getItem(`${WOD_KEY}.${lang}`)
+    if (!raw) return undefined
+    const c = JSON.parse(raw) as WodCache
+    if (c.day !== todayNumber()) return undefined
+    return c.word
+  } catch {
+    return undefined
+  }
+}
+
+function saveWordOfDay(lang: AppLang, word: PoolItem | null): void {
+  try {
+    const cache: WodCache = { day: todayNumber(), word }
+    localStorage.setItem(`${WOD_KEY}.${lang}`, JSON.stringify(cache))
+  } catch {
+    // localStorage переполнен/недоступен — просто не кэшируем
+  }
+}
+
 /**
  * «Слово дня» для Главной: НОВОЕ слово из пака уровня пользователя, которого
  * ещё нет в колоде (пользователь может добавить его кнопкой «В колоду»).
- * Стабильно в течение дня: индекс = номер дня % размер выборки.
+ * Стабильно в течение дня: индекс = номер дня % размер выборки; результат
+ * кэшируется в localStorage на текущий день (см. cachedWordOfDay).
  * null — паки кончились (всё уже в колоде) или не загрузились.
  */
 export async function newWordOfDay(lang: AppLang): Promise<PoolItem | null> {
+  const cached = cachedWordOfDay(lang)
+  if (cached !== undefined) return cached
+
   const [packs, level, deckItems] = await Promise.all([
     loadPackItems(lang).catch(() => []),
     targetLevel(lang),
@@ -176,9 +220,11 @@ export async function newWordOfDay(lang: AppLang): Promise<PoolItem | null> {
   const candidates = sortByLevelCloseness(packs, level)
     .filter((p) => !have.has(p.term.toLowerCase()))
     .slice(0, 60)
-  if (candidates.length === 0) return null
-  const day = Math.floor(Date.now() / 86_400_000)
-  return candidates[day % candidates.length]
+  const word = candidates.length === 0 ? null : candidates[todayNumber() % candidates.length]
+  // пустые паки = скорее всего словарь не загрузился (сеть) — null не кэшируем,
+  // чтобы не остаться без слова дня до завтра из-за разовой ошибки
+  if (packs.length > 0) saveWordOfDay(lang, word)
+  return word
 }
 
 export async function loadGamePool(lang: AppLang, need = 24): Promise<GamePool> {

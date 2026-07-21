@@ -170,12 +170,7 @@ function ReviewedView({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" className="px-2 py-1 text-sm" onClick={onBack}>
-          ← Задания
-        </Button>
-        <h1 className="min-w-0 truncate text-xl font-bold">{m.title ?? m.topic}</h1>
-      </div>
+      <BackHeader onBack={onBack} title={m.title ?? m.topic} label="К заданиям" />
 
       <Card className="flex flex-col items-center text-center">
         <ScoreGlyph percent={percent} />
@@ -307,12 +302,7 @@ function AssignmentRunner({
   if (stage === 'read') {
     return (
       <div className="flex flex-col gap-3">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" className="px-2 py-1 text-sm" onClick={onBack}>
-            ← Задания
-          </Button>
-          <h1 className="min-w-0 truncate text-xl font-bold">{m.title ?? m.topic}</h1>
-        </div>
+        <BackHeader onBack={onBack} title={m.title ?? m.topic} label="К заданиям" />
 
         {row.note && row.status === 'assigned' && (
           <Card className="border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-950/30">

@@ -81,7 +81,7 @@ export function PacksSheet({ lang, onAdded }: { lang: AppLang; onAdded: () => vo
       )
       setResults((r) => ({
         ...r,
-        [topicId]: added > 0 ? `+${added} ✓` : 'уже в колоде',
+        [topicId]: added > 0 ? `+${added} ✓` : 'уже в моих словах',
       }))
       if (added > 0) onAdded()
     } catch (e) {
@@ -126,7 +126,7 @@ export function PacksSheet({ lang, onAdded }: { lang: AppLang; onAdded: () => vo
       </p>
 
       <input
-        className="w-full rounded-lg border border-white/[0.10] bg-[var(--night-surface)] px-3 py-2 text-sm outline-none focus:border-[var(--night-accent-45)] dark:border-white/[0.10] dark:bg-slate-900"
+        className="w-full rounded-lg border border-white/[0.10] bg-[var(--night-input)] px-3 py-2 text-sm outline-none focus:border-[var(--night-accent-45)]"
         placeholder="Поиск темы…"
         value={query}
         onChange={(e) => setQuery(e.target.value)}

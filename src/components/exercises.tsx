@@ -111,7 +111,7 @@ export function FillExercise({
               : 'border-red-500'
             : 'border-white/[0.10] focus:border-[var(--night-accent-45)] dark:border-white/[0.10]'
         }`}
-        placeholder="Ваш ответ…"
+        placeholder="Твой ответ…"
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && check()}
@@ -219,7 +219,7 @@ export function OrderExercise({
           ))}
           {built.length === 0 && (
             <span className="px-1 py-1 text-sm text-[var(--night-text-40)]">
-              нажимайте слова снизу по порядку
+              нажимай слова снизу по порядку
             </span>
           )}
         </div>

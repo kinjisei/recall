@@ -56,7 +56,7 @@ function TeacherCard() {
           <p className="text-sm text-[var(--night-text-40)]">
             {pending > 0
               ? `Работ на проверку: ${pending}`
-              : 'Код-приглашение, колоды, материалы, прогресс'}
+              : 'Код-приглашение, наборы слов, материалы, прогресс'}
           </p>
         </div>
         {pending > 0 ? (
@@ -189,7 +189,7 @@ function JoinTeacherBlock() {
       ) : (
         <form onSubmit={submit} className="flex gap-2">
           <input
-            className="min-w-0 flex-1 rounded-lg border border-white/[0.10] bg-[var(--night-surface)] px-3 py-2 font-mono text-sm uppercase tracking-widest outline-none focus:border-[var(--night-accent-45)] dark:border-white/[0.10] dark:bg-slate-900"
+            className="min-w-0 flex-1 rounded-lg border border-white/[0.10] bg-[var(--night-input)] px-3 py-2 font-mono text-sm uppercase tracking-widest outline-none focus:border-[var(--night-accent-45)]"
             placeholder="КОД (6 символов)"
             value={code}
             maxLength={6}

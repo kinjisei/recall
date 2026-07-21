@@ -122,7 +122,7 @@ export function StudentWordsSection({ studentId }: { studentId: string }) {
       )}
 
       {words.length === 0 ? (
-        <p className="text-sm text-[var(--night-text-40)]">У ученицы пока нет слов в колоде.</p>
+        <p className="text-sm text-[var(--night-text-40)]">У ученицы пока нет своих слов.</p>
       ) : (
         <>
           <p className="text-xs text-[var(--night-text-40)]">

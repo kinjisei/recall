@@ -22,11 +22,11 @@ import {
 } from '../../components/icons'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
-import { supabase } from '../../lib/supabase'
+import { getProfile } from '../../lib/profile'
 import { getStreak, getTodayTypes, getWeek, type WeekDay } from '../../lib/activity'
-import { getDueCards } from '../../lib/fsrs'
-import { newWordOfDay, type PoolItem } from '../../lib/wordPool'
-import { addCard } from '../../lib/cards'
+import { countDueCards } from '../../lib/fsrs'
+import { cachedWordOfDay, newWordOfDay, type PoolItem } from '../../lib/wordPool'
+import { addCard, countMyWords } from '../../lib/cards'
 import { getEsLevel } from '../../lib/esLevel'
 import { startGuided } from '../../lib/guided'
 import { speak } from '../../lib/speech'
@@ -63,18 +63,15 @@ export function DashboardPage() {
   const [week, setWeek] = useState<WeekDay[]>([])
   const [doneToday, setDoneToday] = useState<Set<ActivityType>>(new Set())
   const [dueCount, setDueCount] = useState<number | null>(null)
+  // сколько всего своих слов: 0 — колода пуста, новичка не путаем «Всё повторено»
+  const [wordCount, setWordCount] = useState<number | null>(null)
   const [wordOfDay, setWordOfDay] = useState<PoolItem | null>(null)
   // один запрос на обе плашки заданий (top и bottom)
   const [assignments, setAssignments] = useState<AssignmentCounts | null>(null)
 
   useEffect(() => {
     if (!user) return
-    supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single()
-      .then(({ data }) => setProfile(data as Profile | null))
+    getProfile(user.id).then(setProfile)
     getStreak().then(setStreak).catch(() => {})
     getTodayTypes().then(setDoneToday).catch(() => {})
     getWeek().then(setWeek).catch(() => {})
@@ -87,16 +84,44 @@ export function DashboardPage() {
     // перетирать данные нового
     let alive = true
     setDueCount(null)
+    setWordCount(null)
     setWordOfDay(null)
-    getDueCards(99, lang)
-      .then((d) => alive && setDueCount(d.length))
+    // счётчик — лёгкие count-запросы, без выкачивания строк карточек
+    countDueCards(lang)
+      .then((n) => alive && setDueCount(Math.min(n, 99)))
       .catch(() => {})
-    // слово дня — НОВОЕ слово из пака уровня с кнопкой «В колоду»
-    newWordOfDay(lang)
-      .then((w) => alive && setWordOfDay(w))
+    countMyWords(lang)
+      .then((n) => alive && setWordCount(n))
       .catch(() => {})
+
+    // Слово дня — НОВОЕ слово из пака уровня с кнопкой «В колоду».
+    // Кэш на день читаем сразу; полный расчёт тянет ленивый чанк словаря
+    // (ES ~836 КБ), поэтому первую загрузку откладываем до простоя браузера,
+    // чтобы не конкурировать с первым рендером Главной.
+    const cached = cachedWordOfDay(lang)
+    let idleId = 0
+    let usedIdle = false
+    if (cached !== undefined) {
+      setWordOfDay(cached)
+    } else {
+      const load = () => {
+        newWordOfDay(lang)
+          .then((w) => alive && setWordOfDay(w))
+          .catch(() => {})
+      }
+      if (typeof requestIdleCallback === 'function') {
+        usedIdle = true
+        idleId = requestIdleCallback(load, { timeout: 3000 })
+      } else {
+        idleId = window.setTimeout(load, 1500)
+      }
+    }
     return () => {
       alive = false
+      if (idleId) {
+        if (usedIdle) cancelIdleCallback(idleId)
+        else window.clearTimeout(idleId)
+      }
     }
   }, [user, lang])
 
@@ -108,8 +133,12 @@ export function DashboardPage() {
   const doneCount = planItems.filter((p) => p.types.some((t) => doneToday.has(t))).length
   const allDone = doneCount === planItems.length
 
-  const dueLabel =
-    dueCount === null
+  // Пустая колода ≠ «всё повторено»: новичку без единого слова предлагаем
+  // добавить первые (плитка ведёт в «Учёбу», где живут паки и добавление).
+  const emptyDeck = wordCount === 0
+  const dueLabel = emptyDeck
+    ? 'Добавь первые слова'
+    : dueCount === null
       ? 'Повторить и потренировать'
       : dueCount === 0
         ? 'Всё повторено'
@@ -158,13 +187,14 @@ export function DashboardPage() {
         <div className="flex flex-col gap-2.5">
           {planItems.map((p, i) => {
             const done = p.types.some((t) => doneToday.has(t))
+            const isWords = p.to === '/practice'
             return (
               <RowCard
                 key={p.to}
                 Icon={p.Icon}
                 title={p.title}
-                desc={done ? 'Готово · засчитано в серию' : p.to === '/practice' ? dueLabel : p.desc}
-                to={p.to}
+                desc={done ? 'Готово · засчитано в серию' : isWords ? dueLabel : p.desc}
+                to={isWords && emptyDeck ? '/study' : p.to}
                 muted={done}
                 active={!done && i === 0}
                 trailing={
@@ -325,7 +355,7 @@ function WordOfDay({ word, lang }: { word: PoolItem; lang: 'en' | 'es' }) {
       <button
         onClick={add}
         disabled={state === 'busy' || state === 'added'}
-        aria-label={state === 'added' ? 'Слово в колоде' : 'Добавить в колоду'}
+        aria-label={state === 'added' ? 'Слово уже в моих словах' : 'Добавить в мои слова'}
         className={`lift flex h-11 w-11 flex-none items-center justify-center rounded-full border ${
           state === 'added'
             ? 'border-emerald-500/60 text-emerald-400'

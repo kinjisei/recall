@@ -1,15 +1,16 @@
-﻿import { useState, type ReactNode } from 'react'
+﻿import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Card } from '../../components/Card'
 import { GuidedNext } from '../../components/GuidedNext'
 import { BackHeader } from '../../components/BackButton'
 import { TappableText, WordSheet, type WordPick } from '../../components/WordSheet'
 import { useLanguage } from '../../context/LanguageContext'
+import { getUserLevel } from '../../lib/level'
 import { getSettings, READER_CLASSES } from '../../lib/settings'
 import { SpanishReaderPage } from './SpanishReader'
 import { sampleTexts, type SampleText } from './sampleTexts'
 import type { CEFRLevel } from '../../types'
 
-const levels: CEFRLevel[] = ['B1', 'B2', 'C1']
+const levels: CEFRLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1']
 
 /** Читалка: английский — тексты + словарь; испанский — свой раздел. */
 export function ReaderPage({
@@ -37,6 +38,22 @@ function EnglishReaderPage({
 }) {
   const [level, setLevel] = useState<CEFRLevel>('B1')
   const [active, setActive] = useState<SampleText | null>(null)
+  // пока не пришёл уровень из профиля, не перещёлкивать вкладку под пальцем
+  const userPicked = useRef(false)
+
+  // стартовая вкладка — уровень пользователя (онбординг/placement), если он
+  // известен; C2-текстов нет, поэтому C2 читает как C1
+  useEffect(() => {
+    let alive = true
+    void getUserLevel('en').then((l) => {
+      if (!alive || !l || userPicked.current) return
+      const start = l === 'C2' ? 'C1' : l
+      if ((levels as string[]).includes(start)) setLevel(start as CEFRLevel)
+    })
+    return () => {
+      alive = false
+    }
+  }, [])
 
   const texts = sampleTexts.filter((t) => t.level === level)
 
@@ -58,7 +75,10 @@ function EnglishReaderPage({
         {levels.map((l) => (
           <button
             key={l}
-            onClick={() => setLevel(l)}
+            onClick={() => {
+              userPicked.current = true
+              setLevel(l)
+            }}
             className={`min-h-[44px] rounded-lg px-4 text-sm font-semibold ${
               level === l
                 ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'

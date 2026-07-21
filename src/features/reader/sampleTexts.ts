@@ -10,6 +10,71 @@ export interface SampleText {
 // Встроенные тексты-образцы (понятный ввод, i+1).
 // Позже Фича 4 (AI) сможет генерировать тексты под уровень и интересы.
 export const sampleTexts: SampleText[] = [
+  // --- A1/A2 (авторский контент Recall): простые живые истории для новичка.
+  // A1 — Present Simple, be/have, самые частотные слова; A2 — Past Simple,
+  // going to, can/must. Перевод — как везде: тап по слову (WordSheet).
+  {
+    id: 'a1-family',
+    level: 'A1',
+    title: 'My little sister',
+    body: `My name is Anna. I have a big family: a mother, a father and two sisters. My little sister Kira is five years old. She has a cat. The cat's name is Boss, because he is big and lazy. Kira loves him very much. But every night the cat sleeps on my bed, not on her bed. Kira is sad, and I am happy!`,
+  },
+  {
+    id: 'a1-pizza',
+    level: 'A1',
+    title: 'Pizza day',
+    body: `It is Friday. Friday is pizza day in our house. My dad makes the pizza, and I help him. We have cheese, tomatoes and ham. My mum does not eat ham, so her pizza is small and green: only vegetables. The kitchen is warm, the music is loud. I love Fridays.`,
+  },
+  {
+    id: 'a1-flat',
+    level: 'A1',
+    title: 'Our new flat',
+    body: `We have a new flat. It is small, but I like it. My room is white, and the window is very big. From the window I see a park and a school. We have no sofa now, so we sit on boxes and drink tea. Dad says: "The sofa comes on Monday." It is like a picnic at home.`,
+  },
+  {
+    id: 'a1-morning',
+    level: 'A1',
+    title: 'Seven in the morning',
+    body: `Every morning is the same. Mum opens my door at seven o'clock and says: "Good morning!" I say: "Five minutes, please." Then our dog runs into my room and jumps on my bed. Now I am not sleepy! We eat breakfast together, and I walk to school with my friend Tim. I like our mornings.`,
+  },
+
+  {
+    id: 'a2-wrong-bus',
+    level: 'A2',
+    title: 'The wrong bus',
+    body: `Last summer I went to the sea with my friend Dana. At the bus station we bought tickets, drank coffee and talked a lot. Then we got on the bus and slept for two hours. When we woke up, we saw mountains — but our sea town has no mountains! We took the wrong bus. Dana laughed, but I wanted to cry. A kind driver helped us, and we arrived late at night. Now, before every trip, I check the bus number three times.`,
+  },
+  {
+    id: 'a2-first-job',
+    level: 'A2',
+    title: 'My first job',
+    body: `Two years ago I got my first job in a small café. On my first day I was very nervous. I dropped a cup, forgot an order and put salt in a cappuccino. I wanted to go home and never come back. But my boss said: "Everybody makes mistakes on the first day. Tomorrow you are going to do better." She was right. After a month I could make ten drinks without mistakes, and people started to remember my name.`,
+  },
+  {
+    id: 'a2-red-jacket',
+    level: 'A2',
+    title: 'The red jacket',
+    body: `Yesterday I went shopping because I needed a warm jacket. In the first shop I found a beautiful red jacket, but it cost too much. The shop assistant said: "You must buy it, red is your colour!" I said no and went home. At home I thought about that jacket all evening. Today the shop sent me an email: the jacket is thirty percent off. I am going to buy it tomorrow morning. Sometimes it is good to wait!`,
+  },
+  {
+    id: 'a2-coffee',
+    level: 'A2',
+    title: 'Too much coffee',
+    body: `Last month I felt tired every day and could not sleep at night. I went to the doctor. She asked me many questions: "Do you do sport? What do you eat? How much coffee do you drink?" I said: "Five or six cups a day." The doctor smiled and said: "There is your problem. You must drink less coffee and walk more." I did not believe her, but I tried. After two weeks I slept like a baby. Now I drink one cup in the morning — and no coffee after lunch.`,
+  },
+  {
+    id: 'a2-picnic-rain',
+    level: 'A2',
+    title: 'Rain at the picnic',
+    body: `On Saturday my friends and I planned a big picnic in the park. In the morning the sky was blue, so we did not take umbrellas. We made sandwiches, played games and listened to music. Then, at three o'clock, the sky turned dark, and it started to rain very hard. We ran to the bus stop with our food and wet blankets. At home we dried our clothes and ate the sandwiches on the kitchen floor. It was the best "picnic" of the summer. Next time we are going to check the weather first!`,
+  },
+  {
+    id: 'a2-guitar',
+    level: 'A2',
+    title: 'Three chords',
+    body: `In January I bought a guitar because I wanted a new hobby. The first week was terrible: my fingers hurt, and the songs sounded awful. My neighbour knocked on the wall two times! But I watched lessons online every evening and learned three chords. With three chords you can play hundreds of simple songs — that was a big surprise for me. Last week I played a song for my friends at a party. They sang with me, and nobody laughed. Now I am going to learn my fourth chord.`,
+  },
+
   {
     id: 'b1-habits',
     level: 'B1',

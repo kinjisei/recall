@@ -170,7 +170,7 @@ export function StudyPage() {
         <RowCard
           Icon={IconCards}
           title="Слова"
-          desc="Паки по уровням, свои слова и колода"
+          desc="Паки по уровням, свои слова и повторение"
           onClick={() => setView('words')}
           className="animate-fade-up"
           style={{ animationDelay: '.08s' }}

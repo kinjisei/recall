@@ -3,7 +3,7 @@
 //   1) какой язык учим (пишет recall.lang),
 //   2) уровень: для ES — существующий placement-тест, для EN — выбор вручную
 //      (теста EN пока нет); шаг можно пропустить,
-//   3) «Твой план готов» + конфетти и переход на Главную.
+//   3) «Твой план готов» + конфетти и запуск первой ведомой сессии.
 // Показывается только новичку: см. useIsNewUser ниже.
 // ============================================================================
 import { useState } from 'react'
@@ -20,6 +20,7 @@ import { useLanguage } from '../../context/LanguageContext'
 import { supabase } from '../../lib/supabase'
 import { setEsLevel } from '../../lib/esLevel'
 import { markOnboarded } from '../../lib/onboarding'
+import { startGuided } from '../../lib/guided'
 import { celebrate } from '../../components/Confetti'
 import type { AppLang, CEFRLevel } from '../../types'
 
@@ -45,7 +46,10 @@ export function OnboardingFlow() {
     }
     markOnboarded()
     celebrate()
-    setTimeout(() => navigate('/', { replace: true }), 600)
+    // «Начать первое занятие» — сразу запускаем ведомую сессию (та же, что
+    // кнопка «Начать занятие» на Главной); пустой шаг повторения при нуле слов
+    // Практика пропустит сама (skipReviewIfNoWords) и уведёт на чтение
+    setTimeout(() => navigate(startGuided(), { replace: true }), 600)
   }
 
   return (

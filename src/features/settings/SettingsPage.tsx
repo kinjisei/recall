@@ -10,6 +10,7 @@ import { IconBack, IconSpeaker, IconCheck } from '../../components/icons'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { supabase } from '../../lib/supabase'
+import { invalidateProfile } from '../../lib/profile'
 import { speak } from '../../lib/speech'
 import {
   SPEECH_RATES,
@@ -77,6 +78,8 @@ export function SettingsPage() {
       if (Object.keys(patch).length > 0) {
         const { error: e } = await supabase.from('profiles').update(patch).eq('id', user.id)
         if (e) throw e
+        // сбросить кэш профиля — Главная и аватар-меню сразу увидят изменения
+        invalidateProfile()
       }
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)

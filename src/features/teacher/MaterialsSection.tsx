@@ -5,6 +5,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
+import { BackHeader } from '../../components/BackButton'
 import { LoadError } from '../../components/LoadError'
 import { useAsyncData } from '../../lib/useAsyncData'
 import {
@@ -35,7 +36,7 @@ import type {
 const LEVELS: CEFRLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
 
 const inputClass =
-  'w-full rounded-lg border border-white/[0.10] bg-[var(--night-surface)] px-3 py-2 text-sm outline-none focus:border-[var(--night-accent-45)] dark:border-white/[0.10] dark:bg-slate-900'
+  'w-full rounded-lg border border-white/[0.10] bg-[var(--night-input)] px-3 py-2 text-sm outline-none focus:border-[var(--night-accent-45)]'
 
 type Mode =
   | { name: 'list' }
@@ -327,12 +328,7 @@ function PlanScreen({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" className="px-2 py-1 text-sm" onClick={onBack}>
-          ← К форме
-        </Button>
-        <p className="font-semibold">План материала от AI</p>
-      </div>
+      <BackHeader onBack={onBack} title="План материала от AI" label="К форме" />
 
       <Card className="flex flex-col gap-3">
         <p className="whitespace-pre-wrap text-sm text-[var(--night-text-70)]">
@@ -441,12 +437,7 @@ function PreviewScreen({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" className="px-2 py-1 text-sm" onClick={onBack}>
-          ← К плану
-        </Button>
-        <p className="min-w-0 truncate font-semibold">Предпросмотр</p>
-      </div>
+      <BackHeader onBack={onBack} title="Предпросмотр" label="К плану" />
 
       <Card>
         <p className="text-lg font-bold">{content.title}</p>
@@ -574,12 +565,7 @@ function MaterialDetail({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" className="px-2 py-1 text-sm" onClick={onBack}>
-          ← Материалы
-        </Button>
-        <p className="min-w-0 truncate font-semibold">{material.title ?? material.topic}</p>
-      </div>
+      <BackHeader onBack={onBack} title={material.title ?? material.topic} label="К материалам" />
 
       <Card>
         <p className="text-xs text-[var(--night-text-40)]">

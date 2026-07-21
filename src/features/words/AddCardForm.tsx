@@ -14,7 +14,7 @@ export function AddCardForm({ lang, onAdded }: { lang: AppLang; onAdded: () => v
   const [msg, setMsg] = useState<string | null>(null)
 
   const inputClass =
-    'w-full rounded-lg border border-white/[0.10] bg-[var(--night-surface)] px-3 py-2 text-sm outline-none focus:border-[var(--night-accent-45)] dark:border-white/[0.10] dark:bg-slate-900'
+    'w-full rounded-lg border border-white/[0.10] bg-[var(--night-input)] px-3 py-2 text-sm outline-none focus:border-[var(--night-accent-45)]'
 
   const submit = async () => {
     if (!front.trim()) return
@@ -62,7 +62,7 @@ export function AddCardForm({ lang, onAdded }: { lang: AppLang; onAdded: () => v
       />
       <div className="flex items-center gap-3">
         <Button onClick={submit} disabled={busy || !front.trim()}>
-          {busy ? 'Добавляю…' : 'Добавить в колоду'}
+          {busy ? 'Добавляю…' : 'Добавить в мои слова'}
         </Button>
         {msg && <span className="text-sm text-[var(--night-text-40)]">{msg}</span>}
       </div>

@@ -8,7 +8,7 @@
 //   ГРАММАТИКА      — Выбери форму · Впиши слово · Собери предложение
 //                     (GrammarMixMode по типам заданий, всё — под уровень) ·
 //                     Мои ошибки (банк из lib/mistakes) · Глаголы
-//   РЕЧЬ            — шэдоуинг (features/pronunciation)
+//   РЕЧЬ            — слушай и повторяй за диктором (features/pronunciation)
 // ============================================================================
 import type React from 'react'
 import { lazy, Suspense, useEffect, useState } from 'react'
@@ -33,7 +33,8 @@ import {
 import { Card } from '../../components/Card'
 import { useLanguage } from '../../context/LanguageContext'
 import { getDueCards } from '../../lib/fsrs'
-import { currentGuidedStep } from '../../lib/guided'
+import { countMyWords } from '../../lib/cards'
+import { currentGuidedStep, skipReviewIfNoWords } from '../../lib/guided'
 import { getMistakes } from '../../lib/mistakes'
 import { DeckReview } from '../flashcards/DeckReview'
 
@@ -138,6 +139,8 @@ export function PracticePage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const { lang } = useLanguage()
   const [due, setDue] = useState<number | null>(null)
+  // сколько слов вообще: отличать «всё повторено» от «слов ещё нет»
+  const [words, setWords] = useState<number | null>(null)
 
   // Режим мини-игры хранится в URL (?m=match). Тогда тап по вкладке «Практика»
   // (переход на /practice БЕЗ параметра) возвращает в хаб, и «назад» браузера
@@ -149,20 +152,32 @@ export function PracticePage() {
     setSearchParams(m === 'hub' ? {} : { m }, { replace: false })
 
   // ведомая сессия («Начать занятие» на Главной): при входе без параметра
-  // открываем сразу повторение
+  // открываем сразу повторение; если слов ещё нет — пропускаем пустой шаг
+  // и уводим сессию сразу на чтение (skipReviewIfNoWords в lib/guided)
   useEffect(() => {
     if (currentGuidedStep() === 'flashcards' && !searchParams.get('m')) {
-      setSearchParams({ m: 'review' }, { replace: true })
+      let alive = true
+      void skipReviewIfNoWords(lang).then((route) => {
+        if (!alive) return
+        if (route) navigate(route, { replace: true })
+        else setSearchParams({ m: 'review' }, { replace: true })
+      })
+      return () => {
+        alive = false
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // счётчик для плитки: сколько к повторению
+  // счётчик для плитки: сколько к повторению и есть ли слова вообще
   useEffect(() => {
     let alive = true
     getDueCards(50, lang)
       .then((d) => alive && setDue(d.length))
       .catch(() => alive && setDue(null))
+    countMyWords(lang)
+      .then((n) => alive && setWords(n))
+      .catch(() => alive && setWords(null))
     return () => {
       alive = false
     }
@@ -193,8 +208,8 @@ export function PracticePage() {
 
   const wordTiles: Tile[] = [
     { mode: 'match', Icon: IconMeaning, title: 'Значения', desc: 'Слово ↔ значение' },
-    { mode: 'gap', Icon: IconGap, title: 'Пропуск', desc: 'Слово в предложении' },
-    { mode: 'translate', Icon: IconTranslate, title: 'Перевод', desc: 'Выбери верный' },
+    { mode: 'gap', Icon: IconGap, title: 'Пропущенное слово', desc: 'Слово в предложении' },
+    { mode: 'translate', Icon: IconTranslate, title: 'Быстрый перевод', desc: 'Выбери верный' },
     { mode: 'listening', Icon: IconHeadphones, title: 'Аудирование', desc: 'Услышь и выбери' },
     { mode: 'sprint', Icon: IconTimer, title: 'Спринт', desc: 'Верно или нет · 60 сек' },
     { mode: 'dictation', Icon: IconKeyboard, title: 'Диктант', desc: 'Услышь и напиши' },
@@ -222,7 +237,8 @@ export function PracticePage() {
   ]
 
   const speechTiles: Tile[] = [
-    { to: '/pronunciation', Icon: IconMic, title: 'Произношение', desc: 'Шэдоуинг: слушай и повторяй' },
+    // название плитки = заголовок экрана, куда она ведёт (h1 «Речь»)
+    { to: '/pronunciation', Icon: IconMic, title: 'Речь', desc: 'Слушай и повторяй за диктором' },
   ]
 
   const open = (t: Tile) => {
@@ -246,10 +262,12 @@ export function PracticePage() {
           <span className="block font-medium">Повторение</span>
           <span className="block text-sm text-[var(--night-text-40)]">
             {due === null
-              ? 'Карточки по расписанию'
+              ? 'Слова по расписанию'
               : due > 0
                 ? `К повторению: ${due}`
-                : 'На сегодня всё повторено'}
+                : words === 0
+                  ? 'Пока нет слов — добавь первые в Учёбе'
+                  : 'На сегодня всё повторено'}
           </span>
         </span>
       </button>

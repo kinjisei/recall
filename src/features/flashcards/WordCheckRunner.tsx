@@ -101,7 +101,7 @@ export function WordCheckRunner({
             ? 'Сохраняю результат…'
             : saveError ?? 'Результат отправлен преподавателю ✓'}
         </p>
-        <Button onClick={onDone}>К колоде</Button>
+        <Button onClick={onDone}>К повторению</Button>
       </Card>
     )
   }
@@ -126,12 +126,12 @@ export function WordCheckRunner({
         </p>
 
         <input
-          className={`mt-2 w-full max-w-xs rounded-xl border px-4 py-3 text-center text-lg outline-none dark:bg-slate-900 ${
+          className={`mt-2 w-full max-w-xs rounded-xl border bg-[var(--night-input)] px-4 py-3 text-center text-lg outline-none ${
             checked
               ? ok
                 ? 'border-emerald-500'
                 : 'border-red-500'
-              : 'border-white/[0.10] focus:border-[var(--night-accent-45)] dark:border-white/[0.10]'
+              : 'border-white/[0.10] focus:border-[var(--night-accent-45)]'
           }`}
           placeholder={lang === 'es' ? 'слово по-испански…' : 'слово по-английски…'}
           value={value}

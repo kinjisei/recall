@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { IconGraduation, IconFlame } from '../../components/icons'
+import { BackHeader } from '../../components/BackButton'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { supabase } from '../../lib/supabase'
@@ -21,6 +22,7 @@ import type { Deck, Profile } from '../../types'
 
 export function TeacherPage() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -42,7 +44,7 @@ export function TeacherPage() {
   if (profile?.role !== 'teacher') {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="text-2xl font-bold">Преподаватель</h1>
+        <BackHeader onBack={() => navigate('/')} title="Преподаватель" label="На главную" />
         <Card>
           <p className="text-[var(--night-text-70)]">
             Этот раздел доступен только аккаунтам с ролью «преподаватель».
@@ -51,9 +53,6 @@ export function TeacherPage() {
             Роль включается один раз в базе (Supabase → SQL Editor) — попроси
             владельца приложения.
           </p>
-          <Link to="/" className="mt-4 inline-block text-sm text-[var(--night-accent-text)] hover:underline">
-            ← На главную
-          </Link>
         </Card>
       </div>
     )
@@ -250,7 +249,7 @@ function StudentCard({
         onClick={() => setShowDecks((v) => !v)}
         className="text-left text-sm font-medium text-[var(--night-accent-text)] hover:underline dark:text-[var(--night-accent-text)]"
       >
-        {showDecks ? '▾ Скрыть колоды' : `▸ Колоды (назначено: ${student.assignedDeckIds.length})`}
+        {showDecks ? '▾ Скрыть наборы слов' : `▸ Наборы слов (назначено: ${student.assignedDeckIds.length})`}
       </button>
 
       {showDecks && (

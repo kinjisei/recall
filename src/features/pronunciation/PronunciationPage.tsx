@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { BackButton } from '../../components/BackButton'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { RoundResult } from '../../components/RoundResult'
@@ -81,6 +83,7 @@ const MAX_RECORD_MS = 12_000
 
 export function PronunciationPage() {
   const { lang } = useLanguage()
+  const navigate = useNavigate()
   const supported = isMicSupported() // запись микрофона есть и на iPhone
 
   const [pool, setPool] = useState<Phrase[]>([])
@@ -237,7 +240,10 @@ export function PronunciationPage() {
   if (!current && !done) {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="text-2xl font-medium tracking-tight">Речь</h1>
+        <div className="flex items-center gap-3">
+          <BackButton onClick={() => navigate('/practice')} label="К практике" />
+          <h1 className="text-2xl font-medium tracking-tight">Речь</h1>
+        </div>
         <p className="text-[var(--night-text-40)]">Загрузка…</p>
       </div>
     )
@@ -248,7 +254,10 @@ export function PronunciationPage() {
     const passed = results.filter((p) => p >= PASS).length
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="text-2xl font-medium tracking-tight">Речь</h1>
+        <div className="flex items-center gap-3">
+          <BackButton onClick={() => navigate('/practice')} label="К практике" />
+          <h1 className="text-2xl font-medium tracking-tight">Речь</h1>
+        </div>
         {supported ? (
           <RoundResult
             correct={passed}
@@ -279,7 +288,10 @@ export function PronunciationPage() {
   return (
     <div className="flex min-h-[calc(100dvh-12rem)] flex-col gap-4">
       <div className="flex items-end justify-between">
-        <h1 className="text-2xl font-medium tracking-tight">Речь</h1>
+        <div className="flex items-center gap-3">
+          <BackButton onClick={() => navigate('/practice')} label="К практике" />
+          <h1 className="text-2xl font-medium tracking-tight">Речь</h1>
+        </div>
         <span className="text-sm text-[var(--night-text-40)]">
           фраза {index + 1} / {round.length}
         </span>

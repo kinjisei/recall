@@ -5,7 +5,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, Outlet } from 'react-router-dom'
 import { IconChart, IconTeacher, IconGear, IconSignOut } from './icons'
-import { supabase } from '../lib/supabase'
+import { getProfile } from '../lib/profile'
 import { BottomNav } from './BottomNav'
 import { BrandLogo } from './Brand'
 import { useLanguage } from '../context/LanguageContext'
@@ -33,12 +33,8 @@ function AvatarMenu() {
 
   useEffect(() => {
     if (!user) return
-    supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-      .then(({ data }) => setIsTeacher((data as { role?: string } | null)?.role === 'teacher'))
+    // профиль — из общего кэша (lib/profile): Главная запрашивает тот же ряд
+    getProfile(user.id).then((p) => setIsTeacher(p?.role === 'teacher'))
   }, [user])
 
   // закрытие по клику мимо меню и по Escape

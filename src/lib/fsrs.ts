@@ -1,54 +1,71 @@
 // ============================================================================
 // FSRS — интервальное повторение (обёртка над библиотекой ts-fsrs).
 // Контракт: docs/ARCHITECTURE.md §7.
-//   getDueCards() — карточки, которые пора повторить
-//   reviewCard()  — записать оценку и вычислить следующий показ
+//   getDueCards()   — карточки, которые пора повторить
+//   countDueCards() — лёгкий счётчик тех же карточек (без тел строк)
+//   reviewCard()    — записать оценку и вычислить следующий показ
+//
+// ts-fsrs подгружается лениво: getDueCards/countDueCards — чистые запросы к
+// Supabase, планировщик нужен только reviewCard (экран повторения). Так
+// библиотека не попадает в стартовый бандл Главной.
 // ============================================================================
-import {
-  fsrs,
-  generatorParameters,
-  createEmptyCard,
-  Rating as FsrsRating,
-  State,
-  type Card as FsrsCard,
-  type Grade,
-} from 'ts-fsrs'
+import type { FSRS, Card as FsrsCard, Grade, State } from 'ts-fsrs'
 import { supabase, requireUserId } from './supabase'
 import { getDeckIds } from './cards'
 import type { AppLang, Card, ReviewState, ReviewStateName, Rating } from '../types'
 
-const scheduler = fsrs(generatorParameters({ enable_fuzz: true }))
+type FsrsModule = typeof import('ts-fsrs')
 
-const stateNameToEnum: Record<ReviewStateName, State> = {
-  new: State.New,
-  learning: State.Learning,
-  review: State.Review,
-  relearning: State.Relearning,
+let enginePromise: Promise<{ m: FsrsModule; scheduler: FSRS }> | null = null
+function loadEngine() {
+  return (enginePromise ??= import('ts-fsrs').then((m) => ({
+    m,
+    scheduler: m.fsrs(m.generatorParameters({ enable_fuzz: true })),
+  })))
 }
 
-function stateEnumToName(s: State): ReviewStateName {
+function stateNameToEnum(m: FsrsModule, name: ReviewStateName): State {
+  switch (name) {
+    case 'new':
+      return m.State.New
+    case 'learning':
+      return m.State.Learning
+    case 'review':
+      return m.State.Review
+    default:
+      return m.State.Relearning
+  }
+}
+
+function stateEnumToName(m: FsrsModule, s: State): ReviewStateName {
   switch (s) {
-    case State.New:
+    case m.State.New:
       return 'new'
-    case State.Learning:
+    case m.State.Learning:
       return 'learning'
-    case State.Review:
+    case m.State.Review:
       return 'review'
     default:
       return 'relearning'
   }
 }
 
-const ratingMap: Record<Rating, Grade> = {
-  again: FsrsRating.Again,
-  hard: FsrsRating.Hard,
-  good: FsrsRating.Good,
-  easy: FsrsRating.Easy,
+function ratingToGrade(m: FsrsModule, r: Rating): Grade {
+  switch (r) {
+    case 'again':
+      return m.Rating.Again
+    case 'hard':
+      return m.Rating.Hard
+    case 'good':
+      return m.Rating.Good
+    default:
+      return m.Rating.Easy
+  }
 }
 
 /** Собрать объект ts-fsrs из нашей записи review_states (или пустую карточку). */
-function toFsrsCard(state: ReviewState | null, now: Date): FsrsCard {
-  const base = createEmptyCard(now)
+function toFsrsCard(m: FsrsModule, state: ReviewState | null, now: Date): FsrsCard {
+  const base = m.createEmptyCard(now)
   if (!state || state.state === 'new' || state.stability == null) return base
   return {
     ...base,
@@ -57,7 +74,7 @@ function toFsrsCard(state: ReviewState | null, now: Date): FsrsCard {
     difficulty: state.difficulty ?? base.difficulty,
     reps: state.reps,
     lapses: state.lapses,
-    state: stateNameToEnum[state.state],
+    state: stateNameToEnum(m, state.state),
     last_review: state.last_review ? new Date(state.last_review) : undefined,
   }
 }
@@ -68,9 +85,12 @@ export interface DueCard {
 }
 
 /**
- * Карточки, которые пора повторить: новые (без расписания) + те, у которых due <= сейчас.
- * Фильтрация — на сервере Supabase, чтобы не выкачивать всю колоду целиком.
- * Порядок: сначала новые, затем по просроченности (самые старые due — первыми).
+ * Карточки, которые пора повторить: те, у которых due <= сейчас, + новые
+ * (без расписания). Фильтрация — на сервере Supabase, чтобы не выкачивать
+ * всю колоду целиком.
+ * Порядок: СНАЧАЛА запланированные повторения (самые старые due — первыми),
+ * затем новые — иначе после добавления большого пака (≥limit новых карточек)
+ * реально запланированные слова вообще не попадали бы в выдачу и забывались.
  * lang — показывать только карточки колод этого языка (en/es).
  */
 export async function getDueCards(limit = 50, lang?: AppLang): Promise<DueCard[]> {
@@ -109,16 +129,50 @@ export async function getDueCards(limit = 50, lang?: AppLang): Promise<DueCard[]
   if (dueRes.error) throw dueRes.error
 
   const due: DueCard[] = []
-  for (const row of newRes.data ?? []) {
-    const { review_states: _rs, ...card } = row as Card & { review_states: unknown }
-    due.push({ card: card as Card, state: null })
-  }
+  // Приоритет — запланированные повторения: их FSRS назначил на сегодня.
   for (const row of dueRes.data ?? []) {
     const { cards: card, ...state } = row as ReviewState & { cards: Card | null }
     if (card) due.push({ card, state: state as ReviewState })
   }
+  // Новые — на оставшиеся места лимита.
+  for (const row of newRes.data ?? []) {
+    if (due.length >= limit) break
+    const { review_states: _rs, ...card } = row as Card & { review_states: unknown }
+    due.push({ card: card as Card, state: null })
+  }
 
   return due.slice(0, limit)
+}
+
+/**
+ * Сколько карточек к повторению (те же условия, что в getDueCards), но без
+ * выкачивания строк — только count-запросы. Для счётчиков на Главной.
+ */
+export async function countDueCards(lang?: AppLang): Promise<number> {
+  const userId = await requireUserId()
+  const nowIso = new Date().toISOString()
+
+  const deckIds = lang ? await getDeckIds(lang) : null
+  if (deckIds && deckIds.length === 0) return 0
+
+  let newQuery = supabase
+    .from('cards')
+    .select('id, review_states(id)', { count: 'exact', head: true })
+    .is('review_states', null)
+  if (deckIds) newQuery = newQuery.in('deck_id', deckIds)
+
+  let dueQuery = supabase
+    .from('review_states')
+    .select('id, cards!inner(id)', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .lte('due', nowIso)
+  if (deckIds) dueQuery = dueQuery.in('cards.deck_id', deckIds)
+
+  const [newRes, dueRes] = await Promise.all([newQuery, dueQuery])
+  if (newRes.error) throw newRes.error
+  if (dueRes.error) throw dueRes.error
+
+  return (newRes.count ?? 0) + (dueRes.count ?? 0)
 }
 
 /** Записать оценку по карточке и вычислить следующий показ (FSRS).
@@ -129,10 +183,11 @@ export async function reviewCard(
   rating: Rating,
 ): Promise<ReviewState> {
   const userId = await requireUserId()
+  const { m, scheduler } = await loadEngine()
   const now = new Date()
 
-  const fsrsCard = toFsrsCard(existing, now)
-  const { card: next } = scheduler.next(fsrsCard, now, ratingMap[rating])
+  const fsrsCard = toFsrsCard(m, existing, now)
+  const { card: next } = scheduler.next(fsrsCard, now, ratingToGrade(m, rating))
 
   const { data, error } = await supabase
     .from('review_states')
@@ -146,7 +201,7 @@ export async function reviewCard(
         last_review: (next.last_review ?? now).toISOString(),
         reps: next.reps,
         lapses: next.lapses,
-        state: stateEnumToName(next.state),
+        state: stateEnumToName(m, next.state),
       },
       { onConflict: 'card_id,user_id' },
     )
