@@ -248,23 +248,27 @@ function ChatSection({ level, lang }: { level: CEFRLevel; lang: AppLang }) {
   }
 
   return (
-    // высота под экран: лента растёт и скроллится, поле ввода прижато к низу
-    <div className="flex min-h-[calc(100dvh-17rem)] flex-col gap-3">
-      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto">
-        {msgs.length === 0 && (
-          <Card>
-            <p className="text-[var(--night-text-70)]">
-              {lang === 'es'
-                ? 'Напиши что-нибудь по-испански — AI ответит просто, поддержит разговор и отдельной строкой поправит ошибки.'
-                : 'Напиши что-нибудь по-английски — AI ответит, поддержит разговор и отдельной строкой поправит ошибки.'}
-            </p>
-            <p className="mt-2 text-sm text-[var(--night-text-40)]">
-              {lang === 'es'
-                ? 'Например: «¡Hola! Me llamo Iván. ¿Cómo estás?»'
-                : 'Например: «Hi! I want to talk about travelling.»'}
-            </p>
-          </Card>
-        )}
+    // Естественный поток: поле ввода идёт после ленты. Тянуть контейнер во весь
+    // экран (min-h dvh), чтобы прижать ввод к низу, НЕЛЬЗЯ — на телефоне при
+    // фокусе поля страница уезжала вверх (заголовок пропадал), а нижняя
+    // навигация конфликтовала с клавиатурой.
+    <div className="flex flex-col gap-3">
+      {msgs.length === 0 && (
+        <Card>
+          <p className="text-[var(--night-text-70)]">
+            {lang === 'es'
+              ? 'Напиши что-нибудь по-испански — AI ответит просто, поддержит разговор и отдельной строкой поправит ошибки.'
+              : 'Напиши что-нибудь по-английски — AI ответит, поддержит разговор и отдельной строкой поправит ошибки.'}
+          </p>
+          <p className="mt-2 text-sm text-[var(--night-text-40)]">
+            {lang === 'es'
+              ? 'Например: «¡Hola! Me llamo Iván. ¿Cómo estás?»'
+              : 'Например: «Hi! I want to talk about travelling.»'}
+          </p>
+        </Card>
+      )}
+
+      <div className="flex flex-col gap-2">
         {msgs.map((m, i) => (
           <div
             key={i}
