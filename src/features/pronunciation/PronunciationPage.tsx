@@ -1,12 +1,22 @@
 import { useEffect, useState } from 'react'
 import { Card } from '../../components/Card'
-import { scoreEmoji } from '../../components/RoundResult'
 import { Button } from '../../components/Button'
+import { RoundResult, scoreEmoji } from '../../components/RoundResult'
 import { GuidedNext } from '../../components/GuidedNext'
-import { MicrophoneIcon, SpeakerHighIcon } from '@phosphor-icons/react'
+import { celebrate } from '../../components/Confetti'
+import {
+  MicrophoneIcon,
+  SpeakerHighIcon,
+  GaugeIcon,
+  SealCheckIcon,
+  HeadphonesIcon,
+  ArrowCounterClockwiseIcon,
+} from '@phosphor-icons/react'
 import { supabase } from '../../lib/supabase'
 import { getDeckIds } from '../../lib/cards'
+import { getUserLevel } from '../../lib/level'
 import { logActivity } from '../../lib/activity'
+import { shuffle } from '../../lib/random'
 import { useLanguage } from '../../context/LanguageContext'
 import { spanishSentences } from '../../data/spanish'
 import { englishSentences } from '../../data/english'
@@ -17,59 +27,119 @@ import {
   scorePronunciation,
   type PronunciationScore,
 } from '../../lib/speech'
+import type { AppLang } from '../../types'
 
-/** Фраза для тренировки; hint — русский перевод. */
+/** Фраза для тренировки; hint — русский перевод, level — уровень CEFR. */
 interface Phrase {
   text: string
   hint?: string
+  level?: string
+}
+
+const ROUND = 10 // фраз в одном раунде
+const PASS = 60 // с какого % фраза считается «произнесена»
+const LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
+
+/** Скорость «медленной» озвучки для шэдоуинга. */
+const SLOW_RATE = 0.6
+
+/**
+ * Собирает и перемешивает пул фраз под уровень ученика.
+ * Берём фразы своего уровня и ниже; если их меньше, чем на раунд —
+ * подключаем все (лучше «трудноватая» фраза, чем пустой экран).
+ * Английские фразы из карточек пользователя (уровня нет) идут всегда.
+ */
+function buildPool(lang: AppLang, level: string | null, cardPhrases: string[]): Phrase[] {
+  const base: Phrase[] =
+    lang === 'es'
+      ? spanishSentences.map((s) => ({ text: s.es, hint: s.ru, level: s.level }))
+      : englishSentences.map((s) => ({ text: s.en, hint: s.ru, level: s.level }))
+
+  let picked = base
+  const t = level ? LEVELS.indexOf(level) : -1
+  if (t >= 0) {
+    const atOrBelow = base.filter((p) => {
+      const i = LEVELS.indexOf(p.level ?? '')
+      return i < 0 || i <= t
+    })
+    if (atOrBelow.length >= ROUND) picked = atOrBelow
+  }
+
+  const cards: Phrase[] = cardPhrases.map((text) => ({ text }))
+  return shuffle([...picked, ...cards])
+}
+
+/** Человеческая подсказка по результату вместо «зелёные/красные слова». */
+function humanHint(score: PronunciationScore): string {
+  if (score.percent === 100) return 'Идеально! Все слова на месте.'
+  const missed = score.words.filter((w) => !w.ok).map((w) => w.word)
+  const list = missed.slice(0, 4).map((w) => `«${w}»`).join(', ')
+  const tail = missed.length > 4 ? '…' : ''
+  if (missed.length <= 2) return `Почти идеально. Обрати внимание на ${list}.`
+  return `Ещё потренируйся — недоставало: ${list}${tail}.`
 }
 
 export function PronunciationPage() {
   const { lang } = useLanguage()
   const supported = isRecognitionSupported()
-  const [phrases, setPhrases] = useState<Phrase[]>([])
+
+  const [pool, setPool] = useState<Phrase[]>([])
+  const [round, setRound] = useState<Phrase[]>([])
   const [index, setIndex] = useState(0)
   const [listening, setListening] = useState(false)
   const [heard, setHeard] = useState<string | null>(null)
   const [score, setScore] = useState<PronunciationScore | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [results, setResults] = useState<number[]>([]) // % за каждую фразу раунда
+  const [done, setDone] = useState(false)
 
-  // Испанский: встроенные фразы (рус → исп).
-  // Английский: встроенные фразы B1–C1 (с переводом) + фразы из карточек в конце.
+  // Сброс и загрузка пула под язык/уровень.
   useEffect(() => {
+    let alive = true
     setIndex(0)
     setHeard(null)
     setScore(null)
     setError(null)
+    setResults([])
+    setDone(false)
 
-    if (lang === 'es') {
-      setPhrases(spanishSentences.map((s) => ({ text: s.es, hint: s.ru })))
-      return
-    }
-
-    const builtIn = englishSentences.map((s) => ({ text: s.en, hint: s.ru }))
-    setPhrases(builtIn)
     void (async () => {
-      try {
-        const ids = await getDeckIds('en')
-        if (ids.length === 0) return
-        const { data } = await supabase
-          .from('cards')
-          .select('front, example')
-          .in('deck_id', ids)
-        const fromCards = (data ?? [])
-          .map((c) => (c.example && c.example.trim() ? c.example : c.front))
-          .filter((p): p is string => Boolean(p && /\s/.test(p))) // только фразы (с пробелом)
-        if (fromCards.length > 0) {
-          setPhrases([...builtIn, ...fromCards.map((text) => ({ text }))])
+      const level = await getUserLevel(lang).catch(() => null)
+      let cardPhrases: string[] = []
+      if (lang === 'en') {
+        try {
+          const ids = await getDeckIds('en')
+          if (ids.length > 0) {
+            const { data } = await supabase
+              .from('cards')
+              .select('front, example')
+              .in('deck_id', ids)
+              .limit(50) // не тянем всю колоду — на раунд хватит
+            cardPhrases = (data ?? [])
+              .map((c) => (c.example && c.example.trim() ? c.example : c.front))
+              .filter((p): p is string => Boolean(p && /\s/.test(p)))
+          }
+        } catch {
+          /* остаёмся на встроенных фразах */
         }
-      } catch {
-        /* остаёмся на встроенных фразах */
       }
+      if (!alive) return
+      const p = buildPool(lang, level, cardPhrases)
+      setPool(p)
+      setRound(p.slice(0, ROUND))
     })()
+
+    return () => {
+      alive = false
+    }
   }, [lang])
 
-  const current = phrases[index]
+  const current = round[index]
+
+  // Финал раунда → празднование.
+  useEffect(() => {
+    if (done) celebrate()
+  }, [done])
 
   const onListen = async () => {
     if (!current) return
@@ -89,14 +159,41 @@ export function PronunciationPage() {
     }
   }
 
-  const next = () => {
+  const advance = () => {
+    // зафиксировать результат фразы (0, если не записывал — в режиме оценки)
+    const next = [...results, supported ? (score?.percent ?? 0) : 100]
+    setResults(next)
     setHeard(null)
     setScore(null)
     setError(null)
-    setIndex((i) => (i + 1) % Math.max(phrases.length, 1))
+    if (!supported) void logActivity('pronunciation') // в режиме «слушай-повторяй» тоже засчитываем
+    if (index + 1 >= round.length) {
+      setDone(true)
+    } else {
+      setIndex((i) => i + 1)
+    }
   }
 
-  if (!current) {
+  const retryPhrase = () => {
+    setHeard(null)
+    setScore(null)
+    setError(null)
+  }
+
+  const restart = () => {
+    const reshuffled = shuffle(pool)
+    setPool(reshuffled)
+    setRound(reshuffled.slice(0, ROUND))
+    setIndex(0)
+    setResults([])
+    setHeard(null)
+    setScore(null)
+    setError(null)
+    setDone(false)
+  }
+
+  // ---- Экран загрузки ----
+  if (!current && !done) {
     return (
       <div className="flex flex-col gap-4">
         <h1 className="text-2xl font-medium tracking-tight">Речь</h1>
@@ -105,103 +202,166 @@ export function PronunciationPage() {
     )
   }
 
+  // ---- Финал раунда ----
+  if (done) {
+    const passed = results.filter((p) => p >= PASS).length
+    return (
+      <div className="flex flex-col gap-4">
+        <h1 className="text-2xl font-medium tracking-tight">Речь</h1>
+        {supported ? (
+          <RoundResult
+            correct={passed}
+            total={round.length}
+            note="Раунд засчитан в серию дня."
+            onRestart={restart}
+          />
+        ) : (
+          <Card className="flex flex-col items-center gap-3 text-center">
+            <HeadphonesIcon size={40} className="text-[var(--night-accent-text)]" />
+            <p className="text-lg font-bold">Раунд пройден</p>
+            <p className="text-sm text-[var(--night-text-40)]">
+              Ты повторил {round.length} фраз вслух — так держать!
+            </p>
+            <Button className="mt-1" onClick={restart}>
+              Ещё раунд
+            </Button>
+          </Card>
+        )}
+        <GuidedNext step="pronunciation" />
+      </div>
+    )
+  }
+
+  // ---- Основной экран ----
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-medium tracking-tight">Речь</h1>
+      <div className="flex items-end justify-between">
+        <h1 className="text-2xl font-medium tracking-tight">Речь</h1>
+        <span className="text-sm text-[var(--night-text-40)]">
+          фраза {index + 1} / {round.length}
+        </span>
+      </div>
 
-      {!supported && (
-        <Card className="border-orange-300 bg-orange-50 dark:bg-orange-950/30">
-          <p className="text-sm text-orange-700 dark:text-orange-300">
-            Распознавание речи работает только в <b>Chrome</b> или <b>Edge</b>.
-            Озвучку послушать можно, но оценить повтор — нет.
-          </p>
-        </Card>
-      )}
+      {/* Карточка фразы: чипы озвучки внутри, слова — тапабельные */}
+      <Card className="flex flex-col gap-4">
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => speak(current.text, { lang })}
+            className="lift flex min-h-[40px] items-center gap-2 rounded-full border border-white/[0.10] px-4 text-sm text-[var(--night-text-70)]"
+          >
+            <SpeakerHighIcon size={16} /> Прослушать
+          </button>
+          <button
+            onClick={() => speak(current.text, { lang, rate: SLOW_RATE })}
+            className="lift flex min-h-[40px] items-center gap-2 rounded-full border border-white/[0.10] px-4 text-sm text-[var(--night-text-70)]"
+          >
+            <GaugeIcon size={16} /> Медленно
+          </button>
+        </div>
 
-      <p className="text-sm text-[var(--night-text-40)]">
-        Послушай фразу, затем повтори её вслух — приложение оценит, насколько точно.
-      </p>
-
-      <Card className="min-h-[120px] items-center justify-center text-center">
         <p className="text-xl font-medium leading-relaxed">
-          {score ? (
-            score.words.map((w, i) => (
-              <span
-                key={i}
-                className={
-                  w.ok
-                    ? 'text-emerald-600 dark:text-emerald-400'
-                    : 'text-red-500'
-                }
-              >
-                {w.word}{' '}
+          {(score ? score.words : current.text.split(/\s+/).map((word) => ({ word, ok: null }))).map(
+            (w, i) => (
+              <span key={i}>
+                <button
+                  onClick={() => speak(w.word.replace(/[^\p{L}\p{N}'-]/gu, ''), { lang })}
+                  title="Послушать слово"
+                  className={
+                    'inline align-baseline transition-colors ' +
+                    (w.ok === true
+                      ? 'text-emerald-400'
+                      : w.ok === false
+                        ? 'text-red-400'
+                        : 'hover:text-[var(--night-accent-text)]')
+                  }
+                >
+                  {w.word}
+                </button>{' '}
               </span>
-            ))
-          ) : (
-            <span>{current.text}</span>
+            ),
           )}
         </p>
+
         {current.hint && !score && (
-          <p className="mt-2 text-sm text-[var(--night-text-40)]">{current.hint}</p>
+          <p className="text-sm text-[var(--night-text-40)]">{current.hint}</p>
         )}
       </Card>
 
-      {/* чип «Прослушать» + крупный микрофон, который пульсирует при записи */}
-      <div className="flex flex-col items-center gap-5 pt-1">
-        <button
-          onClick={() => speak(current.text, { lang })}
-          className="lift flex min-h-[44px] items-center gap-2 rounded-full border border-white/[0.10] px-5 text-sm text-[var(--night-text-70)]"
-        >
-          <SpeakerHighIcon size={16} /> Прослушать
-        </button>
-
-        <button
-          onClick={onListen}
-          disabled={!supported || listening}
-          aria-label={listening ? 'Слушаю…' : 'Повторить вслух'}
-          className={`flex h-20 w-20 items-center justify-center rounded-full transition-colors disabled:opacity-40 ${
-            listening
-              ? 'animate-pulse-ring bg-[var(--night-accent)] text-white'
-              : 'lift bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
-          }`}
-        >
-          <MicrophoneIcon size={32} weight="fill" />
-        </button>
-        <p className="text-xs text-[var(--night-text-40)]">
-          {listening ? 'Слушаю — говори' : 'Нажми и повтори фразу вслух'}
-        </p>
-      </div>
-
-      {error && <p className="text-sm text-red-500">{error}</p>}
-
+      {/* Оценка результата */}
       {score && (
-        <Card className="text-center">
-          <p className="text-4xl font-bold">
-            {score.percent}%
-            <span className="ml-2">
-              {scoreEmoji(score.percent)}
-            </span>
+        <Card className="flex items-center gap-3">
+          <SealCheckIcon
+            size={36}
+            weight="fill"
+            className={score.percent >= PASS ? 'text-[var(--night-accent)]' : 'text-[var(--night-text-25)]'}
+          />
+          <div className="min-w-0">
+            <p className="font-bold">
+              Совпадение — {score.percent}% <span>{scoreEmoji(score.percent)}</span>
+            </p>
+            <p className="text-sm text-[var(--night-text-60)]">{humanHint(score)}</p>
+            {heard && (
+              <p className="mt-1 text-xs text-[var(--night-text-40)]">Услышано: «{heard}»</p>
+            )}
+          </div>
+        </Card>
+      )}
+
+      {error && <p className="text-sm text-red-400">{error}</p>}
+
+      {/* Режим оценки (Chrome/Edge): микрофон */}
+      {supported ? (
+        <div className="flex flex-col items-center gap-4 pt-1">
+          <div className="relative flex items-center justify-center">
+            {/* мягкий ореол */}
+            <span
+              aria-hidden
+              className="absolute h-24 w-24 rounded-full bg-[var(--night-accent)] opacity-20 blur-xl"
+            />
+            <button
+              onClick={onListen}
+              disabled={listening}
+              aria-label={listening ? 'Слушаю…' : 'Повторить вслух'}
+              style={{
+                background:
+                  'linear-gradient(160deg, var(--night-accent) 0%, var(--night-accent-900) 100%)',
+              }}
+              className={`relative flex h-24 w-24 items-center justify-center rounded-full text-white shadow-lg disabled:opacity-60 ${
+                listening ? 'animate-pulse-ring' : 'lift'
+              }`}
+            >
+              <MicrophoneIcon size={34} weight="fill" />
+            </button>
+          </div>
+          <p className="text-xs text-[var(--night-text-40)]">
+            {listening ? 'Слушаю — говори' : 'Нажми и повтори фразу вслух'}
           </p>
-          {heard && (
-            <p className="mt-2 text-sm text-[var(--night-text-40)]">Услышано: «{heard}»</p>
-          )}
-          <p className="mt-1 text-xs text-[var(--night-text-40)]">
-            Зелёные слова распознаны верно, красные — стоит повторить.
+        </div>
+      ) : (
+        // Режим «слушай и повторяй» (iPhone/Safari — распознавания нет)
+        <Card className="border-[var(--night-accent-30)]">
+          <p className="text-sm text-[var(--night-text-70)]">
+            На этом устройстве браузер не умеет оценивать произношение. Не беда:
+            послушай эталон (в т.ч. «Медленно») и повтори вслух за диктором — это и есть
+            главная тренировка. Оценка в % работает в Chrome или Edge на компьютере.
           </p>
         </Card>
       )}
 
-      <div className="flex items-center justify-between">
-        <span className="text-sm text-[var(--night-text-40)]">
-          {index + 1} / {phrases.length}
-        </span>
-        <Button variant="ghost" onClick={next}>
-          Дальше →
+      {/* Навигация по раунду */}
+      <div className="flex items-center justify-between gap-3">
+        {score ? (
+          <Button variant="secondary" onClick={retryPhrase}>
+            <ArrowCounterClockwiseIcon size={18} className="mr-1 inline" />
+            Повторить
+          </Button>
+        ) : (
+          <span />
+        )}
+        <Button onClick={advance}>
+          {index + 1 >= round.length ? 'Завершить раунд' : 'Дальше →'}
         </Button>
       </div>
-
-      {/* ведомая сессия: речь — последний шаг, покажем поздравление */}
-      {score && <GuidedNext step="pronunciation" />}
     </div>
   )
 }
