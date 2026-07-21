@@ -251,7 +251,8 @@ function StreakHero({
               className={`animate-grow-bar h-1.5 w-full rounded-full ${
                 d.active ? 'bg-[var(--night-accent)]' : 'bg-white/[0.09]'
               } ${d.isToday && !d.active ? 'ring-1 ring-[var(--night-accent-45)]' : ''}`}
-              style={{ animationDelay: `${0.15 + i * 0.05}s` }}
+              // заметный каскад слева направо: пн → вт → ср → …
+              style={{ animationDelay: `${0.2 + i * 0.12}s` }}
             />
             <span
               className={`text-[10px] ${
