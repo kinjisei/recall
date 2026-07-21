@@ -7,7 +7,6 @@
 // ============================================================================
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { CardsThreeIcon } from '@phosphor-icons/react'
 import {
   IconFlame,
   IconArrowRight,
@@ -18,6 +17,7 @@ import {
   IconHint,
   IconPlus,
   IconSpeaker,
+  IconCards,
   type IconLike,
 } from '../../components/icons'
 import { useAuth } from '../../context/AuthContext'
@@ -48,7 +48,7 @@ interface PlanItem {
 }
 
 const planItems: PlanItem[] = [
-  { to: '/practice', Icon: CardsThreeIcon, title: 'Слова', desc: 'Повторить и потренировать', types: ['flashcards', 'practice'] },
+  { to: '/practice', Icon: IconCards, title: 'Слова', desc: 'Повторить и потренировать', types: ['flashcards', 'practice'] },
   { to: '/study', Icon: IconGap, title: 'Чтение', desc: 'Текст и новые слова', types: ['reader'] },
   { to: '/pronunciation', Icon: IconMic, title: 'Речь', desc: 'Произношение вслух', types: ['pronunciation'] },
   { to: '/conversation', Icon: IconDialog, title: 'Диалог', desc: 'Поговорить с AI', types: ['conversation', 'writing'] },

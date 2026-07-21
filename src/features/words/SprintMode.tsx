@@ -4,8 +4,7 @@
 // возвращает карточку на повтор (markWrong), как и в остальных играх.
 // ============================================================================
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { XIcon } from '@phosphor-icons/react'
-import { IconCheck, IconTimer } from '../../components/icons'
+import { IconCheck, IconTimer, IconClose } from '../../components/icons'
 import { Card } from '../../components/Card'
 import { RoundResult } from '../../components/RoundResult'
 import { logActivity } from '../../lib/activity'
@@ -156,7 +155,7 @@ export function SprintMode({ lang, onBack }: { lang: AppLang; onBack: () => void
           onClick={() => answer(false)}
           className="lift flex min-h-14 items-center justify-center gap-2 rounded-2xl border border-white/[0.12] py-3.5 font-medium text-[var(--night-text-70)]"
         >
-          <XIcon size={20} /> Неверно
+          <IconClose size={20} /> Неверно
         </button>
         <button
           onClick={() => answer(true)}

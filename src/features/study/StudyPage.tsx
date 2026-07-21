@@ -10,7 +10,6 @@
 // ============================================================================
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { CardsThreeIcon, PackageIcon } from '@phosphor-icons/react'
 import {
   IconGap,
   IconSparkle,
@@ -19,6 +18,8 @@ import {
   IconRows,
   IconMaterials,
   IconPlus,
+  IconCards,
+  IconPackage,
 } from '../../components/icons'
 import { RowCard } from '../../components/RowCard'
 import { BackHeader } from '../../components/BackButton'
@@ -167,7 +168,7 @@ export function StudyPage() {
           style={{ animationDelay: '.04s' }}
         />
         <RowCard
-          Icon={CardsThreeIcon}
+          Icon={IconCards}
           title="Слова"
           desc="Паки по уровням, свои слова и колода"
           onClick={() => setView('words')}
@@ -232,7 +233,7 @@ function WordsStudy({ onBack }: { onBack: () => void }) {
             'Закрыть'
           ) : (
             <>
-              <PackageIcon size={16} /> Паки слов
+              <IconPackage size={16} /> Паки слов
             </>
           )}
         </Button>
@@ -256,7 +257,7 @@ function WordsStudy({ onBack }: { onBack: () => void }) {
 
       <div className="flex flex-col gap-2.5">
         <RowCard
-          Icon={CardsThreeIcon}
+          Icon={IconCards}
           title="Повторение колоды"
           desc="Карточки по расписанию FSRS"
           onClick={() => setSub('review')}

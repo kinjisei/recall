@@ -8,11 +8,11 @@
 // ============================================================================
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CardsThreeIcon } from '@phosphor-icons/react'
 import {
   IconBadgeCheck,
   IconGap,
   IconMic,
+  IconCards,
   type IconLike,
 } from '../../components/icons'
 import { useAuth } from '../../context/AuthContext'
@@ -202,7 +202,7 @@ function StepLevel({
 // --- Шаг 3: план готов -----------------------------------------------------
 
 const PLAN: { Icon: IconLike; title: string; desc: string }[] = [
-  { Icon: CardsThreeIcon, title: 'Слова', desc: 'карточки и мини-игры' },
+  { Icon: IconCards, title: 'Слова', desc: 'карточки и мини-игры' },
   { Icon: IconGap, title: 'Чтение', desc: 'тексты с разбором слов' },
   { Icon: IconMic, title: 'Речь', desc: 'произношение вслух' },
 ]

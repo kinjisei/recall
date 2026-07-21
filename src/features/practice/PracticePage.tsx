@@ -13,7 +13,6 @@
 import type React from 'react'
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CardsThreeIcon } from '@phosphor-icons/react'
 import {
   IconRefresh,
   IconGap,
@@ -29,6 +28,7 @@ import {
   IconTranslate,
   IconTimer,
   type IconProps,
+  IconCards,
 } from '../../components/icons'
 import { Card } from '../../components/Card'
 import { useLanguage } from '../../context/LanguageContext'
@@ -222,7 +222,7 @@ export function PracticePage() {
         className="lift animate-fade-up flex items-center gap-4 rounded-2xl border border-[var(--night-accent-45)] bg-[linear-gradient(135deg,rgba(145,132,217,.20),rgba(145,132,217,.08))] px-4 py-4 text-left"
       >
         <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[var(--night-accent-900)] text-[var(--night-accent-100)]">
-          <CardsThreeIcon size={28} weight="fill" />
+          <IconCards size={28} />
         </span>
         <span className="min-w-0">
           <span className="block font-medium">Повторение</span>

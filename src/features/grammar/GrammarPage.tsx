@@ -8,7 +8,6 @@
 // ============================================================================
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { CaretDownIcon } from '@phosphor-icons/react'
 import {
   IconArrowRight,
   IconGap,
@@ -16,6 +15,7 @@ import {
   IconShuffle,
   IconSpeaker,
   type IconProps,
+  IconCaretDown,
 } from '../../components/icons'
 import { BackHeader } from '../../components/BackButton'
 import { Card } from '../../components/Card'
@@ -185,7 +185,7 @@ function LessonsSection({
                   <span className="font-normal text-[var(--night-text-40)]">· {list.length} тем</span>
                 </span>
                 <span className="text-[var(--night-text-40)]">
-                  {isOpen ? <CaretDownIcon size={16} /> : <IconArrowRight size={16} />}
+                  {isOpen ? <IconCaretDown size={16} /> : <IconArrowRight size={16} />}
                 </span>
               </button>
 

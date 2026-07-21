@@ -7,8 +7,15 @@
 // каскадом, см. lib/cards.ts).
 // ============================================================================
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { TrashIcon, XIcon, TrayIcon } from '@phosphor-icons/react'
-import { IconSearch, IconPencil, IconSpeaker, IconCheck } from '../../components/icons'
+import {
+  IconSearch,
+  IconPencil,
+  IconSpeaker,
+  IconCheck,
+  IconTrash,
+  IconClose,
+  IconTray,
+} from '../../components/icons'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { deleteCard, listMyWords, updateCard, type MyWord } from '../../lib/cards'
@@ -173,7 +180,7 @@ export function MyWords({ lang, onBack }: { lang: AppLang; onBack: () => void })
         <p className="text-[var(--night-text-40)]">Загрузка…</p>
       ) : shown.length === 0 ? (
         <Card className="text-center">
-          <TrayIcon size={38} className="mx-auto block text-[var(--night-text-40)]" />
+          <IconTray size={38} className="mx-auto block text-[var(--night-text-40)]" />
           <p className="mt-2 font-medium">
             {counts.all === 0 ? 'Пока нет своих слов' : 'Ничего не найдено'}
           </p>
@@ -294,7 +301,7 @@ function WordRow({
             aria-label="Отмена"
             className="rounded-lg border border-white/[0.10] px-2 py-1.5 text-[var(--night-text-70)]"
           >
-            <XIcon size={16} />
+            <IconClose size={16} />
           </button>
         </div>
       </Card>
@@ -336,7 +343,7 @@ function WordRow({
           aria-label={`Удалить ${card.front}`}
           className="rounded-lg p-2 text-[var(--night-text-40)] hover:text-red-400"
         >
-          <TrashIcon size={17} />
+          <IconTrash size={17} />
         </button>
       </div>
     </div>

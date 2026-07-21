@@ -1,8 +1,7 @@
 // Общие кусочки интерфейса мини-игр: шапка со «← Назад», загрузка,
 // заглушка «мало слов» и универсальный движок вопросов с 4 вариантами.
 import { useEffect, useState } from 'react'
-import { TrayIcon } from '@phosphor-icons/react'
-import { IconSpeaker } from '../../components/icons'
+import { IconSpeaker, IconTray } from '../../components/icons'
 import { BackHeader } from '../../components/BackButton'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
@@ -31,7 +30,7 @@ export function EmptyPool({ title, onBack }: { title: string; onBack: () => void
     <div className="flex flex-col gap-4">
       <GameHeader title={title} onBack={onBack} />
       <Card className="items-center text-center">
-        <TrayIcon size={40} className="text-[var(--night-text-25)]" />
+        <IconTray size={40} className="text-[var(--night-text-25)]" />
         <p className="mt-2 font-semibold">Пока мало слов для игры</p>
         <p className="mt-1 text-sm text-[var(--night-text-40)]">
           Добавь слова кнопкой «Паки» в шапке раздела «Практика» или тапая по словам в «Учёбе».
