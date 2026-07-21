@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { LanguageProvider } from './context/LanguageContext'
 import { ConfettiLayer } from './components/Confetti'
+import { ScrollToTop } from './components/ScrollToTop'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { Layout } from './components/Layout'
@@ -61,6 +62,7 @@ export default function App() {
         {/* слой празднования: слушает celebrate() из любого экрана */}
         <ConfettiLayer />
         <BrowserRouter>
+          <ScrollToTop />
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             {/* онбординг — без Layout: свои шаги на весь экран */}

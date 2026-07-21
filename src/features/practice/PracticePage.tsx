@@ -79,6 +79,54 @@ interface Tile {
   badge?: number
 }
 
+// Сетка плиток и заголовок секции — на уровне модуля, а НЕ внутри PracticePage.
+// Если объявить их внутри, при каждой перерисовке (например, когда догрузится
+// счётчик «к повторению») это будут новые типы компонентов — React снесёт и
+// заново смонтирует сетку, и анимация fade-up проиграется заново = моргание.
+function TileGrid({
+  tiles,
+  onOpen,
+  delayBase = 0,
+}: {
+  tiles: Tile[]
+  onOpen: (t: Tile) => void
+  delayBase?: number
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      {tiles.map((t, i) => (
+        <button
+          key={t.title}
+          onClick={() => onOpen(t)}
+          className="animate-fade-up text-left focus-visible:outline-none"
+          style={{ animationDelay: `${delayBase + 0.05 + i * 0.04}s` }}
+        >
+          <Card interactive className="relative flex h-full flex-col p-4">
+            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--night-accent-900)] text-[var(--night-accent-100)]">
+              <t.Icon size={22} />
+            </span>
+            {t.badge !== undefined && (
+              <span className="absolute right-3 top-3 rounded-full bg-[var(--night-accent)] px-2 py-0.5 text-xs font-medium text-white">
+                {t.badge}
+              </span>
+            )}
+            <span className="mt-3 font-medium">{t.title}</span>
+            <span className="text-sm text-[var(--night-text-40)]">{t.desc}</span>
+          </Card>
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function SectionTitle({ children }: { children: string }) {
+  return (
+    <h2 className="mt-1 text-xs font-semibold uppercase tracking-widest text-[var(--night-text-40)]">
+      {children}
+    </h2>
+  )
+}
+
 export function PracticePage() {
   const navigate = useNavigate()
   const { lang } = useLanguage()
@@ -163,38 +211,6 @@ export function PracticePage() {
     else if (t.to) navigate(t.to)
   }
 
-  const TileGrid = ({ tiles, delayBase = 0 }: { tiles: Tile[]; delayBase?: number }) => (
-    <div className="grid grid-cols-2 gap-3">
-      {tiles.map((t, i) => (
-        <button
-          key={t.title}
-          onClick={() => open(t)}
-          className="animate-fade-up text-left focus-visible:outline-none"
-          style={{ animationDelay: `${delayBase + 0.05 + i * 0.04}s` }}
-        >
-          <Card interactive className="relative flex h-full flex-col p-4">
-            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--night-accent-900)] text-[var(--night-accent-100)]">
-              <t.Icon size={22} />
-            </span>
-            {t.badge !== undefined && (
-              <span className="absolute right-3 top-3 rounded-full bg-[var(--night-accent)] px-2 py-0.5 text-xs font-medium text-white">
-                {t.badge}
-              </span>
-            )}
-            <span className="mt-3 font-medium">{t.title}</span>
-            <span className="text-sm text-[var(--night-text-40)]">{t.desc}</span>
-          </Card>
-        </button>
-      ))}
-    </div>
-  )
-
-  const SectionTitle = ({ children }: { children: string }) => (
-    <h2 className="mt-1 text-xs font-semibold uppercase tracking-widest text-[var(--night-text-40)]">
-      {children}
-    </h2>
-  )
-
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-medium tracking-tight">Практика</h1>
@@ -225,13 +241,13 @@ export function PracticePage() {
       </p>
 
       <SectionTitle>Слова</SectionTitle>
-      <TileGrid tiles={wordTiles} />
+      <TileGrid tiles={wordTiles} onOpen={open} />
 
       <SectionTitle>Грамматика</SectionTitle>
-      <TileGrid tiles={grammarTiles} delayBase={0.1} />
+      <TileGrid tiles={grammarTiles} onOpen={open} delayBase={0.1} />
 
       <SectionTitle>Речь</SectionTitle>
-      <TileGrid tiles={speechTiles} delayBase={0.15} />
+      <TileGrid tiles={speechTiles} onOpen={open} delayBase={0.15} />
     </div>
   )
 }
