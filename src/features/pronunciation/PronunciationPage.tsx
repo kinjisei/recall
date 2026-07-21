@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { RoundResult, scoreEmoji } from '../../components/RoundResult'
@@ -6,6 +6,8 @@ import { GuidedNext } from '../../components/GuidedNext'
 import { celebrate } from '../../components/Confetti'
 import {
   MicrophoneIcon,
+  StopIcon,
+  SpinnerGapIcon,
   SpeakerHighIcon,
   GaugeIcon,
   SealCheckIcon,
@@ -20,13 +22,8 @@ import { shuffle } from '../../lib/random'
 import { useLanguage } from '../../context/LanguageContext'
 import { spanishSentences } from '../../data/spanish'
 import { englishSentences } from '../../data/english'
-import {
-  speak,
-  listen,
-  isRecognitionSupported,
-  scorePronunciation,
-  type PronunciationScore,
-} from '../../lib/speech'
+import { speak, scorePronunciation, type PronunciationScore } from '../../lib/speech'
+import { startRecording, transcribe, isMicSupported, type Recorder } from '../../lib/transcribe'
 import type { AppLang } from '../../types'
 
 /** Фраза для тренировки; hint — русский перевод, level — уровень CEFR. */
@@ -79,19 +76,26 @@ function humanHint(score: PronunciationScore): string {
   return `Ещё потренируйся — недоставало: ${list}${tail}.`
 }
 
+/** Автостоп записи, если человек забыл нажать «Стоп» (фраза — несколько секунд). */
+const MAX_RECORD_MS = 12_000
+
 export function PronunciationPage() {
   const { lang } = useLanguage()
-  const supported = isRecognitionSupported()
+  const supported = isMicSupported() // запись микрофона есть и на iPhone
 
   const [pool, setPool] = useState<Phrase[]>([])
   const [round, setRound] = useState<Phrase[]>([])
   const [index, setIndex] = useState(0)
-  const [listening, setListening] = useState(false)
+  const [recording, setRecording] = useState(false)
+  const [processing, setProcessing] = useState(false)
   const [heard, setHeard] = useState<string | null>(null)
   const [score, setScore] = useState<PronunciationScore | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [results, setResults] = useState<number[]>([]) // % за каждую фразу раунда
   const [done, setDone] = useState(false)
+
+  const recorderRef = useRef<Recorder | null>(null)
+  const autoStopRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Сброс и загрузка пула под язык/уровень.
   useEffect(() => {
@@ -141,21 +145,58 @@ export function PronunciationPage() {
     if (done) celebrate()
   }, [done])
 
-  const onListen = async () => {
-    if (!current) return
+  // освобождаем микрофон при уходе с экрана
+  useEffect(() => {
+    return () => {
+      if (autoStopRef.current) clearTimeout(autoStopRef.current)
+      recorderRef.current?.cancel()
+    }
+  }, [])
+
+  /** Останавливает запись, распознаёт через Groq и считает совпадение слов. */
+  const finishRecording = async () => {
+    const rec = recorderRef.current
+    if (!rec) return
+    recorderRef.current = null
+    if (autoStopRef.current) {
+      clearTimeout(autoStopRef.current)
+      autoStopRef.current = null
+    }
+    setRecording(false)
+    setProcessing(true)
+    try {
+      const blob = await rec.stop()
+      const transcript = await transcribe(blob, lang)
+      if (!transcript) {
+        setError('Не расслышал. Скажи чуть громче и чётче.')
+        return
+      }
+      setHeard(transcript)
+      setScore(scorePronunciation(current!.text, transcript))
+      void logActivity('pronunciation')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Ошибка распознавания')
+    } finally {
+      setProcessing(false)
+    }
+  }
+
+  /** Тап по микрофону: начать запись или остановить и оценить. */
+  const onMic = async () => {
+    if (processing) return
+    if (recording) {
+      void finishRecording()
+      return
+    }
     setError(null)
     setHeard(null)
     setScore(null)
-    setListening(true)
     try {
-      const { transcript } = await listen(lang)
-      setHeard(transcript)
-      setScore(scorePronunciation(current.text, transcript))
-      void logActivity('pronunciation')
+      recorderRef.current = await startRecording()
+      setRecording(true)
+      autoStopRef.current = setTimeout(() => void finishRecording(), MAX_RECORD_MS)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Ошибка')
-    } finally {
-      setListening(false)
+      setError(e instanceof Error ? e.message : 'Не удалось начать запись')
     }
   }
 
@@ -309,7 +350,7 @@ export function PronunciationPage() {
 
       {error && <p className="text-sm text-red-400">{error}</p>}
 
-      {/* Режим оценки (Chrome/Edge): микрофон */}
+      {/* Микрофон: тап — запись, ещё тап — стоп и оценка (работает и на iPhone) */}
       {supported ? (
         <div className="flex flex-col items-center gap-4 pt-1">
           <div className="relative flex items-center justify-center">
@@ -319,31 +360,40 @@ export function PronunciationPage() {
               className="absolute h-24 w-24 rounded-full bg-[var(--night-accent)] opacity-20 blur-xl"
             />
             <button
-              onClick={onListen}
-              disabled={listening}
-              aria-label={listening ? 'Слушаю…' : 'Повторить вслух'}
+              onClick={onMic}
+              disabled={processing}
+              aria-label={recording ? 'Остановить и оценить' : 'Записать произношение'}
               style={{
                 background:
                   'linear-gradient(160deg, var(--night-accent) 0%, var(--night-accent-900) 100%)',
               }}
-              className={`relative flex h-24 w-24 items-center justify-center rounded-full text-white shadow-lg disabled:opacity-60 ${
-                listening ? 'animate-pulse-ring' : 'lift'
+              className={`relative flex h-24 w-24 items-center justify-center rounded-full text-white shadow-lg disabled:opacity-70 ${
+                recording ? 'animate-pulse-ring' : 'lift'
               }`}
             >
-              <MicrophoneIcon size={34} weight="fill" />
+              {processing ? (
+                <SpinnerGapIcon size={32} className="animate-spin" />
+              ) : recording ? (
+                <StopIcon size={30} weight="fill" />
+              ) : (
+                <MicrophoneIcon size={34} weight="fill" />
+              )}
             </button>
           </div>
           <p className="text-xs text-[var(--night-text-40)]">
-            {listening ? 'Слушаю — говори' : 'Нажми и повтори фразу вслух'}
+            {processing
+              ? 'Распознаю…'
+              : recording
+                ? 'Говори фразу и нажми, когда закончишь'
+                : 'Нажми, скажи фразу вслух'}
           </p>
         </div>
       ) : (
-        // Режим «слушай и повторяй» (iPhone/Safari — распознавания нет)
+        // Совсем нет микрофона — режим «слушай и повторяй» без оценки
         <Card className="border-[var(--night-accent-30)]">
           <p className="text-sm text-[var(--night-text-70)]">
-            На этом устройстве браузер не умеет оценивать произношение. Не беда:
-            послушай эталон (в т.ч. «Медленно») и повтори вслух за диктором — это и есть
-            главная тренировка. Оценка в % работает в Chrome или Edge на компьютере.
+            На этом устройстве нет доступа к микрофону. Послушай эталон (в т.ч.
+            «Медленно») и повтори вслух за диктором — это главная тренировка.
           </p>
         </Card>
       )}

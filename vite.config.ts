@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import { ALLOWED_MODELS, callGemini, DEFAULT_GEMINI_MODEL } from './api/_core'
+import { transcribeWithGroq } from './api/_stt'
 import type { ChatTurn } from './src/types'
 
 /**
@@ -61,6 +62,63 @@ function geminiDevEndpoint(apiKey: string | undefined, model: string): Plugin {
   }
 }
 
+/**
+ * Dev-эндпоинт /api/transcribe: в проде обслуживает Vercel-функция
+ * (api/transcribe.ts), а при `npm run dev` — этот плагин. Ключ — из .env.local:
+ * строка GROQ_API_KEY=... (БЕЗ префикса VITE_, в клиентский бандл не попадает).
+ */
+function transcribeDevEndpoint(apiKey: string | undefined): Plugin {
+  return {
+    name: 'transcribe-dev-endpoint',
+    configureServer(server) {
+      server.middlewares.use('/api/transcribe', (req, res) => {
+        if (req.method !== 'POST') {
+          res.statusCode = 405
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify({ error: 'Только POST' }))
+          return
+        }
+        const chunks: Buffer[] = []
+        req.on('data', (chunk) => chunks.push(chunk as Buffer))
+        req.on('end', () => {
+          void (async () => {
+            res.setHeader('Content-Type', 'application/json')
+            try {
+              if (!apiKey) {
+                throw new Error(
+                  'GROQ_API_KEY не задан: добавь строку GROQ_API_KEY=... в .env.local и перезапусти npm run dev',
+                )
+              }
+              const { audio, mime, lang } = JSON.parse(Buffer.concat(chunks).toString() || '{}') as {
+                audio?: string
+                mime?: string
+                lang?: string
+              }
+              if (typeof audio !== 'string' || !audio) {
+                res.statusCode = 400
+                res.end(JSON.stringify({ error: 'Нужно поле audio (base64)' }))
+                return
+              }
+              const buf = Buffer.from(audio, 'base64')
+              const text = await transcribeWithGroq(
+                buf,
+                mime || 'audio/webm',
+                lang === 'es' ? 'es' : 'en',
+                apiKey,
+              )
+              res.end(JSON.stringify({ text }))
+            } catch (e) {
+              const msg = e instanceof Error ? e.message : 'Ошибка распознавания'
+              res.statusCode = msg.includes('лимит') ? 429 : 500
+              res.end(JSON.stringify({ error: msg }))
+            }
+          })()
+        })
+      })
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   // Читаем .env.local целиком (третий аргумент '' = без фильтра по префиксу).
@@ -72,6 +130,7 @@ export default defineConfig(({ mode }) => {
       react(),
       tailwindcss(),
       geminiDevEndpoint(env.GEMINI_API_KEY, env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL),
+      transcribeDevEndpoint(env.GROQ_API_KEY),
       VitePWA({
         registerType: 'autoUpdate',
         // регистрируем SW сами в main.tsx (проверка обновлений при возврате в приложение)

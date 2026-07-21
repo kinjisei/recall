@@ -6,6 +6,10 @@
     "api/gemini.ts": {
       "memory": 512,
       "maxDuration": 60
+    },
+    "api/transcribe.ts": {
+      "memory": 512,
+      "maxDuration": 30
     }
   },
   "headers": [
