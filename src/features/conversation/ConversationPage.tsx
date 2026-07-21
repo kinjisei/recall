@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useKeyboardInset } from '../../lib/useKeyboardInset'
 import {
   IconDialog,
   IconSend,
@@ -181,6 +182,7 @@ function ChatSection({ level, lang }: { level: CEFRLevel; lang: AppLang }) {
   const [error, setError] = useState<string | null>(null)
   const convIdRef = useRef<string | null>(null)
   const bottomRef = useRef<HTMLDivElement | null>(null)
+  const kb = useKeyboardInset() // высота клавиатуры — панель ввода над ней
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -248,11 +250,9 @@ function ChatSection({ level, lang }: { level: CEFRLevel; lang: AppLang }) {
   }
 
   return (
-    // Естественный поток: поле ввода идёт после ленты. Тянуть контейнер во весь
-    // экран (min-h dvh), чтобы прижать ввод к низу, НЕЛЬЗЯ — на телефоне при
-    // фокусе поля страница уезжала вверх (заголовок пропадал), а нижняя
-    // навигация конфликтовала с клавиатурой.
-    <div className="flex flex-col gap-3">
+    // Лента в потоке, ПАНЕЛЬ ВВОДА фиксирована у низа (см. ниже). Внизу большой
+    // отступ, чтобы последнее сообщение не пряталось за панелью.
+    <div className="flex flex-col gap-3 pb-[calc(11rem+env(safe-area-inset-bottom))]">
       {msgs.length === 0 && (
         <Card>
           <p className="text-[var(--night-text-70)]">
@@ -291,31 +291,42 @@ function ChatSection({ level, lang }: { level: CEFRLevel; lang: AppLang }) {
 
       {error && <p className="text-sm text-red-500">{error}</p>}
 
-      {/* как в макете: поле без рамки + квадратная accent-кнопка отправки */}
-      <form onSubmit={send} className="flex items-center gap-2.5">
-        <input
-          aria-label={lang === 'es' ? 'Сообщение по-испански' : 'Сообщение по-английски'}
-          className="h-12 min-w-0 flex-1 rounded-[14px] border-none bg-[var(--night-input)] px-4 text-[15px] outline-none placeholder:text-[var(--night-text-25)] focus:ring-2 focus:ring-[var(--night-accent-45)]"
-          placeholder={lang === 'es' ? 'Escribe en español…' : 'Write in English…'}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          disabled={busy}
-        />
-        <button
-          type="submit"
-          aria-label="Отправить"
-          disabled={busy || !input.trim()}
-          className="lift flex h-12 w-12 flex-none items-center justify-center rounded-[14px] border border-[var(--night-accent-45)] bg-[rgba(145,132,217,.14)] text-[var(--night-accent-100)] transition-colors hover:bg-[rgba(145,132,217,.22)] disabled:opacity-40"
-        >
-          <IconSend size={20} />
-        </button>
-      </form>
+      {/* Панель ввода прижата к низу. Когда открыта клавиатура (visualViewport
+          даёт её высоту kb) — поднимаем панель над ней; иначе панель стоит над
+          плавающей навигацией. Так заголовок не уезжает и клавиатура не режет UI. */}
+      <div
+        className="fixed inset-x-0 z-30 mx-auto max-w-screen-sm border-t border-white/[0.06] bg-[var(--night-bg)] px-4 pb-2 pt-2"
+        style={{ bottom: kb > 0 ? kb : 'calc(5.5rem + env(safe-area-inset-bottom))' }}
+      >
+        {/* поле без рамки + квадратная accent-кнопка отправки */}
+        <form onSubmit={send} className="flex items-center gap-2.5">
+          <input
+            aria-label={lang === 'es' ? 'Сообщение по-испански' : 'Сообщение по-английски'}
+            className="h-12 min-w-0 flex-1 rounded-[14px] border-none bg-[var(--night-input)] px-4 text-[15px] outline-none placeholder:text-[var(--night-text-25)] focus:ring-2 focus:ring-[var(--night-accent-45)]"
+            placeholder={lang === 'es' ? 'Escribe en español…' : 'Write in English…'}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            disabled={busy}
+          />
+          <button
+            type="submit"
+            aria-label="Отправить"
+            disabled={busy || !input.trim()}
+            className="lift flex h-12 w-12 flex-none items-center justify-center rounded-[14px] border border-[var(--night-accent-45)] bg-[rgba(145,132,217,.14)] text-[var(--night-accent-100)] transition-colors hover:bg-[rgba(145,132,217,.22)] disabled:opacity-40"
+          >
+            <IconSend size={20} />
+          </button>
+        </form>
 
-      {msgs.length > 0 && (
-        <Button variant="ghost" className="self-center px-3 py-1 text-sm" onClick={reset}>
-          Новый диалог
-        </Button>
-      )}
+        {msgs.length > 0 && (
+          <button
+            onClick={reset}
+            className="mx-auto mt-1.5 block px-3 py-0.5 text-xs text-[var(--night-text-40)]"
+          >
+            Новый диалог
+          </button>
+        )}
+      </div>
     </div>
   )
 }
