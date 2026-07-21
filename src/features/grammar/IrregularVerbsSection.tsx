@@ -5,13 +5,14 @@
 // и перевод, пользователь печатает 2-ю и 3-ю формы. Итог раунда → стрик.
 // Данные ленивые: src/data/english/irregular.ts.
 // ============================================================================
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { IconSpeaker } from '../../components/icons'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { RoundResult } from '../../components/RoundResult'
 import { speak } from '../../lib/speech'
 import { logActivity } from '../../lib/activity'
+import { getVerbMistakes, addVerbMistake, removeVerbMistake } from '../../lib/verbMistakes'
 import { answerMatches } from '../../lib/text'
 import type {
   IrregularGroup,
@@ -186,12 +187,23 @@ interface Result {
 }
 
 function Trainer({ groups }: { groups: IrregularGroup[] }) {
-  // тренировать все глаголы или только одну группу (при 147 глаголах полезно)
+  // тренировать все глаголы, одну группу или «Мои ошибки» (при 147 полезно)
   const [scope, setScope] = useState<string>('all')
-  const all = useMemo(() => {
-    const src = scope === 'all' ? groups : groups.filter((g) => g.title === scope)
-    return src.flatMap((g) => g.verbs)
-  }, [groups, scope])
+  // счётчик ошибок для пункта списка (обновляется при перерисовке)
+  const [mistakeCount, setMistakeCount] = useState(() => getVerbMistakes('en').length)
+
+  const verbsForScope = useCallback(
+    (s: string): IrregularVerb[] => {
+      if (s === 'mistakes') {
+        const set = new Set(getVerbMistakes('en'))
+        return groups.flatMap((g) => g.verbs).filter((v) => set.has(v.base))
+      }
+      const src = s === 'all' ? groups : groups.filter((g) => g.title === s)
+      return src.flatMap((g) => g.verbs)
+    },
+    [groups],
+  )
+  const all = useMemo(() => verbsForScope(scope), [verbsForScope, scope])
   const [round, setRound] = useState<IrregularVerb[]>(() => sampleRound(all))
   const [index, setIndex] = useState(0)
   const [past, setPast] = useState('')
@@ -212,6 +224,10 @@ function Trainer({ groups }: { groups: IrregularGroup[] }) {
     setChecked(true)
     const ok = matches(past, verb.past) && matches(part, verb.part)
     setResults((r) => [...r, { verb, ok }])
+    // банк «Мои ошибки»: неверный глагол кладём, верный — убираем
+    if (ok) removeVerbMistake('en', verb.base)
+    else addVerbMistake('en', verb.base)
+    setMistakeCount(getVerbMistakes('en').length)
     if (index + 1 >= round.length) void logActivity('grammar')
   }
 
@@ -235,8 +251,7 @@ function Trainer({ groups }: { groups: IrregularGroup[] }) {
   const pickScope = (next: string) => {
     if (next === scope) return
     setScope(next)
-    const src = next === 'all' ? groups : groups.filter((g) => g.title === next)
-    restart(src.flatMap((g) => g.verbs))
+    restart(verbsForScope(next))
   }
 
   // выбор группы глаголов — выпадающим списком
@@ -249,6 +264,7 @@ function Trainer({ groups }: { groups: IrregularGroup[] }) {
         className="min-h-11 flex-1 rounded-xl border border-white/[0.10] bg-[var(--night-input)] px-3 text-sm text-[var(--night-text)] outline-none focus:border-[var(--night-accent-45)]"
       >
         <option value="all">Все группы</option>
+        {mistakeCount > 0 && <option value="mistakes">Мои ошибки ({mistakeCount})</option>}
         {groups.map((g) => (
           <option key={g.title} value={g.title}>
             {g.title}

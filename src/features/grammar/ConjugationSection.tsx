@@ -12,6 +12,7 @@ import { Button } from '../../components/Button'
 import { RoundResult, RoundProgress } from '../../components/RoundResult'
 import { speak } from '../../lib/speech'
 import { logActivity } from '../../lib/activity'
+import { getVerbMistakes, addVerbMistake, removeVerbMistake } from '../../lib/verbMistakes'
 import type {
   ConjugationReference,
   ConjugationTense,
@@ -277,36 +278,52 @@ function ConjTable({
 
 function TrainerView({ exercises }: { exercises: EndingsExercise[] }) {
   const [level, setLevel] = useState<string>('all')
+  const [tick, setTick] = useState(0) // перечитать банк ошибок после хода
+  const mistakeCount = useMemo(() => getVerbMistakes('es').length, [tick])
 
-  const pool = useMemo(
-    () => (level === 'all' ? exercises : exercises.filter((e) => e.level === level)),
-    [exercises, level],
-  )
+  const pool = useMemo(() => {
+    if (level === 'mistakes') {
+      const set = new Set(getVerbMistakes('es'))
+      return exercises.filter((e) => set.has(String(e.id)))
+    }
+    return level === 'all' ? exercises : exercises.filter((e) => e.level === level)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [exercises, level, tick])
+
+  const chips: [string, string][] = [['all', 'Все']]
+  if (mistakeCount > 0) chips.push(['mistakes', `Мои ошибки (${mistakeCount})`])
+  for (const l of LEVELS) chips.push([l, l])
 
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap gap-2">
-        {(['all', ...LEVELS] as const).map((l) => (
+        {chips.map(([id, label]) => (
           <button
-            key={l}
-            onClick={() => setLevel(l)}
+            key={id}
+            onClick={() => setLevel(id)}
             className={`rounded-lg px-3 py-1.5 text-sm font-semibold ${
-              level === l
+              level === id
                 ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
                 : 'bg-white/[0.07] text-[var(--night-text-70)]'
             }`}
           >
-            {l === 'all' ? 'Все' : l}
+            {label}
           </button>
         ))}
       </div>
       {/* key: при смене уровня перезапускаем прогон с начала */}
-      <TrainerRunner key={level} pool={pool} />
+      <TrainerRunner key={level} pool={pool} onMistakeChange={() => setTick((t) => t + 1)} />
     </div>
   )
 }
 
-function TrainerRunner({ pool }: { pool: EndingsExercise[] }) {
+function TrainerRunner({
+  pool,
+  onMistakeChange,
+}: {
+  pool: EndingsExercise[]
+  onMistakeChange: () => void
+}) {
   const [index, setIndex] = useState(0)
   const [correct, setCorrect] = useState(0)
   const [picked, setPicked] = useState<number | null>(null)
@@ -339,7 +356,14 @@ function TrainerRunner({ pool }: { pool: EndingsExercise[] }) {
   const choose = (i: number) => {
     if (picked !== null) return
     setPicked(i)
-    if (i === current.answer) setCorrect((c) => c + 1)
+    // банк «Мои ошибки»: неверное упражнение кладём, верное — убираем
+    if (i === current.answer) {
+      setCorrect((c) => c + 1)
+      removeVerbMistake('es', String(current.id))
+    } else {
+      addVerbMistake('es', String(current.id))
+    }
+    onMistakeChange()
   }
 
   const next = () => {
