@@ -258,8 +258,8 @@ function WordsStudy({ onBack }: { onBack: () => void }) {
       <div className="flex flex-col gap-2.5">
         <RowCard
           Icon={IconCards}
-          title="Повторение колоды"
-          desc="Карточки к повторению — по умному расписанию"
+          title="Повторение слов"
+          desc="Повторяем слова, пока не забылись — приложение само напоминает вовремя"
           onClick={() => setSub('review')}
           active
           className="animate-fade-up"

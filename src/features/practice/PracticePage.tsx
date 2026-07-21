@@ -12,7 +12,7 @@
 // ============================================================================
 import type React from 'react'
 import { lazy, Suspense, useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   IconRefresh,
   IconGap,
@@ -128,20 +128,38 @@ function SectionTitle({ children }: { children: string }) {
   )
 }
 
+const GAME_MODES = new Set<Mode>([
+  'review', 'match', 'gap', 'translate', 'listening', 'sentence', 'sprint',
+  'dictation', 'gr-mcq', 'gr-fill', 'gr-order',
+])
+
 export function PracticePage() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { lang } = useLanguage()
-  // во время ведомой сессии («Начать занятие» на Главной) открываем сразу
-  // повторение — пользователь ждёт карточки, а не меню режимов
-  const [mode, setMode] = useState<Mode>(() =>
-    currentGuidedStep() === 'flashcards' ? 'review' : 'hub',
-  )
   const [due, setDue] = useState<number | null>(null)
+
+  // Режим мини-игры хранится в URL (?m=match). Тогда тап по вкладке «Практика»
+  // (переход на /practice БЕЗ параметра) возвращает в хаб, и «назад» браузера
+  // тоже работает. Раньше режим был в state — повторный тап по вкладке ничего
+  // не делал, игра не открывалась заново.
+  const raw = searchParams.get('m') as Mode | null
+  const mode: Mode = raw && GAME_MODES.has(raw) ? raw : 'hub'
+  const setMode = (m: Mode) =>
+    setSearchParams(m === 'hub' ? {} : { m }, { replace: false })
+
+  // ведомая сессия («Начать занятие» на Главной): при входе без параметра
+  // открываем сразу повторение
+  useEffect(() => {
+    if (currentGuidedStep() === 'flashcards' && !searchParams.get('m')) {
+      setSearchParams({ m: 'review' }, { replace: true })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // счётчик для плитки: сколько к повторению
   useEffect(() => {
     let alive = true
-    setMode(currentGuidedStep() === 'flashcards' ? 'review' : 'hub')
     getDueCards(50, lang)
       .then((d) => alive && setDue(d.length))
       .catch(() => alive && setDue(null))

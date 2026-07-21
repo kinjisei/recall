@@ -89,10 +89,17 @@ function scoreSense(masked: string, pos: string, want: ReturnType<typeof expecte
   // заглавные слова в середине — признак узкого/культурного значения
   const propers = masked.slice(1).match(/\b[A-Z][a-z]{2,}/g)
   score -= (propers?.length ?? 0) * 3
-  // пометки редкости прямо в тексте словаря
-  if (/\b(obsolete|archaic|dialect|slang|historical|heraldry|nautical)\b/i.test(masked)) score -= 5
+  // пометки редкости/узости прямо в тексте словаря
+  if (
+    /\b(obsolete|archaic|dialect|slang|historical|heraldry|nautical|monarch|nobleman|formerly|chiefly|poetic|rare|dated|in former times)\b/i.test(
+      masked,
+    )
+  )
+    score -= 6
   // «Of materials: …», «(of a person) …» — сужающие оговорки
   if (/^\(?of /i.test(masked)) score -= 2
+  // отсылки «see …», «same as …» — бесполезны в игре
+  if (/\b(see|same as|used to)\b/i.test(masked.slice(0, 20))) score -= 3
   const len = masked.length
   if (len < 25) score -= 2
   else if (len <= 100) score += 1
@@ -108,10 +115,12 @@ function pickDefinition(
   const want = expectedPos(translation)
   let best: string | undefined
   let bestScore = -Infinity
-  for (const sense of senses ?? []) {
-    const masked = tidy(sense.text, word)
+  const list = senses ?? []
+  for (let i = 0; i < list.length; i++) {
+    const masked = tidy(list[i].text, word)
     if (!isUsable(masked)) continue
-    const score = scoreSense(masked, sense.pos, want)
+    // ранние значения обычно частотнее — небольшой бонус за место в списке
+    const score = scoreSense(masked, list[i].pos, want) + Math.max(0, 3 - i)
     if (score > bestScore) {
       best = masked
       bestScore = score

@@ -1,11 +1,12 @@
 // «Собери фразу»: по русскому переводу собери фразу из слов (EN и ES).
 // Материал — встроенные фразы «Речи» (60 английских / 135 испанских).
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { IconSpeaker } from '../../components/icons'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { RoundResult, RoundProgress } from '../../components/RoundResult'
 import { logActivity } from '../../lib/activity'
+import { getUserLevel } from '../../lib/level'
 import { speak } from '../../lib/speech'
 import { spanishSentences } from '../../data/spanish'
 import { englishSentences } from '../../data/english'
@@ -15,6 +16,7 @@ import type { AppLang } from '../../types'
 
 const ROUNDS = 8
 const TITLE = 'Собери фразу'
+const LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
 
 interface Task {
   ru: string
@@ -22,23 +24,43 @@ interface Task {
   words: string[]
 }
 
+/** Фразы не выше уровня ученика; если их мало — поднимаем планку на уровень. */
+function byLevel<T extends { level: string }>(pool: T[], level: string | null): T[] {
+  const t = level ? LEVELS.indexOf(level) : LEVELS.length - 1
+  if (t < 0) return pool
+  for (let up = 0; up <= LEVELS.length; up++) {
+    const cands = pool.filter((s) => {
+      const i = LEVELS.indexOf(s.level)
+      return i < 0 || i <= t + up
+    })
+    if (cands.length >= ROUNDS) return cands
+  }
+  return pool
+}
+
 export function SentenceBuilder({ lang, onBack }: { lang: AppLang; onBack: () => void }) {
   const [seed, setSeed] = useState(0)
+  const [level, setLevel] = useState<string | null>(null)
+
+  useEffect(() => {
+    getUserLevel(lang).then(setLevel).catch(() => setLevel(null))
+  }, [lang])
 
   const tasks = useMemo<Task[]>(() => {
     // Берём короткие фразы (до 8 слов) — их приятнее собирать.
     const source =
       lang === 'es'
-        ? spanishSentences.map((s) => ({ ru: s.ru, target: s.es }))
-        : englishSentences.map((s) => ({ ru: s.ru, target: s.en }))
-    const pool = source.filter((s) => s.target.trim().split(/\s+/).length <= 8)
+        ? spanishSentences.map((s) => ({ ru: s.ru, target: s.es, level: s.level }))
+        : englishSentences.map((s) => ({ ru: s.ru, target: s.en, level: s.level }))
+    const short = source.filter((s) => s.target.trim().split(/\s+/).length <= 8)
+    const pool = byLevel(short, level)
     return sample(pool, ROUNDS).map((s) => ({
       ru: s.ru,
       target: s.target,
       words: s.target.trim().split(/\s+/),
     }))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [seed, lang])
+  }, [seed, lang, level])
 
   const [index, setIndex] = useState(0)
   const [correct, setCorrect] = useState(0)

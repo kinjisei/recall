@@ -22,17 +22,29 @@ interface Pair {
   isTrue: boolean
 }
 
-/** Пары для спринта: половина верных, половина с чужим переводом. */
+/** Пары для спринта: половина верных, половина с чужим (но правдоподобным) переводом. */
 function buildPairs(items: PoolItem[]): Pair[] {
-  const usable = items.filter((i) => i.term && i.translation)
+  // дедуп по слову: колода и пак могли дать дубликат → раньше выпадало «quit = quit»
+  const seen = new Set<string>()
+  const usable = items.filter((i) => {
+    if (!i.term || !i.translation) return false
+    const k = i.term.toLowerCase()
+    if (seen.has(k)) return false
+    seen.add(k)
+    return true
+  })
   return shuffle(usable).map((item, idx) => {
     const isTrue = idx % 2 === 0
-    let shown = item.translation
-    if (!isTrue) {
-      const other = usable[(idx + 1 + Math.floor(Math.random() * (usable.length - 1))) % usable.length]
-      shown = other.translation === item.translation ? other.term : other.translation
-    }
-    return { item, shown, isTrue }
+    if (isTrue) return { item, shown: item.translation, isTrue: true }
+    // ложная пара: чужой перевод, ЗАВЕДОМО отличный; предпочитаем ту же тему
+    const pool = usable.filter(
+      (o) => o.translation !== item.translation && o.term !== item.term,
+    )
+    if (pool.length === 0) return { item, shown: item.translation, isTrue: true }
+    const sameTopic = pool.filter((o) => item.topic != null && o.topic === item.topic)
+    const src = sameTopic.length > 0 ? sameTopic : pool
+    const other = src[Math.floor(Math.random() * src.length)]
+    return { item, shown: other.translation, isTrue: false }
   })
 }
 
@@ -126,7 +138,8 @@ export function SprintMode({ lang, onBack }: { lang: AppLang; onBack: () => void
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    // раскладка «по всему экрану»: таймер и слово сверху, кнопки прижаты к низу
+    <div className="flex min-h-[calc(100dvh-11rem)] flex-col gap-4">
       <GameHeader title={TITLE} onBack={onBack} />
 
       <div className="flex items-center justify-between text-sm text-[var(--night-text-40)]">
@@ -138,7 +151,7 @@ export function SprintMode({ lang, onBack }: { lang: AppLang; onBack: () => void
       </div>
 
       <Card
-        className={`items-center gap-2 py-10 text-center transition-colors ${
+        className={`items-center gap-2 py-12 text-center transition-colors ${
           flash === 'ok'
             ? 'border-emerald-500/60'
             : flash === 'bad'
@@ -150,16 +163,18 @@ export function SprintMode({ lang, onBack }: { lang: AppLang; onBack: () => void
         <p className="text-xl text-[var(--night-text-70)]">= {pair.shown} ?</p>
       </Card>
 
+      <div className="flex-1" />
+
       <div className="grid grid-cols-2 gap-2.5">
         <button
           onClick={() => answer(false)}
-          className="lift flex min-h-14 items-center justify-center gap-2 rounded-2xl border border-white/[0.12] py-3.5 font-medium text-[var(--night-text-70)]"
+          className="lift flex min-h-16 items-center justify-center gap-2 rounded-2xl border border-white/[0.12] font-medium text-[var(--night-text-70)]"
         >
           <IconClose size={20} /> Неверно
         </button>
         <button
           onClick={() => answer(true)}
-          className="lift flex min-h-14 items-center justify-center gap-2 rounded-2xl border border-[var(--night-accent-45)] bg-[rgba(145,132,217,.18)] py-3.5 font-medium text-[var(--night-text)]"
+          className="lift flex min-h-16 items-center justify-center gap-2 rounded-2xl border border-[var(--night-accent-45)] bg-[rgba(145,132,217,.18)] font-medium text-[var(--night-text)]"
         >
           <IconCheck size={20} /> Верно
         </button>
