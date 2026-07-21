@@ -3,6 +3,8 @@ import {
   IconDialog,
   IconSend,
   IconPencil,
+  IconCheck,
+  IconMaterials,
   type IconProps,
 } from '../../components/icons'
 import { Card } from '../../components/Card'
@@ -116,40 +118,52 @@ function chatSystemPrompt(level: CEFRLevel, lang: AppLang): string {
     'EVERY reply has this structure:',
     '',
     `1) Check the learner's LAST message for mistakes. Find ALL of them, not only the main one: grammar, spelling, capitalization, articles, prepositions, word order, unnatural word choice. One line per mistake, exactly:`,
-    '✏️ фрагмент с ошибкой → исправление — короткое объяснение по-русски',
-    'Count even small mistakes (i → I; go → went; to shop → to the shop; yesterdi → yesterday). Do NOT invent mistakes; informal style is not a mistake. If the message is correct, write exactly one line: ✅ Без ошибок!',
+    '[fix] фрагмент с ошибкой → исправление — короткое объяснение по-русски',
+    'Count even small mistakes (i → I; go → went; to shop → to the shop; yesterdi → yesterday). Do NOT invent mistakes; informal style is not a mistake. If the message is correct, write exactly one line: [ok] Без ошибок!',
     '',
     `2) Then continue the conversation naturally: 2-4 sentences in ${language} for level ${level}, ending with a question. ${levelHint}`,
     '',
     'TEACHING RULES:',
     '- If several mistakes belong to one grammar topic, or the same mistake repeats across messages, add after the corrections:',
-    '📚 Хромает тема: <название темы по-русски>. Хочешь закрепить? Напиши «давай».',
+    '[topic] Хромает тема: <название темы по-русски>. Хочешь закрепить? Напиши «давай».',
     grammarRef,
     '- If the learner agrees (давай, да, ok, yes), switch to practice mode: give ONE short exercise at a time (перевод короткой фразы с русского or fill-the-gap), wait for the answer, check it with a one-line explanation, 3-5 exercises total. Then praise the learner and return to the conversation with a new question.',
     '- If the learner asks about grammar or a word, explain in Russian with 2-3 examples before continuing.',
     `- ALL explanations (in Russian) must match a ${level} learner: short, simple everyday words, no linguistic or academic jargon. Explain the way you would to a school student, e.g. chair = «стул — то, на чём сидят», NOT a dictionary-style scientific definition.`,
     '- Plain text only, no markdown formatting. Never skip part 1.',
+    '- Service lines MUST start with the EXACT text tags [fix], [ok], [topic] (in square brackets, lowercase). Do NOT use emoji anywhere in your reply.',
   ].join('\n')
 }
 
 /**
- * Текст ответа AI с подсветкой служебных строк (по ТЗ «Nocturne» исправления
- * выделяются акцентом): «✏️ …» — исправление ошибки, «✅ …» — ошибок нет,
- * «📚 …» — предложение потренировать тему.
+ * Служебные строки ответа AI помечаются текст-тегом в начале: [fix] —
+ * исправление ошибки, [ok] — ошибок нет, [topic] — предложение темы. Тег
+ * скрывается, вместо него — иконка и акцентная подсветка. Старые сохранённые
+ * сообщения могли начинаться с эмодзи (✏️/✅/📚) — распознаём и их.
  */
+const MARKERS = [
+  { re: /^(?:✏️|\[fix\])\s*/i, Icon: IconPencil, cls: 'text-[var(--night-accent-text)]' },
+  { re: /^(?:✅|\[ok\])\s*/i, Icon: IconCheck, cls: 'text-emerald-400' },
+  { re: /^(?:📚|\[topic\])\s*/i, Icon: IconMaterials, cls: 'font-medium text-[var(--night-accent-text)]' },
+] as const
+
 function AssistantText({ content }: { content: string }) {
   return (
     <>
       {content.split('\n').map((line, i) => {
-        const cls = line.startsWith('✏️')
-          ? 'text-[var(--night-accent-text)]'
-          : line.startsWith('✅')
-            ? 'text-emerald-400'
-            : line.startsWith('📚')
-              ? 'font-medium text-[var(--night-accent-text)]'
-              : undefined
+        const m = MARKERS.find((mk) => mk.re.test(line))
+        if (m) {
+          const Icon = m.Icon
+          return (
+            <span key={i} className={m.cls}>
+              <Icon size={14} className="mr-1 inline align-[-2px]" />
+              {line.replace(m.re, '')}
+              {'\n'}
+            </span>
+          )
+        }
         return (
-          <span key={i} className={cls}>
+          <span key={i}>
             {line}
             {'\n'}
           </span>
@@ -239,8 +253,8 @@ function ChatSection({ level, lang }: { level: CEFRLevel; lang: AppLang }) {
         <Card>
           <p className="text-[var(--night-text-70)]">
             {lang === 'es'
-              ? 'Напиши что-нибудь по-испански — AI ответит просто, поддержит разговор и поправит ошибки (строкой с ✏️).'
-              : 'Напиши что-нибудь по-английски — AI ответит, поддержит разговор и поправит ошибки (строкой с ✏️).'}
+              ? 'Напиши что-нибудь по-испански — AI ответит просто, поддержит разговор и отдельной строкой поправит ошибки.'
+              : 'Напиши что-нибудь по-английски — AI ответит, поддержит разговор и отдельной строкой поправит ошибки.'}
           </p>
           <p className="mt-2 text-sm text-[var(--night-text-40)]">
             {lang === 'es'
@@ -322,7 +336,7 @@ function writingSystemPrompt(level: CEFRLevel, lang: AppLang): string {
     '',
     'ОШИБКИ',
     'нумерованный список: «цитата» → исправление — короткое объяснение.',
-    'Если ошибок нет — напиши «Ошибок не нашёл 🎉».',
+    'Если ошибок нет — напиши «Ошибок не нашёл».',
     '',
     'УЛУЧШЕННАЯ ВЕРСИЯ',
     `тот же текст на естественном ${textLang} (чуть выше уровня ученика).`,
