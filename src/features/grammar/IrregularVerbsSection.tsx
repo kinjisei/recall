@@ -239,24 +239,23 @@ function Trainer({ groups }: { groups: IrregularGroup[] }) {
     restart(src.flatMap((g) => g.verbs))
   }
 
+  // выбор группы глаголов — выпадающим списком
   const scopeChips = (
-    <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
-      {[['all', 'Все'] as [string, string]].concat(
-        groups.map((g) => [g.title, g.title.split(':')[0]] as [string, string]),
-      ).map(([id, label]) => (
-        <button
-          key={id}
-          onClick={() => pickScope(id)}
-          className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
-            scope === id
-              ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
-              : 'bg-white/[0.07] text-[var(--night-text-70)] dark:bg-white/[0.08] dark:text-[var(--night-text-25)]'
-          }`}
-        >
-          {label}
-        </button>
-      ))}
-    </div>
+    <label className="flex items-center gap-2 text-sm">
+      <span className="shrink-0 text-[var(--night-text-40)]">Группа:</span>
+      <select
+        value={scope}
+        onChange={(e) => pickScope(e.target.value)}
+        className="min-h-11 flex-1 rounded-xl border border-white/[0.10] bg-[var(--night-input)] px-3 text-sm text-[var(--night-text)] outline-none focus:border-[var(--night-accent-45)]"
+      >
+        <option value="all">Все группы</option>
+        {groups.map((g) => (
+          <option key={g.title} value={g.title}>
+            {g.title}
+          </option>
+        ))}
+      </select>
+    </label>
   )
 
   if (done) {

@@ -193,28 +193,27 @@ export async function getDefinitions(
   if (missing.length === 0) return out
 
   const fresh: Record<string, string> = {}
-  let stillMissing: string[] = []
 
-  if (simple) {
-    // новичку — только простые AI-определения
-    stillMissing = missing.map((r) => r.word)
-  } else {
-    // Free Dictionary — параллельно, он бесплатный и быстрый
-    const results = await Promise.all(
-      missing.map((req) =>
-        lookup(req.word)
-          .then((r) => [req.word, pickDefinition(r?.definitions, req.word, req.translation)] as const)
-          .catch(() => [req.word, undefined] as const),
-      ),
-    )
-    for (const [w, def] of results) {
-      // pickDefinition уже вернул готовый (обрезанный и замаскированный) текст
-      if (def) fresh[w] = def
-      else stillMissing.push(w)
+  // AI (через лёгкий путь chat → Groq) — ОСНОВНОЙ источник: определения чище и
+  // проще словарных (Free Dictionary давал архаичные толкования вроде
+  // «interview → meeting of monarchs»), а у Groq щедрый бесплатный лимит —
+  // Gemini не трогаем. Всё кэшируется в localStorage навсегда.
+  Object.assign(fresh, await fromGemini(missing.map((r) => r.word), simple))
+
+  // Кого AI вдруг не вернул (редко) — добираем бесплатным словарём (не для новичка).
+  if (!simple) {
+    const rest = missing.filter((r) => !fresh[r.word])
+    if (rest.length > 0) {
+      const results = await Promise.all(
+        rest.map((req) =>
+          lookup(req.word)
+            .then((r) => [req.word, pickDefinition(r?.definitions, req.word, req.translation)] as const)
+            .catch(() => [req.word, undefined] as const),
+        ),
+      )
+      for (const [w, def] of results) if (def) fresh[w] = def
     }
   }
-
-  Object.assign(fresh, await fromGemini(stillMissing, simple))
 
   if (Object.keys(fresh).length > 0) {
     writeCache(Object.fromEntries(Object.entries(fresh).map(([w, d]) => [ck(w), d])))

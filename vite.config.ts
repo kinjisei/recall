@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import { ALLOWED_MODELS, callGemini, DEFAULT_GEMINI_MODEL } from './api/_core'
 import { transcribeWithGroq } from './api/_stt'
+import { groqChat } from './api/_groq'
 import type { ChatTurn } from './src/types'
 
 /**
@@ -12,7 +13,11 @@ import type { ChatTurn } from './src/types'
  * Ключ берётся из .env.local: строка GEMINI_API_KEY=... (БЕЗ префикса VITE_,
  * поэтому в клиентский бандл он не попадает).
  */
-function geminiDevEndpoint(apiKey: string | undefined, model: string): Plugin {
+function geminiDevEndpoint(
+  apiKey: string | undefined,
+  model: string,
+  groqKey: string | undefined,
+): Plugin {
   return {
     name: 'gemini-dev-endpoint',
     configureServer(server) {
@@ -31,27 +36,35 @@ function geminiDevEndpoint(apiKey: string | undefined, model: string): Plugin {
           void (async () => {
             res.setHeader('Content-Type', 'application/json')
             try {
-              if (!apiKey) {
-                throw new Error(
-                  'GEMINI_API_KEY не задан: добавь строку GEMINI_API_KEY=... в .env.local и перезапусти npm run dev',
-                )
-              }
-              const { messages, system, model: reqModel } = JSON.parse(raw || '{}') as {
+              const { messages, system, model: reqModel, provider } = JSON.parse(raw || '{}') as {
                 messages?: ChatTurn[]
                 system?: string
                 model?: string
+                provider?: string
               }
               if (!Array.isArray(messages) || messages.length === 0) {
                 res.statusCode = 400
                 res.end(JSON.stringify({ error: 'Нужно поле messages (непустой массив)' }))
                 return
               }
+              // лёгкие задачи — на Groq (как в проде)
+              if (provider === 'groq') {
+                if (!groqKey) throw new Error('GROQ_API_KEY не задан в .env.local')
+                const text = await groqChat(messages, system, groqKey)
+                res.end(JSON.stringify({ text }))
+                return
+              }
+              if (!apiKey) {
+                throw new Error(
+                  'GEMINI_API_KEY не задан: добавь строку GEMINI_API_KEY=... в .env.local и перезапусти npm run dev',
+                )
+              }
               const chosen =
                 reqModel && ALLOWED_MODELS.includes(reqModel) ? reqModel : model
               const text = await callGemini(messages, system, apiKey, chosen)
               res.end(JSON.stringify({ text }))
             } catch (e) {
-              const msg = e instanceof Error ? e.message : 'Ошибка Gemini'
+              const msg = e instanceof Error ? e.message : 'Ошибка AI'
               res.statusCode = msg.includes('лимит') ? 429 : 500
               res.end(JSON.stringify({ error: msg }))
             }
@@ -129,7 +142,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       tailwindcss(),
-      geminiDevEndpoint(env.GEMINI_API_KEY, env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL),
+      geminiDevEndpoint(env.GEMINI_API_KEY, env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL, env.GROQ_API_KEY),
       transcribeDevEndpoint(env.GROQ_API_KEY),
       VitePWA({
         registerType: 'autoUpdate',

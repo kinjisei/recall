@@ -8,6 +8,7 @@ import type { ChatTurn } from '../src/types'
 // расширение .js обязательно: "type": "module" — Vercel/Node в ESM-режиме
 // не находит модуль без расширения (FUNCTION_INVOCATION_FAILED при старте)
 import { ALLOWED_MODELS, callGemini, DEFAULT_GEMINI_MODEL } from './_core.js'
+import { groqChat, ALLOWED_GROQ_MODELS, DEFAULT_GROQ_MODEL } from './_groq.js'
 import { authorize, applyCors } from './_auth.js'
 
 // Генерация материала занимает 20–40 с (два запроса к Gemini), плюс повторы
@@ -28,15 +29,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(access.status).json({ error: access.error })
   }
 
-  const apiKey = process.env.GEMINI_API_KEY
-  if (!apiKey) {
-    return res.status(500).json({ error: 'GEMINI_API_KEY не настроен на сервере' })
-  }
-
-  const { messages, system, model } = (req.body ?? {}) as {
+  const { messages, system, model, provider } = (req.body ?? {}) as {
     messages?: ChatTurn[]
     system?: string
     model?: string
+    provider?: string
   }
   if (!Array.isArray(messages) || messages.length === 0) {
     return res.status(400).json({ error: 'Нужно поле messages (непустой массив)' })
@@ -55,6 +52,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'Слишком большая системная инструкция' })
   }
 
+  // Лёгкие массовые задачи (определения, контекстный словарь, разбор работ)
+  // идут на Groq — у него щедрее бесплатный лимит, Gemini бережём для тяжёлого.
+  if (provider === 'groq') {
+    const groqKey = process.env.GROQ_API_KEY
+    if (!groqKey) return res.status(500).json({ error: 'GROQ_API_KEY не настроен на сервере' })
+    const groqModel =
+      model && ALLOWED_GROQ_MODELS.includes(model) ? model : DEFAULT_GROQ_MODEL
+    try {
+      const text = await groqChat(messages, system, groqKey, groqModel)
+      return res.status(200).json({ text })
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Ошибка Groq'
+      return res.status(msg.includes('лимит') ? 429 : 502).json({ error: msg })
+    }
+  }
+
+  const apiKey = process.env.GEMINI_API_KEY
+  if (!apiKey) {
+    return res.status(500).json({ error: 'GEMINI_API_KEY не настроен на сервере' })
+  }
   // клиент может выбрать модель только из белого списка
   const chosenModel =
     model && ALLOWED_MODELS.includes(model)

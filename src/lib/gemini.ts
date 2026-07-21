@@ -31,7 +31,9 @@ export async function chat(
       body: JSON.stringify({
         messages,
         system: opts?.system,
-        model: opts?.light ? 'gemini-3.1-flash-lite' : undefined,
+        // лёгкие массовые задачи — на Groq (щедрее бесплатный лимит),
+        // тяжёлые (материалы, чат, квесты) остаются на Gemini
+        ...(opts?.light ? { provider: 'groq' } : {}),
       }),
     })
   } catch {

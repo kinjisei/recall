@@ -104,7 +104,8 @@ function LessonsSection({
   initialMistakes?: boolean
 }) {
   const [topics, setTopics] = useState<GrammarTopic[] | null>(null)
-  const [openLevel, setOpenLevel] = useState<string | null>('A1')
+  // ничего не раскрыто по умолчанию — уровни разворачиваются по тапу
+  const [openLevel, setOpenLevel] = useState<string | null>(null)
   const [selected, setSelected] = useState<GrammarTopic | null>(null)
   const [reviewMistakes, setReviewMistakes] = useState(initialMistakes)
 
