@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.recall.learning",
+      "sha256_cert_fingerprints": [
+        "2D:3E:77:D6:95:71:D3:40:3B:71:1E:B7:00:C8:9A:3D:6B:66:75:AC:83:70:61:E1:D7:72:24:9A:12:2E:54:B4"
+      ]
+    }
+  }
+]
