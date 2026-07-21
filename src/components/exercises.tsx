@@ -126,7 +126,7 @@ export function FillExercise({
           onClick={() => setShowHint((s) => !s)}
           className="self-start text-xs font-semibold text-[var(--night-accent-text)]"
         >
-          {showHint ? 'скрыть подсказку' : '💡 подсказка'}
+          {showHint ? 'скрыть подсказку' : 'подсказка'}
         </button>
       )}
       {!checked && showHint && exercise.hint && (

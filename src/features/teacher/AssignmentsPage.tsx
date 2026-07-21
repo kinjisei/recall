@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom'
 import { BackHeader } from '../../components/BackButton'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
-import { RoundResult } from '../../components/RoundResult'
+import { RoundResult, ScoreGlyph } from '../../components/RoundResult'
 import { ExerciseView } from '../../components/exercises'
 import { TappableText, WordSheet, type WordPick } from '../../components/WordSheet'
 import { logActivity } from '../../lib/activity'
@@ -177,8 +177,8 @@ function ReviewedView({
         <h1 className="min-w-0 truncate text-xl font-bold">{m.title ?? m.topic}</h1>
       </div>
 
-      <Card className="text-center">
-        <p className="text-4xl">{percent >= 80 ? '🎉' : percent >= 50 ? '👍' : '💪'}</p>
+      <Card className="flex flex-col items-center text-center">
+        <ScoreGlyph percent={percent} />
         <p className="mt-2 text-lg font-bold">
           Проверено преподавателем: {okCount} из {row.auto_total}
         </p>

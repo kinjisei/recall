@@ -112,7 +112,7 @@ export function DashboardPage() {
     dueCount === null
       ? 'Повторить и потренировать'
       : dueCount === 0
-        ? 'Всё повторено ✨'
+        ? 'Всё повторено'
         : `К повторению: ${dueCount}${dueCount >= 99 ? '+' : ''}`
 
   return (

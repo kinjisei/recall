@@ -3,7 +3,7 @@
 // слово на изучаемом языке. Неверные слова возвращаются в колоду (again).
 // ============================================================================
 import { useState } from 'react'
-import { IconSpeaker } from '../../components/icons'
+import { IconSpeaker, IconRefresh } from '../../components/icons'
 import { Card } from '../../components/Card'
 import { ScoreGlyph } from '../../components/RoundResult'
 import { Button } from '../../components/Button'
@@ -111,7 +111,9 @@ export function WordCheckRunner({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between text-sm text-[var(--night-text-40)]">
-        <span>🔁 Перепроверка от преподавателя</span>
+        <span className="flex items-center gap-1.5">
+          <IconRefresh size={14} /> Перепроверка от преподавателя
+        </span>
         <span>
           {index + 1} / {total}
         </span>

@@ -277,7 +277,7 @@ export function WordSheet({
                 {ctx.translation}
               </p>
               {ctx.note && (
-                <p className="mt-1 text-sm text-[var(--night-text-40)]">💡 {ctx.note}</p>
+                <p className="mt-1 text-sm text-[var(--night-text-40)]">{ctx.note}</p>
               )}
             </div>
           )}

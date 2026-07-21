@@ -348,7 +348,7 @@ function Trainer({ groups }: { groups: IrregularGroup[] }) {
             </p>
           )}
           {checked && pastOk && partOk && (
-            <p className="text-sm font-medium text-emerald-600">Верно! 🎉</p>
+            <p className="text-sm font-medium text-emerald-600">Верно!</p>
           )}
           {!checked ? (
             <Button type="submit" disabled={!past.trim() || !part.trim()}>

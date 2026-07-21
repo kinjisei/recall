@@ -91,7 +91,7 @@ export function StudentWordsSection({ studentId }: { studentId: string }) {
                       onClick={() => setOpenCheck((cur) => (cur === c.id ? null : c.id))}
                       className="w-full text-left"
                     >
-                      🔁 {date}:{' '}
+                      {date}:{' '}
                       <span className="font-semibold">
                         {okCount}/{c.card_ids.length}
                       </span>
@@ -112,7 +112,7 @@ export function StudentWordsSection({ studentId }: { studentId: string }) {
                   </>
                 ) : (
                   <span className="text-[var(--night-text-40)]">
-                    🔁 {date}: назначена, ещё не пройдена ({c.card_ids.length} слов)
+                    {date}: назначена, ещё не пройдена ({c.card_ids.length} слов)
                   </span>
                 )}
               </div>
@@ -159,7 +159,7 @@ export function StudentWordsSection({ studentId }: { studentId: string }) {
             onClick={assign}
             disabled={busy || selected.size === 0}
           >
-            {busy ? 'Назначаю…' : `🔁 Назначить перепроверку (${selected.size})`}
+            {busy ? 'Назначаю…' : `Назначить перепроверку (${selected.size})`}
           </Button>
         </>
       )}

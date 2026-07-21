@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { IconGraduation } from '../../components/icons'
+import { IconGraduation, IconFlame } from '../../components/icons'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { supabase } from '../../lib/supabase'
@@ -231,7 +231,8 @@ function StudentCard({
         <div>
           <p className="font-semibold">{p.display_name ?? 'Без имени'}</p>
           <p className="text-sm text-[var(--night-text-40)]">
-            Уровень {p.level} · 🔥 {student.streak} ·{' '}
+            Уровень {p.level} · <IconFlame size={13} className="inline align-text-bottom" />{' '}
+            {student.streak} ·{' '}
             {student.doneToday ? 'сегодня ✓' : 'сегодня —'}
           </p>
         </div>
