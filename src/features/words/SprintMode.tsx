@@ -129,7 +129,7 @@ export function SprintMode({ lang, onBack }: { lang: AppLang; onBack: () => void
     const ok = saidTrue === pair.isTrue
     setTotal((t) => t + 1)
     if (ok) setCorrect((c) => c + 1)
-    else markWrong(pair.item)
+    else markWrong(pair.item, lang)
     navigator.vibrate?.(ok ? 8 : [15, 30, 15])
     if (flashTimer.current) clearTimeout(flashTimer.current)
     setFlash(ok ? 'ok' : 'bad')

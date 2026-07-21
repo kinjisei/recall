@@ -127,7 +127,7 @@ function MatchRound({
     } else {
       // ошибка: слово, которое пользователь ВЫБРАЛ слева, он не знает
       const picked = pairs.find((p) => p.id === selected)
-      if (picked) markWrong(picked.item)
+      if (picked) markWrong(picked.item, lang)
       setMistakes((n) => n + 1)
       setWrong(id)
       setTimeout(() => setWrong(null), 400)

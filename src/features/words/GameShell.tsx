@@ -112,7 +112,7 @@ export function QuizRunner({
     if (picked !== null) return
     setPicked(i)
     if (i === q.answer) setCorrect((c) => c + 1)
-    else markWrong(q.item)
+    else markWrong(q.item, lang)
   }
 
   return (

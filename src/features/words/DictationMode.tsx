@@ -98,7 +98,7 @@ export function DictationMode({ lang, onBack }: { lang: AppLang; onBack: () => v
     const ok = answerMatches(value, current.term)
     setChecked(ok)
     if (ok) setCorrect((c) => c + 1)
-    else markWrong(current)
+    else markWrong(current, lang)
   }
 
   const next = () => {
