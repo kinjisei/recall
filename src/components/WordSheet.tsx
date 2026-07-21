@@ -8,6 +8,7 @@
 // ============================================================================
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { SpeakerHighIcon } from '@phosphor-icons/react'
 import { Button } from './Button'
 import { addCard } from '../lib/cards'
 import { lookup } from '../lib/dictionary'
@@ -258,10 +259,10 @@ export function WordSheet({
             </h3>
             <button
               onClick={playAudio}
-              className="shrink-0 rounded-full bg-white/[0.06] px-3 py-1 text-lg dark:bg-white/[0.08]"
+              className="shrink-0 rounded-full bg-white/[0.06] px-3 py-2 dark:bg-white/[0.08]"
               aria-label="Озвучить"
             >
-              🔊
+              <SpeakerHighIcon size={18} />
             </button>
           </div>
 

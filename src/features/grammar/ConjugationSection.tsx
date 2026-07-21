@@ -5,6 +5,7 @@
 // Данные грузятся лениво (../../data/spanish/conjugation).
 // ============================================================================
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { SpeakerHighIcon } from '@phosphor-icons/react'
 import { BackButton } from '../../components/BackButton'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
@@ -177,10 +178,10 @@ function TenseDetail({
             <p className="font-medium">{tense.example}</p>
             <button
               onClick={() => speak(tense.example, { lang: 'es' })}
-              className="rounded-full bg-[var(--night-surface)] px-2 py-0.5 text-sm dark:bg-white/[0.08]"
+              className="rounded-full bg-[var(--night-surface)] px-2 py-1 dark:bg-white/[0.08]"
               aria-label="Озвучить"
             >
-              🔊
+              <SpeakerHighIcon size={15} />
             </button>
           </div>
           <p className="mt-0.5 text-sm text-[var(--night-text-40)]">{tense.exampleRu}</p>
