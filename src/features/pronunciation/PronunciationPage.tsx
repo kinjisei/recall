@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
-import { RoundResult, scoreEmoji } from '../../components/RoundResult'
+import { RoundResult } from '../../components/RoundResult'
 import { GuidedNext } from '../../components/GuidedNext'
 import { celebrate } from '../../components/Confetti'
 import {
@@ -340,7 +340,7 @@ export function PronunciationPage() {
           />
           <div className="min-w-0">
             <p className="font-bold">
-              Совпадение — {score.percent}% <span>{scoreEmoji(score.percent)}</span>
+              Совпадение — {score.percent}%
             </p>
             <p className="text-sm text-[var(--night-text-60)]">{humanHint(score)}</p>
             {heard && (

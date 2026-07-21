@@ -8,6 +8,7 @@
 // ============================================================================
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { Card } from '../../components/Card'
+import { ScoreGlyph } from '../../components/RoundResult'
 import { Button } from '../../components/Button'
 import { logActivity } from '../../lib/activity'
 import { speak } from '../../lib/speech'
@@ -138,8 +139,8 @@ function MatchRound({
     return (
       <div className="flex flex-col gap-4">
         <GameHeader title="Значения" onBack={onBack} />
-        <Card className="text-center">
-          <p className="text-4xl">{mistakes === 0 ? '🎉' : '👍'}</p>
+        <Card className="flex flex-col items-center text-center">
+          <ScoreGlyph percent={mistakes === 0 ? 100 : 65} />
           <p className="mt-2 font-semibold">
             {mistakes === 0 ? 'Все пары с первого раза!' : `Готово, ошибок: ${mistakes}`}
           </p>

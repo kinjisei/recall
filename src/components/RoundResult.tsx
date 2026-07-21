@@ -4,12 +4,19 @@
 // формулировки успели разъехаться («Засчитано» / «Тема засчитана» / ничего).
 // ============================================================================
 import type { ReactNode } from 'react'
+import { TrophyIcon, ThumbsUpIcon, ArrowUpIcon } from '@phosphor-icons/react'
 import { Card } from './Card'
 import { Button } from './Button'
 
-/** Эмодзи по проценту: 🎉 ≥80, 👍 ≥50, 💪 ниже. */
-export function scoreEmoji(percent: number): string {
-  return percent >= 80 ? '🎉' : percent >= 50 ? '👍' : '💪'
+/**
+ * Значок результата по проценту (вместо эмодзи 🎉/👍/💪): кубок ≥80, палец
+ * вверх ≥50, стрелка «тянись выше» ниже. Векторные Phosphor-иконки — единый
+ * стиль с остальным интерфейсом и корректная тёмная тема.
+ */
+export function ScoreGlyph({ percent, size = 40 }: { percent: number; size?: number }) {
+  if (percent >= 80) return <TrophyIcon size={size} weight="fill" className="text-[var(--night-accent-100)]" />
+  if (percent >= 50) return <ThumbsUpIcon size={size} weight="fill" className="text-[var(--night-accent-text)]" />
+  return <ArrowUpIcon size={size} weight="bold" className="text-[var(--night-text-40)]" />
 }
 
 export function RoundResult({
@@ -34,8 +41,8 @@ export function RoundResult({
 }) {
   const percent = total ? Math.round((correct / total) * 100) : 0
   return (
-    <Card className="flex flex-col gap-3 text-center">
-      <p className="text-4xl">{scoreEmoji(percent)}</p>
+    <Card className="flex flex-col items-center gap-3 text-center">
+      <ScoreGlyph percent={percent} />
       <p className="text-lg font-bold">
         {correct} из {total} верно ({percent}%)
       </p>

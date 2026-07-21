@@ -4,6 +4,7 @@
 // ============================================================================
 import { useState } from 'react'
 import { Card } from '../../components/Card'
+import { ScoreGlyph } from '../../components/RoundResult'
 import { Button } from '../../components/Button'
 import { normalizeAnswer as normalize } from '../../lib/text'
 import { logActivity } from '../../lib/activity'
@@ -72,8 +73,8 @@ export function WordCheckRunner({
     const okCount = results.filter((r) => r.ok).length
     const wrong = results.filter((r) => !r.ok)
     return (
-      <Card className="flex flex-col gap-3 text-center">
-        <p className="text-4xl">{okCount === total ? '🎉' : okCount >= total / 2 ? '👍' : '💪'}</p>
+      <Card className="flex flex-col items-center gap-3 text-center">
+        <ScoreGlyph percent={total ? Math.round((okCount / total) * 100) : 0} />
         <p className="text-lg font-bold">
           Перепроверка: {okCount} из {total}
         </p>
