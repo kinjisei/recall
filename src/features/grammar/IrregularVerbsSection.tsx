@@ -43,8 +43,8 @@ export function IrregularVerbsSection() {
       <div className="flex gap-2">
         {(
           [
-            ['reference', '📋 Справочник'],
-            ['trainer', '⚡ Тренажёр'],
+            ['reference', 'Справочник'],
+            ['trainer', 'Тренажёр'],
           ] as [Mode, string][]
         ).map(([id, label]) => (
           <button

@@ -14,6 +14,7 @@ import {
   SpeakerHighIcon,
   CheckIcon,
   XIcon,
+  TrayIcon,
 } from '@phosphor-icons/react'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
@@ -135,7 +136,7 @@ export function MyWords({ lang, onBack }: { lang: AppLang; onBack: () => void })
 
   return (
     <div className="flex flex-col gap-4">
-      <GameHeader title="📖 Мои слова" onBack={onBack} />
+      <GameHeader title="Мои слова" onBack={onBack} />
 
       {error && (
         <Card className="border-red-400/40 bg-red-500/10">
@@ -179,7 +180,7 @@ export function MyWords({ lang, onBack }: { lang: AppLang; onBack: () => void })
         <p className="text-[var(--night-text-40)]">Загрузка…</p>
       ) : shown.length === 0 ? (
         <Card className="text-center">
-          <p className="text-3xl">🗂</p>
+          <TrayIcon size={38} className="mx-auto block text-[var(--night-text-40)]" />
           <p className="mt-2 font-medium">
             {counts.all === 0 ? 'Пока нет своих слов' : 'Ничего не найдено'}
           </p>

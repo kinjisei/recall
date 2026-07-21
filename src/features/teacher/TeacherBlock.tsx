@@ -52,7 +52,7 @@ function TeacherCard() {
     <Link to="/teacher">
       <Card className="flex items-center justify-between transition-transform active:scale-[0.99]">
         <div>
-          <p className="font-semibold">👩‍🏫 Мои ученицы</p>
+          <p className="font-semibold">Мои ученицы</p>
           <p className="text-sm text-[var(--night-text-40)]">
             {pending > 0
               ? `Работ на проверку: ${pending}`
@@ -96,7 +96,7 @@ export function AssignmentsNotice({
         <Card className="flex items-center justify-between border-amber-300 bg-amber-50 transition-transform active:scale-[0.99] dark:border-amber-700 dark:bg-amber-950/30">
           <div>
             <p className="font-semibold text-amber-900 dark:text-amber-200">
-              📝 Новое задание от преподавателя
+              Новое задание от преподавателя
             </p>
             <p className="text-sm text-amber-700/80 dark:text-amber-300/80">
               {counts.pending === 1
@@ -116,7 +116,7 @@ export function AssignmentsNotice({
     <Link to="/assignments">
       <Card className="flex items-center justify-between transition-transform active:scale-[0.99]">
         <div>
-          <p className="font-semibold">📝 Задания от преподавателя</p>
+          <p className="font-semibold">Задания от преподавателя</p>
           <p className="text-sm text-[var(--night-text-40)]">
             Все задания выполнены ✓
           </p>
@@ -167,7 +167,7 @@ function JoinTeacherBlock() {
     return (
       <Card className="flex items-center justify-between">
         <p className="text-sm text-[var(--night-text-40)]">
-          👩‍🏫 Преподаватель:{' '}
+          Преподаватель:{' '}
           <span className="font-semibold text-[var(--night-text-70)]">
             {teachers.map((t) => t.display_name ?? 'Без имени').join(', ')}
           </span>

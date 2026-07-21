@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { GraduationCapIcon } from '@phosphor-icons/react'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { supabase } from '../../lib/supabase'
@@ -41,7 +42,7 @@ export function TeacherPage() {
   if (profile?.role !== 'teacher') {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="text-2xl font-bold">👩‍🏫 Преподаватель</h1>
+        <h1 className="text-2xl font-bold">Преподаватель</h1>
         <Card>
           <p className="text-[var(--night-text-70)]">
             Этот раздел доступен только аккаунтам с ролью «преподаватель».
@@ -112,7 +113,7 @@ function TeacherDashboard() {
   return (
     <div className="flex flex-col gap-4">
       <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">👩‍🏫 Преподаватель</h1>
+        <h1 className="text-2xl font-bold">Преподаватель</h1>
         {tab === 'students' && (
           <Button variant="ghost" className="px-3 py-1 text-sm" onClick={load}>
             Обновить
@@ -123,8 +124,8 @@ function TeacherDashboard() {
       <div className="flex gap-2">
         {(
           [
-            ['students', '👥 Ученицы'],
-            ['materials', '📝 Материалы'],
+            ['students', 'Ученицы'],
+            ['materials', 'Материалы'],
           ] as [TeacherTab, string][]
         ).map(([id, label]) => (
           <button
@@ -174,7 +175,7 @@ function TeacherDashboard() {
             <p className="text-[var(--night-text-40)]">Загрузка…</p>
           ) : students.length === 0 ? (
             <Card className="text-center">
-              <p className="text-4xl">🎓</p>
+              <GraduationCapIcon size={40} className="mx-auto block text-[var(--night-text-40)]" />
               <p className="mt-2 font-semibold">Пока ни одной ученицы</p>
               <p className="mt-1 text-sm text-[var(--night-text-40)]">
                 Отправь код-приглашение — после ввода кода ученица появится здесь.

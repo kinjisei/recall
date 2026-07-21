@@ -48,10 +48,10 @@ export function ConjugationSection() {
     <div className="flex flex-col gap-4">
       <div className="flex gap-2">
         <SubTab active={tab === 'reference'} onClick={() => setTab('reference')}>
-          📋 Справочник
+          Справочник
         </SubTab>
         <SubTab active={tab === 'trainer'} onClick={() => setTab('trainer')}>
-          🎯 Тренажёр
+          Тренажёр
         </SubTab>
       </div>
 
