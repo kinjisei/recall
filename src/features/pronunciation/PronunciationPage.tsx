@@ -274,8 +274,10 @@ export function PronunciationPage() {
   }
 
   // ---- Основной экран ----
+  // Раскладка «действие к низу»: заголовок и карточка фразы сверху, микрофон и
+  // кнопки прижаты к низу экрана (flex-1 распорка между ними) — как в макете.
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex min-h-[calc(100dvh-12rem)] flex-col gap-4">
       <div className="flex items-end justify-between">
         <h1 className="text-2xl font-medium tracking-tight">Речь</h1>
         <span className="text-sm text-[var(--night-text-40)]">
@@ -349,6 +351,9 @@ export function PronunciationPage() {
       )}
 
       {error && <p className="text-sm text-red-400">{error}</p>}
+
+      {/* распорка: прижимает микрофон и кнопки к низу экрана */}
+      <div className="flex-1" />
 
       {/* Микрофон: тап — запись, ещё тап — стоп и оценка (работает и на iPhone) */}
       {supported ? (
