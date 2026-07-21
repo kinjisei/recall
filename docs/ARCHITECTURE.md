@@ -64,7 +64,9 @@ recall-app/
                                  отдаёт СНАЧАЛА карточки пользователя
       spanishDict.ts          <- перевод исп. слов: локальные паки -> Gemini
       esLevel.ts              <- уровень испанского (placement) в localStorage
-      speech.ts               <- Web Speech API: TTS+STT, en-US/es-ES (Worker 3)
+      speech.ts               <- озвучка (TTS, Web Speech) + scorePronunciation
+      transcribe.ts           <- запись микрофона (MediaRecorder) -> /api/transcribe
+                                 (Groq Whisper); STT работает везде, вкл. iPhone
       gemini.ts               <- вызов нашего /api/gemini (Worker 4)
       cards.ts                <- addCard(), getDefaultDeck(lang), addCardsBulk()
       activity.ts             <- activity_log: стрик и «сделано сегодня» (Фаза 3)
@@ -262,12 +264,20 @@ lookupSpanish(word: string): Promise<{ word: string; translation?: string;
 
 // lib/speech.ts  (Worker 3)
 speak(text: string, opts?: { rate?: number; voice?: string; lang?: AppLang }): void
-listen(lang?: AppLang): Promise<{ transcript: string; confidence: number }>  // одно распознавание
-isRecognitionSupported(): boolean   // STT есть только в Chrome/Edge
 speechLang(lang: AppLang): string   // 'en' -> 'en-US', 'es' -> 'es-ES'
 getVoices(lang?: AppLang): SpeechSynthesisVoice[]
 scorePronunciation(target: string, spoken: string):
   { percent: number; words: { word: string; ok: boolean }[] }
+
+// lib/transcribe.ts — распознавание речи через запись микрофона -> Groq Whisper.
+// Работает везде (вкл. iPhone), в отличие от старого браузерного Web Speech STT.
+isMicSupported(): boolean
+startRecording(): Promise<{ stop: () => Promise<Blob>; cancel: () => void }>
+transcribe(blob: Blob, lang: AppLang): Promise<string>   // POST /api/transcribe (JWT)
+
+// api/transcribe.ts (+ _stt.ts, _auth.ts) — серверный прокси к Groq.
+// POST { audio(base64), mime, lang } -> { text }. Ключ GROQ_API_KEY на сервере.
+// Та же авторизация/квота (consume_ai_quota), что и /api/gemini (_auth.ts общий).
   // испанская диакритика нормализуется: «cómo» == «como»
 
 // lib/gemini.ts  (Worker 4) — зовёт НАШ /api/gemini, не Google напрямую

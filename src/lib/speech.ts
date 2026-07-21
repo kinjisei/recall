@@ -1,17 +1,13 @@
 // ============================================================================
-// Речь — Web Speech API (браузер, бесплатно, без сервера).
-//   speak()  — озвучить текст (TTS, работает в большинстве браузеров)
-//   listen() — распознать речь пользователя (STT, только Chrome/Edge)
+// Речь — озвучка (TTS) через Web Speech API (браузер, бесплатно, без сервера)
+// и сравнение произнесённого с эталоном. Само распознавание речи вынесено в
+// lib/transcribe (запись микрофона → Groq Whisper) — оно работает везде, вкл.
+// iPhone, в отличие от браузерного Web Speech (только Chrome/Edge на десктопе).
 // Поддерживает английский (en-US) и испанский (es-ES).
 // Контракт: docs/ARCHITECTURE.md §7.
 // ============================================================================
 import { currentSpeechRate } from './settings'
 import type { AppLang } from '../types'
-
-export interface ListenResult {
-  transcript: string
-  confidence: number
-}
 
 /** BCP-47-код языка речи для Web Speech API. */
 export function speechLang(lang: AppLang): string {
@@ -65,76 +61,6 @@ export function speak(
 
   window.speechSynthesis.cancel()
   window.speechSynthesis.speak(u)
-}
-
-// --- Распознавание речи (Speech-to-Text) ---
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-function getRecognitionCtor(): any {
-  if (typeof window === 'undefined') return undefined
-  return (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-}
-
-/** Поддерживается ли распознавание речи в этом браузере. */
-export function isRecognitionSupported(): boolean {
-  return Boolean(getRecognitionCtor())
-}
-
-/**
- * Слушает один фрагмент речи и возвращает распознанный текст.
- * lang — язык распознавания ('en' | 'es'), по умолчанию английский.
- * Отклоняется, если браузер не поддерживает распознавание или ничего не услышал.
- */
-export function listen(lang: AppLang = 'en'): Promise<ListenResult> {
-  return new Promise((resolve, reject) => {
-    const Ctor = getRecognitionCtor()
-    if (!Ctor) {
-      reject(
-        new Error('Распознавание речи не поддерживается. Открой в Chrome или Edge.'),
-      )
-      return
-    }
-
-    const recognition = new Ctor()
-    recognition.lang = speechLang(lang)
-    recognition.interimResults = false
-    recognition.maxAlternatives = 1
-    recognition.continuous = false
-
-    let settled = false
-
-    recognition.onresult = (event: any) => {
-      settled = true
-      const result = event.results[0][0]
-      resolve({
-        transcript: String(result.transcript ?? ''),
-        confidence: Number(result.confidence ?? 0),
-      })
-    }
-    recognition.onerror = (event: any) => {
-      if (settled) return
-      settled = true
-      const err = event?.error
-      if (err === 'not-allowed' || err === 'service-not-allowed') {
-        reject(new Error('Нет доступа к микрофону. Разреши доступ в браузере.'))
-      } else if (err === 'no-speech') {
-        reject(new Error('Не услышал речь. Попробуй ещё раз.'))
-      } else {
-        reject(new Error('Ошибка распознавания: ' + (err ?? 'unknown')))
-      }
-    }
-    recognition.onend = () => {
-      if (settled) return
-      settled = true
-      reject(new Error('Ничего не распознал. Попробуй ещё раз.'))
-    }
-
-    try {
-      recognition.start()
-    } catch {
-      if (!settled) reject(new Error('Не удалось запустить микрофон.'))
-    }
-  })
 }
 
 // --- Сравнение произнесённого с целевой фразой ---
