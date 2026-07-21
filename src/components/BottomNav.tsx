@@ -8,18 +8,26 @@
 // все мини-игры, речь), Диалог — общаюсь с AI.
 // ============================================================================
 import { Link, useLocation } from 'react-router-dom'
-import type { Icon } from '@phosphor-icons/react'
 import {
-  HouseIcon,
-  BarbellIcon,
-  BooksIcon,
-  ChatCircleDotsIcon,
-} from '@phosphor-icons/react'
+  IconHome,
+  IconHomeFill,
+  IconStudy,
+  IconStudyFill,
+  IconPractice,
+  IconPracticeFill,
+  IconDialog,
+  IconDialogFill,
+  type IconProps,
+} from './icons'
+
+type IconCmp = (p: IconProps) => React.JSX.Element
 
 interface Tab {
   to: string
   label: string
-  Icon: Icon
+  Icon: IconCmp
+  /** Залитый вариант для активной вкладки. */
+  IconFill: IconCmp
   end: boolean
   /** Внутренние экраны вкладки: на них она тоже должна подсвечиваться. */
   also?: string[]
@@ -28,22 +36,24 @@ interface Tab {
 // Без `also` заход в грамматику или задания гасил всю навигацию — пользователь
 // оказывался «нигде»: ни одна вкладка не была активной.
 const tabs: Tab[] = [
-  { to: '/', label: 'Главная', Icon: HouseIcon, end: true, also: ['/progress', '/settings', '/teacher'] },
+  { to: '/', label: 'Главная', Icon: IconHome, IconFill: IconHomeFill, end: true, also: ['/progress', '/settings', '/teacher'] },
   {
     to: '/study',
     label: 'Учёба',
-    Icon: BooksIcon,
+    Icon: IconStudy,
+    IconFill: IconStudyFill,
     end: false,
     also: ['/grammar', '/placement', '/assignments', '/reader'],
   },
   {
     to: '/practice',
     label: 'Практика',
-    Icon: BarbellIcon,
+    Icon: IconPractice,
+    IconFill: IconPracticeFill,
     end: false,
     also: ['/flashcards', '/pronunciation'],
   },
-  { to: '/conversation', label: 'Диалог', Icon: ChatCircleDotsIcon, end: false },
+  { to: '/conversation', label: 'Диалог', Icon: IconDialog, IconFill: IconDialogFill, end: false },
 ]
 
 export function BottomNav() {
@@ -52,11 +62,12 @@ export function BottomNav() {
   return (
     <nav className="fixed inset-x-4 bottom-4 z-30 mx-auto max-w-screen-sm rounded-3xl border border-white/10 bg-[rgba(22,24,38,.78)] backdrop-blur-xl mb-[env(safe-area-inset-bottom)]">
       <div className="flex items-stretch justify-around px-1.5 py-1.5">
-        {tabs.map(({ to, label, Icon, end, also }) => {
+        {tabs.map(({ to, label, Icon, IconFill, end, also }) => {
           // активна и на своих внутренних экранах (грамматика → «Учёба»)
           const active =
             (end ? pathname === to : pathname.startsWith(to)) ||
             (also ?? []).some((p) => pathname.startsWith(p))
+          const TabIcon = active ? IconFill : Icon
           return (
             <Link
               key={to}
@@ -68,7 +79,7 @@ export function BottomNav() {
                   : 'text-[var(--night-text-40)] hover:text-[var(--night-text-70)]'
               }`}
             >
-              <Icon size={22} weight={active ? 'fill' : 'regular'} />
+              <TabIcon size={22} />
               <span>{label}</span>
             </Link>
           )
