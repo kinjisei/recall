@@ -12,7 +12,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
-import { ArrowLeftIcon, SparkleIcon } from '@phosphor-icons/react'
+import { IconBack, IconSparkle } from '../../components/icons'
 import { shuffle } from '../../lib/random'
 import { setEsLevel } from '../../lib/esLevel'
 import { supabase } from '../../lib/supabase'
@@ -115,7 +115,7 @@ export function PlacementTest() {
         <TopBack onBack={back} />
         <div className="flex flex-col items-center gap-3 py-6 text-center">
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--night-accent-900)] text-[var(--night-accent-100)]">
-            <SparkleIcon size={30} weight="fill" />
+            <IconSparkle size={30} />
           </div>
           <h1 className="text-2xl font-medium tracking-tight">
             Тест уровня {languageName}
@@ -237,7 +237,7 @@ function TopBack({ onBack }: { onBack: () => void }) {
       onClick={onBack}
       className="flex min-h-11 w-fit items-center gap-1 text-sm font-medium text-[var(--night-text-40)] hover:text-[var(--night-text-70)]"
     >
-      <ArrowLeftIcon size={16} /> На главную
+      <IconBack size={16} /> На главную
     </button>
   )
 }

@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import {
-  ChatCircleIcon,
-  PaperPlaneRightIcon,
-  PencilSimpleLineIcon,
-  type Icon,
-} from '@phosphor-icons/react'
+  IconDialog,
+  IconSend,
+  IconPencil,
+  type IconProps,
+} from '../../components/icons'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { supabase } from '../../lib/supabase'
@@ -17,9 +17,9 @@ import type { AppLang, CEFRLevel, ChatTurn } from '../../types'
 
 type Mode = 'chat' | 'writing'
 
-const modes: { id: Mode; label: string; Icon: Icon }[] = [
-  { id: 'chat', label: 'Чат', Icon: ChatCircleIcon },
-  { id: 'writing', label: 'Письмо', Icon: PencilSimpleLineIcon },
+const modes: { id: Mode; label: string; Icon: (p: IconProps) => React.JSX.Element }[] = [
+  { id: 'chat', label: 'Чат', Icon: IconDialog },
+  { id: 'writing', label: 'Письмо', Icon: IconPencil },
 ]
 
 export function ConversationPage() {
@@ -70,7 +70,7 @@ export function ConversationPage() {
                   : 'text-[var(--night-text-40)] hover:text-[var(--night-text-70)]'
               }`}
             >
-              <m.Icon size={14} weight={mode === m.id ? 'fill' : 'regular'} />
+              <m.Icon size={14} />
               {m.label}
             </button>
           ))}
@@ -289,7 +289,7 @@ function ChatSection({ level, lang }: { level: CEFRLevel; lang: AppLang }) {
           disabled={busy || !input.trim()}
           className="lift flex h-12 w-12 flex-none items-center justify-center rounded-[14px] border border-[var(--night-accent-45)] bg-[rgba(145,132,217,.14)] text-[var(--night-accent-100)] transition-colors hover:bg-[rgba(145,132,217,.22)] disabled:opacity-40"
         >
-          <PaperPlaneRightIcon size={20} />
+          <IconSend size={20} />
         </button>
       </form>
 

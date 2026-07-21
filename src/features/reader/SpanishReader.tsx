@@ -5,12 +5,12 @@
 // ============================================================================
 import { useState, type ReactNode } from 'react'
 import {
-  ChatsCircleIcon,
-  FileTextIcon,
-  SpeakerHighIcon,
-  TranslateIcon,
-  type Icon,
-} from '@phosphor-icons/react'
+  IconDialog,
+  IconMaterials,
+  IconSpeaker,
+  IconTranslate,
+  type IconProps,
+} from '../../components/icons'
 import { getSettings, READER_CLASSES } from '../../lib/settings'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
@@ -26,9 +26,9 @@ import type { SpanishDialogue, SpanishReading } from '../../types'
 
 type Kind = 'texts' | 'dialogues'
 
-const kinds: { id: Kind; label: string; Icon: Icon }[] = [
-  { id: 'texts', label: 'Тексты', Icon: FileTextIcon },
-  { id: 'dialogues', label: 'Диалоги', Icon: ChatsCircleIcon },
+const kinds: { id: Kind; label: string; Icon: (p: IconProps) => React.JSX.Element }[] = [
+  { id: 'texts', label: 'Тексты', Icon: IconMaterials },
+  { id: 'dialogues', label: 'Диалоги', Icon: IconDialog },
 ]
 
 export function SpanishReaderPage({
@@ -76,7 +76,7 @@ export function SpanishReaderPage({
                 : 'bg-white/[0.07] text-[var(--night-text-70)]'
             }`}
           >
-            <k.Icon size={16} weight={kind === k.id ? 'fill' : 'regular'} />
+            <k.Icon size={16} />
             {k.label}
           </button>
         ))}
@@ -170,7 +170,7 @@ function ReadingView({
               onClick={() => toggleRu(i)}
               className="mt-1 inline-flex min-h-[44px] items-center gap-1 text-xs font-semibold text-[var(--night-accent-text)]"
             >
-              <TranslateIcon size={14} />
+              <IconTranslate size={14} />
               {openRu.has(i) ? 'Скрыть перевод' : 'Перевод'}
             </button>
             {openRu.has(i) && (
@@ -215,7 +215,7 @@ function DialogueView({
           className="min-h-[44px] shrink-0 px-3 py-1.5 text-xs"
           onClick={() => setShowRu((s) => !s)}
         >
-          <TranslateIcon size={14} />
+          <IconTranslate size={14} />
           {showRu ? 'Скрыть перевод' : 'Перевод'}
         </Button>
       </div>
@@ -240,7 +240,7 @@ function DialogueView({
                 className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/[0.08] text-[var(--night-text-70)]"
                 aria-label="Озвучить реплику"
               >
-                <SpeakerHighIcon size={18} />
+                <IconSpeaker size={18} />
               </button>
             </div>
           </Card>

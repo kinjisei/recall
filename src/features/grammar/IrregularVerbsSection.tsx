@@ -6,7 +6,7 @@
 // Данные ленивые: src/data/english/irregular.ts.
 // ============================================================================
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { SpeakerHighIcon } from '@phosphor-icons/react'
+import { IconSpeaker } from '../../components/icons'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { RoundResult } from '../../components/RoundResult'
@@ -148,7 +148,7 @@ function Reference({ groups }: { groups: IrregularGroup[] }) {
                             className="rounded-full px-1.5 py-1"
                             aria-label={`Озвучить ${v.base}`}
                           >
-                            <SpeakerHighIcon size={15} />
+                            <IconSpeaker size={15} />
                           </button>
                         </td>
                       </tr>

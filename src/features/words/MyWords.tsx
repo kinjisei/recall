@@ -7,15 +7,8 @@
 // каскадом, см. lib/cards.ts).
 // ============================================================================
 import { useEffect, useMemo, useRef, useState } from 'react'
-import {
-  MagnifyingGlassIcon,
-  PencilSimpleIcon,
-  TrashIcon,
-  SpeakerHighIcon,
-  CheckIcon,
-  XIcon,
-  TrayIcon,
-} from '@phosphor-icons/react'
+import { TrashIcon, XIcon, TrayIcon } from '@phosphor-icons/react'
+import { IconSearch, IconPencil, IconSpeaker, IconCheck } from '../../components/icons'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { deleteCard, listMyWords, updateCard, type MyWord } from '../../lib/cards'
@@ -146,7 +139,7 @@ export function MyWords({ lang, onBack }: { lang: AppLang; onBack: () => void })
 
       {/* поиск */}
       <div className="relative">
-        <MagnifyingGlassIcon
+        <IconSearch
           size={18}
           className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--night-text-40)]"
         />
@@ -273,7 +266,7 @@ function WordRow({
         />
         <div className="mt-1 flex gap-2">
           <Button className="flex-1 py-2 text-sm" onClick={() => onSave({ front, back, example })} disabled={!front.trim()}>
-            <CheckIcon size={16} /> Сохранить
+            <IconCheck size={16} /> Сохранить
           </Button>
           <Button variant="ghost" className="py-2 text-sm" onClick={onCancelEdit}>
             Отмена
@@ -329,14 +322,14 @@ function WordRow({
           aria-label="Озвучить"
           className="rounded-lg p-2 text-[var(--night-text-40)] hover:text-[var(--night-text)]"
         >
-          <SpeakerHighIcon size={17} />
+          <IconSpeaker size={17} />
         </button>
         <button
           onClick={onEdit}
           aria-label={`Изменить ${card.front}`}
           className="rounded-lg p-2 text-[var(--night-text-40)] hover:text-[var(--night-text)]"
         >
-          <PencilSimpleIcon size={17} />
+          <IconPencil size={17} />
         </button>
         <button
           onClick={onAskDelete}

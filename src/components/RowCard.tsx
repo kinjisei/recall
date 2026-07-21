@@ -5,10 +5,10 @@
 // ============================================================================
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { CaretRightIcon, type Icon } from '@phosphor-icons/react'
+import { IconArrowRight, type IconLike } from './icons'
 
 export interface RowCardProps {
-  Icon: Icon
+  Icon: IconLike
   title: string
   desc?: string
   /** Ведёт по ссылке (Link) или вызывает обработчик (button). */
@@ -48,7 +48,7 @@ export function RowCard({
             : 'bg-white/[0.06] text-[var(--night-text-70)]'
         }`}
       >
-        <IconCmp size={20} weight={active ? 'fill' : 'regular'} />
+        <IconCmp size={20} />
       </span>
 
       <span className="flex min-w-0 flex-1 flex-col text-left">
@@ -60,7 +60,7 @@ export function RowCard({
         )}
       </span>
 
-      {trailing ?? <CaretRightIcon size={16} className="flex-none text-[var(--night-text-25)]" />}
+      {trailing ?? <IconArrowRight size={16} className="flex-none text-[var(--night-text-25)]" />}
     </>
   )
 

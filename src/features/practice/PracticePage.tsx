@@ -10,25 +10,26 @@
 //                     Мои ошибки (банк из lib/mistakes) · Глаголы
 //   РЕЧЬ            — шэдоуинг (features/pronunciation)
 // ============================================================================
+import type React from 'react'
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { CardsThreeIcon } from '@phosphor-icons/react'
 import {
-  ArrowsClockwiseIcon,
-  BookOpenTextIcon,
-  CardsThreeIcon,
-  CheckSquareIcon,
-  HeadphonesIcon,
-  KeyboardIcon,
-  LinkSimpleIcon,
-  MicrophoneIcon,
-  PencilSimpleLineIcon,
-  PuzzlePieceIcon,
-  RowsIcon,
-  ShuffleIcon,
-  TextAaIcon,
-  TimerIcon,
-  type Icon,
-} from '@phosphor-icons/react'
+  IconRefresh,
+  IconGap,
+  IconMcq,
+  IconHeadphones,
+  IconKeyboard,
+  IconMeaning,
+  IconMic,
+  IconPencil,
+  IconPuzzle,
+  IconRows,
+  IconShuffle,
+  IconTranslate,
+  IconTimer,
+  type IconProps,
+} from '../../components/icons'
 import { Card } from '../../components/Card'
 import { useLanguage } from '../../context/LanguageContext'
 import { getDueCards } from '../../lib/fsrs'
@@ -70,7 +71,7 @@ type Mode =
   | 'gr-order'
 
 interface Tile {
-  Icon: Icon
+  Icon: (p: IconProps) => React.JSX.Element
   title: string
   desc: string
   /** Внутренний режим хаба ИЛИ переход по роуту. */
@@ -173,37 +174,37 @@ export function PracticePage() {
   }
 
   const wordTiles: Tile[] = [
-    { mode: 'match', Icon: LinkSimpleIcon, title: 'Значения', desc: 'Слово ↔ значение' },
-    { mode: 'gap', Icon: BookOpenTextIcon, title: 'Пропуск', desc: 'Слово в предложении' },
-    { mode: 'translate', Icon: TextAaIcon, title: 'Перевод', desc: 'Выбери верный' },
-    { mode: 'listening', Icon: HeadphonesIcon, title: 'Аудирование', desc: 'Услышь и выбери' },
-    { mode: 'sprint', Icon: TimerIcon, title: 'Спринт', desc: 'Верно или нет · 60 сек' },
-    { mode: 'dictation', Icon: KeyboardIcon, title: 'Диктант', desc: 'Услышь и напиши' },
-    { mode: 'sentence', Icon: PuzzlePieceIcon, title: 'Собери фразу', desc: 'Фраза из слов' },
+    { mode: 'match', Icon: IconMeaning, title: 'Значения', desc: 'Слово ↔ значение' },
+    { mode: 'gap', Icon: IconGap, title: 'Пропуск', desc: 'Слово в предложении' },
+    { mode: 'translate', Icon: IconTranslate, title: 'Перевод', desc: 'Выбери верный' },
+    { mode: 'listening', Icon: IconHeadphones, title: 'Аудирование', desc: 'Услышь и выбери' },
+    { mode: 'sprint', Icon: IconTimer, title: 'Спринт', desc: 'Верно или нет · 60 сек' },
+    { mode: 'dictation', Icon: IconKeyboard, title: 'Диктант', desc: 'Услышь и напиши' },
+    { mode: 'sentence', Icon: IconPuzzle, title: 'Собери фразу', desc: 'Фраза из слов' },
   ]
 
   const mistakes = getMistakes(lang).length
   const grammarTiles: Tile[] = [
-    { mode: 'gr-mcq', Icon: CheckSquareIcon, title: 'Выбери форму', desc: 'Тест с вариантами' },
-    { mode: 'gr-fill', Icon: PencilSimpleLineIcon, title: 'Впиши слово', desc: 'Заполни пропуск' },
-    { mode: 'gr-order', Icon: RowsIcon, title: 'Собери предложение', desc: 'Порядок слов' },
+    { mode: 'gr-mcq', Icon: IconMcq, title: 'Выбери форму', desc: 'Тест с вариантами' },
+    { mode: 'gr-fill', Icon: IconPencil, title: 'Впиши слово', desc: 'Заполни пропуск' },
+    { mode: 'gr-order', Icon: IconRows, title: 'Собери предложение', desc: 'Порядок слов' },
     {
       to: '/grammar?mistakes=1',
-      Icon: ArrowsClockwiseIcon,
+      Icon: IconRefresh,
       title: 'Мои ошибки',
       desc: mistakes > 0 ? 'Повтори и закрой' : 'Пока пусто',
       badge: mistakes || undefined,
     },
     {
       to: '/grammar?verbs=1',
-      Icon: ShuffleIcon,
+      Icon: IconShuffle,
       title: 'Глаголы',
       desc: lang === 'es' ? 'Спряжения: справочник и тренажёр' : 'Неправильные глаголы',
     },
   ]
 
   const speechTiles: Tile[] = [
-    { to: '/pronunciation', Icon: MicrophoneIcon, title: 'Произношение', desc: 'Шэдоуинг: слушай и повторяй' },
+    { to: '/pronunciation', Icon: IconMic, title: 'Произношение', desc: 'Шэдоуинг: слушай и повторяй' },
   ]
 
   const open = (t: Tile) => {

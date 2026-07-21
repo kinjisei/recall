@@ -4,7 +4,8 @@
 // возвращает карточку на повтор (markWrong), как и в остальных играх.
 // ============================================================================
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { CheckIcon, XIcon, TimerIcon } from '@phosphor-icons/react'
+import { XIcon } from '@phosphor-icons/react'
+import { IconCheck, IconTimer } from '../../components/icons'
 import { Card } from '../../components/Card'
 import { RoundResult } from '../../components/RoundResult'
 import { logActivity } from '../../lib/activity'
@@ -131,7 +132,7 @@ export function SprintMode({ lang, onBack }: { lang: AppLang; onBack: () => void
 
       <div className="flex items-center justify-between text-sm text-[var(--night-text-40)]">
         <span className="flex items-center gap-1.5">
-          <TimerIcon size={16} />
+          <IconTimer size={16} />
           <span className={timeLeft <= 10 ? 'font-bold text-red-400' : ''}>{timeLeft} с</span>
         </span>
         <span>верно: {correct} / {total}</span>
@@ -161,7 +162,7 @@ export function SprintMode({ lang, onBack }: { lang: AppLang; onBack: () => void
           onClick={() => answer(true)}
           className="lift flex min-h-14 items-center justify-center gap-2 rounded-2xl border border-[var(--night-accent-45)] bg-[rgba(145,132,217,.18)] py-3.5 font-medium text-[var(--night-text)]"
         >
-          <CheckIcon size={20} /> Верно
+          <IconCheck size={20} /> Верно
         </button>
       </div>
     </div>

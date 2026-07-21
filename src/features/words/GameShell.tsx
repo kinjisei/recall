@@ -1,7 +1,8 @@
 // Общие кусочки интерфейса мини-игр: шапка со «← Назад», загрузка,
 // заглушка «мало слов» и универсальный движок вопросов с 4 вариантами.
 import { useEffect, useState } from 'react'
-import { SpeakerHighIcon, TrayIcon } from '@phosphor-icons/react'
+import { TrayIcon } from '@phosphor-icons/react'
+import { IconSpeaker } from '../../components/icons'
 import { BackHeader } from '../../components/BackButton'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
@@ -127,7 +128,7 @@ export function QuizRunner({
             className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[var(--night-accent-900)] text-[var(--night-accent-100)]"
             aria-label="Прослушать ещё раз"
           >
-            <SpeakerHighIcon size={32} weight="fill" />
+            <IconSpeaker size={32} />
           </button>
         ) : (
           <p className="text-lg leading-relaxed">{q.prompt}</p>

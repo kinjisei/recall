@@ -8,15 +8,15 @@
 // ============================================================================
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { CaretDownIcon } from '@phosphor-icons/react'
 import {
-  ArrowsClockwiseIcon,
-  BookOpenIcon,
-  CaretDownIcon,
-  CaretRightIcon,
-  ShuffleIcon,
-  SpeakerHighIcon,
-  type Icon,
-} from '@phosphor-icons/react'
+  IconArrowRight,
+  IconGap,
+  IconRefresh,
+  IconShuffle,
+  IconSpeaker,
+  type IconProps,
+} from '../../components/icons'
 import { BackHeader } from '../../components/BackButton'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
@@ -39,9 +39,9 @@ const LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1'] as const
 
 type Section = 'lessons' | 'verbs'
 
-const sections: { id: Section; label: string; Icon: Icon }[] = [
-  { id: 'lessons', label: 'Уроки', Icon: BookOpenIcon },
-  { id: 'verbs', label: 'Глаголы', Icon: ShuffleIcon },
+const sections: { id: Section; label: string; Icon: (p: IconProps) => React.JSX.Element }[] = [
+  { id: 'lessons', label: 'Уроки', Icon: IconGap },
+  { id: 'verbs', label: 'Глаголы', Icon: IconShuffle },
 ]
 
 /**
@@ -77,7 +77,7 @@ export function GrammarPage() {
                   : 'bg-white/[0.07] text-[var(--night-text-70)]'
               }`}
             >
-              <s.Icon size={16} weight={section === s.id ? 'fill' : 'regular'} />
+              <s.Icon size={16} />
               {s.label}
             </button>
           ))}
@@ -157,7 +157,7 @@ function LessonsSection({
         <button onClick={() => setReviewMistakes(true)} className="text-left">
           <Card className="flex items-center justify-between gap-2 border-[var(--night-accent-45)] transition-transform active:scale-[0.99]">
             <span className="flex min-w-0 items-center gap-2 font-medium">
-              <ArrowsClockwiseIcon size={18} className="shrink-0 text-[var(--night-accent-text)]" />
+              <IconRefresh size={18} className="shrink-0 text-[var(--night-accent-text)]" />
               Мои ошибки
             </span>
             <span className="flex-none rounded-full bg-[var(--night-accent)] px-2 py-0.5 text-xs font-medium text-white">
@@ -185,7 +185,7 @@ function LessonsSection({
                   <span className="font-normal text-[var(--night-text-40)]">· {list.length} тем</span>
                 </span>
                 <span className="text-[var(--night-text-40)]">
-                  {isOpen ? <CaretDownIcon size={16} /> : <CaretRightIcon size={16} />}
+                  {isOpen ? <CaretDownIcon size={16} /> : <IconArrowRight size={16} />}
                 </span>
               </button>
 
@@ -307,7 +307,7 @@ function TheoryBlock({ block, lang }: { block: GrammarTheoryBlock; lang: AppLang
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/[0.08] text-[var(--night-text-70)]"
             aria-label="Озвучить"
           >
-            <SpeakerHighIcon size={16} />
+            <IconSpeaker size={16} />
           </button>
         </div>
         <p className="mt-0.5 text-sm text-[var(--night-text-40)]">{block.ru}</p>

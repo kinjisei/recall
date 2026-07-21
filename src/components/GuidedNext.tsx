@@ -5,7 +5,7 @@
 // ============================================================================
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowRightIcon, ConfettiIcon } from '@phosphor-icons/react'
+import { IconArrowRight, IconSparkle } from './icons'
 import { currentGuidedStep, nextGuidedStep, type GuidedStep } from '../lib/guided'
 
 export function GuidedNext({ step }: { step: GuidedStep }) {
@@ -25,7 +25,7 @@ export function GuidedNext({ step }: { step: GuidedStep }) {
   if (!next) {
     return (
       <div className="animate-fade-up flex items-center gap-3 rounded-2xl border border-[var(--night-accent-45)] bg-[rgba(145,132,217,.12)] px-4 py-3.5">
-        <ConfettiIcon size={22} weight="fill" className="flex-none text-[var(--night-accent-100)]" />
+        <IconSparkle size={22} className="flex-none text-[var(--night-accent-100)]" />
         <p className="text-sm">
           Занятие завершено — все три шага пройдены. Отличная работа!
         </p>
@@ -44,7 +44,7 @@ export function GuidedNext({ step }: { step: GuidedStep }) {
         </span>
         <span className="text-[15px] font-medium">{next.label}</span>
       </span>
-      <ArrowRightIcon size={20} className="flex-none text-[var(--night-accent-100)]" />
+      <IconArrowRight size={20} className="flex-none text-[var(--night-accent-100)]" />
     </button>
   )
 }

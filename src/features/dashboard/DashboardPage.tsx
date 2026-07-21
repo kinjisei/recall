@@ -7,21 +7,19 @@
 // ============================================================================
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { CardsThreeIcon } from '@phosphor-icons/react'
 import {
-  FireIcon,
-  PlayCircleIcon,
-  CardsThreeIcon,
-  BookOpenTextIcon,
-  CheckIcon,
-  MicrophoneIcon,
-  ChatCircleDotsIcon,
-  CheckCircleIcon,
-  LightbulbFilamentIcon,
-  PlusIcon,
-  SpeakerHighIcon,
-  CaretRightIcon,
-  type Icon,
-} from '@phosphor-icons/react'
+  IconFlame,
+  IconArrowRight,
+  IconGap,
+  IconCheck,
+  IconMic,
+  IconDialog,
+  IconHint,
+  IconPlus,
+  IconSpeaker,
+  type IconLike,
+} from '../../components/icons'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { supabase } from '../../lib/supabase'
@@ -43,7 +41,7 @@ import type { ActivityType, Profile } from '../../types'
 
 interface PlanItem {
   to: string
-  Icon: Icon
+  Icon: IconLike
   title: string
   desc: string
   types: ActivityType[]
@@ -51,9 +49,9 @@ interface PlanItem {
 
 const planItems: PlanItem[] = [
   { to: '/practice', Icon: CardsThreeIcon, title: 'Слова', desc: 'Повторить и потренировать', types: ['flashcards', 'practice'] },
-  { to: '/study', Icon: BookOpenTextIcon, title: 'Чтение', desc: 'Текст и новые слова', types: ['reader'] },
-  { to: '/pronunciation', Icon: MicrophoneIcon, title: 'Речь', desc: 'Произношение вслух', types: ['pronunciation'] },
-  { to: '/conversation', Icon: ChatCircleDotsIcon, title: 'Диалог', desc: 'Поговорить с AI', types: ['conversation', 'writing'] },
+  { to: '/study', Icon: IconGap, title: 'Чтение', desc: 'Текст и новые слова', types: ['reader'] },
+  { to: '/pronunciation', Icon: IconMic, title: 'Речь', desc: 'Произношение вслух', types: ['pronunciation'] },
+  { to: '/conversation', Icon: IconDialog, title: 'Диалог', desc: 'Поговорить с AI', types: ['conversation', 'writing'] },
 ]
 
 export function DashboardPage() {
@@ -140,7 +138,7 @@ export function DashboardPage() {
         className="lift animate-fade-up flex h-[58px] items-center justify-center gap-2.5 rounded-2xl border border-[var(--night-accent-45)] bg-[linear-gradient(135deg,rgba(145,132,217,.22),rgba(145,132,217,.10))] font-medium text-[var(--night-text)]"
         style={{ animationDelay: '.12s' }}
       >
-        <PlayCircleIcon size={22} weight="fill" className="text-[var(--night-accent-100)]" />
+        <IconArrowRight size={22} className="text-[var(--night-accent-100)]" />
         <span className="flex flex-col items-start leading-tight">
           Начать занятие
           <span className="text-[11px] font-normal text-[var(--night-text-40)]">
@@ -171,9 +169,8 @@ export function DashboardPage() {
                 active={!done && i === 0}
                 trailing={
                   done ? (
-                    <CheckCircleIcon
+                    <IconCheck
                       size={20}
-                      weight="fill"
                       className="flex-none text-[var(--night-accent)]"
                     />
                   ) : undefined
@@ -234,9 +231,8 @@ function StreakHero({
         <div>
           <p className="text-sm text-[var(--night-text-60)]">Серия дней подряд</p>
           <p className="mt-1.5 flex items-center gap-2.5">
-            <FireIcon
+            <IconFlame
               size={34}
-              weight="fill"
               className="animate-flame text-[var(--night-accent-100)]"
             />
             <span className="animate-pop-in text-4xl font-medium tabular-nums">{streak}</span>
@@ -272,7 +268,7 @@ function StreakHero({
         to="/progress"
         className="relative mt-3 inline-flex min-h-[44px] items-center gap-1 text-sm text-[var(--night-accent-text)] hover:underline"
       >
-        Мой прогресс <CaretRightIcon size={14} />
+        Мой прогресс <IconArrowRight size={14} />
       </Link>
     </div>
   )
@@ -304,7 +300,7 @@ function WordOfDay({ word, lang }: { word: PoolItem; lang: 'en' | 'es' }) {
       style={{ animationDelay: '.45s' }}
     >
       <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-[var(--night-accent-900)] text-[var(--night-accent-100)]">
-        <LightbulbFilamentIcon size={20} weight="fill" />
+        <IconHint size={20} />
       </span>
       <div className="min-w-0 flex-1">
         <p className="text-[10px] uppercase tracking-wider text-[var(--night-text-40)]">
@@ -323,7 +319,7 @@ function WordOfDay({ word, lang }: { word: PoolItem; lang: 'en' | 'es' }) {
         aria-label="Озвучить"
         className="lift flex h-11 w-11 flex-none items-center justify-center rounded-full border border-white/[0.08] text-[var(--night-text-70)]"
       >
-        <SpeakerHighIcon size={18} />
+        <IconSpeaker size={18} />
       </button>
       <button
         onClick={add}
@@ -335,7 +331,7 @@ function WordOfDay({ word, lang }: { word: PoolItem; lang: 'en' | 'es' }) {
             : 'border-[var(--night-accent-45)] bg-[rgba(145,132,217,.14)] text-[var(--night-accent-100)]'
         }`}
       >
-        {state === 'added' ? <CheckIcon size={18} /> : <PlusIcon size={18} />}
+        {state === 'added' ? <IconCheck size={18} /> : <IconPlus size={18} />}
       </button>
     </div>
   )

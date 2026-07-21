@@ -4,12 +4,7 @@
 // ============================================================================
 import { useEffect, useRef, useState } from 'react'
 import { Link, Outlet } from 'react-router-dom'
-import {
-  ChartLineUpIcon,
-  ChalkboardTeacherIcon,
-  GearSixIcon,
-  SignOutIcon,
-} from '@phosphor-icons/react'
+import { IconChart, IconTeacher, IconGear, IconSignOut } from './icons'
 import { supabase } from '../lib/supabase'
 import { BottomNav } from './BottomNav'
 import { BrandLogo } from './Brand'
@@ -83,18 +78,18 @@ function AvatarMenu() {
         >
           <p className="truncate px-4 pb-2 pt-1.5 text-xs text-[var(--night-text-40)]">{name}</p>
           <Link to="/progress" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
-            <ChartLineUpIcon size={17} /> Мой прогресс
+            <IconChart size={17} /> Мой прогресс
           </Link>
           {isTeacher && (
             <Link to="/teacher" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
-              <ChalkboardTeacherIcon size={17} /> Мои ученицы
+              <IconTeacher size={17} /> Мои ученицы
             </Link>
           )}
           <Link to="/settings" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
-            <GearSixIcon size={17} /> Настройки
+            <IconGear size={17} /> Настройки
           </Link>
           <button role="menuitem" onClick={() => void signOut()} className={itemCls}>
-            <SignOutIcon size={17} /> Выйти
+            <IconSignOut size={17} /> Выйти
           </button>
         </div>
       )}

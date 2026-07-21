@@ -10,17 +10,16 @@
 // ============================================================================
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { CardsThreeIcon, PackageIcon } from '@phosphor-icons/react'
 import {
-  BookOpenIcon,
-  CardsThreeIcon,
-  CompassIcon,
-  GameControllerIcon,
-  GraduationCapIcon,
-  ListBulletsIcon,
-  NotePencilIcon,
-  PackageIcon,
-  PlusIcon,
-} from '@phosphor-icons/react'
+  IconGap,
+  IconSparkle,
+  IconPuzzle,
+  IconGraduation,
+  IconRows,
+  IconMaterials,
+  IconPlus,
+} from '../../components/icons'
 import { RowCard } from '../../components/RowCard'
 import { BackHeader } from '../../components/BackButton'
 import { Button } from '../../components/Button'
@@ -108,7 +107,7 @@ export function StudyPage() {
       <div className="flex flex-col gap-2.5">
         {assignments && assignments.total > 0 && (
           <RowCard
-            Icon={NotePencilIcon}
+            Icon={IconMaterials}
             title="Задания от преподавателя"
             desc={
               assignments.pending > 0
@@ -129,7 +128,7 @@ export function StudyPage() {
         )}
         {quests && quests.total > 0 && (
           <RowCard
-            Icon={GameControllerIcon}
+            Icon={IconPuzzle}
             title="AI-квесты"
             desc={
               quests.active > 0
@@ -149,14 +148,14 @@ export function StudyPage() {
           />
         )}
         <RowCard
-          Icon={BookOpenIcon}
+          Icon={IconGap}
           title="Тексты и диалоги"
           desc={lang === 'es' ? 'Чтение с разбором слов · A1–B2' : 'Чтение с разбором слов · B1–C1'}
           onClick={() => setView('reader')}
           className="animate-fade-up"
         />
         <RowCard
-          Icon={GraduationCapIcon}
+          Icon={IconGraduation}
           title="Грамматика"
           desc={
             lang === 'es'
@@ -177,7 +176,7 @@ export function StudyPage() {
         />
         {!levelLoading && (
           <RowCard
-            Icon={CompassIcon}
+            Icon={IconSparkle}
             title={level ? `Твой уровень: ${level}` : 'Определи свой уровень'}
             desc={
               level
@@ -246,7 +245,7 @@ function WordsStudy({ onBack }: { onBack: () => void }) {
             'Закрыть'
           ) : (
             <>
-              <PlusIcon size={16} /> Своё слово
+              <IconPlus size={16} /> Своё слово
             </>
           )}
         </Button>
@@ -265,7 +264,7 @@ function WordsStudy({ onBack }: { onBack: () => void }) {
           className="animate-fade-up"
         />
         <RowCard
-          Icon={ListBulletsIcon}
+          Icon={IconRows}
           title="Мои слова"
           desc="Список, поиск, правка, статусы"
           onClick={() => setSub('mywords')}

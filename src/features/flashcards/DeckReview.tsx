@@ -6,7 +6,7 @@
 // переводу) и обучающая подсказка для новичка.
 // ============================================================================
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ArrowsClockwiseIcon, SealCheckIcon } from '@phosphor-icons/react'
+import { IconRefresh, IconBadgeCheck } from '../../components/icons'
 import { BackButton } from '../../components/BackButton'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
@@ -161,7 +161,7 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
           <Card className="flex items-center justify-between border-amber-300 bg-amber-50 transition-transform active:scale-[0.99] dark:border-amber-700 dark:bg-amber-950/30">
             <div>
               <p className="flex items-center gap-1.5 font-semibold text-amber-900 dark:text-amber-200">
-                <ArrowsClockwiseIcon size={16} /> Перепроверка от преподавателя
+                <IconRefresh size={16} /> Перепроверка от преподавателя
               </p>
               <p className="text-sm text-amber-700/80 dark:text-amber-300/80">
                 Напиши по памяти: слов — {cards.length}
@@ -228,9 +228,8 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
       ) : (
         <>
           <Card className="items-center text-center">
-            <SealCheckIcon
+            <IconBadgeCheck
               size={44}
-              weight="fill"
               className="animate-pop-in text-[var(--night-accent-text)]"
             />
             <p className="mt-2 font-semibold">

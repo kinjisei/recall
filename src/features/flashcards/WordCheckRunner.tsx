@@ -3,7 +3,7 @@
 // слово на изучаемом языке. Неверные слова возвращаются в колоду (again).
 // ============================================================================
 import { useState } from 'react'
-import { SpeakerHighIcon } from '@phosphor-icons/react'
+import { IconSpeaker } from '../../components/icons'
 import { Card } from '../../components/Card'
 import { ScoreGlyph } from '../../components/RoundResult'
 import { Button } from '../../components/Button'
@@ -159,7 +159,7 @@ export function WordCheckRunner({
               className="rounded-full bg-white/[0.06] px-3 py-2 dark:bg-white/[0.08]"
               aria-label="Озвучить"
             >
-              <SpeakerHighIcon size={18} />
+              <IconSpeaker size={18} />
             </button>
           </div>
         )}

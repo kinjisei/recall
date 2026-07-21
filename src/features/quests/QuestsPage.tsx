@@ -8,7 +8,7 @@
 // ============================================================================
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { GameControllerIcon, PaperPlaneRightIcon, SealCheckIcon } from '@phosphor-icons/react'
+import { IconPuzzle, IconSend, IconBadgeCheck } from '../../components/icons'
 import { BackHeader } from '../../components/BackButton'
 import { Card } from '../../components/Card'
 import { RowCard } from '../../components/RowCard'
@@ -104,7 +104,7 @@ export function QuestsPage() {
           {(quests ?? []).map((q) => (
             <RowCard
               key={q.id}
-              Icon={q.status === 'completed' ? SealCheckIcon : GameControllerIcon}
+              Icon={q.status === 'completed' ? IconBadgeCheck : IconPuzzle}
               title={q.scenario}
               desc={`${q.topic} · ${q.lang.toUpperCase()} ${q.level} · ${q.progress}/${q.target}${
                 q.status === 'completed' ? ' · пройден ✓' : ''
@@ -240,7 +240,7 @@ function QuestChat({ quest, onBack }: { quest: GrammarQuest; onBack: () => void 
 
       {completed ? (
         <Card className="items-center text-center">
-          <SealCheckIcon size={40} weight="fill" className="animate-pop-in text-[var(--night-accent-text)]" />
+          <IconBadgeCheck size={40} className="animate-pop-in text-[var(--night-accent-text)]" />
           <p className="mt-1 font-semibold">Квест пройден!</p>
           <p className="text-sm text-[var(--night-text-40)]">
             {quest.target} верных ответов по теме «{quest.topic}». Преподаватель увидит результат.
@@ -262,7 +262,7 @@ function QuestChat({ quest, onBack }: { quest: GrammarQuest; onBack: () => void 
             disabled={busy || !input.trim()}
             className="lift flex h-12 w-12 flex-none items-center justify-center rounded-[14px] border border-[var(--night-accent-45)] bg-[rgba(145,132,217,.14)] text-[var(--night-accent-100)] transition-colors hover:bg-[rgba(145,132,217,.22)] disabled:opacity-40"
           >
-            <PaperPlaneRightIcon size={20} />
+            <IconSend size={20} />
           </button>
         </form>
       )}

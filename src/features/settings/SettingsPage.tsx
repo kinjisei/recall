@@ -6,7 +6,7 @@
 // ============================================================================
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CaretLeftIcon, SpeakerHighIcon, CheckIcon } from '@phosphor-icons/react'
+import { IconBack, IconSpeaker, IconCheck } from '../../components/icons'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { supabase } from '../../lib/supabase'
@@ -95,7 +95,7 @@ export function SettingsPage() {
           aria-label="Назад"
           className="lift -ml-2 flex h-11 w-11 items-center justify-center rounded-full text-[var(--night-text-70)]"
         >
-          <CaretLeftIcon size={20} />
+          <IconBack size={20} />
         </button>
         <h1 className="text-2xl font-medium tracking-tight">Настройки</h1>
       </header>
@@ -137,7 +137,7 @@ export function SettingsPage() {
         <Button className="mt-4 w-full py-2.5 text-sm" onClick={saveProfile}>
           {saved ? (
             <>
-              <CheckIcon size={16} /> Сохранено
+              <IconCheck size={16} /> Сохранено
             </>
           ) : (
             'Сохранить'
@@ -174,7 +174,7 @@ export function SettingsPage() {
           }
           className="lift mt-3 flex min-h-[44px] items-center gap-2 rounded-full border border-white/[0.10] px-4 text-sm text-[var(--night-text-70)]"
         >
-          <SpeakerHighIcon size={16} /> Проверить
+          <IconSpeaker size={16} /> Проверить
         </button>
       </Section>
 

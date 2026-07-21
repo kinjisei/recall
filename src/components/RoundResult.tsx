@@ -4,7 +4,7 @@
 // формулировки успели разъехаться («Засчитано» / «Тема засчитана» / ничего).
 // ============================================================================
 import type { ReactNode } from 'react'
-import { TrophyIcon, ThumbsUpIcon, ArrowUpIcon } from '@phosphor-icons/react'
+import { IconTrophy, IconThumbsUp, IconArrowUp } from './icons'
 import { Card } from './Card'
 import { Button } from './Button'
 
@@ -14,9 +14,9 @@ import { Button } from './Button'
  * стиль с остальным интерфейсом и корректная тёмная тема.
  */
 export function ScoreGlyph({ percent, size = 40 }: { percent: number; size?: number }) {
-  if (percent >= 80) return <TrophyIcon size={size} weight="fill" className="text-[var(--night-accent-100)]" />
-  if (percent >= 50) return <ThumbsUpIcon size={size} weight="fill" className="text-[var(--night-accent-text)]" />
-  return <ArrowUpIcon size={size} weight="bold" className="text-[var(--night-text-40)]" />
+  if (percent >= 80) return <IconTrophy size={size} className="text-[var(--night-accent-100)]" />
+  if (percent >= 50) return <IconThumbsUp size={size} className="text-[var(--night-accent-text)]" />
+  return <IconArrowUp size={size} className="text-[var(--night-text-40)]" />
 }
 
 export function RoundResult({

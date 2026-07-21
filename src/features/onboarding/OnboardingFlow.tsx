@@ -8,13 +8,13 @@
 // ============================================================================
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { CardsThreeIcon } from '@phosphor-icons/react'
 import {
-  SealCheckIcon,
-  CardsThreeIcon,
-  BookOpenTextIcon,
-  MicrophoneIcon,
-  type Icon,
-} from '@phosphor-icons/react'
+  IconBadgeCheck,
+  IconGap,
+  IconMic,
+  type IconLike,
+} from '../../components/icons'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { supabase } from '../../lib/supabase'
@@ -201,10 +201,10 @@ function StepLevel({
 
 // --- Шаг 3: план готов -----------------------------------------------------
 
-const PLAN: { Icon: Icon; title: string; desc: string }[] = [
+const PLAN: { Icon: IconLike; title: string; desc: string }[] = [
   { Icon: CardsThreeIcon, title: 'Слова', desc: 'карточки и мини-игры' },
-  { Icon: BookOpenTextIcon, title: 'Чтение', desc: 'тексты с разбором слов' },
-  { Icon: MicrophoneIcon, title: 'Речь', desc: 'произношение вслух' },
+  { Icon: IconGap, title: 'Чтение', desc: 'тексты с разбором слов' },
+  { Icon: IconMic, title: 'Речь', desc: 'произношение вслух' },
 ]
 
 function StepReady({
@@ -219,9 +219,8 @@ function StepReady({
   return (
     <div className="flex flex-1 flex-col gap-7">
       <div className="flex flex-col items-center gap-4 pt-6 text-center">
-        <SealCheckIcon
+        <IconBadgeCheck
           size={64}
-          weight="fill"
           className="animate-pop-in text-[var(--night-accent)]"
         />
         <Heading
@@ -239,7 +238,7 @@ function StepReady({
             style={{ animationDelay: `${0.1 + i * 0.09}s` }}
           >
             <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-[var(--night-accent-900)] text-[var(--night-accent-100)]">
-              <p.Icon size={20} weight="fill" />
+              <p.Icon size={20} />
             </span>
             <span className="flex flex-col">
               <span className="text-[15px] font-medium">{p.title}</span>

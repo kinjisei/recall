@@ -4,7 +4,7 @@
 // currentColor. Меняем весь набор здесь — приложение подхватит.
 //   НЕ РЕДАКТИРОВАТЬ ВРУЧНУЮ: перегенерировать из SVG.
 // ============================================================================
-import type { CSSProperties } from 'react'
+import type { CSSProperties, ComponentType } from 'react'
 
 export interface IconProps {
   size?: number
@@ -12,6 +12,13 @@ export interface IconProps {
   style?: CSSProperties
   'aria-hidden'?: boolean
 }
+
+/**
+ * Широкий тип «любая иконка»: подходит и наши компоненты, и оставшиеся
+ * Phosphor gap-иконки (forwardRef). Используй его там, где иконка приходит
+ * пропом или лежит в массиве вперемешку с Phosphor.
+ */
+export type IconLike = ComponentType<{ size?: number; className?: string }>
 
 /** Фабрика: внутренний SVG-markup + толщина линии -> компонент иконки. */
 function icon(inner: string, strokeWidth = '1.75') {

@@ -7,14 +7,14 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  CaretLeftIcon,
-  BookmarksIcon,
-  TargetIcon,
-  TrophyIcon,
-  CalendarCheckIcon,
-  SignOutIcon,
-  type Icon,
-} from '@phosphor-icons/react'
+  IconBack,
+  IconMaterials,
+  IconMcq,
+  IconTrophy,
+  IconBadgeCheck,
+  IconSignOut,
+  type IconProps,
+} from '../../components/icons'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { supabase, currentUserId } from '../../lib/supabase'
@@ -96,7 +96,7 @@ export function ProgressPage() {
           aria-label="Назад"
           className="lift -ml-2 flex h-11 w-11 items-center justify-center rounded-full text-[var(--night-text-70)]"
         >
-          <CaretLeftIcon size={20} />
+          <IconBack size={20} />
         </button>
         <h1 className="text-2xl font-medium tracking-tight">Мой прогресс</h1>
       </header>
@@ -145,28 +145,28 @@ export function ProgressPage() {
       {/* Метрики 2×2 */}
       <section className="grid grid-cols-2 gap-3">
         <Metric
-          Icon={BookmarksIcon}
+          Icon={IconMaterials}
           label="Слов изучено"
           value={metrics ? String(metrics.learned) : '—'}
           hint="перешли в долгое повторение"
           delay=".12s"
         />
         <Metric
-          Icon={TargetIcon}
+          Icon={IconMcq}
           label="Точность"
           value={metrics?.accuracy === null || !metrics ? '—' : `${metrics.accuracy}%`}
           hint="повторений без срыва"
           delay=".18s"
         />
         <Metric
-          Icon={TrophyIcon}
+          Icon={IconTrophy}
           label="Лучшая серия"
           value={metrics ? `${metrics.best}` : '—'}
           hint={streak > 0 ? `сейчас — ${streak}` : 'дней подряд'}
           delay=".24s"
         />
         <Metric
-          Icon={CalendarCheckIcon}
+          Icon={IconBadgeCheck}
           label="К завтрашнему дню"
           value={metrics ? String(metrics.tomorrow) : '—'}
           hint="карточек к повторению"
@@ -179,7 +179,7 @@ export function ProgressPage() {
         className="lift animate-fade-up mt-2 flex items-center justify-center gap-2 rounded-2xl border border-white/[0.08] px-4 py-3.5 text-[var(--night-text-70)]"
         style={{ animationDelay: '.36s' }}
       >
-        <SignOutIcon size={18} />
+        <IconSignOut size={18} />
         Выйти из аккаунта
       </button>
     </div>
@@ -193,7 +193,7 @@ function Metric({
   hint,
   delay,
 }: {
-  Icon: Icon
+  Icon: (p: IconProps) => React.JSX.Element
   label: string
   value: string
   hint: string
@@ -205,7 +205,7 @@ function Metric({
       style={{ animationDelay: delay }}
     >
       <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--night-accent-900)] text-[var(--night-accent-100)]">
-        <IconCmp size={18} weight="fill" />
+        <IconCmp size={18} />
       </span>
       <span className="text-2xl font-medium tabular-nums">{value}</span>
       <span className="text-[13px] leading-tight">

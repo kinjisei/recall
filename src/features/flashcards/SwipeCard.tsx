@@ -7,11 +7,11 @@
 import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
-  ArrowLeftIcon,
-  ArrowRightIcon,
-  HandTapIcon,
-  SpeakerHighIcon,
-} from '@phosphor-icons/react'
+  IconArrowRight,
+  IconBack,
+  IconHint,
+  IconSpeaker,
+} from '../../components/icons'
 import { speak } from '../../lib/speech'
 import type { AppLang, Card as CardType } from '../../types'
 
@@ -28,7 +28,7 @@ function SpeakButton({ text, lang }: { text: string; lang: AppLang }) {
       className="flex h-11 w-11 items-center justify-center rounded-full bg-white/[0.08] text-[var(--night-text-70)]"
       aria-label="Озвучить"
     >
-      <SpeakerHighIcon size={18} />
+      <IconSpeaker size={18} />
     </button>
   )
 }
@@ -130,7 +130,7 @@ export function SwipeCard({
           </div>
           {card.ipa && <p className="text-[var(--night-text-40)]">/{card.ipa}/</p>}
           <p className="mt-6 flex items-center gap-1.5 text-sm text-[var(--night-text-40)]">
-            <HandTapIcon size={16} /> тапни — увидишь перевод
+            <IconHint size={16} /> тапни — увидишь перевод
           </p>
         </div>
 
@@ -154,7 +154,7 @@ export function SwipeCard({
             <p className="mt-2 text-sm italic text-[var(--night-text-40)]">«{card.example}»</p>
           )}
           <p className="mt-5 flex items-center gap-2 text-xs text-[var(--night-text-40)]">
-            <ArrowLeftIcon size={14} /> ещё раз&nbsp;·&nbsp;помню <ArrowRightIcon size={14} />
+            <IconBack size={14} /> ещё раз&nbsp;·&nbsp;помню <IconArrowRight size={14} />
           </p>
         </div>
       </div>
@@ -187,20 +187,20 @@ export function SwipeTutorial({ onDismiss }: { onDismiss: () => void }) {
       className="fixed inset-0 z-40 flex flex-col items-center justify-center gap-6 bg-black/60 px-8 backdrop-blur-[2px]"
       onClick={onDismiss}
     >
-      <HandTapIcon size={56} className="animate-pulse text-white" />
+      <IconHint size={56} className="animate-pulse text-white" />
       <p className="text-center text-lg font-semibold text-white">
         Тапни по карточке — увидишь перевод
       </p>
       <div className="flex w-full max-w-xs items-center justify-between text-white/90">
         <div className="flex flex-col items-center gap-1">
-          <ArrowLeftIcon size={36} className="animate-pulse" />
+          <IconBack size={36} className="animate-pulse" />
           <span className="text-center text-sm">свайп влево
             <br />
             <span className="font-bold text-white/80">ещё раз</span>
           </span>
         </div>
         <div className="flex flex-col items-center gap-1">
-          <ArrowRightIcon size={36} className="animate-pulse" />
+          <IconArrowRight size={36} className="animate-pulse" />
           <span className="text-center text-sm">свайп вправо
             <br />
             <span className="font-bold text-[var(--night-accent-text)]">помню</span>

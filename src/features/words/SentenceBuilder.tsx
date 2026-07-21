@@ -1,7 +1,7 @@
 // «Собери фразу»: по русскому переводу собери фразу из слов (EN и ES).
 // Материал — встроенные фразы «Речи» (60 английских / 135 испанских).
 import { useMemo, useState } from 'react'
-import { SpeakerHighIcon } from '@phosphor-icons/react'
+import { IconSpeaker } from '../../components/icons'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { RoundResult, RoundProgress } from '../../components/RoundResult'
@@ -183,7 +183,7 @@ function BuildTask({
             className="flex h-11 w-11 items-center justify-center rounded-full bg-white/[0.08] text-[var(--night-text-70)]"
             aria-label="Озвучить"
           >
-            <SpeakerHighIcon size={18} />
+            <IconSpeaker size={18} />
           </button>
         </div>
       )}

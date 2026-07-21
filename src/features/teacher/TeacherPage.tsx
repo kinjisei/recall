@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { GraduationCapIcon } from '@phosphor-icons/react'
+import { IconGraduation } from '../../components/icons'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { supabase } from '../../lib/supabase'
@@ -175,7 +175,7 @@ function TeacherDashboard() {
             <p className="text-[var(--night-text-40)]">Загрузка…</p>
           ) : students.length === 0 ? (
             <Card className="text-center">
-              <GraduationCapIcon size={40} className="mx-auto block text-[var(--night-text-40)]" />
+              <IconGraduation size={40} className="mx-auto block text-[var(--night-text-40)]" />
               <p className="mt-2 font-semibold">Пока ни одной ученицы</p>
               <p className="mt-1 text-sm text-[var(--night-text-40)]">
                 Отправь код-приглашение — после ввода кода ученица появится здесь.

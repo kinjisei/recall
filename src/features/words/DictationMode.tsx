@@ -4,7 +4,7 @@
 // из колоды возвращает карточку на повтор.
 // ============================================================================
 import { useEffect, useState } from 'react'
-import { SpeakerHighIcon } from '@phosphor-icons/react'
+import { IconSpeaker } from '../../components/icons'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { RoundResult, RoundProgress } from '../../components/RoundResult'
@@ -104,7 +104,7 @@ export function DictationMode({ lang, onBack }: { lang: AppLang; onBack: () => v
           className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[var(--night-accent-900)] text-[var(--night-accent-100)]"
           aria-label="Прослушать ещё раз"
         >
-          <SpeakerHighIcon size={32} weight="fill" />
+          <IconSpeaker size={32} />
         </button>
         <p className="text-center text-sm text-[var(--night-text-40)]">
           Напиши слово, которое услышишь{current?.translation ? ` · подсказка: «${current.translation}»` : ''}

@@ -5,15 +5,15 @@ import { RoundResult } from '../../components/RoundResult'
 import { GuidedNext } from '../../components/GuidedNext'
 import { celebrate } from '../../components/Confetti'
 import {
-  MicrophoneIcon,
-  StopIcon,
-  SpinnerGapIcon,
-  SpeakerHighIcon,
-  GaugeIcon,
-  SealCheckIcon,
-  HeadphonesIcon,
-  ArrowCounterClockwiseIcon,
-} from '@phosphor-icons/react'
+  IconMic,
+  IconStop,
+  IconSpinner,
+  IconSpeaker,
+  IconSpeakerSlow,
+  IconBadgeCheck,
+  IconHeadphones,
+  IconRefresh,
+} from '../../components/icons'
 import { supabase } from '../../lib/supabase'
 import { getDeckIds } from '../../lib/cards'
 import { getUserLevel } from '../../lib/level'
@@ -258,7 +258,7 @@ export function PronunciationPage() {
           />
         ) : (
           <Card className="flex flex-col items-center gap-3 text-center">
-            <HeadphonesIcon size={40} className="text-[var(--night-accent-text)]" />
+            <IconHeadphones size={40} className="text-[var(--night-accent-text)]" />
             <p className="text-lg font-bold">Раунд пройден</p>
             <p className="text-sm text-[var(--night-text-40)]">
               Ты повторил {round.length} фраз вслух — так держать!
@@ -292,13 +292,13 @@ export function PronunciationPage() {
             onClick={() => speak(current.text, { lang })}
             className="lift flex min-h-[40px] items-center gap-2 rounded-full border border-white/[0.10] px-4 text-sm text-[var(--night-text-70)]"
           >
-            <SpeakerHighIcon size={16} /> Прослушать
+            <IconSpeaker size={16} /> Прослушать
           </button>
           <button
             onClick={() => speak(current.text, { lang, rate: SLOW_RATE })}
             className="lift flex min-h-[40px] items-center gap-2 rounded-full border border-white/[0.10] px-4 text-sm text-[var(--night-text-70)]"
           >
-            <GaugeIcon size={16} /> Медленно
+            <IconSpeakerSlow size={16} /> Медленно
           </button>
         </div>
 
@@ -333,9 +333,8 @@ export function PronunciationPage() {
       {/* Оценка результата */}
       {score && (
         <Card className="flex items-center gap-3">
-          <SealCheckIcon
+          <IconBadgeCheck
             size={36}
-            weight="fill"
             className={score.percent >= PASS ? 'text-[var(--night-accent)]' : 'text-[var(--night-text-25)]'}
           />
           <div className="min-w-0">
@@ -377,11 +376,11 @@ export function PronunciationPage() {
               }`}
             >
               {processing ? (
-                <SpinnerGapIcon size={32} className="animate-spin" />
+                <IconSpinner size={32} className="animate-spin" />
               ) : recording ? (
-                <StopIcon size={30} weight="fill" />
+                <IconStop size={30} />
               ) : (
-                <MicrophoneIcon size={34} weight="fill" />
+                <IconMic size={34} />
               )}
             </button>
           </div>
@@ -407,7 +406,7 @@ export function PronunciationPage() {
       <div className="flex items-center justify-between gap-3">
         {score ? (
           <Button variant="secondary" onClick={retryPhrase}>
-            <ArrowCounterClockwiseIcon size={18} className="mr-1 inline" />
+            <IconRefresh size={18} className="mr-1 inline" />
             Повторить
           </Button>
         ) : (

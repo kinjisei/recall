@@ -4,7 +4,7 @@
 // Заменяет разнобой из «← Назад» / «← Главная» / ghost-кнопок, из-за которого
 // заголовки съезжали, а сама кнопка терялась.
 // ============================================================================
-import { CaretLeftIcon } from '@phosphor-icons/react'
+import { IconBack } from './icons'
 
 export function BackButton({
   onClick,
@@ -19,7 +19,7 @@ export function BackButton({
       aria-label={label}
       className="flex h-11 w-11 flex-none items-center justify-center rounded-xl border border-white/[0.12] text-[var(--night-text-70)] transition-colors hover:border-white/[0.25] hover:text-[var(--night-text)] active:scale-95"
     >
-      <CaretLeftIcon size={18} />
+      <IconBack size={18} />
     </button>
   )
 }
