@@ -209,6 +209,16 @@ export function SettingsPage() {
         Скорость озвучки и размер текста сохраняются на этом устройстве.
         Имя и уровень — в аккаунте.
       </p>
+
+      <p className="px-1 text-xs text-[var(--night-text-40)]">
+        <a href="/terms" className="underline hover:text-[var(--night-text-70)]">
+          Условия использования
+        </a>{' '}
+        ·{' '}
+        <a href="/privacy" className="underline hover:text-[var(--night-text-70)]">
+          Политика конфиденциальности
+        </a>
+      </p>
     </div>
   )
 }

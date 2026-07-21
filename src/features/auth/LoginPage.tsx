@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { BrandLogo, BrandMark } from '../../components/Brand'
 import { IconEye } from '../../components/icons'
@@ -166,6 +166,19 @@ export function LoginPage() {
             >
               {busy ? '…' : signup ? 'Создать аккаунт' : 'Войти'}
             </button>
+
+            {signup && (
+              <p className="text-center text-xs leading-relaxed text-[var(--night-text-40)]">
+                Создавая аккаунт, ты принимаешь{' '}
+                <Link to="/terms" className="underline hover:text-[var(--night-text-70)]">
+                  условия
+                </Link>{' '}
+                и{' '}
+                <Link to="/privacy" className="underline hover:text-[var(--night-text-70)]">
+                  политику конфиденциальности
+                </Link>
+              </p>
+            )}
           </form>
 
           <p className="text-center text-sm text-[var(--night-text-40)]">

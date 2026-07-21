@@ -49,6 +49,12 @@ const AssignmentsPage = lazy(() =>
 const QuestsPage = lazy(() =>
   import('./features/quests/QuestsPage').then((m) => ({ default: m.QuestsPage })),
 )
+const PrivacyPage = lazy(() =>
+  import('./features/legal/LegalPage').then((m) => ({ default: m.PrivacyPage })),
+)
+const TermsPage = lazy(() =>
+  import('./features/legal/LegalPage').then((m) => ({ default: m.TermsPage })),
+)
 
 function PageFallback() {
   return <p className="p-6 text-center text-[var(--night-text-40)]">Загрузка…</p>
@@ -65,6 +71,23 @@ export default function App() {
           <ScrollToTop />
           <Routes>
             <Route path="/login" element={<LoginPage />} />
+            {/* юридические страницы — публичные (ссылки со входа) */}
+            <Route
+              path="/privacy"
+              element={
+                <Suspense fallback={<PageFallback />}>
+                  <PrivacyPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/terms"
+              element={
+                <Suspense fallback={<PageFallback />}>
+                  <TermsPage />
+                </Suspense>
+              }
+            />
             {/* онбординг — без Layout: свои шаги на весь экран */}
             <Route
               path="/onboarding"
