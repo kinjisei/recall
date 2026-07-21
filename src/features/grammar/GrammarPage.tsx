@@ -14,6 +14,7 @@ import {
   IconRefresh,
   IconShuffle,
   IconSpeaker,
+  IconWarning,
   type IconProps,
   IconCaretDown,
 } from '../../components/icons'
@@ -293,6 +294,17 @@ function TheoryView({
 
 function TheoryBlock({ block, lang }: { block: GrammarTheoryBlock; lang: AppLang }) {
   if (block.type === 'paragraph') {
+    // абзацы «⚠️ типичная ошибка» — в аккуратный callout с иконкой вместо эмодзи
+    if (block.text.startsWith('⚠')) {
+      return (
+        <div className="flex gap-2 rounded-xl border border-amber-400/25 bg-amber-400/[0.07] px-3 py-2">
+          <IconWarning size={16} className="mt-0.5 shrink-0 text-amber-400" />
+          <p className="leading-relaxed text-amber-100/90">
+            {block.text.replace(/^⚠️?\s*/, '')}
+          </p>
+        </div>
+      )
+    }
     return <p className="leading-relaxed text-[var(--night-text-70)]">{block.text}</p>
   }
   if (block.type === 'example') {

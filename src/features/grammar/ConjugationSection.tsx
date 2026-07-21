@@ -205,12 +205,12 @@ function TenseDetail({
           persons={persons}
           firstHeader="глагол"
           rows={tense.verbs.map((v) => ({
-            head: `${v.infinitive}${v.irregular ? ' ⚠️' : ''}`,
+            head: `${v.infinitive}${v.irregular ? ' *' : ''}`,
             sub: v.ru,
             cells: v.forms,
           }))}
         />
-        <p className="mt-1 text-xs text-[var(--night-text-40)]">⚠️ — неправильный глагол</p>
+        <p className="mt-1 text-xs text-[var(--night-text-40)]">* — неправильный глагол</p>
       </div>
     </div>
   )
