@@ -5,7 +5,7 @@
 // локально (lib/settings.ts), у каждого устройства свои.
 // ============================================================================
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { IconBack, IconSpeaker, IconCheck } from '../../components/icons'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
@@ -210,18 +210,20 @@ export function SettingsPage() {
         Имя и уровень — в аккаунте.
       </p>
 
+      {/* Link, не <a>: обычная ссылка перезагружает всё приложение и рвёт
+          историю — «Назад» с тех страниц переставал возвращать сюда */}
       <p className="px-1 text-xs text-[var(--night-text-40)]">
-        <a href="/terms" className="underline hover:text-[var(--night-text-70)]">
+        <Link to="/terms" className="underline hover:text-[var(--night-text-70)]">
           Условия использования
-        </a>{' '}
+        </Link>{' '}
         ·{' '}
-        <a href="/privacy" className="underline hover:text-[var(--night-text-70)]">
+        <Link to="/privacy" className="underline hover:text-[var(--night-text-70)]">
           Политика конфиденциальности
-        </a>{' '}
+        </Link>{' '}
         ·{' '}
-        <a href="/pricing" className="underline hover:text-[var(--night-text-70)]">
+        <Link to="/pricing" className="underline hover:text-[var(--night-text-70)]">
           Тарифы
-        </a>
+        </Link>
       </p>
     </div>
   )

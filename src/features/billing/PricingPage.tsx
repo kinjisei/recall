@@ -5,8 +5,8 @@
 // БД, плашку с его текущим тарифом.
 // ============================================================================
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { IconBack, IconCheck, IconTeacher, IconTrophy } from '../../components/icons'
+import { IconCheck, IconTeacher, IconTrophy } from '../../components/icons'
+import { SmartBack } from '../../components/SmartBack'
 import { useAuth } from '../../context/AuthContext'
 import { PLANS, KASPI, getMyPlan, type MyPlan, type PlanCard } from '../../lib/billing'
 
@@ -100,13 +100,7 @@ export function PricingPage() {
 
   return (
     <main className="mx-auto min-h-[100dvh] max-w-screen-sm bg-[var(--night-bg)] px-5 pb-16 pt-[calc(env(safe-area-inset-top)+1.5rem)] text-[var(--night-text)]">
-      <Link
-        to={user ? '/settings' : '/login'}
-        className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl border border-white/[0.10]"
-        aria-label="Назад"
-      >
-        <IconBack size={18} />
-      </Link>
+      <SmartBack fallback={user ? '/' : '/login'} />
 
       <h1 className="text-2xl font-medium tracking-tight">Тарифы</h1>
       <p className="mt-1 text-sm text-[var(--night-text-40)]">

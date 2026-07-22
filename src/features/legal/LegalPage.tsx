@@ -4,8 +4,7 @@
 // страницы входа). Тексты — черновик для небольшого учебного сервиса;
 // при выходе на платные тарифы показать юристу.
 // ============================================================================
-import { Link } from 'react-router-dom'
-import { IconBack } from '../../components/icons'
+import { SmartBack } from '../../components/SmartBack'
 
 const CONTACT = 'k.yerbolat.2004@gmail.com'
 const UPDATED = '22 июля 2026'
@@ -13,13 +12,7 @@ const UPDATED = '22 июля 2026'
 function Shell({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <main className="mx-auto min-h-[100dvh] max-w-screen-sm bg-[var(--night-bg)] px-5 pb-16 pt-[calc(env(safe-area-inset-top)+1.5rem)] text-[var(--night-text)]">
-      <Link
-        to="/login"
-        className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl border border-white/[0.10]"
-        aria-label="Назад"
-      >
-        <IconBack size={18} />
-      </Link>
+      <SmartBack fallback="/login" />
       <h1 className="text-2xl font-medium tracking-tight">{title}</h1>
       <p className="mt-1 text-xs text-[var(--night-text-40)]">Обновлено: {UPDATED}</p>
       <div className="mt-6 flex flex-col gap-4 text-[15px] leading-relaxed text-[var(--night-text-70)]">

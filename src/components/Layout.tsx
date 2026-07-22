@@ -42,6 +42,14 @@ function AvatarMenu() {
     getMyPlan().then((p) => setIsAdmin(!!p?.is_admin))
   }, [user])
 
+  // при открытии меню перепроверяем план: если запрос при старте не прошёл
+  // (сеть моргнула), «Админка» иначе не появится до перезагрузки
+  useEffect(() => {
+    if (!open || isAdmin) return
+    getMyPlan().then((p) => setIsAdmin(!!p?.is_admin))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
+
   // закрытие по клику мимо меню и по Escape
   useEffect(() => {
     if (!open) return
