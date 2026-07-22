@@ -8,6 +8,7 @@
 // все мини-игры, речь), Диалог — общаюсь с AI.
 // ============================================================================
 import { Link, useLocation } from 'react-router-dom'
+import { useKeyboardInset } from '../lib/useKeyboardInset'
 import {
   IconHome,
   IconHomeFill,
@@ -58,6 +59,10 @@ const tabs: Tab[] = [
 
 export function BottomNav() {
   const { pathname } = useLocation()
+  // при открытой клавиатуре навигацию прячем: на телефонах фиксированная
+  // капсула иначе «всплывает» над клавиатурой и мешает набору
+  const kb = useKeyboardInset()
+  if (kb > 0) return null
 
   return (
     <nav className="fixed inset-x-4 bottom-4 z-30 mx-auto max-w-screen-sm rounded-3xl border border-white/10 bg-[rgba(22,24,38,.78)] backdrop-blur-xl mb-[env(safe-area-inset-bottom)]">
