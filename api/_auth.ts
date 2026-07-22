@@ -51,6 +51,15 @@ export async function authorize(req: VercelRequest): Promise<AuthResult> {
     if (body.includes('RECALL_BLOCKED')) {
       return { ok: false, status: 403, error: 'Доступ к аккаунту приостановлен' }
     }
+    if (body.includes('RECALL_FREE_LIMIT')) {
+      return {
+        ok: false,
+        status: 429,
+        error:
+          'Дневной AI-лимит бесплатного тарифа исчерпан (5 в день). ' +
+          'Подключи Premium — раздел «Тарифы» в настройках. Слова, тексты и игры работают без лимитов.',
+      }
+    }
     if (body.includes('RECALL_RATE_HOUR')) {
       return {
         ok: false,

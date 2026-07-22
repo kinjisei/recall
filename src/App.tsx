@@ -55,6 +55,13 @@ const PrivacyPage = lazy(() =>
 const TermsPage = lazy(() =>
   import('./features/legal/LegalPage').then((m) => ({ default: m.TermsPage })),
 )
+const PricingPage = lazy(() =>
+  import('./features/billing/PricingPage').then((m) => ({ default: m.PricingPage })),
+)
+// Экран администратора: сам файл делает другой агент — тут только роут.
+const AdminPage = lazy(() =>
+  import('./features/admin/AdminPage').then((m) => ({ default: m.AdminPage })),
+)
 
 function PageFallback() {
   return <p className="p-6 text-center text-[var(--night-text-40)]">Загрузка…</p>
@@ -85,6 +92,15 @@ export default function App() {
               element={
                 <Suspense fallback={<PageFallback />}>
                   <TermsPage />
+                </Suspense>
+              }
+            />
+            {/* тарифы — публичные, работают и без входа */}
+            <Route
+              path="/pricing"
+              element={
+                <Suspense fallback={<PageFallback />}>
+                  <PricingPage />
                 </Suspense>
               }
             />
@@ -196,6 +212,14 @@ export default function App() {
                 element={
                   <Suspense fallback={<PageFallback />}>
                     <QuestsPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/admin"
+                element={
+                  <Suspense fallback={<PageFallback />}>
+                    <AdminPage />
                   </Suspense>
                 }
               />

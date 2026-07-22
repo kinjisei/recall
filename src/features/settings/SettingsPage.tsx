@@ -217,6 +217,10 @@ export function SettingsPage() {
         ·{' '}
         <a href="/privacy" className="underline hover:text-[var(--night-text-70)]">
           Политика конфиденциальности
+        </a>{' '}
+        ·{' '}
+        <a href="/pricing" className="underline hover:text-[var(--night-text-70)]">
+          Тарифы
         </a>
       </p>
     </div>

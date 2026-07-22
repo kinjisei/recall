@@ -1105,3 +1105,250 @@
     where id = p_id and student_id = auth.uid();
     if not found then raise exception 'Квест не найден.'; end if;
   end $fn$;
+
+  -- ============================================================================
+  -- ТАРИФЫ И FREE-ЛИМИТЫ (2026-07-22): планы, триал, платный доступ к AI.
+  -- Планы: free (по умолчанию) · premium · teacher_mini · teacher_start ·
+  -- teacher_pro. Каждому НОВОМУ аккаунту 14 дней полного доступа (trial_until),
+  -- без карты. Free навсегда: статика без лимитов, AI — 5 действий/сутки
+  -- (вместо 40/час + 200/сутки у платных/триала). Ученица активного платящего
+  -- (или триального) учителя получает premium-доступ к AI бесплатно.
+  -- Оплата вручную (Kaspi → админ включает план на N месяцев).
+  -- Блок idempotent — можно запускать повторно.
+  -- ============================================================================
+
+  -- ---- 1. Колонки тарифа в profiles ----
+  -- Добавляются с дефолтами; для УЖЕ существующих строк trial_until заполнится
+  -- значением, вычисленным в момент ALTER (все текущие пользователи получают
+  -- триал на 14 дней от даты миграции — это осознанно, «подарок» на запуск).
+  alter table public.profiles add column if not exists plan text not null default 'free';
+  alter table public.profiles drop constraint if exists profiles_plan_check;
+  alter table public.profiles add constraint profiles_plan_check
+    check (plan in ('free','premium','teacher_mini','teacher_start','teacher_pro'));
+  alter table public.profiles add column if not exists plan_expires_at timestamptz;
+  alter table public.profiles add column if not exists trial_until timestamptz
+    not null default (now() + interval '14 days');
+  alter table public.profiles add column if not exists is_admin boolean not null default false;
+
+  -- ЗАЩИТА ОТ САМОИЗМЕНЕНИЯ: тем же приёмом, что и role/blocked. Выше по файлу
+  -- (блок «ЗАЩИТА ОТ ПОДДЕЛКИ») выполнено
+  --   revoke update on public.profiles from authenticated;
+  --   grant  update (display_name, level, native_lang) on public.profiles to authenticated;
+  -- То есть UPDATE у authenticated разрешён ровно на три колонки. Новые
+  -- plan/plan_expires_at/trial_until/is_admin в этот список НЕ входят, поэтому
+  -- пользователь не может ни включить себе платный план, ни продлить триал, ни
+  -- выдать себе is_admin через прямой REST/DevTools. Пере-заявляем грант здесь
+  -- же на случай запуска блока в отрыве от остального файла (idempotent).
+  revoke update on public.profiles from authenticated;
+  grant update (display_name, level, native_lang) on public.profiles to authenticated;
+  -- Флаг администратора выдаётся ТОЛЬКО из SQL Editor (роль postgres обходит
+  -- гранты): update public.profiles set is_admin = true where id = '…';
+
+  -- ---- 2. Есть ли у пользователя премиум-доступ к AI ----
+  -- true, если: активный триал; ЛИБО платный план не истёк; ЛИБО пользователь —
+  -- ученица учителя с активным (оплаченным или триальным) teacher_*-планом.
+  -- security definer: обходит RLS, чтобы увидеть teacher_students и профиль
+  -- учителя целиком.
+  create or replace function public.has_premium_access(uid uuid)
+  returns boolean
+  language sql
+  security definer
+  stable
+  set search_path = public
+  as $fn$
+    select
+      exists (
+        select 1 from profiles p where p.id = uid and (
+          p.trial_until > now()
+          or (p.plan <> 'free' and p.plan_expires_at is not null
+              and p.plan_expires_at > now())
+        )
+      )
+      or exists (
+        select 1 from teacher_students ts
+        join profiles tp on tp.id = ts.teacher_id
+        where ts.student_id = uid
+          and tp.plan like 'teacher_%'
+          and (
+            (tp.plan_expires_at is not null and tp.plan_expires_at > now())
+            or tp.trial_until > now()
+          )
+      )
+  $fn$;
+
+  -- ---- 3. consume_ai_quota: лимиты зависят от уровня доступа ----
+  -- Прежняя логика (проверка бана/блокировки, чистка, счётчики по ai_calls)
+  -- сохранена дословно; добавлена развилка по has_premium_access:
+  --   премиум/триал → 40/час и 200/сутки (RECALL_RATE_HOUR / RECALL_RATE_DAY);
+  --   free          → 5/сутки (RECALL_FREE_LIMIT).
+  create or replace function public.consume_ai_quota()
+  returns void
+  language plpgsql
+  security definer
+  set search_path = public
+  as $fn$
+  declare
+    max_per_hour constant int := 40;
+    max_per_day  constant int := 200;
+    free_per_day constant int := 5;
+    uid uuid := auth.uid();
+    premium boolean;
+    n int;
+  begin
+    if uid is null then
+      raise exception 'RECALL_NO_AUTH';
+    end if;
+
+    -- Бан в Supabase (Authentication → Users → Ban user): JWT остаётся валидным
+    -- до истечения, поэтому смотрим banned_until явно.
+    if exists (
+      select 1 from auth.users
+      where id = uid and banned_until is not null and banned_until > now()
+    ) then
+      raise exception 'RECALL_BLOCKED';
+    end if;
+
+    if exists (select 1 from profiles where id = uid and blocked) then
+      raise exception 'RECALL_BLOCKED';
+    end if;
+
+    -- Чистим старое, чтобы таблица не росла бесконечно.
+    delete from ai_calls where called_at < now() - interval '3 days';
+
+    premium := public.has_premium_access(uid);
+
+    if premium then
+      select count(*) into n from ai_calls
+      where user_id = uid and called_at > now() - interval '1 hour';
+      if n >= max_per_hour then
+        raise exception 'RECALL_RATE_HOUR';
+      end if;
+
+      select count(*) into n from ai_calls
+      where user_id = uid and called_at > now() - interval '24 hours';
+      if n >= max_per_day then
+        raise exception 'RECALL_RATE_DAY';
+      end if;
+    else
+      -- Free-тариф: единый суточный лимит.
+      select count(*) into n from ai_calls
+      where user_id = uid and called_at > now() - interval '24 hours';
+      if n >= free_per_day then
+        raise exception 'RECALL_FREE_LIMIT';
+      end if;
+    end if;
+
+    insert into ai_calls (user_id) values (uid);
+  end $fn$;
+
+  grant execute on function public.consume_ai_quota() to authenticated;
+
+  -- ---- 4. get_my_plan: сводка тарифа для клиента ----
+  -- Счётчик ai_used_today и ai_day_limit берутся из тех же данных, что и
+  -- consume_ai_quota (окно 24 часа; лимит 200 для премиума, 5 для free).
+  create or replace function public.get_my_plan()
+  returns json
+  language plpgsql
+  security definer
+  set search_path = public
+  as $fn$
+  declare
+    uid uuid := auth.uid();
+    p record;
+    prem boolean;
+    used int;
+  begin
+    if uid is null then
+      raise exception 'RECALL_NO_AUTH';
+    end if;
+    select plan, plan_expires_at, trial_until, is_admin
+      into p from profiles where id = uid;
+    prem := public.has_premium_access(uid);
+    select count(*) into used from ai_calls
+      where user_id = uid and called_at > now() - interval '24 hours';
+    return json_build_object(
+      'plan',            p.plan,
+      'plan_expires_at', p.plan_expires_at,
+      'trial_until',     p.trial_until,
+      'is_admin',        p.is_admin,
+      'premium',         prem,
+      'ai_used_today',   used,
+      'ai_day_limit',    case when prem then 200 else 5 end
+    );
+  end $fn$;
+
+  grant execute on function public.get_my_plan() to authenticated;
+
+  -- ---- 5. Админ-RPC (только is_admin) ----
+  -- Владелец (is_admin=true) находит пользователя по email и включает ему план
+  -- на N месяцев после ручной оплаты (Kaspi). Любой не-админ → RECALL_NOT_ADMIN.
+
+  -- Поиск по email (ilike, до 10 результатов). Возвращает JSON-массив.
+  create or replace function public.admin_find_user(q text)
+  returns json
+  language plpgsql
+  security definer
+  set search_path = public
+  as $fn$
+  begin
+    if not exists (select 1 from profiles where id = auth.uid() and is_admin) then
+      raise exception 'RECALL_NOT_ADMIN';
+    end if;
+    return coalesce((
+      select json_agg(row_to_json(t)) from (
+        select u.id, u.email, p.display_name, p.plan,
+               p.plan_expires_at, p.trial_until
+        from auth.users u
+        join public.profiles p on p.id = u.id
+        where u.email ilike '%' || trim(coalesce(q, '')) || '%'
+        order by u.created_at desc
+        limit 10
+      ) t
+    ), '[]'::json);
+  end $fn$;
+
+  grant execute on function public.admin_find_user(text) to authenticated;
+
+  -- Включить/продлить/снять план. months кламп 0..12; 0 (или план 'free') —
+  -- выключить (plan='free', plan_expires_at=null). Продление наращивает срок от
+  -- максимума (текущий конец плана, если он в будущем) или от now().
+  create or replace function public.admin_set_plan(target uuid, new_plan text, months int)
+  returns json
+  language plpgsql
+  security definer
+  set search_path = public
+  as $fn$
+  declare
+    m int;
+    new_expiry timestamptz;
+  begin
+    if not exists (select 1 from profiles where id = auth.uid() and is_admin) then
+      raise exception 'RECALL_NOT_ADMIN';
+    end if;
+    if new_plan not in ('free','premium','teacher_mini','teacher_start','teacher_pro') then
+      raise exception 'RECALL_BAD_PLAN';
+    end if;
+    if not exists (select 1 from profiles where id = target) then
+      raise exception 'Пользователь не найден.';
+    end if;
+
+    m := greatest(0, least(12, coalesce(months, 0)));
+
+    if m = 0 or new_plan = 'free' then
+      update profiles set plan = 'free', plan_expires_at = null where id = target;
+    else
+      select greatest(coalesce(plan_expires_at, now()), now()) + make_interval(months => m)
+        into new_expiry from profiles where id = target;
+      update profiles set plan = new_plan, plan_expires_at = new_expiry where id = target;
+    end if;
+
+    return json_build_object(
+      'id',              target,
+      'plan',            (select plan from profiles where id = target),
+      'plan_expires_at', (select plan_expires_at from profiles where id = target)
+    );
+  end $fn$;
+
+  grant execute on function public.admin_set_plan(uuid, text, int) to authenticated;
+
+  grant execute on function public.has_premium_access(uuid) to authenticated;
