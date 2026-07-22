@@ -44,7 +44,7 @@ const tabs: Tab[] = [
     Icon: IconStudy,
     IconFill: IconStudyFill,
     end: false,
-    also: ['/grammar', '/placement', '/assignments', '/reader'],
+    also: ['/grammar', '/placement', '/assignments', '/reader', '/program', '/quests'],
   },
   {
     to: '/practice',

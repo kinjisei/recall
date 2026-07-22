@@ -18,6 +18,7 @@ import { MaterialsSection } from './MaterialsSection'
 import { StudentWordsSection } from './StudentWordsSection'
 import { QuestSection } from './QuestSection'
 import { DiagnosticsSection } from './DiagnosticsSection'
+import { ProgramSection } from './ProgramSection'
 import { countSubmittedWorks } from '../../lib/materials'
 import type { Deck, Profile } from '../../types'
 
@@ -205,6 +206,7 @@ function StudentCard({
   const [showWords, setShowWords] = useState(false)
   const [showQuests, setShowQuests] = useState(false)
   const [showDiag, setShowDiag] = useState(false)
+  const [showProgram, setShowProgram] = useState(false)
   const [busyDeck, setBusyDeck] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const p = student.profile
@@ -289,6 +291,14 @@ function StudentCard({
         {showDiag ? '▾ Скрыть диагностику' : '▸ Диагностическая карта'}
       </button>
       {showDiag && <DiagnosticsSection studentId={p.id} />}
+
+      <button
+        onClick={() => setShowProgram((v) => !v)}
+        className="text-left text-sm font-medium text-[var(--night-accent-text)] hover:underline dark:text-[var(--night-accent-text)]"
+      >
+        {showProgram ? '▾ Скрыть программу' : '▸ Программа обучения'}
+      </button>
+      {showProgram && <ProgramSection studentId={p.id} />}
 
       <button
         onClick={() => setShowWords((v) => !v)}

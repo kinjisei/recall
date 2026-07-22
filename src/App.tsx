@@ -49,6 +49,9 @@ const AssignmentsPage = lazy(() =>
 const QuestsPage = lazy(() =>
   import('./features/quests/QuestsPage').then((m) => ({ default: m.QuestsPage })),
 )
+const ProgramPage = lazy(() =>
+  import('./features/program/ProgramPage').then((m) => ({ default: m.ProgramPage })),
+)
 const PrivacyPage = lazy(() =>
   import('./features/legal/LegalPage').then((m) => ({ default: m.PrivacyPage })),
 )
@@ -212,6 +215,14 @@ export default function App() {
                 element={
                   <Suspense fallback={<PageFallback />}>
                     <QuestsPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/program"
+                element={
+                  <Suspense fallback={<PageFallback />}>
+                    <ProgramPage />
                   </Suspense>
                 }
               />

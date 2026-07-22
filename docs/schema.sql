@@ -1381,3 +1381,45 @@
   drop policy if exists "teacher reads student mistakes" on public.grammar_mistakes;
   create policy "teacher reads student mistakes" on public.grammar_mistakes
     for select using (public.is_student_of(auth.uid(), user_id));
+
+  -- ============================================================================
+  -- ПРОГРАММА ОБУЧЕНИЯ (2026-07-22): недельный план для ученицы.
+  -- Преподаватель генерирует программу через AI (уровень + слабые места из
+  -- диагностической карты), правит и сохраняет; ученица видит свою неделю.
+  -- Одна АКТИВНАЯ программа на пару (преподаватель, ученица, язык).
+  -- Блок idempotent — можно запускать повторно.
+  -- ============================================================================
+
+  create table if not exists public.study_plans (
+    id uuid primary key default gen_random_uuid(),
+    teacher_id uuid not null references public.profiles(id) on delete cascade,
+    student_id uuid not null references public.profiles(id) on delete cascade,
+    lang text not null check (lang in ('en','es')),
+    level text not null,
+    goal text not null default '',
+    summary text not null default '',
+    start_day date not null default current_date,
+    weeks jsonb not null check (jsonb_typeof(weeks) = 'array'),
+    status text not null default 'active' check (status in ('active','archived')),
+    created_at timestamptz not null default now(),
+    -- страховка от раздувания (план — это план, а не файлохранилище)
+    constraint study_plans_weeks_size check (pg_column_size(weeks) < 200 * 1024)
+  );
+
+  -- одна активная программа на пару учитель+ученица+язык
+  create unique index if not exists study_plans_one_active
+    on public.study_plans (teacher_id, student_id, lang)
+    where status = 'active';
+
+  alter table public.study_plans enable row level security;
+
+  -- Преподаватель управляет программами СВОИХ учениц (отвязка отбирает всё);
+  -- ученица только читает свои.
+  drop policy if exists "teacher manages own student plans" on public.study_plans;
+  create policy "teacher manages own student plans" on public.study_plans
+    for all
+    using (auth.uid() = teacher_id and public.is_student_of(teacher_id, student_id))
+    with check (auth.uid() = teacher_id and public.is_student_of(teacher_id, student_id));
+  drop policy if exists "student reads own plans" on public.study_plans;
+  create policy "student reads own plans" on public.study_plans
+    for select using (auth.uid() = student_id);

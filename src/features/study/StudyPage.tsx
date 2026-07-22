@@ -30,6 +30,8 @@ import { supabase } from '../../lib/supabase'
 import { getEsLevel } from '../../lib/esLevel'
 import { getMyAssignments } from '../../lib/materials'
 import { listMyQuests } from '../../lib/quests'
+import { currentWeekIndex, getMyPlans } from '../../lib/studyPlan'
+import type { StudyPlan } from '../../types'
 import { currentGuidedStep } from '../../lib/guided'
 import { ReaderPage } from '../reader/ReaderPage'
 import { PacksSheet } from '../flashcards/PacksSheet'
@@ -53,6 +55,7 @@ export function StudyPage() {
   const [enLevel, setEnLevel] = useState<string | null | undefined>(undefined)
   const [assignments, setAssignments] = useState<{ total: number; pending: number } | null>(null)
   const [quests, setQuests] = useState<{ total: number; active: number } | null>(null)
+  const [plans, setPlans] = useState<StudyPlan[] | null>(null)
 
   // уровень испанского хранится локально, английского — в профиле
   useEffect(() => {
@@ -86,6 +89,9 @@ export function StudyPage() {
         }),
       )
       .catch(() => setQuests(null)) // до выполнения SQL таблицы нет — строку прячем
+    getMyPlans()
+      .then(setPlans)
+      .catch(() => setPlans(null)) // таблицы может ещё не быть — строку прячем
   }, [])
 
   if (view === 'reader') {
@@ -145,6 +151,19 @@ export function StudyPage() {
                 </span>
               ) : undefined
             }
+            className="animate-fade-up"
+          />
+        )}
+        {plans && plans.length > 0 && (
+          <RowCard
+            Icon={IconRows}
+            title="Моя программа"
+            desc={(() => {
+              const p = plans.find((x) => x.lang === lang) ?? plans[0]
+              return `Неделя ${currentWeekIndex(p)} из ${p.weeks.length} — план от преподавателя`
+            })()}
+            to="/program"
+            active
             className="animate-fade-up"
           />
         )}
