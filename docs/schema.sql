@@ -1352,3 +1352,32 @@
   grant execute on function public.admin_set_plan(uuid, text, int) to authenticated;
 
   grant execute on function public.has_premium_access(uuid) to authenticated;
+
+  -- ============================================================================
+  -- ДИАГНОСТИКА (2026-07-22): грамматические ошибки учеников — в БД.
+  -- Раньше банк «Мои ошибки» жил только в localStorage ученицы — преподаватель
+  -- не видел, какие темы буксуют. Теперь клиент пишет ошибки и сюда (синк),
+  -- а диагностическая карта ученицы показывает их преподавателю.
+  -- Блок idempotent — можно запускать повторно.
+  -- ============================================================================
+
+  create table if not exists public.grammar_mistakes (
+    id uuid primary key default gen_random_uuid(),
+    user_id uuid not null references public.profiles(id) on delete cascade,
+    lang text not null check (lang in ('en','es')),
+    topic_id int not null,
+    ex int not null,
+    created_at timestamptz not null default now(),
+    unique (user_id, lang, topic_id, ex)
+  );
+
+  alter table public.grammar_mistakes enable row level security;
+
+  -- Ученик управляет своими ошибками (insert при неверном ответе, delete при
+  -- верном); преподаватель ЧИТАЕТ ошибки привязанных учениц (отвязка отбирает).
+  drop policy if exists "own grammar mistakes" on public.grammar_mistakes;
+  create policy "own grammar mistakes" on public.grammar_mistakes
+    for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+  drop policy if exists "teacher reads student mistakes" on public.grammar_mistakes;
+  create policy "teacher reads student mistakes" on public.grammar_mistakes
+    for select using (public.is_student_of(auth.uid(), user_id));

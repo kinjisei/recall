@@ -24,7 +24,13 @@ import { Button } from '../../components/Button'
 import { RoundResult, RoundProgress } from '../../components/RoundResult'
 import { speak } from '../../lib/speech'
 import { logActivity } from '../../lib/activity'
-import { addMistake, getMistakes, removeMistake, type GrammarMistake } from '../../lib/mistakes'
+import {
+  addMistake,
+  getMistakes,
+  removeMistake,
+  syncMistakesToDb,
+  type GrammarMistake,
+} from '../../lib/mistakes'
 import { useLanguage } from '../../context/LanguageContext'
 import { ExerciseView } from '../../components/exercises'
 import { ConjugationSection } from './ConjugationSection'
@@ -60,6 +66,8 @@ export function GrammarPage() {
   // при смене языка возвращаемся к урокам (контент «Глаголов» разный)
   useEffect(() => {
     setSection(params.get('verbs') ? 'verbs' : 'lessons')
+    // разовая заливка старого localStorage-банка ошибок в БД (для диагностики)
+    syncMistakesToDb(lang)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lang])
 
