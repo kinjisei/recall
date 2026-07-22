@@ -4,8 +4,9 @@
 // ============================================================================
 import { useEffect, useRef, useState } from 'react'
 import { Link, Outlet } from 'react-router-dom'
-import { IconChart, IconTeacher, IconGear, IconSignOut } from './icons'
+import { IconChart, IconTeacher, IconGear, IconSignOut, IconCards, IconBadgeCheck } from './icons'
 import { getProfile } from '../lib/profile'
+import { getMyPlan } from '../lib/billing'
 import { BottomNav } from './BottomNav'
 import { BrandLogo } from './Brand'
 import { useLanguage } from '../context/LanguageContext'
@@ -26,6 +27,7 @@ function AvatarMenu() {
   const { user, signOut } = useAuth()
   const [open, setOpen] = useState(false)
   const [isTeacher, setIsTeacher] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
   const boxRef = useRef<HTMLDivElement>(null)
 
   const name = (user?.user_metadata?.display_name as string | undefined) ?? user?.email ?? '?'
@@ -35,6 +37,9 @@ function AvatarMenu() {
     if (!user) return
     // профиль — из общего кэша (lib/profile): Главная запрашивает тот же ряд
     getProfile(user.id).then((p) => setIsTeacher(p?.role === 'teacher'))
+    // пункт «Админка» — только владельцу; это лишь видимость ссылки,
+    // настоящая защита в БД (is_admin проверяют сами RPC)
+    getMyPlan().then((p) => setIsAdmin(!!p?.is_admin))
   }, [user])
 
   // закрытие по клику мимо меню и по Escape
@@ -81,9 +86,17 @@ function AvatarMenu() {
               <IconTeacher size={17} /> Мои ученицы
             </Link>
           )}
+          <Link to="/pricing" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
+            <IconCards size={17} /> Тарифы
+          </Link>
           <Link to="/settings" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
             <IconGear size={17} /> Настройки
           </Link>
+          {isAdmin && (
+            <Link to="/admin" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
+              <IconBadgeCheck size={17} /> Админка
+            </Link>
+          )}
           <button role="menuitem" onClick={() => void signOut()} className={itemCls}>
             <IconSignOut size={17} /> Выйти
           </button>

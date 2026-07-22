@@ -17,10 +17,12 @@ import {
   generateMaterialPlan,
   listMaterialAssignments,
   listMyMaterials,
+  listSubmittedWorks,
   saveMaterial,
   unassignMaterial,
   type MaterialContent,
   type MaterialRequest,
+  type SubmittedWork,
 } from '../../lib/materials'
 import type { StudentInfo } from '../../lib/teacher'
 import { ReviewScreen } from './ReviewScreen'
@@ -43,7 +45,8 @@ type Mode =
   | { name: 'form' }
   | { name: 'plan'; req: MaterialRequest; plan: MaterialPlan }
   | { name: 'preview'; req: MaterialRequest; plan: MaterialPlan; content: MaterialContent }
-  | { name: 'detail'; material: Material }
+  // review — сразу открыть проверку конкретной работы (из блока «На проверку»)
+  | { name: 'detail'; material: Material; review?: { a: MaterialAssignment; name: string } }
 
 export function MaterialsSection({ students }: { students: StudentInfo[] }) {
   const [mode, setMode] = useState<Mode>({ name: 'list' })
@@ -54,6 +57,12 @@ export function MaterialsSection({ students }: { students: StudentInfo[] }) {
     loading: loadingMaterials,
     reload,
   } = useAsyncData<Material[]>(() => listMyMaterials(), [], 'Не удалось загрузить материалы')
+  // сданные работы — блок «На проверку»: кто сдал и что проверять
+  const { data: works, reload: reloadWorks } = useAsyncData<SubmittedWork[]>(
+    () => listSubmittedWorks(),
+    [],
+    'Не удалось загрузить работы',
+  )
 
   if (mode.name === 'form') {
     return (
@@ -94,17 +103,58 @@ export function MaterialsSection({ students }: { students: StudentInfo[] }) {
       <MaterialDetail
         material={mode.material}
         students={students}
+        initialReview={mode.review}
         onDeleted={() => {
           reload()
           setMode({ name: 'list' })
         }}
-        onBack={() => setMode({ name: 'list' })}
+        onBack={() => {
+          reloadWorks() // проверенная работа должна исчезнуть из «На проверку»
+          setMode({ name: 'list' })
+        }}
       />
     )
   }
 
   return (
     <div className="flex flex-col gap-3">
+      {/* На проверку: кто сдал, какой материал — сразу в проверку одним тапом */}
+      {(works ?? []).length > 0 && (
+        <Card className="flex flex-col gap-2 border-amber-300/40 bg-amber-400/[0.06]">
+          <p className="text-sm font-semibold text-amber-200">
+            На проверку: {works!.length}
+          </p>
+          {works!.map((w) => (
+            <button
+              key={w.assignment.id}
+              onClick={() =>
+                setMode({
+                  name: 'detail',
+                  material: w.material,
+                  review: { a: w.assignment, name: w.studentName },
+                })
+              }
+              className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.08] px-3 py-2 text-left transition-transform active:scale-[0.99]"
+            >
+              <span className="min-w-0">
+                <span className="block truncate text-sm font-medium">
+                  {w.studentName} · {w.material.title ?? w.material.topic}
+                </span>
+                <span className="block text-xs text-[var(--night-text-40)]">
+                  авто-балл {w.assignment.auto_score}/{w.assignment.auto_total}
+                  {w.assignment.submitted_at
+                    ? ` · сдано ${new Date(w.assignment.submitted_at).toLocaleDateString('ru-RU')}`
+                    : ''}
+                </span>
+              </span>
+              <span className="shrink-0 text-sm font-medium text-[var(--night-accent-text)]">
+                Проверить ›
+              </span>
+            </button>
+          ))}
+        </Card>
+      )}
+
       <Card>
         <p className="text-sm text-[var(--night-text-70)]">
           Генератор учебных текстов: тема, уровень, формат — AI составит план,
@@ -499,11 +549,14 @@ function PreviewScreen({
 function MaterialDetail({
   material,
   students,
+  initialReview,
   onDeleted,
   onBack,
 }: {
   material: Material
   students: StudentInfo[]
+  /** Открыть сразу проверку конкретной работы (из блока «На проверку»). */
+  initialReview?: { a: MaterialAssignment; name: string }
   onDeleted: () => void
   onBack: () => void
 }) {
@@ -511,7 +564,9 @@ function MaterialDetail({
   const [busyStudent, setBusyStudent] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [showBody, setShowBody] = useState(false)
-  const [reviewing, setReviewing] = useState<{ a: MaterialAssignment; name: string } | null>(null)
+  const [reviewing, setReviewing] = useState<{ a: MaterialAssignment; name: string } | null>(
+    initialReview ?? null,
+  )
   const [printMode, setPrintMode] = useState<'student' | 'teacher' | null>(null)
 
   const reload = useCallback(() => {

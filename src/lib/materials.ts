@@ -310,6 +310,46 @@ export async function countSubmittedWorks(): Promise<number> {
   return count ?? 0
 }
 
+/** Сданная работа для списка «На проверку»: кто, какой материал, когда. */
+export interface SubmittedWork {
+  assignment: MaterialAssignment
+  material: Material
+  studentName: string
+}
+
+/**
+ * Все сданные работы преподавателя разом (для блока «На проверку» во вкладке
+ * «Материалы»). Раньше бейдж показывал только число — преподаватель не видел,
+ * КТО сдал и ЧТО именно проверять, пока не откроет каждый материал вручную.
+ */
+export async function listSubmittedWorks(): Promise<SubmittedWork[]> {
+  const { data, error } = await supabase
+    .from('material_assignments')
+    .select('*, materials(*)')
+    .eq('status', 'submitted')
+    .order('submitted_at', { ascending: true })
+  if (error) throw error
+
+  const rows = (data ?? []) as (MaterialAssignment & { materials: Material | null })[]
+  if (rows.length === 0) return []
+
+  // имена учениц одним запросом (RLS «linked profiles visible» разрешает)
+  const ids = [...new Set(rows.map((r) => r.student_id))]
+  const { data: profs } = await supabase
+    .from('profiles')
+    .select('id, display_name')
+    .in('id', ids)
+  const names = new Map((profs ?? []).map((p) => [p.id as string, p.display_name as string | null]))
+
+  return rows
+    .filter((r) => r.materials)
+    .map(({ materials, ...assignment }) => ({
+      assignment,
+      material: materials as Material,
+      studentName: names.get(assignment.student_id) ?? 'Ученица',
+    }))
+}
+
 /** AI-разбор сданной работы: вердикт и комментарий по каждому упражнению. */
 export async function generateAiReview(
   material: Material,
