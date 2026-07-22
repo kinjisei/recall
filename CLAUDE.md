@@ -544,3 +544,19 @@ npm run build    # проверка типов (tsc -b) + сборка
 - Не ломать контракты из `docs/ARCHITECTURE.md`. Импортировать типы из `src/types`.
 - Каждая фича — в своей папке `features/*` + свой файл `lib/*`. Общие файлы менять аккуратно.
 - После изменений проверять `npm run build`.
+
+- ✅ **Монетизация v1 (2026-07-22, в проде, E2E на проде пройден)** — тарифная
+  механика по решениям грилинга (см. docs/monetization-draft.md, раздел
+  «РЕШЕНИЯ ЗАПУСКА»): планы free/premium(1490₸)/teacher_mini(3000₸,5 уч.)/
+  teacher_start(5000₸,10)/teacher_pro(12000₸,30); триал 14 дней всем новым
+  (trial_until); Free навсегда = статика без лимитов + 5 AI-действий/день
+  (consume_ai_quota → RECALL_FREE_LIMIT, paywall-текст в api/_auth.ts);
+  ученица активного/триального учителя = premium-доступ (has_premium_access).
+  Экран /pricing (публичный, Kaspi +7 776 210 02 21, email в комментарии
+  перевода), /admin (is_admin: поиск по email → admin_set_plan на N месяцев).
+  Блок «ТАРИФЫ И FREE-ЛИМИТЫ» в schema.sql ВЫПОЛНЕН пользователем; владелец
+  (k.yerbolat.2004) — is_admin, девушка (a.abduldina19) — teacher_pro на 100 лет.
+  Смоук на проде: 5 lite-запросов прошли, 6-й → 429 с текстом про Premium.
+  AI-роутинг по сложности: tier lite/standard/max (перевод слова → Groq-8b/
+  Gemini-lite; чат/письмо/разбор → flash-цепочка; материалы учителя →
+  gemini-2.5-pro → 3-pro) + цепочки фолбэков на 429/404 в api/_core.ts.
