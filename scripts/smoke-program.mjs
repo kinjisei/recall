@@ -159,11 +159,11 @@ try {
   for (const id of [tId, sId, xId]) {
     if (id) await admin.auth.admin.deleteUser(id).catch(() => {})
   }
-  await admin
-    .from('allowed_emails')
-    .delete()
-    .in('email', [T_EMAIL, S_EMAIL, X_EMAIL])
-    .catch(() => {})
+  try {
+    await admin.from('allowed_emails').delete().in('email', [T_EMAIL, S_EMAIL, X_EMAIL])
+  } catch {
+    /* подчистка не критична */
+  }
   console.log('Тестовые аккаунты удалены.')
 }
 
