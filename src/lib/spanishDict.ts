@@ -67,6 +67,7 @@ async function lookupAi(word: string): Promise<SpanishLookupResult | null> {
 
   try {
     const raw = await chat([{ role: 'user', content: target }], {
+      tier: 'lite', // перевод одного слова — мини-модель справляется
       system: [
         'Ты — испанско-русский словарь. Пользователь присылает одно испанское слово.',
         'Ответь СТРОГО одним JSON-объектом без пояснений и без markdown:',

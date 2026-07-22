@@ -144,7 +144,7 @@ async function fromGemini(words: string[], simple: boolean): Promise<Record<stri
   try {
     const raw = await chat([{ role: 'user', content: `Words: ${words.join(', ')}` }], {
       system,
-      light: true,
+      tier: 'lite', // простые определения — задача для мини-модели
     })
     const json = raw.slice(raw.indexOf('{'), raw.lastIndexOf('}') + 1)
     const parsed = JSON.parse(json) as Record<string, string>

@@ -8,12 +8,15 @@ import { supabase } from './supabase'
 
 /**
  * Отправляет переписку в /api/gemini и возвращает текст ответа AI.
- * light: true — лёгкая модель (flash-lite) для простых массовых задач:
- * у неё отдельная и бо́льшая бесплатная дневная квота.
+ * tier — уровень сложности задачи, сервер подбирает модель по нему:
+ *   'lite'     — перевод слова, простые определения (мгновенные мини-модели);
+ *   'standard' — чат, письмо, разбор работ, квесты (по умолчанию);
+ *   'max'      — генерация материалов преподавателя (Pro-модели).
+ * light: true — устаревший синоним tier:'lite'.
  */
 export async function chat(
   messages: ChatTurn[],
-  opts?: { system?: string; light?: boolean },
+  opts?: { system?: string; light?: boolean; tier?: 'lite' | 'standard' | 'max' },
 ): Promise<string> {
   // токен сессии — прокси пускает только вошедших (защита квоты от абьюза)
   const {
@@ -31,9 +34,8 @@ export async function chat(
       body: JSON.stringify({
         messages,
         system: opts?.system,
-        // лёгкие массовые задачи — на Groq (щедрее бесплатный лимит),
-        // тяжёлые (материалы, чат, квесты) остаются на Gemini
-        ...(opts?.light ? { provider: 'groq' } : {}),
+        // модель подбирается сервером по уровню сложности задачи
+        tier: opts?.tier ?? (opts?.light ? 'lite' : 'standard'),
       }),
     })
   } catch {

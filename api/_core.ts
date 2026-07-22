@@ -11,22 +11,37 @@ export const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash'
 /** Лёгкая модель для простых массовых задач (отдельная дневная квота). */
 export const LIGHT_GEMINI_MODEL = 'gemini-3.1-flash-lite'
 
-/** Разрешённые модели (клиент может попросить только их). */
+/** Разрешённые модели (клиент может попросить только их; legacy-параметр). */
 export const ALLOWED_MODELS = [DEFAULT_GEMINI_MODEL, LIGHT_GEMINI_MODEL]
 
 /**
- * Цепочка фолбэков при исчерпании дневной квоты (429): у КАЖДОЙ модели своя
- * бесплатная квота, поэтому перебор по цепочке практически убирает «лимит
- * исчерпан» для пользователей. Список сверен с /v1beta/models нашего ключа
- * (2026-07-22). Gemma — последний рубеж: она не поддерживает systemInstruction
- * (см. обработку в callGemini).
+ * Уровень задачи: модель подбирается ПО СЛОЖНОСТИ, а не одна на всё
+ * (принцип «справится ли модель слабее — без потери качества?»):
+ *   lite     — перевод слова в контексте, простые определения;
+ *   standard — чат Диалога, письмо, AI-разбор работ, квесты;
+ *   max      — генерация материалов преподавателя (сложные составные запросы).
+ * Внутри уровня — цепочка фолбэков при 429/404: у каждой модели своя
+ * бесплатная квота, поэтому «лимит исчерпан» почти исчезает. Списки сверены
+ * с /v1beta/models нашего ключа (2026-07-22). Gemma не поддерживает
+ * systemInstruction (см. обработку в callGemini).
  */
-const FALLBACK_MODELS = [
-  'gemini-3.6-flash',
-  'gemini-3.5-flash',
-  'gemini-3.5-flash-lite',
-  'gemma-4-31b-it',
-]
+export type AiTier = 'lite' | 'standard' | 'max'
+
+export const GEMINI_TIER_CHAINS: Record<AiTier, string[]> = {
+  lite: ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-2.0-flash-lite'],
+  standard: [
+    'gemini-2.5-flash',
+    'gemini-3.6-flash',
+    'gemini-3.5-flash',
+    'gemini-3.5-flash-lite',
+    'gemma-4-31b-it',
+  ],
+  // материалы генерируются редко (единицы в день) — можно позволить Pro-модели
+  // с их маленькими бесплатными квотами ради заметно лучшего качества
+  max: ['gemini-2.5-pro', 'gemini-3-pro-preview', 'gemini-2.5-flash', 'gemini-3.6-flash'],
+}
+
+const FALLBACK_MODELS = GEMINI_TIER_CHAINS.standard.slice(1)
 
 interface GeminiResponse {
   candidates?: { content?: { parts?: { text?: string }[] } }[]
@@ -50,6 +65,8 @@ export async function callGemini(
   system: string | undefined,
   apiKey: string,
   model = DEFAULT_GEMINI_MODEL,
+  /** Явная цепочка фолбэков (по умолчанию — standard-цепочка). */
+  fallbacks: string[] = FALLBACK_MODELS,
 ): Promise<string> {
   // system-реплики склеиваем в системную инструкцию, остальные — в contents
   const systemText = [
@@ -93,7 +110,7 @@ export async function callGemini(
 
   // Цепочка моделей: выбранная + фолбэки. 429 (квота) и 404 (модель пропала) —
   // сразу пробуем следующую модель; 5xx — повторяем эту же с паузой.
-  const chain = [model, ...FALLBACK_MODELS.filter((m) => m !== model)]
+  const chain = [model, ...fallbacks.filter((m) => m !== model)]
   let res: Response | null = null
   let lastStatus = 0
 

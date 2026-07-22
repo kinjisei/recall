@@ -11,8 +11,11 @@ const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions'
 /** Модель по умолчанию для лёгких задач (быстрая, качественная, бесплатная). */
 export const DEFAULT_GROQ_MODEL = 'llama-3.3-70b-versatile'
 
+/** Мгновенная мини-модель — для tier 'lite' (перевод слова и т.п.). */
+export const FAST_GROQ_MODEL = 'llama-3.1-8b-instant'
+
 /** Разрешённые Groq-модели (клиент может попросить только их). */
-export const ALLOWED_GROQ_MODELS = [DEFAULT_GROQ_MODEL, 'llama-3.1-8b-instant']
+export const ALLOWED_GROQ_MODELS = [DEFAULT_GROQ_MODEL, FAST_GROQ_MODEL]
 
 interface GroqResponse {
   choices?: { message?: { content?: string } }[]

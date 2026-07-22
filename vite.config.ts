@@ -2,9 +2,15 @@ import { defineConfig, loadEnv, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
-import { ALLOWED_MODELS, callGemini, DEFAULT_GEMINI_MODEL } from './api/_core'
+import {
+  ALLOWED_MODELS,
+  callGemini,
+  DEFAULT_GEMINI_MODEL,
+  GEMINI_TIER_CHAINS,
+  type AiTier,
+} from './api/_core'
 import { transcribeWithGroq } from './api/_stt'
-import { groqChat } from './api/_groq'
+import { groqChat, FAST_GROQ_MODEL } from './api/_groq'
 import type { ChatTurn } from './src/types'
 
 /**
@@ -36,32 +42,42 @@ function geminiDevEndpoint(
           void (async () => {
             res.setHeader('Content-Type', 'application/json')
             try {
-              const { messages, system, model: reqModel, provider } = JSON.parse(raw || '{}') as {
+              const { messages, system, model: reqModel, provider, tier } = JSON.parse(raw || '{}') as {
                 messages?: ChatTurn[]
                 system?: string
                 model?: string
                 provider?: string
+                tier?: string
               }
               if (!Array.isArray(messages) || messages.length === 0) {
                 res.statusCode = 400
                 res.end(JSON.stringify({ error: 'Нужно поле messages (непустой массив)' }))
                 return
               }
-              // лёгкие задачи — на Groq (как в проде)
-              if (provider === 'groq') {
-                if (!groqKey) throw new Error('GROQ_API_KEY не задан в .env.local')
-                const text = await groqChat(messages, system, groqKey)
-                res.end(JSON.stringify({ text }))
-                return
+              // роутинг по уровню сложности — как в проде (api/gemini.ts)
+              const aiTier: AiTier =
+                tier === 'lite' || tier === 'max' || tier === 'standard'
+                  ? tier
+                  : provider === 'groq'
+                    ? 'lite'
+                    : 'standard'
+              if (aiTier === 'lite' && groqKey) {
+                try {
+                  res.end(JSON.stringify({ text: await groqChat(messages, system, groqKey, FAST_GROQ_MODEL) }))
+                  return
+                } catch {
+                  /* мини-Groq лёг — уходим на Gemini-lite */
+                }
               }
               if (!apiKey) {
                 throw new Error(
                   'GEMINI_API_KEY не задан: добавь строку GEMINI_API_KEY=... в .env.local и перезапусти npm run dev',
                 )
               }
+              const chain = GEMINI_TIER_CHAINS[aiTier]
               const chosen =
-                reqModel && ALLOWED_MODELS.includes(reqModel) ? reqModel : model
-              const text = await callGemini(messages, system, apiKey, chosen)
+                reqModel && ALLOWED_MODELS.includes(reqModel) ? reqModel : chain[0]
+              const text = await callGemini(messages, system, apiKey, chosen, chain)
               res.end(JSON.stringify({ text }))
             } catch (e) {
               const msg = e instanceof Error ? e.message : 'Ошибка AI'
