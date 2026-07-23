@@ -7,13 +7,16 @@ import { useLanguage } from '../../context/LanguageContext'
 import { getUserLevel } from '../../lib/level'
 import { getSettings, READER_CLASSES } from '../../lib/settings'
 import { SpanishReaderPage } from './SpanishReader'
+import { AddTextForm, MyTextReader, MyTextsList } from './MyTextsBlock'
+import type { MyText } from '../../lib/myTexts'
 import { sampleTexts, type SampleText } from './sampleTexts'
 import type { CEFRLevel } from '../../types'
 import { useScrollTop } from '../../lib/useScrollTop'
 
 const levels: CEFRLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1']
 
-/** Читалка: английский — тексты + словарь; испанский — свой раздел. */
+/** Читалка: английский — тексты + словарь; испанский — свой раздел.
+ *  «Мои тексты» (вставка/PDF/DOCX/TXT) — общие для обоих языков. */
 export function ReaderPage({
   title = 'Тексты и диалоги',
   header,
@@ -24,8 +27,30 @@ export function ReaderPage({
   onBack?: () => void
 }) {
   const { lang } = useLanguage()
-  if (lang === 'es') return <SpanishReaderPage title={title} header={header} onBack={onBack} />
-  return <EnglishReaderPage title={title} header={header} onBack={onBack} />
+  // свои тексты: 'add' — форма добавления, MyText — чтение
+  const [my, setMy] = useState<'add' | MyText | null>(null)
+  useEffect(() => setMy(null), [lang])
+
+  if (my === 'add') {
+    return (
+      <AddTextForm
+        lang={lang}
+        onDone={(t) => setMy(t ?? null)}
+      />
+    )
+  }
+  if (my) {
+    return <MyTextReader text={my} lang={lang} onBack={() => setMy(null)} />
+  }
+
+  const fullHeader = (
+    <>
+      {header}
+      <MyTextsList lang={lang} onAdd={() => setMy('add')} onOpen={(t) => setMy(t)} />
+    </>
+  )
+  if (lang === 'es') return <SpanishReaderPage title={title} header={fullHeader} onBack={onBack} />
+  return <EnglishReaderPage title={title} header={fullHeader} onBack={onBack} />
 }
 
 function EnglishReaderPage({
