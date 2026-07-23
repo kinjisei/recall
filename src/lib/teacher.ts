@@ -5,7 +5,8 @@
 // Доступы разруливает RLS (docs/schema.sql, блок «ФАЗА 4»).
 // ============================================================================
 import { supabase, requireUserId } from './supabase'
-import type { Deck, Profile } from '../types'
+import { addCardsBulk } from './cards'
+import type { Card, Deck, Profile } from '../types'
 
 /** Сводка по ученице для экрана преподавателя. */
 export interface StudentInfo {
@@ -132,6 +133,52 @@ export async function getMyStudents(): Promise<StudentInfo[]> {
         .map((a) => a.deck_id as string),
     }
   })
+}
+
+/** Слова набора (для просмотра перед назначением — раньше назначали вслепую). */
+export async function listDeckCards(deckId: string): Promise<Card[]> {
+  const { data, error } = await supabase
+    .from('cards')
+    .select('*')
+    .eq('deck_id', deckId)
+    .order('created_at', { ascending: true })
+  if (error) throw error
+  return (data ?? []) as Card[]
+}
+
+/**
+ * Назначить ученице ВЫБОРКУ слов из набора: создаётся новая колода
+ * «<Название> — выборка для <имя>» с копиями выбранных карточек, и она
+ * назначается ученице. Оригинальный набор не меняется; у копий своё
+ * расписание FSRS. Возвращает число скопированных карточек.
+ */
+export async function assignSelectedWords(
+  sourceDeck: Deck,
+  studentId: string,
+  studentName: string,
+  cards: Card[],
+): Promise<number> {
+  const teacherId = await requireUserId()
+  if (cards.length === 0) return 0
+
+  const title = `${sourceDeck.title} — выборка для ${studentName}`.slice(0, 120)
+  const { data: deck, error } = await supabase
+    .from('decks')
+    .insert({ owner_id: teacherId, title, lang: sourceDeck.lang ?? 'en' })
+    .select()
+    .single()
+  if (error) throw new Error(error.message)
+
+  const added = await addCardsBulk(
+    (deck as Deck).id,
+    cards.map((c) => ({
+      front: c.front,
+      back: c.back ?? undefined,
+      example: c.example ?? undefined,
+    })),
+  )
+  await assignDeck((deck as Deck).id, studentId)
+  return added
 }
 
 /** Назначить колоду ученице. */

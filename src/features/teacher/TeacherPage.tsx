@@ -19,6 +19,7 @@ import { StudentWordsSection } from './StudentWordsSection'
 import { QuestSection } from './QuestSection'
 import { DiagnosticsSection } from './DiagnosticsSection'
 import { ProgramSection } from './ProgramSection'
+import { DeckWordsPicker } from './DeckWordsPicker'
 import { countSubmittedWorks } from '../../lib/materials'
 import type { Deck, Profile } from '../../types'
 
@@ -203,6 +204,8 @@ function StudentCard({
   const [showQuests, setShowQuests] = useState(false)
   const [showDiag, setShowDiag] = useState(false)
   const [showProgram, setShowProgram] = useState(false)
+  /** id набора, чьи слова сейчас раскрыты (просмотр + выборочное назначение). */
+  const [openDeck, setOpenDeck] = useState<string | null>(null)
   const [busyDeck, setBusyDeck] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const p = student.profile
@@ -256,23 +259,41 @@ function StudentCard({
         <div className="flex flex-col gap-2">
           {decks.map((d) => {
             const assigned = student.assignedDeckIds.includes(d.id)
+            const opened = openDeck === d.id
             return (
               <div
                 key={d.id}
-                className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.08] px-3 py-2 dark:border-white/[0.08]"
+                className="flex flex-col gap-2 rounded-xl border border-white/[0.08] px-3 py-2 dark:border-white/[0.08]"
               >
-                <p className="min-w-0 truncate text-sm font-medium">
-                  {d.title}{' '}
-                  <span className="text-xs text-[var(--night-text-40)]">({d.lang ?? 'en'})</span>
-                </p>
-                <Button
-                  variant={assigned ? 'ghost' : 'secondary'}
-                  className="shrink-0 px-3 py-1.5 text-sm"
-                  disabled={busyDeck !== null}
-                  onClick={() => toggleDeck(d)}
-                >
-                  {busyDeck === d.id ? '…' : assigned ? 'Убрать ✓' : 'Назначить'}
-                </Button>
+                <div className="flex items-center justify-between gap-2">
+                  {/* тап по названию раскрывает слова — назначение больше не вслепую */}
+                  <button
+                    onClick={() => setOpenDeck(opened ? null : d.id)}
+                    className="min-h-[44px] min-w-0 flex-1 text-left text-sm font-medium"
+                    aria-expanded={opened}
+                  >
+                    <span className="truncate">{d.title}</span>{' '}
+                    <span className="text-xs text-[var(--night-text-40)]">
+                      ({d.lang ?? 'en'}) {opened ? '▾' : '▸ слова'}
+                    </span>
+                  </button>
+                  <Button
+                    variant={assigned ? 'ghost' : 'secondary'}
+                    className="shrink-0 px-3 py-1.5 text-sm"
+                    disabled={busyDeck !== null}
+                    onClick={() => toggleDeck(d)}
+                  >
+                    {busyDeck === d.id ? '…' : assigned ? 'Убрать ✓' : 'Назначить'}
+                  </Button>
+                </div>
+                {opened && (
+                  <DeckWordsPicker
+                    deck={d}
+                    studentId={p.id}
+                    studentName={p.display_name ?? 'ученицы'}
+                    onAssigned={onChanged}
+                  />
+                )}
               </div>
             )
           })}
