@@ -145,6 +145,20 @@ for (const file of ['src/data/spanish/placement_test.json', 'src/data/english/pl
   }
 }
 
+// ---- словарные паки EN (идиомы, база): структура и связность topic_id ----
+for (const file of ['src/data/english/words/words_idioms.json', 'src/data/english/words/words_base.json']) {
+  const data = JSON.parse(readFileSync(path.join(root, file), 'utf8'))
+  const topicIds = new Set(data.topics.map((t) => t.id))
+  if (topicIds.size !== data.topics.length) problems.push(`${file}: дубли id тем`)
+  for (const w of data.words) {
+    checked++
+    const at = `${file} · «${w.english}»`
+    if (!w.english?.trim() || !w.russian?.trim()) problems.push(`${at}: пустое слово/перевод`)
+    if (!['A1', 'A2', 'B1', 'B2', 'C1'].includes(w.level)) problems.push(`${at}: level «${w.level}»`)
+    if (!topicIds.has(w.topic_id)) problems.push(`${at}: topic_id ${w.topic_id} без темы`)
+  }
+}
+
 console.log(`Проверено упражнений/записей: ${checked}`)
 if (warn.length) {
   console.log(`\nПредупреждения (${warn.length}):`)

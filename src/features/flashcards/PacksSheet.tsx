@@ -62,7 +62,16 @@ export function PacksSheet({ lang, onAdded }: { lang: AppLang; onAdded: () => vo
     loadPacks(lang).then((loaded) => {
       if (!alive) return
       setData(loaded)
-      setOpenLevel(loaded.topics[0]?.level ?? null)
+      // авто-раскрытие первого уровня; ключ теперь «категория:уровень»
+      const first = loaded.topics[0]
+      if (first) {
+        const cat = first.name.startsWith('База')
+          ? 'base'
+          : first.name.startsWith('Идиомы')
+            ? 'idioms'
+            : 'themes'
+        setOpenLevel(`${cat}:${first.level}`)
+      }
     })
     return () => {
       alive = false
