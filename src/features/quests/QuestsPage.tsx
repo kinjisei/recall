@@ -8,6 +8,8 @@
 // ============================================================================
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useKeyboardInset } from '../../lib/useKeyboardInset'
+import { useChatList } from '../../lib/useChatList'
 import { IconPuzzle, IconSend, IconBadgeCheck, IconPencil } from '../../components/icons'
 import { BackHeader } from '../../components/BackButton'
 import { Card } from '../../components/Card'
@@ -129,12 +131,16 @@ function QuestChat({ quest, onBack }: { quest: GrammarQuest; onBack: () => void 
   const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const bottomRef = useRef<HTMLDivElement | null>(null)
   const startedRef = useRef(false)
+  const kb = useKeyboardInset()
+  // мессенджер-паттерн (как в «Диалоге»): лента скроллится внутри себя,
+  // заголовок и прогресс всегда видны, клавиатура ничего не сдвигает
+  const { listRef, height } = useChatList(kb, [msgs, busy])
 
+  // вход в квест — всегда с верха страницы (заголовок и прогресс на виду)
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [msgs, busy])
+    window.scrollTo(0, 0)
+  }, [])
 
   const talk = async (history: ChatTurn[]) => {
     setBusy(true)
@@ -213,7 +219,12 @@ function QuestChat({ quest, onBack }: { quest: GrammarQuest; onBack: () => void 
         </div>
       </div>
 
-      <div className="flex flex-col gap-2">
+      {/* лента: внутренний скролл до панели ввода */}
+      <div
+        ref={listRef}
+        style={height ? { height } : undefined}
+        className="flex flex-col gap-2 overflow-y-auto overscroll-contain"
+      >
         {msgs
           .filter((m) => m.content !== START_MARK)
           .map((m, i) => (
@@ -233,38 +244,44 @@ function QuestChat({ quest, onBack }: { quest: GrammarQuest; onBack: () => void 
             печатает…
           </div>
         )}
-        <div ref={bottomRef} />
+        {error && <p className="text-sm text-red-500">{error}</p>}
+        {completed && (
+          <Card className="flex-none items-center text-center">
+            <IconBadgeCheck size={40} className="animate-pop-in text-[var(--night-accent-text)]" />
+            <p className="mt-1 font-semibold">Квест пройден!</p>
+            <p className="text-sm text-[var(--night-text-40)]">
+              {quest.target} верных ответов по теме «{quest.topic}». Преподаватель увидит результат.
+            </p>
+          </Card>
+        )}
       </div>
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
-
-      {completed ? (
-        <Card className="items-center text-center">
-          <IconBadgeCheck size={40} className="animate-pop-in text-[var(--night-accent-text)]" />
-          <p className="mt-1 font-semibold">Квест пройден!</p>
-          <p className="text-sm text-[var(--night-text-40)]">
-            {quest.target} верных ответов по теме «{quest.topic}». Преподаватель увидит результат.
-          </p>
-        </Card>
-      ) : (
-        <form onSubmit={send} className="flex items-center gap-2.5">
-          <input
-            aria-label={quest.lang === 'es' ? 'Ответ по-испански' : 'Ответ по-английски'}
-            className="h-12 min-w-0 flex-1 rounded-[14px] border-none bg-[var(--night-input)] px-4 text-[15px] outline-none placeholder:text-[var(--night-text-40)] focus:ring-2 focus:ring-[var(--night-accent-45)]"
-            placeholder={quest.lang === 'es' ? 'Escribe en español…' : 'Write in English…'}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            disabled={busy}
-          />
-          <button
-            type="submit"
-            aria-label="Отправить"
-            disabled={busy || !input.trim()}
-            className="lift flex h-12 w-12 flex-none items-center justify-center rounded-[14px] border border-[var(--night-accent-45)] bg-[rgba(145,132,217,.14)] text-[var(--night-accent-100)] transition-colors hover:bg-[rgba(145,132,217,.22)] disabled:opacity-40"
-          >
-            <IconSend size={20} />
-          </button>
-        </form>
+      {/* панель ввода прижата к низу (как в «Диалоге»): над клавиатурой или
+          над плавающей навигацией */}
+      {!completed && (
+        <div
+          className="fixed inset-x-0 z-30 mx-auto max-w-screen-sm border-t border-white/[0.06] bg-[var(--night-bg)] px-4 pb-2 pt-2"
+          style={{ bottom: kb > 0 ? kb : 'calc(5.5rem + env(safe-area-inset-bottom))' }}
+        >
+          <form onSubmit={send} className="flex items-center gap-2.5">
+            <input
+              aria-label={quest.lang === 'es' ? 'Ответ по-испански' : 'Ответ по-английски'}
+              className="h-12 min-w-0 flex-1 rounded-[14px] border-none bg-[var(--night-input)] px-4 text-[15px] outline-none placeholder:text-[var(--night-text-40)] focus:ring-2 focus:ring-[var(--night-accent-45)]"
+              placeholder={quest.lang === 'es' ? 'Escribe en español…' : 'Write in English…'}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              disabled={busy}
+            />
+            <button
+              type="submit"
+              aria-label="Отправить"
+              disabled={busy || !input.trim()}
+              className="lift flex h-12 w-12 flex-none items-center justify-center rounded-[14px] border border-[var(--night-accent-45)] bg-[rgba(145,132,217,.14)] text-[var(--night-accent-100)] transition-colors hover:bg-[rgba(145,132,217,.22)] disabled:opacity-40"
+            >
+              <IconSend size={20} />
+            </button>
+          </form>
+        </div>
       )}
     </div>
   )

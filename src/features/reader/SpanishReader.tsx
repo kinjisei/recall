@@ -23,6 +23,7 @@ import {
   spanishReadings,
 } from '../../data/spanish'
 import type { SpanishDialogue, SpanishReading } from '../../types'
+import { useScrollTop } from '../../lib/useScrollTop'
 
 type Kind = 'texts' | 'dialogues'
 
@@ -44,6 +45,7 @@ export function SpanishReaderPage({
   const [level, setLevel] = useState<string>('A1')
   const [reading, setReading] = useState<SpanishReading | null>(null)
   const [dialogue, setDialogue] = useState<SpanishDialogue | null>(null)
+  useScrollTop(reading ?? dialogue)
 
   if (reading) {
     return <ReadingView reading={reading} onBack={() => setReading(null)} />

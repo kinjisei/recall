@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useKeyboardInset } from '../../lib/useKeyboardInset'
+import { useChatList } from '../../lib/useChatList'
 import {
   IconDialog,
   IconSend,
@@ -178,12 +179,10 @@ function ChatSection({ level, lang }: { level: CEFRLevel; lang: AppLang }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const convIdRef = useRef<string | null>(null)
-  const bottomRef = useRef<HTMLDivElement | null>(null)
   const kb = useKeyboardInset() // высота клавиатуры — панель ввода над ней
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [msgs, busy])
+  // лента скроллится ВНУТРИ себя (мессенджер-паттерн): шапка всегда видна,
+  // клавиатура сжимает список, новые сообщения показывают низ ленты
+  const { listRef, height } = useChatList(kb, [msgs, busy])
 
   // Сохраняем реплики в БД; сбой сохранения не должен ломать сам чат.
   const persist = async (turns: ChatTurn[]) => {
@@ -247,11 +246,16 @@ function ChatSection({ level, lang }: { level: CEFRLevel; lang: AppLang }) {
   }
 
   return (
-    // Лента в потоке, ПАНЕЛЬ ВВОДА фиксирована у низа (см. ниже). Внизу большой
-    // отступ, чтобы последнее сообщение не пряталось за панелью.
-    <div className="flex flex-col gap-3 pb-[calc(11rem+env(safe-area-inset-bottom))]">
+    // Лента — внутренний скролл фиксированной высоты, панель ввода прижата к
+    // низу. Страница НЕ скроллится: шапка приложения остаётся на месте.
+    <div className="flex flex-col gap-3">
+      <div
+        ref={listRef}
+        style={height ? { height } : undefined}
+        className="flex flex-col gap-3 overflow-y-auto overscroll-contain"
+      >
       {msgs.length === 0 && (
-        <Card>
+        <Card className="flex-none">
           <p className="text-[var(--night-text-70)]">
             {lang === 'es'
               ? 'Напиши что-нибудь по-испански — AI ответит просто, поддержит разговор и отдельной строкой поправит ошибки.'
@@ -283,10 +287,10 @@ function ChatSection({ level, lang }: { level: CEFRLevel; lang: AppLang }) {
             печатает…
           </div>
         )}
-        <div ref={bottomRef} />
       </div>
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && <p className="flex-none text-sm text-red-500">{error}</p>}
+      </div>
 
       {/* Панель ввода прижата к низу. Когда открыта клавиатура (visualViewport
           даёт её высоту kb) — поднимаем панель над ней; иначе панель стоит над

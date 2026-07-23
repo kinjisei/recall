@@ -37,6 +37,7 @@ import { countMyWords } from '../../lib/cards'
 import { currentGuidedStep, skipReviewIfNoWords } from '../../lib/guided'
 import { getMistakes } from '../../lib/mistakes'
 import { DeckReview } from '../flashcards/DeckReview'
+import { useScrollTop } from '../../lib/useScrollTop'
 
 const MatchMode = lazy(() => import('../words/MatchMode').then((m) => ({ default: m.MatchMode })))
 const GapMode = lazy(() => import('../words/QuizModes').then((m) => ({ default: m.GapMode })))
@@ -148,6 +149,8 @@ export function PracticePage() {
   // не делал, игра не открывалась заново.
   const raw = searchParams.get('m') as Mode | null
   const mode: Mode = raw && GAME_MODES.has(raw) ? raw : 'hub'
+  // смена ?m= маршрут не меняет — глобальный ScrollToTop не срабатывает
+  useScrollTop(mode)
   const setMode = (m: Mode) =>
     setSearchParams(m === 'hub' ? {} : { m }, { replace: false })
 

@@ -27,6 +27,7 @@ import {
 import type { StudentInfo } from '../../lib/teacher'
 import { ReviewScreen } from './ReviewScreen'
 import { PrintSheet } from './PrintSheet'
+import { useScrollTop } from '../../lib/useScrollTop'
 import type {
   AppLang,
   CEFRLevel,
@@ -50,6 +51,8 @@ type Mode =
 
 export function MaterialsSection({ students }: { students: StudentInfo[] }) {
   const [mode, setMode] = useState<Mode>({ name: 'list' })
+  // список → форма → предпросмотр → материал: каждый шаг с верха экрана
+  useScrollTop(mode.name)
   // ошибка RLS/сети не должна выглядеть как «материалов нет»
   const {
     data: materials,

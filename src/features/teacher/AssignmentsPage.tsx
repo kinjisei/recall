@@ -18,6 +18,7 @@ import {
   getMyAssignments,
   submitAssignment,
 } from '../../lib/materials'
+import { useScrollTop } from '../../lib/useScrollTop'
 import type {
   AppLang,
   AssignmentAnswer,
@@ -30,6 +31,7 @@ type Row = MaterialAssignment & { material: Material }
 export function AssignmentsPage() {
   const navigate = useNavigate()
   const [active, setActive] = useState<Row | null>(null)
+  useScrollTop(active)
   // повторное прохождение проверенной работы — тренировка без пересдачи
   const [retry, setRetry] = useState(false)
 
@@ -251,6 +253,7 @@ function AssignmentRunner({
 }) {
   const m = row.material
   const [stage, setStage] = useState<'read' | 'exercises' | 'result'>('read')
+  useScrollTop(stage)
   const [index, setIndex] = useState(0)
   // ответы по индексу упражнения (а не push) — повторный ответ на то же
   // упражнение перезаписывает запись, не задваивая балл и не плодя дубли.

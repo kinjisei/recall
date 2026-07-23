@@ -7,6 +7,7 @@ import {
 } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
+import { clearProfileCaches } from '../lib/profile'
 
 interface AuthContextValue {
   user: User | null
@@ -62,6 +63,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut()
+    // кэши профиля (память + localStorage-уровень) не должны пережить аккаунт
+    clearProfileCaches()
   }
 
   return (

@@ -9,6 +9,7 @@ import { getSettings, READER_CLASSES } from '../../lib/settings'
 import { SpanishReaderPage } from './SpanishReader'
 import { sampleTexts, type SampleText } from './sampleTexts'
 import type { CEFRLevel } from '../../types'
+import { useScrollTop } from '../../lib/useScrollTop'
 
 const levels: CEFRLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1']
 
@@ -38,6 +39,7 @@ function EnglishReaderPage({
 }) {
   const [level, setLevel] = useState<CEFRLevel>('B1')
   const [active, setActive] = useState<SampleText | null>(null)
+  useScrollTop(active)
   // пока не пришёл уровень из профиля, не перещёлкивать вкладку под пальцем
   const userPicked = useRef(false)
 
