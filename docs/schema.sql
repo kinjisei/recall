@@ -1423,3 +1423,38 @@
   drop policy if exists "student reads own plans" on public.study_plans;
   create policy "student reads own plans" on public.study_plans
     for select using (auth.uid() = student_id);
+
+  -- ============================================================================
+  -- ОТКРЫТАЯ РЕГИСТРАЦИЯ (2026-07-23): выключение белого списка.
+  -- До этого блока триггер handle_new_user отклонял регистрацию любого email,
+  -- которого нет в allowed_emails (RECALL_NOT_INVITED) — посторонние не могли
+  -- зарегистрироваться вовсе. Для публичного запуска регистрацию открываем:
+  -- защита от абьюза уже на другом слое — триал 14 дней, потом Free-лимит
+  -- 5 AI-действий/день (consume_ai_quota) + флаг blocked для нарушителей.
+  -- Таблица allowed_emails и обзор access_overview остаются (история, блок-лист
+  -- в будущем можно вернуть, снова добавив проверку).
+  -- ВЫПОЛНЯТЬ ТОЛЬКО КОГДА РЕШИШЬ ОТКРЫТЬСЯ ПУБЛИЧНО.
+  -- ============================================================================
+
+  create or replace function public.handle_new_user()
+  returns trigger
+  language plpgsql
+  security definer
+  set search_path = public
+  as $$
+  begin
+    insert into public.profiles (id, display_name)
+    values (
+      new.id,
+      coalesce(new.raw_user_meta_data->>'display_name', split_part(new.email, '@', 1))
+    )
+    on conflict (id) do nothing;
+
+    insert into public.decks (owner_id, title, description, lang)
+    values
+      (new.id, 'Мои слова',    'Английские слова из чтения и добавленные вручную', 'en'),
+      (new.id, 'Mis palabras', 'Испанские слова из паков, чтения и добавленные вручную', 'es');
+
+    return new;
+  end;
+  $$;
