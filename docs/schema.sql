@@ -26,7 +26,7 @@
     title text not null,
     description text,
     is_shared boolean default false,
-    lang text not nulзаl default 'en',
+    lang text not null default 'en',
     created_at timestamptz default now()
   );
 
