@@ -4,6 +4,7 @@
 // преподаватель. Пункты — ориентиры: чем заниматься на этой неделе в разделах
 // «Учёба», «Практика» и «Диалог».
 // ============================================================================
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BackHeader } from '../../components/BackButton'
 import { Card } from '../../components/Card'
@@ -20,6 +21,17 @@ export function ProgramPage() {
     [],
     'Не удалось загрузить программу',
   )
+
+  // программа открыта — уведомление «тебе назначили программу» на Главной гаснет
+  useEffect(() => {
+    for (const p of plans ?? []) {
+      try {
+        localStorage.setItem(`recall.program_seen.${p.id}`, '1')
+      } catch {
+        /* приватный режим — уведомление просто останется */
+      }
+    }
+  }, [plans])
 
   return (
     <div className="flex flex-col gap-4">

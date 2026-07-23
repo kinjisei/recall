@@ -9,7 +9,8 @@
 import { supabase } from './supabase'
 import { getStudentWords } from './wordChecks'
 import { listStudentQuests } from './quests'
-import { finalScore } from './assignmentScore'
+import { finalScore, scoreSamples } from './assignmentScore'
+import { computeDynamics, type MonthDynamics } from './dynamics'
 import type {
   AppLang,
   GrammarQuest,
@@ -67,6 +68,8 @@ export interface StudentDiagnostics {
   activeDays14: number
   /** Последний день занятий (YYYY-MM-DD) или null. */
   lastActiveDay: string | null
+  /** «Сейчас vs 30 дней назад» — считается из тех же данных (lib/dynamics). */
+  dynamics: MonthDynamics
 }
 
 /** YYYY-MM-DD в местном времени со сдвигом в днях. */
@@ -96,7 +99,7 @@ export async function getStudentDiagnostics(studentId: string): Promise<StudentD
       .from('activity_log')
       .select('day')
       .eq('user_id', studentId)
-      .gte('day', localDay(-13)),
+      .gte('day', localDay(-59)), // 60 дней: хватает и на «за 14», и на динамику
   ])
 
   // --- слова -----------------------------------------------------------
@@ -181,6 +184,20 @@ export async function getStudentDiagnostics(studentId: string): Promise<StudentD
   // --- активность ----------------------------------------------------------
   if (activityRes.error) throw activityRes.error
   const days = [...new Set((activityRes.data ?? []).map((r) => r.day as string))].sort()
+  const from14 = localDay(-13)
+
+  // --- динамика «сейчас vs 30 дней назад» -----------------------------------
+  const dynamics = computeDynamics({
+    activityDays: days,
+    scoreSamples: rows.flatMap((a) => scoreSamples(a)),
+    mistakeDates: mistakesAvailable
+      ? (mistakesRes.data ?? []).map((r) => r.created_at as string)
+      : [],
+    cardCreatedDates: words.map((w) => w.card.created_at),
+    learnedLastReviews: words
+      .filter((w) => w.status === 'learned')
+      .map((w) => w.state?.last_review ?? null),
+  })
 
   return {
     words: diagWords,
@@ -190,7 +207,8 @@ export async function getStudentDiagnostics(studentId: string): Promise<StudentD
     mistakes,
     mistakesAvailable,
     quests,
-    activeDays14: days.length,
+    activeDays14: days.filter((d) => d >= from14).length,
     lastActiveDay: days.length > 0 ? days[days.length - 1] : null,
+    dynamics,
   }
 }

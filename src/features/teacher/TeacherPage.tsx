@@ -307,7 +307,9 @@ function StudentCard({
       >
         {showDiag ? '▾ Скрыть диагностику' : '▸ Диагностическая карта'}
       </button>
-      {showDiag && <DiagnosticsSection studentId={p.id} />}
+      {showDiag && (
+        <DiagnosticsSection studentId={p.id} studentName={p.display_name ?? 'Ученица'} />
+      )}
 
       <button
         onClick={() => setShowProgram((v) => !v)}

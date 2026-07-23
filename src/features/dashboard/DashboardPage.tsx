@@ -18,6 +18,7 @@ import {
   IconPlus,
   IconSpeaker,
   IconCards,
+  IconRows,
   type IconLike,
 } from '../../components/icons'
 import { useAuth } from '../../context/AuthContext'
@@ -28,6 +29,7 @@ import { countDueCards } from '../../lib/fsrs'
 import { cachedWordOfDay, newWordOfDay, type PoolItem } from '../../lib/wordPool'
 import { addCard, countMyWords } from '../../lib/cards'
 import { getEsLevel } from '../../lib/esLevel'
+import { getMyPlans } from '../../lib/studyPlan'
 import { startGuided } from '../../lib/guided'
 import { speak } from '../../lib/speech'
 import { RowCard } from '../../components/RowCard'
@@ -37,7 +39,7 @@ import {
   loadAssignmentCounts,
   type AssignmentCounts,
 } from '../teacher/TeacherBlock'
-import type { ActivityType, Profile } from '../../types'
+import type { ActivityType, Profile, StudyPlan } from '../../types'
 
 interface PlanItem {
   to: string
@@ -68,6 +70,8 @@ export function DashboardPage() {
   const [wordOfDay, setWordOfDay] = useState<PoolItem | null>(null)
   // один запрос на обе плашки заданий (top и bottom)
   const [assignments, setAssignments] = useState<AssignmentCounts | null>(null)
+  // программа, которую ученица ещё не открывала (флаг recall.program_seen.<id>)
+  const [newProgram, setNewProgram] = useState<StudyPlan | null>(null)
 
   useEffect(() => {
     if (!user) return
@@ -76,6 +80,18 @@ export function DashboardPage() {
     getTodayTypes().then(setDoneToday).catch(() => {})
     getWeek().then(setWeek).catch(() => {})
     loadAssignmentCounts().then(setAssignments).catch(() => {})
+    getMyPlans()
+      .then((plans) => {
+        const unseen = plans.find((p) => {
+          try {
+            return !localStorage.getItem(`recall.program_seen.${p.id}`)
+          } catch {
+            return false
+          }
+        })
+        setNewProgram(unseen ?? null)
+      })
+      .catch(() => {}) // таблицы может не быть — карточка просто не покажется
   }, [user])
 
   useEffect(() => {
@@ -160,6 +176,18 @@ export function DashboardPage() {
 
       {/* 3. Новое задание от преподавателя */}
       <AssignmentsNotice placement="top" counts={assignments} />
+
+      {/* 3б. Новая программа обучения (гаснет после открытия /program) */}
+      {newProgram && (
+        <RowCard
+          Icon={IconRows}
+          title="Тебе назначили программу обучения"
+          desc={`${newProgram.lang.toUpperCase()} · ${newProgram.weeks.length} нед. — посмотри план на эту неделю`}
+          to="/program"
+          active
+          className="animate-fade-up"
+        />
+      )}
 
       {/* 4. Начать занятие */}
       <button

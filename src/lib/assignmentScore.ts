@@ -56,6 +56,24 @@ function lastFinishedAttempt(attempts: AttemptSnapshot[] | null): AttemptSnapsho
   return null
 }
 
+/**
+ * Все сданные попытки работы с датой и финальным процентом (текущая +
+ * история attempts) — сырьё для «Динамики за месяц» (lib/dynamics).
+ */
+export function scoreSamples(a: MaterialAssignment): { at: string; percent: number }[] {
+  const out: { at: string; percent: number }[] = []
+  if (a.submitted_at) {
+    const p = attemptPercent(a)
+    if (p !== null) out.push({ at: a.submitted_at, percent: p })
+  }
+  for (const att of a.attempts ?? []) {
+    if (!att.submitted_at) continue
+    const p = attemptPercent(att)
+    if (p !== null) out.push({ at: att.submitted_at, percent: p })
+  }
+  return out
+}
+
 export function finalScore(a: MaterialAssignment): FinalScore {
   const current = attemptPercent(a)
   if (current !== null) {

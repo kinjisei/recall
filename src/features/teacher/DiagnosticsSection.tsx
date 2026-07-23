@@ -6,7 +6,10 @@
 // AI-квесты, активность за 14 дней. Данные — lib/diagnostics.ts, только чтение.
 // ============================================================================
 import { useEffect, useState } from 'react'
+import { Button } from '../../components/Button'
 import { getStudentDiagnostics, type StudentDiagnostics } from '../../lib/diagnostics'
+import type { MetricDelta } from '../../lib/dynamics'
+import { ReportSheet } from './ReportSheet'
 import type { AppLang, GrammarTopic, MaterialExerciseKind } from '../../types'
 
 const KIND_LABELS: Record<MaterialExerciseKind, string> = {
@@ -37,6 +40,45 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   )
 }
 
+/**
+ * Строка динамики «prev → now» со стрелкой. Стрелка-глиф + цвет (статусные
+ * emerald/red, не серийные) — направление читается и без цвета (dataviz:
+ * не кодировать смысл одним цветом). moreIsBetter=false — для ошибок.
+ */
+function TrendRow({
+  label,
+  d,
+  unit,
+  moreIsBetter = true,
+}: {
+  label: string
+  d: MetricDelta
+  unit: string
+  moreIsBetter?: boolean
+}) {
+  const hasPrev = d.prev !== null
+  const diff = hasPrev && d.now !== null ? d.now - (d.prev as number) : null
+  const improved = diff !== null && diff !== 0 && diff > 0 === moreIsBetter
+  return (
+    <div className="flex items-baseline justify-between gap-2 text-sm">
+      <span className="text-[var(--night-text-70)]">{label}</span>
+      <span className="shrink-0 tabular-nums">
+        <span className="text-[var(--night-text-40)]">
+          {d.prev === null ? '—' : `${d.prev}${unit}`}
+        </span>
+        <span className="mx-1 text-[var(--night-text-25)]">→</span>
+        <span className="font-semibold">{d.now === null ? '—' : `${d.now}${unit}`}</span>
+        {diff !== null && diff !== 0 && (
+          <span className={`ml-1.5 text-xs ${improved ? 'text-emerald-400' : 'text-red-400'}`}>
+            {diff > 0 ? '↑' : '↓'}
+            {Math.abs(diff)}
+          </span>
+        )}
+      </span>
+    </div>
+  )
+}
+
 /** Процент → цвет: слабое место должно бросаться в глаза. */
 function pctTone(pct: number): string {
   if (pct >= 80) return 'text-emerald-400'
@@ -44,10 +86,17 @@ function pctTone(pct: number): string {
   return 'text-red-400'
 }
 
-export function DiagnosticsSection({ studentId }: { studentId: string }) {
+export function DiagnosticsSection({
+  studentId,
+  studentName,
+}: {
+  studentId: string
+  studentName: string
+}) {
   const [diag, setDiag] = useState<StudentDiagnostics | null>(null)
   const [titles, setTitles] = useState<TopicTitles>(new Map())
   const [error, setError] = useState<string | null>(null)
+  const [showReport, setShowReport] = useState(false)
 
   useEffect(() => {
     let alive = true
@@ -89,6 +138,40 @@ export function DiagnosticsSection({ studentId }: { studentId: string }) {
 
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-white/[0.08] p-3">
+      {/* динамика месяца: сейчас vs 30 дней назад */}
+      <SectionTitle>Динамика за месяц</SectionTitle>
+      <div className="flex flex-col gap-1">
+        <TrendRow label="Дней с занятиями" d={diag.dynamics.activeDays} unit="" />
+        <TrendRow label="Средний балл работ" d={diag.dynamics.avgScore} unit="%" />
+        <TrendRow label="Слов добавлено" d={diag.dynamics.wordsAdded} unit="" />
+        <TrendRow
+          label="Новых ошибок грамматики"
+          d={diag.dynamics.newMistakes}
+          unit=""
+          moreIsBetter={false}
+        />
+        {diag.dynamics.learnedRecently > 0 && (
+          <p className="text-xs text-[var(--night-text-40)]">
+            За 30 дней выучено слов: {diag.dynamics.learnedRecently}
+          </p>
+        )}
+      </div>
+      <Button
+        variant="secondary"
+        className="self-start px-3 py-2 text-sm"
+        onClick={() => setShowReport(true)}
+      >
+        🖨 Отчёт для родителей
+      </Button>
+      {showReport && (
+        <ReportSheet
+          diag={diag}
+          studentName={studentName}
+          topicTitle={(lng, id) => titles.get(`${lng}:${id}`)?.title ?? `тема №${id}`}
+          onClose={() => setShowReport(false)}
+        />
+      )}
+
       {/* активность */}
       <div className="grid grid-cols-3 gap-2">
         <Stat
