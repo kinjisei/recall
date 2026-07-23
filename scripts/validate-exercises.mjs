@@ -105,6 +105,44 @@ for (const file of ['src/data/spanish/placement_test.json', 'src/data/english/pl
   }
 }
 
+// ---- фразовые глаголы: структура, частица, уровни, границы 6-12 ----
+{
+  const file = 'src/data/english/phrasal/phrasal.json'
+  const data = JSON.parse(readFileSync(path.join(root, file), 'utf8'))
+  if (!Array.isArray(data)) problems.push(`${file}: не массив`)
+  else {
+    if (data.length > 0 && data.length !== 30)
+      warn.push(`${file}: базовых глаголов ${data.length}, ожидалось 30`)
+    const seenVerbs = new Set()
+    for (const e of data) {
+      if (!e.verb?.trim()) { problems.push(`${file}: запись без verb`); continue }
+      if (seenVerbs.has(e.verb)) problems.push(`${file}: дубль базового глагола «${e.verb}»`)
+      seenVerbs.add(e.verb)
+      if (!Array.isArray(e.items) || e.items.length < 6 || e.items.length > 12)
+        problems.push(`${file} · ${e.verb}: фраз ${e.items?.length ?? 0}, ожидалось 6-12`)
+      const seenPhrases = new Set()
+      for (const i of e.items ?? []) {
+        checked++
+        const at = `${file} · ${e.verb} · «${i.phrase}»`
+        for (const f of ['phrase', 'ru', 'example', 'exampleRu'])
+          if (typeof i[f] !== 'string' || !i[f].trim()) problems.push(`${at}: пустое поле ${f}`)
+        if (typeof i.separable !== 'boolean') problems.push(`${at}: separable не boolean`)
+        if (i.level !== 'B1' && i.level !== 'B2') problems.push(`${at}: level «${i.level}»`)
+        if (i.phrase && !i.phrase.toLowerCase().startsWith(e.verb.toLowerCase() + ' '))
+          problems.push(`${at}: фраза не начинается с базового глагола «${e.verb}»`)
+        if (i.phrase && i.phrase.trim().split(/\s+/).length < 2)
+          problems.push(`${at}: нет частицы (одно слово)`)
+        // двойное значение = одинаковая фраза с разным ru — допустимо, но не полный дубль
+        const key = `${i.phrase}|${i.ru}`
+        if (seenPhrases.has(key)) problems.push(`${at}: полный дубль`)
+        seenPhrases.add(key)
+        // частица на to → почти всегда неразделяемый
+        if (i.separable && /\bto$/.test(i.phrase)) warn.push(`${at}: separable=true у фразы на to?`)
+      }
+    }
+  }
+}
+
 console.log(`Проверено упражнений/записей: ${checked}`)
 if (warn.length) {
   console.log(`\nПредупреждения (${warn.length}):`)

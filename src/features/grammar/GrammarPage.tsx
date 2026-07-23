@@ -35,6 +35,7 @@ import { useLanguage } from '../../context/LanguageContext'
 import { ExerciseView } from '../../components/exercises'
 import { ConjugationSection } from './ConjugationSection'
 import { IrregularVerbsSection } from './IrregularVerbsSection'
+import { PhrasalVerbsSection } from './PhrasalVerbsSection'
 import type {
   AppLang,
   GrammarExercise,
@@ -98,8 +99,41 @@ export function GrammarPage() {
       ) : lang === 'es' ? (
         <ConjugationSection />
       ) : (
-        <IrregularVerbsSection />
+        <EnglishVerbs />
       )}
+    </div>
+  )
+}
+
+/**
+ * «Глаголы» в EN: два раздела — неправильные глаголы и фразовые.
+ * (В ES вместо этого спряжения — ConjugationSection.)
+ */
+function EnglishVerbs() {
+  const [kind, setKind] = useState<'irregular' | 'phrasal'>('irregular')
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex gap-2">
+        {(
+          [
+            ['irregular', 'Неправильные'],
+            ['phrasal', 'Фразовые'],
+          ] as ['irregular' | 'phrasal', string][]
+        ).map(([id, label]) => (
+          <button
+            key={id}
+            onClick={() => setKind(id)}
+            className={`min-h-[44px] rounded-lg px-4 text-sm ${
+              kind === id
+                ? 'bg-white/[0.10] font-semibold text-[var(--night-text)]'
+                : 'bg-white/[0.04] text-[var(--night-text-40)]'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      {kind === 'irregular' ? <IrregularVerbsSection /> : <PhrasalVerbsSection />}
     </div>
   )
 }
