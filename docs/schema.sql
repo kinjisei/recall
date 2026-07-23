@@ -1428,9 +1428,14 @@
   -- ОТКРЫТАЯ РЕГИСТРАЦИЯ (2026-07-23): выключение белого списка.
   -- До этого блока триггер handle_new_user отклонял регистрацию любого email,
   -- которого нет в allowed_emails (RECALL_NOT_INVITED) — посторонние не могли
-  -- зарегистрироваться вовсе. Для публичного запуска регистрацию открываем:
-  -- защита от абьюза уже на другом слое — триал 14 дней, потом Free-лимит
-  -- 5 AI-действий/день (consume_ai_quota) + флаг blocked для нарушителей.
+  -- зарегистрироваться вовсе. Для публичного запуска регистрацию открываем.
+  -- ⚠️ НАХОДКА РЕВЬЮ 2026-07-24: авто-триал 14 дней даёт КАЖДОМУ новому
+  -- аккаунту premium-квоту AI (200/день, has_premium_access) — при открытой
+  -- регистрации это фармится скриптом (N аккаунтов = N×200 вызовов/день),
+  -- Free-лимит 5/день включается лишь ПОСЛЕ триала. ПЕРЕД выполнением блока
+  -- решить с владельцем: (а) включить подтверждение email в Supabase Auth —
+  -- обязательный минимум; и/или (б) урезать квоту триала (например 20/день);
+  -- и/или (в) полный триал только по коду учителя.
   -- Таблица allowed_emails и обзор access_overview остаются (история, блок-лист
   -- в будущем можно вернуть, снова добавив проверку).
   -- ВЫПОЛНЯТЬ ТОЛЬКО КОГДА РЕШИШЬ ОТКРЫТЬСЯ ПУБЛИЧНО.
@@ -1495,3 +1500,88 @@
   end $fn$;
 
   grant execute on function public.set_daily_plan(uuid, jsonb) to authenticated;
+
+  -- ============================================================================
+  -- АТОМАРНОСТЬ (2026-07-24, по находкам ревью): две многошаговые операции
+  -- клиента переведены в транзакционные RPC — раньше сбой на середине оставлял
+  -- ученицу без активной программы или плодил колоды-сироты при ретраях.
+  -- Блок idempotent.
+  -- ============================================================================
+
+  -- Замена программы обучения: архив прежней активной + вставка новой ОДНОЙ
+  -- транзакцией (функция plpgsql атомарна: сбой отката́тывает оба шага).
+  create or replace function public.replace_study_plan(
+    p_student_id uuid, p_lang text, p_level text,
+    p_goal text, p_summary text, p_weeks jsonb
+  )
+  returns uuid
+  language plpgsql
+  security definer
+  set search_path = public
+  as $fn$
+  declare
+    new_id uuid;
+  begin
+    if not exists (
+      select 1 from teacher_students
+      where teacher_id = auth.uid() and student_id = p_student_id
+    ) then
+      raise exception 'RECALL_NOT_YOUR_STUDENT';
+    end if;
+    update study_plans set status = 'archived'
+      where teacher_id = auth.uid() and student_id = p_student_id
+        and lang = p_lang and status = 'active';
+    insert into study_plans (teacher_id, student_id, lang, level, goal, summary, weeks)
+      values (auth.uid(), p_student_id, p_lang, p_level, p_goal, p_summary, p_weeks)
+      returning id into new_id;
+    return new_id;
+  end $fn$;
+
+  grant execute on function public.replace_study_plan(uuid, text, text, text, text, jsonb)
+    to authenticated;
+
+  -- Выборка слов ученице: колода + карточки + назначение одной транзакцией.
+  -- p_cards: [{"front":"…","back":"…","example":"…"}, …]. Возвращает число
+  -- вставленных карточек.
+  create or replace function public.assign_selected_words(
+    p_student_id uuid, p_title text, p_lang text, p_cards jsonb
+  )
+  returns int
+  language plpgsql
+  security definer
+  set search_path = public
+  as $fn$
+  declare
+    new_deck uuid;
+    added int;
+  begin
+    if not exists (
+      select 1 from teacher_students
+      where teacher_id = auth.uid() and student_id = p_student_id
+    ) then
+      raise exception 'RECALL_NOT_YOUR_STUDENT';
+    end if;
+    if p_cards is null or jsonb_typeof(p_cards) <> 'array'
+       or jsonb_array_length(p_cards) = 0 or jsonb_array_length(p_cards) > 500
+       or pg_column_size(p_cards) > 200 * 1024 then
+      raise exception 'RECALL_BAD_CARDS';
+    end if;
+    insert into decks (owner_id, title, lang)
+      values (auth.uid(), left(p_title, 120), p_lang)
+      returning id into new_deck;
+    insert into cards (deck_id, front, back, example, source)
+      select new_deck,
+             left(c->>'front', 200),
+             nullif(left(c->>'back', 400), ''),
+             nullif(left(c->>'example', 600), ''),
+             'manual'
+        from jsonb_array_elements(p_cards) c
+        where coalesce(trim(c->>'front'), '') <> '';
+    get diagnostics added = row_count;
+    insert into deck_assignments (deck_id, student_id)
+      values (new_deck, p_student_id);
+    return added;
+  end $fn$;
+
+  grant execute on function public.assign_selected_words(uuid, text, text, jsonb)
+    to authenticated;

@@ -75,9 +75,14 @@ export function DashboardPage() {
   const [assignments, setAssignments] = useState<AssignmentCounts | null>(null)
   // программа, которую ученица ещё не открывала (флаг recall.program_seen.<id>)
   const [newProgram, setNewProgram] = useState<StudyPlan | null>(null)
-  // план дня: настройка учителя (null — умный дефолт) + активные квесты
-  const [dailyCfg, setDailyCfg] = useState<DailyPlanConfig | null>(null)
-  const [activeQuests, setActiveQuests] = useState(0)
+  // план дня: ВСЕ его входы (настройка учителя, задания, квесты) грузятся
+  // одним пакетом с флагом готовности — иначе «идеальный день» успевал
+  // залогиниться по неполному дефолтному плану до прихода данных о задании
+  // (находка ревью 2026-07-24)
+  const [planInputs, setPlanInputs] = useState<{
+    dailyCfg: DailyPlanConfig | null
+    activeQuests: number
+  } | null>(null)
 
   useEffect(() => {
     if (!user) return
@@ -85,11 +90,16 @@ export function DashboardPage() {
     getStreak().then(setStreak).catch(() => {})
     getTodayTypes().then(setDoneToday).catch(() => {})
     getWeek().then(setWeek).catch(() => {})
-    loadAssignmentCounts().then(setAssignments).catch(() => {})
-    getMyDailyPlanConfig().then(setDailyCfg).catch(() => {})
-    listMyQuests()
-      .then((qs) => setActiveQuests(qs.filter((q) => q.status === 'assigned').length))
-      .catch(() => {})
+    Promise.all([
+      loadAssignmentCounts().catch(() => ({ total: 0, pending: 0 })),
+      getMyDailyPlanConfig().catch(() => null),
+      listMyQuests()
+        .then((qs) => qs.filter((q) => q.status === 'assigned').length)
+        .catch(() => 0),
+    ]).then(([counts, dailyCfg, activeQuests]) => {
+      setAssignments(counts)
+      setPlanInputs({ dailyCfg, activeQuests })
+    })
     getMyPlans()
       .then((plans) => {
         const unseen = plans.find((p) => {
@@ -156,17 +166,21 @@ export function DashboardPage() {
   const level = lang === 'es' ? (esLevel ?? 'A1–A2') : (profile?.level ?? 'B1')
   const didToday = doneToday.size > 0
 
-  // план на сегодня: настройка учителя или умный дефолт (3 пункта)
-  const todayPlan = buildTodayPlan(dailyCfg, {
-    pendingAssignments: assignments?.pending ?? 0,
-    activeQuests,
-    weekday: new Date().getDay(),
-  })
-  const doneCount = todayPlan.filter((p) => p.types.some((t) => doneToday.has(t))).length
-  const allDone = doneCount === todayPlan.length
-  const perfect = isPerfectDay(todayPlan, doneToday)
+  // план на сегодня — ТОЛЬКО когда все входы загружены (иначе null)
+  const todayPlan = planInputs
+    ? buildTodayPlan(planInputs.dailyCfg, {
+        pendingAssignments: assignments?.pending ?? 0,
+        activeQuests: planInputs.activeQuests,
+        weekday: new Date().getDay(),
+      })
+    : null
+  const doneCount = todayPlan
+    ? todayPlan.filter((p) => p.types.some((t) => doneToday.has(t))).length
+    : 0
+  const allDone = todayPlan !== null && doneCount === todayPlan.length
+  const perfect = todayPlan !== null && isPerfectDay(todayPlan, doneToday)
 
-  // «идеальный день»: фиксируем один раз (items_done=0 — счётчики не искажает)
+  // «идеальный день»: фиксируем один раз и только по ПОЛНОМУ плану
   useEffect(() => {
     if (perfect && !doneToday.has('perfect')) {
       void logActivity('perfect', 0)
@@ -234,10 +248,20 @@ export function DashboardPage() {
       <section className="animate-fade-up" style={{ animationDelay: '.18s' }}>
         <div className="mb-3 flex items-baseline justify-between">
           <h2 className="text-lg font-medium tracking-tight">План на сегодня</h2>
-          <span className={`text-sm ${perfect ? 'font-medium text-amber-300' : allDone ? 'text-[var(--night-accent-text)]' : 'text-[var(--night-text-40)]'}`}>
-            {perfect ? 'Идеальный день ✦' : `${doneCount} из ${todayPlan.length} готово`}
-          </span>
+          {todayPlan && (
+            <span className={`text-sm ${perfect ? 'font-medium text-amber-300' : allDone ? 'text-[var(--night-accent-text)]' : 'text-[var(--night-text-40)]'}`}>
+              {perfect ? 'Идеальный день ✦' : `${doneCount} из ${todayPlan.length} готово`}
+            </span>
+          )}
         </div>
+        {todayPlan === null ? (
+          // скелетоны, пока грузятся входы плана (настройка/задания/квесты)
+          <div className="flex flex-col gap-2.5" aria-hidden>
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="h-[74px] animate-pulse rounded-2xl bg-white/[0.04]" />
+            ))}
+          </div>
+        ) : (
         <div className="flex flex-col gap-2.5">
           {todayPlan.map((p, i) => {
             const done = p.types.some((t) => doneToday.has(t))
@@ -265,6 +289,7 @@ export function DashboardPage() {
             )
           })}
         </div>
+        )}
       </section>
 
       {/* 6. Слово дня — новое слово уровня, можно сразу добавить в колоду */}

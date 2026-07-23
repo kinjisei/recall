@@ -38,7 +38,9 @@ function DeltaRow({
 }) {
   const now = d.now ?? 0
   const hasPrev = d.prev !== null && d.prev !== undefined
-  const diff = hasPrev ? now - (d.prev as number) : null
+  // d.now === null — данных за период нет: стрелку НЕ рисуем (иначе отчёт
+  // показывал фантомное «— ▼ 80%», когда в этом месяце просто не было работ)
+  const diff = hasPrev && d.now !== null ? now - (d.prev as number) : null
   const improved = diff !== null && diff !== 0 && diff > 0 === moreIsBetter
   return (
     <div className="flex items-baseline justify-between border-b border-neutral-200 py-2">

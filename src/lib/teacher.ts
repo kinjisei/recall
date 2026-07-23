@@ -5,7 +5,6 @@
 // Доступы разруливает RLS (docs/schema.sql, блок «ФАЗА 4»).
 // ============================================================================
 import { supabase, requireUserId } from './supabase'
-import { addCardsBulk } from './cards'
 import type { Card, Deck, Profile } from '../types'
 
 /** Сводка по ученице для экрана преподавателя. */
@@ -147,10 +146,10 @@ export async function listDeckCards(deckId: string): Promise<Card[]> {
 }
 
 /**
- * Назначить ученице ВЫБОРКУ слов из набора: создаётся новая колода
- * «<Название> — выборка для <имя>» с копиями выбранных карточек, и она
- * назначается ученице. Оригинальный набор не меняется; у копий своё
- * расписание FSRS. Возвращает число скопированных карточек.
+ * Назначить ученице ВЫБОРКУ слов из набора: колода-копия + карточки +
+ * назначение — ОДНОЙ транзакцией (RPC assign_selected_words): раньше сбой на
+ * середине оставлял колоду-сироту, а ретраи плодили дубликаты (ревью
+ * 2026-07-24). Возвращает число скопированных карточек.
  */
 export async function assignSelectedWords(
   sourceDeck: Deck,
@@ -158,27 +157,20 @@ export async function assignSelectedWords(
   studentName: string,
   cards: Card[],
 ): Promise<number> {
-  const teacherId = await requireUserId()
   if (cards.length === 0) return 0
-
-  const title = `${sourceDeck.title} — выборка для ${studentName}`.slice(0, 120)
-  const { data: deck, error } = await supabase
-    .from('decks')
-    .insert({ owner_id: teacherId, title, lang: sourceDeck.lang ?? 'en' })
-    .select()
-    .single()
-  if (error) throw new Error(error.message)
-
-  const added = await addCardsBulk(
-    (deck as Deck).id,
-    cards.map((c) => ({
+  const title = `${sourceDeck.title} — выборка для ${studentName}`
+  const { data, error } = await supabase.rpc('assign_selected_words', {
+    p_student_id: studentId,
+    p_title: title,
+    p_lang: sourceDeck.lang ?? 'en',
+    p_cards: cards.map((c) => ({
       front: c.front,
-      back: c.back ?? undefined,
-      example: c.example ?? undefined,
+      back: c.back ?? '',
+      example: c.example ?? '',
     })),
-  )
-  await assignDeck((deck as Deck).id, studentId)
-  return added
+  })
+  if (error) throw new Error(error.message)
+  return (data as number) ?? cards.length
 }
 
 /** Назначить колоду ученице. */

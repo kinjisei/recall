@@ -176,24 +176,19 @@ export async function generateStudyPlan(
   }
 }
 
-/** Сохранить программу как активную (прошлая активная той же пары → архив). */
+/**
+ * Сохранить программу как активную. Архив прежней и вставка новой — ОДНОЙ
+ * транзакцией (RPC replace_study_plan): раньше сбой между двумя запросами
+ * оставлял ученицу вообще без активной программы (находка ревью 2026-07-24).
+ */
 export async function saveStudyPlan(req: PlanRequest, plan: GeneratedPlan): Promise<void> {
-  const teacherId = await requireUserId()
-  // сначала архивируем прежнюю активную — иначе упрёмся в уникальный индекс
-  const { error: archErr } = await supabase
-    .from('study_plans')
-    .update({ status: 'archived' })
-    .match({ teacher_id: teacherId, student_id: req.studentId, lang: req.lang, status: 'active' })
-  if (archErr) throw new Error(archErr.message)
-
-  const { error } = await supabase.from('study_plans').insert({
-    teacher_id: teacherId,
-    student_id: req.studentId,
-    lang: req.lang,
-    level: req.level,
-    goal: req.goal,
-    summary: plan.summary,
-    weeks: plan.weeks,
+  const { error } = await supabase.rpc('replace_study_plan', {
+    p_student_id: req.studentId,
+    p_lang: req.lang,
+    p_level: req.level,
+    p_goal: req.goal,
+    p_summary: plan.summary,
+    p_weeks: plan.weeks,
   })
   if (error) throw new Error(error.message)
 }
