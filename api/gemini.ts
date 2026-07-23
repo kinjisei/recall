@@ -7,19 +7,8 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import type { ChatTurn } from '../src/types'
 // расширение .js обязательно: "type": "module" — Vercel/Node в ESM-режиме
 // не находит модуль без расширения (FUNCTION_INVOCATION_FAILED при старте)
-import {
-  ALLOWED_MODELS,
-  callGemini,
-  DEFAULT_GEMINI_MODEL,
-  GEMINI_TIER_CHAINS,
-  type AiTier,
-} from './_core.js'
-import {
-  groqChat,
-  ALLOWED_GROQ_MODELS,
-  DEFAULT_GROQ_MODEL,
-  FAST_GROQ_MODEL,
-} from './_groq.js'
+import { callGemini, GEMINI_TIER_CHAINS, type AiTier } from './_core.js'
+import { groqChat, DEFAULT_GROQ_MODEL, FAST_GROQ_MODEL } from './_groq.js'
 import { authorize, applyCors } from './_auth.js'
 
 // Генерация материала занимает 20–40 с (два запроса к Gemini), плюс повторы
@@ -35,18 +24,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (applyCors(req, res)) return
   if (req.method !== 'POST') return res.status(405).json({ error: 'Только POST' })
 
-  const access = await authorize(req)
+  const { messages, system, provider, tier } = (req.body ?? {}) as {
+    messages?: ChatTurn[]
+    system?: string
+    provider?: string
+    tier?: string
+  }
+
+  // Уровень задачи: модель по сложности (см. GEMINI_TIER_CHAINS в _core).
+  // legacy: старые клиенты шлют provider:'groq' для лёгких задач → 'lite'.
+  // Считается ДО авторизации: от уровня зависит класс квоты (lite-запросы —
+  // переводы слов — не должны съедать дневные «AI-действия» Диалога).
+  // Подменить tier на 'lite' ради дешёвого кармана бессмысленно: lite-ветка
+  // всегда уходит на слабую модель, параметр model там игнорируется.
+  const aiTier: AiTier =
+    tier === 'lite' || tier === 'max' || tier === 'standard'
+      ? tier
+      : provider === 'groq'
+        ? 'lite'
+        : 'standard'
+
+  const access = await authorize(req, aiTier === 'lite' ? 'light' : 'heavy')
   if (!access.ok) {
     return res.status(access.status).json({ error: access.error })
   }
 
-  const { messages, system, model, provider, tier } = (req.body ?? {}) as {
-    messages?: ChatTurn[]
-    system?: string
-    model?: string
-    provider?: string
-    tier?: string
-  }
   if (!Array.isArray(messages) || messages.length === 0) {
     return res.status(400).json({ error: 'Нужно поле messages (непустой массив)' })
   }
@@ -63,15 +65,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (typeof system === 'string' && system.length > MAX_SYSTEM_CHARS) {
     return res.status(400).json({ error: 'Слишком большая системная инструкция' })
   }
-
-  // Уровень задачи: модель по сложности (см. GEMINI_TIER_CHAINS в _core).
-  // legacy: старые клиенты шлют provider:'groq' для лёгких задач → 'lite'.
-  const aiTier: AiTier =
-    tier === 'lite' || tier === 'max' || tier === 'standard'
-      ? tier
-      : provider === 'groq'
-        ? 'lite'
-        : 'standard'
 
   const apiKey = process.env.GEMINI_API_KEY
   const groqKey = process.env.GROQ_API_KEY
@@ -97,24 +90,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
       if (!apiKey) return res.status(502).json({ error: 'Сервис AI временно недоступен' })
       const chain = GEMINI_TIER_CHAINS.lite
-      return res.status(200).json({ text: await callGemini(messages, system, apiKey, chain[0], chain.slice(1)) })
+      return res.status(200).json({ text: await callGemini(messages, system, apiKey, chain[0], chain.slice(1), 'lite') })
     }
 
-    // standard/max: Gemini-цепочка уровня, терминальный фолбэк — Groq-70b
+    // standard/max: Gemini-цепочка уровня, терминальный фолбэк — Groq-70b.
+    // Модель выбирает СЕРВЕР по уровню задачи. Клиентский параметр model
+    // (legacy) намеренно игнорируется: иначе им можно было принудительно
+    // стартовать с дефицитной модели в обход порядка цепочки и выжечь её
+    // суточную квоту всем пользователям.
     const chain = GEMINI_TIER_CHAINS[aiTier]
-    // legacy-параметр model из белого списка уважаем как старт цепочки
-    const startModel = model && ALLOWED_MODELS.includes(model) ? model : chain[0]
     if (apiKey) {
       try {
-        return res.status(200).json({ text: await callGemini(messages, system, apiKey, startModel, chain) })
+        return res.status(200).json({ text: await callGemini(messages, system, apiKey, chain[0], chain, aiTier) })
       } catch (e) {
         if (!groqKey) return fail(e, 'Ошибка Gemini')
         /* вся Gemini-цепочка легла — последний рубеж Groq */
       }
     }
     if (!groqKey) return res.status(502).json({ error: 'Сервис AI временно недоступен' })
-    const groqModel = model && ALLOWED_GROQ_MODELS.includes(model) ? model : DEFAULT_GROQ_MODEL
-    return res.status(200).json({ text: await groqChat(messages, system, groqKey, groqModel) })
+    return res.status(200).json({ text: await groqChat(messages, system, groqKey, DEFAULT_GROQ_MODEL) })
   } catch (e) {
     return fail(e, 'Ошибка AI')
   }

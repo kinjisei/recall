@@ -19,7 +19,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (applyCors(req, res)) return
   if (req.method !== 'POST') return res.status(405).json({ error: 'Только POST' })
 
-  const access = await authorize(req)
+  // класс speech: у произношения свой щедрый лимит — попытки шэдоуинга не
+  // должны съедать дневные «AI-действия» Диалога (их всего 12 на триале)
+  const access = await authorize(req, 'speech')
   if (!access.ok) return res.status(access.status).json({ error: access.error })
 
   const apiKey = process.env.GROQ_API_KEY

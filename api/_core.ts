@@ -27,18 +27,37 @@ export const ALLOWED_MODELS = [DEFAULT_GEMINI_MODEL, LIGHT_GEMINI_MODEL]
  */
 export type AiTier = 'lite' | 'standard' | 'max'
 
+/**
+ * ВАЖНО про порядок (пересмотрен 2026-07-24): бесплатные лимиты Google —
+ * ПОМОДЕЛЬНЫЕ (у каждой модели свой счётчик запросов в сутки, RPD), поэтому
+ * цепочка фолбэков реально складывает квоты. Раньше первым для «standard»
+ * (Диалог — самый частый сценарий) стоял gemini-2.5-flash, у которого RPD
+ * всего ~20: он выгорал за десяток реплик, а заодно лишал уровень «max»
+ * запасного пути. Теперь дефицитные модели — глубже в цепочке, а первыми
+ * идут те, чьей квоты хватает на поток.
+ * ⚠️ Точные RPD у 3.6-flash / 3.5-flash стоит подсмотреть в AI Studio
+ * (Dashboard → Usage) и при необходимости поправить порядок здесь.
+ */
 export const GEMINI_TIER_CHAINS: Record<AiTier, string[]> = {
-  lite: ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-2.0-flash-lite'],
+  // лёгкое (перевод слова): сначала мини-модели, gemma — как большой резерв
+  lite: [
+    'gemini-3.5-flash-lite',
+    'gemini-3.1-flash-lite',
+    'gemma-4-31b-it',
+    'gemini-2.0-flash-lite',
+  ],
+  // частое и важное (Диалог, письмо, квесты, разбор работ): свежие flash
+  // впереди, gemma (RPD ~14 400) — надёжная страховка, дефицитный 2.5-flash
+  // в самом конце, чтобы не выжигать его и оставить уровню «max»
   standard: [
-    'gemini-2.5-flash',
     'gemini-3.6-flash',
     'gemini-3.5-flash',
-    'gemini-3.5-flash-lite',
     'gemma-4-31b-it',
+    'gemini-2.5-flash',
   ],
-  // материалы генерируются редко (единицы в день) — можно позволить Pro-модели
-  // с их маленькими бесплатными квотами ради заметно лучшего качества
-  max: ['gemini-2.5-pro', 'gemini-3-pro-preview', 'gemini-2.5-flash', 'gemini-3.6-flash'],
+  // материалы и программа обучения генерируются единицами в день — здесь
+  // не жалеем самых умных моделей с их крошечными бесплатными квотами
+  max: ['gemini-2.5-pro', 'gemini-3-pro-preview', 'gemini-3.6-flash', 'gemini-2.5-flash'],
 }
 
 const FALLBACK_MODELS = GEMINI_TIER_CHAINS.standard.slice(1)
@@ -67,6 +86,8 @@ export async function callGemini(
   model = DEFAULT_GEMINI_MODEL,
   /** Явная цепочка фолбэков (по умолчанию — standard-цепочка). */
   fallbacks: string[] = FALLBACK_MODELS,
+  /** Уровень задачи — от него зависит «щедрость» генерации (см. bodyFor). */
+  tier: AiTier = 'standard',
 ): Promise<string> {
   // system-реплики склеиваем в системную инструкцию, остальные — в contents
   const systemText = [
@@ -83,9 +104,33 @@ export async function callGemini(
       parts: [{ text: m.content }],
     }))
 
-  /** Тело запроса под конкретную модель (у Gemma нет systemInstruction). */
+  /**
+   * Тело запроса под конкретную модель (у Gemma нет systemInstruction).
+   *
+   * Настройки генерации зависят от уровня задачи. Наблюдение владельца
+   * (24.07): упираемся мы в ЧИСЛО запросов (RPD), а токенов расходуем
+   * единицы процентов от лимита (TPM ~1.9 тыс. из 250 тыс.). Значит, экономить
+   * токены незачем — выгоднее сделать каждый запрос качественнее:
+   *   lite     — перевод слова: низкая температура (нужна точность, не
+   *              фантазия), короткий ответ, без «размышлений» — быстро;
+   *   standard — Диалог/письмо/разбор: «размышления» включены (у 2.5-моделей
+   *              их раньше глушили ради экономии), ответ длиннее;
+   *   max      — материалы и программа: самый большой потолок ответа.
+   */
   const bodyFor = (m: string): string => {
     const isGemma = m.startsWith('gemma')
+    const isThinkingModel = m.startsWith('gemini-2.5')
+    const gen: Record<string, unknown> =
+      tier === 'lite'
+        ? {
+            temperature: 0.2,
+            maxOutputTokens: 1024,
+            ...(isThinkingModel ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
+          }
+        : {
+            temperature: 0.7,
+            maxOutputTokens: tier === 'max' ? 8192 : 4096,
+          }
     const body: Record<string, unknown> = {
       contents:
         isGemma && systemText && contents.length > 0
@@ -97,12 +142,7 @@ export async function callGemini(
                 : c,
             )
           : contents,
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 4096,
-        // у 2.5-моделей отключаем «размышления»: быстрее и экономит бесплатные токены
-        ...(m.startsWith('gemini-2.5') ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
-      },
+      generationConfig: gen,
     }
     if (systemText && !isGemma) body.systemInstruction = { parts: [{ text: systemText }] }
     return JSON.stringify(body)

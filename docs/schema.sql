@@ -1718,3 +1718,129 @@
       'ai_day_limit',    case when paid then 200 when prem then 12 else 5 end
     );
   end $fn$;
+
+  -- ============================================================================
+  -- КЛАССЫ КВОТ (2026-07-24) — исправление: раньше КАЖДЫЙ запрос к AI списывал
+  -- одну «единицу», поэтому перевод слова по тапу и попытка произношения стоили
+  -- столько же, сколько реплика в Диалоге. При лимите 12/день ученица выжигала
+  -- его десятком тапов по словам, не начав заниматься. Теперь три класса:
+  --   heavy  — Диалог, письмо, квесты, разбор работ, материалы, программа.
+  --            Это и есть «AI-действие» в тарифах (дорогие умные модели).
+  --   light  — перевод слова/фразы, определения, пакетное добавление слов.
+  --            Идут на дешёвые модели (Groq 8b / flash-lite) с огромными
+  --            бесплатными квотами — лимит только против скриптов.
+  --   speech — распознавание речи (Groq Whisper) в тренажёре произношения.
+  -- Блок idempotent.
+  -- ============================================================================
+
+  alter table public.ai_calls add column if not exists kind text not null default 'heavy';
+
+  create index if not exists ai_calls_user_kind_time
+    on public.ai_calls (user_id, kind, called_at desc);
+
+  create or replace function public.consume_ai_quota(p_kind text default 'heavy')
+  returns void
+  language plpgsql
+  security definer
+  set search_path = public
+  as $fn$
+  declare
+    kind text := case when p_kind in ('light', 'speech') then p_kind else 'heavy' end;
+    uid uuid := auth.uid();
+    paid boolean;
+    prem boolean;
+    lim_day int;
+    n int;
+  begin
+    if uid is null then
+      raise exception 'RECALL_NO_AUTH';
+    end if;
+
+    if exists (
+      select 1 from auth.users
+      where id = uid and banned_until is not null and banned_until > now()
+    ) then
+      raise exception 'RECALL_BLOCKED';
+    end if;
+
+    if exists (select 1 from profiles where id = uid and blocked) then
+      raise exception 'RECALL_BLOCKED';
+    end if;
+
+    delete from ai_calls where called_at < now() - interval '3 days';
+
+    paid := public.has_paid_access(uid);
+    prem := public.has_premium_access(uid);   -- триал ИЛИ платный
+
+    -- Часовой предохранитель от скриптов — общий для всех классов.
+    select count(*) into n from ai_calls
+    where user_id = uid and called_at > now() - interval '1 hour';
+    if n >= (case when paid then 200 when prem then 90 else 40 end) then
+      raise exception 'RECALL_RATE_HOUR';
+    end if;
+
+    -- Суточный лимит своего класса.
+    lim_day := case kind
+      when 'heavy'  then case when paid then 200 when prem then  12 else   5 end
+      when 'light'  then case when paid then 900 when prem then 300 else 100 end
+      else               case when paid then 400 when prem then 150 else  50 end
+    end;
+
+    select count(*) into n from ai_calls
+    where user_id = uid and kind = consume_ai_quota.kind
+      and called_at > now() - interval '24 hours';
+
+    if n >= lim_day then
+      if kind = 'light' then
+        raise exception 'RECALL_LIGHT_LIMIT';
+      elsif kind = 'speech' then
+        raise exception 'RECALL_SPEECH_LIMIT';
+      elsif paid then
+        raise exception 'RECALL_RATE_DAY';
+      elsif prem then
+        raise exception 'RECALL_TRIAL_LIMIT';
+      else
+        raise exception 'RECALL_FREE_LIMIT';
+      end if;
+    end if;
+
+    insert into ai_calls (user_id, kind) values (uid, kind);
+  end $fn$;
+
+  grant execute on function public.consume_ai_quota(text) to authenticated;
+
+  -- get_my_plan: «AI-действия» считаем ТОЛЬКО класса heavy — именно они
+  -- ограничены в тарифах; переводы и произношение пользователя не тревожат.
+  create or replace function public.get_my_plan()
+  returns json
+  language plpgsql
+  security definer
+  set search_path = public
+  as $fn$
+  declare
+    uid uuid := auth.uid();
+    p record;
+    paid boolean;
+    prem boolean;
+    used int;
+  begin
+    if uid is null then
+      raise exception 'RECALL_NO_AUTH';
+    end if;
+    select plan, plan_expires_at, trial_until, is_admin
+      into p from profiles where id = uid;
+    paid := public.has_paid_access(uid);
+    prem := public.has_premium_access(uid);
+    select count(*) into used from ai_calls
+      where user_id = uid and kind = 'heavy'
+        and called_at > now() - interval '24 hours';
+    return json_build_object(
+      'plan',            p.plan,
+      'plan_expires_at', p.plan_expires_at,
+      'trial_until',     p.trial_until,
+      'is_admin',        p.is_admin,
+      'premium',         prem,
+      'ai_used_today',   used,
+      'ai_day_limit',    case when paid then 200 when prem then 12 else 5 end
+    );
+  end $fn$;
