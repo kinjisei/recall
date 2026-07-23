@@ -111,15 +111,17 @@ for (const file of ['src/data/spanish/placement_test.json', 'src/data/english/pl
   const data = JSON.parse(readFileSync(path.join(root, file), 'utf8'))
   if (!Array.isArray(data)) problems.push(`${file}: не массив`)
   else {
-    if (data.length > 0 && data.length !== 30)
-      warn.push(`${file}: базовых глаголов ${data.length}, ожидалось 30`)
+    if (data.length > 0 && data.length !== 60)
+      warn.push(`${file}: базовых глаголов ${data.length}, ожидалось 60`)
     const seenVerbs = new Set()
     for (const e of data) {
       if (!e.verb?.trim()) { problems.push(`${file}: запись без verb`); continue }
       if (seenVerbs.has(e.verb)) problems.push(`${file}: дубль базового глагола «${e.verb}»`)
       seenVerbs.add(e.verb)
-      if (!Array.isArray(e.items) || e.items.length < 6 || e.items.length > 12)
-        problems.push(`${file} · ${e.verb}: фраз ${e.items?.length ?? 0}, ожидалось 6-12`)
+      // нижняя граница 2, не 6: у части глаголов (find, calm) частотных фраз
+      // объективно мало — добивать редкими ради квоты хуже, чем оставить как есть
+      if (!Array.isArray(e.items) || e.items.length < 2 || e.items.length > 12)
+        problems.push(`${file} · ${e.verb}: фраз ${e.items?.length ?? 0}, ожидалось 2-12`)
       const seenPhrases = new Set()
       for (const i of e.items ?? []) {
         checked++

@@ -2420,5 +2420,1691 @@
     "level": "B2"
    }
   ]
+ },
+ {
+  "verb": "grow",
+  "items": [
+   {
+    "phrase": "grow up",
+    "ru": "вырасти, повзрослеть",
+    "example": "She grew up in a small town near the coast.",
+    "exampleRu": "Она выросла в маленьком городке у побережья.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "grow out of",
+    "ru": "перерасти (одежду, привычку)",
+    "example": "My son has already grown out of his winter jacket.",
+    "exampleRu": "Мой сын уже вырос из своей зимней куртки.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "grow back",
+    "ru": "отрасти заново",
+    "example": "Her hair grew back thicker after the treatment.",
+    "exampleRu": "Её волосы отросли гуще после процедуры.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "grow into",
+    "ru": "освоиться, дорасти до (роли)",
+    "example": "The new manager quickly grew into her role.",
+    "exampleRu": "Новая менеджер быстро освоилась в своей роли.",
+    "separable": false,
+    "level": "B2"
+   },
+   {
+    "phrase": "grow on",
+    "ru": "начать нравиться со временем",
+    "example": "I didn't like the song at first, but it grew on me.",
+    "exampleRu": "Песня мне сначала не понравилась, но потом полюбилась.",
+    "separable": false,
+    "level": "B2"
+   },
+   {
+    "phrase": "grow apart",
+    "ru": "отдалиться друг от друга",
+    "example": "The two brothers grew apart after their parents divorced.",
+    "exampleRu": "Братья отдалились друг от друга после развода родителей.",
+    "separable": false,
+    "level": "B2"
+   }
+  ]
+ },
+ {
+  "items": [
+   {
+    "phrase": "find out",
+    "ru": "узнать, выяснить",
+    "example": "I need to find out what happened yesterday.",
+    "exampleRu": "Мне нужно узнать, что случилось вчера.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "find out about",
+    "ru": "узнать о, разузнать про",
+    "example": "She found out about the party from her friend.",
+    "exampleRu": "Она узнала о вечеринке от подруги.",
+    "separable": false,
+    "level": "B1"
+   }
+  ],
+  "verb": "find"
+ },
+ {
+  "items": [
+   {
+    "phrase": "figure out",
+    "ru": "разобраться, выяснить",
+    "example": "I can't figure out why she didn't answer the phone yesterday.",
+    "exampleRu": "Я не могу разобраться, почему она вчера не ответила на звонок.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "figure on",
+    "ru": "рассчитывать на",
+    "example": "We're figuring on about fifty guests for the wedding reception.",
+    "exampleRu": "Мы рассчитываем примерно на пятьдесят гостей на свадебном приёме.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "figure in",
+    "ru": "учитывать, включать",
+    "example": "Don't forget to figure in the shipping costs when calculating the price.",
+    "exampleRu": "Не забудь учесть стоимость доставки при расчёте цены.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "figure into",
+    "ru": "влиять на",
+    "example": "Several factors figure into how much you'll pay for insurance.",
+    "exampleRu": "Несколько факторов влияют на то, сколько вы заплатите за страховку.",
+    "separable": false,
+    "level": "B2"
+   }
+  ],
+  "verb": "figure"
+ },
+ {
+  "items": [
+   {
+    "phrase": "end up",
+    "ru": "в итоге оказаться",
+    "example": "If you don't study, you'll end up failing the exam.",
+    "exampleRu": "Если не будешь учиться, в итоге провалишь экзамен.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "end up with",
+    "ru": "получить в итоге",
+    "example": "After the divorce, she ended up with the house and both kids.",
+    "exampleRu": "После развода она получила дом и обоих детей.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "end up in",
+    "ru": "оказаться в",
+    "example": "He drove home drunk and ended up in a car accident.",
+    "exampleRu": "Он поехал домой пьяным и попал в автомобильную аварию.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "end up as",
+    "ru": "стать в итоге",
+    "example": "He started as an intern and ended up as the company director.",
+    "exampleRu": "Он начинал стажёром, а в итоге стал директором компании.",
+    "separable": false,
+    "level": "B2"
+   },
+   {
+    "phrase": "end in",
+    "ru": "закончиться, привести к",
+    "example": "The meeting ended in a heated argument between the managers.",
+    "exampleRu": "Встреча закончилась ожесточённым спором между менеджерами.",
+    "separable": false,
+    "level": "B1"
+   }
+  ],
+  "verb": "end"
+ },
+ {
+  "items": [
+   {
+    "phrase": "wake up",
+    "ru": "пробудиться, просыпаться",
+    "example": "I usually wake up at seven o'clock on weekdays.",
+    "exampleRu": "Я обычно просыпаюсь в семь утра по будням.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "wake up",
+    "ru": "очнуться, встряхнуться",
+    "example": "Wake up! You can't keep ignoring this problem forever.",
+    "exampleRu": "Очнись! Ты не можешь вечно игнорировать эту проблему.",
+    "separable": false,
+    "level": "B2"
+   },
+   {
+    "phrase": "wake up to",
+    "ru": "осознать, понять",
+    "example": "She finally woke up to the fact that she needed help.",
+    "exampleRu": "Она наконец осознала, что ей нужна помощь.",
+    "separable": false,
+    "level": "B2"
+   }
+  ],
+  "verb": "wake"
+ },
+ {
+  "verb": "watch",
+  "items": [
+   {
+    "phrase": "watch out",
+    "ru": "быть осторожным, остерегаться",
+    "example": "Watch out! There's a car coming this way.",
+    "exampleRu": "Осторожно! Сюда едет машина.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "watch out for",
+    "ru": "остерегаться (опасности)",
+    "example": "Watch out for icy patches on the road this morning.",
+    "exampleRu": "Остерегайся наледи на дороге сегодня утром.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "watch out for",
+    "ru": "присматривать за, заботиться о",
+    "example": "Could you watch out for my little sister at the party?",
+    "exampleRu": "Присмотришь за моей младшей сестрой на вечеринке?",
+    "separable": false,
+    "level": "B2"
+   },
+   {
+    "phrase": "watch over",
+    "ru": "присматривать за, охранять",
+    "example": "A nurse watched over the patient all night long.",
+    "exampleRu": "Медсестра присматривала за пациентом всю ночь.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "watch it",
+    "ru": "осторожно!, берегись!",
+    "example": "Watch it! You nearly dropped the whole tray.",
+    "exampleRu": "Осторожно! Ты чуть не уронил весь поднос.",
+    "separable": false,
+    "level": "B2"
+   }
+  ]
+ },
+ {
+  "verb": "calm",
+  "items": [
+   {
+    "phrase": "calm down",
+    "ru": "успокаиваться",
+    "example": "Just take a deep breath and calm down right now.",
+    "exampleRu": "Просто сделай глубокий вдох и успокойся прямо сейчас.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "calm down",
+    "ru": "успокаивать",
+    "example": "Try to calm your little brother down before mom gets home.",
+    "exampleRu": "Постарайся успокоить своего младшего братика, пока не пришла мама.",
+    "separable": true,
+    "level": "B1"
+   }
+  ]
+ },
+ {
+  "verb": "cheer",
+  "items": [
+   {
+    "phrase": "cheer up",
+    "ru": "развеселить",
+    "example": "This funny video will definitely cheer you up after work.",
+    "exampleRu": "Это забавное видео точно тебя развеселит после работы.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "cheer up",
+    "ru": "повеселеть",
+    "example": "Cheer up! I'm sure everything will be fine.",
+    "exampleRu": "Не грусти! Я уверен, всё будет хорошо.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "cheer on",
+    "ru": "подбадривать",
+    "example": "The crowd cheered on the runners during the marathon.",
+    "exampleRu": "Толпа подбадривала бегунов криками во время марафона.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "cheer on",
+    "ru": "поддерживать",
+    "example": "We're all cheering you on for your job interview tomorrow.",
+    "exampleRu": "Мы все поддерживаем тебя перед завтрашним собеседованием.",
+    "separable": true,
+    "level": "B2"
+   },
+   {
+    "phrase": "cheer for",
+    "ru": "болеть за",
+    "example": "Which football team do you usually cheer for?",
+    "exampleRu": "За какую футбольную команду ты обычно болеешь?",
+    "separable": false,
+    "level": "B1"
+   }
+  ]
+ },
+ {
+  "verb": "hang",
+  "items": [
+   {
+    "phrase": "hang up",
+    "ru": "положить трубку",
+    "example": "Don't hang up, I have something important to tell you.",
+    "exampleRu": "Не вешай трубку, мне нужно кое-что важное сказать.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "hang on",
+    "ru": "подожди",
+    "example": "Hang on, I need to find my keys.",
+    "exampleRu": "Подожди, мне нужно найти ключи.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "hang on",
+    "ru": "держаться крепко",
+    "example": "Hang on to the rope or you'll fall.",
+    "exampleRu": "Держись крепко за верёвку, а то упадёшь.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "hang out",
+    "ru": "тусоваться",
+    "example": "We hang out at the shopping center every weekend.",
+    "exampleRu": "Мы тусуемся в торговом центре каждые выходные.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "hang in there",
+    "ru": "не сдаваться",
+    "example": "Hang in there, things will get better soon.",
+    "exampleRu": "Держись, скоро всё наладится.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "hang around",
+    "ru": "слоняться без дела",
+    "example": "Don't hang around here, go home and do your homework.",
+    "exampleRu": "Не слоняйся здесь без дела, иди домой делать уроки.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "hang out with",
+    "ru": "проводить время с",
+    "example": "I love hanging out with my old school friends.",
+    "exampleRu": "Я люблю проводить время со старыми школьными друзьями.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "hang back",
+    "ru": "держаться в стороне",
+    "example": "John hung back during the group activity, too shy to join.",
+    "exampleRu": "Джон держался в стороне во время группового занятия — стеснялся присоединиться.",
+    "separable": false,
+    "level": "B2"
+   },
+   {
+    "phrase": "hang over",
+    "ru": "нависать над",
+    "example": "A dark cloud hung over the city all night long.",
+    "exampleRu": "Тёмная туча всю ночь нависала над городом.",
+    "separable": false,
+    "level": "B2"
+   }
+  ]
+ },
+ {
+  "verb": "check",
+  "items": [
+   {
+    "phrase": "check out",
+    "ru": "выписаться из отеля",
+    "example": "We checked out of the hotel early this morning.",
+    "exampleRu": "Мы выписались из отеля рано утром.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "check out",
+    "ru": "посмотреть, проверить",
+    "example": "You should check out that new coffee shop downtown.",
+    "exampleRu": "Тебе стоит заглянуть в ту новую кофейню в центре.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "check in",
+    "ru": "зарегистрироваться",
+    "example": "We need to check in before three this afternoon.",
+    "exampleRu": "Нам нужно зарегистрироваться до трёх часов дня.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "check on",
+    "ru": "проверить, справиться о",
+    "example": "Can you check on the children while I cook dinner?",
+    "exampleRu": "Можешь проверить, как там дети, пока я готовлю ужин?",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "check off",
+    "ru": "отмечать, вычёркивать",
+    "example": "I checked off each item as we packed for vacation.",
+    "exampleRu": "Я отмечала каждый пункт по мере сборов в отпуск.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "check over",
+    "ru": "осмотреть, проверить",
+    "example": "The mechanic checked the car over before we bought it.",
+    "exampleRu": "Механик тщательно осмотрел машину перед тем, как мы её купили.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "check into",
+    "ru": "расследовать, разобраться",
+    "example": "The police checked into the mysterious disappearance immediately.",
+    "exampleRu": "Полиция сразу начала расследовать это загадочное исчезновение.",
+    "separable": false,
+    "level": "B2"
+   },
+   {
+    "phrase": "check with",
+    "ru": "посоветоваться с",
+    "example": "Check with your doctor before starting a new diet.",
+    "exampleRu": "Проконсультируйся с врачом, прежде чем начинать новую диету.",
+    "separable": false,
+    "level": "B1"
+   }
+  ]
+ },
+ {
+  "verb": "catch",
+  "items": [
+   {
+    "phrase": "catch up",
+    "ru": "догнать, наверстать",
+    "example": "She studied hard all summer to catch up with her classmates.",
+    "exampleRu": "Она усердно занималась всё лето, чтобы догнать одноклассников.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "catch up on",
+    "ru": "наверстать упущенное",
+    "example": "I need to catch up on some sleep this weekend.",
+    "exampleRu": "Мне нужно наверстать сон в эти выходные.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "catch up",
+    "ru": "ввести в курс дела",
+    "example": "Can you catch me up on what I missed at the meeting?",
+    "exampleRu": "Можешь ввести меня в курс того, что я пропустил на встрече?",
+    "separable": true,
+    "level": "B2"
+   },
+   {
+    "phrase": "catch on",
+    "ru": "стать популярным, прижиться",
+    "example": "The new dance trend caught on quickly among students.",
+    "exampleRu": "Новый танцевальный тренд быстро стал популярным среди студентов.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "catch on to",
+    "ru": "понять, раскусить",
+    "example": "It took him a while to catch on to what was really going on.",
+    "exampleRu": "Ему потребовалось время, чтобы понять, что на самом деле происходит.",
+    "separable": false,
+    "level": "B2"
+   },
+   {
+    "phrase": "catch out",
+    "ru": "поймать на ошибке, разоблачить",
+    "example": "One tricky question caught the student out during the exam.",
+    "exampleRu": "Один хитрый вопрос подловил студента на экзамене.",
+    "separable": true,
+    "level": "B2"
+   },
+   {
+    "phrase": "catch up with",
+    "ru": "настигнуть (о последствиях)",
+    "example": "His old debts finally caught up with him last year.",
+    "exampleRu": "Его старые долги наконец настигли его в прошлом году.",
+    "separable": false,
+    "level": "B2"
+   }
+  ]
+ },
+ {
+  "verb": "fill",
+  "items": [
+   {
+    "phrase": "fill in",
+    "ru": "заполнить",
+    "example": "You need to fill in the application form carefully.",
+    "exampleRu": "Вам нужно внимательно заполнить анкету.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "fill out",
+    "ru": "заполнить",
+    "example": "Please fill out the survey before leaving.",
+    "exampleRu": "Пожалуйста, заполните опрос перед уходом.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "fill up",
+    "ru": "наполнить",
+    "example": "She filled up the glass with cold water.",
+    "exampleRu": "Она наполнила стакан холодной водой.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "fill up",
+    "ru": "заправиться",
+    "example": "We need to fill up at the next petrol station.",
+    "exampleRu": "Нам нужно заправиться на следующей заправке.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "fill in for",
+    "ru": "заменить",
+    "example": "I filled in for my colleague while she was away.",
+    "exampleRu": "Я заменял коллегу, пока она была в отъезде.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "fill in",
+    "ru": "ввести в курс дела",
+    "example": "Can you fill me in on what happened yesterday?",
+    "exampleRu": "Можешь ввести меня в курс того, что случилось вчера?",
+    "separable": true,
+    "level": "B2"
+   }
+  ]
+ },
+ {
+  "items": [
+   {
+    "phrase": "drop off",
+    "ru": "высадить, занести",
+    "example": "I'll drop off the kids at school tomorrow morning.",
+    "exampleRu": "Завтра утром я отвезу детей в школу.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "drop out",
+    "ru": "бросить, выбыть",
+    "example": "She dropped out of university to start her own business.",
+    "exampleRu": "Она бросила университет, чтобы открыть свой бизнес.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "drop in",
+    "ru": "заглянуть, нагрянуть",
+    "example": "Feel free to drop in whenever you're passing by my office.",
+    "exampleRu": "Заходи в любое время, если будешь проходить мимо моего офиса.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "drop by",
+    "ru": "заскочить, заглянуть",
+    "example": "I'll try to drop by your place after work tomorrow.",
+    "exampleRu": "Я постараюсь заскочить к тебе после работы завтра.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "drop dead",
+    "ru": "внезапно умереть",
+    "example": "He dropped dead of a heart attack at the age of fifty.",
+    "exampleRu": "Он внезапно умер от сердечного приступа в пятьдесят лет.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "drop away",
+    "ru": "исчезнуть, ослабнуть",
+    "example": "The pain gradually dropped away after he took the medicine.",
+    "exampleRu": "Боль постепенно исчезла после того, как он принял лекарство.",
+    "separable": false,
+    "level": "B2"
+   },
+   {
+    "phrase": "drop back",
+    "ru": "отстать, отойти назад",
+    "example": "He dropped back to third place near the finish line.",
+    "exampleRu": "Он откатился на третье место у самого финиша.",
+    "separable": false,
+    "level": "B2"
+   }
+  ],
+  "verb": "drop"
+ },
+ {
+  "verb": "move",
+  "items": [
+   {
+    "phrase": "move on",
+    "ru": "двигаться дальше, переходить",
+    "example": "Let's move on to the next topic in our discussion.",
+    "exampleRu": "Давайте перейдём к следующей теме нашего обсуждения.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "move in",
+    "ru": "въехать, поселиться",
+    "example": "We just moved in last weekend.",
+    "exampleRu": "Мы только что въехали в новый дом на выходных.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "move out",
+    "ru": "съехать, выселиться",
+    "example": "My roommate is moving out at the end of the month.",
+    "exampleRu": "Мой сосед по комнате съезжает в конце месяца.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "move forward",
+    "ru": "двигаться вперёд, продолжать",
+    "example": "We need to move forward with our project despite obstacles.",
+    "exampleRu": "Нам нужно двигаться вперёд с проектом, несмотря на препятствия.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "move up",
+    "ru": "перенести на более ранний срок",
+    "example": "We had to move up the meeting to Monday.",
+    "exampleRu": "Нам пришлось перенести встречу на более ранний срок — на понедельник.",
+    "separable": true,
+    "level": "B2"
+   },
+   {
+    "phrase": "move over",
+    "ru": "подвинуться",
+    "example": "Could you move over so I can sit next to you?",
+    "exampleRu": "Не мог бы ты подвинуться, чтобы я мог сесть рядом с тобой?",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "move away",
+    "ru": "переехать (в другое место)",
+    "example": "My best friend is moving away to another country next year.",
+    "exampleRu": "Мой лучший друг переезжает в другую страну в следующем году.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "move around",
+    "ru": "часто переезжать, перемещаться",
+    "example": "My family moved around a lot when I was a child.",
+    "exampleRu": "Моя семья часто переезжала, когда я была ребёнком.",
+    "separable": false,
+    "level": "B2"
+   }
+  ]
+ },
+ {
+  "verb": "pass",
+  "items": [
+   {
+    "phrase": "pass away",
+    "ru": "скончаться",
+    "example": "Her grandfather passed away last winter after a long illness.",
+    "exampleRu": "Её дедушка скончался прошлой зимой после долгой болезни.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "pass on",
+    "ru": "передать",
+    "example": "Please pass the message on to your teammates immediately.",
+    "exampleRu": "Пожалуйста, передайте сообщение своим коллегам немедленно.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "pass up",
+    "ru": "упустить (возможность)",
+    "example": "I couldn't pass up the opportunity to study abroad.",
+    "exampleRu": "Я не мог упустить возможность учиться за границей.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "pass through",
+    "ru": "проехать через, миновать",
+    "example": "We only passed through London without stopping there.",
+    "exampleRu": "Мы только проехали через Лондон, не останавливаясь там.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "pass by",
+    "ru": "проходить мимо",
+    "example": "I always pass by that restaurant on my way to the office.",
+    "exampleRu": "Я всегда прохожу мимо того ресторана по дороге в офис.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "pass down",
+    "ru": "передавать (по наследству)",
+    "example": "My grandmother passed down her recipes to all her children.",
+    "exampleRu": "Моя бабушка передала свои рецепты всем детям.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "pass out",
+    "ru": "раздавать",
+    "example": "The teacher passed out the exam papers at the beginning of class.",
+    "exampleRu": "Учитель раздал экзаменационные работы в начале урока.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "pass out",
+    "ru": "потерять сознание",
+    "example": "He passed out on the floor and we called an ambulance.",
+    "exampleRu": "Он потерял сознание на полу, и мы вызвали скорую.",
+    "separable": false,
+    "level": "B2"
+   },
+   {
+    "phrase": "pass around",
+    "ru": "передать по кругу",
+    "example": "Can you pass around the cookies and let everyone try them?",
+    "exampleRu": "Можешь передать печенье по кругу, чтобы все попробовали?",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "pass over",
+    "ru": "обойти (при повышении)",
+    "example": "They passed over John for the promotion and chose Sarah.",
+    "exampleRu": "Они обошли Джона при повышении и выбрали Сару.",
+    "separable": true,
+    "level": "B2"
+   },
+   {
+    "phrase": "pass off",
+    "ru": "выдавать за (pass off as)",
+    "example": "He tried to pass the copy off as an original.",
+    "exampleRu": "Он пытался выдать копию за оригинал.",
+    "separable": true,
+    "level": "B2"
+   }
+  ]
+ },
+ {
+  "verb": "point",
+  "items": [
+   {
+    "phrase": "point out",
+    "ru": "обратить внимание, отметить",
+    "example": "She pointed out that I'd made a mistake in the report.",
+    "exampleRu": "Она указала, что я допустил ошибку в отчёте.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "point out",
+    "ru": "указать, показать",
+    "example": "He pointed out a small café just around the corner.",
+    "exampleRu": "Он показал маленькое кафе прямо за углом.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "point to",
+    "ru": "указывать на, свидетельствовать о",
+    "example": "All the evidence points to his innocence in this case.",
+    "exampleRu": "Все улики указывают на его невиновность в этом деле.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "point at",
+    "ru": "показывать пальцем на",
+    "example": "It's considered rude to point at people in many cultures.",
+    "exampleRu": "Во многих культурах показывать пальцем на людей считается невежливым.",
+    "separable": false,
+    "level": "B1"
+   }
+  ]
+ },
+ {
+  "verb": "sort",
+  "items": [
+   {
+    "phrase": "sort out",
+    "ru": "разобраться, уладить",
+    "example": "We need to sort this out before the meeting.",
+    "exampleRu": "Нам нужно с этим разобраться до начала собрания.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "sort out",
+    "ru": "прибрать, навести порядок",
+    "example": "Please sort out your room before dinner.",
+    "exampleRu": "Пожалуйста, приберись в своей комнате перед ужином.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "sort through",
+    "ru": "перебирать, просматривать",
+    "example": "She sorted through old photos looking for childhood pictures.",
+    "exampleRu": "Она перебирала старые фотографии в поисках снимков из детства.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "sort into",
+    "ru": "разложить по, распределить",
+    "example": "Please sort the students into groups of four.",
+    "exampleRu": "Разделите студентов на группы по четыре человека, пожалуйста.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "sort by",
+    "ru": "сортировать по",
+    "example": "Sort the files by date to find the newest ones.",
+    "exampleRu": "Отсортируйте файлы по дате, чтобы найти самые новые.",
+    "separable": false,
+    "level": "B2"
+   }
+  ]
+ },
+ {
+  "items": [
+   {
+    "phrase": "speak up",
+    "ru": "высказаться",
+    "example": "If you don't agree, you should speak up in the meeting.",
+    "exampleRu": "Если ты не согласен, тебе стоит высказаться на встрече.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "speak up",
+    "ru": "говорить громче",
+    "example": "Could you speak up? I can't hear you very well.",
+    "exampleRu": "Можешь говорить громче? Я тебя плохо слышу.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "speak out",
+    "ru": "выступить против",
+    "example": "Many celebrities have spoken out against the new law.",
+    "exampleRu": "Многие знаменитости открыто выступили против нового закона.",
+    "separable": false,
+    "level": "B2"
+   },
+   {
+    "phrase": "speak to",
+    "ru": "поговорить с кем-то",
+    "example": "I need to speak to you about something important today.",
+    "exampleRu": "Мне нужно поговорить с тобой о важном деле сегодня.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "speak to",
+    "ru": "касаться вопроса",
+    "example": "The report speaks to the main issues we discussed yesterday.",
+    "exampleRu": "Доклад касается основных вопросов, которые мы обсуждали вчера.",
+    "separable": false,
+    "level": "B2"
+   },
+   {
+    "phrase": "speak for",
+    "ru": "представлять",
+    "example": "I can't speak for everyone, but I think this is wrong.",
+    "exampleRu": "Я не могу представлять всех, но, по-моему, это неправильно.",
+    "separable": false,
+    "level": "B2"
+   },
+   {
+    "phrase": "speak of",
+    "ru": "упоминать",
+    "example": "He rarely speaks of his time in the army.",
+    "exampleRu": "Он редко упоминает о своей службе в армии.",
+    "separable": false,
+    "level": "B2"
+   }
+  ],
+  "verb": "speak"
+ },
+ {
+  "items": [
+   {
+    "phrase": "switch on",
+    "ru": "включить",
+    "example": "Switch on the light when you enter the room.",
+    "exampleRu": "Включи свет, когда входишь в комнату.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "switch off",
+    "ru": "выключить",
+    "example": "Don't forget to switch off the TV before bed.",
+    "exampleRu": "Не забудь выключить телевизор перед сном.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "switch to",
+    "ru": "перейти на, переключиться на",
+    "example": "I switched to a new phone provider last month.",
+    "exampleRu": "В прошлом месяце я перешёл на нового оператора связи.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "switch back",
+    "ru": "вернуться к прежнему",
+    "example": "After trying the new app, we switched back to the old one.",
+    "exampleRu": "Опробовав новое приложение, мы вернулись к старому.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "switch over",
+    "ru": "полностью перейти на новое",
+    "example": "It took months for the company to switch over to renewable energy.",
+    "exampleRu": "Компании потребовались месяцы, чтобы полностью перейти на возобновляемую энергию.",
+    "separable": false,
+    "level": "B2"
+   },
+   {
+    "phrase": "switch around",
+    "ru": "поменять местами, переставить",
+    "example": "Can you switch these two chairs around, please?",
+    "exampleRu": "Можешь поменять эти два стула местами, пожалуйста?",
+    "separable": true,
+    "level": "B2"
+   },
+   {
+    "phrase": "switch up",
+    "ru": "изменить, разнообразить",
+    "example": "Let's switch things up and try a new restaurant this week.",
+    "exampleRu": "Давайте разнообразим неделю и сходим в новый ресторан.",
+    "separable": true,
+    "level": "B2"
+   },
+   {
+    "phrase": "switch out",
+    "ru": "заменить (одно на другое)",
+    "example": "Let me switch out the batteries in the remote.",
+    "exampleRu": "Дай я заменю батарейки в пульте.",
+    "separable": true,
+    "level": "B2"
+   }
+  ],
+  "verb": "switch"
+ },
+ {
+  "verb": "try",
+  "items": [
+   {
+    "phrase": "try on",
+    "ru": "примерить",
+    "example": "She tried on three dresses before choosing one.",
+    "exampleRu": "Она примерила три платья, прежде чем выбрать одно.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "try on",
+    "ru": "наглеть, пытаться обмануть",
+    "example": "Don't try it on with me — I know what you're up to.",
+    "exampleRu": "Не пытайся меня обмануть — я знаю, что ты задумал.",
+    "separable": true,
+    "level": "B2"
+   },
+   {
+    "phrase": "try out",
+    "ru": "испробовать, протестировать",
+    "example": "Have you tried out the new software yet?",
+    "exampleRu": "Ты уже опробовал новую программу?",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "try out for",
+    "ru": "пробоваться, проходить отбор",
+    "example": "My brother is trying out for the football team.",
+    "exampleRu": "Мой брат пробуется в футбольную команду.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "try for",
+    "ru": "пытаться получить, добиваться",
+    "example": "She's trying for a scholarship to study abroad.",
+    "exampleRu": "Она пытается получить стипендию для учёбы за границей.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "try for",
+    "ru": "пытаться зачать",
+    "example": "They've been trying for a baby for over a year.",
+    "exampleRu": "Они уже больше года пытаются завести ребёнка.",
+    "separable": false,
+    "level": "B2"
+   }
+  ]
+ },
+ {
+  "items": [
+   {
+    "phrase": "wear out",
+    "ru": "изнашиваться",
+    "example": "My shoes have worn out from constant walking and need replacement",
+    "exampleRu": "Мои туфли износились от постоянной ходьбы, и их нужно заменить.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "wear out",
+    "ru": "утомлять, изматывать",
+    "example": "Constant work and stress are wearing me out completely",
+    "exampleRu": "Постоянная работа и стресс совершенно меня изматывают.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "wear off",
+    "ru": "проходить, исчезать",
+    "example": "The effect of the painkiller will wear off in a few hours",
+    "exampleRu": "Действие обезболивающего пройдёт через несколько часов.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "wear away",
+    "ru": "стираться, разрушаться",
+    "example": "Constant waves wear away the sandy beach over many years",
+    "exampleRu": "Постоянные волны разрушают песчаный пляж на протяжении многих лет.",
+    "separable": true,
+    "level": "B2"
+   },
+   {
+    "phrase": "wear down",
+    "ru": "изматывать, сломить",
+    "example": "Years of criticism gradually wore down her confidence and willpower",
+    "exampleRu": "Годы критики постепенно подорвали её уверенность и волю.",
+    "separable": true,
+    "level": "B2"
+   },
+   {
+    "phrase": "wear on",
+    "ru": "тянуться, продолжаться",
+    "example": "As the evening wore on, people grew more relaxed and talkative",
+    "exampleRu": "По мере того как тянулся вечер, люди становились всё более раскованными и разговорчивыми.",
+    "separable": false,
+    "level": "B2"
+   },
+   {
+    "phrase": "wear thin",
+    "ru": "быть на исходе",
+    "example": "My patience is wearing thin after his constant complaints",
+    "exampleRu": "Моё терпение на исходе из-за его постоянных жалоб.",
+    "separable": false,
+    "level": "B2"
+   },
+   {
+    "phrase": "wear through",
+    "ru": "протираться, изнашиваться",
+    "example": "The sole of my shoe wore through after months of use",
+    "exampleRu": "Подошва моего ботинка протёрлась насквозь после нескольких месяцев носки.",
+    "separable": false,
+    "level": "B2"
+   }
+  ],
+  "verb": "wear"
+ },
+ {
+  "verb": "write",
+  "items": [
+   {
+    "phrase": "write down",
+    "ru": "записать",
+    "example": "Write down the address before leaving the café.",
+    "exampleRu": "Запиши адрес, прежде чем уходить из кафе.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "write back",
+    "ru": "ответить письмом",
+    "example": "I wrote back to her last week about the meeting.",
+    "exampleRu": "Я ответил ей письмом на прошлой неделе по поводу встречи.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "write out",
+    "ru": "выписать целиком",
+    "example": "Write out your full name instead of just using initials.",
+    "exampleRu": "Выпиши своё полное имя, а не только инициалы.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "write off",
+    "ru": "списать",
+    "example": "Don't write off his opinion just because he's young.",
+    "exampleRu": "Не списывай его мнение только потому, что он молодой.",
+    "separable": true,
+    "level": "B2"
+   },
+   {
+    "phrase": "write up",
+    "ru": "оформить письменно",
+    "example": "The journalist wrote up the interview for tomorrow's newspaper.",
+    "exampleRu": "Журналист оформил интервью для завтрашней газеты.",
+    "separable": true,
+    "level": "B2"
+   },
+   {
+    "phrase": "write in",
+    "ru": "написать письмо (в организацию)",
+    "example": "Thousands of people wrote in after the controversial announcement.",
+    "exampleRu": "Тысячи людей написали письма после спорного объявления.",
+    "separable": false,
+    "level": "B2"
+   }
+  ]
+ },
+ {
+  "verb": "blow",
+  "items": [
+   {
+    "phrase": "blow out",
+    "ru": "потушить",
+    "example": "She blew out all the candles on her birthday cake.",
+    "exampleRu": "Она потушила все свечи на своём торте ко дню рождения.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "blow up",
+    "ru": "взорвать, взорваться",
+    "example": "The building will blow up if the bomb goes off.",
+    "exampleRu": "Здание взорвётся, если бомба сработает.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "blow away",
+    "ru": "впечатлить, ошеломить",
+    "example": "Her incredible piano performance absolutely blew me away.",
+    "exampleRu": "Её невероятное исполнение на пианино меня просто ошеломило.",
+    "separable": true,
+    "level": "B2"
+   },
+   {
+    "phrase": "blow off",
+    "ru": "пропустить, проигнорировать",
+    "example": "He blew off our meeting without even calling me back.",
+    "exampleRu": "Он пропустил нашу встречу и даже не перезвонил мне.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "blow over",
+    "ru": "утихнуть, забыться",
+    "example": "Don't worry, this scandal will eventually blow over soon.",
+    "exampleRu": "Не переживай, этот скандал в конце концов утихнет.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "blow through",
+    "ru": "растратить, прожечь",
+    "example": "He blew through his entire salary in just two weeks.",
+    "exampleRu": "Он потратил всю зарплату всего за две недели.",
+    "separable": false,
+    "level": "B2"
+   },
+   {
+    "phrase": "blow down",
+    "ru": "повалить, сломать",
+    "example": "The storm blew down several tall trees in our neighborhood.",
+    "exampleRu": "Шторм повалил несколько высоких деревьев в нашей округе.",
+    "separable": true,
+    "level": "B1"
+   }
+  ]
+ },
+ {
+  "items": [
+   {
+    "phrase": "sign up",
+    "ru": "зарегистрироваться, подписаться",
+    "example": "I signed up for a yoga class last Monday.",
+    "exampleRu": "В прошлый понедельник я записался на занятия йогой.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "sign in",
+    "ru": "войти, авторизоваться",
+    "example": "Please sign in to your account before accessing the files.",
+    "exampleRu": "Пожалуйста, войдите в свой аккаунт перед доступом к файлам.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "sign out",
+    "ru": "выйти из системы",
+    "example": "Don't forget to sign out when you leave the office.",
+    "exampleRu": "Не забудьте выйти из системы, когда будете уходить из офиса.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "sign for",
+    "ru": "расписаться при получении",
+    "example": "A courier asked me to sign for the delivery today.",
+    "exampleRu": "Сегодня курьер попросил меня расписаться при получении посылки.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "sign off",
+    "ru": "одобрить, дать добро",
+    "example": "The manager finally signed off on our project budget.",
+    "exampleRu": "Начальник наконец одобрил бюджет нашего проекта.",
+    "separable": false,
+    "level": "B2"
+   },
+   {
+    "phrase": "sign off",
+    "ru": "закончить, попрощаться",
+    "example": "She signed off the letter with 'love, Anna'.",
+    "exampleRu": "В конце письма она подписалась «с любовью, Анна».",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "sign on",
+    "ru": "наняться, подписать контракт",
+    "example": "Several new players signed on with the football club this season.",
+    "exampleRu": "В этом сезоне несколько новых игроков подписали контракт с футбольным клубом.",
+    "separable": true,
+    "level": "B2"
+   },
+   {
+    "phrase": "sign away",
+    "ru": "потерять, подписав документ",
+    "example": "He signed away all his rights to the company forever.",
+    "exampleRu": "Он навсегда отказался от всех своих прав в пользу компании.",
+    "separable": true,
+    "level": "B2"
+   },
+   {
+    "phrase": "sign over",
+    "ru": "передать, переоформить",
+    "example": "The author signed over the publishing rights to a new distributor.",
+    "exampleRu": "Автор передал права на издание новому дистрибьютору.",
+    "separable": true,
+    "level": "B2"
+   }
+  ],
+  "verb": "sign"
+ },
+ {
+  "verb": "shut",
+  "items": [
+   {
+    "phrase": "shut up",
+    "ru": "замолчать",
+    "example": "He told the kids to shut up and listen.",
+    "exampleRu": "Он велел детям замолчать и слушать.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "shut down",
+    "ru": "закрыть, остановить (завод, компанию); выключить (компьютер, систему)",
+    "example": "The factory shut down after years of financial problems.",
+    "exampleRu": "Завод закрылся после многих лет финансовых проблем.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "shut off",
+    "ru": "отключить (воду, газ, свет, устройство)",
+    "example": "Don't forget to shut off the lights before bed.",
+    "exampleRu": "Не забудь выключить свет перед сном.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "shut out",
+    "ru": "исключить, не допустить (кого-то из группы, отношений)",
+    "example": "She felt completely shut out by her classmates and friends.",
+    "exampleRu": "Она чувствовала себя полностью исключённой одноклассниками и друзьями.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "shut out",
+    "ru": "заглушить, не пропустить (звук, свет)",
+    "example": "I tried to shut out the noise from the construction outside.",
+    "exampleRu": "Я пытался заглушить шум стройки снаружи.",
+    "separable": true,
+    "level": "B2"
+   },
+   {
+    "phrase": "shut in",
+    "ru": "запереть внутри, изолировать в помещении",
+    "example": "The children were shut in the house during the storm.",
+    "exampleRu": "Детей заперли в доме во время шторма.",
+    "separable": true,
+    "level": "B2"
+   },
+   {
+    "phrase": "shut away",
+    "ru": "отгородиться, изолировать себя от окружающего мира",
+    "example": "He shut himself away from society for years.",
+    "exampleRu": "Он отгородился от общества на долгие годы.",
+    "separable": true,
+    "level": "B2"
+   }
+  ]
+ },
+ {
+  "verb": "sit",
+  "items": [
+   {
+    "phrase": "sit down",
+    "ru": "сесть, садиться",
+    "example": "Please sit down and make yourself comfortable.",
+    "exampleRu": "Пожалуйста, садитесь и устраивайтесь поудобнее.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "sit back",
+    "ru": "откинуться назад, расслабиться",
+    "example": "Sit back and enjoy the movie.",
+    "exampleRu": "Откиньтесь на спинку кресла и наслаждайтесь фильмом.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "sit up",
+    "ru": "сесть прямо, выпрямиться",
+    "example": "She sat up straight when the teacher walked in.",
+    "exampleRu": "Она выпрямилась, когда учитель вошёл в класс.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "sit around",
+    "ru": "сидеть без дела, бездельничать",
+    "example": "We can't just sit around waiting for the opportunity.",
+    "exampleRu": "Мы не можем просто сидеть сложа руки в ожидании удобного случая.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "sit through",
+    "ru": "высидеть, досидеть до конца",
+    "example": "I managed to sit through the whole boring lecture.",
+    "exampleRu": "Мне удалось высидеть всю скучную лекцию до конца.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "sit tight",
+    "ru": "подождать, оставаться на месте",
+    "example": "Just sit tight until we sort out the problem.",
+    "exampleRu": "Просто подожди, пока мы не решим эту проблему.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "sit in",
+    "ru": "присутствовать, замещать кого-то",
+    "example": "Can you sit in for me at tomorrow's board meeting?",
+    "exampleRu": "Ты можешь заменить меня на завтрашнем заседании правления?",
+    "separable": false,
+    "level": "B2"
+   },
+   {
+    "phrase": "sit out",
+    "ru": "пропустить, не участвовать",
+    "example": "She decided to sit out the dance because her feet hurt.",
+    "exampleRu": "Она решила пропустить танец, потому что у неё болели ноги.",
+    "separable": true,
+    "level": "B2"
+   },
+   {
+    "phrase": "sit on",
+    "ru": "тянуть с решением, замалчивать",
+    "example": "The board has been sitting on this proposal for weeks.",
+    "exampleRu": "Правление уже несколько недель тянет с решением по этому предложению.",
+    "separable": false,
+    "level": "B2"
+   }
+  ]
+ },
+ {
+  "verb": "do",
+  "items": [
+   {
+    "phrase": "do up",
+    "ru": "застегнуть, завязать",
+    "example": "Can you do up my dress for me, please?",
+    "exampleRu": "Ты можешь застегнуть мне платье, пожалуйста?",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "do up",
+    "ru": "ремонтировать, обновлять",
+    "example": "They spent all summer doing up the old cottage.",
+    "exampleRu": "Они всё лето ремонтировали старый домик.",
+    "separable": true,
+    "level": "B2"
+   },
+   {
+    "phrase": "do with",
+    "ru": "не помешало бы (с could)",
+    "example": "I could really do with a hot cup of coffee.",
+    "exampleRu": "Мне бы сейчас не помешала горячая чашка кофе.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "do without",
+    "ru": "обойтись без",
+    "example": "I can do without your negative comments today.",
+    "exampleRu": "Сегодня я обойдусь без твоих негативных комментариев.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "do over",
+    "ru": "переделать, сделать заново",
+    "example": "I made mistakes, so I had to do it over.",
+    "exampleRu": "Я наделал ошибок, поэтому пришлось переделать всё заново.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "do away with",
+    "ru": "избавиться от, отменить",
+    "example": "The government decided to do away with that old law.",
+    "exampleRu": "Правительство решило отменить этот старый закон.",
+    "separable": false,
+    "level": "B2"
+   },
+   {
+    "phrase": "do in",
+    "ru": "измотать, вымотать",
+    "example": "That difficult hike completely did me in yesterday.",
+    "exampleRu": "Вчера тот трудный поход меня полностью вымотал.",
+    "separable": true,
+    "level": "B2"
+   },
+   {
+    "phrase": "do out of",
+    "ru": "обманом лишить, надуть",
+    "example": "His business partner did him out of thousands of dollars.",
+    "exampleRu": "Его бизнес-партнёр обманом лишил его тысяч долларов.",
+    "separable": true,
+    "level": "B2"
+   }
+  ]
+ },
+ {
+  "verb": "dress",
+  "items": [
+   {
+    "phrase": "dress up",
+    "ru": "наряжаться",
+    "example": "I need to dress up for the dinner party tonight.",
+    "exampleRu": "Мне нужно нарядиться на сегодняшний ужин с гостями.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "dress down",
+    "ru": "одеваться просто",
+    "example": "You can dress down on Fridays at the office.",
+    "exampleRu": "По пятницам в офисе можно одеваться просто.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "dress down",
+    "ru": "отчитывать",
+    "example": "The coach dressed down the players for their poor performance.",
+    "exampleRu": "Тренер отчитал игроков за плохую игру.",
+    "separable": true,
+    "level": "B2"
+   },
+   {
+    "phrase": "dress in",
+    "ru": "одеваться в",
+    "example": "She always dresses in elegant black clothes and looks amazing.",
+    "exampleRu": "Она всегда одевается в элегантную чёрную одежду и выглядит потрясающе.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "dress up in",
+    "ru": "нарядиться в",
+    "example": "The children dressed up in their best clothes for the ceremony.",
+    "exampleRu": "Дети нарядились в лучшую одежду для церемонии.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "dress up as",
+    "ru": "нарядиться кем-то",
+    "example": "He dressed up as a pirate for the Halloween party last weekend.",
+    "exampleRu": "В прошлые выходные он нарядился пиратом на вечеринку на Хеллоуин.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "dress for",
+    "ru": "одеваться подобающе",
+    "example": "You should dress for the occasion when attending a formal event.",
+    "exampleRu": "На официальное мероприятие стоит одеваться подобающе случаю.",
+    "separable": false,
+    "level": "B1"
+   }
+  ]
+ },
+ {
+  "verb": "hurry",
+  "items": [
+   {
+    "phrase": "hurry up",
+    "ru": "поторопиться",
+    "example": "Hurry up! The train leaves in five minutes.",
+    "exampleRu": "Поторопись! Поезд отправляется через пять минут.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "hurry along",
+    "ru": "ускорить",
+    "example": "Could you hurry the paperwork along? We need it by Friday.",
+    "exampleRu": "Не мог бы ты ускорить оформление документов? Нам нужно к пятнице.",
+    "separable": true,
+    "level": "B2"
+   },
+   {
+    "phrase": "hurry away",
+    "ru": "поспешно уйти",
+    "example": "He apologized and hurried away before I could reply.",
+    "exampleRu": "Он извинился и поспешно ушёл, не дав мне ответить.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "hurry off",
+    "ru": "поспешно уехать",
+    "example": "She grabbed her bag and hurried off to catch her flight.",
+    "exampleRu": "Она схватила сумку и поспешила на свой рейс.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "hurry back",
+    "ru": "поспешить вернуться",
+    "example": "I just need to get some milk — I'll hurry back.",
+    "exampleRu": "Мне просто нужно купить молока — я быстро вернусь.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "hurry through",
+    "ru": "сделать наспех",
+    "example": "Don't hurry through the exam — check your answers first.",
+    "exampleRu": "Не торопись на экзамене — сначала проверь ответы.",
+    "separable": false,
+    "level": "B2"
+   }
+  ]
+ },
+ {
+  "verb": "knock",
+  "items": [
+   {
+    "phrase": "knock on",
+    "ru": "стучать (в дверь)",
+    "example": "She knocked on the door three times yesterday evening.",
+    "exampleRu": "Она три раза постучала в дверь вчера вечером.",
+    "separable": false,
+    "level": "B1"
+   },
+   {
+    "phrase": "knock over",
+    "ru": "опрокидывать, сбивать",
+    "example": "He accidentally knocked over his coffee cup on the table.",
+    "exampleRu": "Он случайно опрокинул чашку кофе на столе.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "knock down",
+    "ru": "сносить (здание); сбивать с ног",
+    "example": "They're going to knock down the old cinema next month.",
+    "exampleRu": "В следующем месяце они снесут старый кинотеатр.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "knock out",
+    "ru": "нокаутировать; выбить из соревнования",
+    "example": "The champion knocked out his opponent in the third round.",
+    "exampleRu": "Чемпион нокаутировал соперника в третьем раунде.",
+    "separable": true,
+    "level": "B1"
+   },
+   {
+    "phrase": "knock off",
+    "ru": "заканчивать работу (неформ.)",
+    "example": "Let's knock off early today and go for a drink.",
+    "exampleRu": "Давай сегодня закончим работу пораньше и сходим выпить.",
+    "separable": false,
+    "level": "B2"
+   },
+   {
+    "phrase": "knock back",
+    "ru": "выпить залпом",
+    "example": "He knocked back his drink and ordered another.",
+    "exampleRu": "Он залпом выпил свой напиток и заказал ещё один.",
+    "separable": true,
+    "level": "B2"
+   },
+   {
+    "phrase": "knock into",
+    "ru": "врезаться, столкнуться с",
+    "example": "I knocked into an old friend at the supermarket yesterday.",
+    "exampleRu": "Вчера я случайно столкнулся со старым другом в супермаркете.",
+    "separable": false,
+    "level": "B1"
+   }
+  ]
  }
 ]
