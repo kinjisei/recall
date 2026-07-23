@@ -96,14 +96,17 @@ export function PacksSheet({ lang, onAdded }: { lang: AppLang; onAdded: () => vo
 
   // Поиск по названию темы (без учёта регистра). При поиске раскрываем все уровни.
   const q = query.trim().toLowerCase()
-  const byLevel = useMemo(() => {
-    const groups: Record<string, WordTopic[]> = {}
-    if (!data) return groups
+  // Категории паков (жалоба владельца: «Идиомы» и обычные темы смешивались, а
+  // частотной «Базы уровня» не было видно). Категория — по префиксу названия.
+  const byCategory = useMemo(() => {
+    const cats: Record<string, Record<string, WordTopic[]>> = {}
+    if (!data) return cats
     for (const t of data.topics) {
       if (q && !t.name.toLowerCase().includes(q)) continue
-      ;(groups[t.level] ??= []).push(t)
+      const cat = t.name.startsWith('База') ? 'base' : t.name.startsWith('Идиомы') ? 'idioms' : 'themes'
+      ;((cats[cat] ??= {})[t.level] ??= []).push(t)
     }
-    return groups
+    return cats
   }, [data, q])
 
   if (!data) {
@@ -132,58 +135,80 @@ export function PacksSheet({ lang, onAdded }: { lang: AppLang; onAdded: () => vo
         onChange={(e) => setQuery(e.target.value)}
       />
 
-      {LEVEL_ORDER.map((level) => {
-        const topics = byLevel[level] ?? []
-        if (topics.length === 0) return null
-        const isOpen = q.length > 0 || openLevel === level
+      {(
+        [
+          ['base', '⭐ База уровня — самые нужные слова'],
+          ['themes', 'Темы'],
+          ['idioms', 'Идиомы'],
+        ] as [string, string][]
+      ).map(([cat, catLabel]) => {
+        const levels = byCategory[cat]
+        if (!levels) return null
+        const onlyThemes = Object.keys(byCategory).length === 1 && cat === 'themes'
         return (
-          <div key={level}>
-            <button
-              onClick={() => setOpenLevel((cur) => (cur === level ? null : level))}
-              className="flex w-full items-center justify-between rounded-lg bg-white/[0.06] px-3 py-2 text-left dark:bg-[var(--night-surface)]"
-            >
-              <span className="text-sm font-bold">
-                Уровень {level}{' '}
-                <span className="font-normal text-[var(--night-text-40)]">
-                  · {topics.length} тем
-                </span>
-              </span>
-              <span className="text-[var(--night-text-40)]">{isOpen ? '▾' : '▸'}</span>
-            </button>
-
-            {isOpen && (
-              <div className="mt-2 flex flex-col gap-2">
-                {topics.map((t) => {
-                  const count = data.wordsByTopic.get(t.id)?.length ?? 0
-                  const note = results[t.id]
-                  return (
-                    <div
-                      key={t.id}
-                      className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.08] px-3 py-2 dark:border-white/[0.08]"
-                    >
-                      <div className="min-w-0">
-                        <p className="truncate font-medium">{t.name}</p>
-                        <p className="text-xs text-[var(--night-text-40)]">{count} слов</p>
-                      </div>
-                      {note ? (
-                        <span className="shrink-0 text-sm text-emerald-600 dark:text-emerald-400">
-                          {note}
-                        </span>
-                      ) : (
-                        <Button
-                          variant="secondary"
-                          className="shrink-0 px-3 py-1.5 text-sm"
-                          onClick={() => addTopic(t.id)}
-                          disabled={busyTopic !== null}
-                        >
-                          {busyTopic === t.id ? 'Добавляю…' : '+ Добавить'}
-                        </Button>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
+          <div key={cat} className="flex flex-col gap-2">
+            {/* единственная категория (ES: только темы) — без лишнего заголовка */}
+            {!onlyThemes && (
+              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--night-text-40)]">
+                {catLabel}
+              </p>
             )}
+            {LEVEL_ORDER.map((level) => {
+              const topics = levels[level] ?? []
+              if (topics.length === 0) return null
+              const key = `${cat}:${level}`
+              const isOpen = q.length > 0 || openLevel === key
+              return (
+                <div key={key}>
+                  <button
+                    onClick={() => setOpenLevel((cur) => (cur === key ? null : key))}
+                    className="flex w-full items-center justify-between rounded-lg bg-white/[0.06] px-3 py-2 text-left dark:bg-[var(--night-surface)]"
+                  >
+                    <span className="text-sm font-bold">
+                      Уровень {level}{' '}
+                      <span className="font-normal text-[var(--night-text-40)]">
+                        · {topics.length} тем
+                      </span>
+                    </span>
+                    <span className="text-[var(--night-text-40)]">{isOpen ? '▾' : '▸'}</span>
+                  </button>
+
+                  {isOpen && (
+                    <div className="mt-2 flex flex-col gap-2">
+                      {topics.map((t) => {
+                        const count = data.wordsByTopic.get(t.id)?.length ?? 0
+                        const note = results[t.id]
+                        return (
+                          <div
+                            key={t.id}
+                            className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.08] px-3 py-2 dark:border-white/[0.08]"
+                          >
+                            <div className="min-w-0">
+                              <p className="truncate font-medium">{t.name}</p>
+                              <p className="text-xs text-[var(--night-text-40)]">{count} слов</p>
+                            </div>
+                            {note ? (
+                              <span className="shrink-0 text-sm text-emerald-600 dark:text-emerald-400">
+                                {note}
+                              </span>
+                            ) : (
+                              <Button
+                                variant="secondary"
+                                className="shrink-0 px-3 py-1.5 text-sm"
+                                onClick={() => addTopic(t.id)}
+                                disabled={busyTopic !== null}
+                              >
+                                {busyTopic === t.id ? 'Добавляю…' : '+ Добавить'}
+                              </Button>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
         )
       })}

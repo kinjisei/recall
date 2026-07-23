@@ -8,7 +8,7 @@ import { useRef, useState } from 'react'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { BackHeader } from '../../components/BackButton'
-import { TappableText, WordSheet, type WordPick } from '../../components/WordSheet'
+import { MarkableText } from '../../components/MarkableText'
 import { IconPlus, IconTrash } from '../../components/icons'
 import { getSettings, READER_CLASSES } from '../../lib/settings'
 import {
@@ -177,8 +177,6 @@ export function MyTextReader({
   lang: AppLang
   onBack: () => void
 }) {
-  const [pick, setPick] = useState<WordPick | null>(null)
-
   return (
     <div className="flex flex-col gap-4">
       <BackHeader onBack={onBack} title={text.title} />
@@ -186,13 +184,12 @@ export function MyTextReader({
         <p className="text-xs text-amber-300">Текст был обрезан по лимиту при добавлении.</p>
       )}
       <Card>
-        <p className={`whitespace-pre-wrap ${READER_CLASSES[getSettings().readerSize]}`}>
-          <TappableText text={text.body} onSelect={setPick} />
-        </p>
+        <MarkableText
+          text={text.body}
+          lang={lang}
+          className={`whitespace-pre-wrap ${READER_CLASSES[getSettings().readerSize]}`}
+        />
       </Card>
-      {pick && (
-        <WordSheet word={pick.word} sentence={pick.sentence} lang={lang} onClose={() => setPick(null)} />
-      )}
     </div>
   )
 }

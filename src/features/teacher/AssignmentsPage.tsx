@@ -10,7 +10,7 @@ import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { RoundResult, ScoreGlyph } from '../../components/RoundResult'
 import { ExerciseView } from '../../components/exercises'
-import { TappableText, WordSheet, type WordPick } from '../../components/WordSheet'
+import { MarkableText } from '../../components/MarkableText'
 import { logActivity } from '../../lib/activity'
 import { useAsyncData } from '../../lib/useAsyncData'
 import { LoadError } from '../../components/LoadError'
@@ -378,25 +378,17 @@ function AssignmentRunner({
 
 
 // ---------------------------------------------------------------------------
-// Текст задания с кликабельными словами (общая шторка WordSheet).
+// Текст задания: тап-словарь + режим «Отметить слова» (общий MarkableText).
 // ---------------------------------------------------------------------------
 
 function TappableBody({ body, lang }: { body: string; lang: AppLang }) {
-  const [pick, setPick] = useState<WordPick | null>(null)
-
   return (
-    <>
-      <p className="mt-3 whitespace-pre-wrap leading-relaxed text-[var(--night-text-70)]">
-        <TappableText text={body} onSelect={setPick} />
-      </p>
-      {pick && (
-        <WordSheet
-          word={pick.word}
-          sentence={pick.sentence}
-          lang={lang}
-          onClose={() => setPick(null)}
-        />
-      )}
-    </>
+    <div className="mt-3">
+      <MarkableText
+        text={body}
+        lang={lang}
+        className="whitespace-pre-wrap leading-relaxed text-[var(--night-text-70)]"
+      />
+    </div>
   )
 }

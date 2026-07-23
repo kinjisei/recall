@@ -2,7 +2,7 @@
 import { Card } from '../../components/Card'
 import { GuidedNext } from '../../components/GuidedNext'
 import { BackHeader } from '../../components/BackButton'
-import { TappableText, WordSheet, type WordPick } from '../../components/WordSheet'
+import { MarkableText } from '../../components/MarkableText'
 import { useLanguage } from '../../context/LanguageContext'
 import { getUserLevel } from '../../lib/level'
 import { getSettings, READER_CLASSES } from '../../lib/settings'
@@ -137,29 +137,16 @@ function EnglishReaderPage({
 }
 
 function Reader({ text, onBack }: { text: SampleText; onBack: () => void }) {
-  const [pick, setPick] = useState<WordPick | null>(null)
-
   return (
     <div className="flex flex-col gap-4">
       <BackHeader onBack={onBack} title={text.title} />
 
       <Card>
-        <p className={READER_CLASSES[getSettings().readerSize]}>
-          <TappableText text={text.body} onSelect={setPick} />
-        </p>
+        <MarkableText text={text.body} lang="en" className={READER_CLASSES[getSettings().readerSize]} />
       </Card>
 
       {/* ведомая сессия: после текста предложить следующий шаг */}
       <GuidedNext step="reader" />
-
-      {pick && (
-        <WordSheet
-          word={pick.word}
-          sentence={pick.sentence}
-          lang="en"
-          onClose={() => setPick(null)}
-        />
-      )}
     </div>
   )
 }

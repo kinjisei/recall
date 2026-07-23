@@ -47,9 +47,17 @@ export function sentenceAround(text: string, word: string): string {
 export function TappableText({
   text,
   onSelect,
+  markMode = false,
+  marked,
+  onToggleMark,
 }: {
   text: string
   onSelect: (pick: WordPick) => void
+  /** Режим «Отметить слова»: тап помечает слово вместо открытия шторки. */
+  markMode?: boolean
+  /** Индексы помеченных токенов (подсвечиваются постоянно). */
+  marked?: Set<number>
+  onToggleMark?: (tokenIndex: number, word: string, sentence: string) => void
 }) {
   const tokens = useMemo(() => text.split(/([\s—–…]+)/), [text])
   // индексы токенов-слов, которые входят в выделяемую фразу
@@ -108,11 +116,12 @@ export function TappableText({
             </span>
           )
         }
-        const highlighted = inRange(i)
+        const highlighted = inRange(i) || (markMode && marked?.has(i))
         return (
           <span
             key={i}
             onPointerDown={() => {
+              if (markMode) return // в режиме отметки long-press не нужен
               cancelLongPress()
               // удержание ~350 мс — включаем режим выделения фразы
               longPress.current = window.setTimeout(() => {
@@ -124,6 +133,13 @@ export function TappableText({
               if (selecting) setRange((r) => (r ? { ...r, to: i } : { from: i, to: i }))
             }}
             onPointerUp={(e) => {
+              // режим «Отметить слова»: тап ставит/снимает отметку
+              if (markMode) {
+                e.stopPropagation()
+                const word = cleanWord(tok)
+                if (word) onToggleMark?.(i, word, sentenceAround(text, word))
+                return
+              }
               // обычный тап (без удержания) — перевод одного слова
               if (!selecting) {
                 e.stopPropagation()
