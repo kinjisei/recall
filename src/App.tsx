@@ -61,6 +61,9 @@ const TermsPage = lazy(() =>
 const PricingPage = lazy(() =>
   import('./features/billing/PricingPage').then((m) => ({ default: m.PricingPage })),
 )
+const TeachersPage = lazy(() =>
+  import('./features/landing/TeachersPage').then((m) => ({ default: m.TeachersPage })),
+)
 // Экран администратора: сам файл делает другой агент — тут только роут.
 const AdminPage = lazy(() =>
   import('./features/admin/AdminPage').then((m) => ({ default: m.AdminPage })),
@@ -104,6 +107,15 @@ export default function App() {
               element={
                 <Suspense fallback={<PageFallback />}>
                   <PricingPage />
+                </Suspense>
+              }
+            />
+            {/* лендинг для репетиторов — публичный (его шарим в TG/визитках) */}
+            <Route
+              path="/teachers"
+              element={
+                <Suspense fallback={<PageFallback />}>
+                  <TeachersPage />
                 </Suspense>
               }
             />
