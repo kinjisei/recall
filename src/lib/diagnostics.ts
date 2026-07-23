@@ -9,13 +9,13 @@
 import { supabase } from './supabase'
 import { getStudentWords } from './wordChecks'
 import { listStudentQuests } from './quests'
+import { finalScore } from './assignmentScore'
 import type {
   AppLang,
   GrammarQuest,
   Material,
   MaterialAssignment,
   MaterialExerciseKind,
-  ReviewItem,
 } from '../types'
 
 /** Сводка по словам колоды (статусы — как в «Слова и перепроверка»). */
@@ -38,6 +38,8 @@ export interface DiagAssignment {
   status: MaterialAssignment['status']
   /** Финальный процент: вердикт учителя, иначе авто-балл. null — ещё не сдано. */
   percent: number | null
+  /** true — балл из прошлой попытки (материал переназначен и ещё не пересдан). */
+  fromAttempt: boolean
 }
 
 /** Итог по категории упражнений (понимание/грамматика/лексика) за все работы. */
@@ -74,18 +76,6 @@ function localDay(offsetDays = 0): string {
   const m = String(d.getMonth() + 1).padStart(2, '0')
   const dd = String(d.getDate()).padStart(2, '0')
   return `${d.getFullYear()}-${m}-${dd}`
-}
-
-/** Финальный процент работы: teacher_review приоритетнее авто-балла. */
-function finalPercent(a: MaterialAssignment): number | null {
-  const tr = a.teacher_review
-  if (tr && tr.length > 0) {
-    return Math.round((tr.filter((r) => r.ok).length / tr.length) * 100)
-  }
-  if (a.auto_score !== null && a.auto_total) {
-    return Math.round((a.auto_score / a.auto_total) * 100)
-  }
-  return null
 }
 
 export async function getStudentDiagnostics(studentId: string): Promise<StudentDiagnostics> {
@@ -139,6 +129,9 @@ export async function getStudentDiagnostics(studentId: string): Promise<StudentD
   for (const a of rows) {
     const mat = a.materials
     if (!mat) continue
+    // единая логика балла (assignmentScore): переназначенные работы берут
+    // последнюю завершённую попытку из attempts — не выпадают из среднего
+    const score = finalScore(a)
     assignments.push({
       id: a.id,
       title: mat.title ?? mat.topic,
@@ -146,14 +139,11 @@ export async function getStudentDiagnostics(studentId: string): Promise<StudentD
       level: mat.level,
       submittedAt: a.submitted_at,
       status: a.status,
-      percent: finalPercent(a),
+      percent: score.percent,
+      fromAttempt: score.fromAttempt,
     })
-    // разбивка по категориям: вердикт учителя (если есть) точнее авто-оценки
-    if (!a.answers) continue
-    const verdictByIndex = new Map<number, boolean>()
-    for (const ans of a.answers) verdictByIndex.set(ans.index, ans.auto_ok)
-    for (const r of (a.teacher_review ?? []) as ReviewItem[]) verdictByIndex.set(r.index, r.ok)
-    verdictByIndex.forEach((ok, index) => {
+    // разбивка по категориям — по вердиктам той же попытки, что дала балл
+    score.verdicts.forEach((ok, index) => {
       const kind = mat.exercises[index]?.kind
       if (!kind || !(kind in kindTotals)) return
       kindTotals[kind].total++

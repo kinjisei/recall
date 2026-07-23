@@ -4,7 +4,7 @@ import { IconGraduation, IconFlame } from '../../components/icons'
 import { BackHeader } from '../../components/BackButton'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
-import { supabase } from '../../lib/supabase'
+import { getProfile } from '../../lib/profile'
 import { useAuth } from '../../context/AuthContext'
 import {
   getOrCreateInviteCode,
@@ -30,15 +30,11 @@ export function TeacherPage() {
 
   useEffect(() => {
     if (!user) return
-    supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single()
-      .then(({ data }) => {
-        setProfile(data as Profile | null)
-        setLoading(false)
-      })
+    // кэш профиля — Главная и меню аватара уже запрашивали тот же ряд
+    getProfile(user.id).then((p) => {
+      setProfile(p)
+      setLoading(false)
+    })
   }, [user])
 
   if (loading) return <p className="text-[var(--night-text-40)]">Загрузка…</p>

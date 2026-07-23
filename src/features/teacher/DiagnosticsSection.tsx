@@ -168,7 +168,7 @@ export function DiagnosticsSection({ studentId }: { studentId: string }) {
                     className={`shrink-0 text-xs ${a.percent !== null ? pctTone(a.percent) : 'text-[var(--night-text-40)]'}`}
                   >
                     {a.percent !== null
-                      ? `${a.percent}%`
+                      ? `${a.percent}%${a.fromAttempt ? ' (прошлая попытка)' : ''}`
                       : a.status === 'assigned'
                         ? 'не сдано'
                         : 'на проверке'}

@@ -302,13 +302,13 @@ export function PronunciationPage() {
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => speak(current.text, { lang })}
-            className="lift flex min-h-[40px] items-center gap-2 rounded-full border border-white/[0.10] px-4 text-sm text-[var(--night-text-70)]"
+            className="lift flex min-h-[44px] items-center gap-2 rounded-full border border-white/[0.10] px-4 text-sm text-[var(--night-text-70)]"
           >
             <IconSpeaker size={16} /> Прослушать
           </button>
           <button
             onClick={() => speak(current.text, { lang, rate: SLOW_RATE })}
-            className="lift flex min-h-[40px] items-center gap-2 rounded-full border border-white/[0.10] px-4 text-sm text-[var(--night-text-70)]"
+            className="lift flex min-h-[44px] items-center gap-2 rounded-full border border-white/[0.10] px-4 text-sm text-[var(--night-text-70)]"
           >
             <IconSpeakerSlow size={16} /> Медленно
           </button>
@@ -322,7 +322,10 @@ export function PronunciationPage() {
                   onClick={() => speak(w.word.replace(/[^\p{L}\p{N}'-]/gu, ''), { lang })}
                   title="Послушать слово"
                   className={
-                    'inline align-baseline transition-colors ' +
+                    // -my/py — расширение вертикальной хит-зоны без сдвига
+                    // вёрстки; по ширине слова в предложении — inline-цели,
+                    // допустимое исключение WCAG 2.5.5
+                    'inline -my-2 py-2 align-baseline transition-colors ' +
                     (w.ok === true
                       ? 'text-emerald-400'
                       : w.ok === false

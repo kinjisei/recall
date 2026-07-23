@@ -26,7 +26,7 @@ import { BackHeader } from '../../components/BackButton'
 import { Button } from '../../components/Button'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
-import { supabase } from '../../lib/supabase'
+import { getProfile } from '../../lib/profile'
 import { getEsLevel } from '../../lib/esLevel'
 import { getMyAssignments } from '../../lib/materials'
 import { listMyQuests } from '../../lib/quests'
@@ -64,12 +64,9 @@ export function StudyPage() {
 
   useEffect(() => {
     if (lang !== 'en' || !user) return
-    supabase
-      .from('profiles')
-      .select('level')
-      .eq('id', user.id)
-      .single()
-      .then(({ data }) => setEnLevel((data?.level as string | null) ?? null))
+    // кэш профиля (lib/profile): при повторных заходах отвечает мгновенно —
+    // строка «Твой уровень» не появляется с задержкой
+    getProfile(user.id).then((p) => setEnLevel(p?.level ?? null))
   }, [lang, user])
 
   useEffect(() => {

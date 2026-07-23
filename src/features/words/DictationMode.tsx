@@ -13,7 +13,7 @@ import { RoundResult, RoundProgress } from '../../components/RoundResult'
 import { logActivity } from '../../lib/activity'
 import { speak } from '../../lib/speech'
 import { answerMatches } from '../../lib/text'
-import { loadGamePool, type PoolItem } from '../../lib/wordPool'
+import { loadGamePool, recordShown, withoutRecent, type PoolItem } from '../../lib/wordPool'
 import { markWrong, sample } from './gameUtils'
 import { GameHeader, GameLoading } from './GameShell'
 import type { AppLang } from '../../types'
@@ -47,12 +47,16 @@ export function DictationMode({ lang, onBack }: { lang: AppLang; onBack: () => v
           // «Мои» — только карточки колоды; «Новые» — только слова паков
           const list =
             source === 'deck' ? p.items.slice(0, p.fromDeck) : p.items.slice(p.fromDeck)
+          // анти-повтор — как в pickWords: недавние пропускаем, пока хватает
           const picked = sample(
-            list.filter((w) => w.term),
+            withoutRecent(lang, list.filter((w) => w.term), ROUND),
             ROUND,
           )
           if (picked.length === 0) setEmpty(true)
-          else setWords(picked)
+          else {
+            recordShown(lang, picked.map((w) => w.term))
+            setWords(picked)
+          }
         })
         .catch(() => setEmpty(true))
     },

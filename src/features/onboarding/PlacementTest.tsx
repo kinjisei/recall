@@ -16,6 +16,7 @@ import { IconBack, IconSparkle } from '../../components/icons'
 import { shuffle } from '../../lib/random'
 import { setEsLevel } from '../../lib/esLevel'
 import { supabase } from '../../lib/supabase'
+import { invalidateProfile } from '../../lib/profile'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import type { AppLang, CEFRLevel, PlacementQuestion } from '../../types'
@@ -142,6 +143,7 @@ export function PlacementTest() {
           setEsLevel(level)
         } else if (user) {
           await supabase.from('profiles').update({ level }).eq('id', user.id)
+          invalidateProfile() // иначе кэш (Учёба, игры, промпты) не увидит новый уровень
         }
         navigate('/')
       } finally {

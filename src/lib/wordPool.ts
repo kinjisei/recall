@@ -47,6 +47,8 @@ async function targetLevel(lang: AppLang): Promise<string> {
 }
 
 export interface GamePool {
+  /** Язык пула — нужен анти-повтору (история показанных слов на язык). */
+  lang: AppLang
   items: PoolItem[]
   /** Сколько первых элементов items — карточки пользователя. */
   fromDeck: number
@@ -55,9 +57,48 @@ export interface GamePool {
 // shuffle/sample — в lib/random (чистые), здесь реэкспорт + внутреннее использование
 export { shuffle, sample } from './random'
 
+// --- анти-повтор: история недавно показанных слов ---------------------------
+// Жалоба: «в каждой игре одни и те же слова, отличаются на 1-2». Причины:
+// детерминированный порядок паков + отсутствие памяти между раундами.
+// Храним последние RECENT_MAX показанных слов на язык и не берём их снова,
+// пока пул позволяет; когда свежих не хватает — спокойно добираем старыми.
+const RECENT_KEY = 'recall.recent_words'
+const RECENT_MAX = 40
+
+function loadRecent(lang: AppLang): string[] {
+  try {
+    const raw = localStorage.getItem(`${RECENT_KEY}.${lang}`)
+    const list = raw ? (JSON.parse(raw) as string[]) : []
+    return Array.isArray(list) ? list : []
+  } catch {
+    return []
+  }
+}
+
+/** Пометить слова показанными (зовёт pickWords; игры напрямую — Dictation). */
+export function recordShown(lang: AppLang, terms: string[]): void {
+  if (terms.length === 0) return
+  try {
+    const now = new Set(terms.map((t) => t.toLowerCase()))
+    const rest = loadRecent(lang).filter((t) => !now.has(t))
+    const next = [...rest, ...now].slice(-RECENT_MAX)
+    localStorage.setItem(`${RECENT_KEY}.${lang}`, JSON.stringify(next))
+  } catch {
+    /* приватный режим — истории просто не будет */
+  }
+}
+
+/** Отфильтровать недавно показанные (пока кандидатов хватает на nNeed). */
+export function withoutRecent(lang: AppLang, items: PoolItem[], nNeed: number): PoolItem[] {
+  const recent = new Set(loadRecent(lang))
+  const fresh = items.filter((i) => !recent.has(i.term.toLowerCase()))
+  return fresh.length >= nNeed ? fresh : items
+}
+
 /**
  * Участники раунда: СНАЧАЛА слова из колоды пользователя (он их реально учит,
  * и только по ним работает возврат на повтор), паками добираем лишь нехватку.
+ * Недавно показанные слова пропускаются, пока пул позволяет (анти-повтор).
  *
  * Порядок результата — приоритетный (колода → паки), а НЕ случайный: игры
  * могут отбросить часть кандидатов (например, если не нашлось определения),
@@ -65,10 +106,22 @@ export { shuffle, sample } from './random'
  * показа каждая игра делает сама.
  */
 export function pickWords(pool: GamePool, n: number): PoolItem[] {
+  const recent = new Set(loadRecent(pool.lang))
+  const isFresh = (i: PoolItem) => !recent.has(i.term.toLowerCase())
   const deck = pool.items.slice(0, pool.fromDeck)
   const packs = pool.items.slice(pool.fromDeck)
-  const picked = sample(deck, n)
-  if (picked.length < n) picked.push(...sample(packs, n - picked.length))
+
+  // сначала свежие (колода → паки), потом — если раунд не набрался — недавние
+  const picked = sample(deck.filter(isFresh), n)
+  if (picked.length < n) picked.push(...sample(packs.filter(isFresh), n - picked.length))
+  if (picked.length < n) {
+    const have = new Set(picked.map((i) => i.term.toLowerCase()))
+    const leftovers = (list: PoolItem[]) => list.filter((i) => !have.has(i.term.toLowerCase()))
+    picked.push(...sample(leftovers(deck), n - picked.length))
+    if (picked.length < n) picked.push(...sample(leftovers(packs), n - picked.length))
+  }
+
+  recordShown(pool.lang, picked.map((i) => i.term))
   return picked
 }
 
@@ -149,10 +202,12 @@ function sortByLevelCloseness(items: PoolItem[], target: string): PoolItem[] {
   return items
     .map((item) => {
       const i = LEVEL_ORDER.indexOf(item.level ?? '')
-      // неизвестный уровень — считаем «далёким», но не отбрасываем
-      return { item, distance: i < 0 ? 9 : Math.abs(i - t) }
+      // неизвестный уровень — считаем «далёким», но не отбрасываем;
+      // r — случайный разрыв ничьих: внутри одной дистанции порядок каждый раз
+      // новый, иначе добор паков всегда давал одни и те же первые ~80 слов
+      return { item, distance: i < 0 ? 9 : Math.abs(i - t), r: Math.random() }
     })
-    .sort((a, b) => a.distance - b.distance)
+    .sort((a, b) => a.distance - b.distance || a.r - b.r)
     .map((x) => x.item)
 }
 
@@ -248,5 +303,5 @@ export async function loadGamePool(lang: AppLang, need = 24): Promise<GamePool> 
     }
   }
 
-  return { items, fromDeck: deckItems.length }
+  return { lang, items, fromDeck: deckItems.length }
 }

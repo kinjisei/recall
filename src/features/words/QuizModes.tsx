@@ -140,6 +140,7 @@ export function GapMode({ lang, onBack }: { lang: AppLang; onBack: () => void })
   const build = useCallback((pool: GamePool): Question[] => {
     // играем только словами, у которых есть пример с этим словом внутри
     const usable: GamePool = {
+      lang: pool.lang,
       items: pool.items.filter((p) => p.example && blankOut(p.example, p.term)),
       fromDeck: pool.items
         .slice(0, pool.fromDeck)

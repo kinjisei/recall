@@ -18,6 +18,7 @@ import {
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { supabase } from '../../lib/supabase'
+import { invalidateProfile } from '../../lib/profile'
 import { setEsLevel } from '../../lib/esLevel'
 import { markOnboarded } from '../../lib/onboarding'
 import { startGuided } from '../../lib/guided'
@@ -39,7 +40,7 @@ export function OnboardingFlow() {
       if (lang === 'es') setEsLevel(level)
       else if (user) {
         await supabase.from('profiles').update({ level }).eq('id', user.id).then(
-          () => {},
+          () => invalidateProfile(), // кэш профиля должен увидеть новый уровень
           () => {},
         )
       }

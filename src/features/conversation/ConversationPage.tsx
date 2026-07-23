@@ -11,6 +11,7 @@ import {
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { supabase } from '../../lib/supabase'
+import { getProfile } from '../../lib/profile'
 import { chat } from '../../lib/gemini'
 import { logActivity } from '../../lib/activity'
 import { useAuth } from '../../context/AuthContext'
@@ -35,14 +36,10 @@ export function ConversationPage() {
   // Профильный уровень описывает английский; испанский пока считаем A1–A2.
   useEffect(() => {
     if (!user) return
-    supabase
-      .from('profiles')
-      .select('level')
-      .eq('id', user.id)
-      .single()
-      .then(({ data }) => {
-        if (data?.level) setProfileLevel(data.level as CEFRLevel)
-      })
+    // кэш профиля — без лишнего запроса при каждом заходе во вкладку
+    getProfile(user.id).then((p) => {
+      if (p?.level) setProfileLevel(p.level as CEFRLevel)
+    })
   }, [user])
 
   const level: CEFRLevel = lang === 'es' ? getEsLevel() ?? 'A1' : profileLevel
