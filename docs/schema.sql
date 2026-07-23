@@ -26,7 +26,7 @@
     title text not null,
     description text,
     is_shared boolean default false,
-    lang text not null default 'en',
+    lang text not nulзаl default 'en',
     created_at timestamptz default now()
   );
 
@@ -1716,7 +1716,7 @@
   set search_path = public
   as $fn$
   declare
-    kind text := case when p_kind in ('light', 'speech') then p_kind else 'heavy' end;
+    v_kind text := case when p_kind in ('light', 'speech') then p_kind else 'heavy' end;
     uid uuid := auth.uid();
     paid boolean;
     prem boolean;
@@ -1751,20 +1751,20 @@
     end if;
 
     -- Суточный лимит своего класса.
-    lim_day := case kind
+    lim_day := case v_kind
       when 'heavy'  then case when paid then 200 when prem then  12 else   5 end
       when 'light'  then case when paid then 900 when prem then 300 else 100 end
       else               case when paid then 400 when prem then 150 else  50 end
     end;
 
     select count(*) into n from ai_calls
-    where user_id = uid and kind = consume_ai_quota.kind
+    where user_id = uid and ai_calls.kind = v_kind
       and called_at > now() - interval '24 hours';
 
     if n >= lim_day then
-      if kind = 'light' then
+      if v_kind = 'light' then
         raise exception 'RECALL_LIGHT_LIMIT';
-      elsif kind = 'speech' then
+      elsif v_kind = 'speech' then
         raise exception 'RECALL_SPEECH_LIMIT';
       elsif paid then
         raise exception 'RECALL_RATE_DAY';
@@ -1775,7 +1775,7 @@
       end if;
     end if;
 
-    insert into ai_calls (user_id, kind) values (uid, kind);
+    insert into ai_calls (user_id, kind) values (uid, v_kind);
   end $fn$;
 
   grant execute on function public.consume_ai_quota(text) to authenticated;
@@ -1903,7 +1903,7 @@
   set search_path = public
   as $fn$
   declare
-    kind text := case when p_kind in ('light', 'speech') then p_kind else 'heavy' end;
+    v_kind text := case when p_kind in ('light', 'speech') then p_kind else 'heavy' end;
     uid uuid := auth.uid();
     paid boolean;
     prem boolean;
@@ -1940,20 +1940,20 @@
       raise exception 'RECALL_RATE_HOUR';
     end if;
 
-    lim_day := case kind
+    lim_day := case v_kind
       when 'heavy'  then case when paid then 200 when prem then  12 else   5 end
       when 'light'  then case when paid then 900 when prem then 300 else 100 end
       else               case when paid then 400 when prem then 150 else  50 end
     end;
 
     select count(*) into n from ai_calls
-    where user_id = uid and kind = consume_ai_quota.kind
+    where user_id = uid and ai_calls.kind = v_kind
       and called_at > now() - interval '24 hours';
 
     if n >= lim_day then
-      if kind = 'light' then
+      if v_kind = 'light' then
         raise exception 'RECALL_LIGHT_LIMIT';
-      elsif kind = 'speech' then
+      elsif v_kind = 'speech' then
         raise exception 'RECALL_SPEECH_LIMIT';
       elsif paid then
         raise exception 'RECALL_RATE_DAY';
@@ -1964,5 +1964,5 @@
       end if;
     end if;
 
-    insert into ai_calls (user_id, kind) values (uid, kind);
+    insert into ai_calls (user_id, kind) values (uid, v_kind);
   end $fn$;
