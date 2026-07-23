@@ -6,7 +6,7 @@
 // Слова берутся из общего пула (карточки пользователя + добор из паков).
 // ============================================================================
 import { useCallback, useEffect, useState } from 'react'
-import { loadGamePool, type GamePool, type PoolItem } from '../../lib/wordPool'
+import { loadGamePool, pickDistractors, type GamePool, type PoolItem } from '../../lib/wordPool'
 import { pickWords, shuffle } from './gameUtils'
 import { EmptyPool, GameLoading, QuizRunner, type Question } from './GameShell'
 import type { AppLang } from '../../types'
@@ -62,22 +62,17 @@ function useRound(
   return { questions, empty, restart }
 }
 
-/** Варианты-обманки того же языка. */
 /**
- * Варианты ответа: обманки берём СНАЧАЛА из той же темы пака (topic_id), потом
- * добираем любыми. Раньше подставлялись случайные слова — «he ___ his job» с
- * вариантами landlord/bake/headache или «day off = ломтик» решались без чтения,
- * по несовпадению смысла. Слова одной темы («Работа»: hire, salary…) правдоподобнее.
+ * Варианты ответа: умные обманки (lib/distractors) — та же тема, тот же
+ * уровень, та же часть речи, сравнимая длина; правильный ответ не выделяется
+ * длиной. Раньше — случайные слова, и незнакомое угадывалось исключением.
  */
 function optionsFor(item: PoolItem, pool: PoolItem[], pick: (i: PoolItem) => string): {
   options: string[]
   answer: number
 } {
   const right = pick(item)
-  const cand = pool.filter((p) => pick(p) && pick(p) !== right)
-  const sameTopic = shuffle(cand.filter((p) => item.topic != null && p.topic === item.topic))
-  const rest = shuffle(cand.filter((p) => item.topic == null || p.topic !== item.topic))
-  const others = [...sameTopic, ...rest].slice(0, OPTIONS - 1).map(pick)
+  const others = pickDistractors(item, pool, OPTIONS - 1, pick)
   const options = shuffle([right, ...others])
   return { options, answer: options.indexOf(right) }
 }

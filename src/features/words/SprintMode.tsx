@@ -8,7 +8,13 @@ import { IconCheck, IconTimer, IconClose } from '../../components/icons'
 import { Card } from '../../components/Card'
 import { RoundResult } from '../../components/RoundResult'
 import { logActivity } from '../../lib/activity'
-import { loadGamePool, type PoolItem } from '../../lib/wordPool'
+import {
+  loadGamePool,
+  pickDistractors,
+  recordShown,
+  withoutRecent,
+  type PoolItem,
+} from '../../lib/wordPool'
 import { markWrong, shuffle } from './gameUtils'
 import { EmptyPool, GameHeader, GameLoading } from './GameShell'
 import type { AppLang } from '../../types'
@@ -36,15 +42,14 @@ function buildPairs(items: PoolItem[]): Pair[] {
   return shuffle(usable).map((item, idx) => {
     const isTrue = idx % 2 === 0
     if (isTrue) return { item, shown: item.translation, isTrue: true }
-    // ложная пара: чужой перевод, ЗАВЕДОМО отличный; предпочитаем ту же тему
+    // ложная пара: ПОХОЖИЙ чужой перевод (та же тема/часть речи/длина) —
+    // случайный «крокодил» рядом с «боссом» выдавал ответ без знания слова
     const pool = usable.filter(
       (o) => o.translation !== item.translation && o.term !== item.term,
     )
     if (pool.length === 0) return { item, shown: item.translation, isTrue: true }
-    const sameTopic = pool.filter((o) => item.topic != null && o.topic === item.topic)
-    const src = sameTopic.length > 0 ? sameTopic : pool
-    const other = src[Math.floor(Math.random() * src.length)]
-    return { item, shown: other.translation, isTrue: false }
+    const [similar] = pickDistractors(item, pool, 1, (o) => o.translation)
+    return { item, shown: similar ?? pool[0].translation, isTrue: false }
   })
 }
 
@@ -64,8 +69,10 @@ export function SprintMode({ lang, onBack }: { lang: AppLang; onBack: () => void
     loadGamePool(lang, 40)
       .then((p) => {
         if (!alive) return
-        if (p.items.filter((i) => i.term && i.translation).length < 6) setEmpty(true)
-        else setItems(p.items)
+        const usable = p.items.filter((i) => i.term && i.translation)
+        if (usable.length < 6) setEmpty(true)
+        // анти-повтор: недавно игранные слова пропускаем, пока пул позволяет
+        else setItems(withoutRecent(lang, usable, 20))
       })
       .catch(() => alive && setEmpty(true))
     return () => {
@@ -130,6 +137,7 @@ export function SprintMode({ lang, onBack }: { lang: AppLang; onBack: () => void
     setTotal((t) => t + 1)
     if (ok) setCorrect((c) => c + 1)
     else markWrong(pair.item, lang)
+    recordShown(lang, [pair.item.term]) // показанное — в историю анти-повтора
     navigator.vibrate?.(ok ? 8 : [15, 30, 15])
     if (flashTimer.current) clearTimeout(flashTimer.current)
     setFlash(ok ? 'ok' : 'bad')

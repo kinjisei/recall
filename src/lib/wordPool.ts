@@ -57,43 +57,13 @@ export interface GamePool {
 // shuffle/sample — в lib/random (чистые), здесь реэкспорт + внутреннее использование
 export { shuffle, sample } from './random'
 
-// --- анти-повтор: история недавно показанных слов ---------------------------
-// Жалоба: «в каждой игре одни и те же слова, отличаются на 1-2». Причины:
-// детерминированный порядок паков + отсутствие памяти между раундами.
-// Храним последние RECENT_MAX показанных слов на язык и не берём их снова,
-// пока пул позволяет; когда свежих не хватает — спокойно добираем старыми.
-const RECENT_KEY = 'recall.recent_words'
-const RECENT_MAX = 40
-
-function loadRecent(lang: AppLang): string[] {
-  try {
-    const raw = localStorage.getItem(`${RECENT_KEY}.${lang}`)
-    const list = raw ? (JSON.parse(raw) as string[]) : []
-    return Array.isArray(list) ? list : []
-  } catch {
-    return []
-  }
-}
-
-/** Пометить слова показанными (зовёт pickWords; игры напрямую — Dictation). */
-export function recordShown(lang: AppLang, terms: string[]): void {
-  if (terms.length === 0) return
-  try {
-    const now = new Set(terms.map((t) => t.toLowerCase()))
-    const rest = loadRecent(lang).filter((t) => !now.has(t))
-    const next = [...rest, ...now].slice(-RECENT_MAX)
-    localStorage.setItem(`${RECENT_KEY}.${lang}`, JSON.stringify(next))
-  } catch {
-    /* приватный режим — истории просто не будет */
-  }
-}
-
-/** Отфильтровать недавно показанные (пока кандидатов хватает на nNeed). */
-export function withoutRecent(lang: AppLang, items: PoolItem[], nNeed: number): PoolItem[] {
-  const recent = new Set(loadRecent(lang))
-  const fresh = items.filter((i) => !recent.has(i.term.toLowerCase()))
-  return fresh.length >= nNeed ? fresh : items
-}
+// --- анти-повтор и умные обманки --------------------------------------------
+// История показанных слов и подбор похожих обманок вынесены в чистые модули
+// (lib/recentWords, lib/distractors) — их гоняет мини-тест. Здесь реэкспорт,
+// чтобы игры продолжали импортировать всё из wordPool.
+export { recordShown, withoutRecent } from './recentWords'
+export { pickDistractors, ruPos } from './distractors'
+import { loadRecent, recordShown as recordShownImpl } from './recentWords'
 
 /**
  * Участники раунда: СНАЧАЛА слова из колоды пользователя (он их реально учит,
@@ -121,7 +91,7 @@ export function pickWords(pool: GamePool, n: number): PoolItem[] {
     if (picked.length < n) picked.push(...sample(leftovers(packs), n - picked.length))
   }
 
-  recordShown(pool.lang, picked.map((i) => i.term))
+  recordShownImpl(pool.lang, picked.map((i) => i.term))
   return picked
 }
 
