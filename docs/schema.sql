@@ -1844,3 +1844,154 @@
       'ai_day_limit',    case when paid then 200 when prem then 12 else 5 end
     );
   end $fn$;
+
+  -- ============================================================================
+  -- ЛИМИТ УЧЕНИЦ + ГОНКА КВОТЫ (2026-07-24, по находкам аудита 22.07).
+  -- 1) КРИТИЧНО: join_teacher не проверял лимит мест тарифа. Владелец
+  --    teacher_mini (3000₸, «до 5 учениц») мог раздать код-приглашение хоть
+  --    в чат на 200 человек — все привязывались и получали ПЛАТНУЮ квоту AI
+  --    (бенефит «ученица платного учителя»). Бизнес-модель обходилась одним
+  --    сообщением. Теперь место проверяется в БД при привязке.
+  -- 2) Гонка «посчитал → вставил» в consume_ai_quota: 50 параллельных запросов
+  --    видели n=0 и проходили все. Лечится advisory-локом на пользователя:
+  --    запросы одного аккаунта сериализуются, чужие друг друга не ждут.
+  -- Блок idempotent.
+  -- ============================================================================
+
+  -- Сколько учениц разрешено тарифу (0 — тариф не преподавательский).
+  create or replace function public.teacher_seat_limit(p_plan text)
+  returns int
+  language sql
+  immutable
+  as $fn$
+    select case p_plan
+      when 'teacher_mini'  then 5
+      when 'teacher_start' then 10
+      when 'teacher_pro'   then 30
+      else 0
+    end
+  $fn$;
+
+  create or replace function public.join_teacher(code text)
+  returns text
+  language plpgsql
+  security definer
+  set search_path = public
+  as $$
+  declare
+    t record;
+    t_name text;
+    seats int;
+    taken int;
+  begin
+    select id, coalesce(display_name, 'Преподаватель') as nm, plan, plan_expires_at, trial_until
+      into t
+      from profiles
+     where invite_code = upper(trim(code)) and role = 'teacher';
+    if t.id is null then
+      raise exception 'Код не найден. Проверь код у преподавателя.';
+    end if;
+    if t.id = auth.uid() then
+      raise exception 'Нельзя привязать саму себя.';
+    end if;
+
+    -- уже привязана — просто возвращаем имя (идемпотентно, места не тратим)
+    if exists (
+      select 1 from teacher_students
+      where teacher_id = t.id and student_id = auth.uid()
+    ) then
+      return t.nm;
+    end if;
+
+    -- Лимит мест. На триале (план ещё не оплачен) даём место под 3 ученицы —
+    -- попробовать режим, но не раздавать платную квоту толпе.
+    seats := public.teacher_seat_limit(t.plan);
+    if seats = 0 then
+      seats := case when t.trial_until > now() then 3 else 0 end;
+    elsif t.plan_expires_at is null or t.plan_expires_at <= now() then
+      seats := least(seats, case when t.trial_until > now() then 3 else 0 end);
+    end if;
+
+    select count(*) into taken from teacher_students where teacher_id = t.id;
+    if taken >= seats then
+      raise exception 'RECALL_SEATS_FULL';
+    end if;
+
+    insert into teacher_students (teacher_id, student_id)
+    values (t.id, auth.uid())
+    on conflict (teacher_id, student_id) do nothing;
+    return t.nm;
+  end;
+  $$;
+
+  -- Сериализация квоты на уровне пользователя (лечит гонку параллельных вызовов)
+  create or replace function public.consume_ai_quota(p_kind text default 'heavy')
+  returns void
+  language plpgsql
+  security definer
+  set search_path = public
+  as $fn$
+  declare
+    kind text := case when p_kind in ('light', 'speech') then p_kind else 'heavy' end;
+    uid uuid := auth.uid();
+    paid boolean;
+    prem boolean;
+    lim_day int;
+    n int;
+  begin
+    if uid is null then
+      raise exception 'RECALL_NO_AUTH';
+    end if;
+
+    -- ЛОК: параллельные запросы ОДНОГО пользователя идут по очереди, иначе
+    -- Promise.all из 50 запросов проскакивал мимо лимита (все видели n=0).
+    perform pg_advisory_xact_lock(hashtext('ai_quota:' || uid::text));
+
+    if exists (
+      select 1 from auth.users
+      where id = uid and banned_until is not null and banned_until > now()
+    ) then
+      raise exception 'RECALL_BLOCKED';
+    end if;
+
+    if exists (select 1 from profiles where id = uid and blocked) then
+      raise exception 'RECALL_BLOCKED';
+    end if;
+
+    delete from ai_calls where called_at < now() - interval '3 days';
+
+    paid := public.has_paid_access(uid);
+    prem := public.has_premium_access(uid);
+
+    select count(*) into n from ai_calls
+    where user_id = uid and called_at > now() - interval '1 hour';
+    if n >= (case when paid then 200 when prem then 90 else 40 end) then
+      raise exception 'RECALL_RATE_HOUR';
+    end if;
+
+    lim_day := case kind
+      when 'heavy'  then case when paid then 200 when prem then  12 else   5 end
+      when 'light'  then case when paid then 900 when prem then 300 else 100 end
+      else               case when paid then 400 when prem then 150 else  50 end
+    end;
+
+    select count(*) into n from ai_calls
+    where user_id = uid and kind = consume_ai_quota.kind
+      and called_at > now() - interval '24 hours';
+
+    if n >= lim_day then
+      if kind = 'light' then
+        raise exception 'RECALL_LIGHT_LIMIT';
+      elsif kind = 'speech' then
+        raise exception 'RECALL_SPEECH_LIMIT';
+      elsif paid then
+        raise exception 'RECALL_RATE_DAY';
+      elsif prem then
+        raise exception 'RECALL_TRIAL_LIMIT';
+      else
+        raise exception 'RECALL_FREE_LIMIT';
+      end if;
+    end if;
+
+    insert into ai_calls (user_id, kind) values (uid, kind);
+  end $fn$;

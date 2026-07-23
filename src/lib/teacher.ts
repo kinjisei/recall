@@ -53,7 +53,15 @@ export async function joinTeacher(code: string): Promise<string> {
   const { data, error } = await supabase.rpc('join_teacher', {
     code: code.trim(),
   })
-  if (error) throw new Error(error.message)
+  if (error) {
+    // места тарифа кончились — сообщение из БД техническое, переводим
+    if (error.message.includes('RECALL_SEATS_FULL')) {
+      throw new Error(
+        'У преподавателя закончились места на тарифе. Попроси его расширить тариф — после этого код заработает.',
+      )
+    }
+    throw new Error(error.message)
+  }
   return (data as string) ?? 'Преподаватель'
 }
 
