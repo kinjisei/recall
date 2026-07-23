@@ -20,6 +20,7 @@ import { QuestSection } from './QuestSection'
 import { DiagnosticsSection } from './DiagnosticsSection'
 import { ProgramSection } from './ProgramSection'
 import { DeckWordsPicker } from './DeckWordsPicker'
+import { GuideSection } from './GuideSection'
 import { countSubmittedWorks } from '../../lib/materials'
 import type { Deck, Profile } from '../../types'
 
@@ -60,7 +61,7 @@ export function TeacherPage() {
   return <TeacherDashboard />
 }
 
-type TeacherTab = 'students' | 'materials'
+type TeacherTab = 'students' | 'materials' | 'guide'
 
 function TeacherDashboard() {
   const [tab, setTab] = useState<TeacherTab>('students')
@@ -124,6 +125,7 @@ function TeacherDashboard() {
           [
             ['students', 'Ученицы'],
             ['materials', 'Материалы'],
+            ['guide', 'Методичка'],
           ] as [TeacherTab, string][]
         ).map(([id, label]) => (
           <button
@@ -145,7 +147,9 @@ function TeacherDashboard() {
         ))}
       </div>
 
-      {tab === 'materials' ? (
+      {tab === 'guide' ? (
+        <GuideSection />
+      ) : tab === 'materials' ? (
         <MaterialsSection students={students} />
       ) : (
         <>
