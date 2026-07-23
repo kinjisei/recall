@@ -1458,3 +1458,40 @@
     return new;
   end;
   $$;
+
+  -- ============================================================================
+  -- ПЛАН ДНЯ (2026-07-23): учитель настраивает ежедневные пункты ученицы.
+  -- Хранится jsonb-настройкой на паре учитель-ученица: {"kinds":["reader",...],
+  -- "auto":true} (auto — задания/квесты сами попадают в план). NULL — умный
+  -- дефолт приложения. «Идеальный день» (все пункты плана выполнены) пишется
+  -- клиентом в activity_log строкой type='perfect' (items_done=0) — стрик и
+  -- счётчики недель не искажает. Блок idempotent.
+  -- ============================================================================
+
+  alter table public.teacher_students add column if not exists daily_plan jsonb;
+
+  -- запись только через RPC: учитель — только своей привязанной ученице
+  create or replace function public.set_daily_plan(p_student_id uuid, p_plan jsonb)
+  returns void
+  language plpgsql
+  security definer
+  set search_path = public
+  as $fn$
+  begin
+    if not exists (
+      select 1 from teacher_students
+      where teacher_id = auth.uid() and student_id = p_student_id
+    ) then
+      raise exception 'RECALL_NOT_YOUR_STUDENT';
+    end if;
+    if p_plan is not null and (
+      jsonb_typeof(p_plan) <> 'object' or pg_column_size(p_plan) > 4096
+    ) then
+      raise exception 'RECALL_BAD_PLAN';
+    end if;
+    update teacher_students
+      set daily_plan = p_plan
+      where teacher_id = auth.uid() and student_id = p_student_id;
+  end $fn$;
+
+  grant execute on function public.set_daily_plan(uuid, jsonb) to authenticated;

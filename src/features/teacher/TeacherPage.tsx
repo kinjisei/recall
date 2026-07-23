@@ -21,6 +21,7 @@ import { DiagnosticsSection } from './DiagnosticsSection'
 import { ProgramSection } from './ProgramSection'
 import { DeckWordsPicker } from './DeckWordsPicker'
 import { GuideSection } from './GuideSection'
+import { DailyPlanSection } from './DailyPlanSection'
 import { countSubmittedWorks } from '../../lib/materials'
 import type { Deck, Profile } from '../../types'
 
@@ -208,6 +209,7 @@ function StudentCard({
   const [showQuests, setShowQuests] = useState(false)
   const [showDiag, setShowDiag] = useState(false)
   const [showProgram, setShowProgram] = useState(false)
+  const [showPlanDay, setShowPlanDay] = useState(false)
   /** id набора, чьи слова сейчас раскрыты (просмотр + выборочное назначение). */
   const [openDeck, setOpenDeck] = useState<string | null>(null)
   const [busyDeck, setBusyDeck] = useState<string | null>(null)
@@ -314,6 +316,14 @@ function StudentCard({
       {showDiag && (
         <DiagnosticsSection studentId={p.id} studentName={p.display_name ?? 'Ученица'} />
       )}
+
+      <button
+        onClick={() => setShowPlanDay((v) => !v)}
+        className="text-left text-sm font-medium text-[var(--night-accent-text)] hover:underline dark:text-[var(--night-accent-text)]"
+      >
+        {showPlanDay ? '▾ Скрыть план дня' : '▸ План дня'}
+      </button>
+      {showPlanDay && <DailyPlanSection studentId={p.id} />}
 
       <button
         onClick={() => setShowProgram((v) => !v)}

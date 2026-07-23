@@ -28,6 +28,9 @@ export type ActivityType =
   | 'grammar'
   | 'practice'
   | 'assignment'
+  // «идеальный день»: все пункты плана дня выполнены (items_done=0 — не
+  // искажает счётчики; сам факт дня считают диагностика и отчёт родителям)
+  | 'perfect'
 
 export interface Profile {
   id: string

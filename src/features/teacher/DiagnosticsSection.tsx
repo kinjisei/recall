@@ -150,6 +150,7 @@ export function DiagnosticsSection({
           unit=""
           moreIsBetter={false}
         />
+        <TrendRow label="Идеальных дней (весь план)" d={diag.dynamics.perfectDays} unit="" />
         {diag.dynamics.learnedRecently > 0 && (
           <p className="text-xs text-[var(--night-text-40)]">
             За 30 дней выучено слов: {diag.dynamics.learnedRecently}

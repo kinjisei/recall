@@ -87,8 +87,11 @@ export function ReportSheet({
     )
   }
   if ((dyn.activeDays.now ?? 0) > 0) {
+    const perfect = dyn.perfectDays.now ?? 0
     strengths.push(
-      `${dyn.activeDays.now} ${plural(dyn.activeDays.now ?? 0, 'активный день', 'активных дня', 'активных дней')} из 30 — занятия идут регулярно`,
+      `${dyn.activeDays.now} ${plural(dyn.activeDays.now ?? 0, 'активный день', 'активных дня', 'активных дней')} из 30${
+        perfect > 0 ? `, из них ${perfect} — с полностью выполненным планом дня` : ''
+      } — занятия идут регулярно`,
     )
   }
   const kinds = Object.entries(diag.kindTotals).filter(([, v]) => v.total >= 3)
@@ -163,6 +166,7 @@ export function ReportSheet({
         <h2 className="mt-7 text-lg font-bold">Динамика за месяц</h2>
         <div className="mt-1">
           <DeltaRow label="Дней с занятиями" d={dyn.activeDays} unit="" />
+          <DeltaRow label="Дней с полным планом" d={dyn.perfectDays} unit="" />
           <DeltaRow label="Средний балл по заданиям" d={dyn.avgScore} unit="%" />
           <DeltaRow label="Новых слов добавлено" d={dyn.wordsAdded} unit="" />
           <DeltaRow label="Новых ошибок в грамматике" d={dyn.newMistakes} unit="" moreIsBetter={false} />

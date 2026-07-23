@@ -25,6 +25,8 @@ export interface MonthDynamics {
   avgScore: MetricDelta
   newMistakes: MetricDelta
   wordsAdded: MetricDelta
+  /** «Идеальные дни» (весь план дня выполнен): последние 30 vs прошлые 30. */
+  perfectDays: MetricDelta
   /** Слов стало «выучено» за последние 30 дней (без сравнения — история
    *  статусов не хранится, честнее счётчик, чем выдуманная стрелка). */
   learnedRecently: number
@@ -41,6 +43,8 @@ export interface DynamicsInput {
   cardCreatedDates: string[]
   /** last_review выученных слов (ISO). */
   learnedLastReviews: (string | null)[]
+  /** Дни с «идеальным днём» (activity type='perfect'), YYYY-MM-DD. */
+  perfectDays?: string[]
   /** «Сегодня» — для детерминированных тестов. */
   today?: Date
 }
@@ -102,6 +106,7 @@ export function computeDynamics(input: DynamicsInput): MonthDynamics {
     avgScore: { now: avg(nowScores), prev: avg(prevScores) },
     newMistakes: countBy(input.mistakeDates, today),
     wordsAdded: countBy(input.cardCreatedDates, today),
+    perfectDays: countBy((input.perfectDays ?? []).map((d) => d + 'T00:00:00'), today),
     learnedRecently,
   }
 }

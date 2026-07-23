@@ -97,7 +97,7 @@ export async function getStudentDiagnostics(studentId: string): Promise<StudentD
     listStudentQuests(studentId).catch(() => [] as GrammarQuest[]),
     supabase
       .from('activity_log')
-      .select('day')
+      .select('day, type')
       .eq('user_id', studentId)
       .gte('day', localDay(-59)), // 60 дней: хватает и на «за 14», и на динамику
   ])
@@ -183,12 +183,14 @@ export async function getStudentDiagnostics(studentId: string): Promise<StudentD
 
   // --- активность ----------------------------------------------------------
   if (activityRes.error) throw activityRes.error
-  const days = [...new Set((activityRes.data ?? []).map((r) => r.day as string))].sort()
+  const activityRows = (activityRes.data ?? []) as { day: string; type: string }[]
+  const days = [...new Set(activityRows.map((r) => r.day))].sort()
   const from14 = localDay(-13)
 
   // --- динамика «сейчас vs 30 дней назад» -----------------------------------
   const dynamics = computeDynamics({
     activityDays: days,
+    perfectDays: [...new Set(activityRows.filter((r) => r.type === 'perfect').map((r) => r.day))],
     scoreSamples: rows.flatMap((a) => scoreSamples(a)),
     mistakeDates: mistakesAvailable
       ? (mistakesRes.data ?? []).map((r) => r.created_at as string)

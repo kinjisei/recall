@@ -24,7 +24,14 @@ import {
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { getProfile } from '../../lib/profile'
-import { getStreak, getTodayTypes, getWeek, type WeekDay } from '../../lib/activity'
+import { getStreak, getTodayTypes, getWeek, logActivity, type WeekDay } from '../../lib/activity'
+import {
+  buildTodayPlan,
+  getMyDailyPlanConfig,
+  isPerfectDay,
+  type DailyPlanConfig,
+} from '../../lib/dailyPlan'
+import { listMyQuests } from '../../lib/quests'
 import { countDueCards } from '../../lib/fsrs'
 import { cachedWordOfDay, newWordOfDay, type PoolItem } from '../../lib/wordPool'
 import { addCard, countMyWords } from '../../lib/cards'
@@ -41,20 +48,16 @@ import {
 } from '../teacher/TeacherBlock'
 import type { ActivityType, Profile, StudyPlan } from '../../types'
 
-interface PlanItem {
-  to: string
-  Icon: IconLike
-  title: string
-  desc: string
-  types: ActivityType[]
+/** Иконки пунктов плана дня (сами пункты строит lib/dailyPlan). */
+const PLAN_ICONS: Record<string, IconLike> = {
+  words: IconCards,
+  reader: IconGap,
+  grammar: IconHint,
+  pronunciation: IconMic,
+  conversation: IconDialog,
+  assignment: IconGap,
+  quest: IconHint,
 }
-
-const planItems: PlanItem[] = [
-  { to: '/practice', Icon: IconCards, title: 'Слова', desc: 'Повторить и потренировать', types: ['flashcards', 'practice'] },
-  { to: '/study', Icon: IconGap, title: 'Чтение', desc: 'Текст и новые слова', types: ['reader'] },
-  { to: '/pronunciation', Icon: IconMic, title: 'Речь', desc: 'Произношение вслух', types: ['pronunciation'] },
-  { to: '/conversation', Icon: IconDialog, title: 'Диалог', desc: 'Поговорить с AI', types: ['conversation', 'writing'] },
-]
 
 export function DashboardPage() {
   const { user } = useAuth()
@@ -72,6 +75,9 @@ export function DashboardPage() {
   const [assignments, setAssignments] = useState<AssignmentCounts | null>(null)
   // программа, которую ученица ещё не открывала (флаг recall.program_seen.<id>)
   const [newProgram, setNewProgram] = useState<StudyPlan | null>(null)
+  // план дня: настройка учителя (null — умный дефолт) + активные квесты
+  const [dailyCfg, setDailyCfg] = useState<DailyPlanConfig | null>(null)
+  const [activeQuests, setActiveQuests] = useState(0)
 
   useEffect(() => {
     if (!user) return
@@ -80,6 +86,10 @@ export function DashboardPage() {
     getTodayTypes().then(setDoneToday).catch(() => {})
     getWeek().then(setWeek).catch(() => {})
     loadAssignmentCounts().then(setAssignments).catch(() => {})
+    getMyDailyPlanConfig().then(setDailyCfg).catch(() => {})
+    listMyQuests()
+      .then((qs) => setActiveQuests(qs.filter((q) => q.status === 'assigned').length))
+      .catch(() => {})
     getMyPlans()
       .then((plans) => {
         const unseen = plans.find((p) => {
@@ -146,8 +156,24 @@ export function DashboardPage() {
   const level = lang === 'es' ? (esLevel ?? 'A1–A2') : (profile?.level ?? 'B1')
   const didToday = doneToday.size > 0
 
-  const doneCount = planItems.filter((p) => p.types.some((t) => doneToday.has(t))).length
-  const allDone = doneCount === planItems.length
+  // план на сегодня: настройка учителя или умный дефолт (3 пункта)
+  const todayPlan = buildTodayPlan(dailyCfg, {
+    pendingAssignments: assignments?.pending ?? 0,
+    activeQuests,
+    weekday: new Date().getDay(),
+  })
+  const doneCount = todayPlan.filter((p) => p.types.some((t) => doneToday.has(t))).length
+  const allDone = doneCount === todayPlan.length
+  const perfect = isPerfectDay(todayPlan, doneToday)
+
+  // «идеальный день»: фиксируем один раз (items_done=0 — счётчики не искажает)
+  useEffect(() => {
+    if (perfect && !doneToday.has('perfect')) {
+      void logActivity('perfect', 0)
+      setDoneToday((prev) => new Set(prev).add('perfect'))
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [perfect])
 
   // Пустая колода ≠ «всё повторено»: новичку без единого слова предлагаем
   // добавить первые (плитка ведёт в «Учёбу», где живут паки и добавление).
@@ -172,7 +198,7 @@ export function DashboardPage() {
       </header>
 
       {/* 2. Стрик-герой */}
-      <StreakHero streak={streak} week={week} didToday={didToday} />
+      <StreakHero streak={streak} week={week} didToday={didToday} perfect={perfect} />
 
       {/* 3. Новое задание от преподавателя */}
       <AssignmentsNotice placement="top" counts={assignments} />
@@ -204,22 +230,22 @@ export function DashboardPage() {
         </span>
       </button>
 
-      {/* 5. План на сегодня */}
+      {/* 5. План на сегодня: пункты от учителя или умный дефолт (lib/dailyPlan) */}
       <section className="animate-fade-up" style={{ animationDelay: '.18s' }}>
         <div className="mb-3 flex items-baseline justify-between">
           <h2 className="text-lg font-medium tracking-tight">План на сегодня</h2>
-          <span className={`text-sm ${allDone ? 'text-[var(--night-accent-text)]' : 'text-[var(--night-text-40)]'}`}>
-            {doneCount} из {planItems.length} готово
+          <span className={`text-sm ${perfect ? 'font-medium text-amber-300' : allDone ? 'text-[var(--night-accent-text)]' : 'text-[var(--night-text-40)]'}`}>
+            {perfect ? 'Идеальный день ✦' : `${doneCount} из ${todayPlan.length} готово`}
           </span>
         </div>
         <div className="flex flex-col gap-2.5">
-          {planItems.map((p, i) => {
+          {todayPlan.map((p, i) => {
             const done = p.types.some((t) => doneToday.has(t))
-            const isWords = p.to === '/practice'
+            const isWords = p.key === 'words'
             return (
               <RowCard
-                key={p.to}
-                Icon={p.Icon}
+                key={p.key}
+                Icon={PLAN_ICONS[p.key] ?? IconGap}
                 title={p.title}
                 desc={done ? 'Готово · засчитано в серию' : isWords ? dueLabel : p.desc}
                 to={isWords && emptyDeck ? '/study' : p.to}
@@ -257,12 +283,17 @@ function StreakHero({
   streak,
   week,
   didToday,
+  perfect = false,
 }: {
   streak: number
   week: WeekDay[]
   didToday: boolean
+  /** Все пункты плана дня выполнены — пламя «золотое». */
+  perfect?: boolean
 }) {
-  const hint = didToday
+  const hint = perfect
+    ? 'Идеальный день: весь план выполнен ✦'
+    : didToday
     ? 'Сегодня засчитано — так держать!'
     : streak > 0
       ? 'Позанимайся, чтобы не потерять серию'
@@ -291,7 +322,7 @@ function StreakHero({
           <p className="mt-1.5 flex items-center gap-2.5">
             <IconFlame
               size={34}
-              className="animate-flame text-[var(--night-accent-100)]"
+              className={`animate-flame ${perfect ? 'text-amber-300' : 'text-[var(--night-accent-100)]'}`}
             />
             <span className="animate-pop-in text-4xl font-medium tabular-nums">{streak}</span>
           </p>
