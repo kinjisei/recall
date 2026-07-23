@@ -1585,3 +1585,136 @@
 
   grant execute on function public.assign_selected_words(uuid, text, text, jsonb)
     to authenticated;
+
+  -- ============================================================================
+  -- КВОТА ТРИАЛА (2026-07-24, по находке ревью + решение владельца):
+  -- триал больше НЕ даёт полную premium-квоту. Уровни доступа AI:
+  --   • платный план (свой) / ученица учителя с ПЛАТНЫМ планом / is_admin
+  --     → 40/час и 200/сутки (как было у премиума);
+  --   • триал (свой) или ученица ТРИАЛЬНОГО учителя → 12/сутки
+  --     (хватает распробовать всё, фармить аккаунты бессмысленно);
+  --   • free → 5/сутки.
+  -- Функции has_premium_access (для UI/фич) не меняем — меняем только квоты.
+  -- Блок idempotent. После него ОБЯЗАТЕЛЬНО включить подтверждение email:
+  -- Supabase Dashboard → Authentication → Providers → Email → Confirm email.
+  -- ============================================================================
+
+  -- Полный (оплаченный) доступ: свой платный план, ученица платного учителя,
+  -- или админ.
+  create or replace function public.has_paid_access(uid uuid)
+  returns boolean
+  language sql
+  security definer
+  stable
+  set search_path = public
+  as $fn$
+    select
+      exists (
+        select 1 from profiles p where p.id = uid and (
+          p.is_admin
+          or (p.plan <> 'free' and p.plan_expires_at is not null
+              and p.plan_expires_at > now())
+        )
+      )
+      or exists (
+        select 1 from teacher_students ts
+        join profiles tp on tp.id = ts.teacher_id
+        where ts.student_id = uid
+          and tp.plan like 'teacher_%'
+          and tp.plan_expires_at is not null and tp.plan_expires_at > now()
+      )
+  $fn$;
+
+  create or replace function public.consume_ai_quota()
+  returns void
+  language plpgsql
+  security definer
+  set search_path = public
+  as $fn$
+  declare
+    max_per_hour  constant int := 40;
+    max_per_day   constant int := 200;
+    trial_per_day constant int := 12;
+    free_per_day  constant int := 5;
+    uid uuid := auth.uid();
+    n int;
+  begin
+    if uid is null then
+      raise exception 'RECALL_NO_AUTH';
+    end if;
+
+    if exists (
+      select 1 from auth.users
+      where id = uid and banned_until is not null and banned_until > now()
+    ) then
+      raise exception 'RECALL_BLOCKED';
+    end if;
+
+    if exists (select 1 from profiles where id = uid and blocked) then
+      raise exception 'RECALL_BLOCKED';
+    end if;
+
+    delete from ai_calls where called_at < now() - interval '3 days';
+
+    if public.has_paid_access(uid) then
+      select count(*) into n from ai_calls
+      where user_id = uid and called_at > now() - interval '1 hour';
+      if n >= max_per_hour then
+        raise exception 'RECALL_RATE_HOUR';
+      end if;
+      select count(*) into n from ai_calls
+      where user_id = uid and called_at > now() - interval '24 hours';
+      if n >= max_per_day then
+        raise exception 'RECALL_RATE_DAY';
+      end if;
+    elsif public.has_premium_access(uid) then
+      -- триал (свой или учителя): суточная проба
+      select count(*) into n from ai_calls
+      where user_id = uid and called_at > now() - interval '24 hours';
+      if n >= trial_per_day then
+        raise exception 'RECALL_TRIAL_LIMIT';
+      end if;
+    else
+      select count(*) into n from ai_calls
+      where user_id = uid and called_at > now() - interval '24 hours';
+      if n >= free_per_day then
+        raise exception 'RECALL_FREE_LIMIT';
+      end if;
+    end if;
+
+    insert into ai_calls (user_id) values (uid);
+  end $fn$;
+
+  -- get_my_plan: честный дневной лимит по уровню доступа
+  create or replace function public.get_my_plan()
+  returns json
+  language plpgsql
+  security definer
+  set search_path = public
+  as $fn$
+  declare
+    uid uuid := auth.uid();
+    p record;
+    paid boolean;
+    prem boolean;
+    used int;
+  begin
+    if uid is null then
+      raise exception 'RECALL_NO_AUTH';
+    end if;
+    select plan, plan_expires_at, trial_until, is_admin
+      into p from profiles where id = uid;
+    paid := public.has_paid_access(uid);
+    prem := public.has_premium_access(uid);
+    select count(*) into used from ai_calls
+      where user_id = uid and called_at > now() - interval '24 hours';
+    return json_build_object(
+      'plan',            p.plan,
+      'plan_expires_at', p.plan_expires_at,
+      'trial_until',     p.trial_until,
+      'is_admin',        p.is_admin,
+      'premium',         prem,
+      'ai_used_today',   used,
+      'ai_day_limit',    case when paid then 200 when prem then 12 else 5 end
+    );
+  end $fn$;
