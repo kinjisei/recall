@@ -31,6 +31,7 @@ import { getEsLevel } from '../../lib/esLevel'
 import { getMyAssignments } from '../../lib/materials'
 import { listMyQuests } from '../../lib/quests'
 import { currentWeekIndex, getMyPlans } from '../../lib/studyPlan'
+import { myPendingPlacement, type PlacementRequest } from '../../lib/placement'
 import type { StudyPlan } from '../../types'
 import { currentGuidedStep } from '../../lib/guided'
 import { ReaderPage } from '../reader/ReaderPage'
@@ -63,6 +64,8 @@ export function StudyPage() {
     assignments: { total: number; pending: number } | null
     quests: { total: number; active: number } | null
     plans: StudyPlan[] | null
+    /** Тест уровня, назначенный преподавателем (null — не назначал). */
+    placement: PlacementRequest | null
   } | null>(null)
 
   // уровень испанского хранится локально, английского — в профиле
@@ -92,13 +95,15 @@ export function StudyPage() {
         }))
         .catch(() => null),
       getMyPlans().catch(() => null),
-    ]).then(([assignments, quests, plans]) => {
-      if (alive) setHub({ assignments, quests, plans })
+      // назначил ли преподаватель тест уровня по текущему языку
+      myPendingPlacement(lang).catch(() => null),
+    ]).then(([assignments, quests, plans, placement]) => {
+      if (alive) setHub({ assignments, quests, plans, placement })
     })
     return () => {
       alive = false
     }
-  }, [])
+  }, [lang])
 
   if (view === 'reader') {
     return <ReaderPage title="Тексты и диалоги" onBack={() => setView('hub')} />
@@ -222,14 +227,24 @@ export function StudyPage() {
           {!levelLoading && (
             <RowCard
               Icon={IconSparkle}
-              title={level ? `Твой уровень: ${level}` : 'Определи свой уровень'}
+              // просьба преподавателя важнее собственного любопытства — она и
+              // в заголовке, и строка становится пунктирной (как «есть дело»)
+              title={
+                hub?.placement
+                  ? 'Преподаватель просит пройти тест уровня'
+                  : level
+                    ? `Твой уровень: ${level}`
+                    : 'Определи свой уровень'
+              }
               desc={
-                level
-                  ? 'Пройти тест заново — вдруг уже вырос?'
-                  : `До ${lang === 'es' ? 40 : 50} вопросов — подстроим диалог и подсказки`
+                hub?.placement
+                  ? 'Результат увидит преподаватель — по нему подберёт материалы'
+                  : level
+                    ? 'Пройти тест заново — вдруг уже вырос?'
+                    : `До ${lang === 'es' ? 40 : 50} вопросов — подстроим диалог и подсказки`
               }
               to="/placement"
-              dashed={!level}
+              dashed={!level || !!hub?.placement}
               className="animate-fade-up"
               style={stagger()}
             />

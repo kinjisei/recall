@@ -2027,3 +2027,94 @@
   end $fn$;
 
   grant execute on function public.regenerate_invite_code() to authenticated;
+
+  -- ============================================================================
+  -- ТЕСТ УРОВНЯ ОТ ПРЕПОДАВАТЕЛЯ (2026-07-24). Блок idempotent.
+  --
+  -- Просьба преподавателя: «если ученик новенький и я не знаю его уровень, я бы
+  -- могла назначить ему тест, узнать примерный уровень и дальше подбирать план».
+  -- Раньше тест можно было только попросить пройти на словах, а результат по
+  -- испанскому вообще оставался в localStorage ученицы — учитель его не видел.
+  -- Теперь просьба живёт в БД, и результат возвращается преподавателю.
+  -- ============================================================================
+
+  create table if not exists public.placement_requests (
+    id uuid primary key default gen_random_uuid(),
+    teacher_id uuid not null references public.profiles(id) on delete cascade,
+    student_id uuid not null references public.profiles(id) on delete cascade,
+    lang text not null check (lang in ('en','es')),
+    status text not null default 'assigned' check (status in ('assigned','done')),
+    result_level text check (result_level in ('A1','A2','B1','B2','C1','C2')),
+    created_at timestamptz not null default now(),
+    completed_at timestamptz
+  );
+
+  -- одна НЕЗАКРЫТАЯ просьба на пару учитель+ученица+язык
+  create unique index if not exists placement_requests_one_open
+    on public.placement_requests (teacher_id, student_id, lang)
+    where status = 'assigned';
+
+  alter table public.placement_requests enable row level security;
+
+  -- Читают обе стороны; отвязка отбирает доступ у преподавателя. Запись —
+  -- только через RPC ниже (иначе ученица могла бы вписать себе любой уровень
+  -- «от учителя»).
+  drop policy if exists "teacher reads placement" on public.placement_requests;
+  create policy "teacher reads placement" on public.placement_requests
+    for select using (
+      auth.uid() = teacher_id and public.is_student_of(auth.uid(), student_id)
+    );
+  drop policy if exists "student reads placement" on public.placement_requests;
+  create policy "student reads placement" on public.placement_requests
+    for select using (auth.uid() = student_id);
+  revoke insert, update, delete on public.placement_requests from authenticated;
+
+  -- Учитель назначает тест своей ученице (повторное назначение заменяет
+  -- незакрытую просьбу — чтобы не упираться в уникальный индекс)
+  create or replace function public.assign_placement(p_student_id uuid, p_lang text)
+  returns uuid language plpgsql security definer set search_path = public as $fn$
+  declare new_id uuid;
+  begin
+    if not public.is_student_of(auth.uid(), p_student_id) then
+      raise exception 'Это не ваша ученица.';
+    end if;
+    if p_lang not in ('en', 'es') then
+      raise exception 'Неизвестный язык.';
+    end if;
+    delete from placement_requests
+     where teacher_id = auth.uid() and student_id = p_student_id
+       and lang = p_lang and status = 'assigned';
+    insert into placement_requests (teacher_id, student_id, lang)
+      values (auth.uid(), p_student_id, p_lang)
+      returning id into new_id;
+    return new_id;
+  end $fn$;
+
+  -- Учитель снимает просьбу или убирает старый результат из списка
+  create or replace function public.cancel_placement(p_id uuid)
+  returns void language plpgsql security definer set search_path = public as $fn$
+  begin
+    delete from placement_requests where id = p_id and teacher_id = auth.uid();
+    if not found then raise exception 'Тест не найден.'; end if;
+  end $fn$;
+
+  -- Ученица закончила тест: закрываем ВСЕ открытые просьбы по этому языку.
+  -- Клиенту не нужно знать id — он просто сообщает язык и результат.
+  -- Возвращает, сколько просьб закрыто (0 — теста никто не назначал).
+  create or replace function public.submit_placement(p_lang text, p_level text)
+  returns int language plpgsql security definer set search_path = public as $fn$
+  declare n int;
+  begin
+    if p_level not in ('A1','A2','B1','B2','C1','C2') then
+      raise exception 'Неизвестный уровень.';
+    end if;
+    update placement_requests
+       set status = 'done', result_level = p_level, completed_at = now()
+     where student_id = auth.uid() and lang = p_lang and status = 'assigned';
+    get diagnostics n = row_count;
+    return n;
+  end $fn$;
+
+  grant execute on function public.assign_placement(uuid, text) to authenticated;
+  grant execute on function public.cancel_placement(uuid) to authenticated;
+  grant execute on function public.submit_placement(text, text) to authenticated;

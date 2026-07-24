@@ -19,6 +19,7 @@ import { MaterialsSection } from './MaterialsSection'
 import { StudentWordsSection } from './StudentWordsSection'
 import { QuestSection } from './QuestSection'
 import { DiagnosticsSection } from './DiagnosticsSection'
+import { PlacementSection } from './PlacementSection'
 import { ProgramSection } from './ProgramSection'
 import { DeckWordsPicker } from './DeckWordsPicker'
 import { GuideSection } from './GuideSection'
@@ -349,6 +350,10 @@ function StudentCard({
       {showDiag && (
         <DiagnosticsSection studentId={p.id} studentName={p.display_name ?? 'Ученица'} />
       )}
+
+      {/* тест уровня — своя раскрывашка: нужна в первую очередь с новой
+          ученицей, когда уровень ещё неизвестен */}
+      <PlacementSection studentId={p.id} studentName={p.display_name ?? 'ученица'} />
 
       <button
         onClick={() => setShowPlanDay((v) => !v)}

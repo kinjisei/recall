@@ -15,6 +15,7 @@ import { Button } from '../../components/Button'
 import { IconBack, IconSparkle } from '../../components/icons'
 import { shuffle } from '../../lib/random'
 import { setEsLevel } from '../../lib/esLevel'
+import { reportPlacementResult } from '../../lib/placement'
 import { supabase } from '../../lib/supabase'
 import { invalidateProfile } from '../../lib/profile'
 import { useAuth } from '../../context/AuthContext'
@@ -145,6 +146,9 @@ export function PlacementTest() {
           await supabase.from('profiles').update({ level }).eq('id', user.id)
           invalidateProfile() // иначе кэш (Учёба, игры, промпты) не увидит новый уровень
         }
+        // если тест назначал преподаватель — закрываем просьбу и отдаём ему
+        // результат (по испанскому уровень иначе остался бы только на телефоне)
+        await reportPlacementResult(lang, level)
         navigate('/')
       } finally {
         setSaving(false)
