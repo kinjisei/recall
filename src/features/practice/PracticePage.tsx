@@ -38,6 +38,7 @@ import { currentGuidedStep, skipReviewIfNoWords } from '../../lib/guided'
 import { getMistakes } from '../../lib/mistakes'
 import { DeckReview } from '../flashcards/DeckReview'
 import { useScrollTop } from '../../lib/useScrollTop'
+import { useFocusMode } from '../../components/Layout'
 
 const MatchMode = lazy(() => import('../words/MatchMode').then((m) => ({ default: m.MatchMode })))
 const GapMode = lazy(() => import('../words/QuizModes').then((m) => ({ default: m.GapMode })))
@@ -151,6 +152,9 @@ export function PracticePage() {
   const mode: Mode = raw && GAME_MODES.has(raw) ? raw : 'hub'
   // смена ?m= маршрут не меняет — глобальный ScrollToTop не срабатывает
   useScrollTop(mode)
+  // на время раунда убираем шапку и нижнюю навигацию: без них игра влезает в
+  // экран целиком и перестаёт «ездить» на каждом тапе (см. Layout)
+  useFocusMode(mode !== 'hub')
   const setMode = (m: Mode) =>
     setSearchParams(m === 'hub' ? {} : { m }, { replace: false })
 

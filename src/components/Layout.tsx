@@ -2,7 +2,7 @@
 // Каркас приложения в теме «Nocturne»: шапка (бренд, EN/ES, аватар → прогресс)
 // и плавающая нижняя навигация. Контент — Outlet.
 // ============================================================================
-import { useEffect, useRef, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { Link, Outlet } from 'react-router-dom'
 import { IconChart, IconTeacher, IconGear, IconSignOut, IconCards, IconBadgeCheck } from './icons'
 import { getProfile } from '../lib/profile'
@@ -152,16 +152,48 @@ function TopBar() {
   )
 }
 
+// ---------------------------------------------------------------------------
+// Режим раунда: на время мини-игры шапка и нижняя навигация убираются.
+//
+// Зачем: шапка (79px) + отступ сверху (20px) + отступ снизу под плавающую
+// навигацию (88px) съедали 187px ещё до содержимого. Играм оставалось 450-670px,
+// и они не влезали — но всего на 11-38px (замер scripts/measure-scroll.mjs на
+// экранах 640-844). Это худший случай: прокрутка есть, но короткая, поэтому на
+// каждом тапе экран подпрыгивал. Правим не отступы (любое слово подлиннее — и
+// снова вылезет), а убираем лишнее на время раунда: выход всё равно есть
+// кнопкой «назад» внутри самой игры.
+// ---------------------------------------------------------------------------
+const FocusCtx = createContext<(on: boolean) => void>(() => {})
+
+/** Включает режим раунда на время жизни компонента. */
+export function useFocusMode(on = true): void {
+  const set = useContext(FocusCtx)
+  useEffect(() => {
+    set(on)
+    return () => set(false)
+  }, [on, set])
+}
+
 export function Layout() {
+  const [focus, setFocus] = useState(false)
   return (
+    <FocusCtx.Provider value={setFocus}>
     <div className="min-h-[100dvh] bg-[var(--night-bg)] text-[var(--night-text)]">
-      <TopBar />
+      {!focus && <TopBar />}
       {/* pb — ровно под плавающую навигацию: её высота (~69px) + отступ снизу
-          (16px) + safe-area. Больше — и внизу зияет пустота. */}
-      <main className="mx-auto min-h-[60vh] max-w-screen-sm animate-fade-in px-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-5">
+          (16px) + safe-area. Больше — и внизу зияет пустота.
+          В режиме раунда навигации нет — хватает safe-area. */}
+      <main
+        className={`mx-auto min-h-[60vh] max-w-screen-sm animate-fade-in px-4 pt-5 ${
+          focus
+            ? 'pb-[calc(1rem+env(safe-area-inset-bottom))] pt-[calc(env(safe-area-inset-top)+0.75rem)]'
+            : 'pb-[calc(5.5rem+env(safe-area-inset-bottom))]'
+        }`}
+      >
         <Outlet />
       </main>
-      <BottomNav />
+      {!focus && <BottomNav />}
     </div>
+    </FocusCtx.Provider>
   )
 }
