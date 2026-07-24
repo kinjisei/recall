@@ -26,10 +26,18 @@ export function getCachedEnLevel(): string | null | undefined {
   }
 }
 
+/**
+ * Колонки профиля, доступные клиенту. Перечислены явно, а не '*': с захода 20
+ * SELECT на profiles разрешён грантом только на этот список, и '*' падает с
+ * ошибкой прав. Секреты (invite_code, plan, trial_until, is_admin) через REST
+ * не читаются вовсе — их отдают RPC get_my_plan() и ensure_invite_code().
+ */
+export const PROFILE_COLUMNS = 'id, display_name, level, native_lang, role, created_at'
+
 async function fetchProfile(userId: string): Promise<Profile | null> {
   const { data, error } = await supabase
     .from('profiles')
-    .select('*')
+    .select(PROFILE_COLUMNS)
     .eq('id', userId)
     .single()
   if (error) return null

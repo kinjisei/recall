@@ -5,6 +5,7 @@
 // Доступы разруливает RLS (docs/schema.sql, блок «ФАЗА 4»).
 // ============================================================================
 import { supabase, requireUserId } from './supabase'
+import { PROFILE_COLUMNS } from './profile'
 import type { Card, Deck, Profile } from '../types'
 
 /** Сводка по ученице для экрана преподавателя. */
@@ -48,6 +49,18 @@ export async function getOrCreateInviteCode(): Promise<string> {
   return data as string
 }
 
+/**
+ * Выдаёт НОВЫЙ код-приглашение; старый сразу перестаёт работать.
+ * Нужно, если код куда-то утёк (до захода 20 ученица могла прочитать его прямо
+ * из профиля преподавателя) или его просто разослали лишним людям.
+ * Уже привязанные ученицы не отваливаются: связь живёт в teacher_students.
+ */
+export async function regenerateInviteCode(): Promise<string> {
+  const { data, error } = await supabase.rpc('regenerate_invite_code')
+  if (error) throw new Error(error.message)
+  return data as string
+}
+
 /** Ученица вводит код → привязка. Возвращает имя преподавателя. */
 export async function joinTeacher(code: string): Promise<string> {
   const { data, error } = await supabase.rpc('join_teacher', {
@@ -78,7 +91,7 @@ export async function getMyTeachers(): Promise<Profile[]> {
 
   const { data: profiles, error: pErr } = await supabase
     .from('profiles')
-    .select('*')
+    .select(PROFILE_COLUMNS)
     .in('id', ids)
   if (pErr) throw pErr
   return (profiles ?? []) as Profile[]
@@ -109,7 +122,7 @@ export async function getMyStudents(): Promise<StudentInfo[]> {
   if (ids.length === 0) return []
 
   const [profilesRes, activityRes, assignRes] = await Promise.all([
-    supabase.from('profiles').select('*').in('id', ids),
+    supabase.from('profiles').select(PROFILE_COLUMNS).in('id', ids),
     supabase
       .from('activity_log')
       .select('user_id, day, items_done')

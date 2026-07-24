@@ -8,6 +8,7 @@ import { getProfile } from '../../lib/profile'
 import { useAuth } from '../../context/AuthContext'
 import {
   getOrCreateInviteCode,
+  regenerateInviteCode,
   getMyStudents,
   getMyDecks,
   assignDeck,
@@ -68,6 +69,7 @@ function TeacherDashboard() {
   const [tab, setTab] = useState<TeacherTab>('students')
   const [code, setCode] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [regenerating, setRegenerating] = useState(false)
   const [students, setStudents] = useState<StudentInfo[]>([])
   const [decks, setDecks] = useState<Deck[]>([])
   const [pendingWorks, setPendingWorks] = useState(0)
@@ -107,6 +109,24 @@ function TeacherDashboard() {
       setTimeout(() => setCopied(false), 2000)
     } catch {
       /* нет доступа к буферу — код виден на экране */
+    }
+  }
+
+  // Перевыпуск кода: старый сразу перестаёт работать, уже привязанные ученицы
+  // остаются. Спрашиваем подтверждение — действие необратимое.
+  const changeCode = async () => {
+    if (!confirm('Выдать новый код? Старый перестанет работать сразу. Уже привязанные ученицы останутся.')) {
+      return
+    }
+    setRegenerating(true)
+    setError(null)
+    try {
+      setCode(await regenerateInviteCode())
+      setCopied(false)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Не удалось сменить код')
+    } finally {
+      setRegenerating(false)
     }
   }
 
@@ -165,6 +185,19 @@ function TeacherDashboard() {
               <Button variant="secondary" className="px-3 py-2 text-sm" onClick={copyCode}>
                 {copied ? 'Скопирован ✓' : 'Скопировать'}
               </Button>
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <Button
+                variant="ghost"
+                className="min-h-[44px] px-3 py-2 text-sm"
+                loading={regenerating}
+                onClick={changeCode}
+              >
+                Сменить код
+              </Button>
+              <span className="text-xs text-[var(--night-text-40)]">
+                если код попал не тем — старый перестанет работать
+              </span>
             </div>
           </Card>
 

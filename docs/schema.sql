@@ -1966,3 +1966,64 @@
 
     insert into ai_calls (user_id, kind) values (uid, v_kind);
   end $fn$;
+
+  -- ============================================================================
+  -- УТЕЧКА ПРОФИЛЯ (заход 20). Блок idempotent — можно запускать повторно.
+  --
+  -- Находка ревью 22.07: политика «linked profiles visible» открывает связанным
+  -- сторонам ВСЮ строку профиля. Ученица через DevTools делала
+  --   supabase.from('profiles').select('*').eq('id', <teacher_id>)
+  -- и получала invite_code преподавателя (а заодно plan, plan_expires_at,
+  -- trial_until, is_admin). Код приглашения можно опубликовать где угодно —
+  -- чужие люди займут места её же преподавателя.
+  --
+  -- ПОЧЕМУ НЕ ЧИНИМ ПОЛИТИКУ: RLS в Postgres работает ПОСТРОЧНО и колонки
+  -- прятать не умеет. Любая политика, дающая право читать строку, отдаёт её
+  -- целиком. Колонки закрываются только грантами — тем же приёмом, каким выше
+  -- по файлу закрыт UPDATE (revoke update + grant update на три колонки).
+  -- Поэтому: SELECT у authenticated разрешён на список безобидных колонок, а
+  -- секреты профиля не читаются через REST ВООБЩЕ — ни у чужого, ни у себя.
+  -- Своё отдают security-definer RPC: план и is_admin — get_my_plan(),
+  -- код приглашения — ensure_invite_code()/regenerate_invite_code().
+  -- Побочный эффект: select('*') на profiles теперь падает с ошибкой прав —
+  -- клиенты обязаны перечислять колонки явно (так и сделано, см. lib/profile.ts,
+  -- lib/teacher.ts, SettingsPage).
+  -- ============================================================================
+
+  revoke select on public.profiles from authenticated;
+  grant select (id, display_name, level, native_lang, role, blocked, created_at)
+    on public.profiles to authenticated;
+
+  -- ---- Перевыпуск кода-приглашения ----
+  -- ensure_invite_code() всегда возвращает существующий код, то есть утёкший
+  -- код было нечем отозвать. Эта функция выдаёт НОВЫЙ (старый перестаёт
+  -- работать сразу: join_teacher ищет по текущему значению колонки).
+  -- Уже привязанные ученицы не страдают — связь живёт в teacher_students и от
+  -- кода не зависит.
+  create or replace function public.regenerate_invite_code()
+  returns text language plpgsql security definer set search_path = public as $fn$
+  declare
+    new_code text;
+    alphabet text := 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+    i int;
+    attempt int;
+  begin
+    if not exists (select 1 from profiles where id = auth.uid() and role = 'teacher') then
+      raise exception 'Код-приглашение доступен только преподавателю.';
+    end if;
+    for attempt in 1..6 loop
+      new_code := '';
+      for i in 1..6 loop
+        new_code := new_code || substr(alphabet, 1 + floor(random() * length(alphabet))::int, 1);
+      end loop;
+      begin
+        update profiles set invite_code = new_code where id = auth.uid();
+        return new_code;
+      exception when unique_violation then
+        -- код занят, пробуем ещё
+      end;
+    end loop;
+    raise exception 'Не удалось сгенерировать код, попробуйте ещё раз.';
+  end $fn$;
+
+  grant execute on function public.regenerate_invite_code() to authenticated;
