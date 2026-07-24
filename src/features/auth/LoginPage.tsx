@@ -45,7 +45,8 @@ export function LoginPage() {
         if (error) setError(describeSignUpError(error))
         else
           setInfo(
-            'Аккаунт создан. Если включено подтверждение почты — проверь email, иначе просто войди.',
+            `Аккаунт создан. Мы отправили письмо на ${email.trim()} — открой ссылку в нём, ` +
+              'после этого сможешь войти. Письма нет? Загляни в «Спам».',
           )
       } else {
         const { error } = await signIn(email, password)
