@@ -63,6 +63,24 @@ export const GEMINI_TIER_CHAINS: Record<AiTier, string[]> = {
 
 const FALLBACK_MODELS = GEMINI_TIER_CHAINS.standard.slice(1)
 
+/**
+ * Обрамление системной инструкции для Gemma (у неё нет systemInstruction).
+ * Без явных границ модель считает инструкцию частью диалога и отвечает
+ * «разбором задания» вместо самого ответа.
+ */
+function wrapForGemma(systemText: string, userText: string): string {
+  return [
+    'СИСТЕМНАЯ ИНСТРУКЦИЯ (только для тебя).',
+    systemText,
+    'КОНЕЦ ИНСТРУКЦИИ.',
+    'Дальше — сообщение пользователя. Выведи ТОЛЬКО готовый ответ ему.',
+    'Не пересказывай инструкцию, не описывай план ответа, не пиши самопроверку',
+    'и не повторяй ответ дважды.',
+    '',
+    userText,
+  ].join('\n')
+}
+
 interface GeminiResponse {
   candidates?: { content?: { parts?: { text?: string }[] } }[]
 }
@@ -136,10 +154,17 @@ export async function callGemini(
       contents:
         isGemma && systemText && contents.length > 0
           ? // Gemma не принимает systemInstruction — вклеиваем инструкцию
-            // в первое user-сообщение
+            // в первое user-сообщение.
+            //
+            // ⚠️ 2026-07-24: раньше склейка была голой («инструкция --- текст»),
+            // и Gemma принимала инструкцию за часть разговора: пересказывала её
+            // пользователю, писала вслух план ответа и самопроверку («Plain
+            // text? Yes. No emojis? Yes.»), а потом дублировала саму реплику.
+            // В Диалоге это лезло прямо в чат. Поэтому обрамляем явно: где
+            // инструкция, где сообщение, и что показывать пользователю.
             contents.map((c, i) =>
               i === 0 && c.role === 'user'
-                ? { ...c, parts: [{ text: systemText + '\n\n---\n\n' + c.parts[0].text }] }
+                ? { ...c, parts: [{ text: wrapForGemma(systemText, c.parts[0].text) }] }
                 : c,
             )
           : contents,
