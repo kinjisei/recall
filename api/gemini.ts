@@ -9,7 +9,8 @@ import type { ChatTurn } from '../src/types'
 // не находит модуль без расширения (FUNCTION_INVOCATION_FAILED при старте)
 import { callGemini, GEMINI_TIER_CHAINS, type AiTier } from './_core.js'
 import { groqChat, DEFAULT_GROQ_MODEL, FAST_GROQ_MODEL } from './_groq.js'
-import { authorize, applyCors } from './_auth.js'
+import { authorize, applyCors, isTeacher } from './_auth.js'
+import { taskSpec } from './_tasks.js'
 
 // Генерация материала занимает 20–40 с (два запроса к Gemini), плюс повторы
 // при 503. Дефолтные 10 с Vercel обрывали её раньше времени.
@@ -24,29 +25,43 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (applyCors(req, res)) return
   if (req.method !== 'POST') return res.status(405).json({ error: 'Только POST' })
 
-  const { messages, system, provider, tier } = (req.body ?? {}) as {
+  const { messages, system, provider, tier, task } = (req.body ?? {}) as {
     messages?: ChatTurn[]
     system?: string
     provider?: string
     tier?: string
+    task?: string
   }
 
-  // Уровень задачи: модель по сложности (см. GEMINI_TIER_CHAINS в _core).
-  // legacy: старые клиенты шлют provider:'groq' для лёгких задач → 'lite'.
-  // Считается ДО авторизации: от уровня зависит класс квоты (lite-запросы —
-  // переводы слов — не должны съедать дневные «AI-действия» Диалога).
-  // Подменить tier на 'lite' ради дешёвого кармана бессмысленно: lite-ветка
-  // всегда уходит на слабую модель, параметр model там игнорируется.
-  const aiTier: AiTier =
-    tier === 'lite' || tier === 'max' || tier === 'standard'
-      ? tier
-      : provider === 'groq'
-        ? 'lite'
-        : 'standard'
+  // Модель выбирает СЕРВЕР по типу задачи (карта — api/_tasks.ts). Клиент
+  // присылает только название задачи: подделав его, можно получить ровно ту
+  // модель, что закреплена за чужой задачей, а не «самую умную по заказу».
+  // Считается ДО авторизации: от задачи зависит класс квоты (переводы слов не
+  // должны съедать дневные «AI-действия» Диалога).
+  const spec = taskSpec(task)
 
-  const access = await authorize(req, aiTier === 'lite' ? 'light' : 'heavy')
+  // legacy: у части пользователей в кэше PWA ещё висит старый JS, который шлёт
+  // tier/provider вместо task. Их не ломаем, но уважаем только разделение
+  // «лёгкое/обычное» — уровень 'max' по просьбе клиента больше не выдаётся
+  // никогда (это и была дыра захода 18). Ветку можно удалить, когда старые
+  // клиенты обновятся (SW проверяет обновление при каждом возврате в приложение).
+  const aiTier: AiTier = spec
+    ? spec.tier
+    : tier === 'lite' || provider === 'groq'
+      ? 'lite'
+      : 'standard'
+  const quota = spec ? spec.quota : aiTier === 'lite' ? 'light' : 'heavy'
+
+  const access = await authorize(req, quota)
   if (!access.ok) {
     return res.status(access.status).json({ error: access.error })
+  }
+
+  // Pro-модели — только преподавателю. Проверяем ПОСЛЕ квоты: у запроса уже
+  // подтверждён вход, а неудачная попытка стоит вызывающему одно AI-действие,
+  // что само по себе гасит перебор чужих названий задач.
+  if (spec?.teacherOnly && !(await isTeacher(req))) {
+    return res.status(403).json({ error: 'Эта функция доступна только преподавателю.' })
   }
 
   if (!Array.isArray(messages) || messages.length === 0) {

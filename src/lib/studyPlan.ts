@@ -167,7 +167,7 @@ export async function generateStudyPlan(
     feedback ? `\nПравки преподавателя к прошлой версии программы: ${feedback}` : '',
   ].join('\n')
 
-  const raw = await chat([{ role: 'user', content: userMsg }], { system, tier: 'max' })
+  const raw = await chat([{ role: 'user', content: userMsg }], { system, task: 'program' })
   const parsed = parseJson<GeneratedPlan>(raw)
   if (!Array.isArray(parsed.weeks)) throw new Error('AI вернул неполную программу. Попробуй ещё раз.')
   return {

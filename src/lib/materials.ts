@@ -105,7 +105,7 @@ export async function generateMaterialPlan(
   ].join('\n')
 
   // генерация материалов — сложная составная задача: Pro-уровень моделей
-  const raw = await chat([{ role: 'user', content: userMsg }], { system, tier: 'max' })
+  const raw = await chat([{ role: 'user', content: userMsg }], { system, task: 'material' })
   const plan = parseJson<MaterialPlan>(raw)
   if (!Array.isArray(plan.exercise_plan) || !Array.isArray(plan.vocabulary)) {
     throw new Error('AI вернул неполный план. Попробуй ещё раз.')
@@ -162,7 +162,7 @@ export async function generateMaterialContent(
     feedback ? `\nПравки преподавателя: ${feedback}` : '',
   ].join('\n')
 
-  const raw = await chat([{ role: 'user', content: userMsg }], { system, tier: 'max' })
+  const raw = await chat([{ role: 'user', content: userMsg }], { system, task: 'material' })
   const content = parseJson<MaterialContent>(raw)
 
   // Валидация: выбрасываем битые упражнения, требуем минимум приличный набор.
@@ -391,7 +391,7 @@ export async function generateAiReview(
   ].join('\n')
 
   // разбор работы — не «мелочь», но и не генерация: средний уровень
-  const raw = await chat([{ role: 'user', content: userMsg }], { system, tier: 'standard' })
+  const raw = await chat([{ role: 'user', content: userMsg }], { system, task: 'review' })
   const parsed = parseJson<{ items: ReviewItem[] }>(raw)
   if (!Array.isArray(parsed.items)) throw new Error('AI вернул неполный разбор.')
   // страховка: вердикт на каждое упражнение (чего нет — берём авто-результат)

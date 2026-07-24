@@ -2,13 +2,8 @@ import { defineConfig, loadEnv, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
-import {
-  ALLOWED_MODELS,
-  callGemini,
-  DEFAULT_GEMINI_MODEL,
-  GEMINI_TIER_CHAINS,
-  type AiTier,
-} from './api/_core'
+import { callGemini, GEMINI_TIER_CHAINS, type AiTier } from './api/_core'
+import { taskSpec } from './api/_tasks'
 import { transcribeWithGroq } from './api/_stt'
 import { groqChat, FAST_GROQ_MODEL } from './api/_groq'
 import type { ChatTurn } from './src/types'
@@ -19,11 +14,7 @@ import type { ChatTurn } from './src/types'
  * Ключ берётся из .env.local: строка GEMINI_API_KEY=... (БЕЗ префикса VITE_,
  * поэтому в клиентский бандл он не попадает).
  */
-function geminiDevEndpoint(
-  apiKey: string | undefined,
-  model: string,
-  groqKey: string | undefined,
-): Plugin {
+function geminiDevEndpoint(apiKey: string | undefined, groqKey: string | undefined): Plugin {
   return {
     name: 'gemini-dev-endpoint',
     configureServer(server) {
@@ -42,25 +33,28 @@ function geminiDevEndpoint(
           void (async () => {
             res.setHeader('Content-Type', 'application/json')
             try {
-              const { messages, system, model: reqModel, provider, tier } = JSON.parse(raw || '{}') as {
+              const { messages, system, provider, tier, task } = JSON.parse(raw || '{}') as {
                 messages?: ChatTurn[]
                 system?: string
-                model?: string
                 provider?: string
                 tier?: string
+                task?: string
               }
               if (!Array.isArray(messages) || messages.length === 0) {
                 res.statusCode = 400
                 res.end(JSON.stringify({ error: 'Нужно поле messages (непустой массив)' }))
                 return
               }
-              // роутинг по уровню сложности — как в проде (api/gemini.ts)
-              const aiTier: AiTier =
-                tier === 'lite' || tier === 'max' || tier === 'standard'
-                  ? tier
-                  : provider === 'groq'
-                    ? 'lite'
-                    : 'standard'
+              // роутинг по ТИПУ задачи — как в проде (api/gemini.ts + _tasks.ts).
+              // Права (teacherOnly) здесь не проверяем: в dev нет JWT и квот,
+              // это лишь подбор модели. Правило «клиент не выбирает уровень»
+              // соблюдаем и тут, иначе локально не воспроизвести поведение прода.
+              const spec = taskSpec(task)
+              const aiTier: AiTier = spec
+                ? spec.tier
+                : tier === 'lite' || provider === 'groq'
+                  ? 'lite'
+                  : 'standard'
               if (aiTier === 'lite' && groqKey) {
                 try {
                   res.end(JSON.stringify({ text: await groqChat(messages, system, groqKey, FAST_GROQ_MODEL) }))
@@ -75,9 +69,7 @@ function geminiDevEndpoint(
                 )
               }
               const chain = GEMINI_TIER_CHAINS[aiTier]
-              const chosen =
-                reqModel && ALLOWED_MODELS.includes(reqModel) ? reqModel : chain[0]
-              const text = await callGemini(messages, system, apiKey, chosen, chain)
+              const text = await callGemini(messages, system, apiKey, chain[0], chain, aiTier)
               res.end(JSON.stringify({ text }))
             } catch (e) {
               const msg = e instanceof Error ? e.message : 'Ошибка AI'
@@ -158,7 +150,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       tailwindcss(),
-      geminiDevEndpoint(env.GEMINI_API_KEY, env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL, env.GROQ_API_KEY),
+      geminiDevEndpoint(env.GEMINI_API_KEY, env.GROQ_API_KEY),
       transcribeDevEndpoint(env.GROQ_API_KEY),
       VitePWA({
         registerType: 'autoUpdate',

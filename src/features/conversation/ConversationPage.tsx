@@ -222,6 +222,7 @@ function ChatSection({ level, lang }: { level: CEFRLevel; lang: AppLang }) {
       // отправляем только последние 20 реплик — экономим бесплатные токены
       const reply = await chat(history.slice(-20), {
         system: chatSystemPrompt(level, lang),
+        task: 'dialog',
       })
       setMsgs([...history, { role: 'assistant', content: reply }])
       void logActivity('conversation')
@@ -381,6 +382,7 @@ function WritingSection({ level, lang }: { level: CEFRLevel; lang: AppLang }) {
     try {
       const fb = await chat([{ role: 'user', content: body }], {
         system: writingSystemPrompt(level, lang),
+        task: 'writing',
       })
       setFeedback(fb)
       void logActivity('writing')

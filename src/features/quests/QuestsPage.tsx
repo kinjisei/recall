@@ -146,7 +146,10 @@ function QuestChat({ quest, onBack }: { quest: GrammarQuest; onBack: () => void 
     setBusy(true)
     setError(null)
     try {
-      const reply = await chat(history.slice(-24), { system: questSystemPrompt(quest) })
+      const reply = await chat(history.slice(-24), {
+        system: questSystemPrompt(quest),
+        task: 'quest',
+      })
       const next: ChatTurn[] = [...history, { role: 'assistant', content: reply }]
       setMsgs(next)
       void saveQuestMessages(quest.id, next).catch(() => {})

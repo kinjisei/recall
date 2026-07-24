@@ -3,20 +3,21 @@
 // фронт никогда не ходит в Google напрямую.
 // Контракт: docs/ARCHITECTURE.md §7 — chat(messages, opts).
 // ============================================================================
-import type { ChatTurn } from '../types'
+import type { AiTask, ChatTurn } from '../types'
 import { supabase } from './supabase'
 
 /**
  * Отправляет переписку в /api/gemini и возвращает текст ответа AI.
- * tier — уровень сложности задачи, сервер подбирает модель по нему:
- *   'lite'     — перевод слова, простые определения (мгновенные мини-модели);
- *   'standard' — чат, письмо, разбор работ, квесты (по умолчанию);
- *   'max'      — генерация материалов преподавателя (Pro-модели).
- * light: true — устаревший синоним tier:'lite'.
+ *
+ * task — ЧТО мы просим сделать (перевод слова, реплика Диалога, генерация
+ * материала…). Модель, карман суточной квоты и право на вызов сервер выбирает
+ * сам по этому типу — карта в api/_tasks.ts. Клиент уровень модели НЕ задаёт:
+ * пока он слал tier, любой вошедший мог отправить обычную реплику Диалога с
+ * tier:'max' и жечь дефицитные Pro-модели (пентест, заход 18).
  */
 export async function chat(
   messages: ChatTurn[],
-  opts?: { system?: string; light?: boolean; tier?: 'lite' | 'standard' | 'max' },
+  opts: { task: AiTask; system?: string },
 ): Promise<string> {
   // токен сессии — прокси пускает только вошедших (защита квоты от абьюза)
   const {
@@ -33,9 +34,9 @@ export async function chat(
       },
       body: JSON.stringify({
         messages,
-        system: opts?.system,
-        // модель подбирается сервером по уровню сложности задачи
-        tier: opts?.tier ?? (opts?.light ? 'lite' : 'standard'),
+        system: opts.system,
+        // модель и лимиты сервер подбирает сам по типу задачи
+        task: opts.task,
       }),
     })
   } catch {

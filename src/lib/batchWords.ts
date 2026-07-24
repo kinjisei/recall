@@ -36,7 +36,7 @@ async function translateChunk(words: MarkedWord[], lang: AppLang): Promise<Trans
     'Отвечай ТОЛЬКО валидным JSON-массивом без markdown: [{"word":"…","base":"…","ru":"…"}, …] — ровно по одному объекту на входное слово, в том же порядке.',
   ].join('\n')
   const user = JSON.stringify(words.map((w) => ({ word: w.word, sentence: w.sentence })))
-  const raw = await chat([{ role: 'user', content: user }], { system, tier: 'lite' })
+  const raw = await chat([{ role: 'user', content: user }], { system, task: 'batch' })
   return parseJsonArray<Translated>(raw)
 }
 

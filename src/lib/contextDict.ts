@@ -59,7 +59,7 @@ export async function lookupInContext(
         content: `${isPhrase ? 'Выражение' : 'Слово'}: «${word}»\nПредложение: «${sentence}»`,
       },
     ],
-    { system, tier: 'lite' }, // перевод слова — задача для мини-модели
+    { system, task: 'word' }, // перевод слова — сервер даст мини-модель
   )
   const start = raw.indexOf('{')
   const end = raw.lastIndexOf('}')

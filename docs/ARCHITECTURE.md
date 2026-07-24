@@ -281,8 +281,14 @@ transcribe(blob: Blob, lang: AppLang): Promise<string>   // POST /api/transcribe
   // испанская диакритика нормализуется: «cómo» == «como»
 
 // lib/gemini.ts  (Worker 4) — зовёт НАШ /api/gemini, не Google напрямую
-chat(messages: ChatTurn[], opts?: { system?: string }): Promise<string>
+chat(messages: ChatTurn[], opts: { task: AiTask; system?: string }): Promise<string>
   // ChatTurn = { role: 'user'|'assistant'|'system'; content: string } (src/types)
+  // task — ЧТО делаем: 'word'|'definition'|'batch' (лёгкие модели),
+  //   'dialog'|'writing'|'quest'|'review' (обычные), 'material'|'program'
+  //   (Pro-модели, только role='teacher'). Уровень модели, карман суточной
+  //   квоты и право на вызов выбирает СЕРВЕР по task — карта api/_tasks.ts.
+  //   Клиент уровень модели НЕ задаёт (заход 18: клиентский tier:'max'
+  //   позволял любому вошедшему жечь дефицитные Pro-модели).
 
 // lib/activity.ts  (Фаза 3) — стрик и статистика, день в МЕСТНОМ времени
 logActivity(type: ActivityType, itemsDone?, durationSec?): Promise<void>  // не бросает ошибок
@@ -325,7 +331,10 @@ lookupInContext(word, sentence, lang): Promise<{ base; translation; note }>
 > «ЗАЩИТА ОТ ПОДДЕЛКИ» в schema.sql), а прямая запись из клиента запрещена
 > (revoke). Балл авто-проверки материала пересчитывается на сервере
 > (submit_material). /api/gemini требует Supabase-JWT (иначе публичный прокси
-> жёг бы квоту). Известный остаток: правильные ответы упражнений всё ещё уходят
+> жёг бы квоту) и сам выбирает модель по типу задачи: клиент не может ни
+> назвать модель (параметр model), ни запросить уровень (tier) — иначе любой
+> вошедший уводил обычную реплику Диалога на дефицитные Pro-модели и выжигал
+> их суточную квоту всем (пентест, заход 18; карта — api/_tasks.ts). Известный остаток: правильные ответы упражнений всё ещё уходят
 > на клиент (проверка на клиенте) — «подглядывание» через DevTools возможно,
 > но балл серверный, а учитель видит ответы; полностью закрыть — не отдавать
 > answer и проверять на сервере (бо́льшая переделка).

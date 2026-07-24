@@ -38,6 +38,46 @@ async function tokenValid(url: string, anon: string, token: string): Promise<boo
   return r.ok
 }
 
+/**
+ * Преподаватель ли вызывающий (profiles.role = 'teacher').
+ *
+ * Нужна для задач на Pro-моделях (material/program): их вправе запускать
+ * только учитель. Зовётся ТОЛЬКО для этих задач — их единицы в день, поэтому
+ * два лишних запроса не влияют на горячий путь (Диалог, перевод слова).
+ *
+ * ⚠️ Id пользователя берём у Supabase (/auth/v1/user), а НЕ из полезной
+ * нагрузки JWT: подпись мы не проверяем, а RLS на profiles разрешает читать не
+ * только свою строку (ученица видит профиль своего преподавателя). Возьми мы
+ * id из токена «на веру» — ученица подставила бы id учителя и прочитала бы его
+ * role='teacher', то есть проверка бы её же и пропустила.
+ * При любой ошибке отвечаем false — закрыто по умолчанию.
+ */
+export async function isTeacher(req: VercelRequest): Promise<boolean> {
+  const auth = req.headers.authorization
+  const token = auth?.startsWith('Bearer ') ? auth.slice(7) : null
+  const url = process.env.VITE_SUPABASE_URL
+  const anon = process.env.VITE_SUPABASE_ANON_KEY
+  if (!token || !url || !anon) return false
+
+  try {
+    const headers = { Authorization: `Bearer ${token}`, apikey: anon }
+    const me = await fetch(`${url}/auth/v1/user`, { headers })
+    if (!me.ok) return false
+    const { id } = (await me.json()) as { id?: string }
+    if (!id) return false
+
+    const r = await fetch(
+      `${url}/rest/v1/profiles?id=eq.${encodeURIComponent(id)}&select=role`,
+      { headers },
+    )
+    if (!r.ok) return false
+    const rows = (await r.json()) as { role?: string }[]
+    return rows[0]?.role === 'teacher'
+  } catch {
+    return false
+  }
+}
+
 /** Пускает только вошедших, не заблокированных и не исчерпавших лимит. */
 export async function authorize(
   req: VercelRequest,
