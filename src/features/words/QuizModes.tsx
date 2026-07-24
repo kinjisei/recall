@@ -14,9 +14,20 @@ import type { AppLang } from '../../types'
 const ROUND = 8
 const OPTIONS = 4
 
-/** Прячет слово в предложении, оставляя пропуск. */
+/**
+ * Прячет слово в предложении, оставляя пропуск.
+ *
+ * Совпадение ТОЧНОЕ по словарной форме. Раньше шаблон был `\bword\w*\b` и ловил
+ * любую производную, а в варианты ответа кладётся словарная форма — получались
+ * неграмотные задания: retire + «My father retired at sixty.» → «My father
+ * ______ at sixty» с «правильным» ответом retire (нужно retired). Заодно шаблон
+ * путал разные слова: art поймал бы article.
+ * Замер (scripts/check-gap-examples.mjs): так вело себя 848 английских слов —
+ * 20% играбельных. После строгого совпадения играбельными остаются 3499 слов
+ * EN и 2633 ES, чего с запасом хватает на раунды.
+ */
 function blankOut(sentence: string, word: string): string | null {
-  const re = new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\w*\\b`, 'i')
+  const re = new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i')
   if (!re.test(sentence)) return null
   return sentence.replace(re, '______')
 }

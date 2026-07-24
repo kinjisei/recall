@@ -53,7 +53,10 @@ function tidy(definition: string, word: string): string {
   const dot = d.indexOf('. ')
   if (dot > 30) d = d.slice(0, dot + 1)
   if (d.length > MAX_LEN) d = d.slice(0, MAX_LEN).replace(/\s+\S*$/, '') + '…'
-  // не подсказываем ответ: прячем само слово, если оно попало в определение
+  // Не подсказываем ответ: прячем само слово, если оно попало в определение.
+  // `\w*` здесь НАМЕРЕННО — маскировать надо и производные (retire → retired),
+  // иначе ответ виден. Не путать с blankOut в QuizModes: там такой же шаблон был
+  // ошибкой, потому что пропуск обязан совпадать со словарной формой из вариантов.
   const re = new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\w*\\b`, 'gi')
   return d.replace(re, '…')
 }
