@@ -26,8 +26,16 @@ const anon = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY, {
   auth: { persistSession: false },
 })
 
-// пока регистрация закрыта белым списком — впускаем этот адрес
-await admin.from('allowed_emails').upsert({ email: TO, note: 'проверка почты (временный)' })
+// --open: НЕ вносим адрес в белый список — так проверяется, что регистрация
+// действительно открыта (без флага адрес впускаем, иначе закрытый список
+// отклонит регистрацию раньше отправки письма)
+const openMode = process.argv.includes('--open')
+if (openMode) {
+  await admin.from('allowed_emails').delete().eq('email', TO)
+  console.log('Режим проверки открытой регистрации: адреса в белом списке НЕТ.')
+} else {
+  await admin.from('allowed_emails').upsert({ email: TO, note: 'проверка почты (временный)' })
+}
 
 console.log(`Регистрирую ${TO}…`)
 const { data, error } = await anon.auth.signUp({ email: TO, password: PASS })
