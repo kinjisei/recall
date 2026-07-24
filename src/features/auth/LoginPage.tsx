@@ -75,7 +75,7 @@ export function LoginPage() {
               Присоединяйся к Recall
             </h1>
             <p className="px-4 text-sm leading-relaxed text-[var(--night-text-60)]">
-              Три быстрых шага — и можно заниматься каждый день.
+              Две минуты на настройку — и можно заниматься.
             </p>
           </div>
           <div className="flex flex-col gap-3">
