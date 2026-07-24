@@ -86,6 +86,31 @@ function PlanCardView({ plan }: { plan: PlanCard }) {
   )
 }
 
+/**
+ * Реквизиты Kaspi — под кнопкой «Хочу оплатить». Номер не показываем на
+ * публичной странице сразу (решение владельца): он раскрывается только тому,
+ * кто уже собрался платить.
+ */
+function PayDetails() {
+  const [open, setOpen] = useState(false)
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        className="lift mt-3 inline-flex min-h-[44px] items-center rounded-xl border border-[var(--night-accent-45)] bg-[var(--night-accent-900)] px-4 text-sm font-medium text-[var(--night-accent-100)]"
+      >
+        Хочу оплатить — показать реквизиты
+      </button>
+    )
+  }
+  return (
+    <div className="mt-3 rounded-xl border border-[var(--night-accent-45)] bg-[var(--night-accent-900)]/40 p-3 text-sm leading-relaxed text-[var(--night-text-70)]">
+      Kaspi: <span className="font-medium text-[var(--night-text)]">{KASPI.phone}</span> ({KASPI.name}).
+      <br />В комментарии к переводу укажи email своего аккаунта — так мы поймём, кому включить тариф.
+    </div>
+  )
+}
+
 export function PricingPage() {
   const { user } = useAuth()
   const [myPlan, setMyPlan] = useState<MyPlan | null>(null)
@@ -132,18 +157,13 @@ export function PricingPage() {
       <section className="animate-fade-up mt-8 rounded-2xl border border-white/[0.08] bg-[var(--night-surface)] p-4">
         <h2 className="font-medium">Как оплатить</h2>
         <p className="mt-2 text-sm leading-relaxed text-[var(--night-text-70)]">
-          Переводом в Kaspi на номер{' '}
-          <span className="font-medium text-[var(--night-text)]">{KASPI.phone}</span> (
-          {KASPI.name}). В комментарии к переводу укажи email своего аккаунта — так мы поймём,
-          кому включить тариф.
+          Оплата переводом в Kaspi. Реквизиты покажем, когда решишь платить, —
+          нажми кнопку ниже. Тариф включаем руками, обычно в тот же день (если
+          перевёл ночью — жди утра). Карту не привязываем и сами ничего не
+          списываем: чтобы продлить, переведёшь снова.
         </p>
-        <p className="mt-2 text-sm leading-relaxed text-[var(--night-text-70)]">
-          Тариф включаем руками — обычно в тот же день. Если перевёл ночью, жди утра.
-          Карту мы не привязываем и сами ничего не списываем: чтобы продлить, нужно
-          перевести снова. Передумал — напиши в течение 14 дней, вернём за
-          неиспользованные дни.
-        </p>
-        <p className="mt-2 text-sm leading-relaxed text-[var(--night-text-70)]">
+        <PayDetails />
+        <p className="mt-3 text-sm leading-relaxed text-[var(--night-text-70)]">
           Первые 14 дней после регистрации — пробный период: все разделы открыты,
           12 разговоров с AI в день. Разговор — это реплика в «Диалоге», проверка
           письма или ход в квесте. Перевод слов по тапу, произношение, повторение
