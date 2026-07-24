@@ -12,7 +12,6 @@ import { supabase, currentUserId } from './supabase'
 import { getDeckIds } from './cards'
 import { getEsLevel } from './esLevel'
 import { getProfile } from './profile'
-import { sample } from './random'
 import type { AppLang, Card, ReviewState } from '../types'
 
 /** Слово для игры: термин + перевод (+ пример и связь с карточкой колоды). */
@@ -63,6 +62,7 @@ export { shuffle, sample } from './random'
 // чтобы игры продолжали импортировать всё из wordPool.
 export { recordShown, withoutRecent } from './recentWords'
 export { pickDistractors, ruPos } from './distractors'
+import { pickRound } from './pickRound'
 import { loadRecent, recordShown as recordShownImpl } from './recentWords'
 
 /**
@@ -76,21 +76,12 @@ import { loadRecent, recordShown as recordShownImpl } from './recentWords'
  * показа каждая игра делает сама.
  */
 export function pickWords(pool: GamePool, n: number): PoolItem[] {
-  const recent = new Set(loadRecent(pool.lang))
-  const isFresh = (i: PoolItem) => !recent.has(i.term.toLowerCase())
-  const deck = pool.items.slice(0, pool.fromDeck)
-  const packs = pool.items.slice(pool.fromDeck)
-
-  // сначала свежие (колода → паки), потом — если раунд не набрался — недавние
-  const picked = sample(deck.filter(isFresh), n)
-  if (picked.length < n) picked.push(...sample(packs.filter(isFresh), n - picked.length))
-  if (picked.length < n) {
-    const have = new Set(picked.map((i) => i.term.toLowerCase()))
-    const leftovers = (list: PoolItem[]) => list.filter((i) => !have.has(i.term.toLowerCase()))
-    picked.push(...sample(leftovers(deck), n - picked.length))
-    if (picked.length < n) picked.push(...sample(leftovers(packs), n - picked.length))
-  }
-
+  const picked = pickRound(
+    pool.items.slice(0, pool.fromDeck),
+    pool.items.slice(pool.fromDeck),
+    n,
+    new Set(loadRecent(pool.lang)),
+  )
   recordShownImpl(pool.lang, picked.map((i) => i.term))
   return picked
 }
@@ -260,17 +251,21 @@ export async function loadGamePool(lang: AppLang, need = 24): Promise<GamePool> 
   const seen = new Set(deckItems.map((i) => i.term.toLowerCase()))
   const items = [...deckItems]
 
-  if (items.length < need) {
-    const packs = await loadPackItems(lang).catch(() => [])
-    // добираем словами СВОЕГО уровня, а не первыми попавшимися
-    for (const it of sortByLevelCloseness(packs, level)) {
-      const key = it.term.toLowerCase()
-      if (seen.has(key)) continue
-      seen.add(key)
-      items.push(it)
-      // берём с запасом на обманки, но не тащим весь словарь
-      if (items.length >= Math.max(need * 4, 80)) break
-    }
+  // Паки грузим ВСЕГДА. Раньше условие было `items.length < need` (24), то есть
+  // при колоде больше 24 слов пак не подмешивался вообще — игры бесконечно
+  // крутили одну и ту же колоду. Словарь всё равно ленивый и уже загружен
+  // Главной («слово дня»), так что лишнего трафика это не создаёт.
+  const packBudget = Math.max(need * 3, 60)
+  const packs = await loadPackItems(lang).catch(() => [])
+  let added = 0
+  // добираем словами СВОЕГО уровня, а не первыми попавшимися
+  for (const it of sortByLevelCloseness(packs, level)) {
+    const key = it.term.toLowerCase()
+    if (seen.has(key)) continue
+    seen.add(key)
+    items.push(it)
+    // берём с запасом на обманки, но не тащим весь словарь
+    if (++added >= packBudget) break
   }
 
   return { lang, items, fromDeck: deckItems.length }

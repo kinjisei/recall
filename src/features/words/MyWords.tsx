@@ -7,6 +7,7 @@
 // каскадом, см. lib/cards.ts).
 // ============================================================================
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   IconSearch,
   IconPencil,
@@ -49,6 +50,8 @@ export function MyWords({ lang, onBack }: { lang: AppLang; onBack: () => void })
   const [filter, setFilter] = useState<Filter>('all')
   const [editing, setEditing] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
+  // открытая карточка слова (тап по строке): полный перевод и пример
+  const [viewing, setViewing] = useState<MyWord | null>(null)
 
   // useRef, чтобы перезагрузка после правки/удаления не спорила с эффектом
   const reloadRef = useRef<() => void>(() => {})
@@ -211,11 +214,97 @@ export function MyWords({ lang, onBack }: { lang: AppLang; onBack: () => void })
               }}
               onCancelDelete={() => setConfirmDelete(null)}
               onDelete={() => onDelete(w.card.id)}
+              onOpen={() => setViewing(w)}
             />
           ))}
         </div>
       )}
+
+      {viewing && (
+        <WordCardSheet
+          word={viewing}
+          lang={lang}
+          onClose={() => setViewing(null)}
+          onEdit={() => {
+            setEditing(viewing.card.id)
+            setViewing(null)
+          }}
+        />
+      )}
     </div>
+  )
+}
+
+/**
+ * Карточка слова во весь низ экрана: слово, перевод и пример ЦЕЛИКОМ, без
+ * обрезки. В списке всё это помещалось в одну строку и на телефоне читалось
+ * плохо — особенно длинные переводы с пояснением через «·».
+ */
+function WordCardSheet({
+  word,
+  lang,
+  onClose,
+  onEdit,
+}: {
+  word: MyWord
+  lang: AppLang
+  onClose: () => void
+  onEdit: () => void
+}) {
+  const { card, status, intervalDays } = word
+  const chip = STATUS_CHIP[status]
+
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-end bg-black/40" onClick={onClose}>
+      <div
+        className="flex max-h-[85dvh] w-full flex-col rounded-t-3xl bg-[var(--night-surface)]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mx-auto mb-1 mt-3 h-1.5 w-10 shrink-0 rounded-full bg-slate-600" />
+
+        <div className="min-h-0 overflow-y-auto px-5 pt-2">
+          <div className="flex items-start justify-between gap-3">
+            <h3 className="min-w-0 break-words text-xl font-bold">{card.front}</h3>
+            <button
+              onClick={() => speak(card.front, { lang })}
+              aria-label="Озвучить"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/[0.08]"
+            >
+              <IconSpeaker size={18} />
+            </button>
+          </div>
+
+          <span
+            className={`mt-2 inline-block rounded-full px-2.5 py-1 text-[11px] font-medium ${chip.cls}`}
+          >
+            {chip.label}
+            {intervalDays > 0 ? ` · повтор через ${intervalDays} дн.` : ''}
+          </span>
+
+          {card.back ? (
+            <p className="mt-3 text-lg leading-relaxed">{card.back}</p>
+          ) : (
+            <p className="mt-3 text-[var(--night-text-40)]">Перевода пока нет</p>
+          )}
+
+          {card.example && (
+            <p className="mt-3 rounded-lg bg-white/[0.06] px-3 py-2 text-sm italic leading-relaxed text-[var(--night-text-40)]">
+              «{card.example}»
+            </p>
+          )}
+        </div>
+
+        <div className="flex shrink-0 gap-3 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4">
+          <Button className="flex-1" onClick={onEdit}>
+            <IconPencil size={16} /> Изменить
+          </Button>
+          <Button variant="ghost" onClick={onClose}>
+            Закрыть
+          </Button>
+        </div>
+      </div>
+    </div>,
+    document.body,
   )
 }
 
@@ -230,6 +319,7 @@ function WordRow({
   onAskDelete,
   onCancelDelete,
   onDelete,
+  onOpen,
 }: {
   word: MyWord
   lang: AppLang
@@ -241,6 +331,7 @@ function WordRow({
   onAskDelete: () => void
   onCancelDelete: () => void
   onDelete: () => void
+  onOpen: () => void
 }) {
   const { card, status, intervalDays } = word
   const [front, setFront] = useState(card.front)
@@ -310,7 +401,14 @@ function WordRow({
 
   return (
     <div className="flex items-center gap-3 rounded-2xl border border-white/[0.08] bg-[var(--night-surface)] px-4 py-3">
-      <div className="min-w-0 flex-1">
+      {/* Тап по строке — карточка со ВСЕМ содержимым: в строке слово и перевод
+          обрезаны, а пример не виден вовсе, и на телефоне длинный перевод было
+          не прочитать (жалоба владельца 24.07). */}
+      <button
+        onClick={onOpen}
+        className="min-w-0 flex-1 text-left"
+        aria-label={`Открыть карточку «${card.front}»`}
+      >
         <div className="flex items-center gap-2">
           <p className="truncate text-[15px] font-medium">{card.front}</p>
           <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${chip.cls}`}>
@@ -321,7 +419,7 @@ function WordRow({
         {card.back && (
           <p className="truncate text-[13px] text-[var(--night-text-40)]">{card.back}</p>
         )}
-      </div>
+      </button>
 
       <div className="flex shrink-0 gap-1">
         <button
