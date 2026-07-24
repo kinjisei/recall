@@ -13,6 +13,7 @@ import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { celebrate } from '../../components/Confetti'
 import { getDueCards, reviewCard, type DueCard } from '../../lib/fsrs'
+import { clearMisses } from '../../lib/gameMisses'
 import { countMyWords } from '../../lib/cards'
 import { logActivity } from '../../lib/activity'
 import { getMyPendingWordChecks } from '../../lib/wordChecks'
@@ -116,6 +117,9 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
     try {
       // сохраняем ДО сдвига очереди — при ошибке карточка не потеряется
       const newState = await reviewCard(card, state, rating)
+      // вспомнил на настоящем повторении — прошлые промахи в играх больше не
+      // копятся против этого слова (счётчик решает, штрафовать ли жёстко)
+      if (rating === 'good') clearMisses(card.id)
       void logActivity('flashcards')
       setFlipped(false)
       setIndex((i) => i + 1)
