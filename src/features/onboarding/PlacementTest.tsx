@@ -16,6 +16,7 @@ import { IconBack, IconSparkle } from '../../components/icons'
 import { shuffle } from '../../lib/random'
 import { setEsLevel } from '../../lib/esLevel'
 import { reportPlacementResult } from '../../lib/placement'
+import { markOnboarded } from '../../lib/onboarding'
 import { supabase } from '../../lib/supabase'
 import { invalidateProfile } from '../../lib/profile'
 import { useAuth } from '../../context/AuthContext'
@@ -85,6 +86,7 @@ export function PlacementTest() {
   const [answers, setAnswers] = useState<Record<number, number>>({})
   const [done, setDone] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState(false)
 
   const back = () => navigate('/')
 
@@ -139,17 +141,27 @@ export function PlacementTest() {
     const level = scoreLevel(levels, questions, answers)
     const save = async () => {
       setSaving(true)
+      setSaveError(false)
       try {
         if (lang === 'es') {
           setEsLevel(level)
         } else if (user) {
-          await supabase.from('profiles').update({ level }).eq('id', user.id)
+          // supabase-js не бросает на ошибке — ошибку берём из ответа, иначе
+          // сбой записи уровня прошёл бы молча (пользователь думает, что уровень
+          // сохранён, а его нет)
+          const { error } = await supabase.from('profiles').update({ level }).eq('id', user.id)
+          if (error) throw error
           invalidateProfile() // иначе кэш (Учёба, игры, промпты) не увидит новый уровень
         }
         // если тест назначал преподаватель — закрываем просьбу и отдаём ему
         // результат (по испанскому уровень иначе остался бы только на телефоне)
         await reportPlacementResult(lang, level)
+        // прохождение теста = онбординг пройден: иначе новичок, дошедший до
+        // теста из онбординга, после '/' снова улетал бы на первый шаг
+        markOnboarded()
         navigate('/')
+      } catch {
+        setSaveError(true) // остаёмся на экране — можно нажать «Сохранить» снова
       } finally {
         setSaving(false)
       }
@@ -168,6 +180,11 @@ export function PlacementTest() {
                 : 'Хорошая база — есть куда расти.'}
           </p>
         </Card>
+        {saveError && (
+          <p className="text-center text-sm text-red-400">
+            Не удалось сохранить — проверь интернет и нажми ещё раз.
+          </p>
+        )}
         <Button loading={saving} onClick={save}>
           Сохранить уровень
         </Button>

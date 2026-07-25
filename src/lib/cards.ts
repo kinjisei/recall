@@ -92,7 +92,16 @@ export async function addCardsBulk(
   if (exErr) throw exErr
   const known = new Set((existing ?? []).map((c) => (c.front as string).toLowerCase()))
 
-  const fresh = cards.filter((c) => !known.has(c.front.toLowerCase()))
+  // Дедуп и против существующих (known), и ВНУТРИ самой пачки: без второго два
+  // отмеченных слова с одинаковой базовой формой («made»×2) создавали дубль
+  // карточки. seen копит уже взятые front в этом же вызове.
+  const seen = new Set<string>()
+  const fresh = cards.filter((c) => {
+    const k = c.front.toLowerCase()
+    if (known.has(k) || seen.has(k)) return false
+    seen.add(k)
+    return true
+  })
   if (fresh.length === 0) return 0
 
   const { error } = await supabase.from('cards').insert(

@@ -262,7 +262,7 @@ function Trainer({ entries }: { entries: PhrasalEntry[] }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <RoundProgress index={index} total={round.length} correct={correct} />
+      <RoundProgress index={index + 1} total={round.length} correct={correct} />
 
       <Card className="flex flex-col items-center gap-2 py-6 text-center">
         <p className="text-sm text-[var(--night-text-40)]">{q.item.ru}</p>

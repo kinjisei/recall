@@ -7,7 +7,7 @@ import { IconSpeaker, IconRefresh } from '../../components/icons'
 import { Card } from '../../components/Card'
 import { ScoreGlyph } from '../../components/RoundResult'
 import { Button } from '../../components/Button'
-import { normalizeAnswer as normalize } from '../../lib/text'
+import { answerMatches } from '../../lib/text'
 import { logActivity } from '../../lib/activity'
 import { submitWordCheck } from '../../lib/wordChecks'
 import { speak } from '../../lib/speech'
@@ -34,7 +34,10 @@ export function WordCheckRunner({
 
   const total = cards.length
   const current = cards[index]
-  const ok = current ? normalize(value) === normalize(current.front) : false
+  // answerMatches (а не голое сравнение): принимает варианты через «/»
+  // (was/were), как во всех остальных режимах — иначе верный ответ по карточке
+  // со слэш-формой засчитывался бы как ошибка
+  const ok = current ? answerMatches(value, current.front) : false
 
   const checkAnswer = () => {
     if (checked || !value.trim() || !current) return
@@ -46,7 +49,7 @@ export function WordCheckRunner({
         front: current.front,
         back: current.back,
         given: value.trim(),
-        ok: normalize(value) === normalize(current.front),
+        ok: answerMatches(value, current.front),
       },
     ])
   }

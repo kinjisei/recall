@@ -124,7 +124,12 @@ function MatchRound({
       return out
     }
 
-    build().then((p) => alive && setPairs(p))
+    // catch на самой точке вызова: если build (внутри — сетевой getDefinitions)
+    // всё же выбросит, экран не завис бы навсегда на «Загрузка…» — покажем
+    // «мало слов» вместо бесконечного спиннера
+    build()
+      .then((p) => alive && setPairs(p))
+      .catch(() => alive && setPairs([]))
     return () => {
       alive = false
     }
@@ -139,6 +144,8 @@ function MatchRound({
   }, [complete])
 
   if (!pairs) return <GameLoading title="Значения" onBack={onBack} />
+  // раунд не собрался (сбой или совсем нет годных слов) — не зависаем
+  if (pairs.length === 0) return <EmptyPool title="Значения" onBack={onBack} />
 
   const pickRight = (id: number) => {
     if (selected === null || matched.has(id)) return

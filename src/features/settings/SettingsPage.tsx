@@ -23,7 +23,10 @@ import { getEsLevel, setEsLevel } from '../../lib/esLevel'
 import { Button } from '../../components/Button'
 import type { CEFRLevel, Profile } from '../../types'
 
-const LEVELS: CEFRLevel[] = ['A2', 'B1', 'B2', 'C1']
+// A1 включён: тест уровня может дать A1, и без кнопки его нельзя было выбрать —
+// у пользователя с уровнем A1 не подсвечивалась ни одна кнопка, а сохранение
+// затирало его на случайно нажатый уровень
+const LEVELS: CEFRLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1']
 
 const SPEECH_LABELS: { id: SpeechRate; label: string }[] = [
   { id: 'slow', label: 'Медленно' },

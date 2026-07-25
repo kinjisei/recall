@@ -39,7 +39,17 @@ export { normalizeAnswer as normalize } from '../../lib/text'
 export function markWrong(item: PoolItem, lang: AppLang): void {
   if (item.card) {
     const serious = recordMiss(item.card.id)
-    void reviewCard(item.card, item.state ?? null, serious ? 'again' : 'hard').catch(() => {})
+    // ВАЖНО: обновляем item.state свежим расписанием. item.state — снимок,
+    // сделанный при загрузке пула; без обновления повторный промах по тому же
+    // слову в одной сессии зовёт reviewCard со СТАРЫМ state, и upsert
+    // перезаписывает результат первого промаха (штрафы не накапливаются, а в
+    // краевом случае откатываются назад). Объект item в пуле общий по ссылке —
+    // мутация видна следующему промаху.
+    void reviewCard(item.card, item.state ?? null, serious ? 'again' : 'hard')
+      .then((next) => {
+        item.state = next
+      })
+      .catch(() => {})
     return
   }
   void (async () => {

@@ -28,10 +28,33 @@ export function cleanWord(token: string): string {
   return token.replace(/^[^A-Za-zÀ-ÿ]+/, '').replace(/[^A-Za-zÀ-ÿ'’-]+$/, '')
 }
 
-/** Предложение, в котором встречается слово (для контекстного перевода). */
-export function sentenceAround(text: string, word: string): string {
+/** Предложение, покрывающее символ по индексу at (сканируем до знаков конца). */
+function sentenceAt(text: string, at: number): string {
+  const isEnd = (c: string) => c === '.' || c === '!' || c === '?' || c === '…'
+  let start = Math.max(0, Math.min(at, text.length - 1))
+  while (start > 0 && !isEnd(text[start - 1])) start--
+  let end = Math.max(start, at)
+  while (end < text.length && !isEnd(text[end])) end++
+  if (end < text.length) end++ // включаем сам знак конца предложения
+  return text.slice(start, end).trim().slice(0, 300)
+}
+
+/**
+ * Предложение, в котором встречается слово (для контекстного перевода).
+ *
+ * at — позиция символа в тексте (начало токена, по которому тапнули). С ней
+ * контекст берётся ИМЕННО там, где ты нажал: раньше искали первое вхождение по
+ * подстроке во всём тексте, поэтому (1) слово, встречающееся дважды с разным
+ * смыслом («will» как глагол и как существительное), всегда переводилось по
+ * первому предложению, и (2) подстрока матчила чужое слово («art» находил
+ * «start»). Без at — запасной путь: первое предложение с ЦЕЛЫМ словом.
+ */
+export function sentenceAround(text: string, word: string, at?: number): string {
+  if (typeof at === 'number') return sentenceAt(text, at)
   const sentences = text.split(/(?<=[.!?…])\s+/)
-  const found = sentences.find((s) => s.toLowerCase().includes(word.toLowerCase()))
+  const esc = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const whole = new RegExp(`(^|[^\\p{L}])${esc}([^\\p{L}]|$)`, 'iu')
+  const found = sentences.find((s) => whole.test(s))
   return (found ?? text).trim().slice(0, 300)
 }
 
@@ -60,6 +83,17 @@ export function TappableText({
   onToggleMark?: (tokenIndex: number, word: string, sentence: string) => void
 }) {
   const tokens = useMemo(() => text.split(/([\s—–…]+)/), [text])
+  // Позиция начала каждого токена в тексте: split с захватом сохраняет всё,
+  // поэтому смещения точные (tokens.join('') === text). Нужны, чтобы взять
+  // контекст именно у тапнутого вхождения слова, а не у первого в тексте.
+  const offsets = useMemo(() => {
+    let o = 0
+    return tokens.map((t) => {
+      const start = o
+      o += t.length
+      return start
+    })
+  }, [tokens])
   // индексы токенов-слов, которые входят в выделяемую фразу
   const [range, setRange] = useState<{ from: number; to: number } | null>(null)
   const [selecting, setSelecting] = useState(false)
@@ -93,9 +127,10 @@ export function TappableText({
     }
     const phrase = phraseOf(range.from, range.to)
     const cleaned = phrase.replace(/^[^A-Za-zÀ-ÿ]+|[^A-Za-zÀ-ÿ'’-]+$/g, '')
+    const from = range.from
     setSelecting(false)
     setRange(null)
-    if (cleaned) onSelect({ word: cleaned, sentence: sentenceAround(text, cleaned) })
+    if (cleaned) onSelect({ word: cleaned, sentence: sentenceAround(text, cleaned, offsets[from]) })
   }
 
   const inRange = (i: number) =>
@@ -137,7 +172,7 @@ export function TappableText({
               if (markMode) {
                 e.stopPropagation()
                 const word = cleanWord(tok)
-                if (word) onToggleMark?.(i, word, sentenceAround(text, word))
+                if (word) onToggleMark?.(i, word, sentenceAround(text, word, offsets[i]))
                 return
               }
               // обычный тап (без удержания) — перевод одного слова
@@ -145,7 +180,7 @@ export function TappableText({
                 e.stopPropagation()
                 cancelLongPress()
                 const word = cleanWord(tok)
-                if (word) onSelect({ word, sentence: sentenceAround(text, word) })
+                if (word) onSelect({ word, sentence: sentenceAround(text, word, offsets[i]) })
               }
             }}
             className={`cursor-pointer rounded px-0.5 transition-colors ${

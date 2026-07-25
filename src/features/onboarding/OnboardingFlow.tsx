@@ -1,8 +1,8 @@
 // ============================================================================
 // Онбординг нового пользователя (роут /onboarding): 3 шага —
 //   1) какой язык учим (пишет recall.lang),
-//   2) уровень: для ES — существующий placement-тест, для EN — выбор вручную
-//      (теста EN пока нет); шаг можно пропустить,
+//   2) уровень: тест (есть для обоих языков) ИЛИ для EN ещё и выбор вручную;
+//      шаг можно пропустить,
 //   3) «Твой план готов» + конфетти и запуск первой ведомой сессии.
 // Показывается только новичку: см. useIsNewUser ниже.
 // ============================================================================
@@ -25,7 +25,8 @@ import { startGuided } from '../../lib/guided'
 import { celebrate } from '../../components/Confetti'
 import type { AppLang, CEFRLevel } from '../../types'
 
-const EN_LEVELS: CEFRLevel[] = ['A2', 'B1', 'B2', 'C1']
+// A1 добавлен: profiles.level и тест уровня теперь допускают его (новичок с нуля)
+const EN_LEVELS: CEFRLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1']
 
 export function OnboardingFlow() {
   const navigate = useNavigate()
@@ -39,10 +40,11 @@ export function OnboardingFlow() {
     if (level) {
       if (lang === 'es') setEsLevel(level)
       else if (user) {
-        await supabase.from('profiles').update({ level }).eq('id', user.id).then(
-          () => invalidateProfile(), // кэш профиля должен увидеть новый уровень
-          () => {},
-        )
+        // supabase-js не бросает на ошибке — берём её из ответа. Если запись не
+        // удалась, не инвалидируем кэш зря, но пользователя не держим: онбординг
+        // всё равно завершаем (уровень можно задать позже в «Настройках»).
+        const { error } = await supabase.from('profiles').update({ level }).eq('id', user.id)
+        if (!error) invalidateProfile()
       }
     }
     markOnboarded()
@@ -143,49 +145,54 @@ function StepLevel({
     <div className="flex flex-col gap-6">
       <Heading
         title="Определим уровень"
-        desc={
-          lang === 'es'
-            ? 'Короткий тест подстроит подсказки и «Диалог» под тебя.'
-            : 'Выбери свой уровень — подстроим тексты и задания.'
-        }
+        desc="Короткий тест подстроит тексты, подсказки и «Диалог» — или выбери уровень сам."
       />
 
-      {lang === 'es' ? (
-        <button
-          onClick={onPlacement}
-          className="lift animate-fade-up rounded-2xl border border-[var(--night-accent-45)] bg-[linear-gradient(135deg,rgba(145,132,217,.22),rgba(145,132,217,.10))] px-4 py-4 text-left"
-        >
-          <span className="block text-[15px] font-medium">Пройти тест · до 40 вопросов</span>
-          <span className="block text-[13px] text-[var(--night-text-40)]">
-            ~5 минут, результат сразу
-          </span>
-        </button>
-      ) : (
-        <div className="grid grid-cols-2 gap-3">
-          {EN_LEVELS.map((l, i) => (
-            <button
-              key={l}
-              onClick={() => onPick(l)}
-              className={`lift animate-fade-up rounded-2xl border px-4 py-4 text-left ${
-                level === l
-                  ? 'border-[var(--night-accent-45)] bg-[rgba(145,132,217,.16)]'
-                  : 'border-white/[0.08] bg-[var(--night-surface)]'
-              }`}
-              style={{ animationDelay: `${0.05 + i * 0.06}s` }}
-            >
-              <span className="block text-lg font-medium">{l}</span>
-              <span className="block text-[12px] text-[var(--night-text-40)]">
-                {l === 'A2'
-                  ? 'базовые фразы'
-                  : l === 'B1'
-                    ? 'общаюсь с трудом'
-                    : l === 'B2'
-                      ? 'уверенно, но с ошибками'
-                      : 'свободно'}
-              </span>
-            </button>
-          ))}
-        </div>
+      {/* Тест уровня доступен для ОБОИХ языков (EN-тест теперь есть). Ниже — для
+          EN ещё и ручной выбор, чтобы не заставлять новичка проходить тест. */}
+      <button
+        onClick={onPlacement}
+        className="lift animate-fade-up rounded-2xl border border-[var(--night-accent-45)] bg-[linear-gradient(135deg,rgba(145,132,217,.22),rgba(145,132,217,.10))] px-4 py-4 text-left"
+      >
+        <span className="block text-[15px] font-medium">
+          Пройти тест · до {lang === 'es' ? 40 : 50} вопросов
+        </span>
+        <span className="block text-[13px] text-[var(--night-text-40)]">
+          ~5 минут, результат сразу
+        </span>
+      </button>
+
+      {lang === 'en' && (
+        <>
+          <p className="text-center text-xs text-[var(--night-text-40)]">или выбери сам</p>
+          <div className="grid grid-cols-2 gap-3">
+            {EN_LEVELS.map((l, i) => (
+              <button
+                key={l}
+                onClick={() => onPick(l)}
+                className={`lift animate-fade-up rounded-2xl border px-4 py-4 text-left ${
+                  level === l
+                    ? 'border-[var(--night-accent-45)] bg-[rgba(145,132,217,.16)]'
+                    : 'border-white/[0.08] bg-[var(--night-surface)]'
+                }`}
+                style={{ animationDelay: `${0.05 + i * 0.06}s` }}
+              >
+                <span className="block text-lg font-medium">{l}</span>
+                <span className="block text-[12px] text-[var(--night-text-40)]">
+                  {l === 'A1'
+                    ? 'только начинаю'
+                    : l === 'A2'
+                      ? 'базовые фразы'
+                      : l === 'B1'
+                        ? 'общаюсь с трудом'
+                        : l === 'B2'
+                          ? 'уверенно, но с ошибками'
+                          : 'свободно'}
+                </span>
+              </button>
+            ))}
+          </div>
+        </>
       )}
 
       <div className="mt-auto flex flex-col gap-3">

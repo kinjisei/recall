@@ -70,8 +70,13 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
 
   // Флаг читаем синхронно при каждом рендере: сразу после завершения
   // онбординга состояние ещё «нужен», и редирект возвращал на первый шаг.
+  // /placement исключён наравне с /onboarding: онбординг (шаг «уровень») сам
+  // уводит новичка на тест, а гвард бэунсил его обратно, не дав пройти —
+  // тест уровня становился недостижим для нового пользователя. По окончании
+  // теста PlacementTest ставит markOnboarded, поэтому цикла нет.
   const onboarded = isOnboarded()
-  if (!onboarded && needsOnboarding && pathname !== '/onboarding') {
+  const exempt = pathname === '/onboarding' || pathname === '/placement'
+  if (!onboarded && needsOnboarding && !exempt) {
     return <Navigate to="/onboarding" replace />
   }
 

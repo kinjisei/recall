@@ -58,11 +58,17 @@ export async function addMarkedWords(words: MarkedWord[], lang: AppLang): Promis
       // AI сбоит — кладём слова без перевода (лучше карточка без back, чем ничего)
       translated = chunk.map((w) => ({ word: w.word, base: w.word, ru: '' }))
     }
-    const bySrc = new Map(translated.map((t) => [t.word.toLowerCase(), t]))
+    // Сопоставляем перевод с исходным словом ПО ПОЗИЦИИ (AI обязан вернуть по
+    // одному объекту на входное слово в том же порядке). Map по тексту слова
+    // схлопывал бы повторное слово в разных предложениях в одну запись — оба
+    // получали бы перевод последнего. Если AI вернул не столько объектов —
+    // откатываемся на сопоставление по слову (надёжнее при сбое формата).
+    const byIndex = translated.length === chunk.length
+    const bySrc = byIndex ? null : new Map(translated.map((t) => [t.word.toLowerCase(), t]))
     added += await addCardsBulk(
       deck.id,
-      chunk.map((w) => {
-        const t = bySrc.get(w.word.toLowerCase())
+      chunk.map((w, j) => {
+        const t = byIndex ? translated[j] : bySrc!.get(w.word.toLowerCase())
         return {
           front: (t?.base || w.word).toLowerCase(),
           back: t?.ru || undefined,

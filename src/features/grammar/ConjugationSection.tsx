@@ -287,8 +287,12 @@ function TrainerView({ exercises }: { exercises: EndingsExercise[] }) {
       return exercises.filter((e) => set.has(String(e.id)))
     }
     return level === 'all' ? exercises : exercises.filter((e) => e.level === level)
+    // tick НАМЕРЕННО не в зависимостях: пул фиксируется на время раунда. Раньше
+    // верный ответ в «Моих ошибках» тут же вычищал упражнение из банка, пул
+    // сжимался посреди прогона, current съезжал на следующее (показывался чужой
+    // разбор, одно упражнение пропускалось). tick нужен только счётчику в чипе.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [exercises, level, tick])
+  }, [exercises, level])
 
   const chips: [string, string][] = [['all', 'Все']]
   if (mistakeCount > 0) chips.push(['mistakes', `Мои ошибки (${mistakeCount})`])

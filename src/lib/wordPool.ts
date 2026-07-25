@@ -105,6 +105,10 @@ async function loadDeckItems(lang: AppLang): Promise<PoolItem[]> {
     .from('cards')
     .select('*, review_states(*)')
     .in('deck_id', deckIds)
+    // порядок обязателен: LIMIT без ORDER BY даёт недетерминированный срез, и у
+    // колоды больше MAX_CARDS слов часть навсегда выпадала бы из игр. Свежие
+    // первыми — их и хочется тренировать.
+    .order('created_at', { ascending: false })
     .limit(MAX_CARDS)
   if (error) throw error
 
