@@ -8,7 +8,9 @@ import { createPortal } from 'react-dom'
 import { Button } from '../../components/Button'
 import type { Material } from '../../types'
 
-const LETTERS = ['a', 'b', 'c', 'd', 'e', 'f']
+// с запасом: mcq обычно 4 варианта, но валидатор допускает больше — лишние
+// не должны печататься как «undefined)»
+const LETTERS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
 
 export function PrintSheet({
   material,

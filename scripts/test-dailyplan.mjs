@@ -53,6 +53,19 @@ const allTypes = new Set(p.flatMap((i) => i.types))
 check('идеальный день при всех типах', isPerfectDay(p, allTypes))
 check('не идеальный при одном типе', !isPerfectDay(p, new Set(['flashcards'])))
 
+// квест НЕ закрывается грамматикой (иначе «идеальный день» завышался)
+const withQuest = buildTodayPlan(null, { pendingAssignments: 0, activeQuests: 1, weekday: 3 })
+const questItem = withQuest.find((i) => i.key === 'quest')
+check('пункт «квест» закрывается типом quest, не grammar', questItem?.types.join() === 'quest', questItem?.types.join())
+check(
+  'урок грамматики НЕ помечает квест выполненным',
+  !isPerfectDay(withQuest, new Set(['flashcards', 'reader', 'grammar'])),
+)
+check(
+  'реальное прохождение квеста закрывает пункт',
+  isPerfectDay(withQuest, new Set(withQuest.flatMap((i) => i.types))),
+)
+
 const ok = results.filter(Boolean).length
 console.log(`\nИтог: ${ok}/${results.length}`)
 process.exit(ok === results.length ? 0 : 1)

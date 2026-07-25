@@ -156,7 +156,11 @@ function QuestChat({ quest, onBack }: { quest: GrammarQuest; onBack: () => void 
 
       const { verdict } = parseReply(reply)
       if (verdict === 'CORRECT' && !completed) {
-        void logActivity('grammar')
+        // тип 'quest', НЕ 'grammar': иначе урок грамматики помечал бы пункт
+        // «AI-квест» в плане дня выполненным (и наоборот) — «идеальный день» и
+        // отчёт родителям завышались. Стрик day-based, поэтому квест его всё
+        // равно продлевает.
+        void logActivity('quest')
         try {
           const p = await questCorrectAnswer(quest.id)
           setProgress(p)
@@ -165,7 +169,10 @@ function QuestChat({ quest, onBack }: { quest: GrammarQuest; onBack: () => void 
             celebrate()
           }
         } catch {
-          /* квест мог завершиться на другом устройстве — не ломаем чат */
+          // квест уже завершён (например, на другом устройстве) — синхронизируем
+          // локальное состояние, чтобы чат не завис на прогрессе ниже цели
+          setProgress(quest.target)
+          setCompleted(true)
         }
       }
     } catch (e) {

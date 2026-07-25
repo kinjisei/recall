@@ -172,7 +172,12 @@ function TeacherDashboard() {
       {tab === 'guide' ? (
         <GuideSection />
       ) : tab === 'materials' ? (
-        <MaterialsSection students={students} />
+        // onWorksChanged: после проверки/переназначения пересчитываем бейдж
+        // «На проверку» на вкладке — иначе он висел старым числом до «Обновить»
+        <MaterialsSection
+          students={students}
+          onWorksChanged={() => countSubmittedWorks().then(setPendingWorks)}
+        />
       ) : (
         <>
           <Card>

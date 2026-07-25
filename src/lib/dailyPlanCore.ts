@@ -72,7 +72,9 @@ export function buildTodayPlan(cfg: DailyPlanConfig | null, ctx: PlanContext): T
             to: '/quests',
             title: 'AI-квест',
             desc: 'Продолжи приключение',
-            types: ['grammar'],
+            // 'quest', НЕ 'grammar': иначе пункт закрывался обычным уроком
+            // грамматики, без реального прохождения квеста
+            types: ['quest'],
           }
         : null
 

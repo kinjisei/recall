@@ -46,8 +46,18 @@ async function grammarCatalog(lang: AppLang): Promise<{ topics: GrammarTopic[]; 
   return { topics, text }
 }
 
-/** Сводка диагностики для промпта (по-русски, коротко). */
-function diagnosticsBrief(d: StudentDiagnostics, titles: Map<number, string>): string {
+/**
+ * Сводка диагностики для промпта (по-русски, коротко).
+ * lang — язык программы: ошибки грамматики фильтруем по нему. У EN и ES свои
+ * каталоги уроков, но topic_id в обоих начинаются с 0 и СОВПАДАЮТ по номерам;
+ * без фильтра испанская ошибка №3 подставилась бы под английский урок №3, и AI
+ * получил бы неверную слабую тему (двуязычный ученик).
+ */
+function diagnosticsBrief(
+  d: StudentDiagnostics,
+  titles: Map<number, string>,
+  lang: AppLang,
+): string {
   const lines: string[] = []
   lines.push(
     `Слова: всего ${d.words.total} (учатся ${d.words.learning}, выучено ${d.words.learned}).`,
@@ -71,10 +81,11 @@ function diagnosticsBrief(d: StudentDiagnostics, titles: Map<number, string>): s
         '.',
     )
   }
-  if (d.mistakes.length > 0) {
+  const langMistakes = d.mistakes.filter((m) => m.lang === lang)
+  if (langMistakes.length > 0) {
     lines.push(
       'Слабые темы грамматики (по ошибкам): ' +
-        d.mistakes
+        langMistakes
           .map((m) => `${titles.get(m.topicId) ?? `тема №${m.topicId}`} (ошибок ${m.count})`)
           .join(', ') +
         '.',
@@ -163,7 +174,7 @@ export async function generateStudyPlan(
     `Цель/пожелания преподавателя: ${req.goal.trim() || 'не заданы — исходи из диагностики'}`,
     '',
     'Диагностика ученицы (реальные данные приложения):',
-    diagnosticsBrief(diag, titles),
+    diagnosticsBrief(diag, titles, req.lang),
     feedback ? `\nПравки преподавателя к прошлой версии программы: ${feedback}` : '',
   ].join('\n')
 

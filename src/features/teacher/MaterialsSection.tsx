@@ -49,7 +49,14 @@ type Mode =
   // review — сразу открыть проверку конкретной работы (из блока «На проверку»)
   | { name: 'detail'; material: Material; review?: { a: MaterialAssignment; name: string } }
 
-export function MaterialsSection({ students }: { students: StudentInfo[] }) {
+export function MaterialsSection({
+  students,
+  onWorksChanged,
+}: {
+  students: StudentInfo[]
+  /** Позвать, когда число работ «на проверку» могло измениться (для бейджа вкладки). */
+  onWorksChanged?: () => void
+}) {
   const [mode, setMode] = useState<Mode>({ name: 'list' })
   // список → форма → предпросмотр → материал: каждый шаг с верха экрана
   useScrollTop(mode.name)
@@ -107,12 +114,14 @@ export function MaterialsSection({ students }: { students: StudentInfo[] }) {
         material={mode.material}
         students={students}
         initialReview={mode.review}
+        onWorksChanged={onWorksChanged}
         onDeleted={() => {
           reload()
           setMode({ name: 'list' })
         }}
         onBack={() => {
           reloadWorks() // проверенная работа должна исчезнуть из «На проверку»
+          onWorksChanged?.() // и бейдж вкладки пересчитать
           setMode({ name: 'list' })
         }}
       />
@@ -199,7 +208,7 @@ function MaterialsByLevel({
   onOpen: (m: Material) => void
 }) {
   const [closed, setClosed] = useState<Record<string, boolean>>({})
-  const order = ['A1', 'A2', 'B1', 'B2', 'C1']
+  const order = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
   const groups = order
     .map((level) => ({ level, items: materials.filter((m) => m.level === level) }))
     .filter((g) => g.items.length > 0)
@@ -607,6 +616,7 @@ function MaterialDetail({
   initialReview,
   onDeleted,
   onBack,
+  onWorksChanged,
 }: {
   material: Material
   students: StudentInfo[]
@@ -614,6 +624,8 @@ function MaterialDetail({
   initialReview?: { a: MaterialAssignment; name: string }
   onDeleted: () => void
   onBack: () => void
+  /** Число работ «на проверку» могло измениться (снятие сданной работы). */
+  onWorksChanged?: () => void
 }) {
   const [assignments, setAssignments] = useState<MaterialAssignment[] | null>(null)
   const [busyStudent, setBusyStudent] = useState<string | null>(null)
@@ -635,11 +647,26 @@ function MaterialDetail({
   const assignedIds = new Set((assignments ?? []).map((a) => a.student_id))
 
   const toggle = async (studentId: string) => {
+    const cur = (assignments ?? []).find((a) => a.student_id === studentId)
+    // Снятие сданной/проверенной работы стирает ответы, баллы, разбор и всю
+    // историю попыток — и делает это без возврата. Спрашиваем подтверждение
+    // (у назначенной, но не начатой, терять нечего — снимаем сразу).
+    if (cur && cur.status !== 'assigned') {
+      if (
+        !window.confirm(
+          'Убрать эту работу? Ответы ученицы, баллы и проверка удалятся без возможности вернуть.',
+        )
+      ) {
+        return
+      }
+    }
     setBusyStudent(studentId)
     setError(null)
     try {
-      if (assignedIds.has(studentId)) await unassignMaterial(material.id, studentId)
-      else await assignMaterial(material.id, studentId)
+      if (assignedIds.has(studentId)) {
+        await unassignMaterial(material.id, studentId)
+        onWorksChanged?.() // работа могла быть на проверке — обновим бейдж
+      } else await assignMaterial(material.id, studentId)
       reload()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Ошибка')

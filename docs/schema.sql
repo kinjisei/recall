@@ -1069,11 +1069,14 @@
     return qid;
   end $fn$;
 
-  -- Учитель снимает квест
+  -- Учитель снимает квест. is_student_of — чтобы отвязанный экс-учитель не
+  -- удалял старые квесты (инвариант «отвязка отбирает доступ», как в assign).
   create or replace function public.delete_grammar_quest(p_id uuid)
   returns void language plpgsql security definer set search_path = public as $fn$
   begin
-    delete from grammar_quests where id = p_id and teacher_id = auth.uid();
+    delete from grammar_quests gq
+     where gq.id = p_id and gq.teacher_id = auth.uid()
+       and public.is_student_of(auth.uid(), gq.student_id);
     if not found then raise exception 'Квест не найден.'; end if;
   end $fn$;
 
@@ -2090,11 +2093,15 @@
     return new_id;
   end $fn$;
 
-  -- Учитель снимает просьбу или убирает старый результат из списка
+  -- Учитель снимает просьбу или убирает старый результат из списка.
+  -- is_student_of — чтобы отвязанный экс-учитель не удалял старые записи
+  -- (инвариант «отвязка отбирает доступ», как в assign_placement).
   create or replace function public.cancel_placement(p_id uuid)
   returns void language plpgsql security definer set search_path = public as $fn$
   begin
-    delete from placement_requests where id = p_id and teacher_id = auth.uid();
+    delete from placement_requests pr
+     where pr.id = p_id and pr.teacher_id = auth.uid()
+       and public.is_student_of(auth.uid(), pr.student_id);
     if not found then raise exception 'Тест не найден.'; end if;
   end $fn$;
 

@@ -26,6 +26,7 @@ export type ActivityType =
   | 'conversation'
   | 'writing'
   | 'grammar'
+  | 'quest'
   | 'practice'
   | 'assignment'
   // «идеальный день»: все пункты плана дня выполнены (items_done=0 — не
