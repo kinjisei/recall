@@ -2139,17 +2139,21 @@
   -- ЗАКРЫТИЕ БИЛЛИНГ-ХЕЛПЕРОВ + чистка перегрузки (заход 3 аудита, 2026-07-25).
   -- Блок idempotent.
   --
-  -- 1) has_premium_access(uid)/has_paid_access(uid) по умолчанию Postgres даёт
-  --    EXECUTE роли PUBLIC (включая anon) — проверено вживую: аноним вызывал
-  --    их с ЛЮБЫМ uid и узнавал, платит ли этот человек. Клиент эти функции не
-  --    зовёт (только внутри consume_ai_quota/get_my_plan, security definer от
-  --    владельца — им грант не нужен), поэтому отбираем EXECUTE у public и
-  --    authenticated целиком. В RLS-политиках они не используются.
+  -- 1) has_premium_access(uid)/has_paid_access(uid) были доступны снаружи —
+  --    проверено вживую: аноним вызывал их с ЛЮБЫМ uid и узнавал, платит ли
+  --    этот человек. Клиент эти функции не зовёт (только внутри
+  --    consume_ai_quota/get_my_plan, security definer от владельца — им грант не
+  --    нужен), поэтому отбираем EXECUTE.
+  --    ⚠️ Supabase выдаёт EXECUTE ЯВНО ролям anon и authenticated (ALTER DEFAULT
+  --    PRIVILEGES), а не только через PUBLIC — поэтому `revoke ... from public`
+  --    анонима НЕ закрывает (первый заход смоука поймал: аноним всё ещё читал
+  --    статус). Отбираем у anon и authenticated поимённо. Внутренние вызовы из
+  --    SD-функций владельца не страдают.
   --    (Хелперы отношений is_student_of/deck_owned_by и т.п. ОСТАВЛЕНЫ: они
   --    нужны authenticated внутри RLS-политик, а их утечка — булев признак
   --    связи двух конкретных id, низкая чувствительность.)
-  revoke execute on function public.has_premium_access(uuid) from public, authenticated;
-  revoke execute on function public.has_paid_access(uuid) from public, authenticated;
+  revoke execute on function public.has_premium_access(uuid) from public, anon, authenticated;
+  revoke execute on function public.has_paid_access(uuid) from public, anon, authenticated;
 
   -- 2) Мёртвая перегрузка consume_ai_quota() (0 аргументов, старая логика без
   --    классов и без advisory-лока) оставалась в базе рядом с рабочей
