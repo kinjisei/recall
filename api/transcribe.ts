@@ -19,14 +19,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (applyCors(req, res)) return
   if (req.method !== 'POST') return res.status(405).json({ error: 'Только POST' })
 
-  // класс speech: у произношения свой щедрый лимит — попытки шэдоуинга не
-  // должны съедать дневные «AI-действия» Диалога (их всего 12 на триале)
-  const access = await authorize(req, 'speech')
-  if (!access.ok) return res.status(access.status).json({ error: access.error })
-
   const apiKey = process.env.GROQ_API_KEY
   if (!apiKey) return res.status(500).json({ error: 'GROQ_API_KEY не настроен на сервере' })
 
+  // Валидация аудио ДО списания квоты: пустой/битый base64 не должен жечь
+  // единицу дневного speech-лимита (иначе несколько сбойных попыток выбивают
+  // легитимного пользователя из лимита без единого распознавания).
   const { audio, mime, lang } = (req.body ?? {}) as {
     audio?: string
     mime?: string
@@ -46,6 +44,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (buf.length === 0 || buf.length > MAX_AUDIO_BYTES) {
     return res.status(400).json({ error: 'Слишком большая или пустая запись' })
   }
+
+  // класс speech: у произношения свой щедрый лимит — попытки шэдоуинга не
+  // должны съедать дневные «AI-действия» Диалога (их всего 12 на триале)
+  const access = await authorize(req, 'speech')
+  if (!access.ok) return res.status(access.status).json({ error: access.error })
 
   try {
     const text = await transcribeWithGroq(buf, mime || 'audio/webm', speechLang, apiKey)

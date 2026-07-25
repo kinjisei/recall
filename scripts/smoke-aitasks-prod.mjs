@@ -121,6 +121,26 @@ try {
     r5.status === 200,
     `${r5.status} ${r5.error ?? ''}`,
   )
+
+  // 6. подмена кармана квоты: многорепличный Диалог под видом task:'word' —
+  // отклоняется (иначе списался бы из дешёвого light вместо heavy)
+  const r6 = await fetch(`${BASE}/api/gemini`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${sTok}` },
+    body: JSON.stringify({
+      task: 'word',
+      system: 'Ты собеседник.',
+      messages: Array.from({ length: 20 }, (_, i) => ({
+        role: i % 2 ? 'assistant' : 'user',
+        content: `Реплика диалога номер ${i}, довольно длинная, чтобы это не выглядело как перевод слова.`,
+      })),
+    }),
+  })
+  check(
+    "Диалог под видом task:'word' отклонён (карман квоты не подменить)",
+    r6.status === 400,
+    `${r6.status}`,
+  )
 } catch (e) {
   check(`проверка упала: ${e.message}`, false)
 } finally {

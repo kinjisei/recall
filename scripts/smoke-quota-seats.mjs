@@ -112,6 +112,16 @@ try {
   const { data: plan } = await st1.rpc('get_my_plan')
   check('get_my_plan считает только heavy', plan?.ai_used_today === 5 && plan?.ai_day_limit === 5,
     JSON.stringify(plan && { used: plan.ai_used_today, lim: plan.ai_day_limit }))
+
+  // --- C. биллинг-хелперы закрыты от прямого вызова (заход 3) ---
+  // get_my_plan выше уже прошёл — значит внутренние вызовы has_*_access живы.
+  // Теперь проверяем, что снаружи их не дёрнуть: аноним и вошедший → отказ.
+  const anonHas = await anon().rpc('has_premium_access', { uid: tId })
+  check('аноним НЕ читает биллинг-статус (has_premium_access)', !!anonHas.error,
+    anonHas.error?.code ?? `вернулось ${JSON.stringify(anonHas.data)}`)
+  const stHas = await st1.rpc('has_paid_access', { uid: tId })
+  check('вошедший НЕ читает биллинг-статус (has_paid_access)', !!stHas.error,
+    stHas.error?.code ?? `вернулось ${JSON.stringify(stHas.data)}`)
 } catch (e) {
   console.error('СБОЙ:', e.message)
   results.push(false)

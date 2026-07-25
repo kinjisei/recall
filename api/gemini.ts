@@ -21,6 +21,15 @@ const MAX_MESSAGES = 50
 const MAX_TOTAL_CHARS = 40_000
 const MAX_SYSTEM_CHARS = 12_000
 
+// Лёгкие задачи (перевод/определение/батч слов) — ВСЕГДА один короткий запрос.
+// Жёсткий потолок для них закрывает подмену кармана квоты: без него можно было
+// прислать полноценный 20-репличный Диалог с task:'word' и списать его из
+// дешёвого light-кармана (900/сут) вместо heavy (5/12/200) — обход платного
+// лимита «AI-действий». Легальные lite-запросы: 1 сообщение; батч слов — тоже
+// одно сообщение с JSON до ~5 КБ. 4 сообщения / 8000 символов — с запасом.
+const MAX_MESSAGES_LITE = 4
+const MAX_TOTAL_CHARS_LITE = 8_000
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (applyCors(req, res)) return
   if (req.method !== 'POST') return res.status(405).json({ error: 'Только POST' })
@@ -52,6 +61,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       : 'standard'
   const quota = spec ? spec.quota : aiTier === 'lite' ? 'light' : 'heavy'
 
+  // Валидация входа ДО списания квоты: иначе кривой/пустой запрос (баг клиента,
+  // повторная отправка по таймауту) уже жёг бы единицу дневного лимита без
+  // единого настоящего ответа AI. Плюс lite-задачам — жёсткий потолок (см.
+  // MAX_*_LITE): он не даёт протащить многорепличный Диалог через дешёвый карман.
+  const msgCap = aiTier === 'lite' ? MAX_MESSAGES_LITE : MAX_MESSAGES
+  const charCap = aiTier === 'lite' ? MAX_TOTAL_CHARS_LITE : MAX_TOTAL_CHARS
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return res.status(400).json({ error: 'Нужно поле messages (непустой массив)' })
+  }
+  if (messages.length > msgCap) {
+    return res.status(400).json({ error: 'Слишком много сообщений в запросе' })
+  }
+  const totalChars = messages.reduce(
+    (n, m) => n + (typeof m?.content === 'string' ? m.content.length : 0),
+    0,
+  )
+  if (totalChars > charCap) {
+    return res.status(400).json({ error: 'Слишком большой запрос' })
+  }
+  if (typeof system === 'string' && system.length > MAX_SYSTEM_CHARS) {
+    return res.status(400).json({ error: 'Слишком большая системная инструкция' })
+  }
+
   const access = await authorize(req, quota)
   if (!access.ok) {
     return res.status(access.status).json({ error: access.error })
@@ -62,23 +94,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // что само по себе гасит перебор чужих названий задач.
   if (spec?.teacherOnly && !(await isTeacher(req))) {
     return res.status(403).json({ error: 'Эта функция доступна только преподавателю.' })
-  }
-
-  if (!Array.isArray(messages) || messages.length === 0) {
-    return res.status(400).json({ error: 'Нужно поле messages (непустой массив)' })
-  }
-  if (messages.length > MAX_MESSAGES) {
-    return res.status(400).json({ error: 'Слишком много сообщений в запросе' })
-  }
-  const totalChars = messages.reduce(
-    (n, m) => n + (typeof m?.content === 'string' ? m.content.length : 0),
-    0,
-  )
-  if (totalChars > MAX_TOTAL_CHARS) {
-    return res.status(400).json({ error: 'Слишком большой запрос' })
-  }
-  if (typeof system === 'string' && system.length > MAX_SYSTEM_CHARS) {
-    return res.status(400).json({ error: 'Слишком большая системная инструкция' })
   }
 
   const apiKey = process.env.GEMINI_API_KEY

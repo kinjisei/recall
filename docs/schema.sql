@@ -1177,6 +1177,7 @@
         join profiles tp on tp.id = ts.teacher_id
         where ts.student_id = uid
           and tp.plan like 'teacher_%'
+          and not coalesce(tp.blocked, false) -- блокировка учителя снимает бенефит ученицам
           and (
             (tp.plan_expires_at is not null and tp.plan_expires_at > now())
             or tp.trial_until > now()
@@ -1595,6 +1596,7 @@
         join profiles tp on tp.id = ts.teacher_id
         where ts.student_id = uid
           and tp.plan like 'teacher_%'
+          and not coalesce(tp.blocked, false) -- блокировка учителя снимает бенефит ученицам
           and tp.plan_expires_at is not null and tp.plan_expires_at > now()
       )
   $fn$;
@@ -1869,6 +1871,13 @@
       raise exception 'Нельзя привязать саму себя.';
     end if;
 
+    -- ЛОК на преподавателя: без него N параллельных join_teacher с одним кодом
+    -- (Promise.all) все читали taken до вставок и все проходили проверку мест —
+    -- тариф на 5 мест набирал сколько угодно учениц, каждая с платной AI-квотой
+    -- (та же гонка «посчитал → вставил», что уже закрыта в consume_ai_quota).
+    -- Разные преподаватели друг друга не ждут (лок по id учителя).
+    perform pg_advisory_xact_lock(hashtext('join_teacher:' || t.id::text));
+
     -- уже привязана — просто возвращаем имя (идемпотентно, места не тратим)
     if exists (
       select 1 from teacher_students
@@ -2125,3 +2134,26 @@
   grant execute on function public.assign_placement(uuid, text) to authenticated;
   grant execute on function public.cancel_placement(uuid) to authenticated;
   grant execute on function public.submit_placement(text, text) to authenticated;
+
+  -- ============================================================================
+  -- ЗАКРЫТИЕ БИЛЛИНГ-ХЕЛПЕРОВ + чистка перегрузки (заход 3 аудита, 2026-07-25).
+  -- Блок idempotent.
+  --
+  -- 1) has_premium_access(uid)/has_paid_access(uid) по умолчанию Postgres даёт
+  --    EXECUTE роли PUBLIC (включая anon) — проверено вживую: аноним вызывал
+  --    их с ЛЮБЫМ uid и узнавал, платит ли этот человек. Клиент эти функции не
+  --    зовёт (только внутри consume_ai_quota/get_my_plan, security definer от
+  --    владельца — им грант не нужен), поэтому отбираем EXECUTE у public и
+  --    authenticated целиком. В RLS-политиках они не используются.
+  --    (Хелперы отношений is_student_of/deck_owned_by и т.п. ОСТАВЛЕНЫ: они
+  --    нужны authenticated внутри RLS-политик, а их утечка — булев признак
+  --    связи двух конкретных id, низкая чувствительность.)
+  revoke execute on function public.has_premium_access(uuid) from public, authenticated;
+  revoke execute on function public.has_paid_access(uuid) from public, authenticated;
+
+  -- 2) Мёртвая перегрузка consume_ai_quota() (0 аргументов, старая логика без
+  --    классов и без advisory-лока) оставалась в базе рядом с рабочей
+  --    consume_ai_quota(p_kind). Приложение всегда шлёт p_kind, но прямой REST
+  --    с пустым телом мог попасть в устаревшую версию. Удаляем — остаётся
+  --    только версия с параметром.
+  drop function if exists public.consume_ai_quota();
