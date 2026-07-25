@@ -1,0 +1,350 @@
+<title>Строитель А+Б</title>
+<style>
+@font-face{font-family:'Onest V';font-style:normal;font-weight:100 900;font-display:swap;src:url(__FONT_CYR__) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:'Onest V';font-style:normal;font-weight:100 900;font-display:swap;src:url(__FONT_LAT__) format('woff2');unicode-range:U+0000-00FF,U+2000-206F,U+2190-21BB,U+2212}
+:root{
+  --bg:#F6F5FA;--surface:#FFFFFF;--soft:#EDECF5;--ink:#232438;--mut:#565870;
+  --faint:#8B8CA3;--line:#E2E1EE;--accent:#5F4FD8;--on-accent:#FFFFFF;
+  --good:#177A52;--warn:#9A6210;--shadow:0 10px 30px rgba(35,36,56,.10);
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#161826;--surface:#1E2030;--soft:#252740;--ink:#ECEAF6;--mut:#A9A8C0;
+  --faint:#6E6F8A;--line:#2B2D42;--accent:#9184D9;--on-accent:#14151F;
+  --good:#63C89B;--warn:#D9A662;--shadow:0 10px 30px rgba(0,0,0,.35);
+}}
+:root[data-theme="dark"]{
+  --bg:#161826;--surface:#1E2030;--soft:#252740;--ink:#ECEAF6;--mut:#A9A8C0;
+  --faint:#6E6F8A;--line:#2B2D42;--accent:#9184D9;--on-accent:#14151F;
+  --good:#63C89B;--warn:#D9A662;--shadow:0 10px 30px rgba(0,0,0,.35);
+}
+:root[data-theme="light"]{
+  --bg:#F6F5FA;--surface:#FFFFFF;--soft:#EDECF5;--ink:#232438;--mut:#565870;
+  --faint:#8B8CA3;--line:#E2E1EE;--accent:#5F4FD8;--on-accent:#FFFFFF;
+  --good:#177A52;--warn:#9A6210;--shadow:0 10px 30px rgba(35,36,56,.10);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:'Onest V',system-ui,-apple-system,'Segoe UI',sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+.wrap{max-width:44rem;margin:0 auto;padding:0 20px}
+
+/* ---------- обложка / оглавление ---------- */
+.cover{padding:56px 0 28px}
+.cover .kicker{font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:600}
+.cover h1{font-size:clamp(2rem,7vw,2.9rem);font-weight:800;letter-spacing:-.02em;margin:.35rem 0 .6rem;text-wrap:balance}
+.cover p.sub{font-family:Georgia,'Times New Roman',serif;font-style:italic;color:var(--mut);font-size:1.05rem;margin:0;max-width:34rem}
+.progress{margin:26px 0 8px}
+.bar{height:6px;border-radius:3px;background:var(--soft);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:3px;background:var(--accent);transition:width .4s ease}
+.progress .cap{font-size:.85rem;color:var(--mut);margin-top:8px;font-variant-numeric:tabular-nums}
+.continue{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:var(--accent);color:var(--on-accent);border-radius:16px;padding:16px 18px;margin:18px 0 6px;box-shadow:var(--shadow)}
+.continue .ico{flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--on-accent) 18%,transparent)}
+.continue b{display:block;font-size:.95rem}
+.continue span{display:block;font-size:.8rem;opacity:.85;margin-top:2px}
+.part{margin:34px 0 6px;display:flex;align-items:baseline;gap:12px}
+.part .rn{font-family:Georgia,serif;font-style:italic;color:var(--accent);font-size:1.05rem;min-width:1.6rem}
+.part h2{font-size:.82rem;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);font-weight:650;margin:0}
+.part::after{content:'';flex:1;height:1px;background:var(--line);transform:translateY(-4px)}
+.chrow{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:13px 10px;min-height:48px;border-radius:12px}
+.chrow:not(.soon):hover{background:var(--soft)}
+.chrow .num{font-variant-numeric:tabular-nums;color:var(--accent);font-weight:700;min-width:2.1rem;font-size:.95rem}
+.chrow .t{flex:1;font-size:.98rem}
+.chrow .st{font-size:.78rem;color:var(--faint)}
+.chrow .st.done{color:var(--good);font-weight:600}
+.chrow.soon{cursor:default}
+.chrow.soon .t,.chrow.soon .num{color:var(--faint)}
+.foot{margin:44px 0 40px;color:var(--faint);font-size:.8rem;border-top:1px solid var(--line);padding-top:16px}
+
+/* ---------- глава ---------- */
+.topbar{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.topbar .in{display:flex;align-items:center;gap:8px;max-width:44rem;margin:0 auto;padding:8px 12px}
+.tbtn{display:flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;border-radius:12px;color:var(--mut);gap:6px;padding:0 10px;font-size:.88rem;font-weight:600}
+.tbtn:hover{background:var(--soft);color:var(--ink)}
+.topbar .title{flex:1;text-align:center;font-size:.85rem;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+article{padding:30px 0 90px}
+article .chnum{font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:650}
+article h1{font-size:clamp(1.65rem,5.5vw,2.2rem);font-weight:800;letter-spacing:-.015em;line-height:1.2;margin:.4rem 0 1.4rem;text-wrap:balance}
+article h2{font-size:1.28rem;font-weight:750;letter-spacing:-.01em;margin:2.2em 0 .6em;text-wrap:balance}
+article h3{font-size:1.05rem;font-weight:700;margin:1.8em 0 .5em}
+article p,article li{font-family:Georgia,'Times New Roman',serif;font-size:1.06rem;line-height:1.75;color:var(--ink)}
+article p{margin:0 0 1.05em}
+article ul,article ol{padding-left:1.4em;margin:0 0 1.1em}
+article li{margin-bottom:.45em}
+article strong{font-weight:700}
+article code{font-family:ui-monospace,Consolas,monospace;font-size:.88em;background:var(--soft);padding:.12em .4em;border-radius:6px}
+article hr{border:0;height:1px;background:var(--line);margin:2em 0}
+.callout{border-radius:14px;padding:14px 16px;margin:0 0 1.1em;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent)}
+.callout p{margin:0 0 .7em;font-size:1.01rem}
+.callout p:last-child{margin:0}
+.callout.c-good{border-left-color:var(--good)}
+.callout.c-warn{border-left-color:var(--warn)}
+.term{font-family:inherit;font-size:inherit;line-height:inherit;text-align:left;color:var(--accent);border-bottom:1px dashed color-mix(in srgb,var(--accent) 55%,transparent);padding-bottom:1px}
+.reading{background:color-mix(in srgb,var(--accent) 14%,transparent);border-radius:6px;box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 14%,transparent)}
+.chnav{display:flex;gap:12px;margin-top:40px;border-top:1px solid var(--line);padding-top:20px}
+.chnav button{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:13px 15px;text-align:left;min-height:56px}
+.chnav button:hover{border-color:var(--accent)}
+.chnav .lbl{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);display:block;margin-bottom:3px}
+.chnav .nx{text-align:right}
+.chnav .nm{font-size:.92rem;font-weight:650}
+
+/* ---------- плеер ---------- */
+.player{position:fixed;left:0;right:0;bottom:0;z-index:30;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(12px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+.player .in{max-width:44rem;margin:0 auto;display:flex;align-items:center;gap:6px;padding:8px 12px}
+.pbtn{display:grid;place-items:center;min-width:44px;min-height:44px;border-radius:12px;color:var(--ink)}
+.pbtn:hover{background:var(--soft)}
+.pbtn.main{background:var(--accent);color:var(--on-accent);border-radius:50%;width:48px;height:48px;margin:0 4px}
+.pbtn svg{display:block}
+.rate{font-variant-numeric:tabular-nums;font-weight:700;font-size:.85rem;color:var(--mut);min-width:52px}
+.pspacer{flex:1;font-size:.78rem;color:var(--faint);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;padding:0 4px}
+
+/* ---------- глоссарий ---------- */
+.sheetwrap{position:fixed;inset:0;z-index:40;display:flex;align-items:flex-end;justify-content:center}
+.backdrop{position:absolute;inset:0;background:rgba(10,10,20,.45)}
+.sheet{position:relative;width:100%;max-width:34rem;background:var(--surface);border-radius:20px 20px 0 0;padding:22px 22px calc(26px + env(safe-area-inset-bottom));box-shadow:var(--shadow);animation:up .22s ease}
+@keyframes up{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
+.sheet .gl{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:650}
+.sheet h3{margin:.3rem 0 .5rem;font-size:1.25rem;font-weight:750}
+.sheet p{font-family:Georgia,serif;font-size:1rem;line-height:1.65;color:var(--ink);margin:0}
+.sheet .x{position:absolute;top:10px;right:10px;min-width:44px;min-height:44px;border-radius:12px;display:grid;place-items:center;color:var(--mut)}
+.sheet .x:hover{background:var(--soft)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+</style>
+
+<div id="app"></div>
+
+<script>
+"use strict";
+const PAYLOAD = __PAYLOAD__;
+const CH = PAYLOAD.chapters, GLOSS = PAYLOAD.glossary, PARTS = PAYLOAD.parts;
+const $ = s => document.querySelector(s);
+const app = document.getElementById('app');
+const LS = {
+  get(k, d){ try{ const v = localStorage.getItem('sab.'+k); return v===null? d : JSON.parse(v); }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem('sab.'+k, JSON.stringify(v)); }catch(e){} }
+};
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const smooth = () => matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+const SVG = {
+  back:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
+  play:'<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg>',
+  pause:'<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><rect x="6.5" y="5" width="4" height="14" rx="1"/><rect x="13.5" y="5" width="4" height="14" rx="1"/></svg>',
+  prev:'<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17 5.5v13l-9-6.5z"/><rect x="6" y="5.5" width="2.2" height="13" rx="1"/></svg>',
+  next:'<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M7 5.5v13l9-6.5z"/><rect x="15.8" y="5.5" width="2.2" height="13" rx="1"/></svg>',
+  x:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  speak:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9.5 9.5 0 0 1 0 13"/></svg>',
+  book:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V4H6.5A2.5 2.5 0 0 0 4 6.5z"/></svg>'
+};
+
+/* ---------- озвучка ---------- */
+const TTS = ('speechSynthesis' in window) ? {
+  q: [], i: 0, on: false, seq: 0,
+  rate: LS.get('rate', 1),
+  voice: null,
+  pick(){
+    const vs = speechSynthesis.getVoices().filter(v => v.lang && v.lang.toLowerCase().startsWith('ru'));
+    this.voice = vs.find(v => /google/i.test(v.name)) || vs.find(v => /milena|katya|premium|enhanced/i.test(v.name)) || vs[0] || null;
+  },
+  build(){
+    this.q = []; this.i = 0;
+    document.querySelectorAll('article p, article li, article h1, article h2, article h3').forEach(el => {
+      const txt = el.textContent.trim();
+      if (!txt) return;
+      const parts = txt.match(/[^.!?…]+[.!?…]+["»”)\]]*\s*|[^.!?…]+$/g) || [txt];
+      parts.forEach(s => { s = s.trim(); if (s) this.q.push({ el, s }); });
+    });
+  },
+  speak(){
+    const mySeq = ++this.seq;
+    speechSynthesis.cancel();
+    const item = this.q[this.i];
+    if (!item) { this.stop(); return; }
+    this.mark(item.el);
+    const u = new SpeechSynthesisUtterance(item.s);
+    u.lang = 'ru-RU';
+    if (this.voice) u.voice = this.voice;
+    u.rate = this.rate;
+    u.onend = () => {
+      if (!this.on || mySeq !== this.seq) return;
+      if (this.i < this.q.length - 1) { this.i++; this.speak(); }
+      else this.stop();
+    };
+    speechSynthesis.speak(u);
+  },
+  mark(el){
+    document.querySelectorAll('.reading').forEach(e => e.classList.remove('reading'));
+    if (el) { el.classList.add('reading'); el.scrollIntoView({ block: 'center', behavior: smooth() }); }
+  },
+  toggle(){
+    if (this.on) { this.on = false; this.seq++; speechSynthesis.cancel(); }
+    else {
+      if (!this.q.length) this.build();
+      this.on = true; this.speak();
+    }
+    this.ui();
+  },
+  step(d){
+    this.i = Math.max(0, Math.min(this.q.length - 1, this.i + d));
+    if (this.on) this.speak(); else this.mark(this.q[this.i] && this.q[this.i].el);
+    this.ui();
+  },
+  cycle(){
+    const R = [0.5, 0.75, 1, 1.25, 1.5, 2];
+    this.rate = R[(R.indexOf(this.rate) + 1) % R.length] || 1;
+    LS.set('rate', this.rate);
+    if (this.on) this.speak();
+    this.ui();
+  },
+  stop(){
+    this.on = false; this.seq++; speechSynthesis.cancel();
+    this.mark(null); this.q = []; this.i = 0;
+    const p = $('#player'); if (p) p.remove();
+  },
+  open(){
+    if ($('#player')) { this.toggle(); return; }
+    this.build();
+    const bar = document.createElement('div');
+    bar.id = 'player'; bar.className = 'player';
+    bar.innerHTML = '<div class="in">' +
+      '<button class="pbtn" id="pPrev" aria-label="Назад на предложение">' + SVG.prev + '</button>' +
+      '<button class="pbtn main" id="pPlay" aria-label="Пауза">' + SVG.pause + '</button>' +
+      '<button class="pbtn" id="pNext" aria-label="Вперёд на предложение">' + SVG.next + '</button>' +
+      '<button class="pbtn rate" id="pRate" aria-label="Скорость озвучки"></button>' +
+      '<span class="pspacer">Экран не выключай — озвучка прервётся</span>' +
+      '<button class="pbtn" id="pStop" aria-label="Закрыть плеер">' + SVG.x + '</button></div>';
+    document.body.appendChild(bar);
+    $('#pPlay').onclick = () => this.toggle();
+    $('#pPrev').onclick = () => this.step(-1);
+    $('#pNext').onclick = () => this.step(1);
+    $('#pRate').onclick = () => this.cycle();
+    $('#pStop').onclick = () => this.stop();
+    this.on = true; this.speak(); this.ui();
+  },
+  ui(){
+    const b = $('#pPlay'); if (!b) return;
+    b.innerHTML = this.on ? SVG.pause : SVG.play;
+    b.setAttribute('aria-label', this.on ? 'Пауза' : 'Продолжить');
+    $('#pRate').textContent = String(this.rate).replace('.', ',') + '×';
+  }
+} : null;
+if (TTS) {
+  TTS.pick();
+  if (speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = () => TTS.pick();
+}
+
+/* ---------- глоссарий ---------- */
+function openTerm(id){
+  const g = GLOSS.find(x => x.id === id);
+  if (!g) return;
+  closeSheet();
+  const w = document.createElement('div');
+  w.className = 'sheetwrap'; w.id = 'sheet';
+  w.innerHTML = '<div class="backdrop"></div><div class="sheet" role="dialog" aria-modal="true" aria-label="Глоссарий: ' + esc(g.term) + '">' +
+    '<div class="gl">Глоссарий</div><h3>' + esc(g.term) + '</h3><p>' + esc(g.def) + '</p>' +
+    '<button class="x" aria-label="Закрыть">' + SVG.x + '</button></div>';
+  document.body.appendChild(w);
+  w.querySelector('.backdrop').onclick = closeSheet;
+  w.querySelector('.x').onclick = closeSheet;
+}
+function closeSheet(){ const s = $('#sheet'); if (s) s.remove(); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+
+/* ---------- закладка и прогресс ---------- */
+let curId = null, saveT = 0;
+window.addEventListener('scroll', () => {
+  if (!curId) return;
+  const now = Date.now();
+  if (now - saveT > 400) {
+    saveT = now;
+    LS.set('pos', { ch: curId, y: Math.round(scrollY) });
+  }
+  const h = document.documentElement;
+  if (h.scrollHeight - scrollY - innerHeight < h.clientHeight * 0.08) {
+    const done = LS.get('done', {});
+    if (!done[curId]) { done[curId] = 1; LS.set('done', done); }
+  }
+}, { passive: true });
+
+/* ---------- рендер ---------- */
+function bindTerms(){
+  document.querySelectorAll('.term').forEach(b => b.onclick = () => openTerm(b.dataset.t));
+}
+function renderHome(){
+  if (TTS) TTS.stop();
+  curId = null;
+  document.title = 'Строитель А+Б';
+  const done = LS.get('done', {});
+  const pos = LS.get('pos', null);
+  const ready = CH.filter(c => c.html);
+  const readDone = ready.filter(c => done[c.id]).length;
+  let h = '<div class="wrap"><header class="cover">' +
+    '<div class="kicker">Учебник · на примере Recall</div>' +
+    '<h1>Строитель А+Б</h1>' +
+    '<p class="sub">Как делать с помощью ИИ продукты, в которых хочется жить: от идеи до денег и постоянных клиентов.</p>' +
+    '<div class="progress"><div class="bar"><i style="width:' + Math.round(100 * ready.length / CH.length) + '%"></i></div>' +
+    '<div class="cap">Опубликовано глав: ' + ready.length + ' из ' + CH.length + ' · прочитано: ' + readDone + '</div></div>';
+  if (pos && CH.some(c => c.id === pos.ch && c.html)) {
+    const c = CH.find(x => x.id === pos.ch);
+    h += '<button class="continue" id="cont"><span class="ico">' + SVG.book + '</span>' +
+      '<span><b>Продолжить чтение</b><span>Глава ' + c.n + ' · ' + esc(c.title) + '</span></span></button>';
+  }
+  h += '</header><nav aria-label="Оглавление">';
+  let lastPart = '';
+  CH.forEach(c => {
+    if (c.part !== lastPart) {
+      lastPart = c.part;
+      h += '<div class="part"><span class="rn">' + c.part + '</span><h2>' + esc(PARTS[c.part]) + '</h2></div>';
+    }
+    if (c.html) {
+      h += '<button class="chrow" data-ch="' + c.id + '"><span class="num">' + c.n + '</span>' +
+        '<span class="t">' + esc(c.title) + '</span>' +
+        '<span class="st' + (done[c.id] ? ' done">✓ прочитана' : '">читать') + '</span></button>';
+    } else {
+      h += '<div class="chrow soon"><span class="num">' + c.n + '</span><span class="t">' + esc(c.title) + '</span><span class="st">скоро</span></div>';
+    }
+  });
+  h += '</nav><div class="foot">Закладка, прогресс и скорость озвучки хранятся в этом браузере. Термины с пунктиром — тап открывает объяснение.</div></div>';
+  app.innerHTML = h;
+  const cont = $('#cont');
+  if (cont) cont.onclick = () => { location.hash = '#/' + pos.ch; };
+  document.querySelectorAll('[data-ch]').forEach(b => b.onclick = () => { location.hash = '#/' + b.dataset.ch; });
+  scrollTo(0, 0);
+}
+function renderChapter(id){
+  const c = CH.find(x => x.id === id && x.html);
+  if (!c) { location.hash = ''; return; }
+  if (TTS) TTS.stop();
+  curId = id;
+  document.title = 'Гл. ' + c.n + ' — ' + c.title;
+  const idx = CH.indexOf(c);
+  const prev = CH.slice(0, idx).reverse().find(x => x.html);
+  const next = CH.slice(idx + 1).find(x => x.html);
+  let h = '<div class="topbar"><div class="in">' +
+    '<button class="tbtn" id="back" aria-label="К оглавлению">' + SVG.back + '</button>' +
+    '<div class="title">Глава ' + c.n + ' · ' + esc(PARTS[c.part]) + '</div>' +
+    (TTS ? '<button class="tbtn" id="listen">' + SVG.speak + ' Слушать</button>' : '') +
+    '</div></div><div class="wrap"><article>' +
+    '<div class="chnum">Глава ' + c.n + '</div>' + c.html;
+  h += '<div class="chnav">';
+  h += prev
+    ? '<button data-ch="' + prev.id + '"><span class="lbl">← Назад</span><span class="nm">' + esc(prev.title) + '</span></button>'
+    : '<button data-home="1"><span class="lbl">←</span><span class="nm">Оглавление</span></button>';
+  if (next) h += '<button class="nx" data-ch="' + next.id + '"><span class="lbl">Дальше →</span><span class="nm">' + esc(next.title) + '</span></button>';
+  h += '</div></article></div>';
+  app.innerHTML = h;
+  $('#back').onclick = () => { location.hash = ''; };
+  const li = $('#listen'); if (li) li.onclick = () => TTS.open();
+  document.querySelectorAll('.chnav [data-ch]').forEach(b => b.onclick = () => { location.hash = '#/' + b.dataset.ch; });
+  const hm = document.querySelector('.chnav [data-home]'); if (hm) hm.onclick = () => { location.hash = ''; };
+  bindTerms();
+  const pos = LS.get('pos', null);
+  requestAnimationFrame(() => scrollTo(0, (pos && pos.ch === id) ? pos.y : 0));
+}
+function route(){
+  closeSheet();
+  const m = location.hash.match(/^#\/(.+)$/);
+  if (m) renderChapter(m[1]); else renderHome();
+}
+window.addEventListener('hashchange', route);
+route();
+</script>
