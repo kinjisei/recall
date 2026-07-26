@@ -230,20 +230,32 @@ export async function newWordOfDay(lang: AppLang): Promise<PoolItem | null> {
   const cached = cachedWordOfDay(lang)
   if (cached !== undefined) return cached
 
-  const [packs, level, deckItems] = await Promise.all([
-    loadPackItems(lang).catch(() => []),
+  // Компактный датасет слова дня (~11КБ gzip) вместо всего словаря (~204КБ):
+  // раньше Главная ради одного слова грузила полный пак. Датасет генерится
+  // scripts/gen-word-of-day.mjs (по ~40 слов на уровень).
+  const [mod, level, deckItems] = await Promise.all([
+    import('../data/wordOfDay'),
     targetLevel(lang),
     loadDeckItems(lang).catch(() => []),
   ])
+  const entries = lang === 'es' ? mod.wordOfDayES : mod.wordOfDayEN
+  const items: PoolItem[] = entries.map((e) => ({
+    term: e.t,
+    translation: e.r,
+    example: e.e,
+    level: e.l,
+  }))
   const have = new Set(deckItems.map((i) => i.term.toLowerCase()))
   // ближайшие к уровню ~60 кандидатов: слово по силам, но меняется день ото дня
-  const candidates = sortByLevelCloseness(packs, level)
+  let candidates = sortByLevelCloseness(items, level)
     .filter((p) => !have.has(p.term.toLowerCase()))
     .slice(0, 60)
+  // всё из выборки уже в колоде — показываем что-нибудь по уровню, а не пусто
+  if (candidates.length === 0) candidates = sortByLevelCloseness(items, level).slice(0, 60)
   const word = candidates.length === 0 ? null : candidates[todayNumber() % candidates.length]
-  // пустые паки = скорее всего словарь не загрузился (сеть) — null не кэшируем,
-  // чтобы не остаться без слова дня до завтра из-за разовой ошибки
-  if (packs.length > 0) saveWordOfDay(lang, word)
+  // пустой датасет = сбой загрузки (сеть) — null не кэшируем, чтобы не остаться
+  // без слова дня до завтра из-за разовой ошибки
+  if (items.length > 0) saveWordOfDay(lang, word)
   return word
 }
 
@@ -257,8 +269,9 @@ export async function loadGamePool(lang: AppLang, need = 24): Promise<GamePool> 
 
   // Паки грузим ВСЕГДА. Раньше условие было `items.length < need` (24), то есть
   // при колоде больше 24 слов пак не подмешивался вообще — игры бесконечно
-  // крутили одну и ту же колоду. Словарь всё равно ленивый и уже загружен
-  // Главной («слово дня»), так что лишнего трафика это не создаёт.
+  // крутили одну и ту же колоду. Полный словарь (~204КБ) грузится здесь, при
+  // входе в игры — это ленивый чанк, и для игр он нужен по делу (Главная его
+  // больше не тянет — там компактный датасет слова дня).
   const packBudget = Math.max(need * 3, 60)
   const packs = await loadPackItems(lang).catch(() => [])
   let added = 0
