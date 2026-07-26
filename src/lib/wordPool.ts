@@ -133,8 +133,17 @@ async function loadDeckItems(lang: AppLang): Promise<PoolItem[]> {
   return items
 }
 
+// Обработанные паки кэшируются на сессию: данные статичны (build-time), а
+// map+isPlayable по ~4600 словам иначе прогонялся заново на КАЖДЫЙ вход в игру
+// (Match→Спринт→Пропуск… — каждый заново). import() и так кэшируется модульной
+// системой, но фильтрация — нет; кэшируем результат.
+const packItemsCache = new Map<AppLang, PoolItem[]>()
+
 /** Слова из готовых паков (ленивый импорт — в стартовый бандл не идут). */
 async function loadPackItems(lang: AppLang): Promise<PoolItem[]> {
+  const cached = packItemsCache.get(lang)
+  if (cached) return cached
+
   const items: PoolItem[] = []
   if (lang === 'es') {
     const m = await import('../data/spanish/words')
@@ -153,6 +162,7 @@ async function loadPackItems(lang: AppLang): Promise<PoolItem[]> {
       items.push({ term, translation, example: w.example_en ?? undefined, level: w.level, topic: w.topic_id })
     }
   }
+  packItemsCache.set(lang, items)
   return items
 }
 
