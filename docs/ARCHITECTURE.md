@@ -40,7 +40,7 @@ PWA для изучения **двух языков: английского и �
 | Озвучка (TTS) | **Web Speech API** | бесплатно, en-US / es-ES |
 | Распознавание (STT) | MediaRecorder → `/api/transcribe` (**Groq Whisper**) | работает и на iPhone |
 | Словарь EN | Free Dictionary API + Gemini(light) | транскрипция/аудио + учебные определения |
-| Словарь ES | локальные паки → Gemini | `lib/spanishDict.ts` |
+| Словарь ES | перевод встроен в паки; контекст — Gemini | `lib/contextDict.ts` |
 | SRS | **ts-fsrs** | реализация FSRS |
 | Дизайн | Nocturne: тёмная тема, токены `--night-*`, шрифт Onest (локально), иконки Phosphor | `src/index.css`, единая `class="dark"` |
 | Хостинг | **Vercel** (автодеплой из main) | фронт + serverless |
@@ -205,8 +205,8 @@ interface DueCard { card: Card; state: ReviewState | null }
 getDueCards(limit?: number, lang?: AppLang): Promise<DueCard[]>
 reviewCard(card, existing, rating): Promise<ReviewState>  // возвращает НОВОЕ расписание
 
-// lib/dictionary.ts (EN) / lib/spanishDict.ts (ES) / lib/contextDict.ts (контекст)
-lookup(word) / lookupSpanish(word) / lookupInContext(word, sentence, lang)
+// lib/dictionary.ts (EN) / lib/contextDict.ts (перевод слова в контексте, EN+ES)
+lookup(word) / lookupInContext(word, sentence, lang)
 
 // lib/speech.ts (TTS) — speak(text, {rate?, voice?, lang?}), speechLang, getVoices,
 // scorePronunciation(target, spoken) -> { percent, words[] }
@@ -246,11 +246,16 @@ chat(messages: ChatTurn[], opts: { task: AiTask; system?: string }): Promise<str
 // та же логика в SQL submit_material)
 ```
 
-> Безопасность (итог заходов 17–20): RLS защищает от чтения чужого, но не от
+> Безопасность (итог заходов 17–21): RLS защищает от чтения чужого, но не от
 > записи «удобных» значений в свою строку — поэтому чувствительные записи только
 > через RPC, гранты на колонки, серверный пересчёт баллов, JWT на /api/*,
-> сервер сам выбирает модель по task. Известный осознанный остаток: правильные
-> ответы упражнений уходят на клиент (подглядывание возможно, балл серверный).
+> сервер сам выбирает модель по task. Вызов RPC анонимом закрыт системно
+> (revoke execute … from public + grant … to authenticated, заход 21).
+> Осознанные остатки (починить до открытия для ЧУЖИХ учениц, см. findings.md):
+> (1) правильные ответы упражнений уходят на клиент (балл серверный, но
+> подглядывание возможно); (2) review_states (расписание FSRS) пишется клиентом
+> — ученица может подделать собственную диагностику. Оба — про подделку своих же
+> данных доверенным пользователем; для платящих чужих нужен серверный расчёт.
 
 ## 8. Роуты и дизайн
 Роуты: публичные `/login /pricing /teachers /privacy /terms`; под входом:

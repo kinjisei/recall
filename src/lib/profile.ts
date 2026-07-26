@@ -70,12 +70,33 @@ export function invalidateProfile(): void {
   cache = null
 }
 
-/** Полная очистка (выход из аккаунта): и память, и localStorage-кэш уровня. */
-export function clearProfileCaches(): void {
+// Ключи localStorage, которые ОСТАЮТСЯ при выходе — это настройки устройства,
+// а не данные аккаунта: язык интерфейса, скорость озвучки/размер текста,
+// защита от циклической перезагрузки PWA. Всё остальное с префиксом recall.*
+// — данные пользователя (уровень, банки ошибок, «Мои тексты», кэши) — стирается.
+const DEVICE_PREF_KEYS = new Set([
+  'recall.lang',
+  'recall.settings',
+  'recall.chunk_reload_at',
+])
+
+/**
+ * Полная очистка при выходе из аккаунта: память + ВСЕ пользовательские ключи
+ * localStorage (кроме настроек устройства). Раньше чистился только кэш уровня —
+ * на общем телефоне (кейс «преподаватель + ученицы») следующий вошедший видел
+ * чужие «Мои тексты», уровень и банк ошибок. Ключи не привязаны к user_id,
+ * поэтому единственный надёжный способ разделения — стереть при выходе.
+ */
+export function clearUserLocalData(): void {
   cache = null
   try {
-    localStorage.removeItem(LEVEL_CACHE_KEY)
+    const toRemove: string[] = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i)
+      if (k && k.startsWith('recall.') && !DEVICE_PREF_KEYS.has(k)) toRemove.push(k)
+    }
+    for (const k of toRemove) localStorage.removeItem(k)
   } catch {
-    /* некритично */
+    /* приватный режим — некритично */
   }
 }

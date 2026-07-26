@@ -18,6 +18,8 @@ ux-audit-report.md
 
 # прототипы Omelette (референсы дизайна, не исходники)
 *.dc.html
+# standalone-экспорт прототипа (не исходник; не путать с index.html Vite)
+Recall Приложение (standalone).html
 # Android TWA: сгенерированный проект и ключи не коммитим (ключ — секрет)
 twa/*
 !twa/twa-manifest.json

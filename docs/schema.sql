@@ -2161,3 +2161,194 @@
   --    с пустым телом мог попасть в устаревшую версию. Удаляем — остаётся
   --    только версия с параметром.
   drop function if exists public.consume_ai_quota();
+
+  -- ============================================================================
+  -- ЗАХОД 21: ЗАКРЫТИЕ НАХОДОК АУДИТА (У3/У4, 2026-07-26). Блок idempotent.
+  -- По журналу docs/findings.md. Закрывает: анонимный оракул кодов-приглашений,
+  -- подделку стрика произвольным днём, отсутствие лимитов у materials/
+  -- study_plans/текстовых полей, безлимитную запись grammar_mistakes.
+  -- ⚠️ Блок ДОЛЖЕН идти ПОСЛЕДНИМ в файле: revoke на функции (п.6) действует на
+  -- все функции, СОЗДАННЫЕ ВЫШЕ. Если добавляешь новые функции — либо выше этого
+  -- блока, либо перезалей файл целиком (он idempotent).
+  -- ============================================================================
+
+  -- ---- 1. activity_log: запись только через RPC, день валидируется сервером --
+  -- Было: клиент слал day (из new Date() браузера) и type напрямую — можно было
+  -- задним числом «дорисовать» стрик и «Динамику за месяц» в отчёте родителям, а
+  -- также вписать мусорный type, ломавший выборки диагностики.
+  alter table public.activity_log drop constraint if exists activity_log_type_check;
+  alter table public.activity_log add constraint activity_log_type_check
+    check (type in ('flashcards','reader','pronunciation','conversation','writing',
+                    'grammar','quest','practice','assignment','perfect')) not valid;
+
+  revoke insert, update, delete on public.activity_log from authenticated;
+
+  create or replace function public.log_activity(
+    p_type text, p_day date, p_items int default 1, p_sec int default 0
+  ) returns void language plpgsql security definer set search_path = public as $fn$
+  declare
+    uid uuid := auth.uid();
+    v_items int := least(greatest(coalesce(p_items, 0), 0), 100000);
+    v_sec   int := least(greatest(coalesce(p_sec, 0), 0), 86400);
+  begin
+    if uid is null then raise exception 'RECALL_NO_AUTH'; end if;
+    if p_type not in ('flashcards','reader','pronunciation','conversation','writing',
+                      'grammar','quest','practice','assignment','perfect') then
+      raise exception 'RECALL_BAD_TYPE';
+    end if;
+    -- День задаёт клиент (местная дата пользователя), но сервер не даёт уйти
+    -- дальше ±1 суток от своей даты: любой часовой пояс (UTC−12…+14) сдвигает
+    -- дату максимум на сутки, а подделка истории стрика произвольными датами
+    -- закрыта.
+    if p_day is null or p_day < current_date - 1 or p_day > current_date + 1 then
+      raise exception 'RECALL_BAD_DAY';
+    end if;
+    insert into activity_log (user_id, day, type, items_done, duration_sec)
+    values (uid, p_day, p_type, v_items, v_sec)
+    on conflict (user_id, day, type) do update
+      set items_done   = activity_log.items_done + v_items,
+          duration_sec = activity_log.duration_sec + v_sec;
+  end $fn$;
+
+  grant execute on function public.log_activity(text, date, int, int) to authenticated;
+
+  -- ---- 2. materials: только преподаватель + лимит размера ----
+  -- Политика проверяла лишь teacher_id=auth.uid(), без роли и без предела
+  -- размера — любая ученица (learner) могла вставить себе мегабайтные строки.
+  drop policy if exists "own materials" on public.materials;
+  create policy "own materials" on public.materials
+    for all using (
+      auth.uid() = teacher_id
+      and exists (select 1 from profiles where id = auth.uid() and role = 'teacher')
+    ) with check (
+      auth.uid() = teacher_id
+      and exists (select 1 from profiles where id = auth.uid() and role = 'teacher')
+      and pg_column_size(body) < 100 * 1024
+      and pg_column_size(exercises) < 100 * 1024
+      and pg_column_size(coalesce(plan, '{}'::jsonb)) < 100 * 1024
+    );
+
+  -- ---- 3. study_plans: вставку/удаление — только через RPC ----
+  -- Гонку давала неатомарная «замена» = архивировать активную + вставить новую
+  -- двумя запросами. Закрываем её, запрещая прямой INSERT: создать программу
+  -- теперь можно ТОЛЬКО через replace_study_plan (архив+вставка одной
+  -- транзакцией). UPDATE оставляем — им пользуется archivePlan() (снять
+  -- программу одним шагом, гонки нет), а частичный уникальный индекс не даёт
+  -- сделать две активные. DELETE тоже запрещаем (снятие — это архив, не delete).
+  revoke insert, delete on public.study_plans from authenticated;
+
+  -- ---- 4. Лимиты длины текстовых полей (защита общей базы от раздувания) ----
+  -- Лимиты входа в api/gemini.ts защищают вызов ИИ, но не саму запись: прямой
+  -- POST в PostgREST мог положить мегабайтные строки. CHECK ... NOT VALID
+  -- проверяет только НОВЫЕ записи (существующие данные не трогаем, миграция не
+  -- падает на длинном старом ряду).
+  alter table public.cards drop constraint if exists cards_len_check;
+  alter table public.cards add constraint cards_len_check check (
+    char_length(front) <= 400
+    and char_length(coalesce(back, '')) <= 2000
+    and char_length(coalesce(example, '')) <= 2000
+  ) not valid;
+  alter table public.messages drop constraint if exists messages_len_check;
+  alter table public.messages add constraint messages_len_check
+    check (char_length(coalesce(content, '')) <= 16000) not valid;
+  alter table public.writing_submissions drop constraint if exists writing_len_check;
+  alter table public.writing_submissions add constraint writing_len_check check (
+    char_length(coalesce(text, '')) <= 20000
+    and char_length(coalesce(prompt, '')) <= 2000
+  ) not valid;
+
+  -- ---- 5. grammar_mistakes: потолок числа строк на пользователя ----
+  -- topic_id/ex — произвольные int без FK, поэтому уникальность (user, lang,
+  -- topic, ex) не мешает наплодить сколько угодно «ошибок». Реально их max ~1080
+  -- (60 уроков × ~9 упр. × 2 языка). Потолок 5000 отсекает абьюз, легальных не
+  -- задевает. Сверх лимита строка тихо игнорируется (return null в BEFORE INSERT).
+  create or replace function public.cap_grammar_mistakes()
+  returns trigger language plpgsql security definer set search_path = public as $fn$
+  begin
+    if (select count(*) from grammar_mistakes where user_id = new.user_id) >= 5000 then
+      return null;
+    end if;
+    return new;
+  end $fn$;
+  drop trigger if exists grammar_mistakes_cap on public.grammar_mistakes;
+  create trigger grammar_mistakes_cap
+    before insert on public.grammar_mistakes
+    for each row execute function public.cap_grammar_mistakes();
+
+  -- ---- 6. Закрыть вызов серверных функций анонимом ----
+  -- (находка У4 #11) В Postgres EXECUTE по умолчанию у PUBLIC (⊇ anon,
+  -- authenticated). Явный «grant … to authenticated» его НЕ снимает — только
+  -- revoke. Из-за этого любую RPC (в т.ч. join_teacher) можно было вызвать БЕЗ
+  -- входа; join_teacher к тому же по-разному отвечал на верный/неверный код —
+  -- перебором находились коды-приглашения.
+  --
+  -- Сначала пересоздаём join_teacher (та же логика: лимит мест + advisory-лок)
+  -- с явной проверкой входа первой строкой — оракул закрыт и на уровне самой
+  -- функции. ЗАТЕМ отзываем execute у PUBLIC по ВСЕМ функциям и ре-грантим
+  -- вошедшему (grant … to authenticated не может «недодать» — каждая функция
+  -- проверяет права внутри). Именно этот revoke/grant идёт ПОСЛЕДНИМ, чтобы
+  -- накрыть и заново созданный join_teacher (иначе он получил бы PUBLIC-грант
+  -- обратно). Единственный анонимный вызов в приложении — get_my_plan на
+  -- публичной /pricing (getMyPlan() глотает ошибку в null) — страница работает.
+  create or replace function public.join_teacher(code text)
+  returns text
+  language plpgsql
+  security definer
+  set search_path = public
+  as $$
+  declare
+    t record;
+    seats int;
+    taken int;
+  begin
+    if auth.uid() is null then
+      raise exception 'RECALL_NO_AUTH';
+    end if;
+    select id, coalesce(display_name, 'Преподаватель') as nm, plan, plan_expires_at, trial_until
+      into t
+      from profiles
+     where invite_code = upper(trim(code)) and role = 'teacher';
+    if t.id is null then
+      raise exception 'Код не найден. Проверь код у преподавателя.';
+    end if;
+    if t.id = auth.uid() then
+      raise exception 'Нельзя привязать саму себя.';
+    end if;
+
+    perform pg_advisory_xact_lock(hashtext('join_teacher:' || t.id::text));
+
+    if exists (
+      select 1 from teacher_students
+      where teacher_id = t.id and student_id = auth.uid()
+    ) then
+      return t.nm;
+    end if;
+
+    seats := public.teacher_seat_limit(t.plan);
+    if seats = 0 then
+      seats := case when t.trial_until > now() then 3 else 0 end;
+    elsif t.plan_expires_at is null or t.plan_expires_at <= now() then
+      seats := least(seats, case when t.trial_until > now() then 3 else 0 end);
+    end if;
+
+    select count(*) into taken from teacher_students where teacher_id = t.id;
+    if taken >= seats then
+      raise exception 'RECALL_SEATS_FULL';
+    end if;
+
+    insert into teacher_students (teacher_id, student_id)
+    values (t.id, auth.uid())
+    on conflict (teacher_id, student_id) do nothing;
+    return t.nm;
+  end;
+  $$;
+
+  -- Финальный revoke/grant — ПОСЛЕДНИЙ в файле, накрывает все функции выше,
+  -- включая только что пересозданный join_teacher.
+  -- ⚠️ ВАЖНО (урок захода 3, строки ~2147): Supabase выдаёт EXECUTE ЯВНО роли
+  -- anon (ALTER DEFAULT PRIVILEGES), а не только через PUBLIC. Поэтому revoke
+  -- from public анонима НЕ закрывает — нужно отзывать и от anon поимённо.
+  revoke execute on all functions in schema public from public, anon;
+  grant execute on all functions in schema public to authenticated;
+  revoke execute on function public.has_premium_access(uuid) from public, anon, authenticated;
+  revoke execute on function public.has_paid_access(uuid) from public, anon, authenticated;

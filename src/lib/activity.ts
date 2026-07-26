@@ -31,35 +31,17 @@ export async function logActivity(
   durationSec = 0,
 ): Promise<void> {
   try {
-    const userId = await currentUserId()
-    if (!userId) return
-    const day = localDay()
-
-    const { data: existing } = await supabase
-      .from('activity_log')
-      .select('id, items_done, duration_sec')
-      .eq('user_id', userId)
-      .eq('day', day)
-      .eq('type', type)
-      .maybeSingle()
-
-    if (existing) {
-      await supabase
-        .from('activity_log')
-        .update({
-          items_done: existing.items_done + itemsDone,
-          duration_sec: existing.duration_sec + durationSec,
-        })
-        .eq('id', existing.id)
-    } else {
-      await supabase.from('activity_log').insert({
-        user_id: userId,
-        day,
-        type,
-        items_done: itemsDone,
-        duration_sec: durationSec,
-      })
-    }
+    // Запись идёт через RPC log_activity: прямая запись в activity_log клиенту
+    // запрещена грантом (заход 21). День клиент шлёт местный (для корректного
+    // стрика в своём часовом поясе), но сервер принимает только ±1 сутки от
+    // своей даты — подделать историю стрика произвольными датами нельзя.
+    const { error } = await supabase.rpc('log_activity', {
+      p_type: type,
+      p_day: localDay(),
+      p_items: itemsDone,
+      p_sec: durationSec,
+    })
+    if (error) throw error
   } catch (e) {
     console.warn('Не удалось записать активность:', e)
   }

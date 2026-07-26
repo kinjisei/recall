@@ -21,11 +21,27 @@ interface Translated {
 
 const CHUNK = 15
 
-function parseJsonArray<T>(raw: string): T[] {
+/** Строка из ответа AI или '' — ответ модели никогда не доверяем на тип. */
+function asStr(v: unknown): string {
+  return typeof v === 'string' ? v : ''
+}
+
+/**
+ * Разбирает JSON-массив из ответа AI и приводит КАЖДЫЙ элемент к {word,base,ru}
+ * строками. Без этого мусорный ответ Gemini (число вместо строки, объект без
+ * поля) уходил дальше как есть: (t.base || w.word).toLowerCase() на числе бросал
+ * бы TypeError, а «база» карточки могла оказаться не строкой.
+ */
+function parseTranslated(raw: string): Translated[] {
   const start = raw.indexOf('[')
   const end = raw.lastIndexOf(']')
   if (start === -1 || end <= start) throw new Error('AI вернул не-JSON')
-  return JSON.parse(raw.slice(start, end + 1)) as T[]
+  const parsed: unknown = JSON.parse(raw.slice(start, end + 1))
+  if (!Array.isArray(parsed)) throw new Error('AI вернул не массив')
+  return parsed.map((x) => {
+    const o = (x ?? {}) as Record<string, unknown>
+    return { word: asStr(o.word), base: asStr(o.base), ru: asStr(o.ru) }
+  })
 }
 
 async function translateChunk(words: MarkedWord[], lang: AppLang): Promise<Translated[]> {
@@ -37,7 +53,7 @@ async function translateChunk(words: MarkedWord[], lang: AppLang): Promise<Trans
   ].join('\n')
   const user = JSON.stringify(words.map((w) => ({ word: w.word, sentence: w.sentence })))
   const raw = await chat([{ role: 'user', content: user }], { system, task: 'batch' })
-  return parseJsonArray<Translated>(raw)
+  return parseTranslated(raw)
 }
 
 /**
