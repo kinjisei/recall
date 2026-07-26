@@ -21,6 +21,10 @@
   (тот же движок ts-fsrs считает на сервере, клиент шлёт только оценку
   again/good) — по образцу того, как submit_material считает балл на сервере.
   Родственно осознанному компромиссу «ответы упражнений уходят на клиент».
+- 🔴 **word_checks — результат перепроверки считает клиент** (тот же класс, см.
+  «Соседние места» ниже; подтверждено кодом). ХУЖЕ review_states: результат
+  читает ПРЕПОДАВАТЕЛЬ. Чинить вместе с review_states ДО открытия для чужих —
+  пересчётом ok на сервере в submit_word_check (у RPC есть card_ids + cards).
 
 ### Крупные рефакторинги — отдельным заходом (решение владельца 27.07)
 
@@ -51,6 +55,66 @@
   handoff/LoginPage.tsx может путать. Оставлена как референс дизайна; убрать
   или нет — на усмотрение владельца (риск случайного коммита закрыт: standalone
   html теперь в .gitignore).
+
+### Соседние места (проверка по классам багов захода 21, 2026-07-27) — записано, НЕ чинить
+
+Принцип «рядом с багом живут другие». Аудит соседей по двум классам. Класс
+«RPC-only не зафорсен» (как был study_plans) — **чисто, нового брата нет**:
+у material_assignments/word_checks/grammar_quests/placement_requests/activity_log
+revoke на месте. Класс «jsonb/text без лимита размера» дал список (всё 🟡/⚪ —
+это раздувание общей БД одним аккаунтом, не утечка и не подделка балла):
+
+**Прямая запись клиента (RLS for all, ни revoke, ни CHECK длины):**
+- 🟡 `profiles.display_name`, `decks.title`/`description` — любой аккаунт одним
+  REST-запросом кладёт строку любой длины. Добавить CHECK char_length.
+- 🟡 `writing_submissions.feedback` (jsonb) — клиент пишет AI-фидбек сам, размер
+  не ограничен (text/prompt уже закрыты, feedback пропущен).
+- ⚪ `profiles.native_lang`; `cards.ipa`/`audio_url` (cards_len_check покрыл
+  front/back/example, эти два пропустил); `materials.topic/format/length_range/
+  title` (size-CHECK только на body/exercises/plan).
+
+**Через security-definer RPC, но без pg_column_size-гарда внутри:**
+- 🟡 `material_assignments.answers` ← submit_material (пишет УЧЕНИЦА — широкий
+  вектор); `word_checks.results` ← submit_word_check (ученица). Добавить
+  pg_column_size-проверку в RPC (как в save_quest_messages/set_daily_plan).
+- ⚪ `material_assignments.ai_review`/`teacher_review` (учитель); `word_checks.
+  card_ids` (число id не ограничено); `study_plans.goal/summary/level` (weeks
+  капнут, эти — нет; level ещё и без enum-CHECK).
+
+**Наблюдения (не эксплойт, но стоит знать):**
+- ⚪ Мёртвые for-update политики «student updates …» на material_assignments и
+  word_checks обезврежены только `revoke update`. Если кто-то снимет revoke
+  «чтобы починить» — дыра откроется молча. Удалить политики или пометить.
+- ⚪ **Флуд числом строк** (третий класс, сосед grammar_mistakes-капа): decks,
+  cards, conversations, messages, writing_submissions, review_states — for all
+  без потолка строк на пользователя. Один аккаунт нагенерит сколько угодно.
+  Защищаться — если/когда откроемся публично.
+
+**Клиентский аудит соседей (класс «клиент считает доверенное значение»):**
+- 🔴 **word_checks: результат перепроверки считается на клиенте, сервер не
+  пересчитывает** — ✔ ПОДТВЕРЖДЕНО чтением кода. WordCheckRunner.tsx:40,52
+  считает `ok = answerMatches(...)` в браузере; submitWordCheck шлёт results как
+  есть; RPC submit_word_check (schema.sql:616) делает `set results = p_results`
+  БЕЗ пересчёта. Результат читает ПРЕПОДАВАТЕЛЬ (getWordChecks →
+  StudentWordsSection) — ученица через DevTools вызывает RPC с `ok:true` по всем
+  словам → «перепроверка пройдена идеально» + FSNS-штраф `again` тоже не
+  начисляется. Это ТОЧНАЯ параллель review_states/activity_log, но ХУЖЕ (третья
+  сторона доверяет сигналу), и прямой контраст с materials.auto_score, который
+  СПЕЦИАЛЬНО пересчитывают на сервере. Фикс (тот же класс, что review_states —
+  чинить ДО чужих учениц): пересчёт `ok` в submit_word_check по cards.front
+  (у RPC есть card_ids + доступ к cards). Сгруппировать с review_states.
+- 🟡 **placement_requests: уровень теста — самоотчёт без проверки** (ТОЧНО
+  структурно). submit_placement (schema.sql:2120) валидирует только, что p_level
+  — валидный CEFR, но ответы теста на сервер не идут. Ученица шлёт `level:'C2'`
+  без единого верного ответа → преподаватель видит фальшивый уровень, он же идёт
+  в промпты AI и диагностику. Мягче word_checks (вредит в основном себе —
+  контент не по уровню), но класс тот же. Полный фикс дорог (считать тест на
+  сервере); приемлемо оставить до открытия для чужих.
+- Клиентский аудит подтвердил БЕЗОПАСНЫМИ: conversations/messages (подделка
+  role='assistant' видна только себе), deck_assignments (RLS: своя колода + своя
+  ученица), profiles.update (грант на 3 колонки), contextDict (шлюз
+  cards_len_check), studyPlan.sanitize (реально покрывает типы/topicId/длины),
+  cards.source (влияет только на бейдж).
 
 ## Закрыто
 
