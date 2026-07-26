@@ -3,363 +3,277 @@
 > Этот документ — **контракт** для всех воркеров. Любой чат, который пишет код,
 > должен сначала прочитать этот файл и строго следовать названиям папок, типам,
 > схеме базы и сигнатурам функций. Не изобретать свои названия.
+>
+> ⚠️ ПРАВИЛО АКТУАЛЬНОСТИ: документ обновляется В ТОТ ЖЕ заход, который меняет
+> структуру (папки, роуты, таблицы, контракты). Аудит 2026-07-26 показал, что
+> отставший чертёж активно вредит: воркеры ломают живой код, доверяя документу.
+> Полная синхронизация: 2026-07-26.
 
 ## 1. Что это
-PWA-приложение для изучения/поддержания **двух языков: английского и испанского**.
-Сейчас — для 2 пользователей (англ. B1 и C1; испанский — с нуля, A1–A2).
-Позже — режим «Преподаватель» (учитель назначает колоды ученицам).
+PWA для изучения **двух языков: английского и испанского** + режим
+«Преподаватель» (репетитор ведёт учениц: слова, материалы, программа, квесты,
+диагностика). Язык интерфейса русский; язык изучения — переключатель EN/ES
+в шапке (LanguageContext, localStorage `recall.lang`).
 
-Язык интерфейса: русский. Контент: английский и испанский; язык выбирается
-переключателем EN/ES в шапке (LanguageContext, localStorage `recall.lang`).
-
-> Обновлено 2026-07-07: в Recall влит контент и функциональность
-> Flutter-приложения `d:\projects\spanish` (паки слов A1/A2, тексты, диалоги,
-> фразы для произношения). Flutter-код не переносился — только данные и логика.
+Статус: в проде (https://recall-pgkz.vercel.app), **закрытый тест** — регистрация
+по белому списку `allowed_emails` (открытие — docs/open-registration.sql в день
+запуска). Монетизация v1 включена: планы free/premium/teacher_*, триал 14 дней,
+оплата вручную (Kaspi → админ). Реальные пользователи: владелец (admin) и
+преподаватель (teacher_pro).
 
 ## 2. Научная основа (почему так)
 - **FSRS** (интервальное повторение) — карточки.
 - **Active recall** — пользователь произносит/печатает ответ, а не «узнаёт».
 - **Comprehensible input (i+1)** — тексты/аудио чуть выше уровня.
-- **Output** — говорение и письмо с AI-фидбеком (особенно важно для C1).
+- **Output** — говорение и письмо с AI-фидбеком.
 - **Слова в контексте**, не списком. Привычка (стрик) важнее фич.
 
-## 3. Финальный стек (всё бесплатно)
+## 3. Стек (всё бесплатно)
 | Слой | Технология | Зачем |
 |------|-----------|-------|
-| Frontend | **Vite + React + TypeScript + Tailwind CSS** | SPA, много примеров у AI |
-| PWA | **vite-plugin-pwa** | установка на телефон, офлайн |
+| Frontend | **Vite + React 19 + TypeScript + Tailwind v4** | SPA, много примеров у AI |
+| PWA | **vite-plugin-pwa** | установка, офлайн; авто-проверка обновлений в main.tsx |
 | База + Вход | **Supabase** (Postgres + Auth + RLS) | бесплатно, синхронизация |
-| AI-прокси | **Vercel Serverless Function** `/api/gemini` | прячет GEMINI_API_KEY |
-| Хостинг | **Vercel** | фронт + serverless в одном деплое |
-| Озвучка/распознавание | **Web Speech API** (браузер) | бесплатно, без сервера |
-| Словарь | **Free Dictionary API** (`dictionaryapi.dev`) | без ключа |
-| SRS-алгоритм | **ts-fsrs** (npm, open-source) | реализация FSRS |
-| AI-модель | **Gemini Flash** (free tier, 1500/день) | диалог, фидбек, генерация |
+| AI-прокси | **Vercel serverless** `/api/gemini`, `/api/transcribe` | ключи только на сервере |
+| AI-модели | Каскады Gemini (3.6/3.5-flash, lite, Pro) + Groq (llama, Whisper) | роутинг ПО ТИПУ ЗАДАЧИ — карта `api/_tasks.ts`; клиент модель/уровень НЕ выбирает |
+| Квоты AI | RPC `consume_ai_quota(kind)` — классы heavy/light/speech | лимиты по тарифу, защита от выжигания |
+| Озвучка (TTS) | **Web Speech API** | бесплатно, en-US / es-ES |
+| Распознавание (STT) | MediaRecorder → `/api/transcribe` (**Groq Whisper**) | работает и на iPhone |
+| Словарь EN | Free Dictionary API + Gemini(light) | транскрипция/аудио + учебные определения |
+| Словарь ES | локальные паки → Gemini | `lib/spanishDict.ts` |
+| SRS | **ts-fsrs** | реализация FSRS |
+| Дизайн | Nocturne: тёмная тема, токены `--night-*`, шрифт Onest (локально), иконки Phosphor | `src/index.css`, единая `class="dark"` |
+| Хостинг | **Vercel** (автодеплой из main) | фронт + serverless |
 
-**Важно:** Gemini-ключ НИКОГДА не в коде фронта. Только в env-переменной Vercel,
-доступен только из `/api/gemini`. Фронт зовёт свой `/api/gemini`, не Google напрямую.
+**Ключи** (GEMINI_API_KEY, GROQ_API_KEY) — только в env Vercel/`.env.local`
+(без VITE_-префикса), фронт зовёт свои /api/*. `/api/*` требуют Supabase-JWT.
 
 ## 4. Структура папок (строго соблюдать)
 ```
 recall-app/
-  docs/ARCHITECTURE.md        <- этот файл
-  api/
-    gemini.ts                 <- Vercel serverless: прокси к Gemini (Worker 4)
+  docs/            ARCHITECTURE.md (этот файл), schema.sql (вся БД — источник
+                   правды по таблицам), work-plan.md (план заходов),
+                   findings.md (журнал находок аудитов), costs.md, textbook/
+  api/             gemini.ts, transcribe.ts, _core.ts (вызов моделей + фолбэки),
+                   _tasks.ts (карта task→модели/квота/права), _auth.ts (JWT,
+                   квота, isTeacher), _stt.ts
   src/
-    main.tsx
-    App.tsx                   <- роутинг
-    lib/
-      supabase.ts             <- клиент Supabase (Foundation)
-      fsrs.ts                 <- обёртка над ts-fsrs (Worker 1)
-      dictionary.ts           <- Free Dictionary API, только EN (Worker 2).
-                                 lookup() отдаёт ipa/audio/example и ВСЕ значения
-                                 (definitions: {text, pos}[]) — нужно для «Значений»
-      definitions.ts          <- англ. определения для режима Match: кэш
-                                 (localStorage) -> Free Dictionary -> Gemini(light).
-                                 Выбирает не первое, а самое учебное значение:
-                                 часть речи подсказывает русский перевод карточки
-                                 («храбрый» -> adjective), маскирует само слово
-      wordPool.ts             <- общий пул слов для игр (EN+ES): карточки колоды
-                                 (с ReviewState) + добор из паков; pickWords()
-                                 отдаёт СНАЧАЛА карточки пользователя
-      spanishDict.ts          <- перевод исп. слов: локальные паки -> Gemini
-      esLevel.ts              <- уровень испанского (placement) в localStorage
-      speech.ts               <- озвучка (TTS, Web Speech) + scorePronunciation
-      transcribe.ts           <- запись микрофона (MediaRecorder) -> /api/transcribe
-                                 (Groq Whisper); STT работает везде, вкл. iPhone
-      gemini.ts               <- вызов нашего /api/gemini (Worker 4)
-      cards.ts                <- addCard(), getDefaultDeck(lang), addCardsBulk()
-      activity.ts             <- activity_log: стрик и «сделано сегодня» (Фаза 3)
-    types/
-      index.ts                <- ВСЕ общие TS-типы (Foundation)
-    context/
-      AuthContext.tsx         <- вход/выход
-      LanguageContext.tsx     <- язык изучения EN/ES (localStorage recall.lang)
+    main.tsx       регистрация SW + автообновление PWA
+    App.tsx        роутинг (см. §8)
+    types/index.ts ВСЕ общие типы
+    context/       AuthContext (вход/выход, кэш профиля), LanguageContext (EN/ES)
+    components/    Layout (шапка: BrandLogo, EN/ES, AvatarMenu), BottomNav (4
+                   вкладки), Button, Card, RowCard, BackButton(+BackHeader),
+                   ProtectedRoute, ErrorBoundary, WordSheet (шторка слова),
+                   MarkableText (мультивыбор слов), exercises.tsx (движок
+                   упражнений mcq/fill/order — грамматика И материалы),
+                   icons.tsx (инлайн-SVG), Confetti, GuidedNext, RoundResult,
+                   ScrollToTop, SmartBack, BlockedScreen, LoadError, Brand
     data/
-      spanish/                <- контент из приложения spanish:
-                                 index.ts — readings, dialogues, sentences (eager);
-                                 words.ts + words/*.json — ВЕСЬ словарь (~4668 слов,
-                                 ~281 тема, A1–B2), ЛЕНИВО (dynamic import);
-                                 grammar.ts + grammar/*.json — 74 урока A1–B2, ЛЕНИВО;
-                                 conjugation.ts (+ conjugation_reference/endings_trainer
-                                 .json) — справочник времён + тренажёр окончаний, ЛЕНИВО
-    components/               <- общие UI (Button, Card, Layout c шапкой EN/ES, Nav)
-    features/
-      dashboard/              <- главный экран, стрик, дневная сессия (Foundation+Worker4)
-      words/                  <- ХАБ «Слова» (роут /flashcards, EN+ES): WordsPage —
-                                 плитка «Повторение» + мини-игры. MatchMode
-                                 («слово ↔ значение»: EN — англ. определение,
-                                 ES — перевод), QuizModes (Пропуск/Перевод/
-                                 Аудирование на общем QuizRunner), GameShell
-                                 (шапка, заглушки, движок вопросов),
-                                 SentenceBuilder (ES), gameUtils (markWrong → FSRS)
-      flashcards/             <- DeckReview: режим FSRS-повторения внутри хаба
-                                 (свайпы, SwipeCard, PacksSheet, WordCheckRunner)
-      reader/                 <- блок «Ввод»: EN тексты; ES тексты+диалоги (SpanishReader)
-      pronunciation/          <- блок «Произношение», обе речи
-      conversation/           <- AI-диалог + проверка письма, EN/ES промпты
-      grammar/                <- «Грамматика» (только ES): GrammarPage (2 раздела) —
-                                 «Уроки» (теория + упражнения) и «Глаголы»
-                                 (ConjugationSection: справочник времён + тренажёр)
-      (practice/ удалён)       <- мини-игры переехали в words/; роут /practice
-                                 редиректит на /flashcards
-      onboarding/             <- PlacementTest: тест уровня ES (роут /placement)
-    components/icons.tsx      <- инлайн-SVG-иконки (Lucide-стиль) для навигации/кнопок
-  .env.local                  <- VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
+      spanish/     тексты/диалоги/фразы (eager index.ts); ЛЕНИВО: words.ts
+                   (~4668 слов A1–B2), grammar.ts (74 урока), conjugation.ts,
+                   placement.ts (60 вопросов)
+      english/     ЛЕНИВО: words.ts (паки B1-C1 + идиомы + «База уровня» из
+                   4000 Essential Words, ~4800 слов), grammar.ts (60 уроков
+                   A1–C1), irregular.ts (147 глаголов), phrasal.ts (60 глаголов/
+                   476 фраз), placement.ts (60 вопросов); sentences.json (60 фраз
+                   «Речи»), sampleTexts.ts
+    features/      (по фиче на папку; роуты — §8)
+      auth/        LoginPage
+      dashboard/   Главная: стрик-герой, план дня, «Начать занятие», слово дня
+      study/       ХАБ «Учёба» (/study): тексты → грамматика → слова (паки,
+                   +слово, мои слова, повторение) → задания/квесты/программа →
+                   тест уровня
+      practice/    ХАБ «Практика» (/practice): плитка «Повторение» + мини-игры
+                   слов + грамматика (GrammarMixMode: mcq/fill/order) + речь
+      words/       мини-игры слов: MatchMode, QuizModes (Пропуск/Перевод/
+                   Аудирование), SprintMode, DictationMode, SentenceBuilder,
+                   MyWords, AddCardForm, PacksSheet, GameShell, gameUtils
+      flashcards/  DeckReview (FSRS-повторение: SwipeCard, WordCheckRunner)
+      reader/      читалки: ReaderPage (EN + заголовок-слот), SpanishReader,
+                   MyTextsBlock (свои тексты: вставка/PDF/DOCX, localStorage)
+      grammar/     GrammarPage (?verbs=1, ?mistakes=1): уроки EN/ES,
+                   ConjugationSection (ES), IrregularVerbsSection (EN),
+                   PhrasalVerbsSection (EN), повтор ошибок
+      pronunciation/ «Речь»: шэдоуинг (TTS → запись → Whisper → оценка %)
+      conversation/  «Диалог»: чат + проверка письма (AssistantText, useChatList)
+      onboarding/  OnboardingFlow (/onboarding), PlacementTest (/placement)
+      quests/      QuestsPage (/quests): чат-раннер AI-квестов ученицы
+      program/     ProgramPage (/program), PlanView — программа обучения
+      progress/    ProgressPage (/progress): график недели, метрики, выход
+      settings/    SettingsPage (/settings): имя, уровень, скорость озвучки,
+                   размер текста
+      teacher/     TeacherPage (/teacher) + секции по ученице: MaterialsSection,
+                   ReviewScreen, QuestSection, ProgramSection,
+                   DiagnosticsSection (+ReportSheet — отчёт родителям),
+                   DailyPlanSection, PlacementSection, StudentWordsSection,
+                   DeckWordsPicker, GuideSection (методичка), PrintSheet (печать)
+      billing/     PricingPage (/pricing, публичный)
+      admin/       AdminPage (/admin, is_admin): поиск по email, выдача плана
+      landing/     TeachersPage (/teachers, публичный лендинг)
+      legal/       LegalPage (/privacy, /terms)
+    lib/           (по файлу на подсистему; контракты — §7)
+  vercel.json      SPA-rewrite (не перекрывает /api/*)
+  .env.local       VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, GEMINI_API_KEY,
+                   GROQ_API_KEY, SUPABASE_SERVICE_KEY (только для смоуков)
+  scripts/         смоуки/аудиты (ux-audit.mjs, smoke-*.mjs, validate-exercises,
+                   check-schema.mjs) — создают тестовые аккаунты через service_role
 ```
 
-Правило изоляции: каждый воркер работает В СВОЕЙ папке `features/*` и в СВОЁМ файле
-`lib/*`. Общие вещи (`types/`, `components/`, `lib/supabase.ts`, `lib/cards.ts`)
-создаёт Foundation и менять их воркеры не должны без согласования с архитектором.
+Правило изоляции: каждая фича — в своей папке `features/*` + свой файл `lib/*`.
+Общие вещи (`types/`, `components/`, `lib/supabase.ts`, `lib/cards.ts`) менять
+аккуратно и осознанно.
 
 ## 5. Модель данных (Supabase / Postgres)
-Все таблицы с RLS: пользователь видит только свои строки (кроме shared-колод в будущем).
+**Источник правды — docs/schema.sql** (idempotent, заливается целиком; перед
+заливкой — `node scripts/check-schema.mjs`). RLS включён на всех таблицах.
+Здесь — карта таблиц и ключевые инварианты.
 
-```sql
--- профиль (1:1 с auth.users)
-profiles(
-  id uuid pk references auth.users,
-  display_name text,
-  level text check (level in ('A2','B1','B2','C1','C2')) default 'B1',
-  native_lang text default 'ru',
-  role text check (role in ('learner','teacher')) default 'learner',
-  created_at timestamptz default now()
-)
+Ядро:
+- `profiles` — 1:1 с auth.users. Базовые: display_name, level (A1..C2),
+  native_lang, role ('learner'|'teacher'), created_at. **Плюс колонки фаз 4+:**
+  invite_code (unique), blocked, plan ('free'|'premium'|'teacher_mini'|
+  'teacher_start'|'teacher_pro'), plan_expires_at, trial_until, is_admin.
+  ⚠️ Гранты: UPDATE разрешён только (display_name, level, native_lang);
+  SELECT — только безобидные колонки (id, display_name, level, native_lang,
+  role, blocked, created_at) — секреты отдают RPC get_my_plan() /
+  ensure_invite_code(). `select('*')` на profiles ПАДАЕТ по правам — колонки
+  перечислять явно (константа PROFILE_COLUMNS в lib/profile.ts).
+- `decks` (owner_id, title, lang 'en'|'es') — при регистрации триггер создаёт
+  две колоды (en+es). `cards` (deck_id, front, back, example, ipa, audio_url,
+  source) — язык определяется колодой. `review_states` (card_id+user_id unique,
+  FSRS-поля) — расписание у каждого своё; with check: только доступная карточка.
+- `activity_log` (user_id, day, type, items_done; unique user+day+type) — стрик;
+  type: flashcards|reader|pronunciation|conversation|writing|grammar|practice|
+  perfect ('perfect' — «идеальный день», не искажает счётчики).
+- `conversations`/`messages`, `writing_submissions` — AI-диалог и письмо.
+- `content_items` — ⚠️ УСТАРЕЛА, приложением не используется (контент — в
+  статических JSON). Не строить на ней.
 
--- колода карточек. lang: 'en'|'es' — язык колоды (мультиязычность, 2026-07-07).
--- При регистрации триггер создаёт ДВЕ колоды: «Мои слова» (en) и «Mis palabras» (es).
-decks(
-  id uuid pk default gen_random_uuid(),
-  owner_id uuid references profiles(id),
-  title text not null,
-  description text,
-  is_shared boolean default false,
-  lang text not null default 'en' check (lang in ('en','es')),
-  created_at timestamptz default now()
-)
+Преподаватель (Фаза 4+):
+- `teacher_students` (+ daily_plan jsonb — план дня ученицы, RPC set_daily_plan)
+  — связь создаёт RPC join_teacher(code) с проверкой ЛИМИТА МЕСТ тарифа
+  (teacher_seat_limit: mini 5 / start 10 / pro 30, триал 3) под advisory-локом.
+- `deck_assignments` — назначение колод; ученице — только чтение.
+- `materials` + `material_assignments` (status assigned|submitted|reviewed,
+  answers, auto_score/total, ai_review, teacher_review, attempts, note).
+- `word_checks` — перепроверка слов; `placement_requests` — просьба пройти тест
+  уровня (+ результат учителю); `grammar_quests` — AI-квесты (progress, target,
+  messages jsonb); `study_plans` — программа обучения (weeks jsonb, одна
+  активная на пару+язык, замена — RPC replace_study_plan).
+- `grammar_mistakes` — синк банка «Мои ошибки» (учитель читает у своих учениц).
 
--- карточка (слово/фраза). Контент общий, расписание — отдельно (review_states).
--- Язык карточки определяется колодой (decks.lang).
-cards(
-  id uuid pk default gen_random_uuid(),
-  deck_id uuid references decks(id) on delete cascade,
-  front text not null,            -- слово/фраза EN или ES
-  back text,                      -- перевод/определение
-  example text,                   -- пример в контексте
-  ipa text,                       -- транскрипция
-  audio_url text,                 -- ссылка на произношение
-  source text check (source in ('manual','reader','ai')) default 'manual',
-  created_at timestamptz default now()
-)
+Монетизация и доступ:
+- `allowed_emails` — белый список регистрации (гейт в триггере handle_new_user;
+  клиенту невидим полностью).
+- `ai_calls` (user_id, kind 'heavy'|'light'|'speech', called_at) — журнал AI;
+  пишется только RPC consume_ai_quota(kind): лимиты по тарифу и классу,
+  advisory-лок против гонки. Сводка — RPC get_my_plan().
 
--- персональное расписание FSRS (на пару пользователь+карточка)
-review_states(
-  id uuid pk default gen_random_uuid(),
-  card_id uuid references cards(id) on delete cascade,
-  user_id uuid references profiles(id),
-  stability double precision,
-  difficulty double precision,
-  due timestamptz default now(),
-  last_review timestamptz,
-  reps int default 0,
-  lapses int default 0,
-  state text check (state in ('new','learning','review','relearning')) default 'new',
-  unique(card_id, user_id)
-)
-
--- материалы для «Ввода» (тексты/аудио)
-content_items(
-  id uuid pk default gen_random_uuid(),
-  level text,                     -- A2..C2
-  title text,
-  body text,                      -- текст (можно с markdown)
-  type text check (type in ('reading','listening')) default 'reading',
-  audio_url text,
-  source text default 'ai',
-  created_at timestamptz default now()
-)
-
--- лог активности (стрик и статистика)
--- уникальный индекс (user_id, day, type): одна строка на день и тип занятия,
--- Фаза 3 делает upsert с инкрементом items_done/duration_sec
-activity_log(
-  id uuid pk default gen_random_uuid(),
-  user_id uuid references profiles(id),
-  day date default current_date,
-  type text,                      -- 'flashcards'|'reader'|'pronunciation'|'conversation'|'writing'
-  items_done int default 0,
-  duration_sec int default 0,
-  created_at timestamptz default now(),
-  unique(user_id, day, type)
-)
-
--- AI-диалоги
-conversations(id uuid pk default gen_random_uuid(), user_id uuid references profiles(id), started_at timestamptz default now())
-messages(id uuid pk default gen_random_uuid(), conversation_id uuid references conversations(id) on delete cascade, role text check(role in('user','assistant','system')), content text, created_at timestamptz default now())
-
--- проверка письма
-writing_submissions(id uuid pk default gen_random_uuid(), user_id uuid references profiles(id), prompt text, text text, feedback jsonb, created_at timestamptz default now())
-
--- Фаза 4: режим «Преподаватель»
--- profiles.invite_code text unique — код-приглашение преподавателя
-teacher_students(id uuid pk, teacher_id uuid -> profiles, student_id uuid -> profiles,
-  created_at, unique(teacher_id, student_id))   -- связь создаёт RPC join_teacher(code)
-deck_assignments(id uuid pk, deck_id uuid -> decks, student_id uuid -> profiles,
-  created_at, unique(deck_id, student_id))
--- RLS: ученице назначенные колоды/карточки видны только на чтение; расписание
--- (review_states) у каждой своё. Преподавателю видны профиль и activity_log
--- привязанных учениц. Политики decks<->deck_assignments используют функции
--- security definer (deck_assigned_to, deck_owned_by, is_student_of) — иначе
--- взаимные ссылки политик дают «infinite recursion detected in policy».
-
--- Материалы преподавателя (генератор текстов с упражнениями, фича Materials)
-materials(id uuid pk, teacher_id -> profiles, lang 'en'|'es', level A1..C2,
-  topic, format, length_range, title, body, exercises jsonb, plan jsonb, created_at)
-material_assignments(id uuid pk, material_id -> materials, student_id -> profiles,
-  status 'assigned'|'submitted'|'reviewed', answers jsonb, auto_score, auto_total,
-  ai_review jsonb, teacher_review jsonb, submitted_at, reviewed_at,
-  unique(material_id, student_id))
--- RLS по образцу колод: material_owned_by / material_assigned_to (security definer);
--- ученица может читать назначенные материалы и обновлять свои assignments.
-```
+Ключевой инвариант безопасности: **все чувствительные записи — только через
+security-definer RPC** (submit_material с серверным пересчётом балла,
+finish/reassign/assign_*, quest_*, submit_placement, admin_set_plan...);
+прямые insert/update на этих таблицах отозваны (revoke). «Отвязка отбирает
+доступ»: политики учителя всюду проверяют is_student_of.
 
 ## 6. Общие TypeScript-типы (`src/types/index.ts`)
-Создаёт Foundation. Должны точно отражать таблицы выше. Воркеры импортируют отсюда,
-свои дубликаты не плодят. Минимум:
-`Profile, Deck, Card, ReviewState, ContentItem, ActivityLog, Conversation, Message, WritingSubmission`,
-плюс `CEFRLevel = 'A1'|'A2'|'B1'|'B2'|'C1'|'C2'`, `Rating = 'again'|'hard'|'good'|'easy'`
-и `AppLang = 'en'|'es'` (язык изучения).
-Испанский контент: `SpanishTopic, SpanishWord, SpanishReading, SpanishDialogue, SpanishSentence`.
+Воркеры импортируют отсюда, дубликатов не плодят. Ядро:
+`Profile, Deck, Card, ReviewState, ActivityLog(+ActivityType), Conversation,
+Message, WritingSubmission`, `CEFRLevel = 'A1'..'C2'`, `Rating = 'again'|'hard'|
+'good'|'easy'` (UI колоды использует again/good), `AppLang = 'en'|'es'`,
+`ChatTurn`, `AiTask = 'word'|'definition'|'batch'|'dialog'|'writing'|'quest'|
+'review'|'material'|'program'`.
+Контент: `SpanishTopic, SpanishWord, SpanishReading, SpanishDialogue,
+SpanishSentence, EnglishWord, WordTopic`, грамматика/упражнения (общие типы
+уроков и Exercise для движка components/exercises.tsx).
+Преподаватель: `StudentInfo, Material, MaterialAssignment, GrammarQuest,
+StudyPlan` и связанные.
 
 ## 7. Ключевые общие контракты (сигнатуры — не менять)
-> Обновлено 2026-07-07: мультиязычность (EN/ES). Параметры lang необязательные,
-> по умолчанию 'en' — старые вызовы работают без изменений.
 
 ```ts
-// lib/cards.ts  (Foundation + Worker 1)
-getDefaultDeck(lang?: AppLang): Promise<Deck>  // колода языка (обе создаются триггером)
-getDeckIds(lang: AppLang): Promise<string[]>   // id доступных колод языка (свои + назначенные)
-addCard(input: { front: string; back?: string; example?: string;
-  ipa?: string; audio_url?: string; deckId?: string;   // без deckId — в колоду по умолчанию
-  lang?: AppLang;                                      // язык колоды по умолчанию (без deckId)
-  source?: 'manual'|'reader'|'ai' }): Promise<Card>
+// lib/cards.ts
+getDefaultDeck(lang?: AppLang): Promise<Deck>
+getDeckIds(lang: AppLang): Promise<string[]>   // свои + назначенные
+addCard(input: { front; back?; example?; ipa?; audio_url?; deckId?;
+  lang?: AppLang; source?: 'manual'|'reader'|'ai' }): Promise<Card>
 addCardsBulk(deckId: string, cards: { front; back?; example? }[]): Promise<number>
-  // массовое добавление (паки слов); пропускает дубликаты по front, возвращает добавленное
+listMyWords(lang) / updateCard(id, patch) / deleteCard(id) / countMyWords(lang)
 
-// lib/fsrs.ts  (Worker 1)
-interface DueCard { card: Card; state: ReviewState | null }   // state=null — новая карточка
+// lib/fsrs.ts
+interface DueCard { card: Card; state: ReviewState | null }
 getDueCards(limit?: number, lang?: AppLang): Promise<DueCard[]>
-  // новые + просроченные; lang — только карточки колод этого языка
-reviewCard(card: Card, existing: ReviewState | null, rating: Rating): Promise<ReviewState>
-  // записывает оценку в review_states (upsert), вычисляет следующий показ по FSRS
-  // и ВОЗВРАЩАЕТ новое расписание (нужно колоде для повтора «не знаю» в сессии)
+reviewCard(card, existing, rating): Promise<ReviewState>  // возвращает НОВОЕ расписание
 
-// lib/dictionary.ts  (Worker 2) — только английский
-lookup(word: string): Promise<{ word: string; definition?: string; example?: string;
-  ipa?: string; audio_url?: string } | null>
+// lib/dictionary.ts (EN) / lib/spanishDict.ts (ES) / lib/contextDict.ts (контекст)
+lookup(word) / lookupSpanish(word) / lookupInContext(word, sentence, lang)
 
-// lib/spanishDict.ts — испанский словарь: локальные паки → Gemini
-lookupSpanish(word: string): Promise<{ word: string; translation?: string;
-  example?: string; exampleRu?: string } | null>
+// lib/speech.ts (TTS) — speak(text, {rate?, voice?, lang?}), speechLang, getVoices,
+// scorePronunciation(target, spoken) -> { percent, words[] }
+// lib/transcribe.ts (STT) — isMicSupported, startRecording, transcribe(blob, lang)
 
-// lib/speech.ts  (Worker 3)
-speak(text: string, opts?: { rate?: number; voice?: string; lang?: AppLang }): void
-speechLang(lang: AppLang): string   // 'en' -> 'en-US', 'es' -> 'es-ES'
-getVoices(lang?: AppLang): SpeechSynthesisVoice[]
-scorePronunciation(target: string, spoken: string):
-  { percent: number; words: { word: string; ok: boolean }[] }
-
-// lib/transcribe.ts — распознавание речи через запись микрофона -> Groq Whisper.
-// Работает везде (вкл. iPhone), в отличие от старого браузерного Web Speech STT.
-isMicSupported(): boolean
-startRecording(): Promise<{ stop: () => Promise<Blob>; cancel: () => void }>
-transcribe(blob: Blob, lang: AppLang): Promise<string>   // POST /api/transcribe (JWT)
-
-// api/transcribe.ts (+ _stt.ts, _auth.ts) — серверный прокси к Groq.
-// POST { audio(base64), mime, lang } -> { text }. Ключ GROQ_API_KEY на сервере.
-// Та же авторизация/квота (consume_ai_quota), что и /api/gemini (_auth.ts общий).
-  // испанская диакритика нормализуется: «cómo» == «como»
-
-// lib/gemini.ts  (Worker 4) — зовёт НАШ /api/gemini, не Google напрямую
+// lib/gemini.ts — зовёт НАШ /api/gemini
 chat(messages: ChatTurn[], opts: { task: AiTask; system?: string }): Promise<string>
-  // ChatTurn = { role: 'user'|'assistant'|'system'; content: string } (src/types)
-  // task — ЧТО делаем: 'word'|'definition'|'batch' (лёгкие модели),
-  //   'dialog'|'writing'|'quest'|'review' (обычные), 'material'|'program'
-  //   (Pro-модели, только role='teacher'). Уровень модели, карман суточной
-  //   квоты и право на вызов выбирает СЕРВЕР по task — карта api/_tasks.ts.
-  //   Клиент уровень модели НЕ задаёт (заход 18: клиентский tier:'max'
-  //   позволял любому вошедшему жечь дефицитные Pro-модели).
+// Уровень модели, карман квоты и права выбирает СЕРВЕР по task (api/_tasks.ts).
+// Клиент модель/tier НЕ задаёт (пентест, заход 18). material/program — только teacher.
 
-// lib/activity.ts  (Фаза 3) — стрик и статистика, день в МЕСТНОМ времени
-logActivity(type: ActivityType, itemsDone?, durationSec?): Promise<void>  // не бросает ошибок
-getStreak(): Promise<number>                    // дней подряд (вчерашняя серия ещё жива)
-getTodayTypes(): Promise<Set<ActivityType>>     // какие занятия сделаны сегодня
+// lib/activity.ts — logActivity(type, items?, sec?) (не бросает), getStreak(),
+// getTodayTypes()
+// lib/level.ts — getUserLevel(lang): ES из localStorage, EN из profiles.level
+// lib/profile.ts — fetchProfile (кэш + PROFILE_COLUMNS), getCachedEnLevel,
+// clearProfileCaches (звать при signOut)
+// lib/billing.ts — getMyPlan() (RPC), paywall-тексты; lib/admin.ts — admin-RPC
 
-// lib/teacher.ts  (Фаза 4) — режим «Преподаватель»
-getOrCreateInviteCode(): Promise<string>        // код-приглашение (6 символов)
-joinTeacher(code: string): Promise<string>      // ученица вводит код → имя преподавателя
-getMyTeachers(): Promise<Profile[]>
-getMyStudents(): Promise<StudentInfo[]>         // профиль + стрик + неделя + назначенные колоды
-getMyDecks(): Promise<Deck[]>
-assignDeck(deckId, studentId) / unassignDeck(deckId, studentId): Promise<void>
-
-// lib/materials.ts — генератор материалов (двухшаговый: план → материал)
-generateMaterialPlan(req: MaterialRequest, feedback?): Promise<MaterialPlan>
-generateMaterialContent(req, plan, feedback?): Promise<MaterialContent>
-saveMaterial(req, plan, content): Promise<Material>
-listMyMaterials() / deleteMaterial(id)
-assignMaterial(materialId, studentId) / unassignMaterial(...)
-listMaterialAssignments(materialId): Promise<MaterialAssignment[]>   // преподаватель
-getMyAssignments(): Promise<(MaterialAssignment & {material})[]>     // ученица
-submitAssignment(id, answers, autoScore, autoTotal): Promise<void>   // сдача работы
-// проверка работ (фаза B): generateAiReview, saveAiReview, finishReview,
-// reassignAssignment, countSubmittedWorks
-
-// lib/wordChecks.ts — перепроверка слов учителем
-getStudentWords(studentId): Promise<StudentWord[]>   // слова ученицы + статус FSRS
-assignWordCheck(studentId, cardIds) / getWordChecks(studentId)
-getMyPendingWordChecks(): Promise<{check, cards}[]>  // у ученицы
-submitWordCheck(check, results): Promise<void>       // неверные → again в колоду
-
-// lib/contextDict.ts — контекстный перевод слова через Gemini (lite-модель)
-lookupInContext(word, sentence, lang): Promise<{ base; translation; note }>
+// lib/teacher.ts — getOrCreateInviteCode, regenerateInviteCode, joinTeacher(code),
+// getMyTeachers, getMyStudents, getMyDecks, assignDeck/unassignDeck,
+// listDeckCards, assignSelectedWords (RPC, атомарно)
+// lib/materials.ts — generateMaterialPlan/Content (двухшагово), saveMaterial,
+// assignMaterial..., submitAssignment (балл пересчитывает СЕРВЕР),
+// generateAiReview/finishReview/reassignAssignment
+// lib/wordChecks.ts — getStudentWords (+statusOf), assignWordCheck,
+// getMyPendingWordChecks, submitWordCheck
+// lib/quests.ts — квесты (assign/delete/correctAnswer/saveMessages — всё RPC)
+// lib/studyPlan.ts — generateStudyPlan (диагностика+каталог уроков в промпт),
+// replace_study_plan (RPC, атомарно); lib/diagnostics.ts — getStudentDiagnostics
+// lib/dailyPlan.ts + dailyPlanCore.ts (чистый расчёт плана дня)
+// lib/dynamics.ts (динамика за месяц, чистый); lib/assignmentScore.ts (общий балл)
+// lib/mistakes.ts — банк «Мои ошибки» (localStorage + тихий синк в БД)
+// lib/myTexts.ts — свои тексты (ТОЛЬКО localStorage, лимиты 15к/10шт)
+// lib/batchWords.ts — пакетное добавление слов (1 AI-запрос на ~15 слов, lite)
+// lib/wordPool.ts / distractors.ts / recentWords.ts / pickRound.ts — материал игр
+// lib/guided.ts — ведомая сессия; lib/settings.ts — локальные настройки
+// lib/text.ts — answerMatches (варианты через «/»; ЕДИНАЯ проверка ответов —
+// та же логика в SQL submit_material)
 ```
 
-> Безопасность (2026-07-20): RLS-строки защищают от ЧТЕНИЯ чужого, но не от
-> записи в свою строку любых колонок. Поэтому все чувствительные записи (оценки,
-> вердикты, роль, invite_code) идут через security-definer RPC (см. блоки
-> «ЗАЩИТА ОТ ПОДДЕЛКИ» в schema.sql), а прямая запись из клиента запрещена
-> (revoke). Балл авто-проверки материала пересчитывается на сервере
-> (submit_material). /api/gemini требует Supabase-JWT (иначе публичный прокси
-> жёг бы квоту) и сам выбирает модель по типу задачи: клиент не может ни
-> назвать модель (параметр model), ни запросить уровень (tier) — иначе любой
-> вошедший уводил обычную реплику Диалога на дефицитные Pro-модели и выжигал
-> их суточную квоту всем (пентест, заход 18; карта — api/_tasks.ts). Известный остаток: правильные ответы упражнений всё ещё уходят
-> на клиент (проверка на клиенте) — «подглядывание» через DevTools возможно,
-> но балл серверный, а учитель видит ответы; полностью закрыть — не отдавать
-> answer и проверять на сервере (бо́льшая переделка).
+> Безопасность (итог заходов 17–20): RLS защищает от чтения чужого, но не от
+> записи «удобных» значений в свою строку — поэтому чувствительные записи только
+> через RPC, гранты на колонки, серверный пересчёт баллов, JWT на /api/*,
+> сервер сам выбирает модель по task. Известный осознанный остаток: правильные
+> ответы упражнений уходят на клиент (подглядывание возможно, балл серверный).
 
-## 8. Дизайн (минимум для согласованности)
-- Мобайл-фёрст. Нижняя навигация: Главная / Колода / Ввод / Речь / Диалог.
-- Tailwind. Светлая+тёмная тема. Крупные кнопки (тренировка часто с телефона).
-- Один экран = одна задача. Главная = «дневная сессия» + стрик.
+## 8. Роуты и дизайн
+Роуты: публичные `/login /pricing /teachers /privacy /terms`; под входом:
+`/` (Главная) · `/study` (хаб Учёба) · `/practice` (хаб Практика) · `/conversation`
+(Диалог) · `/pronunciation` (Речь, вход из Практики) · `/grammar` · `/placement` ·
+`/onboarding` · `/quests` · `/program` · `/assignments` · `/progress` · `/settings`
+· `/teacher` · `/admin`. Редиректы истории: `/flashcards → /practice`,
+`/reader → /study`, `* → /`.
 
-## 9. Дорожная карта (фазы)
-- **Фаза 0 — Подготовка** (пользователь): аккаунты + установка Node.
-- **Фаза 1 — Foundation** (1 воркер, последовательно): скелет проекта, Supabase
-  схема+RLS+auth, роутинг, общий layout/навигация, `types/`, `lib/supabase.ts`,
-  стаб `lib/cards.ts`, базовые `components/`. Разблокирует всех.
-- **Фаза 2 — 4 воркера параллельно**: Колода / Ввод / Произношение / AI.
-- **Фаза 3** — дневная сессия + стрик + дашборд, полировка, деплой.
-- **Фаза 4** — режим «Преподаватель» (роли, назначение колод, прогресс учениц).
+**Нижняя навигация — 4 вкладки: Главная / Учёба / Практика / Диалог**
+(«изучаю новое» / «тренируюсь» / «общаюсь»). Шапка: логотип, EN/ES, аватар-меню
+(Прогресс, Мои ученицы — для teacher, Настройки, Выйти).
 
-## 10. Распределение воркеров (Фаза 2)
-- **Worker 1 — Колода:** `features/flashcards/*`, `lib/fsrs.ts`. FSRS-повторение,
-  экран ревью (показ → ответ → оценка again/hard/good/easy), запись в `review_states`.
-- **Worker 2 — Ввод:** `features/reader/*`, `lib/dictionary.ts`. Чтение текста,
-  тап по слову → словарь → кнопка «в колоду» (зовёт `addCard`).
-- **Worker 3 — Произношение:** `features/pronunciation/*`, `lib/speech.ts`.
-  Шэдоуинг: озвучка фразы → пользователь повторяет → распознавание → сравнение.
-- **Worker 4 — AI:** `api/gemini.ts` (прокси), `lib/gemini.ts`, `features/conversation/*`
-  (режимы Чат и Письмо внутри одной вкладки). Диалог с уровневым промптом + проверка письма.
-```
+Дизайн: ЕДИНАЯ тёмная тема Nocturne (`class="dark"` на html, токены `--night-*`
+в index.css, самый бледный текст `--night-text-25` — только для иконок), шрифт
+Onest (@fontsource-variable, офлайн), иконки Phosphor + свои SVG, тач-цели
+≥44px, focus-кольца, prefers-reduced-motion, print-стили белые (PrintSheet).
+Мобайл-фёрст. Один экран = одна задача.
+
+## 9. История и статус
+Фазы 0–4 завершены (фундамент → 4 фичи → стрик/дашборд → преподаватель).
+Дальше шли «заходы» (журнал — CLAUDE.md, план — docs/work-plan.md): контент
+EN/ES, редизайн Nocturne, монетизация v1, безопасность (ревью+пентест),
+AI-квесты, программа обучения, диагностика, план дня, лендинг, юр-страницы.
+Сейчас: закрытый тест, пилот с посторонними репетиторами не начат.
+Журнал находок аудитов (баги/оптимизации на исправление): **docs/findings.md**.
