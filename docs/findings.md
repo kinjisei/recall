@@ -59,6 +59,57 @@
     устаревшим дублем LoginPage.tsx. При случайном `git add -A` уедет в
     историю. Добавить в .gitignore или убрать из корня.
 
+### Из аудита У4 — безопасность БД и клиента (2026-07-26, ключевые подтверждены Opus)
+
+11. 🔴 **Анонимный оракул кодов-приглашений + системная дыра грантов**
+    (schema.sql, join_teacher ~строка 1851). ✔ ПОДТВЕРЖДЕНО чтением кода:
+    в функции НЕТ проверки `auth.uid() is null`, а `revoke execute from anon`
+    стоит только на has_premium_access/has_paid_access. В Postgres право
+    вызова функции по умолчанию у PUBLIC (⊇ anon); `grant ... to authenticated`
+    его НЕ снимает. Итог: join_teacher зовётся БЕЗ входа и отвечает по-разному
+    на верный/неверный код → перебором находятся действующие коды учителей.
+    Фикс: (а) первой строкой каждой SD-функции `if auth.uid() is null then
+    raise exception 'RECALL_NO_AUTH'; end if;`; (б) системно
+    `revoke execute on all functions in schema public from anon;` + точечный
+    ре-грант. Закрывает заодно и утечку relationship-хелперов анониму.
+12. 🔴 **review_states пишется клиентом целиком** (lib/fsrs.ts:192-211). ✔
+    ПОДТВЕРЖДЕНО: браузер сам считает stability/difficulty/due/reps/lapses/
+    state и апсертит; RLS проверяет лишь владение. Ученица через DevTools
+    ставит всей колоде state='review', lapses=0 → «выучивает» всё мгновенно.
+    Бьёт по ПРОДАЮЩЕЙСЯ ценности: диагностика (lapses≥2) и отчёт родителям
+    подделываются самой ученицей. Фикс: RPC submit_review(card_id, rating) —
+    FSRS считает СЕРВЕР (как submit_material), клиент шлёт только оценку.
+13. 🟡 **activity_log: клиент задаёт day и type без ограничений**
+    (lib/activity.ts:36,55). ✔ ПОДТВЕРЖДЕНО: day из new Date() браузера, type
+    без CHECK. Подделка стрика (задним числом) и «Динамики за месяц»; мусорный
+    type тихо портит выборки диагностики. Фикс: RPC log_activity(type) —
+    day/time на сервере (current_date/now()); CHECK на type.
+14. 🟡 **localStorage без границы между аккаунтами; signOut чистит 1 ключ из ~15**
+    (AuthContext → profile.ts clearProfileCaches). ✔ ПОДТВЕРЖДЕНО: переживают
+    выход и не содержат user_id — recall.my_texts.* (ЛИЧНЫЕ тексты!),
+    es_level, grammar_mistakes.*, verb_mistakes, recentWords, gameMisses,
+    word_of_day, onboarded, deck_tutorial_seen. Общее устройство (кейс
+    «учитель+ученицы»): B входит после A и видит тексты/уровень/ошибки A.
+    Фикс: clearAllLocalCaches() в signOut() (весь набор recall.*) ИЛИ ключи
+    с постфиксом .${userId}.
+15. 🟡 **materials: нет проверки роли + нет лимита размера** (schema.sql:355,400).
+    Политика «own materials» проверяет только teacher_id=auth.uid(), без
+    role='teacher'; INSERT не отозван; body/exercises/plan без предела размера
+    (соседи ограничены). Любая ученица (learner) вставляет себе мегабайтные
+    строки, раздувая общую базу. Фикс: check роли в политику + pg_column_size.
+16. 🟡 **study_plans: забыт revoke insert/update/delete** (schema.sql:1402).
+    У соседних таблиц (material_assignments, word_checks, grammar_quests,
+    placement_requests) revoke есть — у study_plans нет. Значит транзакционная
+    replace_study_plan НЕОБЯЗАТЕЛЬНА: прямой UPDATE+INSERT двумя шагами
+    возвращает race, который она закрывала. Фикс: revoke по образцу соседей.
+17. 🟡 **cards/messages/writing_submissions без лимита длины полей** (schema.sql;
+    лимиты живут только в api/gemini.ts — защищают вызов ИИ, не запись в БД).
+    Прямой POST в PostgREST с мегабайтными строками раздувает базу («шумный
+    сосед»). Фикс дешёвый: CHECK (char_length(...) < N) на колонках.
+18. ⚪ **grammar_mistakes: прямая запись без RPC и без лимита строк**
+    (schema.sql:1373). topic_id/ex — произвольные int без FK; можно наплодить
+    уникальных «ошибок», зашумив диагностику. Низкая срочность (данные свои).
+
 ## Закрыто
 
 - ✅ 2026-07-26 — **docs/ARCHITECTURE.md устарел ~наполовину** (находка У2:
