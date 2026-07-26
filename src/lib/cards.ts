@@ -27,16 +27,26 @@ export async function getDefaultDeck(lang: AppLang = 'en'): Promise<Deck> {
  * Без фильтра по владельцу: RLS отдаёт свои колоды + назначенные
  * преподавателем (Фаза 4) — так задания попадают в очередь ученицы.
  */
+// Дедуп «в полёте»: Главная зовёт getDeckIds 3× почти одновременно (счётчик
+// повторения, счётчик слов, слово дня). Пока запрос летит, повторные вызовы
+// получают ТОТ ЖЕ промис — вместо трёх одинаковых запросов к decks идёт один.
+// Кэш чистится по завершении, поэтому назначенная позже колода не потеряется.
+const deckIdsInflight = new Map<AppLang, Promise<string[]>>()
+
 export async function getDeckIds(lang: AppLang): Promise<string[]> {
-  await requireUserId() // ранний отказ без сессии; сам список фильтрует RLS
+  const pending = deckIdsInflight.get(lang)
+  if (pending) return pending
 
-  const { data, error } = await supabase
-    .from('decks')
-    .select('id')
-    .eq('lang', lang)
+  const p = (async () => {
+    await requireUserId() // ранний отказ без сессии; сам список фильтрует RLS
+    const { data, error } = await supabase.from('decks').select('id').eq('lang', lang)
+    if (error) throw error
+    return (data ?? []).map((d) => d.id as string)
+  })()
 
-  if (error) throw error
-  return (data ?? []).map((d) => d.id as string)
+  deckIdsInflight.set(lang, p)
+  void p.finally(() => deckIdsInflight.delete(lang))
+  return p
 }
 
 /**

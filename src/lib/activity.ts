@@ -107,30 +107,39 @@ export interface WeekDay {
 
 const WEEKDAY_LABELS = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб']
 
+/** Скелет недели пн→вс (7 дней, все неактивны) — общий для getWeek и loadHomeActivity. */
+function weekSkeleton(): WeekDay[] {
+  const today = new Date()
+  const shiftToMonday = (today.getDay() + 6) % 7 // пн первым (вс=0 в JS)
+  const days: WeekDay[] = []
+  for (let i = 0; i < 7; i++) {
+    const day = localDay(i - shiftToMonday)
+    const d = new Date()
+    d.setDate(d.getDate() + (i - shiftToMonday))
+    days.push({ day, label: WEEKDAY_LABELS[d.getDay()], active: false, items: 0, minutes: 0, isToday: day === localDay() })
+  }
+  return days
+}
+
+/** Заполняет скелет недели строками активности (day/items_done/duration_sec). */
+function fillWeek(days: WeekDay[], rows: { day: string; items_done?: number; duration_sec?: number }[]): void {
+  const byDay = new Map(days.map((d) => [d.day, d]))
+  for (const row of rows) {
+    const d = byDay.get(row.day)
+    if (!d) continue
+    d.active = true
+    d.items += row.items_done ?? 0
+    d.minutes += Math.round((row.duration_sec ?? 0) / 60)
+  }
+}
+
 /**
  * Текущая неделя с понедельника по воскресенье.
  * Возвращает все 7 дней (даже будущие) — полоски рисуются всегда.
  */
 export async function getWeek(): Promise<WeekDay[]> {
   const userId = await currentUserId()
-
-  const today = new Date()
-  // понедельник как первый день недели (в JS воскресенье = 0)
-  const shiftToMonday = (today.getDay() + 6) % 7
-  const days: WeekDay[] = []
-  for (let i = 0; i < 7; i++) {
-    const day = localDay(i - shiftToMonday)
-    const d = new Date()
-    d.setDate(d.getDate() + (i - shiftToMonday))
-    days.push({
-      day,
-      label: WEEKDAY_LABELS[d.getDay()],
-      active: false,
-      items: 0,
-      minutes: 0,
-      isToday: day === localDay(),
-    })
-  }
+  const days = weekSkeleton()
   if (!userId) return days
 
   const { data, error } = await supabase
@@ -140,16 +149,51 @@ export async function getWeek(): Promise<WeekDay[]> {
     .gte('day', days[0].day)
     .lte('day', days[6].day)
   if (error) throw error
-
-  const byDay = new Map(days.map((d) => [d.day, d]))
-  for (const row of data ?? []) {
-    const d = byDay.get(row.day as string)
-    if (!d) continue
-    d.active = true
-    d.items += (row.items_done as number) ?? 0
-    d.minutes += Math.round(((row.duration_sec as number) ?? 0) / 60)
-  }
+  fillWeek(days, (data ?? []) as { day: string; items_done: number; duration_sec: number }[])
   return days
+}
+
+/** Стрик + неделя + сегодняшние типы ОДНИМ запросом (для Главной).
+ *  Раньше это были три отдельных запроса к activity_log на каждый вход. */
+export interface HomeActivity {
+  streak: number
+  week: WeekDay[]
+  todayTypes: Set<ActivityType>
+}
+
+export async function loadHomeActivity(): Promise<HomeActivity> {
+  const week = weekSkeleton()
+  const userId = await currentUserId()
+  if (!userId) return { streak: 0, week, todayTypes: new Set() }
+
+  // limit(400) покрывает и стрик (до 400 дней), и неделю, и сегодня — всё это
+  // подмножества последних 400 дней активности.
+  const { data, error } = await supabase
+    .from('activity_log')
+    .select('day, type, items_done, duration_sec')
+    .eq('user_id', userId)
+    .order('day', { ascending: false })
+    .limit(400)
+  if (error) throw error
+  const rows = (data ?? []) as { day: string; type: string; items_done: number; duration_sec: number }[]
+
+  const daySet = new Set(rows.map((r) => r.day))
+  const start = daySet.has(localDay(0)) ? 0 : daySet.has(localDay(-1)) ? -1 : null
+  let streak = 0
+  if (start !== null) {
+    let offset = start
+    while (daySet.has(localDay(offset))) {
+      streak++
+      offset--
+    }
+  }
+
+  fillWeek(week, rows)
+
+  const today = localDay()
+  const todayTypes = new Set(rows.filter((r) => r.day === today).map((r) => r.type as ActivityType))
+
+  return { streak, week, todayTypes }
 }
 
 /** Самая длинная серия за всю историю (для экрана прогресса). */

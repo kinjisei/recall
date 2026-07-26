@@ -82,15 +82,16 @@ function TeacherDashboard() {
   const load = useCallback(async () => {
     setError(null)
     try {
-      const [c, s, d] = await Promise.all([
+      const [c, s, d, pending] = await Promise.all([
         getOrCreateInviteCode(),
         getMyStudents(),
         getMyDecks(),
+        countSubmittedWorks().catch(() => 0), // был отдельным шагом ПОСЛЕ Promise.all
       ])
       setCode(c)
       setStudents(s)
       setDecks(d)
-      countSubmittedWorks().then(setPendingWorks)
+      setPendingWorks(pending)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Ошибка загрузки')
     } finally {

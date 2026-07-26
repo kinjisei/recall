@@ -2,6 +2,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useMemo,
   useState,
   type ReactNode,
 } from 'react'
@@ -43,6 +44,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe()
   }, [])
 
+  // Стабильная ссылка на user по id: onAuthStateChange шлёт INITIAL_SESSION,
+  // SIGNED_IN и TOKEN_REFRESHED, каждый раз с НОВЫМ объектом session (и user).
+  // Без мемоизации любой эффект с зависимостью [user] перезапускался при каждом
+  // таком событии — Главная делала все свои запросы ДВАЖДЫ (замер: 38 запросов,
+  // всё ×2). Теперь user меняет ссылку только при смене самого пользователя.
+  const user = useMemo(() => session?.user ?? null, [session?.user?.id])
+
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     return { error: error?.message }
@@ -70,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider
       value={{
-        user: session?.user ?? null,
+        user,
         session,
         loading,
         signIn,

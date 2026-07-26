@@ -24,7 +24,7 @@ import {
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { getProfile } from '../../lib/profile'
-import { getStreak, getTodayTypes, getWeek, logActivity, type WeekDay } from '../../lib/activity'
+import { loadHomeActivity, logActivity, type WeekDay } from '../../lib/activity'
 import {
   buildTodayPlan,
   getMyDailyPlanConfig,
@@ -87,9 +87,15 @@ export function DashboardPage() {
   useEffect(() => {
     if (!user) return
     getProfile(user.id).then(setProfile)
-    getStreak().then(setStreak).catch(() => {})
-    getTodayTypes().then(setDoneToday).catch(() => {})
-    getWeek().then(setWeek).catch(() => {})
+    // стрик + неделя + сделанное сегодня — одним запросом к activity_log
+    // (было три отдельных на каждый вход на Главную)
+    loadHomeActivity()
+      .then((a) => {
+        setStreak(a.streak)
+        setWeek(a.week)
+        setDoneToday(a.todayTypes)
+      })
+      .catch(() => {})
     Promise.all([
       loadAssignmentCounts().catch(() => ({ total: 0, pending: 0 })),
       getMyDailyPlanConfig().catch(() => null),
@@ -112,7 +118,8 @@ export function DashboardPage() {
         setNewProgram(unseen ?? null)
       })
       .catch(() => {}) // таблицы может не быть — карточка просто не покажется
-  }, [user])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id])
 
   useEffect(() => {
     if (!user) return
@@ -159,7 +166,8 @@ export function DashboardPage() {
         else window.clearTimeout(idleId)
       }
     }
-  }, [user, lang])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, lang])
 
   const name = profile?.display_name || user?.email?.split('@')[0] || 'друг'
   const esLevel = lang === 'es' ? getEsLevel() : null
