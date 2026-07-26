@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState, type ReactNode } from 'react'
+﻿import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react'
 import { Card } from '../../components/Card'
 import { GuidedNext } from '../../components/GuidedNext'
 import { BackHeader } from '../../components/BackButton'
@@ -6,7 +6,12 @@ import { MarkableText } from '../../components/MarkableText'
 import { useLanguage } from '../../context/LanguageContext'
 import { getUserLevel } from '../../lib/level'
 import { getSettings, READER_CLASSES } from '../../lib/settings'
-import { SpanishReaderPage } from './SpanishReader'
+// SpanishReader тянет весь испанский контент (data/spanish, ~246КБ). Статический
+// импорт грузил его на «Учёбе» ДАЖЕ английскому ученику, который его не увидит.
+// Лениво: испанские данные приезжают только когда язык реально ES.
+const SpanishReaderPage = lazy(() =>
+  import('./SpanishReader').then((m) => ({ default: m.SpanishReaderPage })),
+)
 import { AddTextForm, MyTextReader, MyTextsList } from './MyTextsBlock'
 import type { MyText } from '../../lib/myTexts'
 import { sampleTexts, type SampleText } from './sampleTexts'
@@ -49,7 +54,12 @@ export function ReaderPage({
       <MyTextsList lang={lang} onAdd={() => setMy('add')} onOpen={(t) => setMy(t)} />
     </>
   )
-  if (lang === 'es') return <SpanishReaderPage title={title} header={fullHeader} onBack={onBack} />
+  if (lang === 'es')
+    return (
+      <Suspense fallback={<Card>Загрузка…</Card>}>
+        <SpanishReaderPage title={title} header={fullHeader} onBack={onBack} />
+      </Suspense>
+    )
   return <EnglishReaderPage title={title} header={fullHeader} onBack={onBack} />
 }
 
