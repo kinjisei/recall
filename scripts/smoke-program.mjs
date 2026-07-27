@@ -105,26 +105,48 @@ try {
     weeks: WEEKS,
   }
 
-  // 1. учитель сохраняет программу
-  const ins = await teacher.from('study_plans').insert(row).select('id').single()
-  check('учитель сохраняет программу ученице', !ins.error, ins.error?.message)
-  const planId = ins.data?.id
+  // Аргументы RPC replace_study_plan (заход 21: создание — ТОЛЬКО через неё)
+  const rpcArgs = {
+    p_student_id: sId,
+    p_lang: 'en',
+    p_level: 'B1',
+    p_goal: 'смоук',
+    p_summary: 'Тестовая программа.',
+    p_weeks: WEEKS,
+  }
 
-  // 2. вторая активная на ту же пару+язык отклоняется (уникальный индекс)
-  const dup = await teacher.from('study_plans').insert(row)
-  check('вторая активная программа отклонена', !!dup.error)
+  // 1. прямая вставка теперь запрещена (revoke insert, заход 21)
+  const directIns = await teacher.from('study_plans').insert(row)
+  check('прямая вставка study_plans запрещена (только через RPC)', !!directIns.error)
 
-  // архив → новая проходит
-  const arch = await teacher.from('study_plans').update({ status: 'archived' }).eq('id', planId)
-  const ins2 = await teacher.from('study_plans').insert(row).select('id').single()
+  // 2. учитель создаёт программу через RPC
+  const rpc1 = await teacher.rpc('replace_study_plan', rpcArgs)
+  check('учитель создаёт программу (replace_study_plan)', !rpc1.error, rpc1.error?.message)
+
+  // 3. повторный replace: старая уходит в архив, активной остаётся ровно одна
+  const rpc2 = await teacher.rpc('replace_study_plan', rpcArgs)
+  const actives = await admin
+    .from('study_plans')
+    .select('id')
+    .eq('student_id', sId)
+    .eq('status', 'active')
   check(
-    'после архива новая программа сохраняется',
-    !arch.error && !ins2.error,
-    arch.error?.message ?? ins2.error?.message,
+    'после повторного replace активна ровно одна',
+    !rpc2.error && actives.data?.length === 1,
+    rpc2.error?.message ?? `активных: ${actives.data?.length}`,
   )
-  const activeId = ins2.data?.id
+  const activeId = actives.data?.[0]?.id
 
-  // 3. доступы
+  // 4. архивирование одним UPDATE разрешено (путь archivePlan; гонки нет)
+  const arch = await teacher
+    .from('study_plans')
+    .update({ status: 'archived' })
+    .eq('id', activeId)
+    .select('id')
+  check('архивирование через update разрешено', !arch.error && (arch.data?.length ?? 0) === 1, arch.error?.message)
+  await teacher.rpc('replace_study_plan', rpcArgs) // вернём активную для чтений ниже
+
+  // 5. доступы
   const sRead = await student.from('study_plans').select('*').eq('status', 'active')
   check(
     'ученица видит свою активную программу',
@@ -135,21 +157,20 @@ try {
   const xRead = await stranger.from('study_plans').select('*')
   check('посторонний НЕ видит программ', !xRead.error && xRead.data?.length === 0)
 
-  const forge = await student
+  // 6. ученица не может создать программу — ни напрямую, ни через RPC на себя
+  const forgeDirect = await student
     .from('study_plans')
     .insert({ ...row, teacher_id: sId, student_id: sId })
-  check('ученица не может создать программу сама', !!forge.error)
+  check('ученица не создаёт программу напрямую', !!forgeDirect.error)
+  const forgeRpc = await student.rpc('replace_study_plan', { ...rpcArgs, p_student_id: sId })
+  check('ученица не создаёт программу через RPC', !!forgeRpc.error)
 
-  // 4. отвязка → экс-учитель теряет доступ, ученица видит
+  // 7. отвязка → экс-учитель теряет доступ (RPC и чтение), ученица видит
   await admin.from('teacher_students').delete().match({ teacher_id: tId, student_id: sId })
+  const tAfterRpc = await teacher.rpc('replace_study_plan', rpcArgs)
+  check('экс-учитель не может пересоздать программу', !!tAfterRpc.error)
   const tAfter = await teacher.from('study_plans').select('*').eq('student_id', sId)
   check('экс-учитель после отвязки не видит программ', !tAfter.error && tAfter.data?.length === 0)
-  const tEdit = await teacher
-    .from('study_plans')
-    .update({ summary: 'взлом' })
-    .eq('id', activeId)
-    .select('id')
-  check('экс-учитель не может править', !tEdit.error && (tEdit.data?.length ?? 0) === 0)
   const sAfter = await student.from('study_plans').select('*').eq('status', 'active')
   check('ученица видит программу и после отвязки', !sAfter.error && sAfter.data?.length === 1)
 } catch (e) {
