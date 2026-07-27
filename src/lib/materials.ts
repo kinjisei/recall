@@ -3,7 +3,7 @@
 // (двухшаговая: план → материал) + хранение и назначение (Supabase).
 // Таблицы materials / material_assignments, RLS — docs/schema.sql.
 // ============================================================================
-import { supabase, requireUserId } from './supabase'
+import { supabase, requireUserId, toJson } from './supabase'
 import { chat } from './gemini'
 import type {
   AppLang,
@@ -212,8 +212,8 @@ export async function saveMaterial(
       length_range: req.lengthRange,
       title: content.title,
       body: content.body,
-      exercises: content.exercises,
-      plan,
+      exercises: toJson(content.exercises),
+      plan: toJson(plan),
     })
     .select()
     .single()
@@ -290,7 +290,7 @@ export async function submitAssignment(
 ): Promise<void> {
   const { error } = await supabase.rpc('submit_material', {
     p_id: assignmentId,
-    p_answers: answers,
+    p_answers: toJson(answers),
     p_auto_score: autoScore,
     p_auto_total: autoTotal,
   })
@@ -412,7 +412,7 @@ export async function saveAiReview(
 ): Promise<void> {
   const { error } = await supabase.rpc('save_material_ai_review', {
     p_id: assignmentId,
-    p_review: review,
+    p_review: toJson(review),
   })
   if (error) throw new Error(error.message)
 }
@@ -424,7 +424,7 @@ export async function finishReview(
 ): Promise<void> {
   const { error } = await supabase.rpc('finish_material_review', {
     p_id: assignmentId,
-    p_review: review,
+    p_review: toJson(review),
   })
   if (error) throw new Error(error.message)
 }

@@ -23,3 +23,6 @@ Recall Приложение (standalone).html
 # Android TWA: сгенерированный проект и ключи не коммитим (ключ — секрет)
 twa/*
 !twa/twa-manifest.json
+
+# временная папка supabase CLI (gen types) — не коммитим
+supabase/

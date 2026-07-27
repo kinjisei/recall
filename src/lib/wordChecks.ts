@@ -3,7 +3,7 @@
 // печатает их по памяти (рус → англ/исп). Неверные возвращаются в колоду
 // оценкой «again». Таблица word_checks, RLS — docs/schema.sql.
 // ============================================================================
-import { supabase, requireUserId } from './supabase'
+import { supabase, requireUserId, toJson } from './supabase'
 import { reviewCard } from './fsrs'
 import type { Card, ReviewState, WordCheck, WordCheckResult } from '../types'
 
@@ -121,7 +121,7 @@ export async function submitWordCheck(
   // (ретрай/повтор) НЕ начисляем again повторно (двойной штраф FSRS).
   const { data: didComplete, error } = await supabase.rpc('submit_word_check', {
     p_id: check.id,
-    p_results: results,
+    p_results: toJson(results),
   })
   if (error) throw new Error(error.message)
   if (!didComplete) return // уже завершена — идемпотентно

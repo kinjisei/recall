@@ -10,6 +10,7 @@ import { IconBack, IconSpeaker, IconCheck } from '../../components/icons'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { supabase } from '../../lib/supabase'
+import type { TablesUpdate } from '../../lib/database.types'
 import { invalidateProfile, PROFILE_COLUMNS } from '../../lib/profile'
 import { speak } from '../../lib/speech'
 import {
@@ -70,7 +71,7 @@ export function SettingsPage() {
     if (!user) return
     setError(null)
     try {
-      const patch: Record<string, string> = {}
+      const patch: TablesUpdate<'profiles'> = {}
       const trimmed = name.trim()
       if (trimmed && trimmed !== profile?.display_name) patch.display_name = trimmed
       // уровень испанского живёт локально, английского — в профиле

@@ -3,7 +3,7 @@
 // Запись — только через security-definer RPC: назначает учитель, прогресс
 // и переписку пишет ученица. Чтение — по RLS (обе стороны).
 // ============================================================================
-import { supabase } from './supabase'
+import { supabase, toJson } from './supabase'
 import type { AppLang, ChatTurn, GrammarQuest } from '../types'
 
 /** Квесты текущей ученицы (новые сверху). */
@@ -64,7 +64,7 @@ export async function questCorrectAnswer(id: string): Promise<number> {
 export async function saveQuestMessages(id: string, messages: ChatTurn[]): Promise<void> {
   const { error } = await supabase.rpc('save_quest_messages', {
     p_id: id,
-    p_messages: messages,
+    p_messages: toJson(messages),
   })
   if (error) throw error
 }

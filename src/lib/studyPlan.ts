@@ -5,7 +5,8 @@
 // (id из каталога — чтобы пункты плана вели на реальные экраны приложения).
 // Хранение — таблица study_plans (docs/schema.sql, блок «ПРОГРАММА ОБУЧЕНИЯ»).
 // ============================================================================
-import { supabase, requireUserId } from './supabase'
+import { supabase, requireUserId, toJson } from './supabase'
+import type { Tables } from './database.types'
 import { chat } from './gemini'
 import { getStudentDiagnostics, type StudentDiagnostics } from './diagnostics'
 import { readRaw, writeRaw } from './storage'
@@ -211,9 +212,21 @@ export async function saveStudyPlan(req: PlanRequest, plan: GeneratedPlan): Prom
     p_level: req.level,
     p_goal: req.goal,
     p_summary: plan.summary,
-    p_weeks: plan.weeks,
+    p_weeks: toJson(plan.weeks),
   })
   if (error) throw new Error(error.message)
+}
+
+// Строка study_plans из БД → StudyPlan. Типизировано всё, кроме трёх полей,
+// которые база хранит свободно (weeks — jsonb, lang/status — text): их приводим
+// явно. Остальные 8 колонок TypeScript проверяет по схеме.
+function rowToPlan(r: Tables<'study_plans'>): StudyPlan {
+  return {
+    ...r,
+    lang: r.lang as AppLang,
+    weeks: (r.weeks as unknown as PlanWeek[]) ?? [],
+    status: r.status as StudyPlan['status'],
+  }
 }
 
 /** Активная программа пары (для экрана преподавателя). */
@@ -225,7 +238,7 @@ export async function getActivePlan(studentId: string, lang: AppLang): Promise<S
     .match({ teacher_id: teacherId, student_id: studentId, lang, status: 'active' })
     .maybeSingle()
   if (error) throw new Error(error.message)
-  return (data as StudyPlan) ?? null
+  return data ? rowToPlan(data) : null
 }
 
 /** Снять программу (в архив). */
@@ -244,7 +257,7 @@ export async function getMyPlans(): Promise<StudyPlan[]> {
     .eq('status', 'active')
     .order('created_at', { ascending: false })
   if (error) throw error
-  return (data ?? []) as StudyPlan[]
+  return (data ?? []).map(rowToPlan)
 }
 
 /** Номер текущей недели программы: 1-based, обрезан границами плана. */

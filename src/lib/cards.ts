@@ -1,4 +1,5 @@
 import { supabase, requireUserId } from './supabase'
+import type { TablesUpdate } from './database.types'
 import type { AppLang, Card, Deck, ReviewState } from '../types'
 import { statusOf, type WordStatus } from './wordChecks'
 
@@ -174,7 +175,7 @@ export async function updateCard(
   id: string,
   fields: { front?: string; back?: string | null; example?: string | null },
 ): Promise<void> {
-  const patch: Record<string, string | null> = {}
+  const patch: TablesUpdate<'cards'> = {}
   if (fields.front !== undefined) {
     const front = fields.front.trim()
     if (!front) throw new Error('Слово не может быть пустым')

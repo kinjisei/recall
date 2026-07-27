@@ -2,7 +2,7 @@
 // План дня — работа с БД (настройка учителя в teacher_students.daily_plan).
 // Чистая логика построения плана — lib/dailyPlanCore (тестируется отдельно).
 // ============================================================================
-import { supabase, requireUserId } from './supabase'
+import { supabase, requireUserId, toJson } from './supabase'
 import type { DailyPlanConfig, PlanKind } from './dailyPlanCore'
 export * from './dailyPlanCore'
 
@@ -47,7 +47,7 @@ export async function setDailyPlan(
 ): Promise<void> {
   const { error } = await supabase.rpc('set_daily_plan', {
     p_student_id: studentId,
-    p_plan: cfg,
+    p_plan: toJson(cfg),
   })
   if (error) throw new Error(error.message)
 }

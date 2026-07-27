@@ -37,7 +37,8 @@ function humanError(message: string): string {
 export async function findUsers(q: string): Promise<AdminUserRow[]> {
   const { data, error } = await supabase.rpc('admin_find_user', { q })
   if (error) throw new Error(humanError(error.message))
-  return (data ?? []) as AdminUserRow[]
+  // RPC возвращает json (схема не описывает его форму) — честный мост через unknown
+  return (data ?? []) as unknown as AdminUserRow[]
 }
 
 /** Включить/продлить/снять план пользователю на N месяцев (0 или 'free' — снять). */
@@ -52,5 +53,5 @@ export async function setPlan(
     months,
   })
   if (error) throw new Error(humanError(error.message))
-  return data as AdminSetPlanResult
+  return data as unknown as AdminSetPlanResult
 }

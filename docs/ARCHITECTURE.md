@@ -129,6 +129,13 @@ recall-app/
 заливкой — `node scripts/check-schema.mjs`). RLS включён на всех таблицах.
 Здесь — карта таблиц и ключевые инварианты.
 
+⚠️ **Типы базы для клиента** — `src/lib/database.types.ts` сгенерированы из схемы
+(`supabase gen types typescript --project-id <ref>`, токен — SUPABASE_ACCESS_TOKEN
+в .env.local). Клиент `createClient<Database>` типизирован ими: расхождение
+«код ↔ база» ловится на сборке. **После изменения schema.sql в Supabase —
+ПЕРЕГЕНЕРИРОВАТЬ** этот файл, иначе типы разойдутся с реальностью. Запись наших
+структур в jsonb-колонки/аргументы RPC — через `toJson()` (lib/supabase.ts).
+
 Ядро:
 - `profiles` — 1:1 с auth.users. Базовые: display_name, level (A1..C2),
   native_lang, role ('learner'|'teacher'), created_at. **Плюс колонки фаз 4+:**

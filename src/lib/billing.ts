@@ -102,7 +102,7 @@ export async function getMyPlan(): Promise<MyPlan | null> {
   try {
     const { data, error } = await supabase.rpc('get_my_plan')
     if (error || !data) return null
-    return data as MyPlan
+    return data as unknown as MyPlan
   } catch {
     return null
   }

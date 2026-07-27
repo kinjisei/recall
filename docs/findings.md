@@ -28,14 +28,6 @@
 
 ### Крупные рефакторинги — отдельным заходом (решение владельца 27.07)
 
-- 🔴→🟡 **Supabase-клиент без типа схемы** (src/lib/supabase.ts): 31 «слепой»
-  каст `data as Deck/Card/...` в 11 файлах, переименование колонки в БД
-  TypeScript не заметит. Фикс: `supabase gen types typescript` +
-  `createClient<Database>(...)`. ⚠️ ТРЕБУЕТ ДЕЙСТВИЯ ВЛАДЕЛЬЦА: supabase CLI не
-  установлен, в .env.local нет ни SUPABASE_ACCESS_TOKEN, ни строки подключения к
-  БД — сгенерировать типы нечем. Нужен твой персональный access token (Supabase
-  → Account → Access Tokens) ИЛИ разрешение поставить supabase CLI. Иначе тип
-  базы придётся писать руками (долго и хрупко).
 - 🟡 **MaterialsSection.tsx — «бог-файл» 805 строк, 6 компонентов**. Резать по
   границам в features/teacher/materials/*. Кандидат-сосед: GrammarPage.tsx (589).
 - ⚪ **Хрупкие non-null `!`** (DictationMode `words!`, MaterialsSection `works!`,
@@ -149,6 +141,17 @@ revoke на месте. Класс «jsonb/text без лимита размер
     приглашению» (посторонний не упрётся в тупик).
   - 🟡 #10 **Мусор в корне** — «Recall Приложение (standalone).html» добавлен
     в .gitignore (риск случайного коммита закрыт).
+- ✅ 2026-07-27 — **#3 Supabase-клиент без типа схемы** (флагман аудита):
+  сгенерированы типы `src/lib/database.types.ts` (`supabase gen types`, вариант А
+  — токен владельца), клиент → `createClient<Database>`. Всплыло 15 реальных
+  расхождений код↔база, все устранены по природе: patch'и профиля/карточки
+  типизированы `TablesUpdate<>` (реальный выигрыш), запись структур в jsonb/
+  аргументы RPC — мост `toJson()`, возвраты RPC (json) — явный `as unknown as`,
+  строки study_plans — точечный маппер rowToPlan (сохраняет проверку 8 колонок,
+  явно кастует только jsonb/text-поля). Теперь переименование колонки в БД
+  ловится на сборке. Проверка: tsc 0 ошибок, build + смоуки (program/quests/
+  dailyplan/diagnostics/zahod21) зелёные. ⚠️ После правок schema.sql —
+  перегенерировать типы (см. ARCHITECTURE §5).
 - ✅ 2026-07-27 — **#8 общий lib/storage.ts + #9 localStorage из компонентов**:
   создан lib/storage.ts (readJson/writeJson/readRaw/writeRaw — единая безопасная
   обёртка); на него переведены 13 модулей (mistakes, recentWords, myTexts,
