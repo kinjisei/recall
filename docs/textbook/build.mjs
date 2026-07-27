@@ -26,8 +26,8 @@ const CHAPTERS = [
   { n: '7',  id: '07',  part: 'II',  title: 'Данные и база', file: '07-dannye.md' },
   { n: '8',  id: '08',  part: 'II',  title: 'Тесты и ревью', file: '08-testy.md' },
   { n: '9',  id: '09',  part: 'II',  title: 'Дизайн и UX', file: '09-dizayn.md' },
-  { n: '10', id: '10',  part: 'III', title: 'Карта сервисов: поставщики, тарифы, выбор' },
-  { n: '11', id: '11',  part: 'III', title: 'Деплой и эксплуатация' },
+  { n: '10', id: '10',  part: 'III', title: 'Карта сервисов: поставщики, тарифы, выбор', file: '10-servisy.md' },
+  { n: '11', id: '11',  part: 'III', title: 'Деплой и эксплуатация', file: '11-deploy.md' },
   { n: '12', id: '12',  part: 'III', title: 'Нагрузка и карта трат' },
   { n: '13', id: '13',  part: 'III', title: 'Юридика, налоги, оформление' },
   { n: '14', id: '14',  part: 'IV',  title: 'Цена, тарифы и юнит-экономика' },
@@ -83,11 +83,38 @@ function mdToHtml(md, chFile) {
     quote = [];
   };
 
-  for (const raw of lines) {
-    const line = raw.trimEnd();
+  // Разбить строку таблицы на ячейки. Защищаем «|» внутри глоссария [[id|текст]]
+  // (иначе он рвал бы ячейку) сентинелом  на время split.
+  const cells = (row) =>
+    row
+      .replace(/\[\[([^\]|]*)\|([^\]]*)\]\]/g, '[[$1$2]]')
+      .replace(/^\||\|$/g, '')
+      .split('|')
+      .map((c) => c.trim().replace(//g, '|'));
+
+  for (let li = 0; li < lines.length; li++) {
+    const line = lines[li].trimEnd();
     const t = line.trim();
     if (t.startsWith('> ') || t === '>') { flushPara(); flushList(); quote.push(t.replace(/^>\s?/, '')); continue; }
     flushQuote();
+    // таблица GFM: строка |...| со следующей строкой-разделителем |---|
+    if (t.startsWith('|') && li + 1 < lines.length && /^\|[\s:|-]+\|$/.test(lines[li + 1].trim())) {
+      flushPara(); flushList();
+      const head = cells(t);
+      li++; // пропускаем разделитель
+      const body = [];
+      while (li + 1 < lines.length && lines[li + 1].trim().startsWith('|')) {
+        li++;
+        body.push(cells(lines[li].trim()));
+      }
+      let tbl = '<div class="tablewrap"><table><thead><tr>' +
+        head.map((h) => `<th>${inline(h, chFile)}</th>`).join('') + '</tr></thead><tbody>';
+      for (const row of body) {
+        tbl += '<tr>' + row.map((c) => `<td>${inline(c, chFile)}</td>`).join('') + '</tr>';
+      }
+      out.push(tbl + '</tbody></table></div>');
+      continue;
+    }
     if (!t) { flushPara(); flushList(); continue; }
     if (t.startsWith('# ')) { flushPara(); flushList(); out.push(`<h1>${inline(t.slice(2), chFile)}</h1>`); continue; }
     if (t.startsWith('## ')) { flushPara(); flushList(); out.push(`<h2>${inline(t.slice(3), chFile)}</h2>`); continue; }
