@@ -354,6 +354,11 @@ function AssignmentRunner({
     )
   }
 
+  // index всегда в границах [0, total-1] пока stage === 'exercises' (next()
+  // увеличивает index только пока index + 1 < total, иначе завершает раунд) —
+  // подстраховка для noUncheckedIndexedAccess.
+  if (!current) return null
+
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between text-sm text-[var(--night-text-40)]">

@@ -210,7 +210,7 @@ export async function getStudentDiagnostics(studentId: string): Promise<StudentD
     mistakesAvailable,
     quests,
     activeDays14: days.filter((d) => d >= from14).length,
-    lastActiveDay: days.length > 0 ? days[days.length - 1] : null,
+    lastActiveDay: days[days.length - 1] ?? null,
     dynamics,
   }
 }

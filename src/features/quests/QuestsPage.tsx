@@ -56,7 +56,9 @@ function parseReply(raw: string): { verdict: 'CORRECT' | 'TRY_AGAIN' | 'START'; 
   const m = raw.match(/^\s*VERDICT:\s*(CORRECT|TRY_AGAIN|START)\s*\n?/i)
   if (!m) return { verdict: 'TRY_AGAIN', text: raw.trim() }
   return {
-    verdict: m[1].toUpperCase() as 'CORRECT' | 'TRY_AGAIN' | 'START',
+    // группа обязательная (без «?») — при успешном match m[1] всегда есть;
+    // fallback только для noUncheckedIndexedAccess, на практике не сработает
+    verdict: (m[1] ?? 'TRY_AGAIN').toUpperCase() as 'CORRECT' | 'TRY_AGAIN' | 'START',
     text: raw.slice(m[0].length).trim(),
   }
 }

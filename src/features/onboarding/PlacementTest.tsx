@@ -198,6 +198,10 @@ export function PlacementTest() {
   // Вопрос
   const q = questions[index]
   const total = questions.length
+  // index всегда в границах [0, total-1] пока идёт тест (choose() продвигает
+  // index только когда следующий вопрос существует) — подстраховка для
+  // noUncheckedIndexedAccess.
+  if (!q) return null
   const choose = (optIndex: number) => {
     const next = { ...answers, [q.id]: optIndex }
     setAnswers(next)

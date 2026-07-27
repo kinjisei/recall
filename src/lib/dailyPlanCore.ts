@@ -86,14 +86,15 @@ export function buildTodayPlan(cfg: DailyPlanConfig | null, ctx: PlanContext): T
       out.push(item(k))
     }
     // учитель снял всё — хотя бы ротация, чтобы план не был из одного пункта
-    if (out.length === 1) out.push(item(ROTATION[ctx.weekday % ROTATION.length]))
+    // (индекс по модулю длины всегда в границах ROTATION)
+    if (out.length === 1) out.push(item(ROTATION[ctx.weekday % ROTATION.length]!))
     return out
   }
 
-  // умный дефолт: 3 пункта
+  // умный дефолт: 3 пункта (индекс по модулю длины всегда в границах ROTATION)
   if (autoItem) out.push(autoItem)
-  const rot1 = ROTATION[ctx.weekday % ROTATION.length]
-  const rot2 = ROTATION[(ctx.weekday + 1) % ROTATION.length]
+  const rot1 = ROTATION[ctx.weekday % ROTATION.length]!
+  const rot2 = ROTATION[(ctx.weekday + 1) % ROTATION.length]!
   for (const k of [rot1, rot2]) {
     if (out.length >= 3) break
     if (!out.some((i) => i.key === k)) out.push(item(k))

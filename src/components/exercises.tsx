@@ -170,7 +170,10 @@ export function OrderExercise({
     const arr = exercise.words.map((w, i) => ({ w, i }))
     for (let i = arr.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1))
-      ;[arr[i], arr[j]] = [arr[j], arr[i]]
+      // Fisher–Yates: i и j всегда валидные индексы arr — элементы точно есть
+      const tmp = arr[i]!
+      arr[i] = arr[j]!
+      arr[j] = tmp
     }
     return arr
   }, [exercise])
@@ -183,7 +186,7 @@ export function OrderExercise({
   // не должно превращать верный порядок в «неверно»
   const ok =
     built.length === exercise.answer.length &&
-    built.every((b, i) => normalizeAnswer(b.w) === normalizeAnswer(exercise.answer[i]))
+    built.every((b, i) => normalizeAnswer(b.w) === normalizeAnswer(exercise.answer[i] ?? ''))
 
   const check = () => {
     if (checked || built.length !== exercise.words.length) return

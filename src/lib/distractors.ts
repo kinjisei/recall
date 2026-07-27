@@ -74,16 +74,17 @@ export function pickDistractors(
     if (right.length === min && right.length * (1 + margin) < Math.min(...lens)) return false
     return true
   }
-  if (picked.length === n && !fits(picked)) {
+  if (picked.length === n && n > 0 && !fits(picked)) {
     const rest = scored.slice(n)
-    // ищем замену, приближающую разброс длин к правильному ответу
+    // ищем замену, приближающую разброс длин к правильному ответу.
+    // wi/worstIdx всегда в границах picked (length === n > 0).
     const worstIdx = picked.reduce(
       (wi, x, i) =>
-        Math.abs(x.len - right.length) > Math.abs(picked[wi].len - right.length) ? i : wi,
+        Math.abs(x.len - right.length) > Math.abs(picked[wi]!.len - right.length) ? i : wi,
       0,
     )
     const better = rest.find(
-      (r) => Math.abs(r.len - right.length) < Math.abs(picked[worstIdx].len - right.length),
+      (r) => Math.abs(r.len - right.length) < Math.abs(picked[worstIdx]!.len - right.length),
     )
     if (better) picked[worstIdx] = better
   }

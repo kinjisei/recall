@@ -188,6 +188,9 @@ export function StudyPage() {
               title="Моя программа"
               desc={(() => {
                 const p = plans.find((x) => x.lang === lang) ?? plans[0]
+                // plans.length > 0 уже проверено условием рендера строки выше —
+                // p гарантирован; guard явный для noUncheckedIndexedAccess.
+                if (!p) return ''
                 return `Неделя ${currentWeekIndex(p)} из ${p.weeks.length} — план от преподавателя`
               })()}
               to="/program"

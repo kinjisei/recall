@@ -68,7 +68,7 @@ function isUsable(masked: string): boolean {
 /** Часть речи, которую подсказывает русский перевод карточки. */
 function expectedPos(translation?: string): 'verb' | 'adjective' | 'noun' | null {
   if (!translation) return null
-  const w = translation.toLowerCase().split(/[,;(/]/)[0].trim()
+  const w = (translation.toLowerCase().split(/[,;(/]/)[0] ?? '').trim()
   if (!w) return null
   if (/(ться|ть|чь)$/.test(w)) return 'verb'
   if (/(ый|ий|ой|ая|яя|ое|ее|ые|ие)$/.test(w)) return 'adjective'
@@ -114,10 +114,11 @@ function pickDefinition(
   let bestScore = -Infinity
   const list = senses ?? []
   for (let i = 0; i < list.length; i++) {
-    const masked = tidy(list[i].text, word)
+    const s = list[i]! // i < list.length — элемент есть
+    const masked = tidy(s.text, word)
     if (!isUsable(masked)) continue
     // ранние значения обычно частотнее — небольшой бонус за место в списке
-    const score = scoreSense(masked, list[i].pos, want) + Math.max(0, 3 - i)
+    const score = scoreSense(masked, s.pos, want) + Math.max(0, 3 - i)
     if (score > bestScore) {
       best = masked
       bestScore = score
@@ -184,7 +185,8 @@ export async function getDefinitions(
   const missing: DefinitionRequest[] = []
 
   for (const [key, req] of byWord) {
-    if (cached[ck(key)]) out[key] = cached[ck(key)]
+    const hit = cached[ck(key)]
+    if (hit) out[key] = hit
     else missing.push({ ...req, word: key })
   }
   if (missing.length === 0) return out

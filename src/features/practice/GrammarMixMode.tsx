@@ -121,6 +121,11 @@ export function GrammarMixMode({
 
   const current = items[index]
 
+  // items.length > 0 гарантирован проверкой выше; index всегда в границах
+  // [0, items.length-1] (next() увеличивает его только пока index+1 < items.length)
+  // — подстраховка для noUncheckedIndexedAccess.
+  if (!current) return null
+
   const onAnswered = (ok: boolean) => {
     const ref = { topicId: current.topicId, ex: current.ex }
     if (ok) {

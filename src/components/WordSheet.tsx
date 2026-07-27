@@ -30,7 +30,9 @@ export function cleanWord(token: string): string {
 
 /** Предложение, покрывающее символ по индексу at (сканируем до знаков конца). */
 function sentenceAt(text: string, at: number): string {
-  const isEnd = (c: string) => c === '.' || c === '!' || c === '?' || c === '…'
+  // text[i] может дать undefined из-за индексации по типам — сравнение
+  // с символами просто вернёт false, поведение то же, что и раньше
+  const isEnd = (c: string | undefined) => c === '.' || c === '!' || c === '?' || c === '…'
   let start = Math.max(0, Math.min(at, text.length - 1))
   while (start > 0 && !isEnd(text[start - 1])) start--
   let end = Math.max(start, at)

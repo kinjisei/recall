@@ -51,7 +51,9 @@ export function QuestSection({ studentId }: { studentId: string }) {
   const [lang, setLang] = useState<AppLang>('en')
   const [level, setLevel] = useState<string>('B1')
   const [topic, setTopic] = useState('')
-  const [scenario, setScenario] = useState(SCENARIOS[0])
+  // SCENARIOS — непустой константный список, [0] всегда есть; ?? '' только
+  // для noUncheckedIndexedAccess (на практике не сработает)
+  const [scenario, setScenario] = useState<string>(SCENARIOS[0] ?? '')
   const [custom, setCustom] = useState('')
   const [target, setTarget] = useState(10)
   const [busy, setBusy] = useState(false)

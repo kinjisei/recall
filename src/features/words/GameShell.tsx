@@ -114,6 +114,10 @@ export function QuizRunner({
     )
   }
 
+  // index < questions.length гарантирован веткой done выше — но компилятор
+  // не связывает done и q, поэтому явный guard (в рантайме не сработает)
+  if (!q) return null
+
   const choose = (i: number) => {
     if (picked !== null) return
     setPicked(i)

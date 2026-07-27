@@ -5,7 +5,9 @@
 // потому что раунды не помнили, что уже показывали.
 // ============================================================================
 
-import { readJson, writeJson } from './storage'
+// .ts в пути — этот модуль грузят node-тесты напрямую (стрип типов), которым
+// нужно явное расширение; vite/tsc такой импорт тоже принимают.
+import { readJson, writeJson } from './storage.ts'
 
 const RECENT_KEY = 'recall.recent_words'
 export const RECENT_MAX = 40

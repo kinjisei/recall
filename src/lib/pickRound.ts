@@ -28,8 +28,9 @@ function sampleSome<T>(arr: readonly T[], n: number): T[] {
   const out: T[] = []
   for (let i = 0; i < n; i++) {
     const j = i + Math.floor(Math.random() * (copy.length - i))
-    ;[copy[i], copy[j]] = [copy[j], copy[i]]
-    out.push(copy[i])
+    // i, j в границах (n < copy.length, j ∈ [i, copy.length)) — элементы есть
+    ;[copy[i], copy[j]] = [copy[j]!, copy[i]!]
+    out.push(copy[i]!)
   }
   return out
 }

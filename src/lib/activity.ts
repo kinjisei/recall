@@ -98,7 +98,8 @@ function weekSkeleton(): WeekDay[] {
     const day = localDay(i - shiftToMonday)
     const d = new Date()
     d.setDate(d.getDate() + (i - shiftToMonday))
-    days.push({ day, label: WEEKDAY_LABELS[d.getDay()], active: false, items: 0, minutes: 0, isToday: day === localDay() })
+    // getDay() всегда 0–6, WEEKDAY_LABELS длиной 7 — элемент есть
+    days.push({ day, label: WEEKDAY_LABELS[d.getDay()]!, active: false, items: 0, minutes: 0, isToday: day === localDay() })
   }
   return days
 }
@@ -128,8 +129,8 @@ export async function getWeek(): Promise<WeekDay[]> {
     .from('activity_log')
     .select('day, items_done, duration_sec')
     .eq('user_id', userId)
-    .gte('day', days[0].day)
-    .lte('day', days[6].day)
+    .gte('day', days[0]!.day)
+    .lte('day', days[6]!.day)
   if (error) throw error
   fillWeek(days, (data ?? []) as { day: string; items_done: number; duration_sec: number }[])
   return days

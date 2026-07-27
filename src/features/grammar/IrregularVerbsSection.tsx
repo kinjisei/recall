@@ -176,7 +176,9 @@ function sampleRound(all: IrregularVerb[]): IrregularVerb[] {
   const pool = [...all]
   for (let i = pool.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1))
-    ;[pool[i], pool[j]] = [pool[j], pool[i]]
+    // i и j всегда валидные индексы pool (0..pool.length-1) — классический
+    // Fisher-Yates, элементы под ними гарантированно есть.
+    ;[pool[i], pool[j]] = [pool[j]!, pool[i]!]
   }
   return pool.slice(0, ROUND_SIZE)
 }
@@ -218,18 +220,6 @@ function Trainer({ groups }: { groups: IrregularGroup[] }) {
   useEffect(() => {
     if (!done) pastRef.current?.focus()
   }, [index, done])
-
-  const check = () => {
-    if (checked) return
-    setChecked(true)
-    const ok = matches(past, verb.past) && matches(part, verb.part)
-    setResults((r) => [...r, { verb, ok }])
-    // банк «Мои ошибки»: неверный глагол кладём, верный — убираем
-    if (ok) removeVerbMistake('en', verb.base)
-    else addVerbMistake('en', verb.base)
-    setMistakeCount(getVerbMistakes('en').length)
-    if (index + 1 >= round.length) void logActivity('grammar')
-  }
 
   const next = () => {
     setIndex((i) => i + 1)
@@ -274,7 +264,9 @@ function Trainer({ groups }: { groups: IrregularGroup[] }) {
     </label>
   )
 
-  if (done) {
+  // done === (index >= round.length) === (verb === undefined) — эквивалентны
+  // по построению; !verb добавлен явно для noUncheckedIndexedAccess.
+  if (done || !verb) {
     const correct = results.filter((r) => r.ok).length
     const wrong = results.filter((r) => !r.ok)
     return (
@@ -300,6 +292,18 @@ function Trainer({ groups }: { groups: IrregularGroup[] }) {
         </RoundResult>
       </div>
     )
+  }
+
+  const check = () => {
+    if (checked) return
+    setChecked(true)
+    const ok = matches(past, verb.past) && matches(part, verb.part)
+    setResults((r) => [...r, { verb, ok }])
+    // банк «Мои ошибки»: неверный глагол кладём, верный — убираем
+    if (ok) removeVerbMistake('en', verb.base)
+    else addVerbMistake('en', verb.base)
+    setMistakeCount(getVerbMistakes('en').length)
+    if (index + 1 >= round.length) void logActivity('grammar')
   }
 
   const pastOk = checked && matches(past, verb.past)

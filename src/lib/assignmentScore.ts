@@ -50,8 +50,8 @@ function attemptVerdicts(a: {
 /** Последняя завершённая (со сданными ответами) попытка из истории. */
 function lastFinishedAttempt(attempts: AttemptSnapshot[] | null): AttemptSnapshot | null {
   for (let i = (attempts?.length ?? 0) - 1; i >= 0; i--) {
-    const a = attempts![i]
-    if (a.submitted_at && (a.answers?.length || a.teacher_review?.length)) return a
+    const a = attempts?.[i]
+    if (a?.submitted_at && (a.answers?.length || a.teacher_review?.length)) return a
   }
   return null
 }

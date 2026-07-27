@@ -40,7 +40,8 @@ function makePieces(seed: number): Piece[] {
   return Array.from({ length: COUNT }, (_, i) => ({
     id: seed * COUNT + i,
     left: (i / COUNT) * 100 + Math.random() * 6,
-    color: COLORS[i % COLORS.length],
+    // i % COLORS.length всегда попадает в границы непустой палитры COLORS
+    color: COLORS[i % COLORS.length]!,
     delay: Math.random() * 0.5,
     duration: 1.4 + Math.random() * 0.5,
     round: i % 3 === 0,

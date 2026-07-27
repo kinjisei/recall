@@ -201,6 +201,9 @@ function MatchRound({
       <div className="grid grid-cols-[minmax(28%,34%)_1fr] gap-x-2.5 gap-y-2">
         {left.map((l, row) => {
           const r = right[row]
+          // right — та же перетасовка pairs, что и left, длины совпадают;
+          // guard на случай рассинхрона — просто не рисуем строку
+          if (!r) return null
           const lDone = matched.has(l.id)
           const rDone = matched.has(r.id)
           const sel = selected === l.id

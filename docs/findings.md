@@ -26,14 +26,6 @@
   читает ПРЕПОДАВАТЕЛЬ. Чинить вместе с review_states ДО открытия для чужих —
   пересчётом ok на сервере в submit_word_check (у RPC есть card_ids + cards).
 
-### Крупные рефакторинги — отдельным заходом (решение владельца 27.07)
-
-- 🟡 **MaterialsSection.tsx — «бог-файл» 805 строк, 6 компонентов**. Резать по
-  границам в features/teacher/materials/*. Кандидат-сосед: GrammarPage.tsx (589).
-- ⚪ **Хрупкие non-null `!`** (DictationMode `words!`, MaterialsSection `works!`,
-  GameShell `q.say!`, QuizModes `item.example!`, PronunciationPage `current!`) +
-  включить `noUncheckedIndexedAccess` в tsconfig. Заодно с типизацией базы.
-
 ### Действие владельца (не код)
 
 - ⚪ **Пилот спланирован, но не запущен**: скрипт сообщения репетиторам
@@ -141,6 +133,19 @@ revoke на месте. Класс «jsonb/text без лимита размер
     приглашению» (посторонний не упрётся в тупик).
   - 🟡 #10 **Мусор в корне** — «Recall Приложение (standalone).html» добавлен
     в .gitignore (риск случайного коммита закрыт).
+- ✅ 2026-07-27 — **#5 бог-файл MaterialsSection** (805 строк, 6 компонентов) →
+  оркестратор 180 строк + features/teacher/materials/{RequestForm,PlanScreen,
+  PreviewScreen,MaterialDetail,MaterialsByLevel,shared}. Поведение не изменено.
+- ✅ 2026-07-27 — **#6 хрупкие non-null + noUncheckedIndexedAccess**: флаг
+  включён в tsconfig.app.json; всплывшие 109 ошибок индексации устранены по
+  всему проекту (guard'ы, повторяющие обработку конца раунда; `?? fallback`;
+  `!` только с явной гарантией границ и комментарием — свопы Фишера-Йейтса,
+  модульная индексация). Работа распараллелена (2 агента + lib сам), сведена
+  централизованно. Заодно починен ранее сломанный test-distractors (recentWords
+  → storage.ts с явным расширением для node-стрипа типов). Проверка: tsc 0,
+  build, 5 юнит-тестов чистых модулей, ux-audit 16 экранов 0 JS-ошибок,
+  smoke-features/phrasal (стэш-сравнение подтвердило: 3 флаки-ассерта свежего
+  аккаунта — предсуществующие, не регрессия).
 - ✅ 2026-07-27 — **#3 Supabase-клиент без типа схемы** (флагман аудита):
   сгенерированы типы `src/lib/database.types.ts` (`supabase gen types`, вариант А
   — токен владельца), клиент → `createClient<Database>`. Всплыло 15 реальных

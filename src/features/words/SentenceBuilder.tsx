@@ -67,6 +67,9 @@ export function SentenceBuilder({ lang, onBack }: { lang: AppLang; onBack: () =>
   const [done, setDone] = useState(false)
 
   const task = tasks[index]
+  // index держится в границах tasks (next() увеличивает его только пока
+  // index+1 < tasks.length, иначе выставляет done) — guard для компилятора
+  if (!task) return null
 
   const onResult = (ok: boolean) => {
     if (ok) setCorrect((c) => c + 1)

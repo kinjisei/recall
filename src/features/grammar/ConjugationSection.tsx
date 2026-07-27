@@ -340,6 +340,11 @@ function TrainerRunner({
     return <Card>Нет упражнений для этого уровня.</Card>
   }
 
+  // index всегда в границах [0, total-1] (next() увеличивает его только пока
+  // index + 1 < total), так что current определён при total > 0 — это
+  // подстраховка для noUncheckedIndexedAccess.
+  if (!current) return null
+
   if (done) {
     return (
       <RoundResult

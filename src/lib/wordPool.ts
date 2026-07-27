@@ -120,7 +120,7 @@ async function loadDeckItems(lang: AppLang): Promise<PoolItem[]> {
     }
     const term = card.front?.trim() ?? ''
     // в back может лежать «перевод · пояснение» — для игр берём первую часть
-    const translation = (card.back ?? '').split('·')[0].trim()
+    const translation = ((card.back ?? '').split('·')[0] ?? '').trim()
     if (!isPlayable(term, translation)) continue
     const state = Array.isArray(review_states) ? (review_states[0] ?? null) : (review_states ?? null)
     items.push({
@@ -252,7 +252,8 @@ export async function newWordOfDay(lang: AppLang): Promise<PoolItem | null> {
     .slice(0, 60)
   // всё из выборки уже в колоде — показываем что-нибудь по уровню, а не пусто
   if (candidates.length === 0) candidates = sortByLevelCloseness(items, level).slice(0, 60)
-  const word = candidates.length === 0 ? null : candidates[todayNumber() % candidates.length]
+  // индекс по модулю длины в границах, когда candidates непуст
+  const word = candidates.length === 0 ? null : candidates[todayNumber() % candidates.length]!
   // пустой датасет = сбой загрузки (сеть) — null не кэшируем, чтобы не остаться
   // без слова дня до завтра из-за разовой ошибки
   if (items.length > 0) saveWordOfDay(lang, word)

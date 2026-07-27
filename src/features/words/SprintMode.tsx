@@ -49,7 +49,8 @@ function buildPairs(items: PoolItem[]): Pair[] {
     )
     if (pool.length === 0) return { item, shown: item.translation, isTrue: true }
     const [similar] = pickDistractors(item, pool, 1, (o) => o.translation)
-    return { item, shown: similar ?? pool[0].translation, isTrue: false }
+    // pool.length > 0 проверено строкой выше — pool[0] точно есть
+    return { item, shown: similar ?? pool[0]!.translation, isTrue: false }
   })
 }
 
@@ -131,6 +132,10 @@ export function SprintMode({ lang, onBack }: { lang: AppLang; onBack: () => void
   }
 
   const pair = pairs[index % pairs.length]
+  // pairs строится из items (проверенных на usable.length >= 6 выше) — почти
+  // всегда непустой; defensive guard на случай, если дедуп buildPairs всё
+  // же схлопнул пул до пустого
+  if (!pair) return null
 
   const answer = (saidTrue: boolean) => {
     const ok = saidTrue === pair.isTrue

@@ -477,6 +477,11 @@ function ExercisesRunner({
     )
   }
 
+  // index всегда в границах [0, total-1] («Упражнения» доступны только когда
+  // total > 0, next() увеличивает index лишь пока index + 1 < total) —
+  // подстраховка для noUncheckedIndexedAccess.
+  if (!current) return null
+
   return (
     <div className="flex flex-col gap-3">
       <RoundProgress index={index + 1} total={total} correct={correct} progressLabel="Упражнение" />
@@ -531,23 +536,10 @@ function MistakesScreen({
   const total = items.length
   const current = items[index]
 
-  const onAnswered = (ok: boolean) => {
-    if (ok) {
-      setCorrect((c) => c + 1)
-      removeMistake(lang, current.ref)
-    }
-  }
-
-  const next = () => {
-    if (index + 1 >= total) {
-      setDone(true)
-      void logActivity('grammar')
-    } else {
-      setIndex((i) => i + 1)
-    }
-  }
-
-  if (total === 0 || done) {
+  // index всегда в границах [0, total-1] (next() увеличивает его только пока
+  // index + 1 < total) — !current тут эквивалентно total === 0, но проверяем
+  // явно для noUncheckedIndexedAccess; UI-ветка та же, что и для total === 0.
+  if (total === 0 || done || !current) {
     return (
       <div className="flex flex-col gap-4">
         <BackHeader onBack={onBack} title="Мои ошибки" />
@@ -569,6 +561,22 @@ function MistakesScreen({
         )}
       </div>
     )
+  }
+
+  const onAnswered = (ok: boolean) => {
+    if (ok) {
+      setCorrect((c) => c + 1)
+      removeMistake(lang, current.ref)
+    }
+  }
+
+  const next = () => {
+    if (index + 1 >= total) {
+      setDone(true)
+      void logActivity('grammar')
+    } else {
+      setIndex((i) => i + 1)
+    }
   }
 
   return (

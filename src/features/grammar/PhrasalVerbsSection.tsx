@@ -223,7 +223,9 @@ function Trainer({ entries }: { entries: PhrasalEntry[] }) {
     setLogged(false)
   }
 
-  if (done) {
+  // done === (index >= round.length) === (q === undefined) — эквивалентны по
+  // построению; !q добавлен явно для noUncheckedIndexedAccess.
+  if (done || !q) {
     return (
       <RoundResult
         correct={correct}
