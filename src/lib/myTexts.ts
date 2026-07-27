@@ -6,6 +6,7 @@
 // Парсеры файлов грузятся ЛЕНИВО: pdfjs (~2МБ) и mammoth не попадают в бандл,
 // пока пользователь не выбрал файл.
 // ============================================================================
+import { readJson, writeJson } from './storage'
 import type { AppLang } from '../types'
 
 export interface MyText {
@@ -23,21 +24,12 @@ const MAX_TEXTS = 10
 const key = (lang: AppLang) => `recall.my_texts.${lang}`
 
 export function listMyTexts(lang: AppLang): MyText[] {
-  try {
-    const raw = localStorage.getItem(key(lang))
-    const list = raw ? (JSON.parse(raw) as MyText[]) : []
-    return Array.isArray(list) ? list : []
-  } catch {
-    return []
-  }
+  const list = readJson<MyText[]>(key(lang), [])
+  return Array.isArray(list) ? list : []
 }
 
 function save(lang: AppLang, list: MyText[]): void {
-  try {
-    localStorage.setItem(key(lang), JSON.stringify(list))
-  } catch {
-    /* переполнен localStorage — молча не сохраняем, UI покажет список как есть */
-  }
+  writeJson(key(lang), list)
 }
 
 export function addMyText(lang: AppLang, title: string, body: string): MyText {

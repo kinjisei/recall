@@ -31,14 +31,11 @@
 - 🔴→🟡 **Supabase-клиент без типа схемы** (src/lib/supabase.ts): 31 «слепой»
   каст `data as Deck/Card/...` в 11 файлах, переименование колонки в БД
   TypeScript не заметит. Фикс: `supabase gen types typescript` +
-  `createClient<Database>(...)`. Отдельный заход (снижает будущие баги, но сам
-  добавляет риск регрессий — проверять смоуками).
-- 🟡 **Нет общего lib/storage.ts**: паттерн «JSON из localStorage с try/catch»
-  переизобретён в 12 файлах, поведение при сбое неоднородно. Вынести
-  readJson/writeJson. Тем же заходом закрыть #9.
-- ⚪ **localStorage напрямую из компонентов** (recall.program_seen.* в
-  DashboardPage/ProgramPage, TUTORIAL_KEY в DeckReview) — свести в lib вместе с
-  общим storage.ts.
+  `createClient<Database>(...)`. ⚠️ ТРЕБУЕТ ДЕЙСТВИЯ ВЛАДЕЛЬЦА: supabase CLI не
+  установлен, в .env.local нет ни SUPABASE_ACCESS_TOKEN, ни строки подключения к
+  БД — сгенерировать типы нечем. Нужен твой персональный access token (Supabase
+  → Account → Access Tokens) ИЛИ разрешение поставить supabase CLI. Иначе тип
+  базы придётся писать руками (долго и хрупко).
 - 🟡 **MaterialsSection.tsx — «бог-файл» 805 строк, 6 компонентов**. Резать по
   границам в features/teacher/materials/*. Кандидат-сосед: GrammarPage.tsx (589).
 - ⚪ **Хрупкие non-null `!`** (DictationMode `words!`, MaterialsSection `works!`,
@@ -152,6 +149,15 @@ revoke на месте. Класс «jsonb/text без лимита размер
     приглашению» (посторонний не упрётся в тупик).
   - 🟡 #10 **Мусор в корне** — «Recall Приложение (standalone).html» добавлен
     в .gitignore (риск случайного коммита закрыт).
+- ✅ 2026-07-27 — **#8 общий lib/storage.ts + #9 localStorage из компонентов**:
+  создан lib/storage.ts (readJson/writeJson/readRaw/writeRaw — единая безопасная
+  обёртка); на него переведены 13 модулей (mistakes, recentWords, myTexts,
+  gameMisses, verbMistakes, esLevel, onboarding, settings, definitions, profile,
+  wordPool, studyPlan, LanguageContext) — поведение сохранено. Ключ
+  program_seen централизован (isProgramSeen/markProgramSeen в studyPlan),
+  туториал-флаг DeckReview и язык переведены на storage. Прямой localStorage в
+  src остался только в clearUserLocalData (перечисление ключей). Проверка:
+  build + ux-audit 16 экранов, 0 JS-ошибок (3 известных inline-исключения «Речи»).
 - ✅ 2026-07-26 — **docs/ARCHITECTURE.md устарел ~наполовину** (находка У2):
   переписан целиком и синхронизирован с кодом; добавлено правило «обновлять в
   тот же заход, что меняет структуру».

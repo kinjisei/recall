@@ -9,6 +9,7 @@
 // диагностической карте ученицы. Сбои сети глотаем: банк не должен ломать урок.
 // ============================================================================
 import { supabase } from './supabase'
+import { readJson, writeJson, readRaw, writeRaw } from './storage'
 import type { AppLang } from '../types'
 
 export interface GrammarMistake {
@@ -20,21 +21,12 @@ export interface GrammarMistake {
 const key = (lang: AppLang) => `recall.grammar_mistakes.${lang}`
 
 export function getMistakes(lang: AppLang): GrammarMistake[] {
-  try {
-    const raw = localStorage.getItem(key(lang))
-    const list = raw ? (JSON.parse(raw) as GrammarMistake[]) : []
-    return Array.isArray(list) ? list : []
-  } catch {
-    return []
-  }
+  const list = readJson<GrammarMistake[]>(key(lang), [])
+  return Array.isArray(list) ? list : []
 }
 
 function save(lang: AppLang, list: GrammarMistake[]): void {
-  try {
-    localStorage.setItem(key(lang), JSON.stringify(list))
-  } catch {
-    /* приватный режим и т.п. — банк просто не сохранится */
-  }
+  writeJson(key(lang), list)
 }
 
 /** id текущего пользователя (null, если сессии нет — синк просто пропускается). */
@@ -86,18 +78,8 @@ export function removeMistake(lang: AppLang, m: GrammarMistake): void {
  */
 export function syncMistakesToDb(lang: AppLang): void {
   const flag = `recall.mistakes_synced.${lang}`
-  try {
-    if (localStorage.getItem(flag)) return
-  } catch {
-    return
-  }
+  if (readRaw(flag)) return
   dbAdd(lang, getMistakes(lang))
-    .then(() => {
-      try {
-        localStorage.setItem(flag, '1')
-      } catch {
-        /* некритично */
-      }
-    })
+    .then(() => writeRaw(flag, '1'))
     .catch(() => {})
 }

@@ -5,6 +5,7 @@
 // После изменения профиля (экран «Настройки») вызвать invalidateProfile().
 // ============================================================================
 import { supabase } from './supabase'
+import { readRaw, writeRaw } from './storage'
 import type { Profile } from '../types'
 
 let cache: { userId: string; promise: Promise<Profile | null> } | null = null
@@ -17,13 +18,9 @@ const LEVEL_CACHE_KEY = 'recall.en_level_cache'
  * undefined — кэш пуст (первый запуск на устройстве).
  */
 export function getCachedEnLevel(): string | null | undefined {
-  try {
-    const v = localStorage.getItem(LEVEL_CACHE_KEY)
-    if (v === null) return undefined
-    return v === '' ? null : v
-  } catch {
-    return undefined
-  }
+  const v = readRaw(LEVEL_CACHE_KEY)
+  if (v === null) return undefined
+  return v === '' ? null : v
 }
 
 /**
@@ -42,11 +39,7 @@ async function fetchProfile(userId: string): Promise<Profile | null> {
     .single()
   if (error) return null
   const profile = data as Profile
-  try {
-    localStorage.setItem(LEVEL_CACHE_KEY, profile.level ?? '')
-  } catch {
-    /* приватный режим */
-  }
+  writeRaw(LEVEL_CACHE_KEY, profile.level ?? '')
   return profile
 }
 

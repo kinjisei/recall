@@ -36,7 +36,7 @@ import { countDueCards } from '../../lib/fsrs'
 import { cachedWordOfDay, newWordOfDay, type PoolItem } from '../../lib/wordPool'
 import { addCard, countMyWords } from '../../lib/cards'
 import { getEsLevel } from '../../lib/esLevel'
-import { getMyPlans } from '../../lib/studyPlan'
+import { getMyPlans, isProgramSeen } from '../../lib/studyPlan'
 import { startGuided } from '../../lib/guided'
 import { speak } from '../../lib/speech'
 import { RowCard } from '../../components/RowCard'
@@ -110,7 +110,7 @@ export function DashboardPage() {
       .then((plans) => {
         const unseen = plans.find((p) => {
           try {
-            return !localStorage.getItem(`recall.program_seen.${p.id}`)
+            return !isProgramSeen(p.id)
           } catch {
             return false
           }

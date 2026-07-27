@@ -8,7 +8,19 @@
 import { supabase, requireUserId } from './supabase'
 import { chat } from './gemini'
 import { getStudentDiagnostics, type StudentDiagnostics } from './diagnostics'
+import { readRaw, writeRaw } from './storage'
 import type { AppLang, GrammarTopic, PlanItem, PlanWeek, StudyPlan } from '../types'
+
+// Флаг «ученица открывала программу» — карточка «Тебе назначили программу» на
+// Главной гаснет после захода на /program. Ключ был продублирован в двух
+// экранах (риск рассинхрона при опечатке) — теперь одна точка.
+const programSeenKey = (planId: string) => `recall.program_seen.${planId}`
+export function isProgramSeen(planId: string): boolean {
+  return readRaw(programSeenKey(planId)) !== null
+}
+export function markProgramSeen(planId: string): void {
+  writeRaw(programSeenKey(planId), '1')
+}
 
 export interface PlanRequest {
   studentId: string

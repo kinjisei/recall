@@ -12,6 +12,7 @@ import { supabase, currentUserId } from './supabase'
 import { getDeckIds } from './cards'
 import { getEsLevel } from './esLevel'
 import { getProfile } from './profile'
+import { readJson, writeJson } from './storage'
 import type { AppLang, Card, ReviewState } from '../types'
 
 /** Слово для игры: термин + перевод (+ пример и связь с карточкой колоды). */
@@ -209,24 +210,13 @@ function todayNumber(): number {
 /** Слово дня из кэша на сегодня (синхронно, без загрузки словаря).
  *  undefined — кэша нет (нужен полный newWordOfDay). */
 export function cachedWordOfDay(lang: AppLang): PoolItem | null | undefined {
-  try {
-    const raw = localStorage.getItem(`${WOD_KEY}.${lang}`)
-    if (!raw) return undefined
-    const c = JSON.parse(raw) as WodCache
-    if (c.day !== todayNumber()) return undefined
-    return c.word
-  } catch {
-    return undefined
-  }
+  const c = readJson<WodCache | null>(`${WOD_KEY}.${lang}`, null)
+  if (!c || c.day !== todayNumber()) return undefined
+  return c.word
 }
 
 function saveWordOfDay(lang: AppLang, word: PoolItem | null): void {
-  try {
-    const cache: WodCache = { day: todayNumber(), word }
-    localStorage.setItem(`${WOD_KEY}.${lang}`, JSON.stringify(cache))
-  } catch {
-    // localStorage переполнен/недоступен — просто не кэшируем
-  }
+  writeJson(`${WOD_KEY}.${lang}`, { day: todayNumber(), word } satisfies WodCache)
 }
 
 /**

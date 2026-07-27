@@ -244,6 +244,9 @@ chat(messages: ChatTurn[], opts: { task: AiTask; system?: string }): Promise<str
 // lib/guided.ts — ведомая сессия; lib/settings.ts — локальные настройки
 // lib/text.ts — answerMatches (варианты через «/»; ЕДИНАЯ проверка ответов —
 // та же логика в SQL submit_material)
+// lib/storage.ts — readJson/writeJson/readRaw/writeRaw: ЕДИНЫЙ безопасный
+// доступ к localStorage (try/catch + fallback). Весь localStorage — через него
+// (кроме перечисления ключей в profile.clearUserLocalData).
 ```
 
 > Безопасность (итог заходов 17–21): RLS защищает от чтения чужого, но не от

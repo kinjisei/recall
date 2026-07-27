@@ -8,17 +8,18 @@
 // INEFFECTIVE_DYNAMIC_IMPORT.
 // ============================================================================
 import { supabase, currentUserId } from './supabase'
+import { readRaw, writeRaw } from './storage'
 
 const KEY = 'recall.onboarded'
 
 /** Уже прошёл онбординг (синхронно, без сети). */
 export function isOnboarded(): boolean {
-  return localStorage.getItem(KEY) !== null
+  return readRaw(KEY) !== null
 }
 
 /** Отметить онбординг пройденным. */
 export function markOnboarded(): void {
-  localStorage.setItem(KEY, '1')
+  writeRaw(KEY, '1')
 }
 
 /**

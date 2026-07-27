@@ -10,6 +10,8 @@
 // промахнулся MISS_LIMIT раз за MISS_WINDOW_DAYS — это уже не случайность.
 // ============================================================================
 
+import { readJson, writeJson } from './storage'
+
 const KEY = 'recall.game_misses'
 const MISS_WINDOW_DAYS = 7
 const MISS_LIMIT = 3
@@ -18,21 +20,12 @@ const WINDOW_MS = MISS_WINDOW_DAYS * 86400000
 type MissLog = Record<string, number[]>
 
 function read(): MissLog {
-  try {
-    const raw = localStorage.getItem(KEY)
-    const v = raw ? (JSON.parse(raw) as MissLog) : {}
-    return v && typeof v === 'object' && !Array.isArray(v) ? v : {}
-  } catch {
-    return {}
-  }
+  const v = readJson<MissLog>(KEY, {})
+  return v && typeof v === 'object' && !Array.isArray(v) ? v : {}
 }
 
 function write(log: MissLog): void {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(log))
-  } catch {
-    /* приватный режим / переполнение — счётчик не критичен */
-  }
+  writeJson(KEY, log)
 }
 
 /**

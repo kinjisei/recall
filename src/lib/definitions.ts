@@ -15,6 +15,7 @@
 // ============================================================================
 import { lookup, type DictionarySense } from './dictionary'
 import { chat } from './gemini'
+import { readJson, writeJson } from './storage'
 
 const CACHE_KEY = 'recall.definitions'
 const MAX_LEN = 110
@@ -29,22 +30,15 @@ let cache: Record<string, string> | null = null
 
 function readCache(): Record<string, string> {
   if (cache) return cache
-  try {
-    cache = JSON.parse(localStorage.getItem(CACHE_KEY) ?? '{}') as Record<string, string>
-  } catch {
-    cache = {}
-  }
+  const v = readJson<Record<string, string>>(CACHE_KEY, {})
+  cache = v && typeof v === 'object' && !Array.isArray(v) ? v : {}
   return cache
 }
 
 function writeCache(entries: Record<string, string>) {
   const c = { ...readCache(), ...entries }
   cache = c
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(c))
-  } catch {
-    // переполнение хранилища — не критично, просто не кэшируем
-  }
+  writeJson(CACHE_KEY, c)
 }
 
 /** Короткое определение: первое предложение, без самого слова в открытую. */

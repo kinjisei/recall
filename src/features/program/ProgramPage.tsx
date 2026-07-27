@@ -10,7 +10,7 @@ import { BackHeader } from '../../components/BackButton'
 import { Card } from '../../components/Card'
 import { LoadError } from '../../components/LoadError'
 import { useAsyncData } from '../../lib/useAsyncData'
-import { currentWeekIndex, getMyPlans } from '../../lib/studyPlan'
+import { currentWeekIndex, getMyPlans, markProgramSeen } from '../../lib/studyPlan'
 import { PlanView } from './PlanView'
 import type { StudyPlan } from '../../types'
 
@@ -24,13 +24,7 @@ export function ProgramPage() {
 
   // программа открыта — уведомление «тебе назначили программу» на Главной гаснет
   useEffect(() => {
-    for (const p of plans ?? []) {
-      try {
-        localStorage.setItem(`recall.program_seen.${p.id}`, '1')
-      } catch {
-        /* приватный режим — уведомление просто останется */
-      }
-    }
+    for (const p of plans ?? []) markProgramSeen(p.id)
   }, [plans])
 
   return (

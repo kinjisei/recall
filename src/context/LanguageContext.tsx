@@ -3,6 +3,7 @@
 // Выбор хранится в localStorage и переживает перезагрузку страницы.
 // ============================================================================
 import { createContext, useContext, useState, type ReactNode } from 'react'
+import { readRaw, writeRaw } from '../lib/storage'
 import type { AppLang } from '../types'
 
 const STORAGE_KEY = 'recall.lang'
@@ -18,12 +19,7 @@ const LanguageContext = createContext<LanguageContextValue>({
 })
 
 function readStoredLang(): AppLang {
-  try {
-    const v = localStorage.getItem(STORAGE_KEY)
-    return v === 'es' ? 'es' : 'en'
-  } catch {
-    return 'en'
-  }
+  return readRaw(STORAGE_KEY) === 'es' ? 'es' : 'en'
 }
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
@@ -31,11 +27,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   const setLang = (next: AppLang) => {
     setLangState(next)
-    try {
-      localStorage.setItem(STORAGE_KEY, next)
-    } catch {
-      /* приватный режим — не критично */
-    }
+    writeRaw(STORAGE_KEY, next)
   }
 
   return (

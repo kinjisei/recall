@@ -6,6 +6,8 @@
 // см. features/settings/SettingsPage.
 // ============================================================================
 
+import { readJson, writeJson } from './storage'
+
 const KEY = 'recall.settings'
 
 export type SpeechRate = 'slow' | 'normal' | 'fast'
@@ -36,12 +38,8 @@ let cache: Settings | null = null
 
 export function getSettings(): Settings {
   if (cache) return cache
-  try {
-    const raw = JSON.parse(localStorage.getItem(KEY) ?? '{}') as Partial<Settings>
-    cache = { ...DEFAULTS, ...raw }
-  } catch {
-    cache = { ...DEFAULTS }
-  }
+  const raw = readJson<Partial<Settings>>(KEY, {})
+  cache = { ...DEFAULTS, ...(raw && typeof raw === 'object' ? raw : {}) }
   return cache
 }
 
@@ -50,11 +48,7 @@ export function getSettings(): Settings {
 export function setSettings(patch: Partial<Settings>): Settings {
   const next = { ...getSettings(), ...patch }
   cache = next
-  try {
-    localStorage.setItem(KEY, JSON.stringify(next))
-  } catch {
-    // приватный режим — настройки просто не переживут перезагрузку
-  }
+  writeJson(KEY, next)
   return next
 }
 

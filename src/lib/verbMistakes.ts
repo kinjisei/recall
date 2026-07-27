@@ -5,26 +5,18 @@
 // убирает; в тренажёре появляется группа «Мои ошибки», гоняющая только их.
 // Всё в localStorage — как и грамматический банк ([[mistakes]]).
 // ============================================================================
+import { readJson, writeJson } from './storage'
 import type { AppLang } from '../types'
 
 const key = (lang: AppLang) => `recall.verb_mistakes.${lang}`
 
 export function getVerbMistakes(lang: AppLang): string[] {
-  try {
-    const raw = localStorage.getItem(key(lang))
-    const list = raw ? (JSON.parse(raw) as string[]) : []
-    return Array.isArray(list) ? list.filter((x) => typeof x === 'string') : []
-  } catch {
-    return []
-  }
+  const list = readJson<string[]>(key(lang), [])
+  return Array.isArray(list) ? list.filter((x) => typeof x === 'string') : []
 }
 
 function save(lang: AppLang, list: string[]): void {
-  try {
-    localStorage.setItem(key(lang), JSON.stringify(list))
-  } catch {
-    /* приватный режим — просто не сохранится */
-  }
+  writeJson(key(lang), list)
 }
 
 export function addVerbMistake(lang: AppLang, id: string): void {

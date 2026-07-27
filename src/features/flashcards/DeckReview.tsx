@@ -14,6 +14,7 @@ import { Button } from '../../components/Button'
 import { celebrate } from '../../components/Confetti'
 import { getDueCards, reviewCard, type DueCard } from '../../lib/fsrs'
 import { clearMisses } from '../../lib/gameMisses'
+import { readRaw, writeRaw } from '../../lib/storage'
 import { countMyWords } from '../../lib/cards'
 import { logActivity } from '../../lib/activity'
 import { getMyPendingWordChecks } from '../../lib/wordChecks'
@@ -93,11 +94,11 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
 
   // обучающая подсказка — один раз, когда впервые появилась карточка
   useEffect(() => {
-    if (current && !localStorage.getItem(TUTORIAL_KEY)) setShowTutorial(true)
+    if (current && !readRaw(TUTORIAL_KEY)) setShowTutorial(true)
   }, [current])
 
   const dismissTutorial = () => {
-    localStorage.setItem(TUTORIAL_KEY, '1')
+    writeRaw(TUTORIAL_KEY, '1')
     setShowTutorial(false)
   }
 
