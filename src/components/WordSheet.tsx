@@ -297,7 +297,7 @@ export function WordSheet({
         className="flex max-h-[85dvh] w-full flex-col rounded-t-3xl bg-[var(--night-surface)]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mx-auto mb-1 mt-3 h-1.5 w-10 shrink-0 rounded-full bg-slate-300 dark:bg-slate-600" />
+        <div className="mx-auto mb-1 mt-3 h-1.5 w-10 shrink-0 rounded-full bg-slate-600" />
 
         {/* Прокручиваемое содержимое */}
         <div className="min-h-0 overflow-y-auto px-5 pt-2">
@@ -312,7 +312,7 @@ export function WordSheet({
             </h3>
             <button
               onClick={playAudio}
-              className="shrink-0 rounded-full bg-white/[0.06] px-3 py-2 dark:bg-white/[0.08]"
+              className="shrink-0 rounded-full bg-white/[0.08] px-3 py-2"
               aria-label="Озвучить"
             >
               <IconSpeaker size={18} />
@@ -340,7 +340,7 @@ export function WordSheet({
             </p>
           )}
 
-          <p className="mt-3 rounded-lg bg-white/[0.06] px-3 py-2 text-sm italic text-[var(--night-text-40)] dark:bg-slate-700/60 dark:text-[var(--night-text-40)]">
+          <p className="mt-3 rounded-lg bg-slate-700/60 px-3 py-2 text-sm italic text-[var(--night-text-40)]">
             «{sentence}»
           </p>
 

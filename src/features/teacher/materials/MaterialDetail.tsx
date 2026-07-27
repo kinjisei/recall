@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { Card } from '../../../components/Card'
 import { Button } from '../../../components/Button'
 import { BackHeader } from '../../../components/BackButton'
+import { LoadError } from '../../../components/LoadError'
+import { IconPrinter, IconTrash } from '../../../components/icons'
 import {
   assignMaterial,
   deleteMaterial,
@@ -33,7 +35,11 @@ export function MaterialDetail({
   onWorksChanged?: () => void
 }) {
   const [assignments, setAssignments] = useState<MaterialAssignment[] | null>(null)
+  // сбой загрузки назначений НЕ равен «никому не назначено»: иначе учитель
+  // видит всех ученицами без работы и может переназначить/проглядеть сдачу
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [busyStudent, setBusyStudent] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showBody, setShowBody] = useState(false)
   const [reviewing, setReviewing] = useState<{ a: MaterialAssignment; name: string } | null>(
@@ -42,7 +48,10 @@ export function MaterialDetail({
   const [printMode, setPrintMode] = useState<'student' | 'teacher' | null>(null)
 
   const reload = useCallback(() => {
-    listMaterialAssignments(material.id).then(setAssignments).catch(() => setAssignments([]))
+    setLoadError(null)
+    listMaterialAssignments(material.id)
+      .then((rows) => setAssignments(rows))
+      .catch((e) => setLoadError(e instanceof Error ? e.message : 'Не удалось загрузить назначения'))
   }, [material.id])
 
   useEffect(() => {
@@ -81,12 +90,16 @@ export function MaterialDetail({
   }
 
   const remove = async () => {
+    if (deleting) return
     if (!window.confirm('Удалить материал? Назначения учениц тоже удалятся.')) return
+    setDeleting(true)
+    setError(null)
     try {
       await deleteMaterial(material.id)
       onDeleted()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Не удалось удалить')
+      setDeleting(false)
     }
   }
 
@@ -116,7 +129,7 @@ export function MaterialDetail({
         </p>
         <button
           onClick={() => setShowBody((s) => !s)}
-          className="mt-2 text-sm font-medium text-[var(--night-accent-text)] hover:underline dark:text-[var(--night-accent-text)]"
+          className="mt-2 text-sm font-medium text-[var(--night-accent-text)] hover:underline"
         >
           {showBody ? '▾ Скрыть текст' : '▸ Показать текст'}
         </button>
@@ -131,14 +144,14 @@ export function MaterialDetail({
             className="px-3 py-1.5 text-sm"
             onClick={() => setPrintMode('student')}
           >
-            🖨 Для ученика
+            <IconPrinter size={16} /> Для ученика
           </Button>
           <Button
             variant="secondary"
             className="px-3 py-1.5 text-sm"
             onClick={() => setPrintMode('teacher')}
           >
-            🖨 С ответами
+            <IconPrinter size={16} /> С ответами
           </Button>
         </div>
       </Card>
@@ -153,7 +166,11 @@ export function MaterialDetail({
 
       <Card className="flex flex-col gap-2">
         <p className="text-sm font-semibold">Назначить ученицам</p>
-        {students.length === 0 ? (
+        {loadError ? (
+          <LoadError message={loadError} onRetry={reload} />
+        ) : assignments === null ? (
+          <p className="text-sm text-[var(--night-text-40)]">Загрузка…</p>
+        ) : students.length === 0 ? (
           <p className="text-sm text-[var(--night-text-40)]">Пока нет привязанных учениц.</p>
         ) : (
           students.map((s) => {
@@ -163,7 +180,7 @@ export function MaterialDetail({
             return (
               <div
                 key={s.profile.id}
-                className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.08] px-3 py-2 dark:border-white/[0.08]"
+                className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.08] px-3 py-2"
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium">{name}</p>
@@ -202,8 +219,13 @@ export function MaterialDetail({
         {error && <p className="text-sm text-red-500">{error}</p>}
       </Card>
 
-      <Button variant="ghost" className="self-start text-sm text-red-500" onClick={remove}>
-        🗑 Удалить материал
+      <Button
+        variant="ghost"
+        className="self-start text-sm text-red-500"
+        onClick={remove}
+        loading={deleting}
+      >
+        <IconTrash size={16} /> Удалить материал
       </Button>
     </div>
   )

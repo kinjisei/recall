@@ -11,6 +11,7 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Button } from '../../components/Button'
+import { IconPrinter } from '../../components/icons'
 import type { StudentDiagnostics } from '../../lib/diagnostics'
 import type { MetricDelta } from '../../lib/dynamics'
 
@@ -134,7 +135,7 @@ export function ReportSheet({
     <div className="print-sheet fixed inset-0 z-50 overflow-auto bg-white px-8 py-6 text-black">
       <div className="no-print mb-5 flex flex-wrap items-center gap-2 border-b border-slate-200 pb-4">
         <Button className="px-4 py-2 text-sm" onClick={() => window.print()}>
-          🖨 Печать / Сохранить в PDF
+          <IconPrinter size={16} /> Печать / Сохранить в PDF
         </Button>
         <Button variant="secondary" className="px-4 py-2 text-sm" onClick={onClose}>
           Закрыть

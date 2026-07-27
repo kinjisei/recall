@@ -7,6 +7,8 @@
 // ============================================================================
 import { useEffect, useState } from 'react'
 import { Button } from '../../components/Button'
+import { LoadError } from '../../components/LoadError'
+import { IconPrinter } from '../../components/icons'
 import { getStudentDiagnostics, type StudentDiagnostics } from '../../lib/diagnostics'
 import type { MetricDelta } from '../../lib/dynamics'
 import { ReportSheet } from './ReportSheet'
@@ -96,10 +98,12 @@ export function DiagnosticsSection({
   const [diag, setDiag] = useState<StudentDiagnostics | null>(null)
   const [titles, setTitles] = useState<TopicTitles>(new Map())
   const [error, setError] = useState<string | null>(null)
+  const [attempt, setAttempt] = useState(0)
   const [showReport, setShowReport] = useState(false)
 
   useEffect(() => {
     let alive = true
+    setError(null)
     getStudentDiagnostics(studentId)
       .then(async (d) => {
         if (!alive) return
@@ -124,9 +128,9 @@ export function DiagnosticsSection({
     return () => {
       alive = false
     }
-  }, [studentId])
+  }, [studentId, attempt])
 
-  if (error) return <p className="text-sm text-red-400">{error}</p>
+  if (error) return <LoadError message={error} onRetry={() => setAttempt((n) => n + 1)} />
   if (!diag) return <p className="text-sm text-[var(--night-text-40)]">Собираю карту…</p>
 
   const w = diag.words
@@ -162,7 +166,7 @@ export function DiagnosticsSection({
         className="self-start px-3 py-2 text-sm"
         onClick={() => setShowReport(true)}
       >
-        🖨 Отчёт для родителей
+        <IconPrinter size={16} /> Отчёт для родителей
       </Button>
       {showReport && (
         <ReportSheet

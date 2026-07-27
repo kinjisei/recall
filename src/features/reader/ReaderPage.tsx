@@ -2,6 +2,7 @@
 import { Card } from '../../components/Card'
 import { GuidedNext } from '../../components/GuidedNext'
 import { BackHeader } from '../../components/BackButton'
+import { TabPicker } from '../../components/TabPicker'
 import { MarkableText } from '../../components/MarkableText'
 import { useLanguage } from '../../context/LanguageContext'
 import { getUserLevel } from '../../lib/level'
@@ -108,24 +109,15 @@ function EnglishReaderPage({
 
       {header}
 
-      <div className="flex gap-2">
-        {levels.map((l) => (
-          <button
-            key={l}
-            onClick={() => {
-              userPicked.current = true
-              setLevel(l)
-            }}
-            className={`min-h-[44px] rounded-lg px-4 text-sm font-semibold ${
-              level === l
-                ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
-                : 'bg-white/[0.07] text-[var(--night-text-70)]'
-            }`}
-          >
-            {l}
-          </button>
-        ))}
-      </div>
+      <TabPicker
+        options={levels.map((l) => ({ id: l, label: l }))}
+        value={level}
+        onChange={(l) => {
+          userPicked.current = true
+          setLevel(l)
+        }}
+        ariaLabel="Уровень текста"
+      />
 
       <p className="text-sm text-[var(--night-text-40)]">
         Выбери текст и нажимай на незнакомые слова. Долгое нажатие и протяжка

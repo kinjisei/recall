@@ -21,7 +21,7 @@ import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { deleteCard, listMyWords, updateCard, type MyWord } from '../../lib/cards'
 import { speak } from '../../lib/speech'
-import type { WordStatus } from '../../lib/wordChecks'
+import { WORD_STATUS_CLS, type WordStatus } from '../../lib/wordChecks'
 import { GameHeader } from './GameShell'
 import type { AppLang } from '../../types'
 
@@ -34,13 +34,11 @@ const FILTERS: { id: Filter; label: string }[] = [
   { id: 'learned', label: 'Выучено' },
 ]
 
+// цвета — общий WORD_STATUS_CLS; подписи от первого лица (свой список)
 const STATUS_CHIP: Record<WordStatus, { label: string; cls: string }> = {
-  new: { label: 'новое', cls: 'bg-white/[0.08] text-[var(--night-text-40)]' },
-  learning: {
-    label: 'учу',
-    cls: 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]',
-  },
-  learned: { label: 'выучено', cls: 'bg-emerald-500/20 text-emerald-300' },
+  new: { label: 'новое', cls: WORD_STATUS_CLS.new },
+  learning: { label: 'учу', cls: WORD_STATUS_CLS.learning },
+  learned: { label: 'выучено', cls: WORD_STATUS_CLS.learned },
 }
 
 export function MyWords({ lang, onBack }: { lang: AppLang; onBack: () => void }) {
@@ -180,7 +178,12 @@ export function MyWords({ lang, onBack }: { lang: AppLang; onBack: () => void })
       </div>
 
       {!words ? (
-        <p className="text-[var(--night-text-40)]">Загрузка…</p>
+        // скелетоны в высоту строк (как в «Учёбе»/на Главной), а не голый текст
+        <div className="flex flex-col gap-2" aria-hidden>
+          {[0, 1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-[64px] animate-pulse rounded-2xl bg-white/[0.04]" />
+          ))}
+        </div>
       ) : shown.length === 0 ? (
         <Card className="text-center">
           <IconTray size={38} className="mx-auto block text-[var(--night-text-40)]" />

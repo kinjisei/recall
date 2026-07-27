@@ -11,6 +11,7 @@ import {
 } from '../../components/icons'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
+import { TabPicker } from '../../components/TabPicker'
 import { supabase } from '../../lib/supabase'
 import { getProfile } from '../../lib/profile'
 import { chat } from '../../lib/gemini'
@@ -55,27 +56,7 @@ export function ConversationPage() {
             {lang === 'es' ? `испанский · ${level}` : `уровень ${level}`}
           </p>
         </div>
-        <div
-          role="group"
-          aria-label="Режим"
-          className="flex gap-0.5 rounded-full bg-white/[0.07] p-0.5"
-        >
-          {modes.map((m) => (
-            <button
-              key={m.id}
-              onClick={() => setMode(m.id)}
-              aria-pressed={mode === m.id}
-              className={`flex min-h-[44px] items-center gap-1.5 rounded-full px-4 text-xs font-semibold transition-colors ${
-                mode === m.id
-                  ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
-                  : 'text-[var(--night-text-40)] hover:text-[var(--night-text-70)]'
-              }`}
-            >
-              <m.Icon size={14} />
-              {m.label}
-            </button>
-          ))}
-        </div>
+        <TabPicker variant="segment" options={modes} value={mode} onChange={setMode} ariaLabel="Режим" />
       </header>
 
       {/* key={lang}: при смене языка начинаем чат/проверку заново */}
@@ -284,7 +265,7 @@ function ChatSection({ level, lang }: { level: CEFRLevel; lang: AppLang }) {
           </div>
         ))}
         {busy && (
-          <div className="self-start rounded-2xl rounded-bl-md border border-white/[0.08] bg-[var(--night-surface)] px-4 py-2.5 text-[var(--night-text-40)] dark:border-white/[0.08] dark:bg-[var(--night-surface)]">
+          <div className="self-start rounded-2xl rounded-bl-md border border-white/[0.08] bg-[var(--night-surface)] px-4 py-2.5 text-[var(--night-text-40)]">
             печатает…
           </div>
         )}

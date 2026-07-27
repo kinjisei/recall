@@ -98,15 +98,19 @@ function ActivePlanView({
   onNew: () => void
 }) {
   const [err, setErr] = useState<string | null>(null)
+  const [archiving, setArchiving] = useState(false)
   const week = currentWeekIndex(plan)
 
   const remove = async () => {
+    if (archiving) return
     if (!confirm('Снять программу? Ученица перестанет её видеть.')) return
+    setArchiving(true)
     try {
       await archivePlan(plan.id)
       onChanged()
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Не удалось снять программу')
+      setArchiving(false)
     }
   }
 
@@ -124,10 +128,20 @@ function ActivePlanView({
       <PlanView weeks={plan.weeks} currentWeek={week} />
       {err && <p className="text-sm text-red-400">{err}</p>}
       <div className="flex gap-2">
-        <Button variant="secondary" className="px-3 py-2 text-sm" onClick={onNew}>
+        <Button
+          variant="secondary"
+          className="px-3 py-2 text-sm"
+          onClick={onNew}
+          disabled={archiving}
+        >
           Составить новую
         </Button>
-        <Button variant="ghost" className="px-3 py-2 text-sm" onClick={remove}>
+        <Button
+          variant="ghost"
+          className="px-3 py-2 text-sm"
+          onClick={remove}
+          loading={archiving}
+        >
           Снять программу
         </Button>
       </div>

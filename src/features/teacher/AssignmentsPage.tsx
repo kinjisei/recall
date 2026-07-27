@@ -14,6 +14,7 @@ import { MarkableText } from '../../components/MarkableText'
 import { logActivity } from '../../lib/activity'
 import { useAsyncData } from '../../lib/useAsyncData'
 import { LoadError } from '../../components/LoadError'
+import { IconTray } from '../../components/icons'
 import {
   getMyAssignments,
   submitAssignment,
@@ -80,7 +81,7 @@ export function AssignmentsPage() {
         <LoadError message={error} onRetry={reload} />
       ) : (rows ?? []).length === 0 ? (
         <Card className="text-center">
-          <p className="text-4xl">🌤</p>
+          <IconTray size={38} className="mx-auto block text-[var(--night-text-40)]" />
           <p className="mt-2 font-semibold">Заданий пока нет</p>
           <p className="mt-1 text-sm text-[var(--night-text-40)]">
             Когда преподаватель назначит задание, оно появится здесь.
@@ -120,7 +121,7 @@ function AssignmentCard({ row, onOpen }: { row: Row; onOpen: () => void }) {
           <p className="text-xs text-[var(--night-text-40)]">
             {m.lang.toUpperCase()} · {m.level} · {m.format} · {m.exercises.length} упр.
             {(row.attempts?.length ?? 0) > 0 && row.status === 'assigned' && (
-              <span className="ml-1 font-semibold text-amber-600 dark:text-amber-400">
+              <span className="ml-1 font-semibold text-amber-400">
                 · повторно
               </span>
             )}
@@ -128,7 +129,7 @@ function AssignmentCard({ row, onOpen }: { row: Row; onOpen: () => void }) {
         </div>
         <span className="shrink-0 text-right text-sm">
           {row.status === 'assigned' ? (
-            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">
+            <span className="rounded-full bg-amber-900/50 px-2 py-0.5 text-xs font-semibold text-amber-300">
               новое
             </span>
           ) : row.status === 'submitted' ? (
@@ -221,13 +222,13 @@ function ReviewedView({
             <p className="text-sm font-medium">{ex.prompt}</p>
             <p className="text-sm">
               Твой ответ:{' '}
-              <span className={ok ? 'font-semibold text-emerald-600 dark:text-emerald-400' : 'font-semibold text-red-500'}>
+              <span className={ok ? 'font-semibold text-emerald-400' : 'font-semibold text-red-500'}>
                 {given} {ok ? '✓' : '✗'}
               </span>
               {!ok && correct && <span className="text-[var(--night-text-40)]"> · правильно: {correct}</span>}
             </p>
             {item?.comment && (
-              <p className="rounded-lg bg-sky-50 px-3 py-2 text-sm text-[var(--night-text-70)] dark:bg-sky-950/40 dark:text-slate-200">
+              <p className="rounded-lg bg-sky-950/40 px-3 py-2 text-sm text-slate-200">
                 💬 {item.comment}
               </p>
             )}
@@ -308,8 +309,8 @@ function AssignmentRunner({
         <BackHeader onBack={onBack} title={m.title ?? m.topic} label="К заданиям" />
 
         {row.note && row.status === 'assigned' && (
-          <Card className="border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-950/30">
-            <p className="text-sm text-amber-900 dark:text-amber-200">
+          <Card className="border-amber-700 bg-amber-950/30">
+            <p className="text-sm text-amber-200">
               💬 Комментарий преподавателя: {row.note}
             </p>
           </Card>
@@ -362,7 +363,7 @@ function AssignmentRunner({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between text-sm text-[var(--night-text-40)]">
-        <button onClick={() => setStage('read')} className="font-medium text-[var(--night-accent-text)] hover:underline dark:text-[var(--night-accent-text)]">
+        <button onClick={() => setStage('read')} className="font-medium text-[var(--night-accent-text)] hover:underline">
           ↑ перечитать текст
         </button>
         <span>

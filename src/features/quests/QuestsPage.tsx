@@ -225,8 +225,8 @@ function QuestChat({ quest, onBack }: { quest: GrammarQuest; onBack: () => void 
         </div>
         <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.07]">
           <div
-            className="h-full rounded-full bg-[var(--night-accent)] transition-all duration-300"
-            style={{ width: `${(progress / quest.target) * 100}%` }}
+            className="h-full origin-left rounded-full bg-[var(--night-accent)] transition-transform duration-300"
+            style={{ transform: `scaleX(${Math.min(progress / quest.target, 1)})` }}
           />
         </div>
       </div>

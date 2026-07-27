@@ -149,7 +149,12 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
   if (activeCheck) {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="text-xl font-medium tracking-tight">Повторение</h1>
+        <header className="flex min-w-0 items-center gap-3">
+          {/* выход из перепроверки — иначе при большом наборе слов ученица
+              заперта до конца всех карточек (нет пути назад в приложении) */}
+          <BackButton onClick={() => setActiveCheck(null)} />
+          <h1 className="truncate text-xl font-medium tracking-tight">Перепроверка</h1>
+        </header>
         <WordCheckRunner
           check={activeCheck.check}
           cards={activeCheck.cards}
@@ -178,12 +183,12 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
           onClick={() => setActiveCheck({ check, cards })}
           className="text-left"
         >
-          <Card className="flex items-center justify-between border-amber-300 bg-amber-50 transition-transform active:scale-[0.99] dark:border-amber-700 dark:bg-amber-950/30">
+          <Card className="flex items-center justify-between border-amber-700 bg-amber-950/30 transition-transform active:scale-[0.99]">
             <div>
-              <p className="flex items-center gap-1.5 font-semibold text-amber-900 dark:text-amber-200">
+              <p className="flex items-center gap-1.5 font-semibold text-amber-200">
                 <IconRefresh size={16} /> Перепроверка от преподавателя
               </p>
-              <p className="text-sm text-amber-700/80 dark:text-amber-300/80">
+              <p className="text-sm text-amber-300/80">
                 Напиши по памяти: слов — {cards.length}
               </p>
             </div>
@@ -195,8 +200,8 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
       ))}
 
       {error && (
-        <Card className="border-red-300 bg-red-50 dark:bg-red-950/30">
-          <p className="text-sm text-red-600 dark:text-red-300">{error}</p>
+        <Card className="border-red-300 bg-red-950/30">
+          <p className="text-sm text-red-300">{error}</p>
         </Card>
       )}
 
@@ -214,8 +219,8 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
             </div>
             <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.07]">
               <div
-                className="h-full rounded-full bg-[var(--night-accent)] transition-all duration-300"
-                style={{ width: `${(index / Math.max(queue.length, 1)) * 100}%` }}
+                className="h-full origin-left rounded-full bg-[var(--night-accent)] transition-transform duration-300"
+                style={{ transform: `scaleX(${index / Math.max(queue.length, 1)})` }}
               />
             </div>
           </div>

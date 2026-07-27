@@ -21,9 +21,11 @@ import {
 import { BackHeader } from '../../components/BackButton'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
+import { TabPicker } from '../../components/TabPicker'
 import { RoundResult, RoundProgress } from '../../components/RoundResult'
 import { speak } from '../../lib/speech'
 import { logActivity } from '../../lib/activity'
+import { useScrollTop } from '../../lib/useScrollTop'
 import {
   addMistake,
   getMistakes,
@@ -75,24 +77,7 @@ export function GrammarPage() {
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-medium tracking-tight">Грамматика</h1>
-      {
-        <div className="flex gap-2">
-          {sections.map((s) => (
-            <button
-              key={s.id}
-              onClick={() => setSection(s.id)}
-              className={`flex min-h-[44px] items-center gap-1.5 rounded-lg px-4 text-sm font-semibold ${
-                section === s.id
-                  ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
-                  : 'bg-white/[0.07] text-[var(--night-text-70)]'
-              }`}
-            >
-              <s.Icon size={16} />
-              {s.label}
-            </button>
-          ))}
-        </div>
-      }
+      <TabPicker options={sections} value={section} onChange={setSection} ariaLabel="Раздел грамматики" />
 
       {section === 'lessons' ? (
         <LessonsSection key={lang} lang={lang} initialMistakes={params.get('mistakes') === '1'} />
@@ -113,26 +98,15 @@ function EnglishVerbs() {
   const [kind, setKind] = useState<'irregular' | 'phrasal'>('irregular')
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex gap-2">
-        {(
-          [
-            ['irregular', 'Неправильные'],
-            ['phrasal', 'Фразовые'],
-          ] as ['irregular' | 'phrasal', string][]
-        ).map(([id, label]) => (
-          <button
-            key={id}
-            onClick={() => setKind(id)}
-            className={`min-h-[44px] rounded-lg px-4 text-sm ${
-              kind === id
-                ? 'bg-white/[0.10] font-semibold text-[var(--night-text)]'
-                : 'bg-white/[0.04] text-[var(--night-text-40)]'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      <TabPicker
+        options={[
+          { id: 'irregular', label: 'Неправильные' },
+          { id: 'phrasal', label: 'Фразовые' },
+        ]}
+        value={kind}
+        onChange={setKind}
+        ariaLabel="Тип глаголов"
+      />
       {kind === 'irregular' ? <IrregularVerbsSection /> : <PhrasalVerbsSection />}
     </div>
   )
@@ -153,9 +127,7 @@ function LessonsSection({
 
   // При открытии темы (и возврате к списку) прокручиваем наверх — иначе
   // урок открывался на прежней прокрутке списка, показывая свою нижнюю часть.
-  useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [selected])
+  useScrollTop(selected)
   // пересчитываем счётчик при каждом возврате к списку
   const mistakeCount = useMemo(
     () => (topics ? collectMistakes(lang, topics).length : 0),
@@ -228,7 +200,7 @@ function LessonsSection({
             <div key={level}>
               <button
                 onClick={() => setOpenLevel((cur) => (cur === level ? null : level))}
-                className="flex min-h-11 w-full items-center justify-between rounded-lg bg-white/[0.06] px-3 py-2 text-left dark:bg-[var(--night-surface)]"
+                className="flex min-h-11 w-full items-center justify-between rounded-lg bg-[var(--night-surface)] px-3 py-2 text-left"
               >
                 <span className="text-sm font-bold">
                   Уровень {level}{' '}
@@ -277,9 +249,7 @@ function TopicScreen({
   const [mode, setMode] = useState<'theory' | 'exercises'>('theory')
 
   // при переключении теория↔упражнения — тоже наверх
-  useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [mode])
+  useScrollTop(mode)
 
   return (
     <div className="flex flex-col gap-4">
@@ -365,7 +335,7 @@ function TheoryBlock({ block, lang }: { block: GrammarTheoryBlock; lang: AppLang
     // текст примера: испанские уроки хранят его в es, английские — в en
     const sample = block.es ?? block.en ?? ''
     return (
-      <div className="rounded-xl bg-white/[0.06] px-3 py-2 dark:bg-[var(--night-surface)]">
+      <div className="rounded-xl bg-[var(--night-surface)] px-3 py-2">
         <div className="flex items-center gap-2">
           <p className="font-medium text-[var(--night-text)]">{sample}</p>
           <button
@@ -389,7 +359,7 @@ function TheoryBlock({ block, lang }: { block: GrammarTheoryBlock; lang: AppLang
             {block.headers.map((h, i) => (
               <th
                 key={i}
-                className="border border-white/[0.08] bg-white/[0.06] px-2 py-1 text-left font-semibold dark:border-white/[0.08] dark:bg-[var(--night-surface)]"
+                className="border border-white/[0.08] bg-[var(--night-surface)] px-2 py-1 text-left font-semibold"
               >
                 {h}
               </th>
@@ -402,7 +372,7 @@ function TheoryBlock({ block, lang }: { block: GrammarTheoryBlock; lang: AppLang
               {row.map((cell, ci) => (
                 <td
                   key={ci}
-                  className="border border-white/[0.08] px-2 py-1 dark:border-white/[0.08]"
+                  className="border border-white/[0.08] px-2 py-1"
                 >
                   {cell}
                 </td>

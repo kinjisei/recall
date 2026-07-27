@@ -158,11 +158,18 @@ function auditPage() {
     if (el.disabled) continue
     const r = el.getBoundingClientRect()
     if (r.width >= 44 && r.height >= 44) continue
-    // исключение WCAG 2.5.5: inline-ссылка внутри предложения
+    // исключение WCAG 2.5.5: цель в потоке текста (слово/ссылка внутри
+    // предложения). display может быть inline ИЛИ inline-block — кнопка-слово
+    // с вертикальным padding для хит-зоны считается inline-block. Ключевой
+    // признак «в предложении»: родитель — текстовый блок, а собственный текст
+    // цели много короче всего предложения. Icon-кнопку в flex-строке (родитель
+    // DIV) это НЕ исключает — регрессии по-прежнему видны.
     const cs = getComputedStyle(el)
     const parentText = (el.parentElement?.textContent || '').trim()
     const ownText = (el.textContent || '').trim()
-    if (cs.display === 'inline' && parentText.length > ownText.length + 5) continue
+    const inFlow = cs.display === 'inline' || cs.display === 'inline-block'
+    const parentIsText = ['P', 'SPAN', 'LI', 'LABEL'].includes(el.parentElement?.tagName || '')
+    if (inFlow && parentIsText && parentText.length > ownText.length + 5) continue
     issues.push({
       type: 'touch',
       detail: `${Math.round(r.width)}×${Math.round(r.height)} — <${el.tagName.toLowerCase()}> «${snippet(el)}»`,

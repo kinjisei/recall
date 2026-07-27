@@ -59,6 +59,7 @@ export function QuestSection({ studentId }: { studentId: string }) {
   const [busy, setBusy] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [openChat, setOpenChat] = useState<string | null>(null)
+  const [removingId, setRemovingId] = useState<string | null>(null)
 
   const submit = async () => {
     const scen = (custom.trim() || scenario).trim()
@@ -88,12 +89,16 @@ export function QuestSection({ studentId }: { studentId: string }) {
   }
 
   const remove = async (id: string) => {
+    if (removingId) return
     if (!confirm('Снять этот квест?')) return
+    setRemovingId(id)
     try {
       await deleteQuest(id)
       reload()
     } catch (e) {
       setFormError(e instanceof Error ? e.message : 'Не удалось удалить')
+    } finally {
+      setRemovingId(null)
     }
   }
 
@@ -140,6 +145,7 @@ export function QuestSection({ studentId }: { studentId: string }) {
                     variant="ghost"
                     className="px-2 py-1 text-xs"
                     onClick={() => remove(q.id)}
+                    loading={removingId === q.id}
                   >
                     Снять
                   </Button>

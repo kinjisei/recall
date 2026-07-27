@@ -58,8 +58,8 @@ export function McqExercise({
           const isPicked = i === picked
           let cls = 'border-white/[0.10] hover:border-[var(--night-accent-45)]'
           if (picked !== null) {
-            if (isAnswer) cls = 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40'
-            else if (isPicked) cls = 'border-red-500 bg-red-50 dark:bg-red-950/40'
+            if (isAnswer) cls = 'border-emerald-500 bg-emerald-950/40'
+            else if (isPicked) cls = 'border-red-500 bg-red-950/40'
             else cls = 'border-white/[0.08] opacity-60'
           }
           return (
@@ -109,7 +109,7 @@ export function FillExercise({
             ? ok
               ? 'border-emerald-500'
               : 'border-red-500'
-            : 'border-white/[0.10] focus:border-[var(--night-accent-45)] dark:border-white/[0.10]'
+            : 'border-white/[0.10] focus:border-[var(--night-accent-45)]'
         }`}
         placeholder="Твой ответ…"
         value={value}
@@ -136,13 +136,13 @@ export function FillExercise({
       {checked && !ok && (
         <p className="text-sm">
           <span className="text-red-500">Верный ответ: </span>
-          <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+          <span className="font-semibold text-emerald-400">
             {exercise.answer}
           </span>
         </p>
       )}
       {checked && ok && (
-        <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+        <p className="text-sm font-semibold text-emerald-400">
           Верно! ✓
         </p>
       )}
@@ -235,10 +235,10 @@ export function OrderExercise({
             key={item.i}
             onClick={() => !checked && setBuilt((arr) => [...arr, item])}
             disabled={checked || usedIdx.has(item.i)}
-            className={`rounded-lg border px-3 py-1.5 text-sm ${
+            className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${
               usedIdx.has(item.i)
-                ? 'border-white/[0.08] text-[var(--night-text-25)] dark:border-slate-800 dark:text-[var(--night-text-70)]'
-                : 'border-white/[0.10]'
+                ? 'border-white/[0.06] text-[var(--night-text-40)]' // использованное слово — приглушено
+                : 'border-white/[0.10] active:scale-[0.97]'
             }`}
           >
             {item.w}
@@ -249,13 +249,13 @@ export function OrderExercise({
       {checked && !ok && (
         <p className="text-sm">
           <span className="text-red-500">Правильно: </span>
-          <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+          <span className="font-semibold text-emerald-400">
             {exercise.answer.join(' ')}
           </span>
         </p>
       )}
       {checked && ok && (
-        <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+        <p className="text-sm font-semibold text-emerald-400">
           Верно! ✓
         </p>
       )}

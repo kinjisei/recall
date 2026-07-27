@@ -9,6 +9,7 @@
 // ============================================================================
 import { useCallback, useEffect, useState } from 'react'
 import { Button } from '../../components/Button'
+import { LoadError } from '../../components/LoadError'
 import {
   assignPlacement,
   cancelPlacement,
@@ -37,9 +38,14 @@ export function PlacementSection({
   const [rows, setRows] = useState<PlacementRequest[] | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  // сбой загрузки ≠ «тестов не было»: иначе учитель не отличит одно от другого
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   const load = useCallback(() => {
-    listPlacements(studentId).then(setRows).catch(() => setRows([]))
+    setLoadError(null)
+    listPlacements(studentId)
+      .then(setRows)
+      .catch((e) => setLoadError(e instanceof Error ? e.message : 'Не удалось загрузить тесты'))
   }, [studentId])
 
   useEffect(() => {
@@ -109,7 +115,9 @@ export function PlacementSection({
 
           {error && <p className="text-sm text-red-400">{error}</p>}
 
-          {rows === null ? (
+          {loadError ? (
+            <LoadError message={loadError} onRetry={load} />
+          ) : rows === null ? (
             <p className="text-sm text-[var(--night-text-40)]">Загружаю…</p>
           ) : rows.length === 0 ? (
             <p className="text-sm text-[var(--night-text-40)]">Тестов пока не было.</p>

@@ -60,7 +60,7 @@ function TeacherCard() {
           </p>
         </div>
         {pending > 0 ? (
-          <span className="rounded-full bg-amber-100 px-2.5 py-1 text-sm font-bold text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">
+          <span className="rounded-full bg-amber-900/50 px-2.5 py-1 text-sm font-bold text-amber-300">
             {pending}
           </span>
         ) : (
@@ -93,12 +93,12 @@ export function AssignmentsNotice({
   if (placement === 'top') {
     return (
       <Link to="/assignments">
-        <Card className="flex items-center justify-between border-amber-300 bg-amber-50 transition-transform active:scale-[0.99] dark:border-amber-700 dark:bg-amber-950/30">
+        <Card className="flex items-center justify-between border-amber-700 bg-amber-950/30 transition-transform active:scale-[0.99]">
           <div>
-            <p className="font-semibold text-amber-900 dark:text-amber-200">
+            <p className="font-semibold text-amber-200">
               Новое задание от преподавателя
             </p>
-            <p className="text-sm text-amber-700/80 dark:text-amber-300/80">
+            <p className="text-sm text-amber-300/80">
               {counts.pending === 1
                 ? 'Тебя ждёт 1 задание'
                 : `Тебя ждут задания: ${counts.pending}`}

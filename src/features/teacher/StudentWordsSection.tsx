@@ -9,14 +9,16 @@ import {
   assignWordCheck,
   getStudentWords,
   getWordChecks,
+  WORD_STATUS_CLS,
   type StudentWord,
 } from '../../lib/wordChecks'
 import type { WordCheck } from '../../types'
 
+// цвета — общий WORD_STATUS_CLS (тот же, что видит ученица); подписи от 3-го лица
 const statusChip = {
-  new: { label: 'новое', cls: 'bg-white/[0.06] text-[var(--night-text-40)] dark:bg-white/[0.08] dark:text-[var(--night-text-25)]' },
-  learning: { label: 'учится', cls: 'bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300' },
-  learned: { label: 'изучено', cls: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' },
+  new: { label: 'новое', cls: WORD_STATUS_CLS.new },
+  learning: { label: 'учится', cls: WORD_STATUS_CLS.learning },
+  learned: { label: 'изучено', cls: WORD_STATUS_CLS.learned },
 } as const
 
 export function StudentWordsSection({ studentId }: { studentId: string }) {
@@ -84,7 +86,7 @@ export function StudentWordsSection({ studentId }: { studentId: string }) {
             const wrong = (c.results ?? []).filter((r) => !r.ok)
             const date = new Date(c.created_at).toLocaleDateString('ru-RU')
             return (
-              <div key={c.id} className="rounded-lg bg-white/[0.06] px-3 py-2 text-sm dark:bg-[var(--night-surface)]">
+              <div key={c.id} className="rounded-lg bg-[var(--night-surface)] px-3 py-2 text-sm">
                 {c.completed_at ? (
                   <>
                     <button
@@ -134,7 +136,7 @@ export function StudentWordsSection({ studentId }: { studentId: string }) {
               return (
                 <label
                   key={w.card.id}
-                  className="flex cursor-pointer items-center gap-2 rounded-lg border border-white/[0.08] px-2.5 py-1.5 dark:border-white/[0.08]"
+                  className="flex cursor-pointer items-center gap-2 rounded-lg border border-white/[0.08] px-2.5 py-1.5"
                 >
                   <input
                     type="checkbox"

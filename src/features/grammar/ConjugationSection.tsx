@@ -125,7 +125,7 @@ function ReferenceView({ reference }: { reference: ConjugationReference }) {
           <div key={level}>
             <button
               onClick={() => setOpenLevel((cur) => (cur === level ? null : level))}
-              className="flex w-full items-center justify-between rounded-lg bg-white/[0.06] px-3 py-2 text-left dark:bg-[var(--night-surface)]"
+              className="flex w-full items-center justify-between rounded-lg bg-[var(--night-surface)] px-3 py-2 text-left"
             >
               <span className="text-sm font-bold">
                 Уровень {level}{' '}
@@ -174,12 +174,12 @@ function TenseDetail({
 
       <Card className="flex flex-col gap-2">
         <p className="text-sm text-[var(--night-text-70)]">{tense.usage}</p>
-        <div className="rounded-lg bg-white/[0.06] px-3 py-2 dark:bg-[var(--night-surface)]">
+        <div className="rounded-lg bg-[var(--night-surface)] px-3 py-2">
           <div className="flex items-center gap-2">
             <p className="font-medium">{tense.example}</p>
             <button
               onClick={() => speak(tense.example, { lang: 'es' })}
-              className="rounded-full bg-[var(--night-surface)] px-2 py-1 dark:bg-white/[0.08]"
+              className="rounded-full bg-[var(--night-surface)] px-2 py-1"
               aria-label="Озвучить"
             >
               <IconSpeaker size={15} />
@@ -232,13 +232,13 @@ function ConjTable({
       <table className="min-w-full border-collapse text-sm">
         <thead>
           <tr>
-            <th className="border border-white/[0.08] bg-white/[0.06] px-2 py-1 text-left font-semibold dark:border-white/[0.08] dark:bg-[var(--night-surface)]">
+            <th className="border border-white/[0.08] bg-[var(--night-surface)] px-2 py-1 text-left font-semibold">
               {firstHeader}
             </th>
             {persons.map((p, i) => (
               <th
                 key={i}
-                className="whitespace-nowrap border border-white/[0.08] bg-white/[0.06] px-2 py-1 text-left font-semibold dark:border-white/[0.08] dark:bg-[var(--night-surface)]"
+                className="whitespace-nowrap border border-white/[0.08] bg-[var(--night-surface)] px-2 py-1 text-left font-semibold"
               >
                 {p}
               </th>
@@ -248,7 +248,7 @@ function ConjTable({
         <tbody>
           {rows.map((row, ri) => (
             <tr key={ri}>
-              <td className="whitespace-nowrap border border-white/[0.08] px-2 py-1 font-medium dark:border-white/[0.08]">
+              <td className="whitespace-nowrap border border-white/[0.08] px-2 py-1 font-medium">
                 {row.head}
                 {row.sub && (
                   <span className="block text-xs font-normal text-[var(--night-text-40)]">
@@ -259,7 +259,7 @@ function ConjTable({
               {row.cells.map((c, ci) => (
                 <td
                   key={ci}
-                  className="whitespace-nowrap border border-white/[0.08] px-2 py-1 dark:border-white/[0.08]"
+                  className="whitespace-nowrap border border-white/[0.08] px-2 py-1"
                 >
                   {c}
                 </td>
@@ -404,8 +404,8 @@ function TrainerRunner({
             const isPicked = i === picked
             let cls = 'border-white/[0.10] hover:border-[var(--night-accent-45)]'
             if (picked !== null) {
-              if (isAnswer) cls = 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40'
-              else if (isPicked) cls = 'border-red-500 bg-red-50 dark:bg-red-950/40'
+              if (isAnswer) cls = 'border-emerald-500 bg-emerald-950/40'
+              else if (isPicked) cls = 'border-red-500 bg-red-950/40'
               else cls = 'border-white/[0.08] opacity-60'
             }
             return (
@@ -423,7 +423,7 @@ function TrainerRunner({
 
         {picked !== null && (
           <>
-            <p className="rounded-lg bg-white/[0.06] px-3 py-2 text-sm text-[var(--night-text-70)] dark:bg-[var(--night-surface)] dark:text-[var(--night-text-25)]">
+            <p className="rounded-lg bg-[var(--night-surface)] px-3 py-2 text-sm text-[var(--night-text-25)]">
               {current.explanation}
             </p>
             <Button onClick={next}>

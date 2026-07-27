@@ -234,8 +234,8 @@ export function PlacementTest() {
         </div>
         <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.07]">
           <div
-            className="h-full rounded-full bg-[var(--night-accent)] transition-all duration-300"
-            style={{ width: `${((index + 1) / total) * 100}%` }}
+            className="h-full origin-left rounded-full bg-[var(--night-accent)] transition-transform duration-300"
+            style={{ transform: `scaleX(${(index + 1) / total})` }}
           />
         </div>
       </div>

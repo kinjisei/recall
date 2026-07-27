@@ -15,6 +15,7 @@ import { getSettings, READER_CLASSES } from '../../lib/settings'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { BackButton, BackHeader } from '../../components/BackButton'
+import { TabPicker } from '../../components/TabPicker'
 import { speak } from '../../lib/speech'
 import { TappableText, WordSheet, type WordPick } from '../../components/WordSheet'
 import {
@@ -67,38 +68,14 @@ export function SpanishReaderPage({
 
       {header}
 
-      <div className="flex gap-2">
-        {kinds.map((k) => (
-          <button
-            key={k.id}
-            onClick={() => setKind(k.id)}
-            className={`flex min-h-[44px] items-center gap-1.5 rounded-lg px-4 text-sm font-semibold ${
-              kind === k.id
-                ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
-                : 'bg-white/[0.07] text-[var(--night-text-70)]'
-            }`}
-          >
-            <k.Icon size={16} />
-            {k.label}
-          </button>
-        ))}
-      </div>
+      <TabPicker options={kinds} value={kind} onChange={setKind} ariaLabel="Тип чтения" />
 
-      <div className="flex gap-2">
-        {spanishLevels.map((l) => (
-          <button
-            key={l}
-            onClick={() => setLevel(l)}
-            className={`min-h-[44px] rounded-lg px-4 text-sm font-semibold ${
-              level === l
-                ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
-                : 'bg-white/[0.07] text-[var(--night-text-70)]'
-            }`}
-          >
-            {l}
-          </button>
-        ))}
-      </div>
+      <TabPicker
+        options={spanishLevels.map((l) => ({ id: l, label: l }))}
+        value={level}
+        onChange={setLevel}
+        ariaLabel="Уровень"
+      />
 
       <p className="text-sm text-[var(--night-text-40)]">
         Выбери {kind === 'texts' ? 'текст' : 'диалог'} и нажимай на незнакомые
@@ -176,7 +153,7 @@ function ReadingView({
               {openRu.has(i) ? 'Скрыть перевод' : 'Перевод'}
             </button>
             {openRu.has(i) && (
-              <p className="mt-1 rounded-lg bg-white/[0.06] px-3 py-2 text-sm text-[var(--night-text-70)] dark:bg-[var(--night-surface)] dark:text-[var(--night-text-25)]">
+              <p className="mt-1 rounded-lg bg-[var(--night-surface)] px-3 py-2 text-sm text-[var(--night-text-25)]">
                 {p.ru}
               </p>
             )}

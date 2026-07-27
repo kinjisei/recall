@@ -171,7 +171,7 @@ export function PacksSheet({ lang, onAdded }: { lang: AppLang; onAdded: () => vo
                 <div key={key}>
                   <button
                     onClick={() => setOpenLevel((cur) => (cur === key ? null : key))}
-                    className="flex w-full items-center justify-between rounded-lg bg-white/[0.06] px-3 py-2 text-left dark:bg-[var(--night-surface)]"
+                    className="flex w-full items-center justify-between rounded-lg bg-[var(--night-surface)] px-3 py-2 text-left"
                   >
                     <span className="text-sm font-bold">
                       Уровень {level}{' '}
@@ -190,14 +190,14 @@ export function PacksSheet({ lang, onAdded }: { lang: AppLang; onAdded: () => vo
                         return (
                           <div
                             key={t.id}
-                            className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.08] px-3 py-2 dark:border-white/[0.08]"
+                            className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.08] px-3 py-2"
                           >
                             <div className="min-w-0">
                               <p className="truncate font-medium">{t.name}</p>
                               <p className="text-xs text-[var(--night-text-40)]">{count} слов</p>
                             </div>
                             {note ? (
-                              <span className="shrink-0 text-sm text-emerald-600 dark:text-emerald-400">
+                              <span className="shrink-0 text-sm text-emerald-400">
                                 {note}
                               </span>
                             ) : (

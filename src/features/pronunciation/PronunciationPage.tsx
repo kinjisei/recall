@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BackButton } from '../../components/BackButton'
 import { Card } from '../../components/Card'
@@ -321,7 +321,10 @@ export function PronunciationPage() {
         <p className="text-xl font-medium leading-relaxed">
           {(score ? score.words : current.text.split(/\s+/).map((word) => ({ word, ok: null }))).map(
             (w, i) => (
-              <span key={i}>
+              // Fragment (не span) — кнопка остаётся ПРЯМЫМ ребёнком <p>, т.е.
+              // настоящей inline-целью внутри предложения (WCAG 2.5.5), а не
+              // словом, обёрнутым в отдельный бокс.
+              <Fragment key={i}>
                 <button
                   onClick={() => speak(w.word.replace(/[^\p{L}\p{N}'-]/gu, ''), { lang })}
                   title="Послушать слово"
@@ -339,7 +342,7 @@ export function PronunciationPage() {
                 >
                   {w.word}
                 </button>{' '}
-              </span>
+              </Fragment>
             ),
           )}
         </p>

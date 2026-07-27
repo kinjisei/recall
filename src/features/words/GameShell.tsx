@@ -150,18 +150,18 @@ export function QuizRunner({
             const isPicked = picked === i
             const cls =
               picked === null
-                ? 'border-white/[0.10]'
+                ? 'border-white/[0.10] active:scale-[0.98]'
                 : isAnswer
-                  ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
+                  ? 'border-emerald-500 bg-emerald-500/15 text-emerald-300'
                   : isPicked
-                    ? 'border-red-500 bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300'
-                    : 'border-white/[0.08] opacity-60 dark:border-white/[0.08]'
+                    ? 'border-red-500 bg-red-500/15 text-red-300'
+                    : 'border-white/[0.08] opacity-60'
             return (
               <button
                 key={i}
                 onClick={() => choose(i)}
                 disabled={picked !== null}
-                className={`rounded-xl border px-3 py-2.5 text-left transition-colors ${cls}`}
+                className={`rounded-xl border px-3 py-2.5 text-left transition-[transform,background-color,border-color,color] duration-150 ${cls}`}
               >
                 {opt}
               </button>

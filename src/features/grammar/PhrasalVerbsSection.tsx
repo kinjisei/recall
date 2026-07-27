@@ -11,6 +11,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { IconSpeaker } from '../../components/icons'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
+import { TabPicker } from '../../components/TabPicker'
 import { RoundResult, RoundProgress } from '../../components/RoundResult'
 import { speak } from '../../lib/speech'
 import { logActivity } from '../../lib/activity'
@@ -39,26 +40,15 @@ export function PhrasalVerbsSection() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex gap-2">
-        {(
-          [
-            ['reference', 'Справочник'],
-            ['trainer', 'Тренажёр'],
-          ] as [Mode, string][]
-        ).map(([id, label]) => (
-          <button
-            key={id}
-            onClick={() => setMode(id)}
-            className={`min-h-[44px] rounded-lg px-4 text-sm font-semibold ${
-              mode === id
-                ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
-                : 'bg-white/[0.07] text-[var(--night-text-70)]'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      <TabPicker
+        options={[
+          { id: 'reference', label: 'Справочник' },
+          { id: 'trainer', label: 'Тренажёр' },
+        ]}
+        value={mode}
+        onChange={setMode}
+        ariaLabel="Режим"
+      />
 
       {mode === 'reference' ? <Reference entries={entries} /> : <Trainer entries={entries} />}
     </div>

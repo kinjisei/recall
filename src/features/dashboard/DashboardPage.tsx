@@ -66,6 +66,9 @@ export function DashboardPage() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [streak, setStreak] = useState(0)
   const [week, setWeek] = useState<WeekDay[]>([])
+  // пока activity_log не пришёл — не показываем «0 серия» с анимацией пламени
+  // (первый экран приложения мигал нулём и пустой неделей до сети)
+  const [homeLoaded, setHomeLoaded] = useState(false)
   const [doneToday, setDoneToday] = useState<Set<ActivityType>>(new Set())
   const [dueCount, setDueCount] = useState<number | null>(null)
   // сколько всего своих слов: 0 — колода пуста, новичка не путаем «Всё повторено»
@@ -96,6 +99,7 @@ export function DashboardPage() {
         setDoneToday(a.todayTypes)
       })
       .catch(() => {})
+      .finally(() => setHomeLoaded(true))
     Promise.all([
       loadAssignmentCounts().catch(() => ({ total: 0, pending: 0 })),
       getMyDailyPlanConfig().catch(() => null),
@@ -219,8 +223,15 @@ export function DashboardPage() {
         </p>
       </header>
 
-      {/* 2. Стрик-герой */}
-      <StreakHero streak={streak} week={week} didToday={didToday} perfect={perfect} />
+      {/* 2. Стрик-герой (скелетон, пока не пришёл activity_log — чтобы не мигать «0») */}
+      {homeLoaded ? (
+        <StreakHero streak={streak} week={week} didToday={didToday} perfect={perfect} />
+      ) : (
+        <div
+          aria-hidden
+          className="h-[196px] animate-pulse rounded-3xl border border-[var(--night-accent-45)] bg-white/[0.04]"
+        />
+      )}
 
       {/* 3. Новое задание от преподавателя */}
       <AssignmentsNotice placement="top" counts={assignments} />

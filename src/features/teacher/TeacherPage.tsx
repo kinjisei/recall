@@ -186,7 +186,7 @@ function TeacherDashboard() {
               Код-приглашение — ученица вводит его у себя на Главной:
             </p>
             <div className="mt-2 flex items-center gap-3">
-              <span className="rounded-xl bg-white/[0.06] px-4 py-2 font-mono text-2xl font-bold tracking-widest dark:bg-white/[0.08]">
+              <span className="rounded-xl bg-white/[0.08] px-4 py-2 font-mono text-2xl font-bold tracking-widest">
                 {code ?? '……'}
               </span>
               <Button variant="secondary" className="px-3 py-2 text-sm" onClick={copyCode}>
@@ -209,8 +209,8 @@ function TeacherDashboard() {
           </Card>
 
           {error && (
-            <Card className="border-red-300 bg-red-50 dark:bg-red-950/30">
-              <p className="text-sm text-red-600 dark:text-red-300">{error}</p>
+            <Card className="border-red-300 bg-red-950/30">
+              <p className="text-sm text-red-300">{error}</p>
             </Card>
           )}
 
@@ -296,7 +296,7 @@ function StudentCard({
 
       <button
         onClick={() => setShowDecks((v) => !v)}
-        className="text-left text-sm font-medium text-[var(--night-accent-text)] hover:underline dark:text-[var(--night-accent-text)]"
+        className="text-left text-sm font-medium text-[var(--night-accent-text)] hover:underline"
       >
         {showDecks ? '▾ Скрыть наборы слов' : `▸ Наборы слов (назначено: ${student.assignedDeckIds.length})`}
       </button>
@@ -309,7 +309,7 @@ function StudentCard({
             return (
               <div
                 key={d.id}
-                className="flex flex-col gap-2 rounded-xl border border-white/[0.08] px-3 py-2 dark:border-white/[0.08]"
+                className="flex flex-col gap-2 rounded-xl border border-white/[0.08] px-3 py-2"
               >
                 <div className="flex items-center justify-between gap-2">
                   {/* тап по названию раскрывает слова — назначение больше не вслепую */}
@@ -349,7 +349,7 @@ function StudentCard({
 
       <button
         onClick={() => setShowDiag((v) => !v)}
-        className="text-left text-sm font-medium text-[var(--night-accent-text)] hover:underline dark:text-[var(--night-accent-text)]"
+        className="text-left text-sm font-medium text-[var(--night-accent-text)] hover:underline"
       >
         {showDiag ? '▾ Скрыть диагностику' : '▸ Диагностическая карта'}
       </button>
@@ -363,7 +363,7 @@ function StudentCard({
 
       <button
         onClick={() => setShowPlanDay((v) => !v)}
-        className="text-left text-sm font-medium text-[var(--night-accent-text)] hover:underline dark:text-[var(--night-accent-text)]"
+        className="text-left text-sm font-medium text-[var(--night-accent-text)] hover:underline"
       >
         {showPlanDay ? '▾ Скрыть план дня' : '▸ План дня'}
       </button>
@@ -371,7 +371,7 @@ function StudentCard({
 
       <button
         onClick={() => setShowProgram((v) => !v)}
-        className="text-left text-sm font-medium text-[var(--night-accent-text)] hover:underline dark:text-[var(--night-accent-text)]"
+        className="text-left text-sm font-medium text-[var(--night-accent-text)] hover:underline"
       >
         {showProgram ? '▾ Скрыть программу' : '▸ Программа обучения'}
       </button>
@@ -379,7 +379,7 @@ function StudentCard({
 
       <button
         onClick={() => setShowWords((v) => !v)}
-        className="text-left text-sm font-medium text-[var(--night-accent-text)] hover:underline dark:text-[var(--night-accent-text)]"
+        className="text-left text-sm font-medium text-[var(--night-accent-text)] hover:underline"
       >
         {showWords ? '▾ Скрыть слова' : '▸ Слова и перепроверка'}
       </button>
@@ -387,7 +387,7 @@ function StudentCard({
 
       <button
         onClick={() => setShowQuests((v) => !v)}
-        className="text-left text-sm font-medium text-[var(--night-accent-text)] hover:underline dark:text-[var(--night-accent-text)]"
+        className="text-left text-sm font-medium text-[var(--night-accent-text)] hover:underline"
       >
         {showQuests ? '▾ Скрыть AI-квесты' : '▸ AI-квесты по грамматике'}
       </button>

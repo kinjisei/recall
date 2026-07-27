@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react'
 import { BackButton } from '../../components/BackButton'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
+import { IconCheck, IconClose } from '../../components/icons'
 import {
   finishReview,
   generateAiReview,
@@ -122,7 +123,7 @@ export function ReviewScreen({
 
       <button
         onClick={() => setShowBody((s) => !s)}
-        className="self-start text-sm font-medium text-[var(--night-accent-text)] hover:underline dark:text-[var(--night-accent-text)]"
+        className="self-start text-sm font-medium text-[var(--night-accent-text)] hover:underline"
       >
         {showBody ? '▾ Скрыть текст материала' : '▸ Текст материала'}
       </button>
@@ -158,8 +159,8 @@ export function ReviewScreen({
         </Card>
       )}
       {error && (
-        <Card className="border-red-300 bg-red-50 dark:bg-red-950/30">
-          <p className="text-sm text-red-600 dark:text-red-300">{error}</p>
+        <Card className="border-red-300 bg-red-950/30">
+          <p className="text-sm text-red-300">{error}</p>
           {!review && (
             <Button variant="secondary" className="mt-2 px-3 py-1.5 text-sm" onClick={runAiReview}>
               Повторить разбор
@@ -190,7 +191,7 @@ export function ReviewScreen({
                 <p className="text-sm font-medium">{ex.prompt}</p>
                 <p className="text-sm">
                   Ответ ученицы:{' '}
-                  <span className={item.ok ? 'font-semibold text-emerald-600 dark:text-emerald-400' : 'font-semibold text-red-500'}>
+                  <span className={item.ok ? 'font-semibold text-emerald-400' : 'font-semibold text-red-500'}>
                     {given}
                   </span>
                   {!item.ok && correct && (
@@ -200,7 +201,7 @@ export function ReviewScreen({
 
                 {alreadyReviewed ? (
                   item.comment && (
-                    <p className="rounded-lg bg-white/[0.06] px-3 py-2 text-sm text-[var(--night-text-70)] dark:bg-[var(--night-surface)] dark:text-[var(--night-text-25)]">
+                    <p className="rounded-lg bg-[var(--night-surface)] px-3 py-2 text-sm text-[var(--night-text-25)]">
                       {item.comment}
                     </p>
                   )
@@ -209,23 +210,23 @@ export function ReviewScreen({
                     <div className="flex gap-2">
                       <button
                         onClick={() => setItem(i, { ok: true })}
-                        className={`rounded-lg px-3 py-1.5 text-sm font-semibold ${
+                        className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors active:scale-[0.97] ${
                           item.ok
                             ? 'bg-emerald-600 text-white'
-                            : 'bg-white/[0.07] text-[var(--night-text-70)] dark:bg-white/[0.08] dark:text-[var(--night-text-25)]'
+                            : 'bg-white/[0.07] text-[var(--night-text-70)]'
                         }`}
                       >
-                        ✓ Правильно
+                        <IconCheck size={16} /> Правильно
                       </button>
                       <button
                         onClick={() => setItem(i, { ok: false })}
-                        className={`rounded-lg px-3 py-1.5 text-sm font-semibold ${
+                        className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors active:scale-[0.97] ${
                           !item.ok
                             ? 'bg-red-500 text-white'
-                            : 'bg-white/[0.07] text-[var(--night-text-70)] dark:bg-white/[0.08] dark:text-[var(--night-text-25)]'
+                            : 'bg-white/[0.07] text-[var(--night-text-70)]'
                         }`}
                       >
-                        ✗ Ошибка
+                        <IconClose size={16} /> Ошибка
                       </button>
                     </div>
                     <textarea
@@ -241,10 +242,10 @@ export function ReviewScreen({
           })}
 
           {!alreadyReviewed && (
-            <Button onClick={finish} disabled={saving}>
+            <Button onClick={finish} loading={saving}>
               {saving
                 ? 'Сохраняю…'
-                : `Завершить проверку (${okCount}/${material.exercises.length}) ✓`}
+                : `Завершить проверку (${okCount}/${material.exercises.length})`}
             </Button>
           )}
 
@@ -253,7 +254,7 @@ export function ReviewScreen({
               {!reassignOpen ? (
                 <button
                   onClick={() => setReassignOpen(true)}
-                  className="text-left text-sm font-medium text-[var(--night-accent-text)] hover:underline dark:text-[var(--night-accent-text)]"
+                  className="text-left text-sm font-medium text-[var(--night-accent-text)] hover:underline"
                 >
                   ↻ Переназначить этот материал (текущий результат сохранится в истории)
                 </button>

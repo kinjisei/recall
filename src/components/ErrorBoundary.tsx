@@ -48,7 +48,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[var(--night-bg)] px-6 text-center dark:bg-slate-950">
+        <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-[var(--night-bg)] px-6 text-center">
           <IconWarning size={40} className="text-[var(--night-accent-text)]" />
           <p className="font-semibold text-[var(--night-text-70)]">
             Что-то пошло не так

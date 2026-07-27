@@ -5,7 +5,7 @@
 // review_states) + выход из аккаунта (перенесён сюда с Главной).
 // ============================================================================
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useSmartBack } from '../../components/SmartBack'
 import {
   IconBack,
   IconMaterials,
@@ -60,7 +60,7 @@ async function loadMetrics(lang: 'en' | 'es'): Promise<Omit<Metrics, 'best'>> {
 }
 
 export function ProgressPage() {
-  const navigate = useNavigate()
+  const goBack = useSmartBack('/')
   const { signOut } = useAuth()
   const { lang } = useLanguage()
   const [week, setWeek] = useState<WeekDay[]>([])
@@ -92,7 +92,7 @@ export function ProgressPage() {
     <div className="flex flex-col gap-6">
       <header className="flex items-center gap-2">
         <button
-          onClick={() => navigate(-1)}
+          onClick={goBack}
           aria-label="Назад"
           className="lift -ml-2 flex h-11 w-11 items-center justify-center rounded-full text-[var(--night-text-70)]"
         >

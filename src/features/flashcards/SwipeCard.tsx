@@ -115,7 +115,7 @@ export function SwipeCard({
     >
       {/* переворачивающаяся плоскость: две грани спина к спине */}
       <div
-        className="relative min-h-[55vh] transition-transform duration-[650ms] [transform-style:preserve-3d] [transition-timing-function:cubic-bezier(.22,1,.36,1)]"
+        className="relative min-h-[55vh] transition-transform duration-[450ms] [transform-style:preserve-3d] [transition-timing-function:cubic-bezier(.22,1,.36,1)]"
         style={{ transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }}
       >
         {/* лицевая грань — слово */}

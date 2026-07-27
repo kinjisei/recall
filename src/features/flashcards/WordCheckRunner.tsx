@@ -91,7 +91,7 @@ export function WordCheckRunner({
               <p key={r.card_id} className="mt-1 text-sm">
                 <span className="font-semibold text-red-500">{r.given || '—'}</span>
                 {' → '}
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                <span className="font-semibold text-emerald-400">
                   {r.front}
                 </span>
                 {r.back && <span className="text-[var(--night-text-40)]"> ({r.back})</span>}
@@ -150,18 +150,18 @@ export function WordCheckRunner({
         {checked && (
           <div className="flex flex-col items-center gap-1">
             {ok ? (
-              <p className="font-semibold text-emerald-600 dark:text-emerald-400">Верно! ✓</p>
+              <p className="font-semibold text-emerald-400">Верно! ✓</p>
             ) : (
               <p className="text-sm">
                 <span className="text-red-500">Правильно: </span>
-                <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                <span className="text-lg font-bold text-emerald-400">
                   {current.front}
                 </span>
               </p>
             )}
             <button
               onClick={() => speak(current.front, { lang })}
-              className="rounded-full bg-white/[0.06] px-3 py-2 dark:bg-white/[0.08]"
+              className="rounded-full bg-white/[0.08] px-3 py-2"
               aria-label="Озвучить"
             >
               <IconSpeaker size={18} />

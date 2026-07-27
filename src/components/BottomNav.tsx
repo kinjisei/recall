@@ -37,14 +37,14 @@ interface Tab {
 // Без `also` заход в грамматику или задания гасил всю навигацию — пользователь
 // оказывался «нигде»: ни одна вкладка не была активной.
 const tabs: Tab[] = [
-  { to: '/', label: 'Главная', Icon: IconHome, IconFill: IconHomeFill, end: true, also: ['/progress', '/settings', '/teacher'] },
+  { to: '/', label: 'Главная', Icon: IconHome, IconFill: IconHomeFill, end: true, also: ['/progress', '/settings', '/teacher', '/admin'] },
   {
     to: '/study',
     label: 'Учёба',
     Icon: IconStudy,
     IconFill: IconStudyFill,
     end: false,
-    also: ['/grammar', '/placement', '/assignments', '/reader', '/program', '/quests'],
+    also: ['/grammar', '/placement', '/assignments', '/program', '/quests'],
   },
   {
     to: '/practice',
@@ -52,7 +52,7 @@ const tabs: Tab[] = [
     Icon: IconPractice,
     IconFill: IconPracticeFill,
     end: false,
-    also: ['/flashcards', '/pronunciation'],
+    also: ['/pronunciation'],
   },
   { to: '/conversation', label: 'Диалог', Icon: IconDialog, IconFill: IconDialogFill, end: false },
 ]

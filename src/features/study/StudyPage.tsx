@@ -267,6 +267,8 @@ function WordsStudy({ onBack }: { onBack: () => void }) {
   const { lang } = useLanguage()
   const [sub, setSub] = useState<'menu' | 'review' | 'mywords'>('menu')
   const [sheet, setSheet] = useState<null | 'add' | 'packs'>(null)
+  // «Мои слова» — длинный список: без сброса открывался на прежней прокрутке меню
+  useScrollTop(sub)
 
   useEffect(() => {
     setSub('menu')

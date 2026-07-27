@@ -9,6 +9,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { IconSpeaker } from '../../components/icons'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
+import { TabPicker } from '../../components/TabPicker'
 import { RoundResult } from '../../components/RoundResult'
 import { speak } from '../../lib/speech'
 import { logActivity } from '../../lib/activity'
@@ -41,26 +42,15 @@ export function IrregularVerbsSection() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex gap-2">
-        {(
-          [
-            ['reference', 'Справочник'],
-            ['trainer', 'Тренажёр'],
-          ] as [Mode, string][]
-        ).map(([id, label]) => (
-          <button
-            key={id}
-            onClick={() => setMode(id)}
-            className={`min-h-[44px] rounded-lg px-4 text-sm font-semibold ${
-              mode === id
-                ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
-                : 'bg-white/[0.07] text-[var(--night-text-70)]'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      <TabPicker
+        options={[
+          { id: 'reference', label: 'Справочник' },
+          { id: 'trainer', label: 'Тренажёр' },
+        ]}
+        value={mode}
+        onChange={setMode}
+        ariaLabel="Режим"
+      />
 
       {mode === 'reference' ? <Reference groups={groups} /> : <Trainer groups={groups} />}
     </div>
@@ -101,7 +91,7 @@ function Reference({ groups }: { groups: IrregularGroup[] }) {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Поиск: go, went, идти…"
-        className="rounded-xl border border-white/[0.10] bg-[var(--night-surface)] px-4 py-2.5 dark:border-white/[0.10] dark:bg-[var(--night-surface)]"
+        className="rounded-xl border border-white/[0.10] bg-[var(--night-surface)] px-4 py-2.5"
       />
 
       {filtered.map((g) => {
@@ -110,7 +100,7 @@ function Reference({ groups }: { groups: IrregularGroup[] }) {
           <div key={g.title}>
             <button
               onClick={() => setOpen((cur) => (cur === g.title ? null : g.title))}
-              className="flex w-full items-center justify-between rounded-lg bg-white/[0.06] px-3 py-2 text-left dark:bg-[var(--night-surface)]"
+              className="flex w-full items-center justify-between rounded-lg bg-[var(--night-surface)] px-3 py-2 text-left"
             >
               <span className="text-sm font-bold">
                 {g.title}{' '}
@@ -134,7 +124,7 @@ function Reference({ groups }: { groups: IrregularGroup[] }) {
                   </thead>
                   <tbody>
                     {g.verbs.map((v) => (
-                      <tr key={v.base} className="border-t border-slate-100 dark:border-slate-700/60">
+                      <tr key={v.base} className="border-t border-slate-700/60">
                         <td className="px-3 py-1.5 font-semibold">{v.base}</td>
                         <td className="px-3 py-1.5">{v.past}</td>
                         <td className="px-3 py-1.5">{v.part}</td>
@@ -279,7 +269,7 @@ function Trainer({ groups }: { groups: IrregularGroup[] }) {
           onRestart={() => restart()}
         >
           {wrong.length > 0 && (
-            <div className="rounded-xl bg-white/[0.06] p-3 text-left text-sm dark:bg-[var(--night-surface)]">
+            <div className="rounded-xl bg-[var(--night-surface)] p-3 text-left text-sm">
               <p className="mb-1 font-semibold">Повтори:</p>
               {wrong.map(({ verb: v }) => (
                 <p key={v.base}>
@@ -309,12 +299,12 @@ function Trainer({ groups }: { groups: IrregularGroup[] }) {
   const pastOk = checked && matches(past, verb.past)
   const partOk = checked && matches(part, verb.part)
   const inputCls = (ok: boolean) =>
-    `rounded-xl border px-4 py-2.5 dark:bg-[var(--night-surface)] ${
+    `rounded-xl border px-4 py-2.5 ${
       !checked
-        ? 'border-white/[0.10] bg-[var(--night-surface)] dark:border-white/[0.10]'
+        ? 'border-white/[0.10] bg-[var(--night-surface)]'
         : ok
-          ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40'
-          : 'border-red-400 bg-red-50 dark:bg-red-950/40'
+          ? 'border-emerald-500 bg-emerald-950/40'
+          : 'border-red-400 bg-red-950/40'
     }`
 
   return (

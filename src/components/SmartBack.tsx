@@ -8,14 +8,20 @@
 import { useNavigate } from 'react-router-dom'
 import { IconBack } from './icons'
 
-export function SmartBack({ fallback }: { fallback: string }) {
+/** Возврат «откуда пришёл», а при прямом заходе/перезагрузке (idx===0) — на
+ *  fallback. Голый navigate(-1) на таких страницах выкидывал из приложения. */
+export function useSmartBack(fallback: string) {
   const navigate = useNavigate()
-  const goBack = () => {
+  return () => {
     // react-router кладёт idx в history.state: >0 — есть куда вернуться внутри SPA
     const idx = (window.history.state as { idx?: number } | null)?.idx ?? 0
     if (idx > 0) navigate(-1)
     else navigate(fallback)
   }
+}
+
+export function SmartBack({ fallback }: { fallback: string }) {
+  const goBack = useSmartBack(fallback)
   return (
     <button
       onClick={goBack}

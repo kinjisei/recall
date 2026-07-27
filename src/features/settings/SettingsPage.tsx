@@ -5,8 +5,9 @@
 // локально (lib/settings.ts), у каждого устройства свои.
 // ============================================================================
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { IconBack, IconSpeaker, IconCheck } from '../../components/icons'
+import { useSmartBack } from '../../components/SmartBack'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { supabase } from '../../lib/supabase'
@@ -42,7 +43,7 @@ const SIZE_LABELS: { id: ReaderSize; label: string }[] = [
 ]
 
 export function SettingsPage() {
-  const navigate = useNavigate()
+  const goBack = useSmartBack('/')
   const { user } = useAuth()
   const { lang } = useLanguage()
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -98,7 +99,7 @@ export function SettingsPage() {
     <div className="flex flex-col gap-6">
       <header className="flex items-center gap-2">
         <button
-          onClick={() => navigate(-1)}
+          onClick={goBack}
           aria-label="Назад"
           className="lift -ml-2 flex h-11 w-11 items-center justify-center rounded-full text-[var(--night-text-70)]"
         >
