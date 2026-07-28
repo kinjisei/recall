@@ -106,8 +106,20 @@ export function TappableText({
   const [range, setRange] = useState<{ from: number; to: number } | null>(null)
   const [selecting, setSelecting] = useState(false)
   const longPress = useRef<number | null>(null)
+  // точка нажатия и флаг «палец сдвинулся» — чтобы отличить тап от прокрутки и,
+  // на тач-экранах, вести выделение фразы через elementFromPoint (onPointerEnter
+  // при тач-захвате НЕ срабатывает на соседних словах).
+  const startPt = useRef<{ x: number; y: number } | null>(null)
+  const moved = useRef(false)
 
   const isWordToken = (tok: string) => /[A-Za-zÀ-ÿ]/.test(tok)
+
+  /** Индекс токена-слова под точкой экрана (для выделения пальцем). */
+  const wordIndexAt = (x: number, y: number): number | null => {
+    const el = document.elementFromPoint(x, y)
+    const ti = el?.closest?.('[data-ti]')?.getAttribute('data-ti')
+    return ti == null ? null : Number(ti)
+  }
 
   /** Собирает фразу из выделенного диапазона токенов. */
   const phraseOf = (from: number, to: number) => {
@@ -156,8 +168,37 @@ export function TappableText({
 
   return (
     <span
-      onPointerUp={finishSelection}
+      onPointerMove={(e) => {
+        if (!startPt.current) return
+        if (selecting) {
+          // ведём выделение по слову под пальцем (работает и на тач)
+          const ti = wordIndexAt(e.clientX, e.clientY)
+          if (ti != null) setRange((r) => (r ? { ...r, to: ti } : { from: ti, to: ti }))
+          e.preventDefault()
+          return
+        }
+        // ещё не выделяем и палец заметно сдвинулся → это ПРОКРУТКА, а не
+        // удержание: отменяем таймер и запрещаем «тап» на отпускании
+        const dx = Math.abs(e.clientX - startPt.current.x)
+        const dy = Math.abs(e.clientY - startPt.current.y)
+        if (dx > 10 || dy > 10) {
+          moved.current = true
+          cancelLongPress()
+        }
+      }}
+      onPointerUp={() => {
+        finishSelection()
+        startPt.current = null
+      }}
+      onPointerCancel={() => {
+        cancelLongPress()
+        setSelecting(false)
+        setRange(null)
+        startPt.current = null
+      }}
       onPointerLeave={() => selecting && finishSelection()}
+      // во время выделения запрещаем прокрутку; иначе — вертикальный скролл + тапы
+      style={{ touchAction: selecting ? 'none' : 'pan-y' }}
       className={selecting ? 'select-none' : undefined}
     >
       {tokens.map((tok, i) => {
@@ -173,17 +214,17 @@ export function TappableText({
         return (
           <span
             key={i}
-            onPointerDown={() => {
+            data-ti={i}
+            onPointerDown={(e) => {
               if (markMode) return // в режиме отметки long-press не нужен
               cancelLongPress()
-              // удержание ~350 мс — включаем режим выделения фразы
+              startPt.current = { x: e.clientX, y: e.clientY }
+              moved.current = false
+              // удержание ~350 мс без движения — режим выделения фразы
               longPress.current = window.setTimeout(() => {
                 setSelecting(true)
                 setRange({ from: i, to: i })
               }, 350)
-            }}
-            onPointerEnter={() => {
-              if (selecting) setRange((r) => (r ? { ...r, to: i } : { from: i, to: i }))
             }}
             onPointerUp={(e) => {
               // режим «Отметить слова»: тап ставит/снимает отметку
@@ -193,8 +234,8 @@ export function TappableText({
                 if (word) onToggleMark?.(i, word, sentenceAround(text, word, offsets[i]))
                 return
               }
-              // обычный тап (без удержания) — перевод одного слова
-              if (!selecting) {
+              // обычный тап (без удержания и без прокрутки) — перевод слова
+              if (!selecting && !moved.current) {
                 e.stopPropagation()
                 cancelLongPress()
                 const word = cleanWord(tok)
