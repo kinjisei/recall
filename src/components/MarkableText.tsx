@@ -7,9 +7,9 @@
 // ============================================================================
 import { useState } from 'react'
 import { Button } from './Button'
-import { IconCheck, IconPlus } from './icons'
+import { IconCheck, IconPlus, IconClose } from './icons'
 import { TappableText, WordSheet, type WordPick } from './WordSheet'
-import { addMarkedWords, type MarkedWord } from '../lib/batchWords'
+import { addMarkedWords, addPhrase, type MarkedWord } from '../lib/batchWords'
 import type { AppLang } from '../types'
 
 export function MarkableText({
@@ -26,6 +26,7 @@ export function MarkableText({
   const [markMode, setMarkMode] = useState(false)
   const [marked, setMarked] = useState<Map<number, MarkedWord>>(new Map())
   const [busy, setBusy] = useState(false)
+  const [busyPhrase, setBusyPhrase] = useState(false)
   const [note, setNote] = useState<string | null>(null)
 
   const exitMark = () => {
@@ -33,17 +34,36 @@ export function MarkableText({
     setMarked(new Map())
   }
 
+  // отмеченные слова В ТЕКСТОВОМ ПОРЯДКЕ (ключ Map — индекс токена), а не в
+  // порядке нажатий — иначе фраза «look up» из тапов up→look собралась бы задом
+  const orderedMarked = () => [...marked.entries()].sort((a, b) => a[0] - b[0]).map((e) => e[1])
+
   const addAll = async () => {
     setBusy(true)
     setNote(null)
     try {
-      const added = await addMarkedWords([...marked.values()], lang)
+      const added = await addMarkedWords(orderedMarked(), lang)
       setNote(added > 0 ? `Добавлено слов: ${added} ✓` : 'Эти слова уже в колоде')
       exitMark()
     } catch (e) {
       setNote(e instanceof Error ? e.message : 'Не удалось добавить')
     } finally {
       setBusy(false)
+    }
+  }
+
+  // добавить отмеченные слова ОДНОЙ фразой (фразовые глаголы, выражения)
+  const addAsPhrase = async () => {
+    setBusyPhrase(true)
+    setNote(null)
+    try {
+      const ok = await addPhrase(orderedMarked(), lang)
+      setNote(ok ? 'Фраза добавлена ✓' : 'Эта фраза уже в колоде')
+      exitMark()
+    } catch (e) {
+      setNote(e instanceof Error ? e.message : 'Не удалось добавить')
+    } finally {
+      setBusyPhrase(false)
     }
   }
 
@@ -65,7 +85,8 @@ export function MarkableText({
       </div>
       {markMode && (
         <p className="text-xs text-[var(--night-text-40)]">
-          Тапай по словам — отмеченные добавятся в колоду одной кнопкой.
+          Тапай по словам. Несколько слов можно добавить «Фразой» — одной карточкой
+          (для фразовых глаголов: look up, give up).
         </p>
       )}
 
@@ -89,11 +110,33 @@ export function MarkableText({
       {/* плавающая панель добавления — над нижней навигацией */}
       {markMode && marked.size > 0 && (
         <div className="fixed inset-x-4 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-40 mx-auto flex max-w-screen-sm items-center gap-2 rounded-2xl border border-[var(--night-accent-45)] bg-[rgba(30,32,48,.97)] p-2.5 backdrop-blur-xl">
-          <Button className="flex-1 py-2.5 text-sm" loading={busy} onClick={addAll}>
-            <IconCheck size={16} /> В колоду ({marked.size})
+          {marked.size >= 2 && (
+            <Button
+              className="flex-1 py-2.5 text-sm"
+              loading={busyPhrase}
+              disabled={busy}
+              onClick={addAsPhrase}
+            >
+              <IconCheck size={16} /> Фразой
+            </Button>
+          )}
+          <Button
+            variant={marked.size >= 2 ? 'secondary' : 'primary'}
+            className="flex-1 py-2.5 text-sm"
+            loading={busy}
+            disabled={busyPhrase}
+            onClick={addAll}
+          >
+            <IconCheck size={16} /> {marked.size >= 2 ? `По слову (${marked.size})` : 'В колоду'}
           </Button>
-          <Button variant="ghost" className="px-3 py-2.5 text-sm" disabled={busy} onClick={exitMark}>
-            Отмена
+          <Button
+            variant="ghost"
+            className="px-3 py-2.5 text-sm"
+            disabled={busy || busyPhrase}
+            onClick={exitMark}
+            aria-label="Отмена"
+          >
+            <IconClose size={16} />
           </Button>
         </div>
       )}

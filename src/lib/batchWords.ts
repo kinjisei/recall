@@ -57,6 +57,48 @@ async function translateChunk(words: MarkedWord[], lang: AppLang): Promise<Trans
 }
 
 /**
+ * Добавляет ОТМЕЧЕННЫЕ слова ОДНОЙ ФРАЗОЙ (для фразовых глаголов и устойчивых
+ * выражений: «look up», «give up», «take care of»). Слова должны прийти уже в
+ * текстовом порядке. AI даёт словарную форму фразы (инфинитив у глагола) и
+ * перевод ВСЕЙ фразы в контексте. Одна карточка. Возвращает true, если добавлена.
+ */
+export async function addPhrase(words: MarkedWord[], lang: AppLang): Promise<boolean> {
+  if (words.length === 0) return false
+  const phrase = words.map((w) => w.word).join(' ')
+  const sentence = words[0]?.sentence ?? phrase
+  const deck = await getDefaultDeck(lang)
+  const langName = lang === 'es' ? 'испанского' : 'английского'
+  const system = [
+    `Ты — словарь ${langName} для русскоязычного ученика.`,
+    'Тебе дают ФРАЗУ (часто фразовый глагол или устойчивое выражение) и предложение, где она встретилась.',
+    'Верни ТОЛЬКО валидный JSON-объект без markdown: {"base":"…","ru":"…"}.',
+    'base — словарная форма ВСЕЙ фразы (для фразового глагола — инфинитив, напр. "looked up" → "look up"; частицу/предлог сохраняй).',
+    'ru — краткий перевод всей фразы В КОНТЕКСТЕ этого предложения (1-4 слова).',
+  ].join('\n')
+  const user = JSON.stringify({ phrase, sentence })
+
+  let base = phrase
+  let ru = ''
+  try {
+    const raw = await chat([{ role: 'user', content: user }], { system, task: 'word' })
+    const s = raw.indexOf('{')
+    const e = raw.lastIndexOf('}')
+    if (s !== -1 && e > s) {
+      const o = JSON.parse(raw.slice(s, e + 1)) as Record<string, unknown>
+      base = asStr(o.base) || phrase
+      ru = asStr(o.ru)
+    }
+  } catch {
+    // AI сбоит — кладём фразу без перевода (лучше карточка без back, чем ничего)
+  }
+
+  const added = await addCardsBulk(deck.id, [
+    { front: base.toLowerCase(), back: ru || undefined, example: sentence },
+  ])
+  return added > 0
+}
+
+/**
  * Переводит пачку слов и кладёт их в колоду по умолчанию данного языка.
  * Возвращает число реально добавленных карточек (дубликаты пропускаются).
  */
