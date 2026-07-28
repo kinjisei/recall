@@ -107,7 +107,7 @@ try {
     })
     check('текст открылся в читалке', true)
 
-    // режим «Отметить слова» → 3 слова → «В колоду (3)»
+    // режим «Отметить слова» → 3 слова → «По слову (3)»
     await page.evaluate(() => {
       ;[...document.querySelectorAll('button')]
         .find((b) => b.textContent.includes('Отметить слова'))?.click()
@@ -130,12 +130,12 @@ try {
     })
     check('отмечено 3 слова', markedCount === 3, `отмечено: ${markedCount}`)
     await page.waitForFunction(
-      () => [...document.querySelectorAll('button')].some((b) => b.textContent.includes('В колоду (3)')),
+      () => [...document.querySelectorAll('button')].some((b) => b.textContent.includes('По слову (3)')),
       { timeout: 5000 },
     )
     await page.evaluate(() => {
       ;[...document.querySelectorAll('button')]
-        .find((b) => b.textContent.includes('В колоду (3)'))?.click()
+        .find((b) => b.textContent.includes('По слову (3)'))?.click()
     })
     // ждём батч-перевод (1 lite-вызов) и запись
     await page.waitForFunction(

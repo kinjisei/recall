@@ -18,6 +18,7 @@ import { BackButton, BackHeader } from '../../components/BackButton'
 import { TabPicker } from '../../components/TabPicker'
 import { speak } from '../../lib/speech'
 import { TappableText, WordSheet, type WordPick } from '../../components/WordSheet'
+import { PhraseSheet, type PhrasePick } from '../../components/PhraseSheet'
 import {
   spanishDialogues,
   spanishLevels,
@@ -119,6 +120,7 @@ function ReadingView({
   onBack: () => void
 }) {
   const [selected, setSelected] = useState<WordPick | null>(null)
+  const [phrase, setPhrase] = useState<PhrasePick | null>(null)
   const [openRu, setOpenRu] = useState<Set<number>>(new Set())
 
   const toggleRu = (i: number) =>
@@ -143,7 +145,7 @@ function ReadingView({
         {reading.paragraphs.map((p, i) => (
           <div key={i}>
             <p className={READER_CLASSES[getSettings().readerSize]}>
-              <TappableText text={p.es} onSelect={setSelected} />
+              <TappableText text={p.es} onSelect={setSelected} onPhrase={setPhrase} />
             </p>
             <button
               onClick={() => toggleRu(i)}
@@ -164,6 +166,15 @@ function ReadingView({
       {selected && (
         <WordSheet word={selected.word} sentence={selected.sentence} lang="es" onClose={() => setSelected(null)} />
       )}
+      {phrase && (
+        <PhraseSheet
+          text={phrase.text}
+          sentence={phrase.sentence}
+          offerAnalysis={phrase.offerAnalysis}
+          lang="es"
+          onClose={() => setPhrase(null)}
+        />
+      )}
     </div>
   )
 }
@@ -180,6 +191,7 @@ function DialogueView({
   onBack: () => void
 }) {
   const [selected, setSelected] = useState<WordPick | null>(null)
+  const [phrase, setPhrase] = useState<PhrasePick | null>(null)
   const [showRu, setShowRu] = useState(false)
 
   return (
@@ -208,7 +220,7 @@ function DialogueView({
                   {line.speaker}
                 </p>
                 <p className="mt-0.5 leading-relaxed">
-                  <TappableText text={line.es} onSelect={setSelected} />
+                  <TappableText text={line.es} onSelect={setSelected} onPhrase={setPhrase} />
                 </p>
                 {showRu && (
                   <p className="mt-1 text-sm text-[var(--night-text-40)]">{line.ru}</p>
@@ -228,6 +240,15 @@ function DialogueView({
 
       {selected && (
         <WordSheet word={selected.word} sentence={selected.sentence} lang="es" onClose={() => setSelected(null)} />
+      )}
+      {phrase && (
+        <PhraseSheet
+          text={phrase.text}
+          sentence={phrase.sentence}
+          offerAnalysis={phrase.offerAnalysis}
+          lang="es"
+          onClose={() => setPhrase(null)}
+        />
       )}
     </div>
   )

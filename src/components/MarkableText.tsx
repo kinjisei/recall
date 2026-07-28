@@ -9,7 +9,7 @@ import { useState } from 'react'
 import { Button } from './Button'
 import { IconCheck, IconPlus, IconClose } from './icons'
 import { TappableText, WordSheet, type WordPick } from './WordSheet'
-import { AnalysisSheet } from './AnalysisSheet'
+import { PhraseSheet, type PhrasePick } from './PhraseSheet'
 import { addMarkedWords, addPhrase, type MarkedWord } from '../lib/batchWords'
 import type { AppLang } from '../types'
 
@@ -24,8 +24,8 @@ export function MarkableText({
   className?: string
 }) {
   const [pick, setPick] = useState<WordPick | null>(null)
-  // разбор фрагмента (зажать + провести по 2+ словам)
-  const [analysis, setAnalysis] = useState<{ text: string; sentence: string } | null>(null)
+  // перевод фразы (зажать + провести по 2+ словам); внутри — кнопка разбора
+  const [phrase, setPhrase] = useState<PhrasePick | null>(null)
   const [markMode, setMarkMode] = useState(false)
   const [marked, setMarked] = useState<Map<number, MarkedWord>>(new Map())
   const [busy, setBusy] = useState(false)
@@ -93,7 +93,8 @@ export function MarkableText({
         </p>
       ) : (
         <p className="text-xs text-[var(--night-text-40)]">
-          Тап — перевод слова. Зажми и проведи по словам — разбор фразы.
+          Тап — перевод слова. Зажми и проведи по словам — перевод фразы (для длинных
+          фраз/предложений появится «Разбор»).
         </p>
       )}
 
@@ -101,7 +102,7 @@ export function MarkableText({
         <TappableText
           text={text}
           onSelect={setPick}
-          onAnalyze={setAnalysis}
+          onPhrase={setPhrase}
           markMode={markMode}
           marked={new Set(marked.keys())}
           onToggleMark={(i, word, sentence) =>
@@ -153,12 +154,13 @@ export function MarkableText({
         <WordSheet word={pick.word} sentence={pick.sentence} lang={lang} onClose={() => setPick(null)} />
       )}
 
-      {analysis && (
-        <AnalysisSheet
-          text={analysis.text}
-          sentence={analysis.sentence}
+      {phrase && (
+        <PhraseSheet
+          text={phrase.text}
+          sentence={phrase.sentence}
+          offerAnalysis={phrase.offerAnalysis}
           lang={lang}
-          onClose={() => setAnalysis(null)}
+          onClose={() => setPhrase(null)}
         />
       )}
     </div>

@@ -15,6 +15,7 @@ import { lookup } from '../lib/dictionary'
 import { lookupInContext, type ContextLookup } from '../lib/contextDict'
 import { logActivity } from '../lib/activity'
 import { speak } from '../lib/speech'
+import { shouldOfferAnalysis } from '../lib/phraseThreshold'
 import type { AppLang } from '../types'
 
 /** Выбранное слово + предложение, в котором оно встретилось. */
@@ -72,16 +73,17 @@ export function sentenceAround(text: string, word: string, at?: number): string 
 export function TappableText({
   text,
   onSelect,
-  onAnalyze,
+  onPhrase,
   markMode = false,
   marked,
   onToggleMark,
 }: {
   text: string
   onSelect: (pick: WordPick) => void
-  /** Выделение 2+ слов (зажать + провести) → разбор фрагмента. Если не задан —
-   *  выделение фразы, как раньше, уходит в onSelect (перевод всей фразы). */
-  onAnalyze?: (sel: { text: string; sentence: string }) => void
+  /** Выделение 2+ слов (зажать + провести) → дешёвый перевод фразы (попап);
+   *  offerAnalysis — предлагать ли кнопку умного разбора (порог ≥5 слов / конец
+   *  предложения). Если не задан — выделение фразы уходит в onSelect (как слово). */
+  onPhrase?: (sel: { text: string; sentence: string; offerAnalysis: boolean }) => void
   /** Режим «Отметить слова»: тап помечает слово вместо открытия шторки. */
   markMode?: boolean
   /** Индексы помеченных токенов (подсвечиваются постоянно). */
@@ -140,10 +142,13 @@ export function TappableText({
     setRange(null)
     if (!cleaned) return
     const sentence = sentenceAround(text, cleaned, offsets[a])
-    // выделили 2+ слова и подключён разбор — открываем карточку-разбор;
-    // иначе (одно слово / нет onAnalyze) — обычная шторка перевода
-    if (onAnalyze && wordCount >= 2) onAnalyze({ text: cleaned, sentence })
-    else onSelect({ word: cleaned, sentence })
+    // выделили 2+ слова → дешёвый перевод фразы (попап); кнопка умного разбора
+    // внутри попапа — по порогу. Одно слово / нет onPhrase → шторка перевода слова.
+    if (onPhrase && wordCount >= 2) {
+      onPhrase({ text: cleaned, sentence, offerAnalysis: shouldOfferAnalysis(tokens, a, b) })
+    } else {
+      onSelect({ word: cleaned, sentence })
+    }
   }
 
   const inRange = (i: number) =>
