@@ -6,14 +6,16 @@
 // ============================================================================
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useNavigate } from 'react-router-dom'
 import { Button } from './Button'
-import { IconSpeaker, IconPlus, IconCheck } from './icons'
+import { IconSpeaker, IconPlus, IconCheck, IconArrowRight } from './icons'
 import { analyzeSelection, type Analysis, type AnalyzedItem, type AnalyzedKind } from '../lib/analyze'
 import { addCard } from '../lib/cards'
 import { speak } from '../lib/speech'
 import { logActivity } from '../lib/activity'
 import type { AppLang } from '../types'
 
+// добавляемые в колоду группы (грамматика — отдельно, не в колоду)
 const GROUPS: { kind: AnalyzedKind; label: string }[] = [
   { kind: 'phrasal', label: 'Фразовые глаголы' },
   { kind: 'expression', label: 'Выражения' },
@@ -31,6 +33,7 @@ export function AnalysisSheet({
   lang: AppLang
   onClose: () => void
 }) {
+  const navigate = useNavigate()
   const [data, setData] = useState<Analysis | null>(null)
   const [error, setError] = useState(false)
   const [added, setAdded] = useState<Set<string>>(new Set())
@@ -150,8 +153,46 @@ export function AnalysisSheet({
                 )
               })}
 
-              {data.items.length > 1 && (
-                <Button className="mt-4 w-full" onClick={() => data.items.forEach(add)}>
+              {/* Грамматические структуры — не в колоду, а объяснение + урок */}
+              {(() => {
+                const gr = data.items.filter((it) => it.kind === 'grammar')
+                if (gr.length === 0) return null
+                return (
+                  <div className="mt-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[var(--night-accent-text)]">
+                      Грам-структуры
+                    </p>
+                    <div className="mt-1.5 flex flex-col gap-1.5">
+                      {gr.map((it, i) => (
+                        <div
+                          key={`${it.base}-${i}`}
+                          className="rounded-xl border border-white/[0.08] px-3 py-2"
+                        >
+                          <p className="text-[15px] font-medium">{it.base}</p>
+                          <p className="mt-0.5 text-sm text-[var(--night-text-40)]">{it.ru}</p>
+                          {it.topicId !== undefined && (
+                            <button
+                              onClick={() => {
+                                onClose()
+                                navigate(`/grammar?topic=${it.topicId}`)
+                              }}
+                              className="mt-1.5 inline-flex min-h-[36px] items-center gap-1 text-sm font-semibold text-[var(--night-accent-text)]"
+                            >
+                              Открыть урок <IconArrowRight size={14} />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })()}
+
+              {data.items.filter((it) => it.kind !== 'grammar').length > 1 && (
+                <Button
+                  className="mt-4 w-full"
+                  onClick={() => data.items.filter((it) => it.kind !== 'grammar').forEach(add)}
+                >
                   <IconPlus size={16} /> Добавить всё в Мои слова
                 </Button>
               )}

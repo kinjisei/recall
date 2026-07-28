@@ -6,7 +6,7 @@
 // Раздел «Глаголы»: ES — спряжения (ConjugationSection), EN — неправильные
 // глаголы (IrregularVerbsSection).
 // ============================================================================
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
   IconArrowRight,
@@ -80,7 +80,12 @@ export function GrammarPage() {
       <TabPicker options={sections} value={section} onChange={setSection} ariaLabel="Раздел грамматики" />
 
       {section === 'lessons' ? (
-        <LessonsSection key={lang} lang={lang} initialMistakes={params.get('mistakes') === '1'} />
+        <LessonsSection
+          key={lang}
+          lang={lang}
+          initialMistakes={params.get('mistakes') === '1'}
+          initialTopic={params.get('topic')}
+        />
       ) : lang === 'es' ? (
         <ConjugationSection />
       ) : (
@@ -115,9 +120,12 @@ function EnglishVerbs() {
 function LessonsSection({
   lang,
   initialMistakes = false,
+  initialTopic = null,
 }: {
   lang: AppLang
   initialMistakes?: boolean
+  /** id урока из ?topic= (deep-link из разбора) — открыть сразу этот урок. */
+  initialTopic?: string | null
 }) {
   const [topics, setTopics] = useState<GrammarTopic[] | null>(null)
   // ничего не раскрыто по умолчанию — уровни разворачиваются по тапу
@@ -148,6 +156,17 @@ function LessonsSection({
       alive = false
     }
   }, [lang])
+
+  // deep-link из разбора (?topic=<id>): один раз открываем нужный урок
+  const appliedTopic = useRef(false)
+  useEffect(() => {
+    if (appliedTopic.current || !topics || !initialTopic) return
+    const t = topics.find((x) => x.id === Number(initialTopic))
+    if (t) {
+      setSelected(t)
+      appliedTopic.current = true
+    }
+  }, [topics, initialTopic])
 
   const byLevel = useMemo(() => {
     const groups: Record<string, GrammarTopic[]> = {}
