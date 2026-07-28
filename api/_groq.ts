@@ -4,7 +4,7 @@
 // лимит, поэтому мы не упираемся в дневную квоту Gemini так быстро.
 // Файл с «_» — Vercel НЕ делает из него функцию. Ключ приходит параметром.
 // ============================================================================
-import type { ChatTurn } from '../src/types'
+import type { ChatTurn } from '../src/types/index.js'
 
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions'
 

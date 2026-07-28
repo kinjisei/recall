@@ -4,7 +4,7 @@
 // (Vercel → Project → Settings → Environment Variables). В коде фронта его нет.
 // ============================================================================
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import type { ChatTurn } from '../src/types'
+import type { ChatTurn } from '../src/types/index.js'
 // расширение .js обязательно: "type": "module" — Vercel/Node в ESM-режиме
 // не находит модуль без расширения (FUNCTION_INVOCATION_FAILED при старте)
 import { callGemini, GEMINI_TIER_CHAINS, type AiTier } from './_core.js'

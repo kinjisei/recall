@@ -4,7 +4,7 @@
 // Его используют двое: api/gemini.ts (прод) и vite.config.ts (локальный dev).
 // КЛЮЧ СЮДА НЕ ПИСАТЬ — он приходит параметром из серверного окружения.
 // ============================================================================
-import type { ChatTurn } from '../src/types'
+import type { ChatTurn } from '../src/types/index.js'
 
 export const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash'
 
