@@ -34,6 +34,9 @@ export const AI_TASKS: Record<AiTask, TaskSpec> = {
   writing: { tier: 'standard', quota: 'heavy' },
   quest: { tier: 'standard', quota: 'heavy' },
   review: { tier: 'standard', quota: 'heavy' },
+  // разбор выделенного фрагмента в читалке (фразовые глаголы/выражения) —
+  // дешёвая модель теряла фразовые глаголы, нужна умная (проверено на проде)
+  analyze: { tier: 'standard', quota: 'heavy' },
 
   // Pro-модели: единицы вызовов в день, и только у преподавателя
   material: { tier: 'max', quota: 'heavy', teacherOnly: true },

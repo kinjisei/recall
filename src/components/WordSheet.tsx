@@ -72,12 +72,16 @@ export function sentenceAround(text: string, word: string, at?: number): string 
 export function TappableText({
   text,
   onSelect,
+  onAnalyze,
   markMode = false,
   marked,
   onToggleMark,
 }: {
   text: string
   onSelect: (pick: WordPick) => void
+  /** Выделение 2+ слов (зажать + провести) → разбор фрагмента. Если не задан —
+   *  выделение фразы, как раньше, уходит в onSelect (перевод всей фразы). */
+  onAnalyze?: (sel: { text: string; sentence: string }) => void
   /** Режим «Отметить слова»: тап помечает слово вместо открытия шторки. */
   markMode?: boolean
   /** Индексы помеченных токенов (подсвечиваются постоянно). */
@@ -127,12 +131,19 @@ export function TappableText({
       setRange(null)
       return
     }
-    const phrase = phraseOf(range.from, range.to)
+    const a = Math.min(range.from, range.to)
+    const b = Math.max(range.from, range.to)
+    const wordCount = tokens.slice(a, b + 1).filter(isWordToken).length
+    const phrase = phraseOf(a, b)
     const cleaned = phrase.replace(/^[^A-Za-zÀ-ÿ]+|[^A-Za-zÀ-ÿ'’-]+$/g, '')
-    const from = range.from
     setSelecting(false)
     setRange(null)
-    if (cleaned) onSelect({ word: cleaned, sentence: sentenceAround(text, cleaned, offsets[from]) })
+    if (!cleaned) return
+    const sentence = sentenceAround(text, cleaned, offsets[a])
+    // выделили 2+ слова и подключён разбор — открываем карточку-разбор;
+    // иначе (одно слово / нет onAnalyze) — обычная шторка перевода
+    if (onAnalyze && wordCount >= 2) onAnalyze({ text: cleaned, sentence })
+    else onSelect({ word: cleaned, sentence })
   }
 
   const inRange = (i: number) =>

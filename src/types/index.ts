@@ -99,6 +99,7 @@ export type AiTask =
   | 'word'
   | 'definition'
   | 'batch'
+  | 'analyze'
   | 'dialog'
   | 'writing'
   | 'quest'

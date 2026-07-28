@@ -9,6 +9,7 @@ import { useState } from 'react'
 import { Button } from './Button'
 import { IconCheck, IconPlus, IconClose } from './icons'
 import { TappableText, WordSheet, type WordPick } from './WordSheet'
+import { AnalysisSheet } from './AnalysisSheet'
 import { addMarkedWords, addPhrase, type MarkedWord } from '../lib/batchWords'
 import type { AppLang } from '../types'
 
@@ -23,6 +24,8 @@ export function MarkableText({
   className?: string
 }) {
   const [pick, setPick] = useState<WordPick | null>(null)
+  // разбор фрагмента (зажать + провести по 2+ словам)
+  const [analysis, setAnalysis] = useState<{ text: string; sentence: string } | null>(null)
   const [markMode, setMarkMode] = useState(false)
   const [marked, setMarked] = useState<Map<number, MarkedWord>>(new Map())
   const [busy, setBusy] = useState(false)
@@ -83,10 +86,14 @@ export function MarkableText({
         </button>
         {note && <span className="text-sm text-emerald-400">{note}</span>}
       </div>
-      {markMode && (
+      {markMode ? (
         <p className="text-xs text-[var(--night-text-40)]">
           Тапай по словам. Несколько слов можно добавить «Фразой» — одной карточкой
           (для фразовых глаголов: look up, give up).
+        </p>
+      ) : (
+        <p className="text-xs text-[var(--night-text-40)]">
+          Тап — перевод слова. Зажми и проведи по словам — разбор фразы.
         </p>
       )}
 
@@ -94,6 +101,7 @@ export function MarkableText({
         <TappableText
           text={text}
           onSelect={setPick}
+          onAnalyze={setAnalysis}
           markMode={markMode}
           marked={new Set(marked.keys())}
           onToggleMark={(i, word, sentence) =>
@@ -143,6 +151,15 @@ export function MarkableText({
 
       {pick && (
         <WordSheet word={pick.word} sentence={pick.sentence} lang={lang} onClose={() => setPick(null)} />
+      )}
+
+      {analysis && (
+        <AnalysisSheet
+          text={analysis.text}
+          sentence={analysis.sentence}
+          lang={lang}
+          onClose={() => setAnalysis(null)}
+        />
       )}
     </div>
   )
