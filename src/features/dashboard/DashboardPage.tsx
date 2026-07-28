@@ -6,6 +6,7 @@
 // сделанное сегодня) и FSRS (карточки к повторению, слово дня).
 // ============================================================================
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   IconFlame,
@@ -17,10 +18,12 @@ import {
   IconHint,
   IconPlus,
   IconSpeaker,
+  IconClose,
   IconCards,
   IconRows,
   type IconLike,
 } from '../../components/icons'
+import { Button } from '../../components/Button'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { getProfile } from '../../lib/profile'
@@ -409,6 +412,7 @@ function StreakHero({
 }
 
 function WordOfDay({ word, lang }: { word: PoolItem; lang: 'en' | 'es' }) {
+  const [open, setOpen] = useState(false)
   const [state, setState] = useState<'idle' | 'busy' | 'added' | 'error'>('idle')
 
   const add = async () => {
@@ -429,44 +433,89 @@ function WordOfDay({ word, lang }: { word: PoolItem; lang: 'en' | 'es' }) {
   }
 
   return (
-    <div
-      className="animate-fade-up flex items-center gap-3.5 rounded-2xl border border-white/[0.08] bg-[var(--night-surface)] px-4 py-3.5"
-      style={{ animationDelay: '.45s' }}
-    >
-      <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-[var(--night-accent-900)] text-[var(--night-accent-100)]">
-        <IconHint size={20} />
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="text-[10px] uppercase tracking-wider text-[var(--night-text-40)]">
-          Слово дня
-        </p>
-        <p className="truncate text-[15px] font-medium">
-          {word.term}
-          <span className="text-[var(--night-text-40)]"> — {word.translation}</span>
-        </p>
-        {state === 'error' && (
-          <p className="text-xs text-red-400">Не удалось добавить — попробуй ещё раз</p>
+    <>
+      {/* Вся строка — кнопка: тап открывает окно со словом (стрелка-подсказка) */}
+      <button
+        onClick={() => setOpen(true)}
+        className="lift animate-fade-up flex w-full items-center gap-3.5 rounded-2xl border border-white/[0.08] bg-[var(--night-surface)] px-4 py-3.5 text-left"
+        style={{ animationDelay: '.45s' }}
+      >
+        <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-[var(--night-accent-900)] text-[var(--night-accent-100)]">
+          <IconHint size={20} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] uppercase tracking-wider text-[var(--night-text-40)]">
+            Слово дня
+          </p>
+          <p className="truncate text-[15px] font-medium">
+            {word.term}
+            <span className="text-[var(--night-text-40)]"> — {word.translation}</span>
+          </p>
+        </div>
+        <IconArrowRight size={18} className="flex-none text-[var(--night-text-40)]" />
+      </button>
+
+      {open &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 sm:items-center"
+            onClick={() => setOpen(false)}
+          >
+            <div
+              className="animate-fade-up w-full rounded-t-3xl border border-white/[0.08] bg-[var(--night-surface)] p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] sm:max-w-sm sm:rounded-3xl sm:pb-5"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-start justify-between">
+                <p className="text-[10px] uppercase tracking-wider text-[var(--night-text-40)]">
+                  Слово дня
+                </p>
+                <button
+                  onClick={() => setOpen(false)}
+                  aria-label="Закрыть"
+                  className="lift -mr-2 -mt-2 flex h-11 w-11 items-center justify-center rounded-full text-[var(--night-text-40)]"
+                >
+                  <IconClose size={20} />
+                </button>
+              </div>
+              <p className="mt-1 text-2xl font-semibold">{word.term}</p>
+              <p className="text-[var(--night-text-70)]">{word.translation}</p>
+              {word.example && (
+                <p className="mt-3 rounded-xl bg-white/[0.04] px-3 py-2 text-sm italic leading-relaxed text-[var(--night-text-70)]">
+                  {word.example}
+                </p>
+              )}
+              <div className="mt-4 flex gap-2">
+                <Button
+                  variant="secondary"
+                  className="flex-1"
+                  onClick={() => speak(word.term, { lang })}
+                >
+                  <IconSpeaker size={18} /> Послушать
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={add}
+                  loading={state === 'busy'}
+                  disabled={state === 'added'}
+                >
+                  {state === 'added' ? (
+                    <>
+                      <IconCheck size={18} /> В колоде
+                    </>
+                  ) : (
+                    <>
+                      <IconPlus size={18} /> В колоду
+                    </>
+                  )}
+                </Button>
+              </div>
+              {state === 'error' && (
+                <p className="mt-2 text-xs text-red-400">Не удалось добавить — попробуй ещё раз</p>
+              )}
+            </div>
+          </div>,
+          document.body,
         )}
-      </div>
-      <button
-        onClick={() => speak(word.term, { lang })}
-        aria-label="Озвучить"
-        className="lift flex h-11 w-11 flex-none items-center justify-center rounded-full border border-white/[0.08] text-[var(--night-text-70)]"
-      >
-        <IconSpeaker size={18} />
-      </button>
-      <button
-        onClick={add}
-        disabled={state === 'busy' || state === 'added'}
-        aria-label={state === 'added' ? 'Слово уже в моих словах' : 'Добавить в мои слова'}
-        className={`lift flex h-11 w-11 flex-none items-center justify-center rounded-full border ${
-          state === 'added'
-            ? 'border-emerald-500/60 text-emerald-400'
-            : 'border-[var(--night-accent-45)] bg-[rgba(145,132,217,.14)] text-[var(--night-accent-100)]'
-        }`}
-      >
-        {state === 'added' ? <IconCheck size={18} /> : <IconPlus size={18} />}
-      </button>
-    </div>
+    </>
   )
 }
