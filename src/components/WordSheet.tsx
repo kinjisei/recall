@@ -6,16 +6,16 @@
 // Шторка выше нижней навигации (z-50), контент прокручивается, кнопки всегда
 // видны (safe-area учтён).
 // ============================================================================
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { IconSpeaker } from './icons'
 import { Button } from './Button'
+import { AnalysisSheet } from './AnalysisSheet'
 import { addCard } from '../lib/cards'
 import { lookup } from '../lib/dictionary'
 import { lookupInContext, type ContextLookup } from '../lib/contextDict'
 import { logActivity } from '../lib/activity'
 import { speak } from '../lib/speech'
-import { shouldOfferAnalysis } from '../lib/phraseThreshold'
 import type { AppLang } from '../types'
 
 /** Выбранное слово + предложение, в котором оно встретилось. */
@@ -73,17 +73,12 @@ export function sentenceAround(text: string, word: string, at?: number): string 
 export function TappableText({
   text,
   onSelect,
-  onPhrase,
   markMode = false,
   marked,
   onToggleMark,
 }: {
   text: string
   onSelect: (pick: WordPick) => void
-  /** Выделение 2+ слов (зажать + провести) → дешёвый перевод фразы (попап);
-   *  offerAnalysis — предлагать ли кнопку умного разбора (порог ≥5 слов / конец
-   *  предложения). Если не задан — выделение фразы уходит в onSelect (как слово). */
-  onPhrase?: (sel: { text: string; sentence: string; offerAnalysis: boolean }) => void
   /** Режим «Отметить слова»: тап помечает слово вместо открытия шторки. */
   markMode?: boolean
   /** Индексы помеченных токенов (подсвечиваются постоянно). */
@@ -102,145 +97,27 @@ export function TappableText({
       return start
     })
   }, [tokens])
-  // индексы токенов-слов, которые входят в выделяемую фразу
-  const [range, setRange] = useState<{ from: number; to: number } | null>(null)
-  const [selecting, setSelecting] = useState(false)
-  const longPress = useRef<number | null>(null)
-  // точка нажатия и флаг «палец сдвинулся» — чтобы отличить тап от прокрутки и,
-  // на тач-экранах, вести выделение фразы через elementFromPoint (onPointerEnter
-  // при тач-захвате НЕ срабатывает на соседних словах).
-  const startPt = useRef<{ x: number; y: number } | null>(null)
-  const moved = useRef(false)
-
   const isWordToken = (tok: string) => /[A-Za-zÀ-ÿ]/.test(tok)
 
-  /** Индекс токена-слова под точкой экрана (для выделения пальцем). */
-  const wordIndexAt = (x: number, y: number): number | null => {
-    const el = document.elementFromPoint(x, y)
-    const ti = el?.closest?.('[data-ti]')?.getAttribute('data-ti')
-    return ti == null ? null : Number(ti)
-  }
-
-  /** Собирает фразу из выделенного диапазона токенов. */
-  const phraseOf = (from: number, to: number) => {
-    const [a, b] = from <= to ? [from, to] : [to, from]
-    return tokens
-      .slice(a, b + 1)
-      .join('')
-      .trim()
-      .replace(/\s+/g, ' ')
-  }
-
-  const cancelLongPress = () => {
-    if (longPress.current !== null) {
-      window.clearTimeout(longPress.current)
-      longPress.current = null
-    }
-  }
-
-  const finishSelection = () => {
-    cancelLongPress()
-    if (!selecting || !range) {
-      setSelecting(false)
-      setRange(null)
-      return
-    }
-    const a = Math.min(range.from, range.to)
-    const b = Math.max(range.from, range.to)
-    const wordCount = tokens.slice(a, b + 1).filter(isWordToken).length
-    const phrase = phraseOf(a, b)
-    const cleaned = phrase.replace(/^[^A-Za-zÀ-ÿ]+|[^A-Za-zÀ-ÿ'’-]+$/g, '')
-    setSelecting(false)
-    setRange(null)
-    if (!cleaned) return
-    const sentence = sentenceAround(text, cleaned, offsets[a])
-    // выделили 2+ слова → дешёвый перевод фразы (попап); кнопка умного разбора
-    // внутри попапа — по порогу. Одно слово / нет onPhrase → шторка перевода слова.
-    if (onPhrase && wordCount >= 2) {
-      onPhrase({ text: cleaned, sentence, offerAnalysis: shouldOfferAnalysis(tokens, a, b) })
-    } else {
-      onSelect({ word: cleaned, sentence })
-    }
-  }
-
-  const inRange = (i: number) =>
-    range !== null && i >= Math.min(range.from, range.to) && i <= Math.max(range.from, range.to)
-
+  // Тап по слову = обычный click: браузер сам отличает касание от прокрутки, так
+  // что нет конфликта со скроллом и «фантомных» кликов (в отличие от pointer-
+  // жестов и long-press). Выделение фразы пальцем убрано — разбор ПРЕДЛОЖЕНИЯ
+  // открывается кнопкой из шторки слова, а точную фразу собирают режимом
+  // «Отметить слова».
   return (
-    <span
-      onPointerMove={(e) => {
-        if (!startPt.current) return
-        if (selecting) {
-          // ведём выделение по слову под пальцем (работает и на тач)
-          const ti = wordIndexAt(e.clientX, e.clientY)
-          if (ti != null) setRange((r) => (r ? { ...r, to: ti } : { from: ti, to: ti }))
-          e.preventDefault()
-          return
-        }
-        // ещё не выделяем и палец заметно сдвинулся → это ПРОКРУТКА, а не
-        // удержание: отменяем таймер и запрещаем «тап» на отпускании
-        const dx = Math.abs(e.clientX - startPt.current.x)
-        const dy = Math.abs(e.clientY - startPt.current.y)
-        if (dx > 10 || dy > 10) {
-          moved.current = true
-          cancelLongPress()
-        }
-      }}
-      onPointerUp={() => {
-        finishSelection()
-        startPt.current = null
-      }}
-      onPointerCancel={() => {
-        cancelLongPress()
-        setSelecting(false)
-        setRange(null)
-        startPt.current = null
-      }}
-      onPointerLeave={() => selecting && finishSelection()}
-      // во время выделения запрещаем прокрутку; иначе — вертикальный скролл + тапы
-      style={{ touchAction: selecting ? 'none' : 'pan-y' }}
-      className={selecting ? 'select-none' : undefined}
-    >
+    <span>
       {tokens.map((tok, i) => {
-        if (!isWordToken(tok)) {
-          // пробелы внутри выделения тоже подсвечиваем — фраза выглядит цельной
-          return (
-            <span key={i} className={inRange(i) ? 'bg-[rgba(145,132,217,.28)]' : undefined}>
-              {tok}
-            </span>
-          )
-        }
-        const highlighted = inRange(i) || (markMode && marked?.has(i))
+        if (!isWordToken(tok)) return <span key={i}>{tok}</span>
+        const highlighted = markMode && marked?.has(i)
         return (
           <span
             key={i}
-            data-ti={i}
-            onPointerDown={(e) => {
-              if (markMode) return // в режиме отметки long-press не нужен
-              cancelLongPress()
-              startPt.current = { x: e.clientX, y: e.clientY }
-              moved.current = false
-              // удержание ~350 мс без движения — режим выделения фразы
-              longPress.current = window.setTimeout(() => {
-                setSelecting(true)
-                setRange({ from: i, to: i })
-              }, 350)
-            }}
-            onPointerUp={(e) => {
-              // режим «Отметить слова»: тап ставит/снимает отметку
-              if (markMode) {
-                e.stopPropagation()
-                const word = cleanWord(tok)
-                if (word) onToggleMark?.(i, word, sentenceAround(text, word, offsets[i]))
-                return
-              }
-              // обычный тап (без удержания и без прокрутки) — перевод слова
-              if (!selecting && !moved.current) {
-                e.stopPropagation()
-                cancelLongPress()
-                const word = cleanWord(tok)
-                if (word) onSelect({ word, sentence: sentenceAround(text, word, offsets[i]) })
-              }
+            onClick={() => {
+              const word = cleanWord(tok)
+              if (!word) return
+              const sentence = sentenceAround(text, word, offsets[i])
+              if (markMode) onToggleMark?.(i, word, sentence)
+              else onSelect({ word, sentence })
             }}
             className={`cursor-pointer rounded px-0.5 transition-colors ${
               highlighted
@@ -278,6 +155,8 @@ export function WordSheet({
   const [added, setAdded] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // разбор ВСЕГО предложения (умная модель) — вместо выделения фразы пальцем
+  const [analyze, setAnalyze] = useState(false)
 
   // Контекстный перевод (Gemini) и — для английского — транскрипция/аудио.
   // alive-флаг: при быстрой смене слова медленный ответ по прошлому слову
@@ -349,6 +228,7 @@ export function WordSheet({
   // Портал в body: внутри <main> любой предок с transform/filter «приватизирует»
   // fixed-позиционирование, и шторка уезжает за навигацию на длинных текстах.
   return createPortal(
+    <>
     <div className="fixed inset-0 z-50 flex items-end bg-black/40" onClick={onClose}>
       <div
         className="flex max-h-[85dvh] w-full flex-col rounded-t-3xl bg-[var(--night-surface)]"
@@ -402,6 +282,14 @@ export function WordSheet({
           </p>
 
           {error && <p className="mt-3 text-sm text-red-500">{error}</p>}
+
+          {/* Разбор всего предложения (фразовые глаголы/выражения/грамматика) */}
+          <button
+            onClick={() => setAnalyze(true)}
+            className="lift mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl border border-[var(--night-accent-45)] bg-[rgba(145,132,217,.10)] py-2.5 text-sm font-medium text-[var(--night-accent-100)]"
+          >
+            🔍 Разбор предложения
+          </button>
         </div>
 
         {/* Кнопки — всегда видны, не прячутся за навигацией */}
@@ -420,7 +308,16 @@ export function WordSheet({
           </Button>
         </div>
       </div>
-    </div>,
+    </div>
+    {analyze && (
+      <AnalysisSheet
+        text={sentence}
+        sentence={sentence}
+        lang={lang}
+        onClose={() => setAnalyze(false)}
+      />
+    )}
+    </>,
     document.body,
   )
 }

@@ -121,9 +121,7 @@ try {
           (x) => x.textContent.trim() === w && x.childElementCount === 0,
         )
         if (!el) continue
-        const fire = (type) =>
-          el.dispatchEvent(new PointerEvent(type, { bubbles: true, pointerId: 1 }))
-        fire('pointerup')
+        el.click() // слово теперь onClick (в режиме отметки — toggle)
         n++
       }
       return n

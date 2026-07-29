@@ -129,7 +129,7 @@ export function AnalysisSheet({
                             <button
                               onClick={() => speak(it.base, { lang })}
                               aria-label="Озвучить"
-                              className="lift flex h-10 w-10 flex-none items-center justify-center rounded-full border border-white/[0.08] text-[var(--night-text-70)]"
+                              className="lift flex h-9 w-9 flex-none items-center justify-center rounded-full border border-white/[0.08] text-[var(--night-text-70)]"
                             >
                               <IconSpeaker size={16} />
                             </button>
@@ -137,7 +137,7 @@ export function AnalysisSheet({
                               onClick={() => add(it)}
                               disabled={isAdded}
                               aria-label={isAdded ? 'Добавлено' : 'В мои слова'}
-                              className={`lift flex h-10 w-10 flex-none items-center justify-center rounded-full border ${
+                              className={`lift flex h-9 w-9 flex-none items-center justify-center rounded-full border ${
                                 isAdded
                                   ? 'border-emerald-500/60 text-emerald-400'
                                   : 'border-[var(--night-accent-45)] bg-[rgba(145,132,217,.14)] text-[var(--night-accent-100)]'
@@ -190,7 +190,7 @@ export function AnalysisSheet({
 
               {data.items.filter((it) => it.kind !== 'grammar').length > 1 && (
                 <Button
-                  className="mt-4 w-full"
+                  className="mt-4 w-full py-2.5 text-sm"
                   onClick={() => data.items.filter((it) => it.kind !== 'grammar').forEach(add)}
                 >
                   <IconPlus size={16} /> Добавить всё в Мои слова

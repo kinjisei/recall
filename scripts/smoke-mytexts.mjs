@@ -107,17 +107,13 @@ try {
     })
     check('текст открылся в читалке', true)
 
-    // тап по слову → шторка → «В колоду». Слова — span с pointer-событиями
-    // (не click): down взводит long-press, up без удержания открывает шторку.
+    // тап по слову → шторка → «В колоду». Слово — span с onClick (браузер сам
+    // отличает тап от прокрутки), поэтому обычный click.
     await page.evaluate(() => {
       const el = [...document.querySelectorAll('span')].find(
         (x) => x.textContent.trim() === 'scientist' && x.childElementCount === 0,
       )
-      if (!el) return
-      const fire = (type) =>
-        el.dispatchEvent(new PointerEvent(type, { bubbles: true, pointerId: 1 }))
-      fire('pointerdown')
-      fire('pointerup')
+      el?.click()
     })
     await page.waitForFunction(
       () => [...document.querySelectorAll('button')].some((b) => /мои слова/i.test(b.textContent)),
