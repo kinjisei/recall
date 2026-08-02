@@ -13,6 +13,7 @@ import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { TabPicker } from '../../components/TabPicker'
 import { RoundResult, RoundProgress } from '../../components/RoundResult'
+import type { ReviewItem } from '../../components/RoundReview'
 import { speak } from '../../lib/speech'
 import { logActivity } from '../../lib/activity'
 import { shuffle, sample } from '../../lib/random'
@@ -191,6 +192,7 @@ function Trainer({ entries }: { entries: PhrasalEntry[] }) {
   const [chosen, setChosen] = useState<number | null>(null)
   const [wrong, setWrong] = useState<Question[]>([])
   const [correct, setCorrect] = useState(0)
+  const [results, setResults] = useState<ReviewItem[]>([])
   const [logged, setLogged] = useState(false)
 
   const q = round[index]
@@ -210,6 +212,7 @@ function Trainer({ entries }: { entries: PhrasalEntry[] }) {
     setChosen(null)
     setWrong([])
     setCorrect(0)
+    setResults([])
     setLogged(false)
   }
 
@@ -221,6 +224,8 @@ function Trainer({ entries }: { entries: PhrasalEntry[] }) {
         correct={correct}
         total={round.length}
         note="Раунд засчитан в серию дня"
+        lang="en"
+        review={results}
         onRestart={() => restart()}
       >
         {wrong.length > 0 && (
@@ -247,7 +252,17 @@ function Trainer({ entries }: { entries: PhrasalEntry[] }) {
   const pick = (i: number) => {
     if (chosen !== null) return
     setChosen(i)
-    if (i === q.answer) setCorrect((c) => c + 1)
+    const ok = i === q.answer
+    setResults((r) => [
+      ...r,
+      {
+        prompt: `${q.verb} ___  — «${q.item.ru}»`,
+        given: q.options[i] ?? '',
+        correct: q.particle,
+        ok,
+      },
+    ])
+    if (ok) setCorrect((c) => c + 1)
     else setWrong((w) => [...w, q])
     speak(q.item.phrase, { lang: 'en' })
   }

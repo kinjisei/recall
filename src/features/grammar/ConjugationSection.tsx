@@ -10,6 +10,7 @@ import { BackButton } from '../../components/BackButton'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { RoundResult, RoundProgress } from '../../components/RoundResult'
+import type { ReviewItem } from '../../components/RoundReview'
 import { speak } from '../../lib/speech'
 import { logActivity } from '../../lib/activity'
 import { getVerbMistakes, addVerbMistake, removeVerbMistake } from '../../lib/verbMistakes'
@@ -331,6 +332,7 @@ function TrainerRunner({
   const [index, setIndex] = useState(0)
   const [correct, setCorrect] = useState(0)
   const [picked, setPicked] = useState<number | null>(null)
+  const [results, setResults] = useState<ReviewItem[]>([])
   const [done, setDone] = useState(false)
 
   const total = pool.length
@@ -352,10 +354,13 @@ function TrainerRunner({
         total={total}
         note="Засчитано в серию дня."
         restartLabel="Ещё раз"
+        lang="es"
+        review={results}
         onRestart={() => {
           setIndex(0)
           setCorrect(0)
           setPicked(null)
+          setResults([])
           setDone(false)
         }}
       />
@@ -365,8 +370,18 @@ function TrainerRunner({
   const choose = (i: number) => {
     if (picked !== null) return
     setPicked(i)
+    const ok = i === current.answer
+    setResults((r) => [
+      ...r,
+      {
+        prompt: `${current.prompt} (${current.infinitive})`,
+        given: current.options[i] ?? '',
+        correct: current.options[current.answer] ?? '',
+        ok,
+      },
+    ])
     // банк «Мои ошибки»: неверное упражнение кладём, верное — убираем
-    if (i === current.answer) {
+    if (ok) {
       setCorrect((c) => c + 1)
       removeVerbMistake('es', String(current.id))
     } else {

@@ -5,6 +5,7 @@ import { IconSpeaker } from '../../components/icons'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { RoundResult, RoundProgress } from '../../components/RoundResult'
+import type { ReviewItem } from '../../components/RoundReview'
 import { logActivity } from '../../lib/activity'
 import { getUserLevel } from '../../lib/level'
 import { speak } from '../../lib/speech'
@@ -64,6 +65,7 @@ export function SentenceBuilder({ lang, onBack }: { lang: AppLang; onBack: () =>
 
   const [index, setIndex] = useState(0)
   const [correct, setCorrect] = useState(0)
+  const [results, setResults] = useState<ReviewItem[]>([])
   const [done, setDone] = useState(false)
 
   const task = tasks[index]
@@ -71,8 +73,9 @@ export function SentenceBuilder({ lang, onBack }: { lang: AppLang; onBack: () =>
   // index+1 < tasks.length, иначе выставляет done) — guard для компилятора
   if (!task) return null
 
-  const onResult = (ok: boolean) => {
+  const onResult = (ok: boolean, given: string) => {
     if (ok) setCorrect((c) => c + 1)
+    setResults((r) => [...r, { prompt: task.ru, given, correct: task.target, ok }])
   }
   const next = () => {
     if (index + 1 >= tasks.length) {
@@ -90,10 +93,13 @@ export function SentenceBuilder({ lang, onBack }: { lang: AppLang; onBack: () =>
         <RoundResult
           correct={correct}
           total={tasks.length}
+          review={results}
+          lang={lang}
           restartLabel="Ещё раз"
           onRestart={() => {
             setIndex(0)
             setCorrect(0)
+            setResults([])
             setDone(false)
             setSeed((s) => s + 1)
           }}
@@ -127,7 +133,7 @@ function BuildTask({
 }: {
   task: Task
   lang: AppLang
-  onResult: (ok: boolean) => void
+  onResult: (ok: boolean, given: string) => void
   onNext: () => void
   isLast: boolean
 }) {
@@ -144,7 +150,7 @@ function BuildTask({
   const check = () => {
     if (checked || built.length !== task.words.length) return
     setChecked(true)
-    onResult(ok)
+    onResult(ok, built.map((b) => b.w).join(' '))
   }
 
   return (

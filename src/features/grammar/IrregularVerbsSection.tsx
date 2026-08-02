@@ -176,6 +176,8 @@ function sampleRound(all: IrregularVerb[]): IrregularVerb[] {
 interface Result {
   verb: IrregularVerb
   ok: boolean
+  /** Что ввёл ученик: «past / part» (для разбора «Посмотреть результаты»). */
+  given: string
 }
 
 function Trainer({ groups }: { groups: IrregularGroup[] }) {
@@ -266,6 +268,13 @@ function Trainer({ groups }: { groups: IrregularGroup[] }) {
           correct={correct}
           total={round.length}
           note="Раунд засчитан в серию дня."
+          lang="en"
+          review={results.map((r) => ({
+            prompt: `${r.verb.base} (${r.verb.ru})`,
+            given: r.given,
+            correct: `${r.verb.past} / ${r.verb.part}`,
+            ok: r.ok,
+          }))}
           onRestart={() => restart()}
         >
           {wrong.length > 0 && (
@@ -288,7 +297,7 @@ function Trainer({ groups }: { groups: IrregularGroup[] }) {
     if (checked) return
     setChecked(true)
     const ok = matches(past, verb.past) && matches(part, verb.part)
-    setResults((r) => [...r, { verb, ok }])
+    setResults((r) => [...r, { verb, ok, given: `${past.trim()} / ${part.trim()}` }])
     // банк «Мои ошибки»: неверный глагол кладём, верный — убираем
     if (ok) removeVerbMistake('en', verb.base)
     else addVerbMistake('en', verb.base)
