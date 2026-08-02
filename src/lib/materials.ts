@@ -71,6 +71,33 @@ function comprehensionRange(lengthRange: string): string {
   return '7-12'
 }
 
+/** Длина-корзина по числу слов в теле текста (для «Мой текст»). */
+export function lengthRangeOf(body: string): MaterialRequest['lengthRange'] {
+  const n = body.split(/\s+/).filter(Boolean).length
+  return n < 100 ? '50-100' : n <= 250 ? '100-250' : '250-350'
+}
+
+/** Валидные упражнения из ответа AI (общая для генерации текста и «Мой текст»). */
+function validExercises(list: MaterialExercise[]): MaterialExercise[] {
+  return (list ?? []).filter((e) => {
+    if (!e || typeof e !== 'object') return false
+    if (e.type === 'mcq') {
+      return (
+        typeof e.prompt === 'string' &&
+        Array.isArray(e.options) &&
+        e.options.length >= 2 &&
+        typeof e.answer === 'number' &&
+        e.answer >= 0 &&
+        e.answer < e.options.length
+      )
+    }
+    if (e.type === 'fill') {
+      return typeof e.prompt === 'string' && typeof e.answer === 'string' && e.answer.length > 0
+    }
+    return false
+  })
+}
+
 /** Шаг 1: AI проверяет заявку и предлагает план материала. */
 export async function generateMaterialPlan(
   req: MaterialRequest,
@@ -168,27 +195,97 @@ export async function generateMaterialContent(
   const content = parseJson<MaterialContent>(raw)
 
   // Валидация: выбрасываем битые упражнения, требуем минимум приличный набор.
-  const valid = (content.exercises ?? []).filter((e) => {
-    if (!e || typeof e !== 'object') return false
-    if (e.type === 'mcq') {
-      return (
-        typeof e.prompt === 'string' &&
-        Array.isArray(e.options) &&
-        e.options.length >= 2 &&
-        typeof e.answer === 'number' &&
-        e.answer >= 0 &&
-        e.answer < e.options.length
-      )
-    }
-    if (e.type === 'fill') {
-      return typeof e.prompt === 'string' && typeof e.answer === 'string' && e.answer.length > 0
-    }
-    return false
-  })
+  const valid = validExercises(content.exercises ?? [])
   if (!content.title || !content.body || valid.length < 3) {
     throw new Error('AI вернул неполный материал. Нажми «Генерировать» ещё раз.')
   }
   return { title: content.title, body: content.body, exercises: valid }
+}
+
+/** Первая строка/предложение текста — запасной заголовок для «Мой текст». */
+function firstLine(body: string): string {
+  const line = body.trim().split(/\n/)[0] ?? ''
+  const sent = line.split(/(?<=[.!?…])\s/)[0] ?? line
+  return (sent.length > 60 ? sent.slice(0, 57).trimEnd() + '…' : sent) || 'Свой текст'
+}
+
+/**
+ * «Мой текст»: упражнения СТРОГО по готовому тексту преподавателя (генерация
+ * текста пропускается). Возвращает MaterialContent с ТЕМ ЖЕ body — дальше поток
+ * как обычно (предпросмотр → сохранить → назначить). opts.feedback — правки при
+ * перегенерации упражнений.
+ */
+export async function generateExercisesForText(
+  body: string,
+  lang: AppLang,
+  level: CEFRLevel,
+  opts?: { vocabulary?: string; grammar?: string; feedback?: string },
+): Promise<MaterialContent> {
+  const langName = lang === 'es' ? 'испанском' : 'английском'
+  const compr = comprehensionRange(lengthRangeOf(body))
+  const system = [
+    'Ты — автор учебных упражнений по иностранным языкам.',
+    `Дан ГОТОВЫЙ текст на ${langName} (уровень ученика — ${level}). Составь упражнения СТРОГО по этому тексту.`,
+    'Отвечай ТОЛЬКО валидным JSON без markdown.',
+    '',
+    'Формат ответа:',
+    '{',
+    '  "title": "короткий заголовок текста на целевом языке",',
+    '  "exercises": [',
+    '    {"kind":"comprehension","type":"mcq","prompt":"вопрос по смыслу на целевом языке","options":["A","B","C","D"],"answer":0},',
+    '    {"kind":"grammar","type":"fill","prompt":"предложение ИЗ текста с пропуском ___","answer":"пропущенная часть","hint":"подсказка по-русски"},',
+    '    {"kind":"vocab","type":"mcq","prompt":"определение слова НА ЦЕЛЕВОМ ЯЗЫКЕ (само слово не называть!)","options":["слово1","слово2","слово3","слово4"],"answer":0}',
+    '  ]',
+    '}',
+    '',
+    'Жёсткие требования:',
+    '1. ВСЕ упражнения строго по содержанию ДАННОГО текста. Не выдумывай фактов, которых в тексте нет.',
+    `2. Вопросов на понимание (comprehension) — ${compr}; грамматических (fill, предложения ИЗ текста) — 3-6; словарных (vocab) — 3-6.`,
+    opts?.grammar?.trim() ? `3. Сделай акцент на грамматике: ${opts.grammar.trim()}.` : '',
+    opts?.vocabulary?.trim() ? `4. В словарных упражнениях приоритет словам: ${opts.vocabulary.trim()}.` : '',
+    'В fill ответ (answer) — ровно то, что пропущено на месте ___; «/» только для равноправных вариантов (was/were), не как часть самого ответа.',
+    'В vocab prompt — простое определение слова уровня ученика БЕЗ самого слова; options — 4 слова (правильное + 3 из текста/того же уровня); answer — индекс правильного.',
+    'Порядок упражнений: сначала comprehension, потом grammar, потом vocab.',
+  ]
+    .filter(Boolean)
+    .join('\n')
+
+  const userMsg = ['Текст:', body, opts?.feedback ? `\nПравки преподавателя: ${opts.feedback}` : '']
+    .filter(Boolean)
+    .join('\n')
+
+  const raw = await chat([{ role: 'user', content: userMsg }], { system, task: 'material' })
+  const content = parseJson<{ title?: string; exercises?: MaterialExercise[] }>(raw)
+  const valid = validExercises(content.exercises ?? [])
+  if (valid.length < 3) {
+    throw new Error('AI не собрал упражнения по тексту. Попробуй ещё раз.')
+  }
+  const title = (typeof content.title === 'string' && content.title.trim()) || firstLine(body)
+  return { title, body, exercises: valid }
+}
+
+/** Синтетическая заявка для сохранения «своего текста» (saveMaterial ждёт req+plan). */
+export function ownTextRequest(
+  lang: AppLang,
+  level: CEFRLevel,
+  body: string,
+  accent?: { vocabulary?: string; grammar?: string },
+): MaterialRequest {
+  return {
+    lang,
+    level,
+    topic: firstLine(body),
+    format: 'мой текст',
+    lengthRange: lengthRangeOf(body),
+    // сохраняем акцент, чтобы перегенерация упражнений его учитывала
+    vocabulary: accent?.vocabulary ?? '',
+    grammar: accent?.grammar ?? '',
+  }
+}
+
+/** Минимальный план для «своего текста» (генерации плана не было). */
+export function ownTextPlan(): MaterialPlan {
+  return { comments: 'Материал по своему тексту преподавателя.', vocabulary: [], grammar_focus: null, exercise_plan: [] }
 }
 
 // ---------------------------------------------------------------------------

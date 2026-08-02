@@ -7,18 +7,27 @@ import {
   MATERIAL_FORMATS,
   MATERIAL_LENGTHS,
   generateMaterialPlan,
+  generateExercisesForText,
+  ownTextRequest,
+  ownTextPlan,
+  type MaterialContent,
   type MaterialRequest,
 } from '../../../lib/materials'
+import { MY_TEXT_LIMIT } from '../../../lib/myTexts'
 import type { AppLang, CEFRLevel, MaterialPlan } from '../../../types'
 import { LEVELS, inputClass } from './shared'
 
 export function RequestForm({
   onCancel,
   onPlanned,
+  onOwnGenerated,
 }: {
   onCancel: () => void
   onPlanned: (req: MaterialRequest, plan: MaterialPlan) => void
+  /** «Мой текст»: упражнения готовы, сразу в предпросмотр (плана нет). */
+  onOwnGenerated: (req: MaterialRequest, plan: MaterialPlan, content: MaterialContent) => void
 }) {
+  const [source, setSource] = useState<'generate' | 'own'>('generate')
   const [lang, setLang] = useState<AppLang>('en')
   const [level, setLevel] = useState<CEFRLevel>('A2')
   const [topic, setTopic] = useState('')
@@ -26,6 +35,7 @@ export function RequestForm({
   const [lengthRange, setLengthRange] = useState<MaterialRequest['lengthRange']>('100-250')
   const [vocabulary, setVocabulary] = useState('')
   const [grammar, setGrammar] = useState('')
+  const [body, setBody] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -52,6 +62,21 @@ export function RequestForm({
     }
   }
 
+  const submitOwn = async () => {
+    const text = body.trim()
+    if (text.length < 40 || busy) return
+    setBusy(true)
+    setError(null)
+    try {
+      const content = await generateExercisesForText(text, lang, level, { vocabulary, grammar })
+      onOwnGenerated(ownTextRequest(lang, level, text, { vocabulary, grammar }), ownTextPlan(), content)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Ошибка генерации упражнений')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const chip = (active: boolean) =>
     `rounded-lg px-3 py-1.5 text-sm font-semibold ${
       active
@@ -62,6 +87,18 @@ export function RequestForm({
   return (
     <Card className="flex flex-col gap-3">
       <p className="font-semibold">Новый материал</p>
+
+      <div>
+        <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">Источник текста</p>
+        <div className="flex gap-2">
+          <button className={chip(source === 'generate')} onClick={() => setSource('generate')}>
+            Сгенерировать
+          </button>
+          <button className={chip(source === 'own')} onClick={() => setSource('own')}>
+            Мой текст
+          </button>
+        </div>
+      </div>
 
       <div>
         <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">Язык</p>
@@ -80,37 +117,59 @@ export function RequestForm({
         </div>
       </div>
 
-      <div>
-        <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">Тема текста *</p>
-        <input
-          className={inputClass}
-          placeholder="Например: Путешествие в горы"
-          value={topic}
-          onChange={(e) => setTopic(e.target.value)}
-        />
-      </div>
+      {source === 'generate' ? (
+        <>
+          <div>
+            <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">Тема текста *</p>
+            <input
+              className={inputClass}
+              placeholder="Например: Путешествие в горы"
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+            />
+          </div>
 
-      <div>
-        <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">Формат</p>
-        <div className="flex flex-wrap gap-2">
-          {MATERIAL_FORMATS.map((f) => (
-            <button key={f} className={chip(format === f)} onClick={() => setFormat(f)}>{f}</button>
-          ))}
-        </div>
-      </div>
+          <div>
+            <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">Формат</p>
+            <div className="flex flex-wrap gap-2">
+              {MATERIAL_FORMATS.map((f) => (
+                <button key={f} className={chip(format === f)} onClick={() => setFormat(f)}>{f}</button>
+              ))}
+            </div>
+          </div>
 
-      <div>
-        <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">Длина (слов)</p>
-        <div className="flex gap-2">
-          {MATERIAL_LENGTHS.map((l) => (
-            <button key={l} className={chip(lengthRange === l)} onClick={() => setLengthRange(l)}>{l}</button>
-          ))}
+          <div>
+            <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">Длина (слов)</p>
+            <div className="flex gap-2">
+              {MATERIAL_LENGTHS.map((l) => (
+                <button key={l} className={chip(lengthRange === l)} onClick={() => setLengthRange(l)}>{l}</button>
+              ))}
+            </div>
+          </div>
+        </>
+      ) : (
+        <div>
+          <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">
+            Твой текст (упражнения соберутся строго по нему)
+          </p>
+          <textarea
+            className={`${inputClass} min-h-[160px]`}
+            placeholder="Вставь сюда текст на выбранном языке…"
+            value={body}
+            maxLength={MY_TEXT_LIMIT}
+            onChange={(e) => setBody(e.target.value)}
+          />
+          <p className="mt-1 text-right text-xs text-[var(--night-text-40)]">
+            {body.trim().length} / {MY_TEXT_LIMIT}
+          </p>
         </div>
-      </div>
+      )}
 
       <div>
         <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">
-          Слова через запятую или тема словаря (необязательно)
+          {source === 'own'
+            ? 'Слова для акцента в словаре (необязательно)'
+            : 'Слова через запятую или тема словаря (необязательно)'}
         </p>
         <input
           className={inputClass}
@@ -122,7 +181,7 @@ export function RequestForm({
 
       <div>
         <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">
-          Грамматическая тема (необязательно)
+          {source === 'own' ? 'Акцент на грамматике (необязательно)' : 'Грамматическая тема (необязательно)'}
         </p>
         <input
           className={inputClass}
@@ -134,14 +193,25 @@ export function RequestForm({
 
       {error && <p className="text-sm text-red-500">{error}</p>}
 
-      <div className="flex gap-2">
-        <Button className="flex-1" onClick={submit} disabled={busy || !topic.trim()}>
-          {busy ? 'AI составляет план…' : 'Составить план →'}
-        </Button>
-        <Button variant="ghost" onClick={onCancel} disabled={busy}>
-          Отмена
-        </Button>
-      </div>
+      {source === 'generate' ? (
+        <div className="flex gap-2">
+          <Button className="flex-1" onClick={submit} disabled={busy || !topic.trim()}>
+            {busy ? 'AI составляет план…' : 'Составить план →'}
+          </Button>
+          <Button variant="ghost" onClick={onCancel} disabled={busy}>
+            Отмена
+          </Button>
+        </div>
+      ) : (
+        <div className="flex gap-2">
+          <Button className="flex-1" onClick={submitOwn} disabled={busy || body.trim().length < 40}>
+            {busy ? 'AI собирает упражнения…' : 'Составить упражнения →'}
+          </Button>
+          <Button variant="ghost" onClick={onCancel} disabled={busy}>
+            Отмена
+          </Button>
+        </div>
+      )}
     </Card>
   )
 }

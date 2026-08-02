@@ -5,6 +5,7 @@ import { Button } from '../../../components/Button'
 import { BackHeader } from '../../../components/BackButton'
 import {
   generateMaterialContent,
+  generateExercisesForText,
   saveMaterial,
   type MaterialContent,
   type MaterialRequest,
@@ -16,6 +17,7 @@ export function PreviewScreen({
   req,
   plan,
   content,
+  own = false,
   onRegenerated,
   onSaved,
   onBack,
@@ -23,6 +25,8 @@ export function PreviewScreen({
   req: MaterialRequest
   plan: MaterialPlan
   content: MaterialContent
+  /** «Мой текст»: перегенерируем ТОЛЬКО упражнения, тело сохраняем. */
+  own?: boolean
   onRegenerated: (content: MaterialContent) => void
   onSaved: (material: Material) => void
   onBack: () => void
@@ -35,7 +39,15 @@ export function PreviewScreen({
     setBusy('regen')
     setError(null)
     try {
-      onRegenerated(await generateMaterialContent(req, plan, feedback.trim() || undefined))
+      const fb = feedback.trim() || undefined
+      const next = own
+        ? await generateExercisesForText(content.body, req.lang, req.level, {
+            vocabulary: req.vocabulary,
+            grammar: req.grammar,
+            feedback: fb,
+          })
+        : await generateMaterialContent(req, plan, fb)
+      onRegenerated(next)
       setFeedback('')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Ошибка')
@@ -59,7 +71,7 @@ export function PreviewScreen({
 
   return (
     <div className="flex flex-col gap-3">
-      <BackHeader onBack={onBack} title="Предпросмотр" label="К плану" />
+      <BackHeader onBack={onBack} title="Предпросмотр" label={own ? 'К форме' : 'К плану'} />
 
       <Card>
         <p className="text-lg font-bold">{content.title}</p>

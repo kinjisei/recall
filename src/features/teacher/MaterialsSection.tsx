@@ -29,7 +29,8 @@ type Mode =
   | { name: 'list' }
   | { name: 'form' }
   | { name: 'plan'; req: MaterialRequest; plan: MaterialPlan }
-  | { name: 'preview'; req: MaterialRequest; plan: MaterialPlan; content: MaterialContent }
+  // own: материал по своему тексту преподавателя (плана нет, назад — к форме)
+  | { name: 'preview'; req: MaterialRequest; plan: MaterialPlan; content: MaterialContent; own?: boolean }
   // review — сразу открыть проверку конкретной работы (из блока «На проверку»)
   | { name: 'detail'; material: Material; review?: { a: MaterialAssignment; name: string } }
 
@@ -63,6 +64,9 @@ export function MaterialsSection({
       <RequestForm
         onCancel={() => setMode({ name: 'list' })}
         onPlanned={(req, plan) => setMode({ name: 'plan', req, plan })}
+        onOwnGenerated={(req, plan, content) =>
+          setMode({ name: 'preview', req, plan, content, own: true })
+        }
       />
     )
   }
@@ -83,12 +87,17 @@ export function MaterialsSection({
         req={mode.req}
         plan={mode.plan}
         content={mode.content}
+        own={mode.own}
         onRegenerated={(content) => setMode({ ...mode, content })}
         onSaved={(material) => {
           reload()
           setMode({ name: 'detail', material })
         }}
-        onBack={() => setMode({ name: 'plan', req: mode.req, plan: mode.plan })}
+        onBack={() =>
+          mode.own
+            ? setMode({ name: 'form' })
+            : setMode({ name: 'plan', req: mode.req, plan: mode.plan })
+        }
       />
     )
   }
