@@ -26,6 +26,7 @@ import { DeckWordsPicker } from './DeckWordsPicker'
 import { GuideSection } from './GuideSection'
 import { DailyPlanSection } from './DailyPlanSection'
 import { countSubmittedWorks } from '../../lib/materials'
+import { countSubmittedWriting } from '../../lib/writing'
 import type { Deck, Profile } from '../../types'
 
 export function TeacherPage() {
@@ -75,6 +76,7 @@ function TeacherDashboard() {
   const [students, setStudents] = useState<StudentInfo[]>([])
   const [decks, setDecks] = useState<Deck[]>([])
   const [pendingWorks, setPendingWorks] = useState(0)
+  const [pendingWriting, setPendingWriting] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -83,16 +85,18 @@ function TeacherDashboard() {
   const load = useCallback(async () => {
     setError(null)
     try {
-      const [c, s, d, pending] = await Promise.all([
+      const [c, s, d, pending, pendingW] = await Promise.all([
         getOrCreateInviteCode(),
         getMyStudents(),
         getMyDecks(),
         countSubmittedWorks().catch(() => 0), // был отдельным шагом ПОСЛЕ Promise.all
+        countSubmittedWriting().catch(() => 0),
       ])
       setCode(c)
       setStudents(s)
       setDecks(d)
       setPendingWorks(pending)
+      setPendingWriting(pendingW)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Ошибка загрузки')
     } finally {
@@ -166,6 +170,11 @@ function TeacherDashboard() {
             {id === 'materials' && pendingWorks > 0 && (
               <span className="ml-1.5 rounded-full bg-amber-400 px-1.5 py-0.5 text-xs font-bold text-amber-950">
                 {pendingWorks}
+              </span>
+            )}
+            {id === 'writing' && pendingWriting > 0 && (
+              <span className="ml-1.5 rounded-full bg-amber-400 px-1.5 py-0.5 text-xs font-bold text-amber-950">
+                {pendingWriting}
               </span>
             )}
           </button>

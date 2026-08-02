@@ -15,6 +15,7 @@ import { getMyWritingAssignments, submitWriting } from '../../lib/writing'
 import { gradeWriting, bandLabel } from '../../lib/writingGrade'
 import type { WritingGrade, WritingTask, WritingTaskAssignment } from '../../types'
 import { WritingGradeView } from './WritingGradeView'
+import { WritingHistory } from './WritingHistory'
 
 type Row = WritingTaskAssignment & { task: WritingTask }
 
@@ -192,12 +193,26 @@ function WritingRunner({
             <p className="whitespace-pre-wrap leading-relaxed text-[var(--night-text-70)]">{essay}</p>
           </Card>
 
-          {grade && (
+          {reviewed && row.teacher_review ? (
             <Card>
-              <p className="mb-2 text-sm font-semibold">
-                {reviewed ? 'Разбор' : 'Оценка AI'}
-              </p>
+              <p className="mb-2 text-sm font-semibold">Разбор преподавателя</p>
+              {row.teacher_review.comment && (
+                <p className="mb-3 rounded-lg bg-white/[0.05] px-3 py-2 text-sm text-[var(--night-text-70)]">
+                  {row.teacher_review.comment}
+                </p>
+              )}
+              <WritingGradeView grade={row.teacher_review} mode={task.mode} />
+            </Card>
+          ) : grade ? (
+            <Card>
+              <p className="mb-2 text-sm font-semibold">Оценка AI</p>
               <WritingGradeView grade={grade} mode={task.mode} />
+            </Card>
+          ) : null}
+
+          {row.attempts && row.attempts.length > 0 && (
+            <Card>
+              <WritingHistory attempts={row.attempts} />
             </Card>
           )}
 

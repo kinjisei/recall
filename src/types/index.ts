@@ -421,6 +421,8 @@ export interface WritingGrade {
   topics?: string[]
   words?: string[]
   rewrites?: { was: string; better: string }[]
+  /** Общий комментарий преподавателя (в teacher_review, Заход 5c). */
+  comment?: string
 }
 
 /** Письменное задание (таблица writing_tasks). */

@@ -116,6 +116,36 @@ export async function submitWriting(
   if (error) throw new Error(error.message)
 }
 
+/** Преподаватель завершает проверку письма: свой вердикт + итоговый band. */
+export async function finishWritingReview(
+  assignmentId: string,
+  review: WritingGrade,
+  band: string,
+): Promise<void> {
+  const { error } = await supabase.rpc('finish_writing_review', {
+    p_id: assignmentId,
+    p_review: toJson(review),
+    p_band: band,
+  })
+  if (error) throw new Error(error.message)
+}
+
+/** Переназначить письмо той же ученице (текущий цикл уходит в историю). */
+export async function reassignWriting(assignmentId: string, note: string): Promise<void> {
+  const { error } = await supabase.rpc('reassign_writing', { p_id: assignmentId, p_note: note })
+  if (error) throw new Error(error.message)
+}
+
+/** Сколько писем ждут проверки (для бейджа вкладки «Письмо» у преподавателя). */
+export async function countSubmittedWriting(): Promise<number> {
+  const { count, error } = await supabase
+    .from('writing_task_assignments')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'submitted')
+  if (error) return 0
+  return count ?? 0
+}
+
 /** Сколько письменных заданий у ученицы (для строки в «Учёбе»). */
 export async function countMyWritingTasks(): Promise<{ total: number; pending: number }> {
   const userId = await requireUserId()

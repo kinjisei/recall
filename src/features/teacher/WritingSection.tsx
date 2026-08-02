@@ -28,6 +28,7 @@ import type {
   WritingTaskAssignment,
 } from '../../types'
 import { LEVELS, inputClass } from './materials/shared'
+import { WritingReviewScreen } from '../writing/WritingReviewScreen'
 
 const BANDS = ['5.5', '6.0', '6.5', '7.0', '7.5', '8.0']
 
@@ -333,6 +334,22 @@ function WritingDetail({
   const [busyStudent, setBusyStudent] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [err, setErr] = useState<string | null>(null)
+  const [reviewing, setReviewing] = useState<{ a: WritingTaskAssignment; name: string } | null>(null)
+
+  if (reviewing) {
+    return (
+      <WritingReviewScreen
+        task={task}
+        assignment={reviewing.a}
+        studentName={reviewing.name}
+        onBack={() => setReviewing(null)}
+        onDone={() => {
+          setReviewing(null)
+          reload()
+        }}
+      />
+    )
+  }
 
   const toggle = async (studentId: string) => {
     if (busyStudent) return
@@ -412,14 +429,24 @@ function WritingDetail({
                     </p>
                   )}
                 </div>
-                <Button
-                  variant={a ? 'ghost' : 'secondary'}
-                  className="shrink-0 px-3 py-1.5 text-sm"
-                  disabled={busyStudent !== null}
-                  onClick={() => toggle(st.profile.id)}
-                >
-                  {busyStudent === st.profile.id ? '…' : a ? 'Убрать ✓' : 'Назначить'}
-                </Button>
+                <div className="flex shrink-0 gap-1.5">
+                  {a && a.status !== 'assigned' && (
+                    <Button
+                      className="px-3 py-1.5 text-sm"
+                      onClick={() => setReviewing({ a, name })}
+                    >
+                      {a.status === 'submitted' ? 'Проверить' : 'Разбор'}
+                    </Button>
+                  )}
+                  <Button
+                    variant={a ? 'ghost' : 'secondary'}
+                    className="px-3 py-1.5 text-sm"
+                    disabled={busyStudent !== null}
+                    onClick={() => toggle(st.profile.id)}
+                  >
+                    {busyStudent === st.profile.id ? '…' : a ? 'Убрать ✓' : 'Назначить'}
+                  </Button>
+                </div>
               </div>
             )
           })

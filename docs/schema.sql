@@ -2450,6 +2450,46 @@
     if not found then raise exception 'Работа не найдена или уже проверена.'; end if;
   end $fn$;
 
+  -- Преподаватель завершает проверку письма (Заход 5c): свой вердикт + итоговый
+  -- band, статус reviewed. Можно перепроверить (правка вердикта) из reviewed.
+  create or replace function public.finish_writing_review(p_id uuid, p_review jsonb, p_band text)
+  returns void language plpgsql security definer set search_path = public as $fn$
+  begin
+    if not exists (
+      select 1 from writing_task_assignments wa
+      where wa.id = p_id and public.writing_task_owned_by(wa.task_id, auth.uid())
+        and public.is_student_of(auth.uid(), wa.student_id)
+    ) then raise exception 'Нет прав проверять эту работу.'; end if;
+    update writing_task_assignments
+      set teacher_review = p_review, band = coalesce(nullif(p_band, ''), band),
+          status = 'reviewed', reviewed_at = now()
+    where id = p_id and status in ('submitted', 'reviewed');
+    if not found then raise exception 'Работа не на проверке.'; end if;
+  end $fn$;
+
+  -- Преподаватель переназначает письмо той же ученице: текущий цикл (последняя
+  -- попытка) получает вердикт учителя и band в историю attempts, затем рабочие
+  -- поля сбрасываются в assigned; note — «на что обратить внимание в этот раз».
+  create or replace function public.reassign_writing(p_id uuid, p_note text)
+  returns void language plpgsql security definer set search_path = public as $fn$
+  declare n int;
+  begin
+    if not exists (
+      select 1 from writing_task_assignments wa
+      where wa.id = p_id and public.writing_task_owned_by(wa.task_id, auth.uid())
+        and public.is_student_of(auth.uid(), wa.student_id)
+    ) then raise exception 'Нет прав.'; end if;
+    select jsonb_array_length(coalesce(attempts, '[]'::jsonb)) into n
+      from writing_task_assignments where id = p_id;
+    update writing_task_assignments
+      set attempts = case when n > 0 then jsonb_set(attempts, array[(n - 1)::text],
+            (attempts -> (n - 1)) || jsonb_build_object('teacher_review', teacher_review, 'band', band))
+          else attempts end,
+          status = 'assigned', essay = null, ai_review = null, teacher_review = null,
+          band = null, submitted_at = null, reviewed_at = null, note = nullif(trim(p_note), '')
+    where id = p_id;
+  end $fn$;
+
   -- Финальный revoke/grant — ПОСЛЕДНИЙ в файле, накрывает все функции выше,
   -- включая только что пересозданный join_teacher.
   -- ⚠️ ВАЖНО (урок захода 3, строки ~2147): Supabase выдаёт EXECUTE ЯВНО роли

@@ -1021,6 +1021,14 @@ export type Database = {
         Args: { p_id: string; p_essay: string; p_grade: Json; p_band: string }
         Returns: undefined
       }
+      finish_writing_review: {
+        Args: { p_id: string; p_review: Json; p_band: string }
+        Returns: undefined
+      }
+      reassign_writing: {
+        Args: { p_id: string; p_note: string }
+        Returns: undefined
+      }
       assign_placement: {
         Args: { p_lang: string; p_student_id: string }
         Returns: string

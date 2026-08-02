@@ -104,7 +104,35 @@ try {
   const { data: teacherSees } = await tc.from('writing_task_assignments').select('*').eq('id', a.id).single()
   ok('учитель видит сданную работу (essay+band)', teacherSees?.essay === 'Second, better draft.' && teacherSees?.band === '6.5')
 
-  // 12) отвязка отбирает у учителя доступ к назначению (USING-фикс)
+  // 12) учитель завершает проверку (finish_writing_review) — Заход 5c
+  const tReview = { band: 6.0, comment: 'Good progress, watch articles.', errors: [{ was: 'exams is', fix: 'exams are' }] }
+  const { error: finErr } = await tc.rpc('finish_writing_review', { p_id: a.id, p_review: tReview, p_band: '6.0' })
+  ok('учитель завершил проверку', !finErr)
+  const { data: rev } = await sc.from('writing_task_assignments').select('*').eq('id', a.id).single()
+  ok('статус reviewed, teacher_review + band у ученицы', rev?.status === 'reviewed' && !!rev?.teacher_review?.comment && rev?.band === '6.0')
+  const beforeLen = rev.attempts?.length ?? 0
+
+  // 13) посторонний НЕ может проверить чужую работу
+  const { error: fakeFin } = await oc.rpc('finish_writing_review', { p_id: a.id, p_review: {}, p_band: '9.0' })
+  ok('посторонний НЕ проверяет чужую работу', !!fakeFin)
+
+  // 14) переназначение: вердикт уходит в историю последней попытки, статус assigned
+  const { error: reErr2 } = await tc.rpc('reassign_writing', { p_id: a.id, p_note: 'Try again, add examples.' })
+  ok('учитель переназначил (reassign_writing)', !reErr2)
+  const { data: reasg } = await sc.from('writing_task_assignments').select('*').eq('id', a.id).single()
+  ok('после переназначения статус assigned, поля сброшены, note',
+    reasg?.status === 'assigned' && !reasg?.essay && !reasg?.band && reasg?.note === 'Try again, add examples.')
+  ok('вердикт учителя сохранён в истории последней попытки',
+    Array.isArray(reasg?.attempts) && reasg.attempts.length === beforeLen &&
+    reasg.attempts[beforeLen - 1]?.teacher_review?.comment === 'Good progress, watch articles.')
+
+  // 15) ученица снова сдаёт после переназначения — новая попытка в истории
+  const { error: sub3 } = await sc.rpc('submit_writing', { p_id: a.id, p_essay: 'Third draft with examples.', p_grade: { band: 7 }, p_band: '7.0' })
+  ok('ученица пересдала после переназначения', !sub3)
+  const { data: after3 } = await sc.from('writing_task_assignments').select('*').eq('id', a.id).single()
+  ok('история выросла на 1, статус submitted', Array.isArray(after3?.attempts) && after3.attempts.length === beforeLen + 1 && after3.status === 'submitted')
+
+  // 16) отвязка отбирает у учителя доступ к назначению (USING-фикс)
   await admin.from('teacher_students').delete().eq('teacher_id', ids.t).eq('student_id', ids.s)
   const { data: afterUnlink } = await tc.from('writing_task_assignments').select('*').eq('id', a.id)
   ok('после отвязки учитель НЕ видит назначение', (afterUnlink ?? []).length === 0)
