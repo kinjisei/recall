@@ -1,26 +1,12 @@
 // ============================================================================
-// Карточка-разбор выделенного фрагмента (открывается после «зажать + провести»
-// по словам в читалке). Показывает общий перевод и найденное по группам
-// (фразовые глаголы / выражения / слова); любое — добавить в «Мои слова».
-// Разбор — lib/analyze (один запрос AI, лёгкая модель).
+// Карточка-разбор ПРЕДЛОЖЕНИЯ (кнопка «Разбор предложения» в шторке слова).
+// Общий перевод + найденное (AnalyzedItemsView). Разбор — lib/analyze.
 // ============================================================================
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { useNavigate } from 'react-router-dom'
-import { Button } from './Button'
-import { IconSpeaker, IconPlus, IconCheck, IconArrowRight } from './icons'
-import { analyzeSelection, type Analysis, type AnalyzedItem, type AnalyzedKind } from '../lib/analyze'
-import { addCard } from '../lib/cards'
-import { speak } from '../lib/speech'
-import { logActivity } from '../lib/activity'
+import { analyzeSelection, type Analysis } from '../lib/analyze'
+import { AnalyzedItemsView } from './AnalyzedItemsView'
 import type { AppLang } from '../types'
-
-// добавляемые в колоду группы (грамматика — отдельно, не в колоду)
-const GROUPS: { kind: AnalyzedKind; label: string }[] = [
-  { kind: 'phrasal', label: 'Фразовые глаголы' },
-  { kind: 'expression', label: 'Выражения' },
-  { kind: 'word', label: 'Слова' },
-]
 
 export function AnalysisSheet({
   text,
@@ -33,10 +19,8 @@ export function AnalysisSheet({
   lang: AppLang
   onClose: () => void
 }) {
-  const navigate = useNavigate()
   const [data, setData] = useState<Analysis | null>(null)
   const [error, setError] = useState(false)
-  const [added, setAdded] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     let alive = true
@@ -49,30 +33,6 @@ export function AnalysisSheet({
       alive = false
     }
   }, [text, sentence, lang])
-
-  const add = async (it: AnalyzedItem) => {
-    const key = it.base.toLowerCase()
-    setAdded((prev) => {
-      if (prev.has(key)) return prev
-      return new Set(prev).add(key)
-    })
-    try {
-      await addCard({
-        front: it.base.toLowerCase(),
-        back: it.ru,
-        example: sentence,
-        lang,
-        source: 'reader',
-      })
-      void logActivity('reader')
-    } catch {
-      setAdded((prev) => {
-        const next = new Set(prev)
-        next.delete(key)
-        return next
-      })
-    }
-  }
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-end bg-black/40" onClick={onClose}>
@@ -99,103 +59,7 @@ export function AnalysisSheet({
                   {data.translation}
                 </p>
               )}
-              {data.items.length === 0 && (
-                <p className="mt-4 text-sm text-[var(--night-text-40)]">
-                  Ничего примечательного не нашлось — можно добавить слово обычным тапом.
-                </p>
-              )}
-
-              {GROUPS.map(({ kind, label }) => {
-                const list = data.items.filter((it) => it.kind === kind)
-                if (list.length === 0) return null
-                return (
-                  <div key={kind} className="mt-4">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-[var(--night-accent-text)]">
-                      {label}
-                    </p>
-                    <div className="mt-1.5 flex flex-col gap-1.5">
-                      {list.map((it) => {
-                        const key = it.base.toLowerCase()
-                        const isAdded = added.has(key)
-                        return (
-                          <div
-                            key={key}
-                            className="flex items-center gap-2 rounded-xl border border-white/[0.08] px-3 py-2"
-                          >
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate text-[15px] font-medium">{it.base}</p>
-                              <p className="truncate text-sm text-[var(--night-text-40)]">{it.ru}</p>
-                            </div>
-                            <button
-                              onClick={() => speak(it.base, { lang })}
-                              aria-label="Озвучить"
-                              className="lift flex h-9 w-9 flex-none items-center justify-center rounded-full border border-white/[0.08] text-[var(--night-text-70)]"
-                            >
-                              <IconSpeaker size={16} />
-                            </button>
-                            <button
-                              onClick={() => add(it)}
-                              disabled={isAdded}
-                              aria-label={isAdded ? 'Добавлено' : 'В мои слова'}
-                              className={`lift flex h-9 w-9 flex-none items-center justify-center rounded-full border ${
-                                isAdded
-                                  ? 'border-emerald-500/60 text-emerald-400'
-                                  : 'border-[var(--night-accent-45)] bg-[rgba(145,132,217,.14)] text-[var(--night-accent-100)]'
-                              }`}
-                            >
-                              {isAdded ? <IconCheck size={16} /> : <IconPlus size={16} />}
-                            </button>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                )
-              })}
-
-              {/* Грамматические структуры — не в колоду, а объяснение + урок */}
-              {(() => {
-                const gr = data.items.filter((it) => it.kind === 'grammar')
-                if (gr.length === 0) return null
-                return (
-                  <div className="mt-4">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-[var(--night-accent-text)]">
-                      Грам-структуры
-                    </p>
-                    <div className="mt-1.5 flex flex-col gap-1.5">
-                      {gr.map((it, i) => (
-                        <div
-                          key={`${it.base}-${i}`}
-                          className="rounded-xl border border-white/[0.08] px-3 py-2"
-                        >
-                          <p className="text-[15px] font-medium">{it.base}</p>
-                          <p className="mt-0.5 text-sm text-[var(--night-text-40)]">{it.ru}</p>
-                          {it.topicId !== undefined && (
-                            <button
-                              onClick={() => {
-                                onClose()
-                                navigate(`/grammar?topic=${it.topicId}`)
-                              }}
-                              className="mt-1.5 inline-flex min-h-[36px] items-center gap-1 text-sm font-semibold text-[var(--night-accent-text)]"
-                            >
-                              Открыть урок <IconArrowRight size={14} />
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )
-              })()}
-
-              {data.items.filter((it) => it.kind !== 'grammar').length > 1 && (
-                <Button
-                  className="mt-4 w-full py-2.5 text-sm"
-                  onClick={() => data.items.filter((it) => it.kind !== 'grammar').forEach(add)}
-                >
-                  <IconPlus size={16} /> Добавить всё в Мои слова
-                </Button>
-              )}
+              <AnalyzedItemsView items={data.items} lang={lang} example={sentence} onClose={onClose} />
             </>
           )}
         </div>

@@ -5,8 +5,9 @@
 // Используется в читалках EN/ES, «Моих текстах» и заданиях.
 // ============================================================================
 import { useState } from 'react'
-import { IconTranslate } from './icons'
+import { IconTranslate, IconSearch } from './icons'
 import { TappableText, WordSheet, type WordPick } from './WordSheet'
+import { TextAnalysisSheet } from './TextAnalysisSheet'
 import type { AppLang } from '../types'
 
 export function MarkableText({
@@ -22,10 +23,11 @@ export function MarkableText({
   // одна шторка и для слова, и для фразы (WordSheet принимает любое «слово»)
   const [pick, setPick] = useState<WordPick | null>(null)
   const [selectMode, setSelectMode] = useState(false)
+  const [analyzeAll, setAnalyzeAll] = useState(false)
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <button
           onClick={() => setSelectMode((v) => !v)}
           className={`flex min-h-[40px] items-center gap-1.5 rounded-full border px-3.5 text-sm ${
@@ -36,6 +38,13 @@ export function MarkableText({
         >
           <IconTranslate size={14} />
           {selectMode ? 'Отмена' : 'Выделить фразу'}
+        </button>
+        <button
+          onClick={() => setAnalyzeAll(true)}
+          className="flex min-h-[40px] items-center gap-1.5 rounded-full border border-white/[0.10] px-3.5 text-sm text-[var(--night-text-40)]"
+        >
+          <IconSearch size={14} />
+          Разобрать весь текст
         </button>
       </div>
 
@@ -59,6 +68,10 @@ export function MarkableText({
 
       {pick && (
         <WordSheet word={pick.word} sentence={pick.sentence} lang={lang} onClose={() => setPick(null)} />
+      )}
+
+      {analyzeAll && (
+        <TextAnalysisSheet text={text} lang={lang} onClose={() => setAnalyzeAll(false)} />
       )}
     </div>
   )
