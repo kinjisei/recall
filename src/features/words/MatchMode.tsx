@@ -9,6 +9,7 @@
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { Card } from '../../components/Card'
 import { ScoreGlyph } from '../../components/RoundResult'
+import { RoundReview, type ReviewItem } from '../../components/RoundReview'
 import { Button } from '../../components/Button'
 import { logActivity } from '../../lib/activity'
 import { speak } from '../../lib/speech'
@@ -62,6 +63,9 @@ function MatchRound({
   const [matched, setMatched] = useState<Set<number>>(new Set())
   const [wrong, setWrong] = useState<number | null>(null)
   const [mistakes, setMistakes] = useState(0)
+  // ошибочные попытки для разбора «Посмотреть результаты» (слово → чужое значение)
+  const [wrongItems, setWrongItems] = useState<ReviewItem[]>([])
+  const [showReview, setShowReview] = useState(false)
 
   // Набираем раунд: для английского ждём определения (часть слов может их
   // не иметь — тогда берём следующие из пула).
@@ -71,6 +75,8 @@ function MatchRound({
     setSelected(null)
     setMatched(new Set())
     setMistakes(0)
+    setWrongItems([])
+    setShowReview(false)
 
     const build = async () => {
       // Два слова с ОДИНАКОВЫМ значением в одном раунде (bonito/lindo →
@@ -154,7 +160,14 @@ function MatchRound({
     } else {
       // ошибка: слово, которое пользователь ВЫБРАЛ слева, он не знает
       const picked = pairs.find((p) => p.id === selected)
-      if (picked) markWrong(picked.item, lang)
+      const tapped = pairs.find((p) => p.id === id)
+      if (picked) {
+        markWrong(picked.item, lang)
+        setWrongItems((w) => [
+          ...w,
+          { prompt: picked.item.term, given: tapped?.meaning ?? '', correct: picked.meaning, ok: false },
+        ])
+      }
       setMistakes((n) => n + 1)
       setWrong(id)
       setTimeout(() => setWrong(null), 400)
@@ -176,10 +189,21 @@ function MatchRound({
               Слова с ошибками вернутся в ближайшее повторение.
             </p>
           )}
-          <Button className="mt-4" onClick={() => setSeed((s) => s + 1)}>
+          {wrongItems.length > 0 && (
+            <button
+              onClick={() => setShowReview(true)}
+              className="lift mt-4 w-full rounded-xl border border-white/[0.12] py-2.5 text-sm font-medium text-[var(--night-text-70)]"
+            >
+              Посмотреть результаты
+            </button>
+          )}
+          <Button className="mt-3" onClick={() => setSeed((s) => s + 1)}>
             Ещё раунд
           </Button>
         </Card>
+        {showReview && (
+          <RoundReview items={wrongItems} lang={lang} onClose={() => setShowReview(false)} />
+        )}
       </div>
     )
   }

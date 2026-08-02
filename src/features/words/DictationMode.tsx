@@ -10,6 +10,7 @@ import { IconSpeaker } from '../../components/icons'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { RoundResult, RoundProgress } from '../../components/RoundResult'
+import type { ReviewItem } from '../../components/RoundReview'
 import { logActivity } from '../../lib/activity'
 import { speak } from '../../lib/speech'
 import { answerMatches } from '../../lib/text'
@@ -29,6 +30,7 @@ export function DictationMode({ lang, onBack }: { lang: AppLang; onBack: () => v
   const [empty, setEmpty] = useState(false)
   const [index, setIndex] = useState(0)
   const [correct, setCorrect] = useState(0)
+  const [results, setResults] = useState<ReviewItem[]>([])
   const [value, setValue] = useState('')
   const [checked, setChecked] = useState<null | boolean>(null)
   const [revealed, setRevealed] = useState(false)
@@ -39,6 +41,7 @@ export function DictationMode({ lang, onBack }: { lang: AppLang; onBack: () => v
       setEmpty(false)
       setIndex(0)
       setCorrect(0)
+      setResults([])
       setValue('')
       setChecked(null)
       setRevealed(false)
@@ -86,6 +89,8 @@ export function DictationMode({ lang, onBack }: { lang: AppLang; onBack: () => v
         <RoundResult
           correct={correct}
           total={words!.length}
+          review={results}
+          lang={lang}
           note={
             correct < words!.length
               ? 'Слова с ошибками вернутся в ближайшее повторение.'
@@ -101,6 +106,15 @@ export function DictationMode({ lang, onBack }: { lang: AppLang; onBack: () => v
     if (checked !== null || !value.trim() || !current) return
     const ok = answerMatches(value, current.term)
     setChecked(ok)
+    setResults((r) => [
+      ...r,
+      {
+        prompt: current.translation ? `На слух: «${current.translation}»` : 'Слово на слух',
+        given: value.trim(),
+        correct: current.term,
+        ok,
+      },
+    ])
     if (ok) setCorrect((c) => c + 1)
     else markWrong(current, lang)
   }

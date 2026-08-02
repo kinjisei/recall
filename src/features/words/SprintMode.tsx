@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { IconCheck, IconTimer, IconClose } from '../../components/icons'
 import { Card } from '../../components/Card'
 import { RoundResult } from '../../components/RoundResult'
+import type { ReviewItem } from '../../components/RoundReview'
 import { logActivity } from '../../lib/activity'
 import {
   loadGamePool,
@@ -61,6 +62,7 @@ export function SprintMode({ lang, onBack }: { lang: AppLang; onBack: () => void
   const [index, setIndex] = useState(0)
   const [correct, setCorrect] = useState(0)
   const [total, setTotal] = useState(0)
+  const [results, setResults] = useState<ReviewItem[]>([])
   const [timeLeft, setTimeLeft] = useState(SECONDS)
   const [flash, setFlash] = useState<'ok' | 'bad' | null>(null)
   const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -111,6 +113,8 @@ export function SprintMode({ lang, onBack }: { lang: AppLang; onBack: () => void
         <RoundResult
           correct={correct}
           total={total}
+          review={results}
+          lang={lang}
           note={
             total > correct
               ? 'Слова с ошибками вернутся в ближайшее повторение.'
@@ -124,6 +128,7 @@ export function SprintMode({ lang, onBack }: { lang: AppLang; onBack: () => void
             setIndex(0)
             setCorrect(0)
             setTotal(0)
+            setResults([])
             setTimeLeft(SECONDS)
           }}
         />
@@ -140,6 +145,15 @@ export function SprintMode({ lang, onBack }: { lang: AppLang; onBack: () => void
   const answer = (saidTrue: boolean) => {
     const ok = saidTrue === pair.isTrue
     setTotal((t) => t + 1)
+    setResults((r) => [
+      ...r,
+      {
+        prompt: `«${pair.item.term}» = «${pair.shown}»?`,
+        given: saidTrue ? 'Верно' : 'Неверно',
+        correct: `${pair.isTrue ? 'Верно' : 'Неверно'} — «${pair.item.term}» = «${pair.item.translation}»`,
+        ok,
+      },
+    ])
     if (ok) setCorrect((c) => c + 1)
     else markWrong(pair.item, lang)
     recordShown(lang, [pair.item.term]) // показанное — в историю анти-повтора
