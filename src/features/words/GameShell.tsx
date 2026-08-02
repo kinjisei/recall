@@ -7,6 +7,7 @@ import { BackHeader } from '../../components/BackButton'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { RoundResult, RoundProgress } from '../../components/RoundResult'
+import type { ReviewItem } from '../../components/RoundReview'
 import { logActivity } from '../../lib/activity'
 import { speak } from '../../lib/speech'
 import { markWrong } from './gameUtils'
@@ -78,6 +79,8 @@ export function QuizRunner({
   const [index, setIndex] = useState(0)
   const [picked, setPicked] = useState<number | null>(null)
   const [correct, setCorrect] = useState(0)
+  // ответы раунда для «Посмотреть результаты» (разбор с «Почему?»)
+  const [results, setResults] = useState<ReviewItem[]>([])
 
   const q = questions[index]
   const done = index >= questions.length
@@ -98,6 +101,8 @@ export function QuizRunner({
         <RoundResult
           correct={correct}
           total={questions.length}
+          review={results}
+          lang={lang}
           note={
             correct < questions.length
               ? 'Слова с ошибками вернутся в ближайшее повторение.'
@@ -107,6 +112,7 @@ export function QuizRunner({
             setIndex(0)
             setPicked(null)
             setCorrect(0)
+            setResults([])
             onRestart()
           }}
         />
@@ -121,7 +127,17 @@ export function QuizRunner({
   const choose = (i: number) => {
     if (picked !== null) return
     setPicked(i)
-    if (i === q.answer) setCorrect((c) => c + 1)
+    const ok = i === q.answer
+    setResults((r) => [
+      ...r,
+      {
+        prompt: q.prompt || q.say || '',
+        given: q.options[i] ?? '',
+        correct: q.options[q.answer] ?? '',
+        ok,
+      },
+    ])
+    if (ok) setCorrect((c) => c + 1)
     else markWrong(q.item, lang)
   }
 

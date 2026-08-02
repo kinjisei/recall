@@ -3,10 +3,12 @@
 // и тренажёров. Раньше эта разметка была скопирована в 8 местах, и
 // формулировки успели разъехаться («Засчитано» / «Тема засчитана» / ничего).
 // ============================================================================
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { IconTrophy, IconThumbsUp, IconArrowUp } from './icons'
 import { Card } from './Card'
 import { Button } from './Button'
+import { RoundReview, type ReviewItem } from './RoundReview'
+import type { AppLang } from '../types'
 
 /**
  * Значок результата по проценту (вместо эмодзи 🎉/👍/💪): кубок ≥80, палец
@@ -27,6 +29,8 @@ export function RoundResult({
   onRestart,
   extra,
   children,
+  review,
+  lang,
 }: {
   correct: number
   total: number
@@ -38,8 +42,12 @@ export function RoundResult({
   extra?: ReactNode
   /** Доп. блок между заметкой и кнопкой (например, список «Повтори»). */
   children?: ReactNode
+  /** Ответы раунда для разбора «Посмотреть результаты» (если режим их собрал). */
+  review?: ReviewItem[]
+  lang?: AppLang
 }) {
   const percent = total ? Math.round((correct / total) * 100) : 0
+  const [showReview, setShowReview] = useState(false)
   return (
     <Card className="flex flex-col items-center gap-3 text-center">
       <ScoreGlyph percent={percent} />
@@ -48,12 +56,23 @@ export function RoundResult({
       </p>
       {note && <p className="-mt-1 text-sm text-[var(--night-text-40)]">{note}</p>}
       {children}
+      {review && review.length > 0 && lang && (
+        <button
+          onClick={() => setShowReview(true)}
+          className="lift w-full rounded-xl border border-white/[0.12] py-2.5 text-sm font-medium text-[var(--night-text-70)]"
+        >
+          Посмотреть результаты
+        </button>
+      )}
       <div className="mt-1 flex justify-center gap-3">
         <Button variant={extra ? 'secondary' : 'primary'} onClick={onRestart}>
           {restartLabel}
         </Button>
         {extra}
       </div>
+      {showReview && review && lang && (
+        <RoundReview items={review} lang={lang} onClose={() => setShowReview(false)} />
+      )}
     </Card>
   )
 }
