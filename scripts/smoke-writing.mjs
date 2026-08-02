@@ -80,7 +80,31 @@ try {
   const { error: fakeAssign } = await oc.rpc('assign_writing_task', { p_task_id: task.id, p_student_id: ids.s })
   ok('посторонний НЕ назначает чужое задание (RPC-проверка прав)', !!fakeAssign)
 
-  // 8) отвязка отбирает у учителя доступ к назначению (USING-фикс)
+  // 8) ученица сдаёт работу (submit_writing) — Заход 5b
+  const grade1 = { band: 5.5, criteria: { task: 5, coherence: 6, lexis: 5, grammar: 6 }, errors: [{ was: 'exams is', fix: 'exams are' }] }
+  const { error: subErr } = await sc.rpc('submit_writing', { p_id: a.id, p_essay: 'First draft.', p_grade: grade1, p_band: '5.5' })
+  ok('ученица сдала письмо (submit_writing)', !subErr)
+
+  const { data: after1 } = await sc.from('writing_task_assignments').select('*').eq('id', a.id).single()
+  ok('статус submitted, essay/band/ai_review записаны', after1?.status === 'submitted' && after1?.essay === 'First draft.' && after1?.band === '5.5' && !!after1?.ai_review)
+  ok('в истории attempts 1 попытка', Array.isArray(after1?.attempts) && after1.attempts.length === 1)
+
+  // 9) самопересдача (пока не проверено) — новая попытка в истории
+  const { error: reErr } = await sc.rpc('submit_writing', { p_id: a.id, p_essay: 'Second, better draft.', p_grade: { band: 6.5 }, p_band: '6.5' })
+  ok('самопересдача разрешена (не проверено)', !reErr)
+  const { data: after2 } = await sc.from('writing_task_assignments').select('*').eq('id', a.id).single()
+  ok('attempts выросли до 2, band обновлён', Array.isArray(after2?.attempts) && after2.attempts.length === 2 && after2.band === '6.5')
+
+  // 10) чужая ученица НЕ может сдать это задание
+  const { error: fakeSub } = await oc.rpc('submit_writing', { p_id: a.id, p_essay: 'hack', p_grade: {}, p_band: 'x' })
+  const { data: notLeaked } = await oc.from('writing_task_assignments').select('*').eq('id', a.id)
+  ok('посторонний НЕ сдаёт чужую работу', (notLeaked ?? []).length === 0 || !!fakeSub)
+
+  // 11) учитель видит сданную работу с текстом
+  const { data: teacherSees } = await tc.from('writing_task_assignments').select('*').eq('id', a.id).single()
+  ok('учитель видит сданную работу (essay+band)', teacherSees?.essay === 'Second, better draft.' && teacherSees?.band === '6.5')
+
+  // 12) отвязка отбирает у учителя доступ к назначению (USING-фикс)
   await admin.from('teacher_students').delete().eq('teacher_id', ids.t).eq('student_id', ids.s)
   const { data: afterUnlink } = await tc.from('writing_task_assignments').select('*').eq('id', a.id)
   ok('после отвязки учитель НЕ видит назначение', (afterUnlink ?? []).length === 0)

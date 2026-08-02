@@ -46,6 +46,9 @@ const TeacherPage = lazy(() =>
 const AssignmentsPage = lazy(() =>
   import('./features/teacher/AssignmentsPage').then((m) => ({ default: m.AssignmentsPage })),
 )
+const WritingPage = lazy(() =>
+  import('./features/writing/WritingPage').then((m) => ({ default: m.WritingPage })),
+)
 const QuestsPage = lazy(() =>
   import('./features/quests/QuestsPage').then((m) => ({ default: m.QuestsPage })),
 )
@@ -219,6 +222,14 @@ export default function App() {
                 element={
                   <Suspense fallback={<PageFallback />}>
                     <AssignmentsPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/writing"
+                element={
+                  <Suspense fallback={<PageFallback />}>
+                    <WritingPage />
                   </Suspense>
                 }
               />

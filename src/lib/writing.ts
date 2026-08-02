@@ -8,6 +8,7 @@ import { chat } from './gemini'
 import type {
   AppLang,
   CEFRLevel,
+  WritingGrade,
   WritingMode,
   WritingSettings,
   WritingTask,
@@ -97,6 +98,38 @@ export async function getMyWritingAssignments(): Promise<
   return ((data ?? []) as (WritingTaskAssignment & { writing_tasks: WritingTask | null })[])
     .filter((row) => row.writing_tasks)
     .map(({ writing_tasks, ...a }) => ({ ...(a as WritingTaskAssignment), task: writing_tasks as WritingTask }))
+}
+
+/** Ученица сдаёт (или пересдаёт) письмо — essay + AI-оценка, статус submitted. */
+export async function submitWriting(
+  assignmentId: string,
+  essay: string,
+  grade: WritingGrade,
+  band: string,
+): Promise<void> {
+  const { error } = await supabase.rpc('submit_writing', {
+    p_id: assignmentId,
+    p_essay: essay,
+    p_grade: toJson(grade),
+    p_band: band,
+  })
+  if (error) throw new Error(error.message)
+}
+
+/** Сколько письменных заданий у ученицы (для строки в «Учёбе»). */
+export async function countMyWritingTasks(): Promise<{ total: number; pending: number }> {
+  const userId = await requireUserId()
+  const { data, error } = await supabase
+    .from('writing_task_assignments')
+    .select('status')
+    .eq('student_id', userId)
+  if (error) return { total: 0, pending: 0 }
+  const rows = data ?? []
+  return {
+    total: rows.length,
+    // «новых» — ещё не сдавала (assigned) либо учитель переназначил (тоже assigned)
+    pending: rows.filter((r) => r.status === 'assigned').length,
+  }
 }
 
 /** Опционально: AI придумывает вопрос IELTS (teacher-only, task material). */

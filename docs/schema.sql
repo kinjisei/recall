@@ -2433,6 +2433,23 @@
     delete from writing_task_assignments where task_id = p_task_id and student_id = p_student_id;
   end $fn$;
 
+  -- Ученица сдаёт письмо (Заход 5b) и может пересдавать, пока НЕ проверено:
+  -- каждая сдача дописывается в attempts (история). Оценка ai_review считается
+  -- на клиенте heavy-моделью — сервер лишь фиксирует (как с материалами).
+  create or replace function public.submit_writing(
+    p_id uuid, p_essay text, p_grade jsonb, p_band text
+  ) returns void language plpgsql security definer set search_path = public as $fn$
+  begin
+    update writing_task_assignments
+      set essay = p_essay, ai_review = p_grade, band = p_band,
+          status = 'submitted', submitted_at = now(),
+          attempts = coalesce(attempts, '[]'::jsonb) || jsonb_build_array(
+            jsonb_build_object('essay', p_essay, 'ai_review', p_grade, 'band', p_band, 'at', now())
+          )
+    where id = p_id and student_id = auth.uid() and status in ('assigned', 'submitted');
+    if not found then raise exception 'Работа не найдена или уже проверена.'; end if;
+  end $fn$;
+
   -- Финальный revoke/grant — ПОСЛЕДНИЙ в файле, накрывает все функции выше,
   -- включая только что пересозданный join_teacher.
   -- ⚠️ ВАЖНО (урок захода 3, строки ~2147): Supabase выдаёт EXECUTE ЯВНО роли

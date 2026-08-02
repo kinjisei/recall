@@ -17,6 +17,7 @@ import {
   IconGraduation,
   IconRows,
   IconMaterials,
+  IconPencil,
   IconPlus,
   IconCards,
   IconPackage,
@@ -29,6 +30,7 @@ import { useLanguage } from '../../context/LanguageContext'
 import { getProfile, getCachedEnLevel } from '../../lib/profile'
 import { getEsLevel } from '../../lib/esLevel'
 import { getMyAssignments } from '../../lib/materials'
+import { countMyWritingTasks } from '../../lib/writing'
 import { listMyQuests } from '../../lib/quests'
 import { currentWeekIndex, getMyPlans } from '../../lib/studyPlan'
 import { myPendingPlacement, type PlacementRequest } from '../../lib/placement'
@@ -70,6 +72,7 @@ export function StudyPage() {
   // иначе они вываливались вразнобой без анимации (жалоба владельца)
   const [hub, setHub] = useState<{
     assignments: { total: number; pending: number } | null
+    writing: { total: number; pending: number } | null
     quests: { total: number; active: number } | null
     plans: StudyPlan[] | null
     /** Тест уровня, назначенный преподавателем (null — не назначал). */
@@ -96,6 +99,7 @@ export function StudyPage() {
           pending: rows.filter((r) => r.status === 'assigned').length,
         }))
         .catch(() => null), // строка просто не появится
+      countMyWritingTasks().catch(() => null),
       listMyQuests()
         .then((rows) => ({
           total: rows.length,
@@ -105,8 +109,8 @@ export function StudyPage() {
       getMyPlans().catch(() => null),
       // назначил ли преподаватель тест уровня по текущему языку
       myPendingPlacement(lang).catch(() => null),
-    ]).then(([assignments, quests, plans, placement]) => {
-      if (alive) setHub({ assignments, quests, plans, placement })
+    ]).then(([assignments, writing, quests, plans, placement]) => {
+      if (alive) setHub({ assignments, writing, quests, plans, placement })
     })
     return () => {
       alive = false
@@ -124,6 +128,7 @@ export function StudyPage() {
   const levelLoading = lang === 'en' && enLevel === undefined
 
   const assignments = hub?.assignments ?? null
+  const writing = hub?.writing ?? null
   const quests = hub?.quests ?? null
   const plans = hub?.plans ?? null
   // единый stagger: задержка растёт по ПОЗИЦИИ строки, какие бы строки ни были
@@ -161,6 +166,28 @@ export function StudyPage() {
                 assignments.pending > 0 ? (
                   <span className="flex-none rounded-full bg-[var(--night-accent)] px-2 py-0.5 text-xs font-medium text-white">
                     {assignments.pending}
+                  </span>
+                ) : undefined
+              }
+              className="animate-fade-up"
+              style={stagger()}
+            />
+          )}
+          {writing && writing.total > 0 && (
+            <RowCard
+              Icon={IconPencil}
+              title="Письменные задания"
+              desc={
+                writing.pending > 0
+                  ? `Новых: ${writing.pending} · всего ${writing.total}`
+                  : 'Все сданы · можно пересдать'
+              }
+              to="/writing"
+              active={writing.pending > 0}
+              trailing={
+                writing.pending > 0 ? (
+                  <span className="flex-none rounded-full bg-[var(--night-accent)] px-2 py-0.5 text-xs font-medium text-white">
+                    {writing.pending}
                   </span>
                 ) : undefined
               }
