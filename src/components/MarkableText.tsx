@@ -7,6 +7,7 @@
 import { useState } from 'react'
 import { IconTranslate, IconSearch } from './icons'
 import { TappableText, WordSheet, type WordPick } from './WordSheet'
+import { PhraseSheet, type PhrasePick } from './PhraseSheet'
 import { TextAnalysisSheet } from './TextAnalysisSheet'
 import type { AppLang } from '../types'
 
@@ -20,8 +21,8 @@ export function MarkableText({
   /** Классы абзаца (размер текста читалки). */
   className?: string
 }) {
-  // одна шторка и для слова, и для фразы (WordSheet принимает любое «слово»)
-  const [pick, setPick] = useState<WordPick | null>(null)
+  const [pick, setPick] = useState<WordPick | null>(null) // одно слово → WordSheet
+  const [phrase, setPhrase] = useState<PhrasePick | null>(null) // фраза → PhraseSheet
   const [selectMode, setSelectMode] = useState(false)
   const [analyzeAll, setAnalyzeAll] = useState(false)
 
@@ -59,8 +60,8 @@ export function MarkableText({
           text={text}
           onSelect={setPick}
           selectMode={selectMode}
-          onPhrase={(phrase, sentence) => {
-            setPick({ word: phrase, sentence })
+          onPhrase={(p, sentence) => {
+            setPhrase({ text: p, sentence })
             setSelectMode(false)
           }}
         />
@@ -68,6 +69,15 @@ export function MarkableText({
 
       {pick && (
         <WordSheet word={pick.word} sentence={pick.sentence} lang={lang} onClose={() => setPick(null)} />
+      )}
+
+      {phrase && (
+        <PhraseSheet
+          text={phrase.text}
+          sentence={phrase.sentence}
+          lang={lang}
+          onClose={() => setPhrase(null)}
+        />
       )}
 
       {analyzeAll && (
