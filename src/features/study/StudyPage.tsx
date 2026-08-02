@@ -54,6 +54,14 @@ export function StudyPage() {
   )
   // переход хаб ↔ читалка ↔ слова — всегда с верха экрана
   useScrollTop(view)
+  // повторный тап по вкладке «Учёба» (BottomNav шлёт событие) → назад к хабу
+  useEffect(() => {
+    const reset = (e: Event) => {
+      if ((e as CustomEvent).detail === '/study') setView('hub')
+    }
+    window.addEventListener('recall:reset-tab', reset)
+    return () => window.removeEventListener('recall:reset-tab', reset)
+  }, [])
   const [esLevel, setEsLevel] = useState<string | null>(null)
   // мгновенный старт из localStorage-кэша: undefined только на самом первом
   // запуске устройства — строка «Твой уровень» больше не мигает с задержкой

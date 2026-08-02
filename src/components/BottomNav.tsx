@@ -77,6 +77,14 @@ export function BottomNav() {
             <Link
               key={to}
               to={to}
+              onClick={() => {
+                // повторный тап по активной вкладке, когда мы уже на её роуте
+                // (напр. /study с внутренним экраном «Мои слова»): Link ведёт «в
+                // никуда», поэтому шлём событие — экран сам сбросится к хабу.
+                if (pathname === to) {
+                  window.dispatchEvent(new CustomEvent('recall:reset-tab', { detail: to }))
+                }
+              }}
               aria-current={active ? 'page' : undefined}
               className={`flex min-h-[44px] flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-1 py-1.5 text-[11px] font-medium transition-[background-color,color] duration-300 [transition-timing-function:cubic-bezier(.22,1,.36,1)] ${
                 active
