@@ -16,6 +16,7 @@ import {
   type StudentInfo,
 } from '../../lib/teacher'
 import { MaterialsSection } from './MaterialsSection'
+import { WritingSection } from './WritingSection'
 import { StudentWordsSection } from './StudentWordsSection'
 import { QuestSection } from './QuestSection'
 import { DiagnosticsSection } from './DiagnosticsSection'
@@ -64,7 +65,7 @@ export function TeacherPage() {
   return <TeacherDashboard />
 }
 
-type TeacherTab = 'students' | 'materials' | 'guide'
+type TeacherTab = 'students' | 'materials' | 'writing' | 'guide'
 
 function TeacherDashboard() {
   const [tab, setTab] = useState<TeacherTab>('students')
@@ -148,6 +149,7 @@ function TeacherDashboard() {
           [
             ['students', 'Ученицы'],
             ['materials', 'Материалы'],
+            ['writing', 'Письмо'],
             ['guide', 'Методичка'],
           ] as [TeacherTab, string][]
         ).map(([id, label]) => (
@@ -172,6 +174,8 @@ function TeacherDashboard() {
 
       {tab === 'guide' ? (
         <GuideSection />
+      ) : tab === 'writing' ? (
+        <WritingSection students={students} />
       ) : tab === 'materials' ? (
         // onWorksChanged: после проверки/переназначения пересчитываем бейдж
         // «На проверку» на вкладке — иначе он висел старым числом до «Обновить»

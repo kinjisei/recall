@@ -856,6 +856,110 @@ export type Database = {
           },
         ]
       }
+      writing_task_assignments: {
+        Row: {
+          ai_review: Json | null
+          attempts: Json | null
+          band: string | null
+          created_at: string | null
+          essay: string | null
+          id: string
+          note: string | null
+          reviewed_at: string | null
+          status: string
+          student_id: string
+          submitted_at: string | null
+          task_id: string
+          teacher_review: Json | null
+        }
+        Insert: {
+          ai_review?: Json | null
+          attempts?: Json | null
+          band?: string | null
+          created_at?: string | null
+          essay?: string | null
+          id?: string
+          note?: string | null
+          reviewed_at?: string | null
+          status?: string
+          student_id: string
+          submitted_at?: string | null
+          task_id: string
+          teacher_review?: Json | null
+        }
+        Update: {
+          ai_review?: Json | null
+          attempts?: Json | null
+          band?: string | null
+          created_at?: string | null
+          essay?: string | null
+          id?: string
+          note?: string | null
+          reviewed_at?: string | null
+          status?: string
+          student_id?: string
+          submitted_at?: string | null
+          task_id?: string
+          teacher_review?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "writing_task_assignments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "writing_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "writing_task_assignments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      writing_tasks: {
+        Row: {
+          created_at: string | null
+          id: string
+          lang: string
+          level: string
+          mode: string
+          prompt: string
+          settings: Json | null
+          teacher_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          lang?: string
+          level: string
+          mode: string
+          prompt: string
+          settings?: Json | null
+          teacher_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          lang?: string
+          level?: string
+          mode?: string
+          prompt?: string
+          settings?: Json | null
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "writing_tasks_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       access_overview: {
@@ -903,6 +1007,14 @@ export type Database = {
       }
       assign_material: {
         Args: { p_material_id: string; p_student_id: string }
+        Returns: undefined
+      }
+      assign_writing_task: {
+        Args: { p_task_id: string; p_student_id: string }
+        Returns: undefined
+      }
+      unassign_writing_task: {
+        Args: { p_task_id: string; p_student_id: string }
         Returns: undefined
       }
       assign_placement: {

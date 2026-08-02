@@ -386,6 +386,82 @@ export interface MaterialAssignment {
 }
 
 // ---------------------------------------------------------------------------
+// «Письмо»: письменные задания (IELTS / обычное эссе). Механика — как материалы.
+// ---------------------------------------------------------------------------
+
+export type WritingMode = 'ielts' | 'regular'
+
+/** Настройки письменного задания (зависят от режима). */
+export interface WritingSettings {
+  /** IELTS: Task 2 (эссе) или General Training Task 1 (письмо). */
+  ieltsTask?: 'task2' | 'gt1'
+  /** IELTS: целевой балл (band). */
+  targetBand?: number
+  /** Обычный: целевые слова. */
+  targetWords?: string[]
+  /** Обычный: целевая грамматика. */
+  targetGrammar?: string[]
+  /** Обычный: минимальная длина (слов). */
+  minWords?: number
+}
+
+/** Оценка письма (AI-черновик и/или финал учителя). Заполняется в 5b/5c. */
+export interface WritingGrade {
+  // IELTS
+  band?: number
+  criteria?: { task: number; coherence: number; lexis: number; grammar: number }
+  // Обычный
+  level?: string
+  targetWords?: { w: string; used: boolean }[]
+  targetGrammar?: { t: string; used: boolean }[]
+  // общее
+  errors?: { was: string; fix: string; type?: string }[]
+  strengths?: string[]
+  improve?: string[]
+  topics?: string[]
+  words?: string[]
+  rewrites?: { was: string; better: string }[]
+}
+
+/** Письменное задание (таблица writing_tasks). */
+export interface WritingTask {
+  id: string
+  teacher_id: string
+  lang: AppLang
+  mode: WritingMode
+  level: string
+  prompt: string
+  settings: WritingSettings | null
+  created_at: string
+}
+
+/** Одна попытка письма в истории (attempts). */
+export interface WritingAttempt {
+  essay: string
+  ai_review: WritingGrade | null
+  teacher_review: WritingGrade | null
+  band: string | null
+  at: string
+}
+
+/** Назначение письма ученице + её работа (таблица writing_task_assignments). */
+export interface WritingTaskAssignment {
+  id: string
+  task_id: string
+  student_id: string
+  status: AssignmentStatus
+  essay: string | null
+  ai_review: WritingGrade | null
+  teacher_review: WritingGrade | null
+  band: string | null
+  attempts: WritingAttempt[] | null
+  note: string | null
+  submitted_at: string | null
+  reviewed_at: string | null
+  created_at: string
+}
+
+// ---------------------------------------------------------------------------
 // Перепроверка слов: учитель выбирает слова ученицы, она печатает их по памяти.
 // ---------------------------------------------------------------------------
 

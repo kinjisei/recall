@@ -2343,6 +2343,96 @@
   end;
   $$;
 
+  -- ============================================================================
+  -- «ПИСЬМО» (Заход 5a): письменные задания (IELTS / обычное эссе). По образцу
+  -- material_assignments. Блок idempotent — можно запускать повторно.
+  -- ============================================================================
+
+  create table if not exists public.writing_tasks (
+    id uuid primary key default gen_random_uuid(),
+    teacher_id uuid not null references public.profiles(id) on delete cascade,
+    lang text not null check (lang in ('en','es')) default 'en',
+    mode text not null check (mode in ('ielts','regular')),
+    level text not null check (level in ('A1','A2','B1','B2','C1','C2')),
+    prompt text not null,
+    settings jsonb,
+    created_at timestamptz default now()
+  );
+
+  create table if not exists public.writing_task_assignments (
+    id uuid primary key default gen_random_uuid(),
+    task_id uuid not null references public.writing_tasks(id) on delete cascade,
+    student_id uuid not null references public.profiles(id) on delete cascade,
+    status text not null check (status in ('assigned','submitted','reviewed')) default 'assigned',
+    essay text,
+    ai_review jsonb,
+    teacher_review jsonb,
+    band text,
+    attempts jsonb,
+    note text,
+    submitted_at timestamptz,
+    reviewed_at timestamptz,
+    created_at timestamptz default now(),
+    unique (task_id, student_id)
+  );
+
+  alter table public.writing_tasks enable row level security;
+  alter table public.writing_task_assignments enable row level security;
+
+  create or replace function public.writing_task_owned_by(w_id uuid, u_id uuid)
+  returns boolean language sql security definer set search_path = public as
+  $$ select exists (select 1 from writing_tasks where id = w_id and teacher_id = u_id) $$;
+
+  create or replace function public.writing_assigned_to(w_id uuid, s_id uuid)
+  returns boolean language sql security definer set search_path = public as
+  $$ select exists (select 1 from writing_task_assignments
+                    where task_id = w_id and student_id = s_id) $$;
+
+  -- writing_tasks: учитель распоряжается своими; ученице назначенные — на чтение
+  drop policy if exists "own writing tasks" on public.writing_tasks;
+  create policy "own writing tasks" on public.writing_tasks
+    for all using (auth.uid() = teacher_id) with check (auth.uid() = teacher_id);
+  drop policy if exists "assigned writing tasks readable" on public.writing_tasks;
+  create policy "assigned writing tasks readable" on public.writing_tasks
+    for select using (public.writing_assigned_to(id, auth.uid()));
+
+  -- writing_task_assignments: учитель читает назначения СВОИХ заданий и только
+  -- СВОИМ ученицам (отвязка отбирает доступ); ученица видит свои. Запись — RPC.
+  drop policy if exists "teacher reads writing assignments" on public.writing_task_assignments;
+  create policy "teacher reads writing assignments" on public.writing_task_assignments
+    for select using (
+      public.writing_task_owned_by(task_id, auth.uid())
+      and public.is_student_of(auth.uid(), student_id)
+    );
+  drop policy if exists "student sees own writing assignments" on public.writing_task_assignments;
+  create policy "student sees own writing assignments" on public.writing_task_assignments
+    for select using (auth.uid() = student_id);
+
+  -- запись в назначения — только через security-definer функции
+  revoke insert, update, delete on public.writing_task_assignments from authenticated;
+
+  -- Учитель назначает письмо своей ученице
+  create or replace function public.assign_writing_task(p_task_id uuid, p_student_id uuid)
+  returns void language plpgsql security definer set search_path = public as $fn$
+  begin
+    if not public.writing_task_owned_by(p_task_id, auth.uid())
+      or not public.is_student_of(auth.uid(), p_student_id) then
+      raise exception 'Нет прав назначить это задание этой ученице.';
+    end if;
+    insert into writing_task_assignments (task_id, student_id)
+    values (p_task_id, p_student_id)
+    on conflict (task_id, student_id) do nothing;
+  end $fn$;
+
+  create or replace function public.unassign_writing_task(p_task_id uuid, p_student_id uuid)
+  returns void language plpgsql security definer set search_path = public as $fn$
+  begin
+    if not public.writing_task_owned_by(p_task_id, auth.uid()) then
+      raise exception 'Нет прав.';
+    end if;
+    delete from writing_task_assignments where task_id = p_task_id and student_id = p_student_id;
+  end $fn$;
+
   -- Финальный revoke/grant — ПОСЛЕДНИЙ в файле, накрывает все функции выше,
   -- включая только что пересозданный join_teacher.
   -- ⚠️ ВАЖНО (урок захода 3, строки ~2147): Supabase выдаёт EXECUTE ЯВНО роли
