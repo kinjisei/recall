@@ -107,48 +107,44 @@ try {
     })
     check('текст открылся в читалке', true)
 
-    // режим «Отметить слова» → 3 слова → «По слову (3)»
+    // режим «Выделить фразу» → тап первого и последнего слова → шторка фразы → «в колоду»
     await page.evaluate(() => {
       ;[...document.querySelectorAll('button')]
-        .find((b) => b.textContent.includes('Отметить слова'))?.click()
+        .find((b) => b.textContent.includes('Выделить фразу'))?.click()
     })
     await new Promise((r) => setTimeout(r, 400))
-    const markedCount = await page.evaluate(() => {
-      const words = ['brave', 'scientist', 'library']
-      let n = 0
-      for (const w of words) {
+    const tapWord = (w) =>
+      page.evaluate((word) => {
         const el = [...document.querySelectorAll('span')].find(
-          (x) => x.textContent.trim() === w && x.childElementCount === 0,
+          (x) => x.textContent.trim() === word && x.childElementCount === 0,
         )
-        if (!el) continue
-        el.click() // слово теперь onClick (в режиме отметки — toggle)
-        n++
-      }
-      return n
-    })
-    check('отмечено 3 слова', markedCount === 3, `отмечено: ${markedCount}`)
+        el && el.click()
+      }, w)
+    // между тапами пауза: React должен успеть записать «начало» (startIdx),
+    // иначе второй тап читает старое состояние — как быстрый двойной тап
+    await tapWord('ancient')
+    await new Promise((r) => setTimeout(r, 350))
+    await tapWord('library')
+    // шторка фразы открылась (WordSheet для фразы «ancient library»)
     await page.waitForFunction(
-      () => [...document.querySelectorAll('button')].some((b) => b.textContent.includes('По слову (3)')),
-      { timeout: 5000 },
+      () => [...document.querySelectorAll('button')].some((b) => /мои слова/i.test(b.textContent)),
+      { timeout: 10000 },
     )
+    check('шторка фразы открылась', true)
     await page.evaluate(() => {
-      ;[...document.querySelectorAll('button')]
-        .find((b) => b.textContent.includes('По слову (3)'))?.click()
+      ;[...document.querySelectorAll('button')].find((b) => /В мои слова/i.test(b.textContent))?.click()
     })
-    // ждём батч-перевод (1 lite-вызов) и запись
-    await page.waitForFunction(
-      () => document.body.textContent.includes('Добавлено слов'),
-      { timeout: 40000 },
-    )
-    await new Promise((r) => setTimeout(r, 1500))
+    await new Promise((r) => setTimeout(r, 2000))
     const { data: decks } = await admin.from('decks').select('id').eq('owner_id', userId)
     const { data: cards } = await admin
       .from('cards')
       .select('front, back')
       .in('deck_id', decks.map((d) => d.id))
-    const withBack = (cards ?? []).filter((c) => c.back && c.back.length > 0).length
-    check('в колоде 3 карточки', (cards ?? []).length === 3, `карточек: ${cards?.length}`)
-    check('переводы заполнены (батч lite)', withBack === 3, `с переводом: ${withBack}`)
+    check(
+      'фраза добавлена одной карточкой',
+      (cards ?? []).some((c) => /ancient library/i.test(c.front)),
+      `карточки: ${JSON.stringify((cards ?? []).map((c) => c.front))}`,
+    )
     check('JS-ошибок нет', jsErrors.length === 0, jsErrors[0] ?? '')
   } finally {
     await browser.close().catch(() => {})

@@ -73,17 +73,14 @@ export function sentenceAround(text: string, word: string, at?: number): string 
 export function TappableText({
   text,
   onSelect,
-  markMode = false,
-  marked,
-  onToggleMark,
+  selectMode = false,
+  onPhrase,
 }: {
   text: string
   onSelect: (pick: WordPick) => void
-  /** Режим «Отметить слова»: тап помечает слово вместо открытия шторки. */
-  markMode?: boolean
-  /** Индексы помеченных токенов (подсвечиваются постоянно). */
-  marked?: Set<number>
-  onToggleMark?: (tokenIndex: number, word: string, sentence: string) => void
+  /** Режим «Выделить фразу»: тап ПЕРВОГО и ПОСЛЕДНЕГО слова → onPhrase(фраза). */
+  selectMode?: boolean
+  onPhrase?: (phrase: string, sentence: string) => void
 }) {
   const tokens = useMemo(() => text.split(/([\s—–…]+)/), [text])
   // Позиция начала каждого токена в тексте: split с захватом сохраняет всё,
@@ -99,29 +96,50 @@ export function TappableText({
   }, [tokens])
   const isWordToken = (tok: string) => /[A-Za-zÀ-ÿ]/.test(tok)
 
+  // Индекс уже отмеченного ПЕРВОГО слова фразы (режим «Выделить фразу»).
+  const [startIdx, setStartIdx] = useState<number | null>(null)
+  useEffect(() => {
+    if (!selectMode) setStartIdx(null)
+  }, [selectMode])
+
   // Тап по слову = обычный click: браузер сам отличает касание от прокрутки, так
-  // что нет конфликта со скроллом и «фантомных» кликов (в отличие от pointer-
-  // жестов и long-press). Выделение фразы пальцем убрано — разбор ПРЕДЛОЖЕНИЯ
-  // открывается кнопкой из шторки слова, а точную фразу собирают режимом
-  // «Отметить слова».
+  // что нет конфликта со скроллом и «фантомных» кликов. В режиме «Выделить
+  // фразу» первый тап ставит начало, второй — конец → onPhrase(фраза).
+  const onWord = (tok: string, i: number) => {
+    const word = cleanWord(tok)
+    if (!word) return
+    if (selectMode) {
+      if (startIdx === null) {
+        setStartIdx(i)
+        return
+      }
+      const a = Math.min(startIdx, i)
+      const b = Math.max(startIdx, i)
+      const phrase = tokens
+        .slice(a, b + 1)
+        .join('')
+        .trim()
+        .replace(/\s+/g, ' ')
+        .replace(/^[^A-Za-zÀ-ÿ]+|[^A-Za-zÀ-ÿ'’-]+$/g, '')
+      setStartIdx(null)
+      if (phrase) onPhrase?.(phrase, sentenceAround(text, word, offsets[a]))
+      return
+    }
+    onSelect({ word, sentence: sentenceAround(text, word, offsets[i]) })
+  }
+
   return (
     <span>
       {tokens.map((tok, i) => {
         if (!isWordToken(tok)) return <span key={i}>{tok}</span>
-        const highlighted = markMode && marked?.has(i)
+        const highlighted = selectMode && startIdx === i
         return (
           <span
             key={i}
-            onClick={() => {
-              const word = cleanWord(tok)
-              if (!word) return
-              const sentence = sentenceAround(text, word, offsets[i])
-              if (markMode) onToggleMark?.(i, word, sentence)
-              else onSelect({ word, sentence })
-            }}
+            onClick={() => onWord(tok, i)}
             className={`cursor-pointer rounded px-0.5 transition-colors ${
               highlighted
-                ? 'bg-[rgba(145,132,217,.28)]'
+                ? 'bg-[rgba(145,132,217,.28)] ring-1 ring-[var(--night-accent-45)]'
                 : 'hover:bg-[rgba(145,132,217,.18)] active:bg-[rgba(145,132,217,.28)]'
             }`}
           >
