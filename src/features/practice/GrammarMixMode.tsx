@@ -11,6 +11,7 @@ import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { RoundResult, RoundProgress } from '../../components/RoundResult'
 import { ExerciseView } from '../../components/exercises'
+import { useExerciseReview } from '../../components/useExerciseReview'
 import { logActivity } from '../../lib/activity'
 import { addMistake, removeMistake } from '../../lib/mistakes'
 import { getUserLevel } from '../../lib/level'
@@ -76,6 +77,7 @@ export function GrammarMixMode({
   const [index, setIndex] = useState(0)
   const [correct, setCorrect] = useState(0)
   const [done, setDone] = useState(false)
+  const review = useExerciseReview()
 
   useEffect(() => {
     let alive = true
@@ -148,6 +150,8 @@ export function GrammarMixMode({
         <RoundResult
           correct={correct}
           total={items.length}
+          review={review.results}
+          lang={lang}
           note={
             correct < items.length
               ? 'Упражнения с ошибками ждут в «Моих ошибках».'
@@ -159,6 +163,7 @@ export function GrammarMixMode({
             setIndex(0)
             setCorrect(0)
             setDone(false)
+            review.reset()
           }}
         />
       </div>
@@ -173,7 +178,7 @@ export function GrammarMixMode({
       <ExerciseView
         key={`${current.topicId}-${current.ex}-${index}`}
         exercise={current.exercise}
-        onAnswered={onAnswered}
+        {...review.handlers(current.exercise, onAnswered)}
         onNext={next}
         isLast={index + 1 >= items.length}
       />

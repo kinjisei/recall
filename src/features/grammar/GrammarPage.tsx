@@ -35,6 +35,7 @@ import {
 } from '../../lib/mistakes'
 import { useLanguage } from '../../context/LanguageContext'
 import { ExerciseView } from '../../components/exercises'
+import { useExerciseReview } from '../../components/useExerciseReview'
 import { ConjugationSection } from './ConjugationSection'
 import { IrregularVerbsSection } from './IrregularVerbsSection'
 import { PhrasalVerbsSection } from './PhrasalVerbsSection'
@@ -420,6 +421,7 @@ function ExercisesRunner({
   const [index, setIndex] = useState(0)
   const [correct, setCorrect] = useState(0)
   const [done, setDone] = useState(false)
+  const review = useExerciseReview()
 
   const total = topic.exercises.length
   const current = topic.exercises[index]
@@ -450,12 +452,15 @@ function ExercisesRunner({
       <RoundResult
         correct={correct}
         total={total}
+        review={review.results}
+        lang={lang}
         note="Тема засчитана в серию дня."
         restartLabel="Ещё раз"
         onRestart={() => {
           setIndex(0)
           setCorrect(0)
           setDone(false)
+          review.reset()
         }}
         extra={
           <Button variant="ghost" onClick={onBackToTheory}>
@@ -477,7 +482,7 @@ function ExercisesRunner({
       <ExerciseView
         key={index}
         exercise={current}
-        onAnswered={onAnswered}
+        {...review.handlers(current, onAnswered)}
         onNext={next}
         isLast={index + 1 >= total}
       />
@@ -521,6 +526,7 @@ function MistakesScreen({
   const [index, setIndex] = useState(0)
   const [correct, setCorrect] = useState(0)
   const [done, setDone] = useState(false)
+  const review = useExerciseReview()
 
   const total = items.length
   const current = items[index]
@@ -543,6 +549,8 @@ function MistakesScreen({
           <RoundResult
             correct={correct}
             total={total}
+            review={review.results}
+            lang={lang}
             note="Верно решённые упражнения ушли из банка ошибок."
             restartLabel="К урокам"
             onRestart={onBack}
@@ -576,7 +584,7 @@ function MistakesScreen({
       <ExerciseView
         key={index}
         exercise={current.exercise}
-        onAnswered={onAnswered}
+        {...review.handlers(current.exercise, onAnswered)}
         onNext={next}
         isLast={index + 1 >= total}
       />
