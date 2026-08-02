@@ -31,8 +31,12 @@ function asStr(v: unknown): string {
   return typeof v === 'string' ? v : ''
 }
 
+const KINDS: AnalyzedKind[] = ['phrasal', 'expression', 'word', 'grammar']
+
 /** Каталог уроков грамматики (id·уровень·название) для сопоставления структур. */
-async function grammarCatalog(lang: AppLang): Promise<{ text: string; ids: Set<number> }> {
+export async function loadGrammarCatalog(
+  lang: AppLang,
+): Promise<{ text: string; ids: Set<number> }> {
   try {
     const mod =
       lang === 'es' ? await import('../data/spanish/grammar') : await import('../data/english/grammar')
@@ -46,13 +50,36 @@ async function grammarCatalog(lang: AppLang): Promise<{ text: string; ids: Set<n
   }
 }
 
+/** Санитайз массива items из ответа AI (типы, topicId из каталога, обрезка). */
+export function parseAnalyzedItems(
+  rawItems: unknown[],
+  ids: Set<number>,
+  max = 8,
+): AnalyzedItem[] {
+  return rawItems
+    .slice(0, max)
+    .map((x): AnalyzedItem => {
+      const it = (x ?? {}) as Record<string, unknown>
+      const kind: AnalyzedKind = KINDS.includes(it.kind as AnalyzedKind)
+        ? (it.kind as AnalyzedKind)
+        : 'word'
+      const text = asStr(it.text)
+      const item: AnalyzedItem = { kind, text, base: asStr(it.base) || text, ru: asStr(it.ru) }
+      if (kind === 'grammar' && typeof it.topicId === 'number' && ids.has(it.topicId)) {
+        item.topicId = it.topicId
+      }
+      return item
+    })
+    .filter((it) => it.base && it.ru)
+}
+
 export async function analyzeSelection(
   fragment: string,
   sentence: string,
   lang: AppLang,
 ): Promise<Analysis> {
   const dict = lang === 'es' ? 'испанского' : 'английского'
-  const { text: catalog, ids } = await grammarCatalog(lang)
+  const { text: catalog, ids } = await loadGrammarCatalog(lang)
 
   // промпт выверен живым тестом на проде (умная модель): дешёвая теряла
   // фразовые глаголы и ломала формат, поэтому task:'analyze' (стандарт).
@@ -78,24 +105,6 @@ export async function analyzeSelection(
   if (s === -1 || e <= s) throw new Error('AI вернул не-JSON')
   const o = JSON.parse(raw.slice(s, e + 1)) as Record<string, unknown>
 
-  const KINDS: AnalyzedKind[] = ['phrasal', 'expression', 'word', 'grammar']
-  const rawItems = Array.isArray(o.items) ? o.items : []
-  const items: AnalyzedItem[] = rawItems
-    .slice(0, 8)
-    .map((x): AnalyzedItem => {
-      const it = (x ?? {}) as Record<string, unknown>
-      const kind: AnalyzedKind = KINDS.includes(it.kind as AnalyzedKind)
-        ? (it.kind as AnalyzedKind)
-        : 'word'
-      const text = asStr(it.text)
-      const item: AnalyzedItem = { kind, text, base: asStr(it.base) || text, ru: asStr(it.ru) }
-      // topicId — только у grammar и только если существует в каталоге
-      if (kind === 'grammar' && typeof it.topicId === 'number' && ids.has(it.topicId)) {
-        item.topicId = it.topicId
-      }
-      return item
-    })
-    .filter((it) => it.base && it.ru)
-
+  const items = parseAnalyzedItems(Array.isArray(o.items) ? o.items : [], ids)
   return { translation: asStr(o.translation), items }
 }
