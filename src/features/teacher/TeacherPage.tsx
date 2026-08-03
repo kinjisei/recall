@@ -27,6 +27,8 @@ import { GuideSection } from './GuideSection'
 import { DailyPlanSection } from './DailyPlanSection'
 import { countSubmittedWorks } from '../../lib/materials'
 import { countSubmittedWriting } from '../../lib/writing'
+import { getMyPlan, type MyPlan } from '../../lib/billing'
+import { IconSparkle } from '../../components/icons'
 import type { Deck, Profile } from '../../types'
 
 export function TeacherPage() {
@@ -77,6 +79,7 @@ function TeacherDashboard() {
   const [decks, setDecks] = useState<Deck[]>([])
   const [pendingWorks, setPendingWorks] = useState(0)
   const [pendingWriting, setPendingWriting] = useState(0)
+  const [myPlan, setMyPlan] = useState<MyPlan | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -97,6 +100,7 @@ function TeacherDashboard() {
       setDecks(d)
       setPendingWorks(pending)
       setPendingWriting(pendingW)
+      getMyPlan().then(setMyPlan).catch(() => {})
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Ошибка загрузки')
     } finally {
@@ -194,6 +198,9 @@ function TeacherDashboard() {
         />
       ) : (
         <>
+          {myPlan && typeof myPlan.energy_max === 'number' && !myPlan.is_admin && myPlan.in_studio && (
+            <StudioEnergy plan={myPlan} />
+          )}
           <Card>
             <p className="text-sm text-[var(--night-text-40)]">
               Код-приглашение — ученица вводит его у себя на Главной:
@@ -405,6 +412,50 @@ function StudentCard({
         {showQuests ? '▾ Скрыть AI-квесты' : '▸ AI-квесты по грамматике'}
       </button>
       {showQuests && <QuestSection studentId={p.id} />}
+    </Card>
+  )
+}
+
+// Панель энергии студии (E3): общий дневной пул на всех учениц + месячные
+// генерации материалов/программ. Показывается на вкладке «Ученицы».
+function StudioEnergy({ plan }: { plan: MyPlan }) {
+  const max = plan.energy_max ?? 0
+  const spent = plan.energy_spent ?? 0
+  const left = Math.max(0, max - spent)
+  const genLim = plan.gen_limit ?? 0
+  const genUsed = plan.gen_used ?? 0
+  const bar = (used: number, cap: number) => (
+    <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-white/[0.07]">
+      <div
+        className="h-full rounded-full bg-[var(--night-accent)] transition-[width] duration-500"
+        style={{ width: `${cap ? Math.min(100, (used / cap) * 100) : 0}%` }}
+      />
+    </div>
+  )
+  return (
+    <Card className="flex flex-col gap-3">
+      <p className="flex items-center gap-1.5 text-sm font-semibold">
+        <IconSparkle size={16} className="text-[var(--night-accent-text)]" /> Энергия студии
+      </p>
+      <div>
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-[var(--night-text-70)]">Разговоры с AI сегодня</span>
+          <span className="font-medium">{left} из {max} осталось</span>
+        </div>
+        {bar(spent, max)}
+        <p className="mt-1 text-xs text-[var(--night-text-40)]">
+          Общий дневной запас на всех учениц. Пополняется утром.
+        </p>
+      </div>
+      {genLim > 0 && (
+        <div>
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-[var(--night-text-70)]">Материалы и программы (месяц)</span>
+            <span className="font-medium">{genUsed} из {genLim}</span>
+          </div>
+          {bar(genUsed, genLim)}
+        </div>
+      )}
     </Card>
   )
 }

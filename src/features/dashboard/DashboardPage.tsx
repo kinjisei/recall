@@ -40,6 +40,8 @@ import { cachedWordOfDay, newWordOfDay, type PoolItem } from '../../lib/wordPool
 import { addCard, countMyWords } from '../../lib/cards'
 import { getEsLevel } from '../../lib/esLevel'
 import { getMyPlans, isProgramSeen } from '../../lib/studyPlan'
+import { getMyPlan, type MyPlan } from '../../lib/billing'
+import { EnergyBar } from '../../components/EnergyBar'
 import { startGuided } from '../../lib/guided'
 import { speak } from '../../lib/speech'
 import { RowCard } from '../../components/RowCard'
@@ -81,6 +83,7 @@ export function DashboardPage() {
   const [assignments, setAssignments] = useState<AssignmentCounts | null>(null)
   // программа, которую ученица ещё не открывала (флаг recall.program_seen.<id>)
   const [newProgram, setNewProgram] = useState<StudyPlan | null>(null)
+  const [myPlan, setMyPlan] = useState<MyPlan | null>(null)
   // план дня: ВСЕ его входы (настройка учителя, задания, квесты) грузятся
   // одним пакетом с флагом готовности — иначе «идеальный день» успевал
   // залогиниться по неполному дефолтному плану до прихода данных о задании
@@ -113,6 +116,7 @@ export function DashboardPage() {
       setAssignments(counts)
       setPlanInputs({ dailyCfg, activeQuests })
     })
+    getMyPlan().then(setMyPlan).catch(() => {})
     getMyPlans()
       .then((plans) => {
         const unseen = plans.find((p) => {
@@ -235,6 +239,9 @@ export function DashboardPage() {
           className="h-[196px] animate-pulse rounded-3xl border border-[var(--night-accent-45)] bg-white/[0.04]"
         />
       )}
+
+      {/* 2б. Энергия AI (E3): дневной запас на разговоры с ИИ */}
+      {myPlan && <EnergyBar plan={myPlan} className="animate-fade-up" />}
 
       {/* 3. Новое задание от преподавателя */}
       <AssignmentsNotice placement="top" counts={assignments} />

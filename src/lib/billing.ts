@@ -20,6 +20,21 @@ export interface MyPlan {
   premium: boolean
   ai_used_today: number
   ai_day_limit: number
+  // Энергия (E1/E3). Могут отсутствовать, если миграция «ЭНЕРГИЯ» ещё не залита.
+  /** Дневной бюджет энергии источника (пул студии / свой premium / free). */
+  energy_max?: number
+  /** Потрачено энергии пулом за местный день. */
+  energy_spent?: number
+  /** Потрачено энергии ЭТИМ аккаунтом (для под-капа в студии). */
+  energy_self?: number
+  /** Под-кап на аккаунт в студии (≤50% пула), null — не в студии. */
+  energy_subcap?: number | null
+  /** Источник — общий пул студии (учитель + ученицы). */
+  in_studio?: boolean
+  /** Месячный лимит генераций (материалы/программы) пула учителя. */
+  gen_limit?: number
+  /** Использовано генераций в этом месяце. */
+  gen_used?: number
 }
 
 export interface PlanCard {
