@@ -9,6 +9,7 @@ import { IconCheck, IconTeacher, IconTrophy } from '../../components/icons'
 import { SmartBack } from '../../components/SmartBack'
 import { useAuth } from '../../context/AuthContext'
 import { PLANS, KASPI, getMyPlan, type MyPlan, type PlanCard } from '../../lib/billing'
+import { energyLeft } from '../../components/EnergyBar'
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -17,13 +18,15 @@ function formatDate(iso: string): string {
 function MyPlanBanner({ plan }: { plan: MyPlan }) {
   const planTitle = PLANS.find((p) => p.id === plan.plan)?.title ?? plan.plan
 
+  const e = energyLeft(plan)
+  const energyBit = e ? `энергия ${e.left}/${e.cap} ⚡` : null
   let statusLine: string
   if (plan.trial_until && new Date(plan.trial_until) > new Date()) {
-    statusLine = `Триал до ${formatDate(plan.trial_until)}`
+    statusLine = `Триал до ${formatDate(plan.trial_until)}${energyBit ? ` · ${energyBit}` : ''}`
   } else if (plan.plan_expires_at) {
-    statusLine = `действует до ${formatDate(plan.plan_expires_at)}`
-  } else if (plan.plan === 'free') {
-    statusLine = `AI сегодня: ${plan.ai_used_today} из ${plan.ai_day_limit}`
+    statusLine = `действует до ${formatDate(plan.plan_expires_at)}${energyBit ? ` · ${energyBit}` : ''}`
+  } else if (energyBit) {
+    statusLine = `Энергия сегодня: ${e!.left} из ${e!.cap} ⚡`
   } else {
     statusLine = 'активен'
   }
@@ -165,10 +168,10 @@ export function PricingPage() {
         <PayDetails />
         <p className="mt-3 text-sm leading-relaxed text-[var(--night-text-70)]">
           Первые 14 дней после регистрации — пробный период: все разделы открыты,
-          12 разговоров с AI в день. Разговор — это реплика в «Диалоге», проверка
-          письма или ход в квесте. Перевод слов по тапу, произношение, повторение
-          карточек, игры и грамматика не считаются — они без лимита всегда.
-          Карта не нужна.
+          с энергией AI как у Premium (30 ⚡ в день). Энергию тратят разговоры с AI —
+          реплика в «Диалоге», проверка письма (2 ⚡), ход в квесте. Перевод слов по
+          тапу, произношение, повторение карточек, игры и грамматика энергию не
+          тратят — они без лимита всегда. Карта не нужна.
         </p>
       </section>
     </main>
