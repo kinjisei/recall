@@ -2676,3 +2676,7 @@
   grant execute on all functions in schema public to authenticated;
   revoke execute on function public.has_premium_access(uuid) from public, anon, authenticated;
   revoke execute on function public.has_paid_access(uuid) from public, anon, authenticated;
+  -- energy_source(uid) принимает ЧУЖОЙ uid → мог бы выдать размер пула/тариф
+  -- чужого (тот же класс утечки, что закрыт выше у has_premium_access). Клиент
+  -- его не зовёт — только spend_energy/get_my_plan внутри (security definer).
+  revoke execute on function public.energy_source(uuid) from public, anon, authenticated;
