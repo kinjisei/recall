@@ -60,6 +60,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       ? 'lite'
       : 'standard'
   const quota = spec ? spec.quota : aiTier === 'lite' ? 'light' : 'heavy'
+  // цена в энергии + признак генерации (материал/программа) — для spend_energy.
+  // legacy без spec: heavy = 1 ⚡, lite = 0; генерация только у известных задач.
+  const energyCost = spec ? spec.energyCost : quota === 'heavy' ? 1 : 0
+  const generation = spec?.generation ?? false
 
   // Валидация входа ДО списания квоты: иначе кривой/пустой запрос (баг клиента,
   // повторная отправка по таймауту) уже жёг бы единицу дневного лимита без
@@ -84,16 +88,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'Слишком большая системная инструкция' })
   }
 
-  const access = await authorize(req, quota)
-  if (!access.ok) {
-    return res.status(access.status).json({ error: access.error })
-  }
-
-  // Pro-модели — только преподавателю. Проверяем ПОСЛЕ квоты: у запроса уже
-  // подтверждён вход, а неудачная попытка стоит вызывающему одно AI-действие,
-  // что само по себе гасит перебор чужих названий задач.
+  // Pro-модели (material/program) — только преподавателю. Проверяем ДО списания:
+  // это задачи-генерации, и для не-учителя лимит генераций пула = 0, то есть
+  // authorize вернул бы 429 «лимит генераций» вместо понятного 403. Проверка
+  // роли ничего не стоит по энергии, поэтому переборa она не поощряет.
   if (spec?.teacherOnly && !(await isTeacher(req))) {
     return res.status(403).json({ error: 'Эта функция доступна только преподавателю.' })
+  }
+
+  const access = await authorize(req, quota, energyCost, generation)
+  if (!access.ok) {
+    return res.status(access.status).json({ error: access.error })
   }
 
   const apiKey = process.env.GEMINI_API_KEY

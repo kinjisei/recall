@@ -78,20 +78,27 @@ export async function isTeacher(req: VercelRequest): Promise<boolean> {
   }
 }
 
-/** Пускает только вошедших, не заблокированных и не исчерпавших лимит. */
+/** Пускает только вошедших, не заблокированных и не исчерпавших лимит.
+ * cost — цена действия в ЭНЕРГИИ (heavy), generation — материал/программа
+ * (месячный лимит вместо энергии). Списывает через spend_energy; если функции
+ * ещё нет в БД (миграция E1 не залита) — откат на consume_ai_quota. */
 export async function authorize(
   req: VercelRequest,
   kind: QuotaKind = 'heavy',
+  cost?: number,
+  generation = false,
 ): Promise<AuthResult> {
   const auth = req.headers.authorization
   const token = auth?.startsWith('Bearer ') ? auth.slice(7) : null
   const url = process.env.VITE_SUPABASE_URL
   const anon = process.env.VITE_SUPABASE_ANON_KEY
   if (!token || !url || !anon) return DENIED
+  // энергия действия: heavy по умолчанию 1 ⚡, light/speech — 0 (только анти-абьюз)
+  const p_cost = cost ?? (kind === 'heavy' ? 1 : 0)
 
   try {
-    const call = (body: string) =>
-      fetch(`${url}/rest/v1/rpc/consume_ai_quota`, {
+    const rpc = (fn: string, body: string) =>
+      fetch(`${url}/rest/v1/rpc/${fn}`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -101,16 +108,56 @@ export async function authorize(
         body,
       })
 
-    let r = await call(JSON.stringify({ p_kind: kind }))
-    // Старая версия RPC (блок «КЛАССЫ КВОТ» ещё не выполнен в базе) не знает
-    // параметра p_kind и отвечает PGRST202 — повторяем по-старому, без класса,
-    // чтобы деплой кода до миграции не ломал AI.
-    if (r.status === 404) r = await call('{}')
+    // Основной путь — энергия (E1). Фолбэки на старую RPC держат деплой безопасным
+    // и до, и после миграции (клиент/сервер не ломаются в переходный момент).
+    let r = await rpc('spend_energy', JSON.stringify({ p_kind: kind, p_cost, p_generation: generation }))
+    if (r.status === 404) {
+      // spend_energy ещё нет — старый путь по классам (блок «КЛАССЫ КВОТ»)…
+      r = await rpc('consume_ai_quota', JSON.stringify({ p_kind: kind }))
+      // …а если и её нет (совсем старая база) — по-старому без класса
+      if (r.status === 404) r = await rpc('consume_ai_quota', '{}')
+    }
     if (r.ok) return { ok: true }
     if (r.status === 401 || r.status === 403) return DENIED
 
     const body = await r.text()
     if (body.includes('RECALL_NO_AUTH')) return DENIED
+    if (body.includes('RECALL_ENERGY_POOL')) {
+      return {
+        ok: false,
+        status: 429,
+        error:
+          'Энергия студии на сегодня закончилась. Она вернётся утром — ' +
+          'чтение, слова, грамматика и произношение работают как обычно.',
+      }
+    }
+    if (body.includes('RECALL_ENERGY_SUBCAP')) {
+      return {
+        ok: false,
+        status: 429,
+        error:
+          'На сегодня по твоему аккаунту хватит AI — чтобы хватило всей студии. ' +
+          'Энергия вернётся утром; слова, тексты и игры работают без ограничений.',
+      }
+    }
+    if (body.includes('RECALL_ENERGY_DAY')) {
+      return {
+        ok: false,
+        status: 429,
+        error:
+          'Дневная энергия закончилась — вернётся утром. Слова, тексты и игры ' +
+          'работают без лимитов; больше AI даёт тариф побольше.',
+      }
+    }
+    if (body.includes('RECALL_GEN_LIMIT')) {
+      return {
+        ok: false,
+        status: 429,
+        error:
+          'Лимит генераций материалов и программ на этот месяц исчерпан. ' +
+          'Он обновится 1-го числа, либо доступен на тарифе побольше.',
+      }
+    }
     if (body.includes('RECALL_BLOCKED')) {
       return { ok: false, status: 403, error: 'Доступ к аккаунту приостановлен' }
     }

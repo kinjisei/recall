@@ -19,28 +19,36 @@ export interface TaskSpec {
   tier: AiTier
   /** Из какого суточного кармана списывать (см. «КЛАССЫ КВОТ» в schema.sql). */
   quota: QuotaKind
+  /**
+   * Цена действия в ЭНЕРГИИ (docs/energy-design.md): 1 ⚡ = реплика Диалога.
+   * light/speech — 0 (энергию не тратят, только анти-абьюз-кэп). Материалы и
+   * программы — 0 (списываются НЕ энергией, а месячным лимитом генераций).
+   */
+  energyCost: number
+  /** Материал/программа — списывается из месячного лимита генераций учителя. */
+  generation?: boolean
   /** Требует роли преподавателя (Pro-модели — только под генерацию учителю). */
   teacherOnly?: boolean
 }
 
 export const AI_TASKS: Record<AiTask, TaskSpec> = {
-  // лёгкие массовые задачи — мини-модели, отдельный большой карман (900/300/100)
-  word: { tier: 'lite', quota: 'light' },
-  definition: { tier: 'lite', quota: 'light' },
-  batch: { tier: 'lite', quota: 'light' },
+  // лёгкие массовые задачи — мини-модели, отдельный большой карман; 0 энергии
+  word: { tier: 'lite', quota: 'light', energyCost: 0 },
+  definition: { tier: 'lite', quota: 'light', energyCost: 0 },
+  batch: { tier: 'lite', quota: 'light', energyCost: 0 },
 
-  // «AI-действия» из тарифов (200/12/5 в сутки)
-  dialog: { tier: 'standard', quota: 'heavy' },
-  writing: { tier: 'standard', quota: 'heavy' },
-  quest: { tier: 'standard', quota: 'heavy' },
-  review: { tier: 'standard', quota: 'heavy' },
+  // «AI-действия» — тратят энергию (dialog/quest/analyze = 1 ⚡; письмо/разбор = 2 ⚡)
+  dialog: { tier: 'standard', quota: 'heavy', energyCost: 1 },
+  quest: { tier: 'standard', quota: 'heavy', energyCost: 1 },
   // разбор выделенного фрагмента в читалке (фразовые глаголы/выражения) —
   // дешёвая модель теряла фразовые глаголы, нужна умная (проверено на проде)
-  analyze: { tier: 'standard', quota: 'heavy' },
+  analyze: { tier: 'standard', quota: 'heavy', energyCost: 1 },
+  writing: { tier: 'standard', quota: 'heavy', energyCost: 2 },
+  review: { tier: 'standard', quota: 'heavy', energyCost: 2 },
 
-  // Pro-модели: единицы вызовов в день, и только у преподавателя
-  material: { tier: 'max', quota: 'heavy', teacherOnly: true },
-  program: { tier: 'max', quota: 'heavy', teacherOnly: true },
+  // Pro-модели: месячный лимит генераций (не энергия), только у преподавателя
+  material: { tier: 'max', quota: 'heavy', energyCost: 0, generation: true, teacherOnly: true },
+  program: { tier: 'max', quota: 'heavy', energyCost: 0, generation: true, teacherOnly: true },
 }
 
 /** Спека задачи по присланному клиентом названию (undefined — название чужое). */
