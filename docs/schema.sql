@@ -2490,6 +2490,183 @@
     where id = p_id;
   end $fn$;
 
+  -- ============================================================================
+  -- ЭНЕРГИЯ (единая валюта AI, E1) — см. docs/energy-design.md. Блок idempotent.
+  -- Заменяет учёт «3 кармана heavy/light/speech» на дневной бюджет ЭНЕРГИИ:
+  --   • heavy-действия стоят энергию (dialog=1, письмо=2… — цену считает сервер);
+  --   • переводы/произношение (light/speech) — 0 энергии, только анти-абьюз-кэп;
+  --   • генерации учителя (материал/программа) — отдельный МЕСЯЧНЫЙ лимит.
+  -- Источник энергии: пул студии (учитель + её ученицы) → свой premium → free.
+  -- День и месяц считаем по фикс. поясу Asia/Almaty (продукт для Казахстана).
+  -- consume_ai_quota НЕ трогаем (сервер уходит на spend_energy отдельным заходом).
+  -- ============================================================================
+
+  alter table public.ai_calls add column if not exists cost_energy int not null default 0;
+  alter table public.ai_calls add column if not exists pool_owner uuid;      -- чей дневной пул тратим
+  alter table public.ai_calls add column if not exists is_generation boolean not null default false;
+
+  create or replace function public.recall_day_start()
+  returns timestamptz language sql stable set search_path = public as
+  $$ select date_trunc('day', now() at time zone 'Asia/Almaty') at time zone 'Asia/Almaty' $$;
+  create or replace function public.recall_month_start()
+  returns timestamptz language sql stable set search_path = public as
+  $$ select date_trunc('month', now() at time zone 'Asia/Almaty') at time zone 'Asia/Almaty' $$;
+
+  create or replace function public.teacher_energy_pool(p_plan text)
+  returns int language sql immutable as $$ select case p_plan
+    when 'teacher_mini' then 70 when 'teacher_start' then 110 when 'teacher_pro' then 260 else 0 end $$;
+  create or replace function public.teacher_gen_limit(p_plan text)
+  returns int language sql immutable as $$ select case p_plan
+    when 'teacher_mini' then 25 when 'teacher_start' then 45 when 'teacher_pro' then 90 else 0 end $$;
+
+  -- Дневной источник энергии пользователя. in_studio=true → пул общий (учитель+ученицы),
+  -- тогда действует под-кап на аккаунт. gen_limit — месячный лимит генераций пула.
+  -- Триал-учитель (plan='free', но trial_until>now, role='teacher') получает пул 40 / 10 генераций.
+  create or replace function public.energy_source(
+    uid uuid, out pool_owner uuid, out day_budget int, out in_studio boolean, out gen_limit int
+  ) language plpgsql stable security definer set search_path = public as $fn$
+  declare me record; t record;
+  begin
+    select role, plan, plan_expires_at, trial_until into me from profiles where id = uid;
+    -- 1) сам аккаунт-учитель с ненулевым пулом → свой пул студии
+    if me.role = 'teacher' then
+      day_budget := case
+        when me.plan like 'teacher_%' and me.plan_expires_at > now() then public.teacher_energy_pool(me.plan)
+        when me.trial_until > now() then 40 else 0 end;
+      if day_budget > 0 then
+        pool_owner := uid; in_studio := true;
+        gen_limit := case
+          when me.plan like 'teacher_%' and me.plan_expires_at > now() then public.teacher_gen_limit(me.plan)
+          when me.trial_until > now() then 10 else 0 end;
+        return;
+      end if;
+    end if;
+    -- 2) ученица привязанного учителя с ненулевым пулом → пул этого учителя
+    select tp.id as tid,
+      case when tp.plan like 'teacher_%' and tp.plan_expires_at > now() then public.teacher_energy_pool(tp.plan)
+           when tp.trial_until > now() then 40 else 0 end as pool
+      into t
+      from teacher_students ts join profiles tp on tp.id = ts.teacher_id
+      where ts.student_id = uid and not coalesce(tp.blocked, false)
+      order by pool desc limit 1;
+    if t.tid is not null and t.pool > 0 then
+      pool_owner := t.tid; day_budget := t.pool; in_studio := true; gen_limit := 0; return;
+    end if;
+    -- 3) сольный premium/триал → 30; 4) free → 5
+    if public.has_premium_access(uid) then
+      pool_owner := uid; day_budget := 30; in_studio := false; gen_limit := 0; return;
+    end if;
+    pool_owner := uid; day_budget := 5; in_studio := false; gen_limit := 0;
+  end $fn$;
+
+  -- Списание энергии/генерации. Сервер (api/_auth) считает p_cost по типу задачи.
+  --   p_kind: heavy|light|speech (для анти-абьюз-кэпов light/speech и часового);
+  --   p_cost: энергия действия (0 для light/speech; N для heavy);
+  --   p_generation: true для материала/программы (месячный лимит вместо энергии).
+  create or replace function public.spend_energy(
+    p_kind text default 'heavy', p_cost int default 1, p_generation boolean default false
+  ) returns void language plpgsql security definer set search_path = public as $fn$
+  declare
+    v_kind text := case when p_kind in ('light','speech') then p_kind else 'heavy' end;
+    uid uuid := auth.uid();
+    day0 timestamptz := public.recall_day_start();
+    src record;
+    n int; pool_spent int; self_spent int; gen_used int;
+  begin
+    if uid is null then raise exception 'RECALL_NO_AUTH'; end if;
+    perform pg_advisory_xact_lock(hashtext('ai_quota:' || uid::text));
+
+    if exists (select 1 from auth.users where id=uid and banned_until is not null and banned_until>now())
+      then raise exception 'RECALL_BLOCKED'; end if;
+    if exists (select 1 from profiles where id=uid and blocked) then raise exception 'RECALL_BLOCKED'; end if;
+    delete from ai_calls where called_at < now() - interval '40 days';  -- держим месяц генераций
+
+    -- админ (владелец) — без лимитов, но пишем строку для статистики
+    if exists (select 1 from profiles where id=uid and is_admin) then
+      insert into ai_calls (user_id, kind, cost_energy, is_generation) values (uid, v_kind, 0, p_generation);
+      return;
+    end if;
+
+    -- часовой предохранитель от скриптов (по классу доступа)
+    select count(*) into n from ai_calls where user_id=uid and called_at > now() - interval '1 hour';
+    if n >= (case when public.has_paid_access(uid) then 200 when public.has_premium_access(uid) then 90 else 40 end)
+      then raise exception 'RECALL_RATE_HOUR'; end if;
+
+    -- ГЕНЕРАЦИЯ: месячный лимит по пулу учителя
+    if p_generation then
+      select * into src from public.energy_source(uid);
+      select count(*) into gen_used from ai_calls
+        where pool_owner = src.pool_owner and is_generation and called_at >= public.recall_month_start();
+      if gen_used >= src.gen_limit then raise exception 'RECALL_GEN_LIMIT'; end if;
+      insert into ai_calls (user_id, kind, cost_energy, pool_owner, is_generation)
+        values (uid, 'heavy', 0, src.pool_owner, true);
+      return;
+    end if;
+
+    -- LIGHT/SPEECH (0 энергии): только суточный анти-абьюз-кэп по классу
+    if v_kind in ('light','speech') then
+      select count(*) into n from ai_calls
+        where user_id=uid and ai_calls.kind=v_kind and called_at >= day0;
+      if n >= (case v_kind
+          when 'light' then case when public.has_paid_access(uid) then 900 when public.has_premium_access(uid) then 300 else 100 end
+          else case when public.has_paid_access(uid) then 400 when public.has_premium_access(uid) then 150 else 50 end end) then
+        if v_kind='light' then raise exception 'RECALL_LIGHT_LIMIT'; else raise exception 'RECALL_SPEECH_LIMIT'; end if;
+      end if;
+      insert into ai_calls (user_id, kind, cost_energy) values (uid, v_kind, 0);
+      return;
+    end if;
+
+    -- ЭНЕРГИЯ (heavy): дневной пул + под-кап на аккаунт в студии
+    select * into src from public.energy_source(uid);
+    select coalesce(sum(cost_energy),0) into pool_spent from ai_calls
+      where pool_owner = src.pool_owner and called_at >= day0;
+    if pool_spent + p_cost > src.day_budget then
+      if src.in_studio then raise exception 'RECALL_ENERGY_POOL';
+      elsif public.has_premium_access(uid) then raise exception 'RECALL_ENERGY_DAY';
+      else raise exception 'RECALL_FREE_LIMIT'; end if;
+    end if;
+    if src.in_studio and src.pool_owner <> uid then
+      select coalesce(sum(cost_energy),0) into self_spent from ai_calls
+        where user_id = uid and called_at >= day0;
+      if self_spent + p_cost > (src.day_budget / 2) then raise exception 'RECALL_ENERGY_SUBCAP'; end if;
+    end if;
+    insert into ai_calls (user_id, kind, cost_energy, pool_owner) values (uid, 'heavy', p_cost, src.pool_owner);
+  end $fn$;
+
+  -- get_my_plan v2: старые поля СОХРАНЕНЫ (текущий клиент их читает) + энергия.
+  create or replace function public.get_my_plan()
+  returns json language plpgsql security definer set search_path = public as $fn$
+  declare
+    uid uuid := auth.uid();
+    p record; prem boolean; used int;
+    day0 timestamptz := public.recall_day_start();
+    src record; e_spent int; e_self int; g_used int;
+  begin
+    if uid is null then raise exception 'RECALL_NO_AUTH'; end if;
+    select plan, plan_expires_at, trial_until, is_admin into p from profiles where id = uid;
+    prem := public.has_premium_access(uid);
+    select count(*) into used from ai_calls
+      where user_id = uid and ai_calls.kind = 'heavy' and called_at > now() - interval '24 hours';
+    select * into src from public.energy_source(uid);
+    select coalesce(sum(cost_energy),0) into e_spent from ai_calls
+      where pool_owner = src.pool_owner and called_at >= day0;
+    select coalesce(sum(cost_energy),0) into e_self from ai_calls
+      where user_id = uid and called_at >= day0;
+    select count(*) into g_used from ai_calls
+      where pool_owner = src.pool_owner and is_generation and called_at >= public.recall_month_start();
+    return json_build_object(
+      'plan', p.plan, 'plan_expires_at', p.plan_expires_at, 'trial_until', p.trial_until,
+      'is_admin', p.is_admin, 'premium', prem,
+      'ai_used_today', used, 'ai_day_limit', case when p.is_admin then 999999 when prem then 200 else 5 end,
+      -- энергия (E1): бюджет пула, потрачено пулом, потрачено этим аккаунтом, под-кап
+      'energy_max', case when p.is_admin then 999999 else src.day_budget end,
+      'energy_spent', e_spent, 'energy_self', e_self,
+      'energy_subcap', case when src.in_studio and src.pool_owner <> uid then src.day_budget / 2 else null end,
+      'in_studio', src.in_studio,
+      'gen_limit', src.gen_limit, 'gen_used', g_used
+    );
+  end $fn$;
+
   -- Финальный revoke/grant — ПОСЛЕДНИЙ в файле, накрывает все функции выше,
   -- включая только что пересозданный join_teacher.
   -- ⚠️ ВАЖНО (урок захода 3, строки ~2147): Supabase выдаёт EXECUTE ЯВНО роли
