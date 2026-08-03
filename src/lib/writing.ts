@@ -8,6 +8,7 @@ import { chat } from './gemini'
 import type {
   AppLang,
   CEFRLevel,
+  ChartSpec,
   WritingGrade,
   WritingMode,
   WritingSettings,
@@ -160,6 +161,92 @@ export async function countMyWritingTasks(): Promise<{ total: number; pending: n
     // «новых» — ещё не сдавала (assigned) либо учитель переназначил (тоже assigned)
     pending: rows.filter((r) => r.status === 'assigned').length,
   }
+}
+
+// ---------------------------------------------------------------------------
+// IELTS Academic Task 1: AI генерит ДАННЫЕ графика (не картинку), рисуем сами.
+// ---------------------------------------------------------------------------
+
+const KIND_RU: Record<ChartSpec['kind'], string> = {
+  bar: 'столбчатая диаграмма',
+  line: 'линейный график',
+  pie: 'круговая диаграмма',
+  table: 'таблица',
+}
+
+/** Санитайз данных графика от AI — гарантируем валидную структуру и числа. */
+function sanitizeChart(raw: unknown, kind: ChartSpec['kind']): ChartSpec | null {
+  const o = (raw ?? {}) as Record<string, unknown>
+  const seriesRaw = Array.isArray(o.series) ? o.series : []
+  const series = seriesRaw
+    .slice(0, kind === 'pie' ? 1 : 4)
+    .map((s) => {
+      const so = (s ?? {}) as Record<string, unknown>
+      const points = (Array.isArray(so.points) ? so.points : [])
+        .slice(0, 12)
+        .map((p) => {
+          const po = (p ?? {}) as Record<string, unknown>
+          const value = typeof po.value === 'number' && isFinite(po.value) ? po.value : NaN
+          return { label: typeof po.label === 'string' ? po.label : '', value }
+        })
+        .filter((p) => p.label && !Number.isNaN(p.value))
+      return { name: typeof so.name === 'string' && so.name ? so.name : 'Ряд', points }
+    })
+    .filter((s) => s.points.length >= 2)
+  if (series.length === 0) return null
+  // все ряды по числу точек равняем на первый (иначе оси разъедутся)
+  const n = series[0]!.points.length
+  for (const s of series) s.points = s.points.slice(0, n)
+  return {
+    kind,
+    title: typeof o.title === 'string' && o.title ? o.title : 'Chart',
+    xLabel: typeof o.xLabel === 'string' ? o.xLabel : undefined,
+    yLabel: typeof o.yLabel === 'string' ? o.yLabel : undefined,
+    unit: typeof o.unit === 'string' ? o.unit : undefined,
+    series,
+  }
+}
+
+/**
+ * Задание IELTS Academic Task 1: AI придумывает вопрос + реалистичные данные
+ * графика выбранного типа. Рисуем данные сами (ChartView). teacher-only (Pro).
+ */
+export async function generateChartTask(
+  kind: ChartSpec['kind'],
+  topic: string,
+): Promise<{ prompt: string; chart: ChartSpec }> {
+  const system = [
+    'Ты — составитель заданий IELTS Academic Writing Task 1 (описание визуальных данных).',
+    `Тип визуализации: ${KIND_RU[kind]} (kind: "${kind}").`,
+    'Верни ТОЛЬКО валидный JSON без markdown:',
+    `{"prompt":"...","chart":{"kind":"${kind}","title":"...","xLabel":"...","yLabel":"...","unit":"%","series":[{"name":"...","points":[{"label":"...","value":123}]}]}}`,
+    'prompt — формулировка задания на английском в стиле IELTS: одно вводное предложение про то, что показывает график, затем «Summarise the information by selecting and reporting the main features, and make comparisons where relevant.»',
+    'Данные РЕАЛИСТИЧНЫЕ и в разумном диапазоне; 4–8 точек по горизонтали; подписи короткие (годы, страны, категории).',
+    kind === 'pie'
+      ? 'pie: РОВНО один ряд, значения — доли, в сумме примерно 100 (unit "%").'
+      : kind === 'table'
+        ? 'table: 2–4 ряда (это столбцы таблицы), у всех одинаковые label точек (строки).'
+        : 'bar/line: 1–3 ряда с ОДИНАКОВЫМ набором label точек. Укажи xLabel, yLabel, unit.',
+    'Числа целые или с одним знаком после запятой.',
+    topic.trim()
+      ? `Тема данных: ${topic.trim()}.`
+      : 'Тему выбери сам (население, продажи, температуры, доли рынка, интернет-пользователи и т.п.).',
+  ].join('\n')
+
+  const raw = await chat([{ role: 'user', content: 'Сгенерируй задание с данными.' }], {
+    system,
+    task: 'material',
+  })
+  const s = raw.indexOf('{')
+  const e = raw.lastIndexOf('}')
+  if (s === -1 || e <= s) throw new Error('AI вернул не-JSON. Попробуй ещё раз.')
+  const o = JSON.parse(raw.slice(s, e + 1)) as { prompt?: string; chart?: unknown }
+  const chart = sanitizeChart(o.chart, kind)
+  if (!chart) throw new Error('AI не собрал корректные данные графика. Попробуй ещё раз.')
+  const prompt =
+    (typeof o.prompt === 'string' && o.prompt.trim()) ||
+    'The chart below shows the given data. Summarise the information by selecting and reporting the main features, and make comparisons where relevant.'
+  return { prompt, chart }
 }
 
 /** Опционально: AI придумывает вопрос IELTS (teacher-only, task material). */

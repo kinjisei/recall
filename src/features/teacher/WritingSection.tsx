@@ -17,18 +17,28 @@ import {
   unassignWritingTask,
   listWritingAssignments,
   generateIeltsQuestion,
+  generateChartTask,
 } from '../../lib/writing'
 import type { StudentInfo } from '../../lib/teacher'
 import type {
   AppLang,
   CEFRLevel,
+  ChartSpec,
   WritingMode,
   WritingSettings,
   WritingTask,
   WritingTaskAssignment,
 } from '../../types'
 import { LEVELS, inputClass } from './materials/shared'
+import { ChartView } from '../../components/ChartView'
 import { WritingReviewScreen } from '../writing/WritingReviewScreen'
+
+const CHART_KINDS: { id: ChartSpec['kind']; label: string }[] = [
+  { id: 'bar', label: 'Столбцы' },
+  { id: 'line', label: 'Линия' },
+  { id: 'pie', label: 'Круговая' },
+  { id: 'table', label: 'Таблица' },
+]
 
 const BANDS = ['5.5', '6.0', '6.5', '7.0', '7.5', '8.0']
 
@@ -131,22 +141,39 @@ function WritingForm({
   const [mode, setMode] = useState<WritingMode>('ielts')
   const [lang, setLang] = useState<AppLang>('en')
   const [level, setLevel] = useState<CEFRLevel>('B1')
-  const [ieltsTask, setIeltsTask] = useState<'task2' | 'gt1'>('task2')
+  const [ieltsTask, setIeltsTask] = useState<'task2' | 'gt1' | 'academic1'>('task2')
   const [targetBand, setTargetBand] = useState('6.5')
+  const [chartKind, setChartKind] = useState<ChartSpec['kind']>('bar')
+  const [chartTopic, setChartTopic] = useState('')
+  const [chart, setChart] = useState<ChartSpec | null>(null)
   const [prompt, setPrompt] = useState('')
   const [targetWords, setTargetWords] = useState('')
   const [targetGrammar, setTargetGrammar] = useState('')
   const [minWords, setMinWords] = useState('150')
-  const [busy, setBusy] = useState<'gen' | 'save' | null>(null)
+  const [busy, setBusy] = useState<'gen' | 'chart' | 'save' | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const genQuestion = async () => {
     setBusy('gen')
     setError(null)
     try {
-      setPrompt(await generateIeltsQuestion(ieltsTask))
+      setPrompt(await generateIeltsQuestion(ieltsTask === 'gt1' ? 'gt1' : 'task2'))
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Ошибка генерации вопроса')
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  const genChart = async () => {
+    setBusy('chart')
+    setError(null)
+    try {
+      const { prompt: p, chart: ch } = await generateChartTask(chartKind, chartTopic)
+      setChart(ch)
+      setPrompt(p)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Ошибка генерации графика')
     } finally {
       setBusy(null)
     }
@@ -158,7 +185,11 @@ function WritingForm({
     setError(null)
     const settings: WritingSettings =
       mode === 'ielts'
-        ? { ieltsTask, targetBand: Number(targetBand) }
+        ? {
+            ieltsTask,
+            targetBand: Number(targetBand),
+            ...(ieltsTask === 'academic1' && chart ? { chart } : {}),
+          }
         : {
             targetWords: targetWords.split(',').map((w) => w.trim()).filter(Boolean),
             targetGrammar: targetGrammar.split(',').map((w) => w.trim()).filter(Boolean),
@@ -196,9 +227,10 @@ function WritingForm({
           <>
             <div>
               <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">Тип</p>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <button className={chipCls(ieltsTask === 'task2')} onClick={() => setIeltsTask('task2')}>Task 2 (эссе)</button>
                 <button className={chipCls(ieltsTask === 'gt1')} onClick={() => setIeltsTask('gt1')}>GT Task 1 (письмо)</button>
+                <button className={chipCls(ieltsTask === 'academic1')} onClick={() => setIeltsTask('academic1')}>Academic Task 1 (график)</button>
               </div>
             </div>
             <div>
@@ -209,6 +241,35 @@ function WritingForm({
                 ))}
               </div>
             </div>
+
+            {ieltsTask === 'academic1' && (
+              <div className="flex flex-col gap-2">
+                <div>
+                  <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">Тип графика</p>
+                  <div className="flex flex-wrap gap-2">
+                    {CHART_KINDS.map((k) => (
+                      <button key={k.id} className={chipCls(chartKind === k.id)} onClick={() => setChartKind(k.id)}>
+                        {k.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <input
+                  className={inputClass}
+                  placeholder="Тема данных (необязательно): население, продажи, температуры…"
+                  value={chartTopic}
+                  onChange={(e) => setChartTopic(e.target.value)}
+                />
+                <Button variant="secondary" className="self-start px-3 py-2 text-sm" onClick={genChart} loading={busy === 'chart'} disabled={busy !== null}>
+                  {busy === 'chart' ? 'AI рисует данные…' : '📊 Сгенерировать график'}
+                </Button>
+                {chart && (
+                  <div className="rounded-xl border border-white/[0.08] p-3">
+                    <ChartView chart={chart} />
+                  </div>
+                )}
+              </div>
+            )}
           </>
         ) : (
           <>
@@ -235,7 +296,7 @@ function WritingForm({
             <p className="text-xs font-semibold text-[var(--night-text-40)]">
               {mode === 'ielts' ? 'Вопрос задания' : 'Тема / задание'}
             </p>
-            {mode === 'ielts' && (
+            {mode === 'ielts' && ieltsTask !== 'academic1' && (
               <button
                 onClick={genQuestion}
                 disabled={busy !== null}
@@ -391,6 +452,11 @@ function WritingDetail({
             : `Обычное эссе · ${task.lang === 'es' ? 'испанский' : 'английский'} · ${task.level}`}
         </p>
         <p className="mt-2 whitespace-pre-wrap leading-relaxed">{task.prompt}</p>
+        {s?.chart && (
+          <div className="mt-3 rounded-xl border border-white/[0.08] p-3">
+            <ChartView chart={s.chart} />
+          </div>
+        )}
         {task.mode === 'regular' && (
           <div className="mt-2 flex flex-col gap-1 text-xs text-[var(--night-text-40)]">
             {s?.targetWords?.length ? <p>Слова: {s.targetWords.join(', ')}</p> : null}

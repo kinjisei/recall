@@ -391,12 +391,28 @@ export interface MaterialAssignment {
 
 export type WritingMode = 'ielts' | 'regular'
 
+/** График для IELTS Academic Task 1 (данные → наш SVG-рендер, без картинок). */
+export interface ChartSpec {
+  kind: 'bar' | 'line' | 'pie' | 'table'
+  title: string
+  /** Подпись оси X (bar/line). */
+  xLabel?: string
+  /** Подпись оси Y (bar/line). */
+  yLabel?: string
+  /** Единица измерения для подписей значений (%, млн, °C…). */
+  unit?: string
+  /** Ряды: bar/line — несколько; pie — один; table — по одному на столбец. */
+  series: { name: string; points: { label: string; value: number }[] }[]
+}
+
 /** Настройки письменного задания (зависят от режима). */
 export interface WritingSettings {
-  /** IELTS: Task 2 (эссе) или General Training Task 1 (письмо). */
-  ieltsTask?: 'task2' | 'gt1'
+  /** IELTS: Task 2 (эссе), General Training Task 1 (письмо) или Academic Task 1 (график). */
+  ieltsTask?: 'task2' | 'gt1' | 'academic1'
   /** IELTS: целевой балл (band). */
   targetBand?: number
+  /** IELTS Academic Task 1: данные графика (рисуем сами). */
+  chart?: ChartSpec
   /** Обычный: целевые слова. */
   targetWords?: string[]
   /** Обычный: целевая грамматика. */

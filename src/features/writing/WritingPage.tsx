@@ -16,6 +16,7 @@ import { gradeWriting, bandLabel } from '../../lib/writingGrade'
 import type { WritingGrade, WritingTask, WritingTaskAssignment } from '../../types'
 import { WritingGradeView } from './WritingGradeView'
 import { WritingHistory } from './WritingHistory'
+import { ChartView } from '../../components/ChartView'
 
 type Row = WritingTaskAssignment & { task: WritingTask }
 
@@ -147,6 +148,11 @@ function WritingRunner({
             : `Эссе · ${task.lang === 'es' ? 'испанский' : 'английский'} · ${task.level}`}
         </p>
         <p className="mt-2 whitespace-pre-wrap leading-relaxed">{task.prompt}</p>
+        {task.settings?.chart && (
+          <div className="mt-3 rounded-xl border border-white/[0.08] p-3">
+            <ChartView chart={task.settings.chart} />
+          </div>
+        )}
         {task.mode === 'regular' && task.settings?.targetWords?.length ? (
           <p className="mt-2 text-xs text-[var(--night-text-40)]">
             Постарайся употребить: {task.settings.targetWords.join(', ')}

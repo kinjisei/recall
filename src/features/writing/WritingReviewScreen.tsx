@@ -13,6 +13,7 @@ import { finishWritingReview, reassignWriting } from '../../lib/writing'
 import type { WritingGrade, WritingTask, WritingTaskAssignment } from '../../types'
 import { WritingGradeView } from './WritingGradeView'
 import { WritingHistory } from './WritingHistory'
+import { ChartView } from '../../components/ChartView'
 
 export function WritingReviewScreen({
   task,
@@ -86,6 +87,11 @@ export function WritingReviewScreen({
             : `Эссе · ${task.level}`}
         </p>
         <p className="mt-1 text-sm font-medium">{task.prompt}</p>
+        {task.settings?.chart && (
+          <div className="mt-3 rounded-xl border border-white/[0.08] p-3">
+            <ChartView chart={task.settings.chart} />
+          </div>
+        )}
       </Card>
 
       <Card>

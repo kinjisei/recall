@@ -87,9 +87,18 @@ export async function gradeWriting(
   lang: AppLang,
 ): Promise<WritingGrade> {
   if (task.mode === 'ielts') {
-    const kind = task.settings?.ieltsTask === 'gt1' ? 'General Training Task 1 (письмо)' : 'Task 2 (эссе)'
+    const chart = task.settings?.chart
+    const academic = task.settings?.ieltsTask === 'academic1' && chart
+    const kind = academic
+      ? 'Academic Task 1 (описание графика/данных)'
+      : task.settings?.ieltsTask === 'gt1'
+        ? 'General Training Task 1 (письмо)'
+        : 'Task 2 (эссе)'
     const system = [
       `Ты — экзаменатор IELTS. Оцени работу ученика (${kind}).`,
+      academic
+        ? 'Это Academic Task 1: ученик описывает данные графика. Данные графика даны тебе НИЖЕ в JSON — сверяй по ним факты. Оценивай: есть ли обзор (overview) главных тенденций, выделены ли ключевые особенности, ТОЧНЫ ли числа и сравнения, нет ли лишних мнений/причин. Ошибка в данных (неверная цифра/тренд) — это ошибка Task Achievement.'
+        : '',
       'Верни ТОЛЬКО валидный JSON без markdown:',
       '{"band":0-9,"criteria":{"task":0-9,"coherence":0-9,"lexis":0-9,"grammar":0-9},' +
         '"errors":[{"was":"цитата из текста","fix":"исправление","type":"grammar|vocab|spelling"}],' +
@@ -98,11 +107,15 @@ export async function gradeWriting(
         '"rewrites":[{"was":"слабое предложение","better":"улучшенный вариант"}]}',
       'band и criteria — по шкале 0-9 (допускается .5). Считай РЕАЛЬНЫЕ ошибки, не выдумывай.',
       'errors — конкретные цитаты из текста ученика и их исправления. strengths/improve/topics/words/rewrites — по-русски там, где это пояснение; сами английские слова/фразы — на английском.',
+    ]
+      .filter(Boolean)
+      .join('\n')
+    const user = [
+      `Вопрос задания:\n${task.prompt}`,
+      academic ? `\nДанные графика (JSON):\n${JSON.stringify(chart)}` : '',
+      `\nОтвет ученика:\n${essay}`,
     ].join('\n')
-    const raw = await chat([{ role: 'user', content: `Вопрос задания:\n${task.prompt}\n\nОтвет ученика:\n${essay}` }], {
-      system,
-      task: 'writing',
-    })
+    const raw = await chat([{ role: 'user', content: user }], { system, task: 'writing' })
     return parseGrade(raw, 'ielts')
   }
 
