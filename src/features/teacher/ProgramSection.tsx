@@ -1,5 +1,5 @@
 // ============================================================================
-// Программа обучения — сторона преподавателя (раскрывашка в карточке ученицы):
+// Программа обучения — сторона преподавателя (раскрывашка в карточке ученика):
 // AI (tier max) составляет недельный план по уровню + цели + диагностике,
 // преподаватель смотрит предпросмотр, просит правки или сохраняет; активная
 // программа показывается с подсветкой текущей недели. Данные — lib/studyPlan.
@@ -103,7 +103,7 @@ function ActivePlanView({
 
   const remove = async () => {
     if (archiving) return
-    if (!confirm('Снять программу? Ученица перестанет её видеть.')) return
+    if (!confirm('Снять программу? Ученик перестанет её видеть.')) return
     setArchiving(true)
     try {
       await archivePlan(plan.id)
@@ -206,7 +206,7 @@ function PlanForm({
         <>
           <div className="grid grid-cols-2 gap-2">
             <label className="flex flex-col gap-1 text-xs text-[var(--night-text-40)]">
-              Уровень ученицы
+              Уровень ученика
               <select value={level} onChange={(e) => setLevel(e.target.value)} className={inputCls}>
                 {LEVELS.map((l) => (
                   <option key={l} value={l}>
@@ -241,7 +241,7 @@ function PlanForm({
             />
           </label>
           <p className="text-xs text-[var(--night-text-40)]">
-            AI учтёт диагностику ученицы: слабые темы грамматики, буксующие слова и баллы по
+            AI учтёт диагностику ученика: слабые темы грамматики, буксующие слова и баллы по
             заданиям.
           </p>
           {err && <p className="text-sm text-red-400">{err}</p>}

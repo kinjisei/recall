@@ -1,4 +1,4 @@
-// Карточка сохранённого материала: показ текста, печать, назначение ученицам,
+// Карточка сохранённого материала: показ текста, печать, назначение ученикам,
 // открытие проверки сданной работы, удаление.
 import { useCallback, useEffect, useState } from 'react'
 import { Card } from '../../../components/Card'
@@ -36,7 +36,7 @@ export function MaterialDetail({
 }) {
   const [assignments, setAssignments] = useState<MaterialAssignment[] | null>(null)
   // сбой загрузки назначений НЕ равен «никому не назначено»: иначе учитель
-  // видит всех ученицами без работы и может переназначить/проглядеть сдачу
+  // видит всех учеников без работы и может переназначить/проглядеть сдачу
   const [loadError, setLoadError] = useState<string | null>(null)
   const [busyStudent, setBusyStudent] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
@@ -68,7 +68,7 @@ export function MaterialDetail({
     if (cur && cur.status !== 'assigned') {
       if (
         !window.confirm(
-          'Убрать эту работу? Ответы ученицы, баллы и проверка удалятся без возможности вернуть.',
+          'Убрать эту работу? Ответы ученика, баллы и проверка удалятся без возможности вернуть.',
         )
       ) {
         return
@@ -91,7 +91,7 @@ export function MaterialDetail({
 
   const remove = async () => {
     if (deleting) return
-    if (!window.confirm('Удалить материал? Назначения учениц тоже удалятся.')) return
+    if (!window.confirm('Удалить материал? Назначения учеников тоже удалятся.')) return
     setDeleting(true)
     setError(null)
     try {
@@ -165,13 +165,13 @@ export function MaterialDetail({
       )}
 
       <Card className="flex flex-col gap-2">
-        <p className="text-sm font-semibold">Назначить ученицам</p>
+        <p className="text-sm font-semibold">Назначить ученикам</p>
         {loadError ? (
           <LoadError message={loadError} onRetry={reload} />
         ) : assignments === null ? (
           <p className="text-sm text-[var(--night-text-40)]">Загрузка…</p>
         ) : students.length === 0 ? (
-          <p className="text-sm text-[var(--night-text-40)]">Пока нет привязанных учениц.</p>
+          <p className="text-sm text-[var(--night-text-40)]">Пока нет привязанных учеников.</p>
         ) : (
           students.map((s) => {
             const a = (assignments ?? []).find((x) => x.student_id === s.profile.id)

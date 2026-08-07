@@ -19,7 +19,7 @@ const langTabs: { id: AppLang; label: string }[] = [
 ]
 
 /**
- * Кружок с инициалом → меню: прогресс, ученицы (у преподавателя), выход.
+ * Кружок с инициалом → меню: прогресс, ученики (у преподавателя), выход.
  * Раньше вёл только на прогресс, а вход в режим преподавателя был лишь
  * карточкой внизу Главной — теперь всё «служебное» собрано в одном месте.
  */
@@ -89,11 +89,11 @@ function AvatarMenu() {
           <Link to="/progress" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
             <IconChart size={17} /> Мой прогресс
           </Link>
-          {isTeacher && (
-            <Link to="/teacher" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
-              <IconTeacher size={17} /> Мои ученицы
-            </Link>
-          )}
+          {/* не-преподавателю показываем вход в режим: до A1 попасть в студию
+              самостоятельно было нельзя вообще, роль выдавалась вручную SQL-ом */}
+          <Link to="/teacher" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
+            <IconTeacher size={17} /> {isTeacher ? 'Мои ученики' : 'Я веду учеников'}
+          </Link>
           <Link to="/pricing" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
             <IconCards size={17} /> Тарифы
           </Link>

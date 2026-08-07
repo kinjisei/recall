@@ -1,14 +1,14 @@
 // ============================================================================
 // Фаза 4: режим «Преподаватель».
-//   Преподаватель: код-приглашение, список учениц с прогрессом, назначение колод.
-//   Ученица: привязка по коду (RPC join_teacher), список своих преподавателей.
+//   Преподаватель: код-приглашение, список учеников с прогрессом, назначение колод.
+//   Ученик: привязка по коду (RPC join_teacher), список своих преподавателей.
 // Доступы разруливает RLS (docs/schema.sql, блок «ФАЗА 4»).
 // ============================================================================
 import { supabase, requireUserId } from './supabase'
-import { PROFILE_COLUMNS } from './profile'
+import { PROFILE_COLUMNS, invalidateProfile } from './profile'
 import type { Card, Deck, Profile } from '../types'
 
-/** Сводка по ученице для экрана преподавателя. */
+/** Сводка по ученику для экрана преподавателя. */
 export interface StudentInfo {
   profile: Profile
   streak: number
@@ -51,9 +51,9 @@ export async function getOrCreateInviteCode(): Promise<string> {
 
 /**
  * Выдаёт НОВЫЙ код-приглашение; старый сразу перестаёт работать.
- * Нужно, если код куда-то утёк (до захода 20 ученица могла прочитать его прямо
+ * Нужно, если код куда-то утёк (до захода 20 ученик мог прочитать его прямо
  * из профиля преподавателя) или его просто разослали лишним людям.
- * Уже привязанные ученицы не отваливаются: связь живёт в teacher_students.
+ * Уже привязанные ученики не отваливаются: связь живёт в teacher_students.
  */
 export async function regenerateInviteCode(): Promise<string> {
   const { data, error } = await supabase.rpc('regenerate_invite_code')
@@ -61,16 +61,40 @@ export async function regenerateInviteCode(): Promise<string> {
   return data as string
 }
 
-/** Ученица вводит код → привязка. Возвращает имя преподавателя. */
+/**
+ * Включить себе роль преподавателя (A1). Раньше роль выдавалась только вручную
+ * SQL-ом, и попасть в студию самостоятельно было нельзя вообще.
+ * Идемпотентно: повторный вызов ничего не ломает.
+ */
+export async function becomeTeacher(): Promise<void> {
+  const { error } = await supabase.rpc('become_teacher')
+  if (error) {
+    if (error.message.includes('RECALL_BLOCKED')) {
+      throw new Error('Аккаунт приостановлен — напиши владельцу приложения.')
+    }
+    // RPC ещё не залита в базу (деплой раньше миграции)
+    if (error.code === 'PGRST202' || error.message.includes('become_teacher')) {
+      throw new Error(
+        'Режим преподавателя пока включается вручную — напиши владельцу приложения.',
+      )
+    }
+    throw new Error(error.message)
+  }
+  invalidateProfile()
+}
+
+/** Ученик вводит код → привязка. Возвращает имя преподавателя. */
 export async function joinTeacher(code: string): Promise<string> {
   const { data, error } = await supabase.rpc('join_teacher', {
     code: code.trim(),
   })
   if (error) {
-    // места тарифа кончились — сообщение из БД техническое, переводим
+    // Места кончились. Текст адресован УЧЕНИКУ и намеренно не говорит, какой у
+    // преподавателя тариф: чужой тариф — не его дело (тот же принцип, что и
+    // закрытые гранты на profiles).
     if (error.message.includes('RECALL_SEATS_FULL')) {
       throw new Error(
-        'У преподавателя закончились места на тарифе. Попроси его расширить тариф — после этого код заработает.',
+        'У преподавателя сейчас нет свободного места для нового ученика. Напиши ему — он освободит место или расширит тариф, и код заработает.',
       )
     }
     throw new Error(error.message)
@@ -78,7 +102,7 @@ export async function joinTeacher(code: string): Promise<string> {
   return (data as string) ?? 'Преподаватель'
 }
 
-/** Преподаватели текущей ученицы (обычно один). */
+/** Преподаватели текущего ученика (обычно один). */
 export async function getMyTeachers(): Promise<Profile[]> {
   const userId = await requireUserId()
   const { data: links, error } = await supabase
@@ -97,7 +121,7 @@ export async function getMyTeachers(): Promise<Profile[]> {
   return (profiles ?? []) as Profile[]
 }
 
-/** Все колоды текущего пользователя (для назначения ученицам). */
+/** Все колоды текущего пользователя (для назначения ученикам). */
 export async function getMyDecks(): Promise<Deck[]> {
   const userId = await requireUserId()
   const { data, error } = await supabase
@@ -109,7 +133,7 @@ export async function getMyDecks(): Promise<Deck[]> {
   return (data ?? []) as Deck[]
 }
 
-/** Ученицы текущего преподавателя со сводкой прогресса. */
+/** Ученики текущего преподавателя со сводкой прогресса. */
 export async function getMyStudents(): Promise<StudentInfo[]> {
   const userId = await requireUserId()
 
@@ -167,7 +191,7 @@ export async function listDeckCards(deckId: string): Promise<Card[]> {
 }
 
 /**
- * Назначить ученице ВЫБОРКУ слов из набора: колода-копия + карточки +
+ * Назначить ученику ВЫБОРКУ слов из набора: колода-копия + карточки +
  * назначение — ОДНОЙ транзакцией (RPC assign_selected_words): раньше сбой на
  * середине оставлял колоду-сироту, а ретраи плодили дубликаты (ревью
  * 2026-07-24). Возвращает число скопированных карточек.
@@ -194,7 +218,7 @@ export async function assignSelectedWords(
   return (data as number) ?? cards.length
 }
 
-/** Назначить колоду ученице. */
+/** Назначить колоду ученику. */
 export async function assignDeck(deckId: string, studentId: string): Promise<void> {
   const { error } = await supabase
     .from('deck_assignments')

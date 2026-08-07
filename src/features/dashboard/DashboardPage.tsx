@@ -81,7 +81,7 @@ export function DashboardPage() {
   const [wordOfDay, setWordOfDay] = useState<PoolItem | null>(null)
   // один запрос на обе плашки заданий (top и bottom)
   const [assignments, setAssignments] = useState<AssignmentCounts | null>(null)
-  // программа, которую ученица ещё не открывала (флаг recall.program_seen.<id>)
+  // программа, которую ученик ещё не открывал (флаг recall.program_seen.<id>)
   const [newProgram, setNewProgram] = useState<StudyPlan | null>(null)
   const [myPlan, setMyPlan] = useState<MyPlan | null>(null)
   // план дня: ВСЕ его входы (настройка учителя, задания, квесты) грузятся

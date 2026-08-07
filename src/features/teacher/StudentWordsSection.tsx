@@ -1,5 +1,5 @@
 // ============================================================================
-// «Слова» ученицы у преподавателя: список слов со статусом изученности,
+// «Слова» ученика у преподавателя: список слов со статусом изученности,
 // выбор галочками → назначить перепроверку; результаты прошлых перепроверок.
 // ============================================================================
 import { useCallback, useEffect, useState } from 'react'
@@ -14,7 +14,7 @@ import {
 } from '../../lib/wordChecks'
 import type { WordCheck } from '../../types'
 
-// цвета — общий WORD_STATUS_CLS (тот же, что видит ученица); подписи от 3-го лица
+// цвета — общий WORD_STATUS_CLS (тот же, что видит ученик); подписи от 3-го лица
 const statusChip = {
   new: { label: 'новое', cls: WORD_STATUS_CLS.new },
   learning: { label: 'учится', cls: WORD_STATUS_CLS.learning },
@@ -72,7 +72,7 @@ export function StudentWordsSection({ studentId }: { studentId: string }) {
   }
 
   // ошибка загрузки — отдельно от «слов нет»: иначе преподаватель видел бы
-  // пустой список у ученицы, у которой слова есть
+  // пустой список у ученика, у которого слова есть
   if (loadError) return <LoadError message={loadError} onRetry={reload} />
   if (words === null) return <p className="text-sm text-[var(--night-text-40)]">Загружаю слова…</p>
 
@@ -124,7 +124,7 @@ export function StudentWordsSection({ studentId }: { studentId: string }) {
       )}
 
       {words.length === 0 ? (
-        <p className="text-sm text-[var(--night-text-40)]">У ученицы пока нет своих слов.</p>
+        <p className="text-sm text-[var(--night-text-40)]">У ученика пока нет своих слов.</p>
       ) : (
         <>
           <p className="text-xs text-[var(--night-text-40)]">

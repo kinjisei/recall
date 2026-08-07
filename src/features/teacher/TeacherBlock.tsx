@@ -6,7 +6,7 @@ import { joinTeacher, getMyTeachers } from '../../lib/teacher'
 import { countSubmittedWorks, getMyAssignments } from '../../lib/materials'
 import type { Profile } from '../../types'
 
-/** Сколько заданий у ученицы всего и сколько ещё не сдано. */
+/** Сколько заданий у ученика всего и сколько ещё не сдано. */
 export interface AssignmentCounts {
   total: number
   pending: number
@@ -27,8 +27,8 @@ export async function loadAssignmentCounts(): Promise<AssignmentCounts> {
 
 /**
  * Блок «Преподаватель» на Главной (Фаза 4).
- * Преподавателю — ссылка на экран учениц; ученице — привязка по коду
- * и имя её преподавателя, когда привязка уже есть.
+ * Преподавателю — ссылка на экран учеников; ученику — привязка по коду
+ * и имя его преподавателя, когда привязка уже есть.
  */
 export function TeacherBlock({ profile }: { profile: Profile | null }) {
   if (!profile) return null
@@ -52,7 +52,7 @@ function TeacherCard() {
     <Link to="/teacher">
       <Card className="flex items-center justify-between transition-transform active:scale-[0.99]">
         <div>
-          <p className="font-semibold">Мои ученицы</p>
+          <p className="font-semibold">Мои ученики</p>
           <p className="text-sm text-[var(--night-text-40)]">
             {pending > 0
               ? `Работ на проверку: ${pending}`
@@ -72,7 +72,7 @@ function TeacherCard() {
 }
 
 /**
- * Уведомление «Задания от преподавателя» у ученицы.
+ * Уведомление «Задания от преподавателя» у ученика.
  * placement="top" — заметная плашка под стриком, ТОЛЬКО пока есть несданные;
  * placement="bottom" — спокойная карточка внизу, когда всё сдано (для доступа
  * к выполненным работам и разборам).

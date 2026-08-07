@@ -1,8 +1,8 @@
 // ============================================================================
-// Проверка письма преподавателем (Заход 5c): текст ученицы + AI-оценка → учитель
+// Проверка письма преподавателем (Заход 5c): текст ученика + AI-оценка → учитель
 // оставляет/убирает правки AI, ставит итоговый балл и комментарий → «Завершить
 // проверку» (teacher_review, статус reviewed). Или «Переназначить на доработку»
-// (текущий цикл уходит в историю attempts, ученица правит поверх прошлого текста).
+// (текущий цикл уходит в историю attempts, ученик правит поверх прошлого текста).
 // ============================================================================
 import { useState } from 'react'
 import { Card } from '../../components/Card'
@@ -62,7 +62,7 @@ export function WritingReviewScreen({
   }
 
   const reassign = async () => {
-    const note = prompt('Комментарий ученице «на что обратить внимание» (необязательно):') ?? ''
+    const note = prompt('Комментарий ученику «на что обратить внимание» (необязательно):') ?? ''
     setBusy('reassign')
     setError(null)
     try {
@@ -95,7 +95,7 @@ export function WritingReviewScreen({
       </Card>
 
       <Card>
-        <p className="mb-1 text-[10px] uppercase tracking-wider text-[var(--night-text-40)]">Текст ученицы</p>
+        <p className="mb-1 text-[10px] uppercase tracking-wider text-[var(--night-text-40)]">Текст ученика</p>
         <p className="whitespace-pre-wrap leading-relaxed text-[var(--night-text-70)]">
           {assignment.essay || '(пусто)'}
         </p>
@@ -153,7 +153,7 @@ export function WritingReviewScreen({
 
         <div>
           <p className="mb-1 text-[10px] uppercase tracking-wider text-[var(--night-text-40)]">
-            Комментарий ученице
+            Комментарий ученику
           </p>
           <textarea
             className="min-h-[72px] w-full rounded-lg border border-white/[0.10] bg-[var(--night-input)] px-3 py-2 outline-none focus:border-[var(--night-accent-45)]"

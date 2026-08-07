@@ -100,7 +100,7 @@ export function WritingSection({ students }: { students: StudentInfo[] }) {
         <Card className="text-center">
           <p className="font-semibold">Пока нет заданий</p>
           <p className="mt-1 text-sm text-[var(--night-text-40)]">
-            Создай письмо в режиме IELTS или обычного эссе и назначь ученицам.
+            Создай письмо в режиме IELTS или обычного эссе и назначь ученикам.
           </p>
         </Card>
       ) : (
@@ -281,7 +281,7 @@ function WritingForm({
               </div>
             </div>
             <div>
-              <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">Уровень ученицы</p>
+              <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">Уровень ученика</p>
               <div className="flex flex-wrap gap-2">
                 {LEVELS.map((l) => (
                   <button key={l} className={chipCls(level === l)} onClick={() => setLevel(l)}>{l}</button>
@@ -373,7 +373,7 @@ function WritingForm({
 }
 
 // ---------------------------------------------------------------------------
-// Карточка задания: назначение ученицам + удаление.
+// Карточка задания: назначение ученикам + удаление.
 // ---------------------------------------------------------------------------
 
 function WritingDetail({
@@ -429,7 +429,7 @@ function WritingDetail({
   }
 
   const remove = async () => {
-    if (!confirm('Удалить это задание? Назначения ученицам тоже пропадут.')) return
+    if (!confirm('Удалить это задание? Назначения ученикам тоже пропадут.')) return
     setDeleting(true)
     try {
       await deleteWritingTask(task.id)
@@ -467,13 +467,13 @@ function WritingDetail({
       </Card>
 
       <Card className="flex flex-col gap-2">
-        <p className="text-sm font-semibold">Назначить ученицам</p>
+        <p className="text-sm font-semibold">Назначить ученикам</p>
         {error ? (
           <LoadError message={error} onRetry={reload} />
         ) : loading ? (
           <p className="text-sm text-[var(--night-text-40)]">Загрузка…</p>
         ) : students.length === 0 ? (
-          <p className="text-sm text-[var(--night-text-40)]">Пока нет привязанных учениц.</p>
+          <p className="text-sm text-[var(--night-text-40)]">Пока нет привязанных учеников.</p>
         ) : (
           students.map((st) => {
             const a = (assignments ?? []).find((x) => x.student_id === st.profile.id)

@@ -1,12 +1,12 @@
 // ============================================================================
 // AI-квесты по грамматике (см. блок «AI-КВЕСТЫ» в docs/schema.sql).
 // Запись — только через security-definer RPC: назначает учитель, прогресс
-// и переписку пишет ученица. Чтение — по RLS (обе стороны).
+// и переписку пишет ученик. Чтение — по RLS (обе стороны).
 // ============================================================================
 import { supabase, toJson } from './supabase'
 import type { AppLang, ChatTurn, GrammarQuest } from '../types'
 
-/** Квесты текущей ученицы (новые сверху). */
+/** Квесты текущего ученика (новые сверху). */
 export async function listMyQuests(): Promise<GrammarQuest[]> {
   const { data: auth } = await supabase.auth.getUser()
   if (!auth.user) return []
@@ -19,7 +19,7 @@ export async function listMyQuests(): Promise<GrammarQuest[]> {
   return (data ?? []) as GrammarQuest[]
 }
 
-/** Квесты конкретной ученицы — для карточки на экране преподавателя. */
+/** Квесты конкретного ученика — для карточки на экране преподавателя. */
 export async function listStudentQuests(studentId: string): Promise<GrammarQuest[]> {
   const { data, error } = await supabase
     .from('grammar_quests')

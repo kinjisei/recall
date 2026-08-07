@@ -85,7 +85,7 @@ export async function listWritingAssignments(taskId: string): Promise<WritingTas
   return (data ?? []) as WritingTaskAssignment[]
 }
 
-/** Письменные задания текущей ученицы вместе с самим заданием. */
+/** Письменные задания текущего ученика вместе с самим заданием. */
 export async function getMyWritingAssignments(): Promise<
   (WritingTaskAssignment & { task: WritingTask })[]
 > {
@@ -101,7 +101,7 @@ export async function getMyWritingAssignments(): Promise<
     .map(({ writing_tasks, ...a }) => ({ ...(a as WritingTaskAssignment), task: writing_tasks as WritingTask }))
 }
 
-/** Ученица сдаёт (или пересдаёт) письмо — essay + AI-оценка, статус submitted. */
+/** Ученик сдаёт (или пересдаёт) письмо — essay + AI-оценка, статус submitted. */
 export async function submitWriting(
   assignmentId: string,
   essay: string,
@@ -131,7 +131,7 @@ export async function finishWritingReview(
   if (error) throw new Error(error.message)
 }
 
-/** Переназначить письмо той же ученице (текущий цикл уходит в историю). */
+/** Переназначить письмо тому же ученику (текущий цикл уходит в историю). */
 export async function reassignWriting(assignmentId: string, note: string): Promise<void> {
   const { error } = await supabase.rpc('reassign_writing', { p_id: assignmentId, p_note: note })
   if (error) throw new Error(error.message)
@@ -147,7 +147,7 @@ export async function countSubmittedWriting(): Promise<number> {
   return count ?? 0
 }
 
-/** Сколько письменных заданий у ученицы (для строки в «Учёбе»). */
+/** Сколько письменных заданий у ученика (для строки в «Учёбе»). */
 export async function countMyWritingTasks(): Promise<{ total: number; pending: number }> {
   const userId = await requireUserId()
   const { data, error } = await supabase

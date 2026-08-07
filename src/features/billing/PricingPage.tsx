@@ -72,7 +72,7 @@ function PlanCardView({ plan }: { plan: PlanCard }) {
         <h3 className="font-medium">{plan.title}</h3>
         {plan.studentLimit && (
           <span className="rounded-full bg-white/[0.06] px-2.5 py-1 text-xs text-[var(--night-text-40)]">
-            до {plan.studentLimit} учениц
+            до {plan.studentLimit} учеников
           </span>
         )}
       </div>

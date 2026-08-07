@@ -26,7 +26,7 @@ export async function getMyDailyPlanConfig(): Promise<DailyPlanConfig | null> {
   return { kinds, auto: raw.auto !== false }
 }
 
-/** Учителю: текущая настройка плана ученицы. */
+/** Учителю: текущая настройка плана ученика. */
 export async function getStudentDailyPlan(studentId: string): Promise<DailyPlanConfig | null> {
   const teacherId = await requireUserId()
   const { data, error } = await supabase

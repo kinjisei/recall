@@ -107,7 +107,7 @@ export type AiTask =
   | 'material'
   | 'program'
 
-/** AI-квест по грамматике: учитель назначает, ученица играет с AI. */
+/** AI-квест по грамматике: учитель назначает, ученик играет с AI. */
 export interface GrammarQuest {
   id: string
   teacher_id: string
@@ -130,10 +130,10 @@ export interface GrammarQuest {
 
 // ---------------------------------------------------------------------------
 // Программа обучения по неделям (таблица study_plans): AI составляет по
-// диагностике, преподаватель утверждает, ученица видит свою неделю.
+// диагностике, преподаватель утверждает, ученик видит свою неделю.
 // ---------------------------------------------------------------------------
 
-/** Тип пункта недели — определяет иконку и куда ведёт ссылка у ученицы. */
+/** Тип пункта недели — определяет иконку и куда ведёт ссылка у ученика. */
 export type PlanItemType =
   | 'grammar' // урок грамматики (topicId — из встроенных уроков)
   | 'words' // лексика: паки/карточки
@@ -147,7 +147,7 @@ export interface PlanItem {
   type: PlanItemType
   /** Короткая формулировка («Past Simple: вопросы», «20 слов „Еда“»). */
   title: string
-  /** Пояснение для ученицы (зачем/как заниматься), по-русски. */
+  /** Пояснение для ученика (зачем/как заниматься), по-русски. */
   note: string
   /** id встроенного урока грамматики (только для type='grammar'). */
   topicId?: number
@@ -342,7 +342,7 @@ export interface Material {
 
 export type AssignmentStatus = 'assigned' | 'submitted' | 'reviewed'
 
-/** Ответ ученицы на одно упражнение. */
+/** Ответ ученика на одно упражнение. */
 export interface AssignmentAnswer {
   index: number
   given: string
@@ -367,7 +367,7 @@ export interface AttemptSnapshot {
   note: string | null
 }
 
-/** Назначение материала ученице + её работа (таблица material_assignments). */
+/** Назначение материала ученику + его работа (таблица material_assignments). */
 export interface MaterialAssignment {
   id: string
   material_id: string
@@ -462,7 +462,7 @@ export interface WritingAttempt {
   at: string
 }
 
-/** Назначение письма ученице + её работа (таблица writing_task_assignments). */
+/** Назначение письма ученику + его работа (таблица writing_task_assignments). */
 export interface WritingTaskAssignment {
   id: string
   task_id: string
@@ -480,7 +480,7 @@ export interface WritingTaskAssignment {
 }
 
 // ---------------------------------------------------------------------------
-// Перепроверка слов: учитель выбирает слова ученицы, она печатает их по памяти.
+// Перепроверка слов: учитель выбирает слова ученика, он печатает их по памяти.
 // ---------------------------------------------------------------------------
 
 /** Результат по одному слову перепроверки. */
@@ -488,7 +488,7 @@ export interface WordCheckResult {
   card_id: string
   front: string // слово (для отчёта учителю, даже если карточку удалят)
   back: string | null
-  given: string // что напечатала ученица
+  given: string // что напечатал ученик
   ok: boolean
 }
 

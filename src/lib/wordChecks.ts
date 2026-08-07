@@ -1,5 +1,5 @@
 // ============================================================================
-// Перепроверка слов: учитель выбирает слова из колоды ученицы, ученица
+// Перепроверка слов: учитель выбирает слова из колоды ученика, ученик
 // печатает их по памяти (рус → англ/исп). Неверные возвращаются в колоду
 // оценкой «again». Таблица word_checks, RLS — docs/schema.sql.
 // ============================================================================
@@ -10,7 +10,7 @@ import type { Card, ReviewState, WordCheck, WordCheckResult } from '../types'
 /** Статус изученности слова (по интервалу FSRS). */
 export type WordStatus = 'new' | 'learning' | 'learned'
 
-/** Единая цветовая кодировка статуса (токены Nocturne) — одинаково у ученицы
+/** Единая цветовая кодировка статуса (токены Nocturne) — одинаково у ученика
  *  («Мои слова») и у преподавателя, чтобы «учу» не был двух разных цветов.
  *  Подпись задаётся на месте (перспектива: «учу» у себя / «учится» у учителя). */
 export const WORD_STATUS_CLS: Record<WordStatus, string> = {
@@ -35,7 +35,7 @@ export function statusOf(state: ReviewState | null): { status: WordStatus; inter
   return { status: 'learning', intervalDays: days }
 }
 
-/** Слова ученицы с расписаниями (для экрана выбора у преподавателя). */
+/** Слова ученика с расписаниями (для экрана выбора у преподавателя). */
 export async function getStudentWords(studentId: string): Promise<StudentWord[]> {
   const { data: decks, error: dErr } = await supabase
     .from('decks')
@@ -73,7 +73,7 @@ export async function assignWordCheck(studentId: string, cardIds: string[]): Pro
   if (error) throw new Error(error.message)
 }
 
-/** Перепроверки, назначенные ученице (для отчёта у преподавателя). */
+/** Перепроверки, назначенные ученику (для отчёта у преподавателя). */
 export async function getWordChecks(studentId: string): Promise<WordCheck[]> {
   const { data, error } = await supabase
     .from('word_checks')
@@ -84,7 +84,7 @@ export async function getWordChecks(studentId: string): Promise<WordCheck[]> {
   return (data ?? []) as WordCheck[]
 }
 
-/** Незавершённые перепроверки текущей ученицы + карточки к ним. */
+/** Незавершённые перепроверки текущего ученика + карточки к ним. */
 export async function getMyPendingWordChecks(): Promise<
   { check: WordCheck; cards: Card[] }[]
 > {

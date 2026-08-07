@@ -53,7 +53,7 @@ export function GuideSection() {
   return (
     <div className="flex flex-col gap-3">
       <p className="text-sm text-[var(--night-text-40)]">
-        Как вести учениц в Recall: рабочий цикл, реакции на диагностику, проверенные
+        Как вести учеников в Recall: рабочий цикл, реакции на диагностику, проверенные
         методики и типичные ошибки. Читается за 15 минут, применяется годами.
       </p>
 

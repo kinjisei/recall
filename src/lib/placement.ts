@@ -1,7 +1,7 @@
 // ============================================================================
 // Тест уровня, назначенный преподавателем.
 // Раньше уровень можно было только попросить пройти на словах, а результат по
-// испанскому оставался в localStorage ученицы — учитель его не видел.
+// испанскому оставался в localStorage ученика — учитель его не видел.
 // Таблица placement_requests + RPC (docs/schema.sql, блок «ТЕСТ УРОВНЯ ОТ
 // ПРЕПОДАВАТЕЛЯ»): запись только через функции, чтение — обеим сторонам.
 // ============================================================================
@@ -19,7 +19,7 @@ export interface PlacementRequest {
   completed_at: string | null
 }
 
-/** Преподаватель назначает тест своей ученице. */
+/** Преподаватель назначает тест своему ученику. */
 export async function assignPlacement(studentId: string, lang: AppLang): Promise<void> {
   const { error } = await supabase.rpc('assign_placement', {
     p_student_id: studentId,
@@ -34,7 +34,7 @@ export async function cancelPlacement(id: string): Promise<void> {
   if (error) throw new Error(error.message)
 }
 
-/** Все тесты, назначенные этой ученице (для карточки у преподавателя). */
+/** Все тесты, назначенные этому ученику (для карточки у преподавателя). */
 export async function listPlacements(studentId: string): Promise<PlacementRequest[]> {
   const { data, error } = await supabase
     .from('placement_requests')
@@ -46,7 +46,7 @@ export async function listPlacements(studentId: string): Promise<PlacementReques
 }
 
 /**
- * Незакрытая просьба пройти тест — для строки в «Учёбе» у ученицы.
+ * Незакрытая просьба пройти тест — для строки в «Учёбе» у ученика.
  * null, если теста никто не назначал.
  */
 export async function myPendingPlacement(lang: AppLang): Promise<PlacementRequest | null> {
@@ -67,7 +67,7 @@ export async function myPendingPlacement(lang: AppLang): Promise<PlacementReques
 }
 
 /**
- * Ученица закончила тест — закрываем просьбу и отдаём результат преподавателю.
+ * Ученик закончил тест — закрываем просьбу и отдаём результат преподавателю.
  * Тихо игнорирует ошибки: тест мог никто не назначать, и это норма.
  * Возвращает true, если просьба действительно была закрыта.
  */

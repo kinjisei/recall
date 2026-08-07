@@ -190,7 +190,7 @@ export function ReviewScreen({
                 </p>
                 <p className="text-sm font-medium">{ex.prompt}</p>
                 <p className="text-sm">
-                  Ответ ученицы:{' '}
+                  Ответ ученика:{' '}
                   <span className={item.ok ? 'font-semibold text-emerald-400' : 'font-semibold text-red-500'}>
                     {given}
                   </span>
@@ -231,7 +231,7 @@ export function ReviewScreen({
                     </div>
                     <textarea
                       className="min-h-[120px] w-full rounded-lg border border-white/[0.10] bg-[var(--night-input)] px-3 py-2 text-sm leading-relaxed outline-none focus:border-[var(--night-accent-45)]"
-                      placeholder="Комментарий для ученицы: что не так и как правильно…"
+                      placeholder="Комментарий для ученика: что не так и как правильно…"
                       value={item.comment}
                       onChange={(e) => setItem(i, { comment: e.target.value })}
                     />
@@ -263,7 +263,7 @@ export function ReviewScreen({
                   <p className="text-sm font-semibold">Переназначить материал</p>
                   <textarea
                     className="min-h-[100px] w-full rounded-lg border border-white/[0.10] bg-[var(--night-input)] px-3 py-2 text-sm leading-relaxed outline-none focus:border-[var(--night-accent-45)]"
-                    placeholder="Комментарий для ученицы: на что обратить внимание в этот раз…"
+                    placeholder="Комментарий для ученика: на что обратить внимание в этот раз…"
                     value={reassignNote}
                     onChange={(e) => setReassignNote(e.target.value)}
                     disabled={reassignBusy}

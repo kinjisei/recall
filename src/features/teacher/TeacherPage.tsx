@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { IconGraduation, IconFlame } from '../../components/icons'
+import { Link, useNavigate } from 'react-router-dom'
+import { IconGraduation, IconFlame, IconBadgeCheck } from '../../components/icons'
 import { BackHeader } from '../../components/BackButton'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
@@ -9,6 +9,7 @@ import { useAuth } from '../../context/AuthContext'
 import {
   getOrCreateInviteCode,
   regenerateInviteCode,
+  becomeTeacher,
   getMyStudents,
   getMyDecks,
   assignDeck,
@@ -37,7 +38,7 @@ export function TeacherPage() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
+  const reload = useCallback(() => {
     if (!user) return
     // кэш профиля — Главная и меню аватара уже запрашивали тот же ряд
     getProfile(user.id).then((p) => {
@@ -46,26 +47,90 @@ export function TeacherPage() {
     })
   }, [user])
 
+  useEffect(reload, [reload])
+
   if (loading) return <p className="text-[var(--night-text-40)]">Загрузка…</p>
 
   if (profile?.role !== 'teacher') {
-    return (
-      <div className="flex flex-col gap-4">
-        <BackHeader onBack={() => navigate('/')} title="Преподаватель" label="На главную" />
-        <Card>
-          <p className="text-[var(--night-text-70)]">
-            Этот раздел доступен только аккаунтам с ролью «преподаватель».
-          </p>
-          <p className="mt-2 text-sm text-[var(--night-text-40)]">
-            Роль включается один раз в базе (Supabase → SQL Editor) — попроси
-            владельца приложения.
-          </p>
-        </Card>
-      </div>
-    )
+    return <BecomeTeacher onDone={reload} onBack={() => navigate('/')} />
   }
 
   return <TeacherDashboard />
+}
+
+// --- Включение режима преподавателя ----------------------------------------
+// Раньше здесь стояла заглушка «попроси владельца включить роль в SQL Editor» —
+// то есть репетитор, пришедший сам, не мог начать вообще (A1 в docs/mkt/19-fix-plan).
+
+const TEACHER_PERKS = [
+  'Привязываешь учеников по коду — они занимаются, ты видишь результат',
+  'AI проверяет письменные работы, ты правишь вердикт, если не согласен',
+  'Карта ошибок ученика: какие слова не держатся, какие темы валит',
+  'Отчёт родителям на печать — в одну кнопку',
+]
+
+function BecomeTeacher({ onDone, onBack }: { onDone: () => void; onBack: () => void }) {
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  // число бесплатных мест живёт в БД (free_teacher_seats) — здесь только показываем
+  const [freeSeats, setFreeSeats] = useState<number | null>(null)
+
+  useEffect(() => {
+    getMyPlan().then((p) => setFreeSeats(p?.free_seats ?? null))
+  }, [])
+
+  const enable = async () => {
+    setBusy(true)
+    setError(null)
+    try {
+      await becomeTeacher()
+      onDone()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Не получилось включить режим')
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <BackHeader onBack={onBack} title="Преподаватель" label="На главную" />
+      <Card>
+        <div className="flex items-start gap-3">
+          <span className="flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-[var(--night-accent-900)] text-[var(--night-accent-100)]">
+            <IconGraduation size={22} />
+          </span>
+          <div>
+            <h2 className="text-[17px] font-medium">Ведёшь учеников?</h2>
+            <p className="mt-1 text-sm text-[var(--night-text-70)]">
+              Включи режим преподавателя — появится своя студия с кодом-приглашением.
+            </p>
+          </div>
+        </div>
+
+        <ul className="mt-4 flex flex-col gap-2">
+          {TEACHER_PERKS.map((p) => (
+            <li key={p} className="flex gap-2.5 text-sm text-[var(--night-text-70)]">
+              <IconBadgeCheck size={17} className="mt-0.5 flex-none text-[var(--night-accent)]" />
+              {p}
+            </li>
+          ))}
+        </ul>
+
+        {error && <p className="mt-4 text-sm text-rose-300">{error}</p>}
+
+        <Button className="mt-5 w-full" onClick={enable} loading={busy}>
+          Включить режим преподавателя
+        </Button>
+        <p className="mt-3 text-center text-xs text-[var(--night-text-40)]">
+          {freeSeats
+            ? `Бесплатно можно вести до ${freeSeats} учеников. `
+            : 'Начать можно бесплатно. '}
+          Больше — на тарифе для преподавателей. Учиться самому это не мешает:
+          всё остальное останется как было.
+        </p>
+      </Card>
+    </div>
+  )
 }
 
 type TeacherTab = 'students' | 'materials' | 'writing' | 'guide'
@@ -84,7 +149,7 @@ function TeacherDashboard() {
   const [error, setError] = useState<string | null>(null)
 
   // «Загрузка…» только при первом открытии: при обновлениях список остаётся
-  // на экране, иначе раскрытые колоды учениц схлопываются при каждом действии.
+  // на экране, иначе раскрытые колоды учеников схлопываются при каждом действии.
   const load = useCallback(async () => {
     setError(null)
     try {
@@ -123,10 +188,10 @@ function TeacherDashboard() {
     }
   }
 
-  // Перевыпуск кода: старый сразу перестаёт работать, уже привязанные ученицы
+  // Перевыпуск кода: старый сразу перестаёт работать, уже привязанные ученики
   // остаются. Спрашиваем подтверждение — действие необратимое.
   const changeCode = async () => {
-    if (!confirm('Выдать новый код? Старый перестанет работать сразу. Уже привязанные ученицы останутся.')) {
+    if (!confirm('Выдать новый код? Старый перестанет работать сразу. Уже привязанные ученики останутся.')) {
       return
     }
     setRegenerating(true)
@@ -155,7 +220,7 @@ function TeacherDashboard() {
       <div className="flex gap-2">
         {(
           [
-            ['students', 'Ученицы'],
+            ['students', 'Ученики'],
             ['materials', 'Материалы'],
             ['writing', 'Письмо'],
             ['guide', 'Методичка'],
@@ -203,7 +268,7 @@ function TeacherDashboard() {
           )}
           <Card>
             <p className="text-sm text-[var(--night-text-40)]">
-              Код-приглашение — ученица вводит его у себя на Главной:
+              Код-приглашение — ученик вводит его у себя на Главной:
             </p>
             <div className="mt-2 flex items-center gap-3">
               <span className="rounded-xl bg-white/[0.08] px-4 py-2 font-mono text-2xl font-bold tracking-widest">
@@ -226,6 +291,7 @@ function TeacherDashboard() {
                 если код попал не тем — старый перестанет работать
               </span>
             </div>
+            <Seats plan={myPlan} used={students.length} />
           </Card>
 
           {error && (
@@ -239,9 +305,9 @@ function TeacherDashboard() {
           ) : students.length === 0 ? (
             <Card className="text-center">
               <IconGraduation size={40} className="mx-auto block text-[var(--night-text-40)]" />
-              <p className="mt-2 font-semibold">Пока ни одной ученицы</p>
+              <p className="mt-2 font-semibold">Пока ни одного ученика</p>
               <p className="mt-1 text-sm text-[var(--night-text-40)]">
-                Отправь код-приглашение — после ввода кода ученица появится здесь.
+                Отправь код-приглашение — после ввода кода ученик появится здесь.
               </p>
             </Card>
           ) : (
@@ -356,7 +422,7 @@ function StudentCard({
                   <DeckWordsPicker
                     deck={d}
                     studentId={p.id}
-                    studentName={p.display_name ?? 'ученицы'}
+                    studentName={p.display_name ?? 'ученика'}
                     onAssigned={onChanged}
                   />
                 )}
@@ -374,12 +440,12 @@ function StudentCard({
         {showDiag ? '▾ Скрыть диагностику' : '▸ Диагностическая карта'}
       </button>
       {showDiag && (
-        <DiagnosticsSection studentId={p.id} studentName={p.display_name ?? 'Ученица'} />
+        <DiagnosticsSection studentId={p.id} studentName={p.display_name ?? 'Ученик'} />
       )}
 
-      {/* тест уровня — своя раскрывашка: нужна в первую очередь с новой
-          ученицей, когда уровень ещё неизвестен */}
-      <PlacementSection studentId={p.id} studentName={p.display_name ?? 'ученица'} />
+      {/* тест уровня — своя раскрывашка: нужна в первую очередь с новым
+          учеником, когда уровень ещё неизвестен */}
+      <PlacementSection studentId={p.id} studentName={p.display_name ?? 'ученик'} />
 
       <button
         onClick={() => setShowPlanDay((v) => !v)}
@@ -416,8 +482,38 @@ function StudentCard({
   )
 }
 
-// Панель энергии студии (E3): общий дневной пул на всех учениц + месячные
-// генерации материалов/программ. Показывается на вкладке «Ученицы».
+// Панель энергии студии (E3): общий дневной пул на всех учеников + месячные
+// генерации материалов/программ. Показывается на вкладке «Ученики».
+/**
+ * Занятые места. Молчит, если миграция «САМОСТОЯТЕЛЬНАЯ РОЛЬ» ещё не залита
+ * (seats тогда не приходит) или если аккаунт админский — у владельца лимитов нет.
+ */
+function Seats({ plan, used }: { plan: MyPlan | null; used: number }) {
+  if (!plan || typeof plan.seats !== 'number' || plan.is_admin) return null
+  const total = plan.seats
+  const full = used >= total
+  const onFreeSeats = typeof plan.free_seats === 'number' && total === plan.free_seats
+
+  return (
+    <div className="mt-3 border-t border-white/[0.06] pt-3">
+      <p className="text-xs text-[var(--night-text-40)]">
+        Занято мест: <span className="text-[var(--night-text-70)]">{used} из {total}</span>
+      </p>
+      {full && (
+        <p className="mt-1.5 text-xs text-[var(--night-text-70)]">
+          {onFreeSeats
+            ? `На бесплатном тарифе можно вести до ${total} учеников. Чтобы взять больше — `
+            : 'Места тарифа заняты. Чтобы взять больше учеников — '}
+          <Link to="/pricing" className="text-[var(--night-accent)] underline underline-offset-2">
+            подключи тариф
+          </Link>
+          . Уже привязанные ученики останутся в любом случае.
+        </p>
+      )}
+    </div>
+  )
+}
+
 function StudioEnergy({ plan }: { plan: MyPlan }) {
   const max = plan.energy_max ?? 0
   const spent = plan.energy_spent ?? 0
@@ -444,7 +540,7 @@ function StudioEnergy({ plan }: { plan: MyPlan }) {
         </div>
         {bar(spent, max)}
         <p className="mt-1 text-xs text-[var(--night-text-40)]">
-          Общий дневной запас на всех учениц. Пополняется утром.
+          Общий дневной запас на всех учеников. Пополняется утром.
         </p>
       </div>
       {genLim > 0 && (

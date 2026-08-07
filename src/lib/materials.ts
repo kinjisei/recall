@@ -362,7 +362,7 @@ export async function listMaterialAssignments(
   return (data ?? []) as MaterialAssignment[]
 }
 
-/** Задания текущей ученицы вместе с материалами. */
+/** Задания текущего ученика вместе с материалами. */
 export async function getMyAssignments(): Promise<
   (MaterialAssignment & { material: Material })[]
 > {
@@ -378,7 +378,7 @@ export async function getMyAssignments(): Promise<
     .map(({ materials, ...a }) => ({ ...(a as MaterialAssignment), material: materials as Material }))
 }
 
-/** Ученица сдаёт работу: ответы + авто-балл, статус submitted (через RPC). */
+/** Ученик сдаёт работу: ответы + авто-балл, статус submitted (через RPC). */
 export async function submitAssignment(
   assignmentId: string,
   answers: AssignmentAnswer[],
@@ -432,7 +432,7 @@ export async function listSubmittedWorks(): Promise<SubmittedWork[]> {
   const rows = (data ?? []) as (MaterialAssignment & { materials: Material | null })[]
   if (rows.length === 0) return []
 
-  // имена учениц одним запросом (RLS «linked profiles visible» разрешает)
+  // имена учеников одним запросом (RLS «linked profiles visible» разрешает)
   const ids = [...new Set(rows.map((r) => r.student_id))]
   const { data: profs } = await supabase
     .from('profiles')
@@ -445,7 +445,7 @@ export async function listSubmittedWorks(): Promise<SubmittedWork[]> {
     .map(({ materials, ...assignment }) => ({
       assignment,
       material: materials as Material,
-      studentName: names.get(assignment.student_id) ?? 'Ученица',
+      studentName: names.get(assignment.student_id) ?? 'Ученик',
     }))
 }
 
@@ -527,7 +527,7 @@ export async function finishReview(
 }
 
 /**
- * Переназначить проверенный материал той же ученице: текущая работа уходит
+ * Переназначить проверенный материал тому же ученику: текущая работа уходит
  * в историю (attempts), назначение сбрасывается в assigned, note — комментарий
  * преподавателя «на что обратить внимание в этот раз». Снимок и сброс — на
  * сервере (RPC), чтобы клиент не мог подделать историю.

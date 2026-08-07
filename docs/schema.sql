@@ -2667,6 +2667,186 @@
     );
   end $fn$;
 
+  -- ============================================================================
+  -- САМОСТОЯТЕЛЬНАЯ РОЛЬ ПРЕПОДАВАТЕЛЯ (2026-08-06, заход A1 из docs/mkt/19-fix-plan)
+  -- Проблема: роль teacher выдавалась ТОЛЬКО вручную через SQL Editor. У аккаунта
+  -- learner не было ни одного пути к студии — экран прямо отправлял «попроси
+  -- владельца». Любой репетитор, пришедший из рассылки или с конференции, упирался
+  -- в стену на первой минуте, то есть всё привлечение преподавателей было
+  -- заблокировано.
+  -- Решение владельца: роль выдаётся сразу по кнопке, но бесплатно можно вести
+  -- не больше 3 учеников; больше — только с оплаченным тарифом. Триал (14 дней)
+  -- не меняется.
+  -- Блок idempotent.
+  -- ============================================================================
+
+  -- ЕДИНСТВЕННОЕ место, где живёт число бесплатных мест. Менять здесь.
+  create or replace function public.free_teacher_seats()
+  returns int language sql immutable as $fn$ select 3 $fn$;
+
+  -- Сколько мест реально доступно преподавателю СЕЙЧАС.
+  -- Оплаченный тариф с не истёкшим сроком → места тарифа; во всех остальных
+  -- случаях (free, триал, истёкший тариф) → бесплатные места.
+  -- ⚠️ Принимает чужой uid → тот же класс утечки, что был у energy_source:
+  -- по нему можно было бы узнать тариф чужого. EXECUTE отзывается у
+  -- authenticated в финальном блоке файла; зовут только security-definer функции.
+  create or replace function public.teacher_seats_effective(p_uid uuid)
+  returns int
+  language sql
+  stable
+  security definer
+  set search_path = public
+  as $fn$
+    select case
+      when p.role <> 'teacher' then 0
+      when public.teacher_seat_limit(p.plan) > 0
+           and p.plan_expires_at is not null
+           and p.plan_expires_at > now()
+        then public.teacher_seat_limit(p.plan)
+      else public.free_teacher_seats()
+    end
+    from profiles p
+    where p.id = p_uid
+  $fn$;
+
+  -- Журнал самостоятельных включений роли: владелец смотрит из SQL Editor,
+  -- кто и когда стал преподавателем (почта — джойном к auth.users).
+  -- RLS включён БЕЗ политик: через REST таблица не видна никому (тот же приём,
+  -- что у allowed_emails).
+  create table if not exists public.teacher_signups (
+    user_id uuid primary key references public.profiles(id) on delete cascade,
+    created_at timestamptz not null default now()
+  );
+  alter table public.teacher_signups enable row level security;
+  revoke all on public.teacher_signups from anon, authenticated;
+
+  create or replace view public.teacher_signups_overview as
+    select ts.created_at, p.display_name, u.email, p.plan, p.trial_until,
+           (select count(*) from teacher_students s where s.teacher_id = ts.user_id) as students
+      from teacher_signups ts
+      join profiles p on p.id = ts.user_id
+      left join auth.users u on u.id = ts.user_id
+     order by ts.created_at desc;
+  revoke all on public.teacher_signups_overview from anon, authenticated;
+
+  -- Самостоятельное включение роли. Идемпотентно: повторный вызов ничего не портит.
+  -- Прямой update на profiles.role по-прежнему запрещён грантами — это
+  -- единственный путь.
+  create or replace function public.become_teacher()
+  returns void
+  language plpgsql
+  security definer
+  set search_path = public
+  as $fn$
+  declare
+    uid uuid := auth.uid();
+    cur text;
+    is_blocked boolean;
+  begin
+    if uid is null then raise exception 'RECALL_NO_AUTH'; end if;
+    select role, coalesce(blocked, false) into cur, is_blocked from profiles where id = uid;
+    if is_blocked then raise exception 'RECALL_BLOCKED'; end if;
+    if cur = 'teacher' then return; end if;
+
+    update profiles set role = 'teacher' where id = uid;
+    insert into teacher_signups (user_id) values (uid)
+      on conflict (user_id) do nothing;
+  end $fn$;
+
+  -- join_teacher: та же функция, что и раньше (лок, идемпотентность, коды ошибок
+  -- не менялись), но лимит мест теперь берётся из teacher_seats_effective —
+  -- одного места для всей логики. Прежний вариант считал места по триалу прямо
+  -- здесь и после его окончания оставлял бесплатному преподавателю 0 мест:
+  -- человек, попробовавший продукт в декабре, в январе не мог добавить ученика
+  -- вообще. Теперь бесплатных мест всегда 3.
+  create or replace function public.join_teacher(code text)
+  returns text
+  language plpgsql
+  security definer
+  set search_path = public
+  as $$
+  declare
+    t record;
+    seats int;
+    taken int;
+  begin
+    select id, coalesce(display_name, 'Преподаватель') as nm
+      into t
+      from profiles
+     where invite_code = upper(trim(code)) and role = 'teacher';
+    if t.id is null then
+      raise exception 'Код не найден. Проверь код у преподавателя.';
+    end if;
+    if t.id = auth.uid() then
+      raise exception 'Нельзя привязать самого себя.';
+    end if;
+
+    perform pg_advisory_xact_lock(hashtext('join_teacher:' || t.id::text));
+
+    if exists (
+      select 1 from teacher_students
+      where teacher_id = t.id and student_id = auth.uid()
+    ) then
+      return t.nm;
+    end if;
+
+    -- coalesce: если профиля вдруг нет, функция вернёт null и сравнение
+    -- «taken >= seats» будет null (не true) — привязка прошла бы мимо лимита
+    seats := coalesce(public.teacher_seats_effective(t.id), 0);
+    select count(*) into taken from teacher_students where teacher_id = t.id;
+    if taken >= seats then
+      -- один код на все случаи: ученику НЕ показываем, какой у преподавателя
+      -- тариф — это его дело (тот же принцип, что закрытые гранты на profiles)
+      raise exception 'RECALL_SEATS_FULL';
+    end if;
+
+    insert into teacher_students (teacher_id, student_id)
+    values (t.id, auth.uid())
+    on conflict (teacher_id, student_id) do nothing;
+    return t.nm;
+  end;
+  $$;
+
+  -- get_my_plan v3: всё как в v2 + места (seats/seats_used) для подсказки
+  -- преподавателю «занято 3 из 3». Старые поля сохранены — клиент их читает.
+  create or replace function public.get_my_plan()
+  returns json language plpgsql security definer set search_path = public as $fn$
+  declare
+    uid uuid := auth.uid();
+    p record; prem boolean; used int;
+    day0 timestamptz := public.recall_day_start();
+    src record; e_spent int; e_self int; g_used int;
+    v_seats int; v_seats_used int;
+  begin
+    if uid is null then raise exception 'RECALL_NO_AUTH'; end if;
+    select plan, plan_expires_at, trial_until, is_admin, role into p from profiles where id = uid;
+    prem := public.has_premium_access(uid);
+    select count(*) into used from ai_calls
+      where user_id = uid and ai_calls.kind = 'heavy' and called_at > now() - interval '24 hours';
+    select * into src from public.energy_source(uid);
+    select coalesce(sum(cost_energy),0) into e_spent from ai_calls
+      where pool_owner = src.pool_owner and called_at >= day0;
+    select coalesce(sum(cost_energy),0) into e_self from ai_calls
+      where user_id = uid and called_at >= day0;
+    select count(*) into g_used from ai_calls
+      where pool_owner = src.pool_owner and is_generation and called_at >= public.recall_month_start();
+    v_seats := coalesce(public.teacher_seats_effective(uid), 0);
+    select count(*) into v_seats_used from teacher_students where teacher_id = uid;
+    return json_build_object(
+      'plan', p.plan, 'plan_expires_at', p.plan_expires_at, 'trial_until', p.trial_until,
+      'is_admin', p.is_admin, 'premium', prem,
+      'ai_used_today', used, 'ai_day_limit', case when p.is_admin then 999999 when prem then 200 else 5 end,
+      'energy_max', case when p.is_admin then 999999 else src.day_budget end,
+      'energy_spent', e_spent, 'energy_self', e_self,
+      'energy_subcap', case when src.in_studio and src.pool_owner <> uid then src.day_budget / 2 else null end,
+      'in_studio', src.in_studio,
+      'gen_limit', src.gen_limit, 'gen_used', g_used,
+      -- места (A1): сколько всего и сколько занято; для не-преподавателя seats = 0
+      'seats', v_seats, 'seats_used', v_seats_used,
+      'free_seats', public.free_teacher_seats()
+    );
+  end $fn$;
+
   -- Финальный revoke/grant — ПОСЛЕДНИЙ в файле, накрывает все функции выше,
   -- включая только что пересозданный join_teacher.
   -- ⚠️ ВАЖНО (урок захода 3, строки ~2147): Supabase выдаёт EXECUTE ЯВНО роли
@@ -2680,3 +2860,6 @@
   -- чужого (тот же класс утечки, что закрыт выше у has_premium_access). Клиент
   -- его не зовёт — только spend_energy/get_my_plan внутри (security definer).
   revoke execute on function public.energy_source(uuid) from public, anon, authenticated;
+  -- teacher_seats_effective(uid) — та же причина: по чужому uid раскрывал бы,
+  -- оплачен ли у человека тариф. Зовут только join_teacher и get_my_plan.
+  revoke execute on function public.teacher_seats_effective(uuid) from public, anon, authenticated;

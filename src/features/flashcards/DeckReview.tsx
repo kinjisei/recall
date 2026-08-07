@@ -150,8 +150,8 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
     return (
       <div className="flex flex-col gap-4">
         <header className="flex min-w-0 items-center gap-3">
-          {/* выход из перепроверки — иначе при большом наборе слов ученица
-              заперта до конца всех карточек (нет пути назад в приложении) */}
+          {/* выход из перепроверки — иначе при большом наборе слов ученик
+              заперт до конца всех карточек (нет пути назад в приложении) */}
           <BackButton onClick={() => setActiveCheck(null)} />
           <h1 className="truncate text-xl font-medium tracking-tight">Перепроверка</h1>
         </header>

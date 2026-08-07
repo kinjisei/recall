@@ -35,18 +35,21 @@ export function OnboardingFlow() {
   const [step, setStep] = useState(0)
   const [level, setLevel] = useState<CEFRLevel | null>(null)
 
-  const finish = async () => {
-    // уровень английского храним в профиле, испанского — локально
-    if (level) {
-      if (lang === 'es') setEsLevel(level)
-      else if (user) {
-        // supabase-js не бросает на ошибке — берём её из ответа. Если запись не
-        // удалась, не инвалидируем кэш зря, но пользователя не держим: онбординг
-        // всё равно завершаем (уровень можно задать позже в «Настройках»).
-        const { error } = await supabase.from('profiles').update({ level }).eq('id', user.id)
-        if (!error) invalidateProfile()
-      }
+  // уровень английского храним в профиле, испанского — локально
+  const saveLevel = async () => {
+    if (!level) return
+    if (lang === 'es') setEsLevel(level)
+    else if (user) {
+      // supabase-js не бросает на ошибке — берём её из ответа. Если запись не
+      // удалась, не инвалидируем кэш зря, но пользователя не держим: онбординг
+      // всё равно завершаем (уровень можно задать позже в «Настройках»).
+      const { error } = await supabase.from('profiles').update({ level }).eq('id', user.id)
+      if (!error) invalidateProfile()
     }
+  }
+
+  const finish = async () => {
+    await saveLevel()
     markOnboarded()
     celebrate()
     // «Начать первое занятие» — сразу запускаем ведомую сессию (та же, что
@@ -90,7 +93,19 @@ export function OnboardingFlow() {
         />
       )}
 
-      {step === 2 && <StepReady lang={lang} level={level} onFinish={finish} />}
+      {step === 2 && (
+        <StepReady
+          lang={lang}
+          level={level}
+          onFinish={finish}
+          onTeacher={async () => {
+            // онбординг считаем пройденным, иначе ProtectedRoute вернёт сюда же
+            await saveLevel()
+            markOnboarded()
+            navigate('/teacher', { replace: true })
+          }}
+        />
+      )}
     </main>
   )
 }
@@ -223,10 +238,12 @@ function StepReady({
   lang,
   level,
   onFinish,
+  onTeacher,
 }: {
   lang: AppLang
   level: CEFRLevel | null
   onFinish: () => void
+  onTeacher: () => void
 }) {
   return (
     <div className="flex flex-1 flex-col gap-7">
@@ -260,12 +277,22 @@ function StepReady({
         ))}
       </div>
 
-      <button
-        onClick={onFinish}
-        className="mt-auto rounded-2xl bg-[var(--night-text)] py-4 font-medium text-[var(--night-bg)] transition-[filter,transform] active:scale-[0.98]"
-      >
-        Начать первое занятие
-      </button>
+      <div className="mt-auto flex flex-col gap-3">
+        <button
+          onClick={onFinish}
+          className="rounded-2xl bg-[var(--night-text)] py-4 font-medium text-[var(--night-bg)] transition-[filter,transform] active:scale-[0.98]"
+        >
+          Начать первое занятие
+        </button>
+        {/* вход для репетитора: раньше роль выдавалась только вручную в базе,
+            и человек, пришедший вести учеников, не находил студию вообще */}
+        <button
+          onClick={onTeacher}
+          className="min-h-[44px] py-1 text-sm text-[var(--night-text-40)] underline underline-offset-4"
+        >
+          Я преподаватель — веду своих учеников
+        </button>
+      </div>
     </div>
   )
 }
