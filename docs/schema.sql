@@ -1758,7 +1758,7 @@
     -- Суточный лимит своего класса.
     lim_day := case v_kind
       when 'heavy'  then case when paid then 200 when prem then  12 else   5 end
-      when 'light'  then case when paid then 900 when prem then 300 else 100 end
+      when 'light'  then case when paid then 900 when prem then 150 else 100 end
       else               case when paid then 400 when prem then 150 else  50 end
     end;
 
@@ -1954,7 +1954,7 @@
 
     lim_day := case v_kind
       when 'heavy'  then case when paid then 200 when prem then  12 else   5 end
-      when 'light'  then case when paid then 900 when prem then 300 else 100 end
+      when 'light'  then case when paid then 900 when prem then 150 else 100 end
       else               case when paid then 400 when prem then 150 else  50 end
     end;
 
@@ -2608,7 +2608,10 @@
       select count(*) into n from ai_calls
         where user_id=uid and ai_calls.kind=v_kind and called_at >= day0;
       if n >= (case v_kind
-          when 'light' then case when public.has_paid_access(uid) then 900 when public.has_premium_access(uid) then 300 else 100 end
+          -- триал/ученик студии: 300 → 150 (решение владельца 06.08.2026).
+          -- Живой человек тапает 20–50 слов за занятие, разницы не заметит,
+          -- а по стоимости это половина всей light-статьи триала.
+          when 'light' then case when public.has_paid_access(uid) then 900 when public.has_premium_access(uid) then 150 else 100 end
           else case when public.has_paid_access(uid) then 400 when public.has_premium_access(uid) then 150 else 50 end end) then
         if v_kind='light' then raise exception 'RECALL_LIGHT_LIMIT'; else raise exception 'RECALL_SPEECH_LIMIT'; end if;
       end if;
@@ -3080,7 +3083,7 @@
   ) language plpgsql stable security definer set search_path = public as $fn$
   declare me record; t record; v_teacher uuid;
   begin
-    select role, plan, plan_expires_at, trial_until into me from profiles where id = uid;
+    select role, plan, plan_expires_at, trial_until, created_at into me from profiles where id = uid;
     -- 1) сам аккаунт-учитель с ненулевым пулом → свой пул студии
     if me.role = 'teacher' then
       day_budget := case
@@ -3108,9 +3111,24 @@
         pool_owner := v_teacher; day_budget := t.pool; in_studio := true; gen_limit := 0; return;
       end if;
     end if;
-    -- 3) сольный premium/триал → 30; 4) free → 5
+    -- 3) свой premium → 30; триал → 30 первые 3 дня, дальше 15; 4) free → 5
+    --
+    -- Почему триал ступенькой (решение владельца 06.08.2026): человек решает,
+    -- нужен ли ему продукт, в первую сессию, а не на двенадцатый день. Первые
+    -- дни финансируем щедро, хвост — вдвое скромнее. Считаем не по деньгам
+    -- (мы на бесплатном тире), а по ОБЩЕЙ квоте моделей: сотня зашедших
+    -- посмотреть не должна оставлять без AI платящих и учеников студии.
+    -- Заодно триал перестаёт быть равен Premium — появляется, куда расти.
     if public.has_premium_access(uid) then
-      pool_owner := uid; day_budget := 30; in_studio := false; gen_limit := 0; return;
+      pool_owner := uid; in_studio := false; gen_limit := 0;
+      if me.plan <> 'free' and me.plan_expires_at is not null and me.plan_expires_at > now() then
+        day_budget := 30;                      -- оплаченный Premium
+      elsif me.created_at > now() - interval '3 days' then
+        day_budget := 30;                      -- первые 3 дня триала
+      else
+        day_budget := 15;                      -- остаток триала
+      end if;
+      return;
     end if;
     pool_owner := uid; day_budget := 5; in_studio := false; gen_limit := 0;
   end $fn$;
