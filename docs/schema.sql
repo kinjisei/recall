@@ -2897,6 +2897,11 @@
   -- Блок idempotent.
   -- ============================================================================
 
+  -- Колонка мест — ПЕРЕД covering_teacher: функции на language sql проверяются
+  -- при создании, и ссылка на ещё не существующую колонку валит всю заливку
+  -- (ERROR 42703: column x.seat does not exist).
+  alter table public.teacher_students add column if not exists seat boolean not null default false;
+
   -- Позиция ученика в очереди считается по (created_at, id) — нужен индекс,
   -- функция дёргается на КАЖДОМ запросе к AI.
   create index if not exists teacher_students_teacher_created_idx
@@ -2955,12 +2960,11 @@
     limit 1
   $fn$;
 
-  -- Преподаватель сам выбирает, кто занимает места тарифа.
-  -- Пока он ничего не выбрал (ни одного seat), действует умолчание «первые N по
-  -- дате привязки» — чтобы всё работало из коробки и после покупки тарифа
-  -- никто не остался без покрытия. Как только он тронул выбор, решает выбор.
-  alter table public.teacher_students add column if not exists seat boolean not null default false;
-
+  -- Преподаватель сам выбирает, кто занимает места тарифа (колонка seat заведена
+  -- выше, до covering_teacher). Пока он ничего не выбрал, действует умолчание
+  -- «первые N по дате привязки» — чтобы всё работало из коробки и после покупки
+  -- тарифа никто не остался без покрытия. Тронул выбор — решает выбор.
+  --
   -- set_student_seat: занять/освободить место. Прямой update на связи запрещён
   -- (политики update у teacher_students нет) — это единственный путь.
   create or replace function public.set_student_seat(p_student uuid, p_on boolean)
