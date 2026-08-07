@@ -48,6 +48,18 @@ try {
     `mailer_autoconfirm=${settings.mailer_autoconfirm}`,
   )
 
+  // 0б. состояние переключателя. Оно теперь в БД (app_settings), а не в коде:
+  // раньше открытая версия handle_new_user жила в отдельном файле, и повторная
+  // заливка schema.sql молча закрывала регистрацию обратно.
+  const { data: flag } = await admin
+    .from('app_settings')
+    .select('value')
+    .eq('key', 'registration_open')
+    .maybeSingle()
+  const flagOpen = flag?.value === true || flag?.value === 'true'
+  check('флаг registration_open существует', flag !== null && flag !== undefined,
+    `значение: ${JSON.stringify(flag?.value)}`)
+
   // 1. пробуем зарегистрировать посторонний адрес.
   // Сырым запросом, а не supabase-js: отказ белого списка приходит как HTTP 500
   // с пустым телом (AuthRetryableFetchError, message "{}"), и отличить его от
@@ -59,6 +71,13 @@ try {
   })
   const raw = await res.text()
   const closed = !res.ok && /RECALL_NOT_INVITED/.test(raw)
+
+  // поведение обязано совпадать с флагом — иначе где-то рассинхрон
+  check(
+    'поведение совпадает с флагом registration_open',
+    flagOpen === !closed,
+    `флаг=${flagOpen}, регистрация ${closed ? 'закрыта' : 'открыта'}`,
+  )
 
   if (closed) {
     console.log('\nРегистрация ЗАКРЫТА (белый список активен).')

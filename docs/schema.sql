@@ -844,12 +844,44 @@
   -- Supabase (Authentication → Users), она мгновенно убивает все токены.
   alter table public.profiles add column if not exists blocked boolean not null default false;
 
+  -- ---- 2б. Настройки приложения ----
+  -- Состояние, которое НЕ должно жить в коде. Первым сюда переехала открытость
+  -- регистрации (2026-08-06): раньше закрытая версия handle_new_user лежала в
+  -- schema.sql, а открытая — в отдельном файле, и любая повторная заливка схемы
+  -- МОЛЧА закрывала регистрацию обратно. Ловушка тем неприятнее, что человек
+  -- правит что-то своё, а ломается вход для новых людей.
+  -- Теперь открыть/закрыть — одна строка UPDATE, без правки кода и деплоя.
+  create table if not exists public.app_settings (
+    key        text primary key,
+    value      jsonb not null,
+    updated_at timestamptz not null default now()
+  );
+  alter table public.app_settings enable row level security;
+  revoke all on public.app_settings from anon, authenticated;
+
+  -- ⚠️ on conflict do nothing — ОБЯЗАТЕЛЬНО: иначе каждая заливка схемы
+  -- сбрасывала бы уже открытую регистрацию обратно в закрытую, то есть ровно
+  -- та проблема, ради которой всё это и делается.
+  insert into public.app_settings (key, value)
+  values ('registration_open', 'false'::jsonb)
+  on conflict (key) do nothing;
+
+  create or replace function public.registration_open()
+  returns boolean
+  language sql
+  stable
+  security definer
+  set search_path = public
+  as $fn$
+    select coalesce((select (value #>> '{}')::boolean from app_settings where key = 'registration_open'), false)
+  $fn$;
+
   -- ---- 3. Гейт на регистрацию ----
   -- Триггер AFTER INSERT на auth.users: raise внутри него откатывает всю
   -- транзакцию регистрации, поэтому запись в auth.users не остаётся —
   -- «полурегистрации» без профиля возникнуть не может.
-  -- Тело функции ниже полностью повторяет прежнее (профиль + две колоды),
-  -- добавлена только проверка белого списка в начале.
+  -- Тело функции: профиль + две стартовые колоды. Проверка белого списка
+  -- работает, только пока регистрация закрыта (см. app_settings выше).
   create or replace function public.handle_new_user()
   returns trigger
   language plpgsql
@@ -857,11 +889,15 @@
   set search_path = public
   as $$
   begin
+    -- Белый список действует, ТОЛЬКО пока регистрация закрыта. Открывается
+    -- одной строкой: update app_settings set value='true' where key='registration_open';
+    -- (готовая команда с проверками — docs/open-registration.sql)
+    --
     -- Пропускаем, если в списке есть либо точный адрес, либо доменная запись
     -- вида '@example.com' (тогда проходит любой адрес на этом домене).
     -- ⚠️ НЕ вписывать публичные домены (@gmail.com и т.п.) — это открыло бы
     -- регистрацию всему миру. Доменная запись — для своей команды/тестов.
-    if not exists (
+    if not public.registration_open() and not exists (
       select 1 from public.allowed_emails a
       where a.email = lower(trim(new.email))
          or a.email = '@' || split_part(lower(trim(new.email)), '@', 2)
