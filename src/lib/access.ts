@@ -16,22 +16,28 @@ import { supabase } from './supabase'
 const NOT_INVITED_MARKER = 'RECALL_NOT_INVITED'
 
 const NOT_INVITED_TEXT =
-  'Этот адрес не в списке приглашённых. Recall пока работает в закрытом тесте — ' +
-  'напиши владельцу, чтобы он добавил твою почту.'
+  'Этот адрес не в списке приглашённых. Напиши владельцу, чтобы он добавил твою почту.'
+
+/**
+ * Общая формулировка для случая, когда GoTrue замаскировал ошибку триггера.
+ * Раньше здесь стоял текст про закрытый тест: пока белый список был активен,
+ * это почти всегда была именно «нет в списке». После открытия регистрации
+ * (docs/open-registration.sql) та же маска будет означать настоящий сбой —
+ * и говорить человеку «тебя не приглашали» стало бы неправдой.
+ */
+const GENERIC_SIGNUP_TEXT =
+  'Не получилось создать профиль. Попробуй ещё раз через минуту — если снова не выйдет, напиши нам.'
 
 /**
  * Превращает техническую ошибку регистрации в понятную пользователю.
- * Всё, что не опознано как «нет в списке», возвращаем как есть — иначе
- * настоящие проблемы (слабый пароль, занятый email) будут маскироваться.
+ * Всё, что не опознано, возвращаем как есть — иначе настоящие проблемы
+ * (слабый пароль, занятый email) будут маскироваться.
  */
 export function describeSignUpError(raw: string): string {
   const s = raw.toLowerCase()
-  if (
-    raw.includes(NOT_INVITED_MARKER) ||
-    s.includes('database error saving new user') ||
-    s.includes('unexpected_failure')
-  ) {
-    return NOT_INVITED_TEXT
+  if (raw.includes(NOT_INVITED_MARKER)) return NOT_INVITED_TEXT
+  if (s.includes('database error saving new user') || s.includes('unexpected_failure')) {
+    return GENERIC_SIGNUP_TEXT
   }
   return raw
 }
