@@ -5,6 +5,7 @@
 // ============================================================================
 import { supabase, requireUserId, toJson } from './supabase'
 import { chat } from './gemini'
+import { track } from './analytics'
 import type {
   AppLang,
   AssignmentAnswer,
@@ -152,6 +153,9 @@ export async function generateMaterialContent(
   plan: MaterialPlan,
   feedback?: string,
 ): Promise<MaterialContent> {
+  // предпоследний шаг воронки преподавателя: материал сгенерирован
+  void track('material_generated', { lang: req.lang, level: req.level })
+
   const langName = req.lang === 'es' ? 'испанском' : 'английском'
   const system = [
     'Ты — автор учебных материалов по иностранным языкам.',

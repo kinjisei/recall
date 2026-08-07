@@ -3220,6 +3220,135 @@
     ), '[]'::json);
   end $fn$;
 
+  -- ============================================================================
+  -- АНАЛИТИКА (2026-08-06, блокер A3 из docs/mkt/19-fix-plan.md)
+  -- До этого блока считались только просмотры страниц (Vercel Analytics), то
+  -- есть ответить «какой канал привёл платящих» было нечем.
+  --
+  -- Почему события пишем ДО входа (anon_id), а не только после: главный отвал
+  -- происходит между «увидел ссылку» и «зарегистрировался». Без визитов сравнение
+  -- каналов врёт: 5 регистраций из 500 визитов и 5 из 50 выглядят одинаково,
+  -- хотя второй канал в десять раз лучше.
+  --
+  -- Своя таблица, а не внешний сервис: данные и так наши, RLS уже настроен,
+  -- никаких дополнительных согласий и зависимостей.
+  -- Блок idempotent.
+  -- ============================================================================
+
+  create table if not exists public.events (
+    id         bigserial primary key,
+    anon_id    uuid,                       -- посетитель до входа
+    user_id    uuid references public.profiles(id) on delete set null,
+    name       text not null,
+    props      jsonb not null default '{}'::jsonb,
+    source     text,                       -- utm_source / referrer / «как узнал»
+    created_at timestamptz not null default now()
+  );
+  create index if not exists events_name_created_idx on public.events (name, created_at desc);
+  create index if not exists events_anon_idx         on public.events (anon_id, created_at desc);
+  create index if not exists events_user_idx         on public.events (user_id, created_at desc);
+
+  alter table public.events enable row level security;
+  -- Прямой доступ закрыт полностью: пишем только через RPC (валидация + склейка),
+  -- читаем только сводками для владельца.
+  revoke all on public.events from anon, authenticated;
+  revoke all on sequence public.events_id_seq from anon, authenticated;
+
+  -- Приём события. Доступен и анониму: без этого нет знаменателя воронки.
+  -- Защита от мусора: имя по строгому шаблону, размер props ограничен,
+  -- поток с одного посетителя ограничен (тихо игнорируем, а не ругаемся —
+  -- аналитика никогда не должна ломать экран пользователю).
+  create or replace function public.track_event(
+    p_name text, p_props jsonb default '{}'::jsonb,
+    p_anon uuid default null, p_source text default null
+  )
+  returns void
+  language plpgsql
+  security definer
+  set search_path = public
+  as $fn$
+  declare uid uuid := auth.uid(); n int;
+  begin
+    if p_name is null or p_name !~ '^[a-z][a-z0-9_]{2,39}$' then return; end if;
+    if p_props is not null and length(p_props::text) > 2000 then return; end if;
+
+    if p_anon is not null then
+      select count(*) into n from events
+       where anon_id = p_anon and created_at > now() - interval '1 hour';
+      if n > 500 then return; end if;  -- защита от скрипта, без ошибки наружу
+    end if;
+
+    insert into events (anon_id, user_id, name, props, source)
+    values (p_anon, uid, p_name, coalesce(p_props, '{}'::jsonb), left(p_source, 120));
+
+    -- СКЛЕЙКА: как только человек вошёл, привязываем к нему всё, что он делал
+    -- анонимно с этого же устройства. Без этого визит и регистрация остаются
+    -- разными людьми, и воронка не сходится.
+    if uid is not null and p_anon is not null then
+      update events set user_id = uid
+       where anon_id = p_anon and user_id is null;
+    end if;
+  end $fn$;
+
+  grant execute on function public.track_event(text, jsonb, uuid, text) to anon, authenticated;
+
+  -- Воронка за N дней одним запросом — для блока в /admin.
+  -- Считаем ЛЮДЕЙ (distinct), а не события: иначе один активный пользователь
+  -- выглядит как двадцать.
+  create or replace function public.admin_funnel(p_days int default 30)
+  returns json
+  language plpgsql
+  security definer
+  set search_path = public
+  as $fn$
+  declare d timestamptz := now() - make_interval(days => greatest(1, least(coalesce(p_days, 30), 365)));
+  begin
+    if not exists (select 1 from profiles where id = auth.uid() and is_admin) then
+      raise exception 'RECALL_NOT_ADMIN';
+    end if;
+    return json_build_object(
+      'days', p_days,
+      'steps', (
+        select coalesce(json_agg(row_to_json(s) order by s.ord), '[]'::json) from (
+          select 1 as ord, 'Визиты'            as step, count(distinct coalesce(anon_id::text, user_id::text)) as people from events where name = 'page_view'      and created_at >= d
+          union all select 2, 'Регистрации',      count(distinct user_id) from events where name = 'signup'          and created_at >= d
+          union all select 3, 'Онбординг пройден',count(distinct user_id) from events where name = 'onboarding_done' and created_at >= d
+          union all select 4, 'Первая польза',    count(distinct user_id) from events where name = 'first_value'     and created_at >= d
+          union all select 5, 'Первое AI-действие',count(distinct user_id) from events where name = 'ai_first'       and created_at >= d
+          union all select 6, 'Включили студию',  count(distinct user_id) from events where name = 'teacher_enabled' and created_at >= d
+          union all select 7, 'Привязан ученик',  count(distinct user_id) from events where name = 'student_linked'  and created_at >= d
+          union all select 8, 'Сгенерён материал',count(distinct user_id) from events where name = 'material_generated' and created_at >= d
+          union all select 9, 'Оплата включена',  count(distinct user_id) from events where name = 'payment_activated'  and created_at >= d
+        ) s
+      ),
+      -- по источникам: визиты → регистрации → оплаты. Источник берём ПЕРВЫЙ
+      -- по времени у этого посетителя (first touch): человек мог прийти из
+      -- телеграма, а зарегистрироваться позже с прямой ссылки.
+      'sources', (
+        select coalesce(json_agg(row_to_json(x) order by x.visits desc), '[]'::json) from (
+          select
+            coalesce(nullif(f.source, ''), 'неизвестно') as source,
+            count(distinct f.who)                         as visits,
+            count(distinct f.who) filter (where f.signed) as signups,
+            count(distinct f.who) filter (where f.paid)   as payments
+          from (
+            select
+              coalesce(e.anon_id::text, e.user_id::text) as who,
+              first_value(e.source) over (
+                partition by coalesce(e.anon_id::text, e.user_id::text)
+                order by e.created_at
+              ) as source,
+              bool_or(e.name = 'signup')            over (partition by coalesce(e.anon_id::text, e.user_id::text)) as signed,
+              bool_or(e.name = 'payment_activated') over (partition by coalesce(e.anon_id::text, e.user_id::text)) as paid
+            from events e
+            where e.created_at >= d
+          ) f
+          group by 1
+        ) x
+      )
+    );
+  end $fn$;
+
   -- Финальный revoke/grant — ПОСЛЕДНИЙ в файле, накрывает все функции выше,
   -- включая только что пересозданный join_teacher.
   -- ⚠️ ВАЖНО (урок захода 3, строки ~2147): Supabase выдаёт EXECUTE ЯВНО роли
@@ -3239,3 +3368,8 @@
   -- covering_teacher(uid) — по чужому uid показал бы, платит ли за него учитель.
   -- Зовут только has_*_access и energy_source (все security definer).
   revoke execute on function public.covering_teacher(uuid, boolean) from public, anon, authenticated;
+
+  -- ⚠️ ПОСЛЕ общего revoke: track_event обязан быть доступен АНОНИМУ, иначе
+  -- визиты до регистрации не считаются и воронка теряет знаменатель.
+  -- Грант выше по файлу не работает — строка `revoke ... from anon` его снимает.
+  grant execute on function public.track_event(text, jsonb, uuid, text) to anon, authenticated;

@@ -22,11 +22,15 @@ import { invalidateProfile } from '../../lib/profile'
 import { setEsLevel } from '../../lib/esLevel'
 import { markOnboarded } from '../../lib/onboarding'
 import { startGuided } from '../../lib/guided'
+import { track, setSelfReportedSource } from '../../lib/analytics'
 import { celebrate } from '../../components/Confetti'
 import type { AppLang, CEFRLevel } from '../../types'
 
 // A1 добавлен: profiles.level и тест уровня теперь допускают его (новичок с нуля)
 const EN_LEVELS: CEFRLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1']
+
+/** Варианты ответа «как узнал» — короткие, чтобы влезали в один-два ряда чипов. */
+const HOW_HEARD = ['Инстаграм', 'TikTok', 'Телеграм', 'От преподавателя', 'Друзья', 'Поиск', 'Другое']
 
 export function OnboardingFlow() {
   const navigate = useNavigate()
@@ -50,6 +54,7 @@ export function OnboardingFlow() {
 
   const finish = async () => {
     await saveLevel()
+    void track('onboarding_done', { lang, level })
     markOnboarded()
     celebrate()
     // «Начать первое занятие» — сразу запускаем ведомую сессию (та же, что
@@ -245,6 +250,7 @@ function StepReady({
   onFinish: () => void
   onTeacher: () => void
 }) {
+  const [heard, setHeard] = useState<string | null>(null)
   return (
     <div className="flex flex-1 flex-col gap-7">
       <div className="flex flex-col items-center gap-4 pt-6 text-center">
@@ -275,6 +281,32 @@ function StepReady({
             </span>
           </div>
         ))}
+      </div>
+
+      {/* «Как узнал» — единственный источник, который переживает пересылку
+          ссылки без параметров (а в телеграме и вотсапе так пересылают почти
+          всегда) и ловит сарафан, которого метки не видят вовсе.
+          Отдельным шагом делать не стал: это налог на всех ради одной строки. */}
+      <div className="flex flex-col gap-2.5">
+        <p className="text-sm text-[var(--night-text-40)]">Как ты о нас узнал?</p>
+        <div className="flex flex-wrap gap-2">
+          {HOW_HEARD.map((h) => (
+            <button
+              key={h}
+              onClick={() => {
+                setHeard(h)
+                setSelfReportedSource(h)
+              }}
+              className={`min-h-11 rounded-xl border px-3.5 py-2 text-sm ${
+                heard === h
+                  ? 'border-[var(--night-accent-45)] bg-[rgba(145,132,217,.16)]'
+                  : 'border-white/[0.08] bg-[var(--night-surface)] text-[var(--night-text-70)]'
+              }`}
+            >
+              {h}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="mt-auto flex flex-col gap-3">

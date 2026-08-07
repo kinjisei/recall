@@ -5,6 +5,7 @@
 // сервере, здесь только вызовы и человеко-читаемые ошибки.
 // ============================================================================
 import { supabase } from './supabase'
+import { track } from './analytics'
 
 export type PlanId = 'free' | 'premium' | 'teacher_mini' | 'teacher_start' | 'teacher_pro'
 
@@ -53,6 +54,9 @@ export async function setPlan(
   plan: PlanId,
   months: number,
 ): Promise<AdminSetPlanResult> {
+  // конец воронки: событие пишется от имени владельца, но по user_id клиента
+  // его можно связать с источником, из которого этот человек пришёл
+  void track('payment_activated', { plan, months, target })
   const { data, error } = await supabase.rpc('admin_set_plan', {
     target,
     new_plan: plan,

@@ -5,6 +5,7 @@
 // ============================================================================
 import type { AiTask, ChatTurn } from '../types'
 import { supabase } from './supabase'
+import { track } from './analytics'
 
 /**
  * Отправляет переписку в /api/gemini и возвращает текст ответа AI.
@@ -19,6 +20,9 @@ export async function chat(
   messages: ChatTurn[],
   opts: { task: AiTask; system?: string },
 ): Promise<string> {
+  // одна точка на все AI-механики: любой экран, зовущий AI, попадает в воронку
+  void track('ai_first', { task: opts.task })
+
   // токен сессии — прокси пускает только вошедших (защита квоты от абьюза)
   const {
     data: { session },

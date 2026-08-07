@@ -1,4 +1,5 @@
 import { supabase, requireUserId } from './supabase'
+import { track } from './analytics'
 import type { TablesUpdate } from './database.types'
 import type { AppLang, Card, Deck, ReviewState } from '../types'
 import { statusOf, type WordStatus } from './wordChecks'
@@ -65,6 +66,10 @@ export async function addCard(input: {
   lang?: AppLang
   source?: 'manual' | 'reader' | 'ai'
 }): Promise<Card> {
+  // «первая польза» в воронке: слово в колоде — самое раннее осмысленное
+  // действие нового пользователя (воронка считает людей, повторы не мешают)
+  void track('first_value', { kind: 'word', source: input.source ?? 'manual' })
+
   const deckId = input.deckId ?? (await getDefaultDeck(input.lang ?? 'en')).id
 
   const { data, error } = await supabase

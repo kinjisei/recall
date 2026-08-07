@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext'
 import { LanguageProvider } from './context/LanguageContext'
 import { ConfettiLayer } from './components/Confetti'
 import { ScrollToTop } from './components/ScrollToTop'
+import { PageTracker } from './components/PageTracker'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { Layout } from './components/Layout'
@@ -85,6 +86,7 @@ export default function App() {
         <ConfettiLayer />
         <BrowserRouter>
           <ScrollToTop />
+          <PageTracker />
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             {/* юридические страницы — публичные (ссылки со входа) */}

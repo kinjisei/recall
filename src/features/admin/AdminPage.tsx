@@ -119,6 +119,8 @@ function AdminConsole() {
         </p>
       </header>
 
+      <Funnel />
+
       <div className="flex gap-2">
         <input
           value={query}
@@ -253,5 +255,122 @@ function UserRow({
 
       {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
     </div>
+  )
+}
+
+/* ===== Воронка =============================================================
+ * Аналитика, в которую надо лезть запросом, не читается никем — поэтому
+ * сводка живёт прямо здесь. Считаются ЛЮДИ (distinct), а не события: иначе
+ * один активный пользователь выглядит как двадцать.
+ * Источник берётся ПЕРВЫЙ по времени (first touch): человек мог прийти из
+ * телеграма, а зарегистрироваться через неделю по прямой ссылке.
+ * ========================================================================== */
+
+interface FunnelStep {
+  ord: number
+  step: string
+  people: number
+}
+interface FunnelSource {
+  source: string
+  visits: number
+  signups: number
+  payments: number
+}
+
+function Funnel() {
+  const [days, setDays] = useState(30)
+  const [data, setData] = useState<{ steps: FunnelStep[]; sources: FunnelSource[] } | null>(null)
+  const [err, setErr] = useState<string | null>(null)
+
+  useEffect(() => {
+    let alive = true
+    supabase
+      .rpc('admin_funnel', { p_days: days })
+      .then(({ data, error }) => {
+        if (!alive) return
+        // блок аналитики никогда не должен ронять админку: показываем текст,
+        // а не пустой экран (частый случай — миграция ещё не залита)
+        if (error) setErr(error.message)
+        else setData(data as unknown as { steps: FunnelStep[]; sources: FunnelSource[] })
+      })
+    return () => {
+      alive = false
+    }
+  }, [days])
+
+  const top = data?.steps?.[0]?.people ?? 0
+
+  return (
+    <section className="rounded-2xl border border-white/[0.08] bg-[var(--night-surface)] p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="font-medium">Воронка</h2>
+        <div className="flex gap-1">
+          {[7, 30, 90].map((d) => (
+            <button
+              key={d}
+              onClick={() => setDays(d)}
+              className={`min-h-11 rounded-lg px-3 text-sm ${
+                days === d
+                  ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
+                  : 'text-[var(--night-text-40)] hover:text-[var(--night-text)]'
+              }`}
+            >
+              {d} дн
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {err && <p className="mt-3 text-sm text-amber-300">Аналитика недоступна: {err}</p>}
+      {!err && !data && <p className="mt-3 text-sm text-[var(--night-text-40)]">Считаю…</p>}
+
+      {data && (
+        <>
+          <div className="mt-3 flex flex-col gap-1.5">
+            {data.steps.map((s) => (
+              <div key={s.ord} className="flex items-center gap-3">
+                <span className="w-44 shrink-0 text-sm text-[var(--night-text-70)]">{s.step}</span>
+                <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/[0.06]">
+                  <div
+                    className="h-full rounded-full bg-[var(--night-accent)]"
+                    style={{ width: top > 0 ? `${Math.round((s.people / top) * 100)}%` : '0%' }}
+                  />
+                </div>
+                <span className="w-10 shrink-0 text-right text-sm tabular-nums">{s.people}</span>
+              </div>
+            ))}
+          </div>
+
+          <h3 className="mt-5 text-sm font-medium">Источники</h3>
+          {data.sources.length === 0 ? (
+            <p className="mt-1 text-sm text-[var(--night-text-40)]">Пока нет данных.</p>
+          ) : (
+            <div className="mt-2 overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs uppercase tracking-wide text-[var(--night-text-40)]">
+                    <th className="py-1 pr-3 font-medium">Источник</th>
+                    <th className="py-1 pr-3 font-medium">Визиты</th>
+                    <th className="py-1 pr-3 font-medium">Регистрации</th>
+                    <th className="py-1 font-medium">Оплаты</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.sources.map((s) => (
+                    <tr key={s.source} className="border-t border-white/[0.06]">
+                      <td className="py-1.5 pr-3">{s.source}</td>
+                      <td className="py-1.5 pr-3 tabular-nums">{s.visits}</td>
+                      <td className="py-1.5 pr-3 tabular-nums">{s.signups}</td>
+                      <td className="py-1.5 tabular-nums">{s.payments}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      )}
+    </section>
   )
 }

@@ -1061,7 +1061,12 @@ export type Database = {
         Returns: boolean
       }
       delete_grammar_quest: { Args: { p_id: string }; Returns: undefined }
+      admin_funnel: { Args: { p_days?: number }; Returns: Json }
       become_teacher: { Args: never; Returns: undefined }
+      track_event: {
+        Args: { p_name: string; p_props?: Json; p_anon?: string | null; p_source?: string | null }
+        Returns: undefined
+      }
       set_student_seat: { Args: { p_student: string; p_on: boolean }; Returns: undefined }
       ensure_invite_code: { Args: never; Returns: string }
       finish_material_review: {

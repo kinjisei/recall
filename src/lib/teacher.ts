@@ -6,6 +6,7 @@
 // ============================================================================
 import { supabase, requireUserId } from './supabase'
 import { PROFILE_COLUMNS, invalidateProfile } from './profile'
+import { track } from './analytics'
 import type { Card, Deck, Profile } from '../types'
 
 /** Сводка по ученику для экрана преподавателя. */
@@ -83,6 +84,7 @@ export async function becomeTeacher(): Promise<void> {
     throw new Error(error.message)
   }
   invalidateProfile()
+  void track('teacher_enabled')
 }
 
 /**
@@ -133,6 +135,7 @@ export async function joinTeacher(code: string): Promise<string> {
     }
     throw new Error(error.message)
   }
+  void track('student_linked')
   return (data as string) ?? 'Преподаватель'
 }
 

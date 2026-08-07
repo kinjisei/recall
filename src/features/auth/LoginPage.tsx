@@ -6,6 +6,7 @@ import { IconEye } from '../../components/icons'
 import { describeSignUpError } from '../../lib/access'
 import { supabase } from '../../lib/supabase'
 import { rememberPendingRole } from '../../lib/pendingRole'
+import { track } from '../../lib/analytics'
 
 /**
  * Экран входа/регистрации Recall — тёмная версия «Nocturne».
@@ -57,7 +58,10 @@ export function LoginPage() {
         // Успех — уводим на отдельное состояние «проверь почту». Раньше форма
         // оставалась на экране, и кнопка «Создать аккаунт» приглашала нажать
         // ещё раз: человек получал «этот адрес уже зарегистрирован» и терялся.
-        else setSentTo(email.trim())
+        else {
+          void track('signup', { role: signup ? 'learner' : undefined })
+          setSentTo(email.trim())
+        }
       } else {
         const { error } = await signIn(email, password)
         if (error) setError(error)
