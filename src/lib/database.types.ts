@@ -742,6 +742,7 @@ export type Database = {
           created_at: string | null
           daily_plan: Json | null
           id: string
+          seat: boolean
           student_id: string
           teacher_id: string
         }
@@ -749,6 +750,7 @@ export type Database = {
           created_at?: string | null
           daily_plan?: Json | null
           id?: string
+          seat?: boolean
           student_id: string
           teacher_id: string
         }
@@ -756,6 +758,7 @@ export type Database = {
           created_at?: string | null
           daily_plan?: Json | null
           id?: string
+          seat?: boolean
           student_id?: string
           teacher_id?: string
         }
@@ -1059,6 +1062,7 @@ export type Database = {
       }
       delete_grammar_quest: { Args: { p_id: string }; Returns: undefined }
       become_teacher: { Args: never; Returns: undefined }
+      set_student_seat: { Args: { p_student: string; p_on: boolean }; Returns: undefined }
       ensure_invite_code: { Args: never; Returns: string }
       finish_material_review: {
         Args: { p_id: string; p_review: Json }

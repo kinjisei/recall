@@ -15,6 +15,8 @@ export interface StudentInfo {
   doneToday: boolean
   weekItems: number
   assignedDeckIds: string[]
+  /** Занимает ли место тарифа (только оно даёт повышенные лимиты AI). */
+  seat: boolean
 }
 
 /** YYYY-MM-DD в местном времени (offsetDays: 0 — сегодня, -1 — вчера…). */
@@ -83,6 +85,38 @@ export async function becomeTeacher(): Promise<void> {
   invalidateProfile()
 }
 
+/**
+ * Занять/освободить место тарифа для ученика. Пока преподаватель не трогал
+ * выбор, места держат первые N по дате привязки; первое явное действие
+ * фиксирует текущий расклад, дальше решает выбор.
+ */
+export async function setStudentSeat(studentId: string, on: boolean): Promise<void> {
+  const { error } = await supabase.rpc('set_student_seat', {
+    p_student: studentId,
+    p_on: on,
+  })
+  if (error) {
+    if (error.message.includes('RECALL_SEATS_FULL')) {
+      throw new Error('Все места тарифа заняты — сначала освободи одно или расширь тариф.')
+    }
+    if (error.message.includes('RECALL_NOT_YOUR_STUDENT')) {
+      throw new Error('Это не твой ученик.')
+    }
+    throw new Error(error.message)
+  }
+}
+
+/** Отвязать ученика от себя. Его аккаунт и прогресс остаются при нём. */
+export async function unlinkStudent(studentId: string): Promise<void> {
+  const teacherId = await requireUserId()
+  const { error } = await supabase
+    .from('teacher_students')
+    .delete()
+    .eq('teacher_id', teacherId)
+    .eq('student_id', studentId)
+  if (error) throw new Error(error.message)
+}
+
 /** Ученик вводит код → привязка. Возвращает имя преподавателя. */
 export async function joinTeacher(code: string): Promise<string> {
   const { data, error } = await supabase.rpc('join_teacher', {
@@ -141,12 +175,15 @@ export async function getMyStudents(): Promise<StudentInfo[]> {
   // (covering_teacher в БД считает так же), и экран должен показывать то же самое
   const { data: links, error } = await supabase
     .from('teacher_students')
-    .select('student_id, created_at')
+    .select('student_id, created_at, seat')
     .eq('teacher_id', userId)
     .order('created_at', { ascending: true })
   if (error) throw error
   const ids = (links ?? []).map((l) => l.student_id as string)
   if (ids.length === 0) return []
+  const seatById = new Map(
+    (links ?? []).map((l) => [l.student_id as string, (l as { seat?: boolean }).seat === true]),
+  )
 
   const [profilesRes, activityRes, assignRes] = await Promise.all([
     supabase.from('profiles').select(PROFILE_COLUMNS).in('id', ids),
@@ -183,6 +220,7 @@ export async function getMyStudents(): Promise<StudentInfo[]> {
       assignedDeckIds: (assignRes.data ?? [])
         .filter((a) => a.student_id === profile.id)
         .map((a) => a.deck_id as string),
+      seat: seatById.get(profile.id) === true,
     }
   })
 }

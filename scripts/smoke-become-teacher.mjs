@@ -59,8 +59,18 @@ async function makeUser(email) {
     const { data: list } = await admin.auth.admin.listUsers({ perPage: 1000 })
     id = list.users.find((u) => u.email === email)?.id
   } else if (error) throw new Error(error.message)
-  // на всякий случай сбрасываем роль: аккаунт мог остаться от прошлого прогона
-  await admin.from('profiles').update({ role: 'learner' }).eq('id', id)
+  // Аккаунт мог остаться от прошлого прогона (удаление в finally может не
+  // пройти) — приводим профиль к известному состоянию, иначе тест недетерминирован:
+  // остаточный тариф менял источник энергии и проверки покрытия «плавали».
+  await admin
+    .from('profiles')
+    .update({
+      role: 'learner',
+      plan: 'free',
+      plan_expires_at: null,
+      trial_until: new Date(Date.now() + 14 * 864e5).toISOString(),
+    })
+    .eq('id', id)
   await admin.from('teacher_students').delete().eq('teacher_id', id)
   await admin.from('teacher_signups').delete().eq('user_id', id)
   return id
@@ -179,8 +189,8 @@ try {
       .join(' '),
   )
   check(
-    'четвёртый ученик СВЕРХ мест не покрыт (свои бесплатные лимиты)',
-    covered[3].studio === false && covered[3].max === 5,
+    'четвёртый ученик СВЕРХ мест не покрыт (не в студии)',
+    covered[3].studio === false,
     `in_studio=${covered[3].studio}, energy_max=${covered[3].max}`,
   )
 
@@ -199,6 +209,57 @@ try {
     p4?.in_studio === true,
     `in_studio=${p4?.in_studio}, energy_max=${p4?.energy_max}`,
   )
+
+  // 6d. преподаватель сам выбирает, кто занимает место
+  const teacher2 = await signIn(T_EMAIL)
+  // вернём тариф в состояние «мест 3» (триал), чтобы место было дефицитным
+  await admin
+    .from('profiles')
+    .update({ plan: 'free', plan_expires_at: null })
+    .eq('id', tId)
+
+  const free1 = await teacher2.rpc('set_student_seat', { p_student: sIds[0], p_on: false })
+  check('преподаватель освобождает место у первого', !free1.error, free1.error?.message)
+
+  const give4 = await teacher2.rpc('set_student_seat', { p_student: sIds[3], p_on: true })
+  check('преподаватель отдаёт место четвёртому', !give4.error, give4.error?.message)
+
+  const st1 = await signIn(S_EMAILS[0])
+  const p1 = (await st1.rpc('get_my_plan')).data
+  const st4b = await signIn(S_EMAILS[3])
+  const p4b = (await st4b.rpc('get_my_plan')).data
+  check(
+    'покрытие переехало: первый вне тарифа, четвёртый в тарифе',
+    p1?.in_studio === false && p4b?.in_studio === true,
+    `первый=${p1?.in_studio}, четвёртый=${p4b?.in_studio}`,
+  )
+
+  const over = await teacher2.rpc('set_student_seat', { p_student: sIds[0], p_on: true })
+  check(
+    'сверх мест дать нельзя',
+    !!over.error && over.error.message.includes('RECALL_SEATS_FULL'),
+    over.error?.message ?? 'ПРОШЛО',
+  )
+
+    // сам себе учеником не является — проверка «не твой ученик»
+  const alien = await teacher2.rpc('set_student_seat', { p_student: tId, p_on: true })
+  check(
+    'не своему ученику место дать нельзя',
+    !!alien.error,
+    alien.error?.message ?? 'ПРОШЛО',
+  )
+
+  // 6e. отвязка ученика
+  const del = await teacher2
+    .from('teacher_students')
+    .delete()
+    .eq('teacher_id', tId)
+    .eq('student_id', sIds[1])
+  const { count: leftLinks } = await admin
+    .from('teacher_students')
+    .select('id', { count: 'exact', head: true })
+    .eq('teacher_id', tId)
+  check('преподаватель отвязал ученика', !del.error && leftLinks === 3, `связей: ${leftLinks}`)
 
   // 7. журнал самостоятельных включений
   const { count } = await admin

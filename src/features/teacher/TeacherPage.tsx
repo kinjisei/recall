@@ -10,6 +10,8 @@ import {
   getOrCreateInviteCode,
   regenerateInviteCode,
   becomeTeacher,
+  setStudentSeat,
+  unlinkStudent,
   getMyStudents,
   getMyDecks,
   assignDeck,
@@ -318,8 +320,16 @@ function TeacherDashboard() {
                 student={s}
                 decks={decks}
                 onChanged={load}
-                // тариф покрывает первых N по дате привязки — так же считает БД
-                covered={typeof myPlan?.seats !== 'number' ? true : i < myPlan.seats}
+                // то же правило, что в БД: пока мест никто не выбирал, их держат
+                // первые N по дате привязки; как только выбор сделан — решает он
+                covered={
+                  typeof myPlan?.seats !== 'number'
+                    ? true
+                    : students.some((x) => x.seat)
+                      ? s.seat
+                      : i < myPlan.seats
+                }
+                seatsKnown={typeof myPlan?.seats === 'number'}
               />
             ))
           )}
@@ -334,13 +344,18 @@ function StudentCard({
   decks,
   onChanged,
   covered = true,
+  seatsKnown = false,
 }: {
   student: StudentInfo
   decks: Deck[]
   onChanged: () => void
   /** Покрыт ли ученик тарифом: сверх мест AI-возможности у него обычные, бесплатные. */
   covered?: boolean
+  /** Есть ли вообще ограничение мест (на тарифе без лимита переключать нечего). */
+  seatsKnown?: boolean
 }) {
+  const [seatBusy, setSeatBusy] = useState(false)
+  const [unlinking, setUnlinking] = useState(false)
   const [showDecks, setShowDecks] = useState(false)
   const [showWords, setShowWords] = useState(false)
   const [showQuests, setShowQuests] = useState(false)
@@ -380,7 +395,7 @@ function StudentCard({
             {student.streak} ·{' '}
             {student.doneToday ? 'сегодня ✓' : 'сегодня —'}
           </p>
-          {!covered && (
+          {seatsKnown && !covered && (
             <p className="mt-1 inline-block rounded-lg bg-amber-500/10 px-2 py-1 text-xs text-amber-200">
               Вне мест тарифа — занимается на бесплатных лимитах AI
             </p>
@@ -494,6 +509,54 @@ function StudentCard({
         {showQuests ? '▾ Скрыть AI-квесты' : '▸ AI-квесты по грамматике'}
       </button>
       {showQuests && <QuestSection studentId={p.id} />}
+
+      <div className="mt-1 flex flex-wrap items-center gap-2 border-t border-white/[0.06] pt-3">
+        {seatsKnown && (
+          <Button
+            variant="ghost"
+            className="min-h-[44px] px-3 py-2 text-sm"
+            loading={seatBusy}
+            onClick={async () => {
+              setSeatBusy(true)
+              setError(null)
+              try {
+                await setStudentSeat(p.id, !covered)
+                onChanged()
+              } catch (e) {
+                setError(e instanceof Error ? e.message : 'Не удалось изменить место')
+              } finally {
+                setSeatBusy(false)
+              }
+            }}
+          >
+            {covered ? 'Освободить место тарифа' : 'Дать место тарифа'}
+          </Button>
+        )}
+        <Button
+          variant="ghost"
+          className="min-h-[44px] px-3 py-2 text-sm text-rose-300"
+          loading={unlinking}
+          onClick={async () => {
+            if (
+              !window.confirm(
+                `Отвязать ${p.display_name ?? 'ученика'}? Его аккаунт и прогресс останутся при нём, но ты перестанешь видеть его занятия и не сможешь назначать задания.`,
+              )
+            )
+              return
+            setUnlinking(true)
+            setError(null)
+            try {
+              await unlinkStudent(p.id)
+              onChanged()
+            } catch (e) {
+              setError(e instanceof Error ? e.message : 'Не удалось отвязать')
+              setUnlinking(false)
+            }
+          }}
+        >
+          Отвязать
+        </Button>
+      </div>
     </Card>
   )
 }

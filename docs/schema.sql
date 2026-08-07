@@ -2822,6 +2822,17 @@
     insert into teacher_students (teacher_id, student_id)
     values (t.id, auth.uid())
     on conflict (teacher_id, student_id) do nothing;
+
+    -- Если преподаватель уже распределял места руками и свободное осталось —
+    -- занимаем его сразу: иначе новый ученик молча оказался бы «вне тарифа»
+    -- при оплаченном свободном месте. (Мы внутри лока на преподавателя.)
+    if exists (select 1 from teacher_students where teacher_id = t.id and seat) then
+      select count(*) into taken from teacher_students where teacher_id = t.id and seat;
+      if taken < coalesce(public.teacher_seats_effective(t.id), 0) then
+        update teacher_students set seat = true
+         where teacher_id = t.id and student_id = auth.uid();
+      end if;
+    end if;
     return t.nm;
   end;
   $$;
@@ -2907,24 +2918,121 @@
     from teacher_students ts
     join profiles tp on tp.id = ts.teacher_id
     where ts.student_id = p_student
-      and tp.plan like 'teacher_%'
       and not coalesce(tp.blocked, false) -- блокировка учителя снимает бенефит
       and (
-        (tp.plan_expires_at is not null and tp.plan_expires_at > now())
-        or (not p_paid_only and tp.trial_until > now())
+        -- оплаченный преподавательский тариф
+        (tp.plan like 'teacher_%'
+         and tp.plan_expires_at is not null and tp.plan_expires_at > now())
+        -- ЛИБО триал: у триального преподавателя plan='free', поэтому проверять
+        -- plan like 'teacher_%' здесь нельзя — иначе его ученики теряют студию.
+        -- (Раньше тут была нестыковка: energy_source давал им пул 40, а
+        -- has_premium_access повышенных лимитов не давал. Теперь одинаково.)
+        or (not p_paid_only and tp.role = 'teacher' and tp.trial_until > now())
       )
-      -- ученик попадает в число мест тарифа: его позиция в очереди привязки
-      -- к ЭТОМУ преподавателю не больше числа мест
-      and (
-        select count(*) from teacher_students t2
-        where t2.teacher_id = ts.teacher_id
-          and (coalesce(t2.created_at, 'epoch'::timestamptz), t2.id)
-              <= (coalesce(ts.created_at, 'epoch'::timestamptz), ts.id)
-      ) <= coalesce(public.teacher_seats_effective(ts.teacher_id), 0)
+      -- ученик занимает место тарифа. Если преподаватель выбор ещё не трогал
+      -- (ни одного seat) — действует умолчание «первые N по дате привязки».
+      -- Ранг среди занятых считается ВСЕГДА: после понижения тарифа мест
+      -- отмечено больше, чем оплачено, и лишние не должны покрываться.
+      and case
+        when exists (
+          select 1 from teacher_students x where x.teacher_id = ts.teacher_id and x.seat
+        ) then
+          ts.seat and (
+            select count(*) from teacher_students t2
+            where t2.teacher_id = ts.teacher_id and t2.seat
+              and (coalesce(t2.created_at, 'epoch'::timestamptz), t2.id)
+                  <= (coalesce(ts.created_at, 'epoch'::timestamptz), ts.id)
+          ) <= coalesce(public.teacher_seats_effective(ts.teacher_id), 0)
+        else (
+          select count(*) from teacher_students t2
+          where t2.teacher_id = ts.teacher_id
+            and (coalesce(t2.created_at, 'epoch'::timestamptz), t2.id)
+                <= (coalesce(ts.created_at, 'epoch'::timestamptz), ts.id)
+        ) <= coalesce(public.teacher_seats_effective(ts.teacher_id), 0)
+      end
     -- если преподавателей несколько, оплаченный тариф важнее триального
     order by (tp.plan_expires_at is not null and tp.plan_expires_at > now()) desc
     limit 1
   $fn$;
+
+  -- Преподаватель сам выбирает, кто занимает места тарифа.
+  -- Пока он ничего не выбрал (ни одного seat), действует умолчание «первые N по
+  -- дате привязки» — чтобы всё работало из коробки и после покупки тарифа
+  -- никто не остался без покрытия. Как только он тронул выбор, решает выбор.
+  alter table public.teacher_students add column if not exists seat boolean not null default false;
+
+  -- set_student_seat: занять/освободить место. Прямой update на связи запрещён
+  -- (политики update у teacher_students нет) — это единственный путь.
+  create or replace function public.set_student_seat(p_student uuid, p_on boolean)
+  returns void
+  language plpgsql
+  security definer
+  set search_path = public
+  as $fn$
+  declare
+    uid uuid := auth.uid();
+    seats int;
+    taken int;
+  begin
+    if uid is null then raise exception 'RECALL_NO_AUTH'; end if;
+    if not exists (
+      select 1 from teacher_students where teacher_id = uid and student_id = p_student
+    ) then
+      raise exception 'RECALL_NOT_YOUR_STUDENT';
+    end if;
+
+    -- лок на преподавателя: параллельные включения не должны пробить лимит мест
+    perform pg_advisory_xact_lock(hashtext('seats:' || uid::text));
+
+    -- первое явное действие: материализуем текущее умолчание (первые N по дате),
+    -- иначе включение одного ученика молча снимет покрытие со всех остальных
+    if not exists (select 1 from teacher_students where teacher_id = uid and seat) then
+      seats := coalesce(public.teacher_seats_effective(uid), 0);
+      if seats > 0 then
+        update teacher_students ts set seat = true
+         where ts.teacher_id = uid
+           and ts.id in (
+             select id from teacher_students
+              where teacher_id = uid
+              order by created_at nulls first, id
+              limit seats
+           );
+      end if;
+    end if;
+
+    if p_on then
+      seats := public.teacher_seats_effective(uid);
+      if seats is not null then
+        select count(*) into taken from teacher_students
+         where teacher_id = uid and seat and student_id <> p_student;
+        if taken >= seats then
+          raise exception 'RECALL_SEATS_FULL';
+        end if;
+      end if;
+    end if;
+
+    update teacher_students set seat = p_on
+     where teacher_id = uid and student_id = p_student;
+  end $fn$;
+
+  -- Разовая простановка мест для связей, созданных до появления колонки.
+  -- Guard: выполняется, только если во ВСЕЙ таблице ещё нет ни одного места —
+  -- то есть ровно один раз, при первой заливке этого блока.
+  do $mig$
+  begin
+    if not exists (select 1 from public.teacher_students where seat) then
+      update public.teacher_students ts set seat = true
+       where ts.id in (
+         select x.id from (
+           select id, teacher_id,
+                  row_number() over (partition by teacher_id
+                                     order by created_at nulls first, id) as rn
+             from public.teacher_students
+         ) x
+         where x.rn <= coalesce(public.teacher_seats_effective(x.teacher_id), 0)
+       );
+    end if;
+  end $mig$;
 
   -- Три места, где жило наследование, теперь спрашивают привратника.
   create or replace function public.has_premium_access(uid uuid)
