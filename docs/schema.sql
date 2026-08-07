@@ -2867,6 +2867,142 @@
     );
   end $fn$;
 
+  -- ============================================================================
+  -- ПОКРЫТИЕ УЧЕНИКА ТАРИФОМ (2026-08-06, решение владельца)
+  -- Дыра, которую закрываем: у преподавателя без тарифа мест не ограничено
+  -- (это правильно — его ученики ничего не наследуют). Но он мог набрать сто
+  -- человек, потом купить самый младший тариф — и все сто разом получали
+  -- платные лимиты, потому что места проверялись ТОЛЬКО при привязке и при
+  -- покупке тарифа не пересчитывались.
+  --
+  -- Решение: тариф покрывает не «всех привязанных», а первых N по дате
+  -- привязки, где N — места тарифа. Остальные остаются обычными бесплатными
+  -- аккаунтами, пока преподаватель не расширит тариф.
+  --
+  -- ⚠️ Наследование раньше жило в ТРЁХ местах с тремя копиями условия
+  -- (has_premium_access, has_paid_access, energy_source) — заплатка в одном
+  -- оставила бы дыру в двух других. Поэтому здесь один привратник, а те трое
+  -- начинают спрашивать его.
+  -- Блок idempotent.
+  -- ============================================================================
+
+  -- Позиция ученика в очереди считается по (created_at, id) — нужен индекс,
+  -- функция дёргается на КАЖДОМ запросе к AI.
+  create index if not exists teacher_students_teacher_created_idx
+    on public.teacher_students (teacher_id, created_at, id);
+
+  -- Кто из преподавателей реально покрывает этого ученика своим тарифом.
+  -- null — никто (ученик живёт на своих бесплатных лимитах).
+  -- p_paid_only = true → триал не считается (для has_paid_access).
+  create or replace function public.covering_teacher(
+    p_student uuid, p_paid_only boolean default false
+  )
+  returns uuid
+  language sql
+  stable
+  security definer
+  set search_path = public
+  as $fn$
+    select ts.teacher_id
+    from teacher_students ts
+    join profiles tp on tp.id = ts.teacher_id
+    where ts.student_id = p_student
+      and tp.plan like 'teacher_%'
+      and not coalesce(tp.blocked, false) -- блокировка учителя снимает бенефит
+      and (
+        (tp.plan_expires_at is not null and tp.plan_expires_at > now())
+        or (not p_paid_only and tp.trial_until > now())
+      )
+      -- ученик попадает в число мест тарифа: его позиция в очереди привязки
+      -- к ЭТОМУ преподавателю не больше числа мест
+      and (
+        select count(*) from teacher_students t2
+        where t2.teacher_id = ts.teacher_id
+          and (coalesce(t2.created_at, 'epoch'::timestamptz), t2.id)
+              <= (coalesce(ts.created_at, 'epoch'::timestamptz), ts.id)
+      ) <= coalesce(public.teacher_seats_effective(ts.teacher_id), 0)
+    -- если преподавателей несколько, оплаченный тариф важнее триального
+    order by (tp.plan_expires_at is not null and tp.plan_expires_at > now()) desc
+    limit 1
+  $fn$;
+
+  -- Три места, где жило наследование, теперь спрашивают привратника.
+  create or replace function public.has_premium_access(uid uuid)
+  returns boolean
+  language sql
+  security definer
+  stable
+  set search_path = public
+  as $fn$
+    select
+      exists (
+        select 1 from profiles p where p.id = uid and (
+          p.trial_until > now()
+          or (p.plan <> 'free' and p.plan_expires_at is not null
+              and p.plan_expires_at > now())
+        )
+      )
+      or public.covering_teacher(uid) is not null
+  $fn$;
+
+  create or replace function public.has_paid_access(uid uuid)
+  returns boolean
+  language sql
+  security definer
+  stable
+  set search_path = public
+  as $fn$
+    select
+      exists (
+        select 1 from profiles p where p.id = uid and (
+          p.is_admin
+          or (p.plan <> 'free' and p.plan_expires_at is not null
+              and p.plan_expires_at > now())
+        )
+      )
+      or public.covering_teacher(uid, true) is not null
+  $fn$;
+
+  create or replace function public.energy_source(
+    uid uuid, out pool_owner uuid, out day_budget int, out in_studio boolean, out gen_limit int
+  ) language plpgsql stable security definer set search_path = public as $fn$
+  declare me record; t record; v_teacher uuid;
+  begin
+    select role, plan, plan_expires_at, trial_until into me from profiles where id = uid;
+    -- 1) сам аккаунт-учитель с ненулевым пулом → свой пул студии
+    if me.role = 'teacher' then
+      day_budget := case
+        when me.plan like 'teacher_%' and me.plan_expires_at > now() then public.teacher_energy_pool(me.plan)
+        when me.trial_until > now() then 40 else 0 end;
+      if day_budget > 0 then
+        pool_owner := uid; in_studio := true;
+        gen_limit := case
+          when me.plan like 'teacher_%' and me.plan_expires_at > now() then public.teacher_gen_limit(me.plan)
+          when me.trial_until > now() then 10 else 0 end;
+        return;
+      end if;
+    end if;
+    -- 2) ученик, ПОКРЫТЫЙ тарифом преподавателя → пул этого преподавателя.
+    --    Раньше здесь искался любой привязанный преподаватель — то есть сотый
+    --    ученик тарифа на пятерых пил из общего пула наравне с первым.
+    v_teacher := public.covering_teacher(uid);
+    if v_teacher is not null then
+      select case
+        when tp.plan like 'teacher_%' and tp.plan_expires_at > now() then public.teacher_energy_pool(tp.plan)
+        when tp.trial_until > now() then 40 else 0 end as pool
+        into t
+        from profiles tp where tp.id = v_teacher;
+      if t.pool > 0 then
+        pool_owner := v_teacher; day_budget := t.pool; in_studio := true; gen_limit := 0; return;
+      end if;
+    end if;
+    -- 3) сольный premium/триал → 30; 4) free → 5
+    if public.has_premium_access(uid) then
+      pool_owner := uid; day_budget := 30; in_studio := false; gen_limit := 0; return;
+    end if;
+    pool_owner := uid; day_budget := 5; in_studio := false; gen_limit := 0;
+  end $fn$;
+
   -- admin_find_user + число учеников. Зачем: у преподавателя БЕЗ тарифа мест
   -- не ограничено (см. teacher_seats_effective), поэтому он может набрать
   -- сколько угодно учеников, а потом купить самый младший тариф — и все они
@@ -2918,3 +3054,6 @@
   -- teacher_seats_effective(uid) — та же причина: по чужому uid раскрывал бы,
   -- оплачен ли у человека тариф. Зовут только join_teacher и get_my_plan.
   revoke execute on function public.teacher_seats_effective(uuid) from public, anon, authenticated;
+  -- covering_teacher(uid) — по чужому uid показал бы, платит ли за него учитель.
+  -- Зовут только has_*_access и energy_source (все security definer).
+  revoke execute on function public.covering_teacher(uuid, boolean) from public, anon, authenticated;

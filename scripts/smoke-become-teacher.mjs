@@ -156,6 +156,50 @@ try {
   const late = await lastStudent.rpc('join_teacher', { code })
   check('четвёртый ученик привязался после триала', !late.error, late.error?.message)
 
+  // 6b. ГЛАВНОЕ: тариф покрывает только первых N по дате привязки.
+  //     Воспроизводим саму дыру: набрали учеников сверх мест, пока лимита не
+  //     было, потом «купили» тариф — четвёртый НЕ должен получить пул студии.
+  await admin
+    .from('profiles')
+    .update({ trial_until: new Date(Date.now() + 7 * 864e5).toISOString() })
+    .eq('id', tId)
+
+  const covered = []
+  for (let i = 0; i < 4; i++) {
+    const st = await signIn(S_EMAILS[i])
+    const p = (await st.rpc('get_my_plan')).data
+    covered.push({ studio: p?.in_studio, max: p?.energy_max })
+  }
+  check(
+    'первые 3 ученика покрыты тарифом (пул студии)',
+    covered.slice(0, 3).every((c) => c.studio === true),
+    covered
+      .slice(0, 3)
+      .map((c) => `${c.studio}/${c.max}`)
+      .join(' '),
+  )
+  check(
+    'четвёртый ученик СВЕРХ мест не покрыт (свои бесплатные лимиты)',
+    covered[3].studio === false && covered[3].max === 5,
+    `in_studio=${covered[3].studio}, energy_max=${covered[3].max}`,
+  )
+
+  // 6c. расширили тариф — покрытие догоняет, руками ничего чинить не надо
+  await admin
+    .from('profiles')
+    .update({
+      plan: 'teacher_mini',
+      plan_expires_at: new Date(Date.now() + 30 * 864e5).toISOString(),
+    })
+    .eq('id', tId)
+  const st4 = await signIn(S_EMAILS[3])
+  const p4 = (await st4.rpc('get_my_plan')).data
+  check(
+    'после расширения тарифа четвёртый покрыт',
+    p4?.in_studio === true,
+    `in_studio=${p4?.in_studio}, energy_max=${p4?.energy_max}`,
+  )
+
   // 7. журнал самостоятельных включений
   const { count } = await admin
     .from('teacher_signups')

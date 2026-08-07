@@ -312,8 +312,15 @@ function TeacherDashboard() {
               </p>
             </Card>
           ) : (
-            students.map((s) => (
-              <StudentCard key={s.profile.id} student={s} decks={decks} onChanged={load} />
+            students.map((s, i) => (
+              <StudentCard
+                key={s.profile.id}
+                student={s}
+                decks={decks}
+                onChanged={load}
+                // тариф покрывает первых N по дате привязки — так же считает БД
+                covered={typeof myPlan?.seats !== 'number' ? true : i < myPlan.seats}
+              />
             ))
           )}
         </>
@@ -326,10 +333,13 @@ function StudentCard({
   student,
   decks,
   onChanged,
+  covered = true,
 }: {
   student: StudentInfo
   decks: Deck[]
   onChanged: () => void
+  /** Покрыт ли ученик тарифом: сверх мест AI-возможности у него обычные, бесплатные. */
+  covered?: boolean
 }) {
   const [showDecks, setShowDecks] = useState(false)
   const [showWords, setShowWords] = useState(false)
@@ -370,6 +380,11 @@ function StudentCard({
             {student.streak} ·{' '}
             {student.doneToday ? 'сегодня ✓' : 'сегодня —'}
           </p>
+          {!covered && (
+            <p className="mt-1 inline-block rounded-lg bg-amber-500/10 px-2 py-1 text-xs text-amber-200">
+              Вне мест тарифа — занимается на бесплатных лимитах AI
+            </p>
+          )}
         </div>
         <p className="text-right text-sm text-[var(--night-text-40)]">
           за 7 дней:

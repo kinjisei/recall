@@ -137,10 +137,13 @@ export async function getMyDecks(): Promise<Deck[]> {
 export async function getMyStudents(): Promise<StudentInfo[]> {
   const userId = await requireUserId()
 
+  // порядок привязки важен: тариф покрывает первых N учеников по дате
+  // (covering_teacher в БД считает так же), и экран должен показывать то же самое
   const { data: links, error } = await supabase
     .from('teacher_students')
-    .select('student_id')
+    .select('student_id, created_at')
     .eq('teacher_id', userId)
+    .order('created_at', { ascending: true })
   if (error) throw error
   const ids = (links ?? []).map((l) => l.student_id as string)
   if (ids.length === 0) return []
@@ -161,7 +164,12 @@ export async function getMyStudents(): Promise<StudentInfo[]> {
   const activity = activityRes.data ?? []
   const weekFrom = localDay(-6)
 
-  return ((profilesRes.data ?? []) as Profile[]).map((profile) => {
+  // .in() возвращает строки в произвольном порядке — восстанавливаем порядок
+  // привязки, иначе «первые N покрыты тарифом» на экране будут не те люди
+  const byId = new Map((profilesRes.data ?? []).map((p) => [(p as Profile).id, p as Profile]))
+  const ordered = ids.map((id) => byId.get(id)).filter((p): p is Profile => !!p)
+
+  return ordered.map((profile) => {
     const mine = activity.filter((a) => a.user_id === profile.id)
     const days = new Set(mine.map((a) => a.day as string))
     const weekItems = mine
