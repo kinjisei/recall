@@ -14,7 +14,13 @@ import type { ReviewItem } from '../../components/RoundReview'
 import { logActivity } from '../../lib/activity'
 import { speak } from '../../lib/speech'
 import { answerMatches } from '../../lib/text'
-import { loadGamePool, recordShown, withoutRecent, type PoolItem } from '../../lib/wordPool'
+import {
+  loadGamePool,
+  recordShown,
+  withoutRecent,
+  isTypable,
+  type PoolItem,
+} from '../../lib/wordPool'
 import { markWrong, sample } from './gameUtils'
 import { GameHeader, GameLoading } from './GameShell'
 import type { AppLang } from '../../types'
@@ -51,8 +57,11 @@ export function DictationMode({ lang, onBack }: { lang: AppLang; onBack: () => v
           const list =
             source === 'deck' ? p.items.slice(0, p.fromDeck) : p.items.slice(p.fromDeck)
           // анти-повтор — как в pickWords: недавние пропускаем, пока хватает
+          // Диктант — единственная игра, где ответ печатают руками, поэтому
+          // фильтр жёстче общего: длинные идиомы годятся для выбора варианта,
+          // но не для набора по памяти (см. isTypable в lib/wordPool).
           const picked = sample(
-            withoutRecent(lang, list.filter((w) => w.term), ROUND),
+            withoutRecent(lang, list.filter((w) => w.term && isTypable(w.term)), ROUND),
             ROUND,
           )
           if (picked.length === 0) setEmpty(true)

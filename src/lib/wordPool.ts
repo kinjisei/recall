@@ -89,12 +89,32 @@ export function pickWords(pool: GamePool, n: number): PoolItem[] {
 
 const MAX_CARDS = 200
 
-/** Слишком длинные фразы в играх неудобны (кнопки разъезжаются). */
+/**
+ * Годится ли выражение для игр с ВЫБОРОМ варианта (перевод, пропуск,
+ * аудирование, пары). Варианты рисуются в столбик с переносом строки, поэтому
+ * длинная фраза не ломает вёрстку — кнопка просто становится выше.
+ *
+ * Лимит был 3 слова / 28 символов и отсекал половину идиом: из 911 в играх
+ * участвовали 466. При 5 словах / 40 символах — 820. Именно ради идиом
+ * («bark up the wrong tree») ограничение и ослаблено: учить их списком, но не
+ * иметь возможности потренировать, — половина пользы впустую.
+ */
 function isPlayable(term: string, translation: string): boolean {
   if (!term || !translation) return false
-  if (term.split(/\s+/).length > 3 || term.length > 28) return false
+  if (term.split(/\s+/).length > 5 || term.length > 40) return false
   if (translation.length > 60) return false
   return true
+}
+
+/**
+ * Годится ли выражение для игр, где ответ НАБИРАЮТ руками (диктант).
+ * Здесь лимит должен быть жёстче общего: выбрать «a watched pot never boils»
+ * из четырёх вариантов легко, а напечатать по памяти — мучение, и человек
+ * решит, что игра сломана.
+ */
+export function isTypable(term: string): boolean {
+  if (!term) return false
+  return term.split(/\s+/).length <= 2 && term.length <= 20
 }
 
 /** Карточки пользователя выбранного языка вместе с расписанием. */
