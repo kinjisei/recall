@@ -31,7 +31,7 @@ function CTA({ label = 'Попробовать 14 дней бесплатно' }
       >
         {label}
       </Link>
-      <span className="text-xs text-[var(--night-text-40)]">Карта не нужна · отмена в любой момент · сейчас доступ по приглашению</span>
+      <span className="text-xs text-[var(--night-text-40)]">Карта не нужна · отмена в любой момент · регистрация открыта</span>
     </div>
   )
 }
