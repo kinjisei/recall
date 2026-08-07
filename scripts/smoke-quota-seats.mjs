@@ -71,10 +71,18 @@ try {
   check('код-приглашение получен', typeof code === 'string' && code.length >= 4, String(code))
 
   // --- A. места ---
-  // у преподавателя план free и триал в прошлом → мест 0
+  // Преподаватель без плана и без триала: мест НЕ ограничено (решение владельца
+  // 06.08.2026). Его ученики ничего не наследуют — у каждого свои бесплатные
+  // лимиты, поэтому такие привязки нам ничего не стоят и запрещать их незачем.
+  // Раньше здесь ожидался отказ RECALL_SEATS_FULL — это устаревшее поведение.
   let r = await st1.rpc('join_teacher', { code })
-  check('без плана и триала — привязка отклонена', !!r.error && r.error.message.includes('RECALL_SEATS_FULL'),
+  check('без плана и триала — привязка проходит (мест не ограничено)', !r.error,
     r.error?.message?.slice(0, 60))
+  // и покрытия при этом нет: пула студии у такого преподавателя не существует
+  const solo = (await st1.rpc('get_my_plan')).data
+  check('ученик такого преподавателя не в студии', solo?.in_studio === false,
+    `in_studio=${solo?.in_studio}`)
+  await admin.from('teacher_students').delete().eq('teacher_id', tId).eq('student_id', s1)
 
   // включаем триал → 3 места
   await admin.from('profiles').update({ trial_until: future }).eq('id', tId)
