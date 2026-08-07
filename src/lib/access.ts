@@ -39,7 +39,35 @@ export function describeSignUpError(raw: string): string {
   if (s.includes('database error saving new user') || s.includes('unexpected_failure')) {
     return GENERIC_SIGNUP_TEXT
   }
-  return raw
+  return describeAuthError(raw)
+}
+
+/**
+ * Ошибки входа и регистрации от GoTrue приходят ПО-АНГЛИЙСКИ, а мы обещаем
+ * человеку русский интерфейс: «Invalid login credentials» на экране входа —
+ * это первое, что видит новый пользователь, если промахнулся по клавише.
+ * Переводим известные случаи; неизвестное отдаём как есть, но с припиской,
+ * чтобы человек хотя бы понял, что делать дальше.
+ */
+export function describeAuthError(raw: string): string {
+  const s = raw.toLowerCase()
+  if (s.includes('invalid login credentials'))
+    return 'Неверная почта или пароль. Проверь раскладку и заглавные буквы.'
+  if (s.includes('email not confirmed'))
+    return 'Почта ещё не подтверждена — открой письмо от нас и нажми ссылку. Письма нет? Загляни в «Спам».'
+  if (s.includes('password should be at least'))
+    return 'Пароль слишком короткий — нужно минимум 8 символов.'
+  if (s.includes('user already registered') || s.includes('already been registered'))
+    return 'Такая почта уже зарегистрирована. Войди с ней или восстанови пароль.'
+  if (s.includes('unable to validate email') || s.includes('invalid format'))
+    return 'Почта написана с ошибкой — проверь адрес.'
+  if (s.includes('rate limit') || s.includes('you can only request this after'))
+    return 'Слишком много попыток подряд. Подожди минуту и попробуй снова.'
+  if (s.includes('signups not allowed'))
+    return 'Регистрация сейчас закрыта. Напиши нам — откроем доступ.'
+  if (s.includes('failed to fetch') || s.includes('networkerror') || s.includes('load failed'))
+    return 'Нет связи с сервером. Проверь интернет и попробуй ещё раз.'
+  return `Не получилось: ${raw}. Попробуй ещё раз — если повторится, напиши нам.`
 }
 
 /**

@@ -3,7 +3,7 @@ import { Link, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { BrandLogo, BrandMark } from '../../components/Brand'
 import { IconEye } from '../../components/icons'
-import { describeSignUpError } from '../../lib/access'
+import { describeAuthError, describeSignUpError } from '../../lib/access'
 import { supabase } from '../../lib/supabase'
 import { rememberPendingRole } from '../../lib/pendingRole'
 import { track } from '../../lib/analytics'
@@ -64,7 +64,7 @@ export function LoginPage() {
         }
       } else {
         const { error } = await signIn(email, password)
-        if (error) setError(error)
+        if (error) setError(describeAuthError(error))
       }
     } finally {
       setBusy(false)
@@ -170,7 +170,7 @@ export function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  minLength={6}
+                  minLength={8}
                 />
                 <button
                   type="button"
@@ -182,7 +182,7 @@ export function LoginPage() {
                 </button>
               </div>
               {signup && (
-                <p className="text-xs text-[var(--night-text-40)]">Минимум 6 символов.</p>
+                <p className="text-xs text-[var(--night-text-40)]">Минимум 8 символов.</p>
               )}
             </div>
 
