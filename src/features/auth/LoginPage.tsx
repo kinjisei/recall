@@ -1,9 +1,10 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { BrandLogo, BrandMark } from '../../components/Brand'
 import { IconEye } from '../../components/icons'
 import { describeSignUpError } from '../../lib/access'
+import { supabase } from '../../lib/supabase'
 
 /**
  * Экран входа/регистрации Recall — тёмная версия «Nocturne».
@@ -26,6 +27,8 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [info, setInfo] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  /** Адрес, на который ушло письмо подтверждения; не null — показываем экран ожидания. */
+  const [sentTo, setSentTo] = useState<string | null>(null)
 
   if (user) return <Navigate to="/" replace />
 
@@ -43,11 +46,10 @@ export function LoginPage() {
         // Отказ по белому списку приходит из БД технической формулировкой —
         // переводим его в человеческую (см. lib/access.ts)
         if (error) setError(describeSignUpError(error))
-        else
-          setInfo(
-            `Аккаунт создан. Мы отправили письмо на ${email.trim()} — открой ссылку в нём, ` +
-              'после этого сможешь войти. Письма нет? Загляни в «Спам».',
-          )
+        // Успех — уводим на отдельное состояние «проверь почту». Раньше форма
+        // оставалась на экране, и кнопка «Создать аккаунт» приглашала нажать
+        // ещё раз: человек получал «этот адрес уже зарегистрирован» и терялся.
+        else setSentTo(email.trim())
       } else {
         const { error } = await signIn(email, password)
         if (error) setError(error)
@@ -98,15 +100,34 @@ export function LoginPage() {
 
           <div className="flex flex-col gap-2">
             <h2 className="text-3xl font-medium tracking-tight">
-              {signup ? 'Создать новый профиль' : 'С возвращением'}
+              {sentTo ? 'Проверь почту' : signup ? 'Создать новый профиль' : 'С возвращением'}
             </h2>
             <p className="text-sm text-[var(--night-text-40)]">
-              {signup
-                ? 'Займёт минуту. На почту придёт письмо — подтверди адрес, и можно заниматься.'
-                : 'Войди, чтобы продолжить занятия.'}
+              {sentTo
+                ? 'Остался один шаг — подтвердить адрес.'
+                : signup
+                  ? 'Займёт минуту. На почту придёт письмо — подтверди адрес, и можно заниматься.'
+                  : 'Войди, чтобы продолжить занятия.'}
             </p>
           </div>
 
+          {sentTo ? (
+            <CheckEmail
+              email={sentTo}
+              onChangeEmail={() => {
+                setSentTo(null)
+                setInfo(null)
+                setError(null)
+              }}
+              onGoSignIn={() => {
+                setSentTo(null)
+                setMode('signin')
+                setPassword('')
+                setInfo(null)
+                setError(null)
+              }}
+            />
+          ) : (
           <form onSubmit={onSubmit} className="flex flex-col gap-5">
             {signup && (
               <div className="grid grid-cols-2 gap-4">
@@ -181,7 +202,9 @@ export function LoginPage() {
               </p>
             )}
           </form>
+          )}
 
+          {!sentTo && (
           <p className="text-center text-sm text-[var(--night-text-40)]">
             {signup ? 'Уже есть аккаунт?' : 'Нет аккаунта?'}{' '}
             <button
@@ -196,6 +219,7 @@ export function LoginPage() {
               {signup ? 'Войти' : 'Зарегистрироваться'}
             </button>
           </p>
+          )}
         </div>
       </div>
     </main>
@@ -203,6 +227,99 @@ export function LoginPage() {
 }
 
 /* ===== Переиспользуемые компоненты ===== */
+
+/**
+ * Состояние «письмо отправлено». Раньше после регистрации форма оставалась на
+ * экране вместе с кнопкой «Создать аккаунт» — человек нажимал её второй раз и
+ * получал «этот адрес уже зарегистрирован».
+ * Здесь у него ровно три понятных выхода: подождать письмо, попросить ещё одно,
+ * вернуться и исправить адрес.
+ */
+function CheckEmail({
+  email,
+  onChangeEmail,
+  onGoSignIn,
+}: {
+  email: string
+  onChangeEmail: () => void
+  onGoSignIn: () => void
+}) {
+  const [left, setLeft] = useState(60)
+  const [busy, setBusy] = useState(false)
+  const [note, setNote] = useState<string | null>(null)
+  const [err, setErr] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (left <= 0) return
+    const t = setTimeout(() => setLeft((v) => v - 1), 1000)
+    return () => clearTimeout(t)
+  }, [left])
+
+  const resend = async () => {
+    setBusy(true)
+    setErr(null)
+    setNote(null)
+    const { error } = await supabase.auth.resend({ type: 'signup', email })
+    if (error) {
+      // частый случай — слишком частые повторы; текст Supabase технический
+      setErr(
+        /rate|seconds|too many/i.test(error.message)
+          ? 'Письма отправляются не чаще раза в минуту. Подожди немного.'
+          : error.message,
+      )
+    } else {
+      setNote('Отправили ещё одно письмо.')
+      setLeft(60)
+    }
+    setBusy(false)
+  }
+
+  return (
+    <div className="flex flex-col gap-5">
+      <div className="rounded-2xl border border-[var(--night-accent-45)] bg-[rgba(145,132,217,.10)] p-4">
+        <p className="text-sm text-[var(--night-text-70)]">Письмо ушло на адрес</p>
+        <p className="mt-1 break-all font-medium">{email}</p>
+        <p className="mt-3 text-sm text-[var(--night-text-70)]">
+          Открой ссылку из письма — и сразу попадёшь в приложение. Обычно приходит за
+          минуту. Если не видно, загляни в «Спам» и «Промоакции».
+        </p>
+      </div>
+
+      {note && <p className="text-sm text-emerald-400">{note}</p>}
+      {err && (
+        <p role="alert" className="text-sm text-red-400">
+          {err}
+        </p>
+      )}
+
+      <button
+        type="button"
+        onClick={resend}
+        disabled={busy || left > 0}
+        className="h-14 w-full rounded-xl bg-[var(--night-text)] font-semibold text-[var(--night-bg)] transition-[filter,transform] hover:brightness-95 active:scale-[0.98] disabled:opacity-40"
+      >
+        {busy ? '…' : left > 0 ? `Отправить ещё раз через ${left} с` : 'Отправить письмо ещё раз'}
+      </button>
+
+      <div className="flex flex-col gap-2 text-center text-sm">
+        <button
+          type="button"
+          onClick={onGoSignIn}
+          className="-m-3 p-3 font-medium text-[var(--night-accent-text)] hover:underline"
+        >
+          Уже подтвердил — войти
+        </button>
+        <button
+          type="button"
+          onClick={onChangeEmail}
+          className="-m-3 p-3 text-[var(--night-text-40)] hover:text-[var(--night-text-70)] hover:underline"
+        >
+          Ошибся в адресе — изменить
+        </button>
+      </div>
+    </div>
+  )
+}
 
 /** Переливающийся фон: глубокий индиго-градиент + 3 дрейфующих blur-пятна + блик. */
 function AuroraBg() {
