@@ -10,7 +10,9 @@
 // ============================================================================
 import { SmartBack } from '../../components/SmartBack'
 
-const CONTACT = 'k.yerbolat.2004@gmail.com'
+// адрес — из общего lib/contacts: раньше он был вписан здесь и больше нигде,
+// поэтому из самого приложения написать было некуда
+import { SUPPORT_EMAIL as CONTACT } from '../../lib/contacts'
 const UPDATED = '24 июля 2026'
 
 function Shell({ title, children }: { title: string; children: React.ReactNode }) {

@@ -6,6 +6,7 @@
 // ============================================================================
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { SUPPORT_EMAIL, SUPPORT_SLA, supportMailto } from '../../lib/contacts'
 import { IconBack, IconSpeaker, IconCheck } from '../../components/icons'
 import { useSmartBack } from '../../components/SmartBack'
 import { useAuth } from '../../context/AuthContext'
@@ -214,6 +215,21 @@ export function SettingsPage() {
         Скорость озвучки и размер текста сохраняются на этом устройстве.
         Имя и уровень — в аккаунте.
       </p>
+
+      {/* Написать владельцу. До этого из приложения написать было НЕКУДА:
+          адрес лежал только в юридических страницах, куда никто не заходит. */}
+      <div className="rounded-2xl border border-white/[0.08] bg-[var(--night-surface)] p-4">
+        <p className="text-[15px] font-medium">Что-то не работает или непонятно?</p>
+        <p className="mt-1 text-sm text-[var(--night-text-70)]">
+          Напиши мне — починю или объясню. {SUPPORT_SLA}.
+        </p>
+        <a
+          href={supportMailto()}
+          className="mt-3 inline-flex min-h-11 items-center rounded-xl bg-[var(--night-accent-900)] px-4 text-sm font-medium text-[var(--night-accent-100)]"
+        >
+          Написать на {SUPPORT_EMAIL}
+        </a>
+      </div>
 
       {/* Link, не <a>: обычная ссылка перезагружает всё приложение и рвёт
           историю — «Назад» с тех страниц переставал возвращать сюда */}

@@ -8,6 +8,7 @@
 // выдуманных отзывов (соц. доказательства появятся после пилота).
 // ============================================================================
 import { Link } from 'react-router-dom'
+import { SUPPORT_SLA, supportMailto } from '../../lib/contacts'
 import { BrandLogo } from '../../components/Brand'
 import {
   IconCheck,
@@ -272,7 +273,16 @@ export function TeachersPage() {
           <div className="mt-5">
             <CTA />
           </div>
-          <p className="mt-8 text-xs text-[var(--night-text-40)]">
+          {/* Живой человек на другом конце — для холодного посетителя это часто
+              решает больше, чем ещё один блок про возможности */}
+          <p className="mt-8 text-sm text-[var(--night-text-60)]">
+            Вопросы до регистрации?{' '}
+            <a href={supportMailto('Recall — вопрос от преподавателя')} className="text-[var(--night-accent-text)] underline">
+              Напиши мне
+            </a>
+            . {SUPPORT_SLA}.
+          </p>
+          <p className="mt-4 text-xs text-[var(--night-text-40)]">
             <Link to="/pricing" className="underline">Все тарифы</Link> ·{' '}
             <Link to="/terms" className="underline">Условия</Link> ·{' '}
             <Link to="/privacy" className="underline">Конфиденциальность</Link>

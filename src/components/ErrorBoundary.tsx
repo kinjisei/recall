@@ -6,6 +6,7 @@
 // а на прочие ошибки показываем понятный экран с кнопкой.
 // ============================================================================
 import { Component, type ReactNode } from 'react'
+import { supportMailto } from '../lib/contacts'
 import { IconWarning } from './icons'
 
 const RELOAD_AT = 'recall.chunk_reload_at'
@@ -55,6 +56,18 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
           </p>
           <p className="max-w-sm text-sm text-[var(--night-text-40)]">
             Попробуй обновить страницу — обычно это помогает.
+          </p>
+          {/* Экран поломки — самое место для контакта: если обновление не
+              спасло, человеку больше некуда идти */}
+          <p className="max-w-sm text-sm text-[var(--night-text-40)]">
+            Не помогло?{' '}
+            <a
+              href={supportMailto('Recall — ошибка в приложении')}
+              className="text-[var(--night-accent-text)] underline"
+            >
+              Напиши мне
+            </a>
+            , починю.
           </p>
           <button
             onClick={() => {
