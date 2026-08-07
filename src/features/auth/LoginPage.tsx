@@ -1,10 +1,11 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import { Link, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { BrandLogo, BrandMark } from '../../components/Brand'
 import { IconEye } from '../../components/icons'
 import { describeSignUpError } from '../../lib/access'
 import { supabase } from '../../lib/supabase'
+import { rememberPendingRole } from '../../lib/pendingRole'
 
 /**
  * Экран входа/регистрации Recall — тёмная версия «Nocturne».
@@ -29,6 +30,13 @@ export function LoginPage() {
   const [busy, setBusy] = useState(false)
   /** Адрес, на который ушло письмо подтверждения; не null — показываем экран ожидания. */
   const [sentTo, setSentTo] = useState<string | null>(null)
+
+  // /login?role=teacher — пришёл с лендинга для репетиторов. Запоминаем сразу:
+  // после подтверждения почты страница откроется заново, и параметра уже не будет.
+  const { search } = useLocation()
+  useEffect(() => {
+    rememberPendingRole(search)
+  }, [search])
 
   if (user) return <Navigate to="/" replace />
 

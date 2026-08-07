@@ -25,7 +25,7 @@ function CTA({ label = 'Попробовать 14 дней бесплатно' }
   return (
     <div className="flex flex-col items-center gap-1.5">
       <Link
-        to="/login"
+        to="/login?role=teacher"
         className="lift inline-flex min-h-[52px] items-center justify-center rounded-2xl bg-[var(--night-accent)] px-7 font-medium text-white"
       >
         {label}
@@ -101,7 +101,7 @@ export function TeachersPage() {
         <div className="mx-auto flex max-w-screen-md items-center justify-between px-5 py-3">
           <BrandLogo width={92} />
           <Link
-            to="/login"
+            to="/login?role=teacher"
             className="flex min-h-[40px] items-center rounded-full border border-white/[0.12] px-4 text-sm text-[var(--night-text-70)]"
           >
             Войти

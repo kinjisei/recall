@@ -3,6 +3,8 @@ import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { isOnboarded, shouldOnboard } from '../lib/onboarding'
 import { isBlocked } from '../lib/access'
+import { hasPendingTeacherRole, clearPendingRole } from '../lib/pendingRole'
+import { becomeTeacher } from '../lib/teacher'
 import { BlockedScreen } from './BlockedScreen'
 
 /**
@@ -39,6 +41,19 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
     }
     // pathname в зависимостях — чтобы перепроверить после перехода с /onboarding
   }, [user, pathname])
+
+  // Пришёл по ссылке для преподавателей (/login?role=teacher) — включаем режим
+  // сам, как только он вошёл. Метка переживает поход в почту (localStorage),
+  // потому что подтверждение открывает страницу заново.
+  // Ошибку глотаем намеренно: не пустить человека в приложение из-за того, что
+  // не включился режим, — хуже, чем один раз нажать переключатель вручную.
+  useEffect(() => {
+    if (!user || !hasPendingTeacherRole()) return
+    let alive = true
+    becomeTeacher()
+      .then(() => alive && clearPendingRole())
+      .catch(() => alive && clearPendingRole())
+  }, [user?.id])
 
   // Флаг блокировки перечитываем только при смене пользователя: зависимость на
   // user?.id, а не на объект user, иначе рефреш токена дёргал бы запрос заново.

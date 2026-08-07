@@ -3117,19 +3117,35 @@
   create or replace function public.energy_source(
     uid uuid, out pool_owner uuid, out day_budget int, out in_studio boolean, out gen_limit int
   ) language plpgsql stable security definer set search_path = public as $fn$
-  declare me record; t record; v_teacher uuid;
+  declare me record; t record; v_teacher uuid; paid_teacher boolean; has_students boolean;
   begin
     select role, plan, plan_expires_at, trial_until, created_at into me from profiles where id = uid;
-    -- 1) сам аккаунт-учитель с ненулевым пулом → свой пул студии
+    -- 1) сам аккаунт-учитель → свой пул студии
+    --
+    -- ⚠️ РОЛЬ САМА ПО СЕБЕ НЕ ДАЁТ НИЧЕГО (2026-08-06). Пока роль выдавалась
+    -- вручную SQL-ом, это было неважно. Но с самостоятельным включением (A1)
+    -- любой аккаунт на триале одним нажатием получал 40 ⚡/день вместо 30/15 и
+    -- 10 генераций на Pro-моделях (~22 ₸ штука) — то есть потолок бесплатного
+    -- аккаунта поднимался примерно с 330 ₸ до 770 ₸.
+    -- Теперь пул и генерации на триале включаются, только когда появился ХОТЯ БЫ
+    -- ОДИН привязанный ученик. Настоящему репетитору это ничего не стоит (он за
+    -- этим и пришёл), а «нажал посмотреть» перестаёт что-либо давать.
+    -- Оплаченный тариф работает сразу, без учеников: человек заплатил.
     if me.role = 'teacher' then
+      paid_teacher := me.plan like 'teacher_%' and me.plan_expires_at > now();
+      select exists (select 1 from teacher_students where teacher_id = uid) into has_students;
       day_budget := case
-        when me.plan like 'teacher_%' and me.plan_expires_at > now() then public.teacher_energy_pool(me.plan)
-        when me.trial_until > now() then 40 else 0 end;
+        when paid_teacher then public.teacher_energy_pool(me.plan)
+        when me.trial_until > now() and has_students then 40
+        else 0 end;
       if day_budget > 0 then
         pool_owner := uid; in_studio := true;
         gen_limit := case
-          when me.plan like 'teacher_%' and me.plan_expires_at > now() then public.teacher_gen_limit(me.plan)
-          when me.trial_until > now() then 10 else 0 end;
+          when paid_teacher then public.teacher_gen_limit(me.plan)
+          -- на триале 3, а не 10: генерация материала/программы идёт на самых
+          -- дорогих моделях, и десять штук на бесплатный аккаунт — перебор.
+          -- Трёх хватает попробовать материал и программу с одной переделкой.
+          else 3 end;
         return;
       end if;
     end if;

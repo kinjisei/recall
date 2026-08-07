@@ -261,6 +261,46 @@ try {
     .eq('teacher_id', tId)
   check('преподаватель отвязал ученика', !del.error && leftLinks === 3, `связей: ${leftLinks}`)
 
+  // 6f. РОЛЬ САМА ПО СЕБЕ НИЧЕГО НЕ ДАЁТ: пул студии и генерации на триале
+  //     включаются только с первым учеником. Иначе любой аккаунт одним нажатием
+  //     получал 40 ⚡/день вместо 30/15 и 10 генераций на Pro-моделях.
+  const lonely = await makeUser('become-lonely@recall.test')
+  await admin.from('profiles').update({ role: 'teacher' }).eq('id', lonely)
+  const lonelyClient = await signIn('become-lonely@recall.test')
+  const lonelyPlan = (await lonelyClient.rpc('get_my_plan')).data
+  check(
+    'преподаватель БЕЗ учеников: пула студии нет',
+    lonelyPlan?.in_studio === false && lonelyPlan?.gen_limit === 0,
+    `in_studio=${lonelyPlan?.in_studio}, gen_limit=${lonelyPlan?.gen_limit}`,
+  )
+  check(
+    'преподаватель БЕЗ учеников: энергия как у обычного триала',
+    lonelyPlan?.energy_max === 30,
+    `energy_max=${lonelyPlan?.energy_max}`,
+  )
+  const lonelyGen = await lonelyClient.rpc('spend_energy', {
+    p_kind: 'heavy', p_cost: 0, p_generation: true,
+  })
+  check(
+    'преподаватель БЕЗ учеников: генерация отклонена',
+    !!lonelyGen.error && /GEN_LIMIT/.test(lonelyGen.error.message),
+    lonelyGen.error?.message ?? 'ПРОШЛА',
+  )
+
+  // привязываем одного ученика — студия оживает
+  const lonelyCode = (await lonelyClient.rpc('ensure_invite_code')).data
+  const someStudent = await signIn(S_EMAILS[2])
+  await someStudent.rpc('join_teacher', { code: lonelyCode })
+  const lonelyPlan2 = (await lonelyClient.rpc('get_my_plan')).data
+  check(
+    'с первым учеником: пул студии 40 и 3 генерации',
+    lonelyPlan2?.energy_max === 40 && lonelyPlan2?.gen_limit === 3,
+    `energy_max=${lonelyPlan2?.energy_max}, gen_limit=${lonelyPlan2?.gen_limit}`,
+  )
+  await admin.from('teacher_students').delete().eq('teacher_id', lonely)
+  await admin.auth.admin.deleteUser(lonely).catch(() => {})
+  await admin.from('allowed_emails').delete().eq('email', 'become-lonely@recall.test')
+
   // 7. журнал самостоятельных включений
   const { count } = await admin
     .from('teacher_signups')
