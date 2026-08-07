@@ -16,6 +16,12 @@ export interface AdminUserRow {
   plan: PlanId
   plan_expires_at: string | null
   trial_until: string | null
+  /** Роль в приложении; появилось вместе с самостоятельной выдачей роли (A1). */
+  role?: 'learner' | 'teacher'
+  /** Сколько учеников уже привязано — виден риск «набрал бесплатно, купил младший тариф». */
+  students?: number
+  /** Мест по текущему тарифу; null — без ограничения. */
+  seats?: number | null
 }
 
 /** Ответ admin_set_plan — свежие plan/plan_expires_at для обновления строки. */

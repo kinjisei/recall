@@ -122,11 +122,12 @@ function BecomeTeacher({ onDone, onBack }: { onDone: () => void; onBack: () => v
           Включить режим преподавателя
         </Button>
         <p className="mt-3 text-center text-xs text-[var(--night-text-40)]">
+          Включается бесплатно, учеников можно приглашать сразу.
           {freeSeats
-            ? `Бесплатно можно вести до ${freeSeats} учеников. `
-            : 'Начать можно бесплатно. '}
-          Больше — на тарифе для преподавателей. Учиться самому это не мешает:
-          всё остальное останется как было.
+            ? ` Пока идёт пробный период — до ${freeSeats} учеников, зато у каждого повышенный запас AI.`
+            : ''}{' '}
+          Общий запас AI на всю студию и генерация материалов — на тарифе для преподавателей.
+          Учиться самому это не мешает.
         </p>
       </Card>
     </div>
@@ -489,11 +490,31 @@ function StudentCard({
  * (seats тогда не приходит) или если аккаунт админский — у владельца лимитов нет.
  */
 function Seats({ plan, used }: { plan: MyPlan | null; used: number }) {
-  if (!plan || typeof plan.seats !== 'number' || plan.is_admin) return null
-  const total = plan.seats
-  const full = used >= total
-  const onFreeSeats = typeof plan.free_seats === 'number' && total === plan.free_seats
+  // seats нет в ответе — миграция не залита; 0 — не преподаватель; админ без лимитов
+  if (!plan || plan.seats === undefined || plan.seats === 0 || plan.is_admin) return null
+  const total = plan.seats // null = без ограничения
 
+  if (total === null) {
+    return (
+      <div className="mt-3 border-t border-white/[0.06] pt-3">
+        <p className="text-xs text-[var(--night-text-40)]">
+          Учеников: <span className="text-[var(--night-text-70)]">{used}</span> · приглашать
+          можно сколько нужно
+        </p>
+        <p className="mt-1.5 text-xs text-[var(--night-text-40)]">
+          Сейчас у каждого ученика обычный бесплатный запас AI. Общий запас на всю студию и
+          генерация материалов —{' '}
+          <Link to="/pricing" className="text-[var(--night-accent)] underline underline-offset-2">
+            на тарифе для преподавателей
+          </Link>
+          .
+        </p>
+      </div>
+    )
+  }
+
+  const full = used >= total
+  const onTrialSeats = typeof plan.free_seats === 'number' && total === plan.free_seats
   return (
     <div className="mt-3 border-t border-white/[0.06] pt-3">
       <p className="text-xs text-[var(--night-text-40)]">
@@ -501,8 +522,8 @@ function Seats({ plan, used }: { plan: MyPlan | null; used: number }) {
       </p>
       {full && (
         <p className="mt-1.5 text-xs text-[var(--night-text-70)]">
-          {onFreeSeats
-            ? `На бесплатном тарифе можно вести до ${total} учеников. Чтобы взять больше — `
+          {onTrialSeats
+            ? `Пока идёт пробный период, учеников можно вести до ${total} — зато у каждого повышенный запас AI. Чтобы взять больше — `
             : 'Места тарифа заняты. Чтобы взять больше учеников — '}
           <Link to="/pricing" className="text-[var(--night-accent)] underline underline-offset-2">
             подключи тариф

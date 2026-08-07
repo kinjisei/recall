@@ -197,7 +197,25 @@ function UserRow({
         <span>
           Триал до: <span className="text-[var(--night-text-70)]">{fmtDate(row.trial_until)}</span>
         </span>
+        {typeof row.students === 'number' && row.students > 0 && (
+          <span>
+            Учеников: <span className="text-[var(--night-text-70)]">{row.students}</span>
+          </span>
+        )}
       </div>
+
+      {/* У преподавателя без тарифа мест не ограничено, и при покупке МЛАДШЕГО
+          тарифа все набранные ученики разом получают платные лимиты AI.
+          Проверка мест стоит только при привязке, при активации не пересчитывается —
+          поэтому предупреждаем глазами. */}
+      {typeof row.students === 'number' &&
+        row.students > 5 &&
+        !row.plan.startsWith('teacher_') && (
+          <p className="mt-2 rounded-xl bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+            У этого аккаунта уже {row.students} учеников. После включения тарифа все они
+            получат повышенные лимиты AI — проверь, что это ожидаемо.
+          </p>
+        )}
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <select

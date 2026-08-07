@@ -2680,13 +2680,29 @@
   -- Блок idempotent.
   -- ============================================================================
 
-  -- ЕДИНСТВЕННОЕ место, где живёт число бесплатных мест. Менять здесь.
+  -- Мест на ТРИАЛЕ. Ограничение здесь нужно не ради денег за места, а потому
+  -- что ученики триального преподавателя НАСЛЕДУЮТ его уровень доступа
+  -- (has_premium_access): каждый получает личные 300 переводов и 150
+  -- распознаваний в сутки МИМО пула энергии. Без лимита один триальный аккаунт
+  -- раздавал бы премиум-лимиты сотне человек на 14 дней бесплатно.
   create or replace function public.free_teacher_seats()
   returns int language sql immutable as $fn$ select 3 $fn$;
 
-  -- Сколько мест реально доступно преподавателю СЕЙЧАС.
-  -- Оплаченный тариф с не истёкшим сроком → места тарифа; во всех остальных
-  -- случаях (free, триал, истёкший тариф) → бесплатные места.
+  -- Сколько мест доступно преподавателю СЕЙЧАС. null = без ограничения.
+  --
+  -- Логика (решение владельца 06.08.2026): ограничиваем только там, где место
+  -- реально чего-то стоит.
+  --   • оплаченный тариф активен → места тарифа (ученики наследуют платные
+  --     лимиты 900/400 в сутки каждый — вот это и надо считать);
+  --   • триал активен → free_teacher_seats() (наследуют премиум-лимиты);
+  --   • всё остальное (free без триала, истёкший тариф) → БЕЗ ОГРАНИЧЕНИЯ:
+  --     ученики такого преподавателя не получают ничего сверх обычного
+  --     бесплатного аккаунта, у каждого свои 5 ⚡ и свои 100 переводов. Тридцать
+  --     его учеников стоят нам ровно столько же, сколько тридцать случайных
+  --     бесплатных пользователей, — ограничивать тут нечего.
+  -- Давление на покупку остаётся другое и более честное: без тарифа нет пула
+  -- энергии для учеников и нельзя генерировать материалы и программы.
+  --
   -- ⚠️ Принимает чужой uid → тот же класс утечки, что был у energy_source:
   -- по нему можно было бы узнать тариф чужого. EXECUTE отзывается у
   -- authenticated в финальном блоке файла; зовут только security-definer функции.
@@ -2703,7 +2719,8 @@
            and p.plan_expires_at is not null
            and p.plan_expires_at > now()
         then public.teacher_seat_limit(p.plan)
-      else public.free_teacher_seats()
+      when p.trial_until > now() then public.free_teacher_seats()
+      else null  -- без ограничения: ученики ничего не наследуют
     end
     from profiles p
     where p.id = p_uid
@@ -2790,14 +2807,16 @@
       return t.nm;
     end if;
 
-    -- coalesce: если профиля вдруг нет, функция вернёт null и сравнение
-    -- «taken >= seats» будет null (не true) — привязка прошла бы мимо лимита
-    seats := coalesce(public.teacher_seats_effective(t.id), 0);
-    select count(*) into taken from teacher_students where teacher_id = t.id;
-    if taken >= seats then
-      -- один код на все случаи: ученику НЕ показываем, какой у преподавателя
-      -- тариф — это его дело (тот же принцип, что закрытые гранты на profiles)
-      raise exception 'RECALL_SEATS_FULL';
+    -- null = без ограничения (преподаватель без тарифа и без триала: его
+    -- ученики не наследуют повышенных лимитов, считать нечего)
+    seats := public.teacher_seats_effective(t.id);
+    if seats is not null then
+      select count(*) into taken from teacher_students where teacher_id = t.id;
+      if taken >= seats then
+        -- один код на все случаи: ученику НЕ показываем, какой у преподавателя
+        -- тариф — это его дело (тот же принцип, что закрытые гранты на profiles)
+        raise exception 'RECALL_SEATS_FULL';
+      end if;
     end if;
 
     insert into teacher_students (teacher_id, student_id)
@@ -2830,7 +2849,8 @@
       where user_id = uid and called_at >= day0;
     select count(*) into g_used from ai_calls
       where pool_owner = src.pool_owner and is_generation and called_at >= public.recall_month_start();
-    v_seats := coalesce(public.teacher_seats_effective(uid), 0);
+    -- seats: null = без ограничения (клиент так и покажет)
+    v_seats := public.teacher_seats_effective(uid);
     select count(*) into v_seats_used from teacher_students where teacher_id = uid;
     return json_build_object(
       'plan', p.plan, 'plan_expires_at', p.plan_expires_at, 'trial_until', p.trial_until,
@@ -2845,6 +2865,41 @@
       'seats', v_seats, 'seats_used', v_seats_used,
       'free_seats', public.free_teacher_seats()
     );
+  end $fn$;
+
+  -- admin_find_user + число учеников. Зачем: у преподавателя БЕЗ тарифа мест
+  -- не ограничено (см. teacher_seats_effective), поэтому он может набрать
+  -- сколько угодно учеников, а потом купить самый младший тариф — и все они
+  -- разом унаследуют платные лимиты (900 переводов и 400 распознаваний в сутки
+  -- КАЖДОМУ, мимо пула). Проверка мест стоит только в момент привязки и при
+  -- активации тарифа не пересчитывается.
+  -- Пока оплата включается руками, самая дешёвая защита — показать число
+  -- учеников прямо в админке: владелец увидит «учеников: 50, тариф на 5» и
+  -- задаст вопрос. Когда оплата станет автоматической, это надо будет заменить
+  -- на жёсткое правило (бенефит только первым N ученикам по дате привязки).
+  create or replace function public.admin_find_user(q text)
+  returns json
+  language plpgsql
+  security definer
+  set search_path = public
+  as $fn$
+  begin
+    if not exists (select 1 from profiles where id = auth.uid() and is_admin) then
+      raise exception 'RECALL_NOT_ADMIN';
+    end if;
+    return coalesce((
+      select json_agg(row_to_json(t)) from (
+        select u.id, u.email, p.display_name, p.plan,
+               p.plan_expires_at, p.trial_until, p.role,
+               (select count(*) from teacher_students ts where ts.teacher_id = u.id) as students,
+               public.teacher_seats_effective(u.id) as seats
+        from auth.users u
+        join public.profiles p on p.id = u.id
+        where u.email ilike '%' || trim(coalesce(q, '')) || '%'
+        order by u.created_at desc
+        limit 10
+      ) t
+    ), '[]'::json);
   end $fn$;
 
   -- Финальный revoke/grant — ПОСЛЕДНИЙ в файле, накрывает все функции выше,

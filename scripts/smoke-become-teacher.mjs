@@ -5,11 +5,15 @@
  *  1. Обычный пользователь включает себе роль сам (RPC become_teacher).
  *  2. Повторный вызов не ломается (идемпотентность).
  *  3. Прямая попытка выдать себе роль в обход RPC (update profiles.role) — отказ.
- *  4. Бесплатных мест ровно free_teacher_seats(): 3 ученика привязываются,
- *     четвёртый получает RECALL_SEATS_FULL.
+ *  4. На ТРИАЛЕ мест ровно free_teacher_seats(): 3 ученика привязываются,
+ *     четвёртый получает RECALL_SEATS_FULL (их ученики наследуют повышенные
+ *     лимиты AI, поэтому места считаем).
  *  5. get_my_plan отдаёт seats/seats_used/free_seats.
- *  6. Запись о новом преподавателе попала в teacher_signups.
- *  7. teacher_seats_effective недоступна клиенту напрямую (утечка чужого тарифа).
+ *  6. ПОСЛЕ триала лимита нет (seats = null) и четвёртый ученик привязывается:
+ *     ученики такого преподавателя ничего не наследуют и стоят нам столько же,
+ *     сколько любые бесплатные аккаунты.
+ *  7. Запись о новом преподавателе попала в teacher_signups.
+ *  8. teacher_seats_effective недоступна клиенту напрямую (утечка чужого тарифа).
  *
  * Запуск: node scripts/smoke-become-teacher.mjs
  * Скрипт сам создаёт и удаляет тестовые аккаунты через service_role.
@@ -136,14 +140,30 @@ try {
     `seats=${plan2?.seats}, used=${plan2?.seats_used}`,
   )
 
-  // 6. журнал самостоятельных включений
+  // 6. после триала лимита нет: ученики такого преподавателя не наследуют
+  //    повышенных лимитов, поэтому считать места незачем
+  await admin
+    .from('profiles')
+    .update({ trial_until: new Date(Date.now() - 864e5).toISOString() })
+    .eq('id', tId)
+  const planAfter = (await teacher.rpc('get_my_plan')).data
+  check(
+    'после триала мест без ограничения (seats = null)',
+    planAfter?.seats === null,
+    `seats=${planAfter?.seats}`,
+  )
+  const lastStudent = await signIn(S_EMAILS[3])
+  const late = await lastStudent.rpc('join_teacher', { code })
+  check('четвёртый ученик привязался после триала', !late.error, late.error?.message)
+
+  // 7. журнал самостоятельных включений
   const { count } = await admin
     .from('teacher_signups')
     .select('user_id', { count: 'exact', head: true })
     .eq('user_id', tId)
   check('запись в teacher_signups есть', count === 1, `строк: ${count}`)
 
-  // 7. служебная функция закрыта от клиента
+  // 8. служебная функция закрыта от клиента
   const leak = await teacher.rpc('teacher_seats_effective', { p_uid: sIds[0] })
   check('teacher_seats_effective недоступна клиенту', !!leak.error, leak.error?.message ?? 'ОТДАЛА ДАННЫЕ')
 } catch (e) {
