@@ -6,6 +6,7 @@
 // ПРЕПОДАВАТЕЛЯ»): запись только через функции, чтение — обеим сторонам.
 // ============================================================================
 import { supabase, requireUserId } from './supabase'
+import { dbError } from './dbError'
 import type { AppLang, CEFRLevel } from '../types'
 
 export interface PlacementRequest {
@@ -25,13 +26,13 @@ export async function assignPlacement(studentId: string, lang: AppLang): Promise
     p_student_id: studentId,
     p_lang: lang,
   })
-  if (error) throw new Error(error.message)
+  if (error) throw dbError(error, 'назначить тест уровня')
 }
 
 /** Преподаватель снимает тест (или убирает старый результат из списка). */
 export async function cancelPlacement(id: string): Promise<void> {
   const { error } = await supabase.rpc('cancel_placement', { p_id: id })
-  if (error) throw new Error(error.message)
+  if (error) throw dbError(error, 'снять тест уровня')
 }
 
 /** Все тесты, назначенные этому ученику (для карточки у преподавателя). */

@@ -3,6 +3,7 @@
 // Чистая логика построения плана — lib/dailyPlanCore (тестируется отдельно).
 // ============================================================================
 import { supabase, requireUserId, toJson } from './supabase'
+import { dbError } from './dbError'
 import type { DailyPlanConfig, PlanKind } from './dailyPlanCore'
 export * from './dailyPlanCore'
 
@@ -49,5 +50,5 @@ export async function setDailyPlan(
     p_student_id: studentId,
     p_plan: toJson(cfg),
   })
-  if (error) throw new Error(error.message)
+  if (error) throw dbError(error, 'сохранить план дня')
 }

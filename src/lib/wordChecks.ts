@@ -4,6 +4,7 @@
 // оценкой «again». Таблица word_checks, RLS — docs/schema.sql.
 // ============================================================================
 import { supabase, requireUserId, toJson } from './supabase'
+import { dbError } from './dbError'
 import { reviewCard } from './fsrs'
 import type { Card, ReviewState, WordCheck, WordCheckResult } from '../types'
 
@@ -70,7 +71,7 @@ export async function assignWordCheck(studentId: string, cardIds: string[]): Pro
     p_student_id: studentId,
     p_card_ids: cardIds,
   })
-  if (error) throw new Error(error.message)
+  if (error) throw dbError(error, 'назначить перепроверку слов')
 }
 
 /** Перепроверки, назначенные ученику (для отчёта у преподавателя). */
@@ -132,7 +133,7 @@ export async function submitWordCheck(
     p_id: check.id,
     p_results: toJson(results),
   })
-  if (error) throw new Error(error.message)
+  if (error) throw dbError(error, 'сохранить результат перепроверки')
   if (!didComplete) return // уже завершена — идемпотентно
 
   // неверные слова → again (вернутся в колоду; FSRS сожмёт интервал)

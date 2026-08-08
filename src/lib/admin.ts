@@ -5,6 +5,7 @@
 // сервере, здесь только вызовы и человеко-читаемые ошибки.
 // ============================================================================
 import { supabase } from './supabase'
+import { dbError } from './dbError'
 import { track } from './analytics'
 
 export type PlanId = 'free' | 'premium' | 'teacher_mini' | 'teacher_start' | 'teacher_pro'
@@ -32,18 +33,13 @@ export interface AdminSetPlanResult {
   plan_expires_at: string | null
 }
 
-/** Коды ошибок RPC → понятный текст на русском. */
-function humanError(message: string): string {
-  if (message.includes('RECALL_NOT_ADMIN')) return 'Доступно только владельцу'
-  if (message.includes('RECALL_BAD_PLAN')) return 'Неизвестный план'
-  if (message.includes('RECALL_NO_AUTH')) return 'Нужно войти заново'
-  return message || 'Что-то пошло не так'
-}
+// Коды RECALL_NOT_ADMIN / RECALL_BAD_PLAN / RECALL_NO_AUTH переводит общий
+// dbError — отдельная таблица переводов здесь больше не нужна.
 
 /** Найти пользователей по email (частичное совпадение, до 10 штук). */
 export async function findUsers(q: string): Promise<AdminUserRow[]> {
   const { data, error } = await supabase.rpc('admin_find_user', { q })
-  if (error) throw new Error(humanError(error.message))
+  if (error) throw dbError(error, 'найти пользователя')
   // RPC возвращает json (схема не описывает его форму) — честный мост через unknown
   return (data ?? []) as unknown as AdminUserRow[]
 }
@@ -62,6 +58,6 @@ export async function setPlan(
     new_plan: plan,
     months,
   })
-  if (error) throw new Error(humanError(error.message))
+  if (error) throw dbError(error, 'изменить тариф')
   return data as unknown as AdminSetPlanResult
 }

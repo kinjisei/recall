@@ -5,6 +5,8 @@
 // Доступы разруливает RLS (docs/schema.sql, блок «ФАЗА 4»).
 // ============================================================================
 import { supabase, requireUserId } from './supabase'
+import { dbError } from './dbError'
+import { SUPPORT_EMAIL } from './contacts'
 import { PROFILE_COLUMNS, invalidateProfile } from './profile'
 import { track } from './analytics'
 import type { Card, Deck, Profile } from '../types'
@@ -48,7 +50,7 @@ function streakFromDays(days: Set<string>): number {
  */
 export async function getOrCreateInviteCode(): Promise<string> {
   const { data, error } = await supabase.rpc('ensure_invite_code')
-  if (error) throw new Error(error.message)
+  if (error) throw dbError(error, 'получить код приглашения')
   return data as string
 }
 
@@ -60,7 +62,7 @@ export async function getOrCreateInviteCode(): Promise<string> {
  */
 export async function regenerateInviteCode(): Promise<string> {
   const { data, error } = await supabase.rpc('regenerate_invite_code')
-  if (error) throw new Error(error.message)
+  if (error) throw dbError(error, 'сменить код приглашения')
   return data as string
 }
 
@@ -72,16 +74,16 @@ export async function regenerateInviteCode(): Promise<string> {
 export async function becomeTeacher(): Promise<void> {
   const { error } = await supabase.rpc('become_teacher')
   if (error) {
-    if (error.message.includes('RECALL_BLOCKED')) {
-      throw new Error('Аккаунт приостановлен — напиши владельцу приложения.')
-    }
-    // RPC ещё не залита в базу (деплой раньше миграции)
+    // RPC ещё не залита в базу (деплой раньше миграции). Общий текст dbError
+    // тут хуже: человеку важно знать, что путь всё-таки есть — роль включат
+    // руками. Остальное (блокировка, сеть, права) разбирает dbError.
     if (error.code === 'PGRST202' || error.message.includes('become_teacher')) {
+      console.error('[db] нет RPC become_teacher:', error)
       throw new Error(
-        'Режим преподавателя пока включается вручную — напиши владельцу приложения.',
+        `Режим преподавателя пока включается вручную — напиши на ${SUPPORT_EMAIL}.`,
       )
     }
-    throw new Error(error.message)
+    throw dbError(error, 'включить режим преподавателя')
   }
   invalidateProfile()
   void track('teacher_enabled')
@@ -97,15 +99,9 @@ export async function setStudentSeat(studentId: string, on: boolean): Promise<vo
     p_student: studentId,
     p_on: on,
   })
-  if (error) {
-    if (error.message.includes('RECALL_SEATS_FULL')) {
-      throw new Error('Все места тарифа заняты — сначала освободи одно или расширь тариф.')
-    }
-    if (error.message.includes('RECALL_NOT_YOUR_STUDENT')) {
-      throw new Error('Это не твой ученик.')
-    }
-    throw new Error(error.message)
-  }
+  // RECALL_SEATS_FULL и RECALL_NOT_YOUR_STUDENT переводит сам dbError:
+  // тексты общие для преподавателя, дублировать их здесь незачем
+  if (error) throw dbError(error, 'изменить место по тарифу')
 }
 
 /** Отвязать ученика от себя. Его аккаунт и прогресс остаются при нём. */
@@ -116,7 +112,7 @@ export async function unlinkStudent(studentId: string): Promise<void> {
     .delete()
     .eq('teacher_id', teacherId)
     .eq('student_id', studentId)
-  if (error) throw new Error(error.message)
+  if (error) throw dbError(error, 'отвязать ученика')
 }
 
 /** Ученик вводит код → привязка. Возвращает имя преподавателя. */
@@ -129,11 +125,12 @@ export async function joinTeacher(code: string): Promise<string> {
     // преподавателя тариф: чужой тариф — не его дело (тот же принцип, что и
     // закрытые гранты на profiles).
     if (error.message.includes('RECALL_SEATS_FULL')) {
+      console.error('[db] join_teacher: мест нет', error)
       throw new Error(
         'У преподавателя сейчас нет свободного места для нового ученика. Напиши ему — он освободит место или расширит тариф, и код заработает.',
       )
     }
-    throw new Error(error.message)
+    throw dbError(error, 'привязаться к преподавателю')
   }
   void track('student_linked')
   return (data as string) ?? 'Преподаватель'
@@ -263,7 +260,7 @@ export async function assignSelectedWords(
       example: c.example ?? '',
     })),
   })
-  if (error) throw new Error(error.message)
+  if (error) throw dbError(error, 'назначить слова ученику')
   return (data as number) ?? cards.length
 }
 

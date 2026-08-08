@@ -4,6 +4,7 @@
 // Таблицы materials / material_assignments, RLS — docs/schema.sql.
 // ============================================================================
 import { supabase, requireUserId, toJson } from './supabase'
+import { dbError } from './dbError'
 import { chat } from './gemini'
 import { track } from './analytics'
 import type {
@@ -343,7 +344,7 @@ export async function assignMaterial(materialId: string, studentId: string): Pro
     p_material_id: materialId,
     p_student_id: studentId,
   })
-  if (error) throw new Error(error.message)
+  if (error) throw dbError(error, 'назначить материал')
 }
 
 export async function unassignMaterial(materialId: string, studentId: string): Promise<void> {
@@ -351,7 +352,7 @@ export async function unassignMaterial(materialId: string, studentId: string): P
     p_material_id: materialId,
     p_student_id: studentId,
   })
-  if (error) throw new Error(error.message)
+  if (error) throw dbError(error, 'снять назначение')
 }
 
 /** Назначения одного материала (для карточки материала у преподавателя). */
@@ -395,7 +396,7 @@ export async function submitAssignment(
     p_auto_score: autoScore,
     p_auto_total: autoTotal,
   })
-  if (error) throw new Error(error.message)
+  if (error) throw dbError(error, 'отправить работу')
 }
 
 // ---------------------------------------------------------------------------
@@ -515,7 +516,7 @@ export async function saveAiReview(
     p_id: assignmentId,
     p_review: toJson(review),
   })
-  if (error) throw new Error(error.message)
+  if (error) throw dbError(error, 'сохранить черновик проверки')
 }
 
 /** Финал проверки: вердикты преподавателя, статус reviewed (через RPC). */
@@ -527,7 +528,7 @@ export async function finishReview(
     p_id: assignmentId,
     p_review: toJson(review),
   })
-  if (error) throw new Error(error.message)
+  if (error) throw dbError(error, 'сохранить проверку')
 }
 
 /**
@@ -544,5 +545,5 @@ export async function reassignAssignment(
     p_id: assignment.id,
     p_note: note,
   })
-  if (error) throw new Error(error.message)
+  if (error) throw dbError(error, 'переназначить работу')
 }

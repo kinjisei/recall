@@ -6,6 +6,7 @@
 // Хранение — таблица study_plans (docs/schema.sql, блок «ПРОГРАММА ОБУЧЕНИЯ»).
 // ============================================================================
 import { supabase, requireUserId, toJson } from './supabase'
+import { dbError } from './dbError'
 import type { Tables } from './database.types'
 import { chat } from './gemini'
 import { getStudentDiagnostics, type StudentDiagnostics } from './diagnostics'
@@ -214,7 +215,7 @@ export async function saveStudyPlan(req: PlanRequest, plan: GeneratedPlan): Prom
     p_summary: plan.summary,
     p_weeks: toJson(plan.weeks),
   })
-  if (error) throw new Error(error.message)
+  if (error) throw dbError(error, 'сохранить программу')
 }
 
 // Строка study_plans из БД → StudyPlan. Типизировано всё, кроме трёх полей,
@@ -237,14 +238,14 @@ export async function getActivePlan(studentId: string, lang: AppLang): Promise<S
     .select('*')
     .match({ teacher_id: teacherId, student_id: studentId, lang, status: 'active' })
     .maybeSingle()
-  if (error) throw new Error(error.message)
+  if (error) throw dbError(error, 'загрузить программу')
   return data ? rowToPlan(data) : null
 }
 
 /** Снять программу (в архив). */
 export async function archivePlan(id: string): Promise<void> {
   const { error } = await supabase.from('study_plans').update({ status: 'archived' }).eq('id', id)
-  if (error) throw new Error(error.message)
+  if (error) throw dbError(error, 'снять программу')
 }
 
 /** Активные программы текущего ученика (для «Учёбы» и /program). */

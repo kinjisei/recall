@@ -4,6 +4,7 @@
 // 5a — создание/назначение; оценка и проверка — в 5b/5c.
 // ============================================================================
 import { supabase, requireUserId, toJson } from './supabase'
+import { dbError } from './dbError'
 import { chat } from './gemini'
 import type {
   AppLang,
@@ -64,7 +65,7 @@ export async function assignWritingTask(taskId: string, studentId: string): Prom
     p_task_id: taskId,
     p_student_id: studentId,
   })
-  if (error) throw new Error(error.message)
+  if (error) throw dbError(error, 'назначить письменное задание')
 }
 
 export async function unassignWritingTask(taskId: string, studentId: string): Promise<void> {
@@ -72,7 +73,7 @@ export async function unassignWritingTask(taskId: string, studentId: string): Pr
     p_task_id: taskId,
     p_student_id: studentId,
   })
-  if (error) throw new Error(error.message)
+  if (error) throw dbError(error, 'снять письменное задание')
 }
 
 /** Назначения одного задания (для карточки задания у преподавателя). */
@@ -114,7 +115,7 @@ export async function submitWriting(
     p_grade: toJson(grade),
     p_band: band,
   })
-  if (error) throw new Error(error.message)
+  if (error) throw dbError(error, 'отправить письмо')
 }
 
 /** Преподаватель завершает проверку письма: свой вердикт + итоговый band. */
@@ -128,13 +129,13 @@ export async function finishWritingReview(
     p_review: toJson(review),
     p_band: band,
   })
-  if (error) throw new Error(error.message)
+  if (error) throw dbError(error, 'сохранить проверку письма')
 }
 
 /** Переназначить письмо тому же ученику (текущий цикл уходит в историю). */
 export async function reassignWriting(assignmentId: string, note: string): Promise<void> {
   const { error } = await supabase.rpc('reassign_writing', { p_id: assignmentId, p_note: note })
-  if (error) throw new Error(error.message)
+  if (error) throw dbError(error, 'переназначить письмо')
 }
 
 /** Сколько писем ждут проверки (для бейджа вкладки «Письмо» у преподавателя). */
