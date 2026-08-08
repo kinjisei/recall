@@ -62,7 +62,7 @@ export function WritingPage() {
         <Card className="text-center">
           <p className="font-semibold">Заданий пока нет</p>
           <p className="mt-1 text-sm text-[var(--night-text-40)]">
-            Преподаватель назначит письмо — оно появится здесь.
+            Преподаватель назначит письменную работу — она появится здесь.
           </p>
         </Card>
       ) : (
@@ -137,7 +137,7 @@ function WritingRunner({
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-3 px-4 py-4">
-      <BackHeader onBack={onBack} title="Письмо" label="К списку" />
+      <BackHeader onBack={onBack} title="Письменная работа" label="К списку" />
 
       <Card>
         <p className="text-xs text-[var(--night-text-40)]">

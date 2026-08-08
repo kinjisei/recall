@@ -12,6 +12,7 @@ import {
   getOrCreateInviteCode,
   regenerateInviteCode,
   becomeTeacher,
+  stopTeaching,
   setStudentSeat,
   unlinkStudent,
   getMyStudents,
@@ -149,6 +150,7 @@ function TeacherDashboard() {
   const [code, setCode] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [regenerating, setRegenerating] = useState(false)
+  const [stopping, setStopping] = useState(false)
   const [students, setStudents] = useState<StudentInfo[]>([])
   const [decks, setDecks] = useState<Deck[]>([])
   const [pendingWorks, setPendingWorks] = useState(0)
@@ -199,6 +201,24 @@ function TeacherDashboard() {
 
   // Перевыпуск кода: старый сразу перестаёт работать, уже привязанные ученики
   // остаются. Спрашиваем подтверждение — действие необратимое.
+  // Выключение режима: возвращает обычную роль. Учеников не трогает — если они
+  // есть, база откажет с понятным текстом (кнопку в этом случае и не показываем).
+  const stopTeach = async () => {
+    if (!confirm('Выключить режим преподавателя? Студия и код приглашения пропадут. Твои собственные занятия останутся как есть.')) return
+    setStopping(true)
+    setError(null)
+    try {
+      await stopTeaching()
+      // жёсткий переход, а не navigate: роль читают шапка, меню и Главная —
+      // после смены роли проще перезагрузить приложение, чем ловить их все
+      window.location.assign('/')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Не получилось выключить')
+    } finally {
+      setStopping(false)
+    }
+  }
+
   const changeCode = async () => {
     if (!confirm('Выдать новый код? Старый перестанет работать сразу. Уже привязанные ученики останутся.')) {
       return
@@ -237,7 +257,11 @@ function TeacherDashboard() {
           [
             ['students', 'Ученики'],
             ['materials', 'Материалы'],
-            ['writing', 'Письмо'],
+            // «Письмо» читалось как «сообщение ученику», хотя это задания-эссе
+            // с проверкой по критериям IELTS — то есть самый сильный довод
+            // студии прятался за названием (находка ревью 1В). У ученика этот
+            // же раздел уже называется «Письменные задания» — теперь совпадает.
+            ['writing', 'Письменные работы'],
             ['guide', 'Методичка'],
           ] as [TeacherTab, string][]
         ).map(([id, label]) => (
@@ -307,6 +331,23 @@ function TeacherDashboard() {
               </span>
             </div>
             <Seats plan={myPlan} used={students.length} />
+
+            {/* Включить режим можно было одним нажатием, а выключить — никак:
+                нажавший из любопытства оставался с чужой ролью навсегда.
+                Показываем только когда учеников нет — с ними выключение всё
+                равно откажет, и кнопка-обманка была бы хуже её отсутствия. */}
+            {students.length === 0 && (
+              <div className="mt-3 border-t border-white/[0.06] pt-3">
+                <Button
+                  variant="ghost"
+                  className="min-h-[44px] px-3 py-2 text-sm text-[var(--night-text-40)]"
+                  loading={stopping}
+                  onClick={stopTeach}
+                >
+                  Выключить режим преподавателя
+                </Button>
+              </div>
+            )}
           </Card>
 
           {error && (
@@ -404,7 +445,11 @@ function StudentCard({
         <div>
           <p className="font-semibold">{p.display_name ?? 'Без имени'}</p>
           <p className="text-sm text-[var(--night-text-40)]">
-            Уровень {p.level} · <IconFlame size={13} className="inline align-text-bottom" />{' '}
+            {/* Уровня может НЕ БЫТЬ: пока ученик не прошёл тест, мы его не
+                знаем. Раньше здесь стояло «Уровень B1» (умолчание колонки), и
+                карточка противоречила строке ниже — «тестов пока не было». */}
+            {p.level ? `Уровень ${p.level}` : 'Уровень не определён'} ·{' '}
+            <IconFlame size={13} className="inline align-text-bottom" />{' '}
             {student.streak} ·{' '}
             {student.doneToday ? 'сегодня ✓' : 'сегодня —'}
           </p>
@@ -485,6 +530,11 @@ function StudentCard({
         </div>
       )}
 
+      {/* Тест уровня — ПЕРВЫМ. Комментарий в коде и методичка всегда говорили,
+          что с нового ученика надо начинать именно с него, но на экране он
+          стоял третьим — после колод и диагностики (находка ревью 1В). */}
+      <PlacementSection studentId={p.id} studentName={p.display_name ?? 'ученик'} />
+
       <button
         onClick={() => setShowDiag((v) => !v)}
         className="text-left text-sm font-medium text-[var(--night-accent-text)] hover:underline"
@@ -494,10 +544,6 @@ function StudentCard({
       {showDiag && (
         <DiagnosticsSection studentId={p.id} studentName={p.display_name ?? 'Ученик'} />
       )}
-
-      {/* тест уровня — своя раскрывашка: нужна в первую очередь с новым
-          учеником, когда уровень ещё неизвестен */}
-      <PlacementSection studentId={p.id} studentName={p.display_name ?? 'ученик'} />
 
       <button
         onClick={() => setShowPlanDay((v) => !v)}

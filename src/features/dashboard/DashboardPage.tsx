@@ -182,7 +182,9 @@ export function DashboardPage() {
 
   const name = profile?.display_name || user?.email?.split('@')[0] || 'друг'
   const esLevel = lang === 'es' ? getEsLevel() : null
-  const level = lang === 'es' ? (esLevel ?? 'A1–A2') : (profile?.level ?? 'B1')
+  // ⚠️ Не подставляем B1: раньше приложение уверенно писало уровень, которого
+  // никто не измерял (умолчание колонки в базе). Не знаем — не говорим.
+  const level = lang === 'es' ? esLevel : (profile?.level ?? null)
   const didToday = doneToday.size > 0
 
   // план на сегодня — ТОЛЬКО когда все входы загружены (иначе null)
@@ -225,7 +227,8 @@ export function DashboardPage() {
       <header className="animate-fade-up">
         <h1 className="text-2xl font-medium tracking-tight">Привет, {name}</h1>
         <p className="mt-1 text-sm text-[var(--night-text-40)]">
-          {lang === 'es' ? 'Испанский' : 'Английский'} · {level} ·{' '}
+          {lang === 'es' ? 'Испанский' : 'Английский'}
+          {level ? ` · ${level}` : ''} ·{' '}
           {didToday ? 'сегодня уже занимался' : 'готов к практике?'}
         </p>
       </header>
