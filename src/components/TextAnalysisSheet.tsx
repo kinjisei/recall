@@ -28,6 +28,8 @@ export function TextAnalysisSheet({
   onClose: () => void
 }) {
   const [phase, setPhase] = useState<'confirm' | 'loading' | 'result' | 'error'>('confirm')
+  // причина отказа от сервера — показываем её, а не общее «попробуй ещё раз»
+  const [error, setError] = useState<string | null>(null)
   const [data, setData] = useState<TextAnalysis | null>(null)
   const [progress, setProgress] = useState({ done: 0, total: estimateCost(text) })
 
@@ -48,7 +50,9 @@ export function TextAnalysisSheet({
       setCachedTextAnalysis(lang, text, r)
       setData(r)
       setPhase('result')
-    } catch {
+    } catch (e) {
+      // причину не теряем: сервер объясняет, что именно случилось
+      setError(e instanceof Error ? e.message : null)
       setPhase('error')
     }
   }
@@ -108,7 +112,9 @@ export function TextAnalysisSheet({
 
           {phase === 'error' && (
             <div className="mt-4 flex flex-col gap-3">
-              <p className="text-sm text-red-400">Не удалось разобрать. Попробуй ещё раз.</p>
+              <p className="text-sm text-red-400">
+                {error ?? 'Не удалось разобрать. Попробуй ещё раз.'}
+              </p>
               <Button className="w-full" onClick={run}>
                 Повторить
               </Button>

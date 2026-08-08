@@ -35,6 +35,7 @@ export function ConversationPage() {
   const [profileLevel, setProfileLevel] = useState<CEFRLevel>('B1')
   // цель обучения из профиля — уходит в промпт (см. goalHint)
   const [goal, setGoal] = useState<LearningGoal | null>(null)
+  const [profileKnown, setProfileKnown] = useState(false)
 
   // Уровень из профиля — от него зависят промпты (B1 проще, C1 богаче).
   // Профильный уровень описывает английский; испанский пока считаем A1–A2.
@@ -42,12 +43,17 @@ export function ConversationPage() {
     if (!user) return
     // кэш профиля — без лишнего запроса при каждом заходе во вкладку
     getProfile(user.id).then((p) => {
-      if (p?.level) setProfileLevel(p.level as CEFRLevel)
+      if (p?.level) {
+        setProfileLevel(p.level as CEFRLevel)
+        setProfileKnown(true)
+      }
       setGoal(p?.goal ?? null)
     })
   }, [user])
 
   const level: CEFRLevel = lang === 'es' ? getEsLevel() ?? 'A1' : profileLevel
+  // знаем ли уровень на самом деле (профиль мог быть пустым)
+  const knownLevel = lang === 'es' ? getEsLevel() !== null : profileKnown
 
   return (
     <div className="flex flex-col gap-4">
@@ -56,7 +62,14 @@ export function ConversationPage() {
         <div className="min-w-0">
           <h1 className="text-2xl font-medium tracking-tight">Диалог</h1>
           <p className="text-xs text-[var(--night-text-40)]">
-            {lang === 'es' ? `испанский · ${level}` : `уровень ${level}`}
+            {/* Уровень показываем, только если он ИЗВЕСТЕН: у нового аккаунта
+                его нет, а B1 здесь — рабочее умолчание для промпта, не факт
+                о человеке. Раньше экран уверенно писал «уровень B1». */}
+            {lang === 'es'
+              ? `испанский · ${level}`
+              : knownLevel
+                ? `уровень ${level}`
+                : 'уровень определим по ходу'}
           </p>
         </div>
         <TabPicker variant="segment" options={modes} value={mode} onChange={setMode} ariaLabel="Режим" />

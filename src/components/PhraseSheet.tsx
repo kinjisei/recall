@@ -32,7 +32,8 @@ export function PhraseSheet({
   onClose: () => void
 }) {
   const [tr, setTr] = useState<string | null>(null)
-  const [failed, setFailed] = useState(false)
+  // текст причины, а не флаг — см. AnalysisSheet
+  const [failed, setFailed] = useState<string | null>(null)
   const [added, setAdded] = useState(false)
   const [busy, setBusy] = useState(false)
   const [analyze, setAnalyze] = useState(false)
@@ -40,15 +41,15 @@ export function PhraseSheet({
   useEffect(() => {
     let alive = true
     setTr(null)
-    setFailed(false)
+    setFailed(null)
     setAdded(false)
     translatePhrase(text, lang)
       .then((r) => {
         if (!alive) return
         if (r) setTr(r)
-        else setFailed(true)
+        else setFailed('Не удалось перевести — можно добавить как есть.')
       })
-      .catch(() => alive && setFailed(true))
+      .catch((e) => alive && setFailed(e instanceof Error ? e.message : 'Не удалось перевести — можно добавить как есть.'))
     return () => {
       alive = false
     }
@@ -94,11 +95,7 @@ export function PhraseSheet({
             {tr === null && !failed && (
               <p className="mt-3 text-sm text-[var(--night-text-40)]">Перевожу…</p>
             )}
-            {failed && (
-              <p className="mt-3 text-sm text-[var(--night-text-40)]">
-                Не удалось перевести — можно добавить как есть.
-              </p>
-            )}
+            {failed && <p className="mt-3 text-sm text-[var(--night-text-40)]">{failed}</p>}
             {tr && (
               <p className="mt-2 rounded-xl bg-white/[0.04] px-3 py-2 text-[15px] leading-relaxed text-[var(--night-text)]">
                 {tr}

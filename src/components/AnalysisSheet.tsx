@@ -20,15 +20,18 @@ export function AnalysisSheet({
   onClose: () => void
 }) {
   const [data, setData] = useState<Analysis | null>(null)
-  const [error, setError] = useState(false)
+  // ⚠️ Храним ТЕКСТ ошибки, а не флаг: сервер объясняет причину («энергия
+  // на сегодня кончилась», «нет связи»), а флаг превращал любое объяснение
+  // в «попробуй ещё раз» — человек жал вслепую (находка ревью 2В).
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let alive = true
     setData(null)
-    setError(false)
+    setError(null)
     analyzeSelection(text, sentence, lang)
       .then((r) => alive && setData(r))
-      .catch(() => alive && setError(true))
+      .catch((e) => alive && setError(e instanceof Error ? e.message : 'Не удалось разобрать. Попробуй ещё раз.'))
     return () => {
       alive = false
     }
@@ -48,9 +51,7 @@ export function AnalysisSheet({
           {!data && !error && (
             <p className="mt-4 text-sm text-[var(--night-text-40)]">Разбираю фрагмент…</p>
           )}
-          {error && (
-            <p className="mt-4 text-sm text-red-400">Не удалось разобрать. Попробуй ещё раз.</p>
-          )}
+          {error && <p className="mt-4 text-sm text-red-400">{error}</p>}
 
           {data && (
             <>

@@ -36,10 +36,13 @@ export function EmptyPool({ title, onBack }: { title: string; onBack: () => void
         <IconTray size={40} className="text-[var(--night-text-25)]" />
         <p className="mt-2 font-semibold">Пока мало слов для игры</p>
         <p className="mt-1 text-sm text-[var(--night-text-40)]">
-          Добавляй слова в разделе «Учёба» → «Слова» (кнопка «Паки слов») или
-          тапая по словам в текстах.
+          Возьми готовый набор по уровню — или тапни по незнакомому слову в
+          любом тексте.
         </p>
-        <Button className="mt-4" onClick={() => navigate('/study')}>
+        {/* Кнопка ведёт ТУДА, ЧТО ОБЕЩАЕТ. Такая же была в пустой колоде и
+            уже починена; эта осталась второй копией того же класса — вела на
+            корень «Учёбы», где до слов ещё два тапа. */}
+        <Button className="mt-4" onClick={() => navigate('/study?view=words&sheet=packs')}>
           Добавить первые слова
         </Button>
       </Card>
