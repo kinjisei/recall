@@ -3373,3 +3373,202 @@
   -- визиты до регистрации не считаются и воронка теряет знаменатель.
   -- Грант выше по файлу не работает — строка `revoke ... from anon` его снимает.
   grant execute on function public.track_event(text, jsonb, uuid, text) to anon, authenticated;
+
+-- ============================================================================
+-- ЭТАП 2 РЕМОНТА: ВОЗВРАТ ЭНЕРГИИ И ПРОБНЫЕ ГЕНЕРАЦИИ (2026-08-08)
+-- Выполнять ЦЕЛИКОМ вместе с файлом (идемпотентно).
+-- ============================================================================
+do $$ begin
+
+  -- --------------------------------------------------------------------------
+  -- 1. ВОЗВРАТ ЭНЕРГИИ, КОГДА AI НЕ ОТВЕТИЛ
+  --
+  -- Проблема. api/gemini.ts списывает энергию ДО обращения к модели. Если вся
+  -- цепочка моделей выгорела по суточным квотам Google (429 у каждой), человек
+  -- теряет ⚡ и не получает ничего. Бьёт по платящим и читается как поломка,
+  -- хотя ограничение внешнее.
+  --
+  -- Почему НЕ «вернуть последнее списание». Сервер ходит в базу под токеном
+  -- пользователя (своего ключа у него нет) — значит любая RPC возврата доступна
+  -- и самому пользователю из браузера. RPC «верни последнее» = безлимитный AI
+  -- в один вызов. Поэтому списание помечается НЕУГАДЫВАЕМЫМ токеном, который
+  -- сервер генерирует у себя и клиенту не отдаёт, а вернуть можно строго по
+  -- нему, только своё и только в ближайшие минуты.
+  -- --------------------------------------------------------------------------
+  alter table public.ai_calls add column if not exists refund_token uuid;
+  create index if not exists ai_calls_refund_token
+    on public.ai_calls (refund_token) where refund_token is not null;
+
+  -- Добавляем параметр p_nonce. Старую 3-аргументную версию ОБЯЗАТЕЛЬНО
+  -- удаляем: иначе появится перегрузка, и вызов с тремя параметрами станет
+  -- неоднозначным для PostgREST.
+  drop function if exists public.spend_energy(text, int, boolean);
+
+  create or replace function public.spend_energy(
+    p_kind text default 'heavy', p_cost int default 1, p_generation boolean default false,
+    p_nonce text default null
+  ) returns void language plpgsql security definer set search_path = public as $fn$
+  declare
+    v_kind text := case when p_kind in ('light','speech') then p_kind else 'heavy' end;
+    -- пустую строку (старый клиент/сервер) трактуем как «токена нет»
+    v_tok uuid;
+    uid uuid := auth.uid();
+    day0 timestamptz := public.recall_day_start();
+    src record;
+    n int; pool_spent int; self_spent int; gen_used int;
+  begin
+    if uid is null then raise exception 'RECALL_NO_AUTH'; end if;
+    begin v_tok := nullif(p_nonce, '')::uuid; exception when others then v_tok := null; end;
+    perform pg_advisory_xact_lock(hashtext('ai_quota:' || uid::text));
+
+    if exists (select 1 from auth.users where id=uid and banned_until is not null and banned_until>now())
+      then raise exception 'RECALL_BLOCKED'; end if;
+    if exists (select 1 from profiles where id=uid and blocked) then raise exception 'RECALL_BLOCKED'; end if;
+    delete from ai_calls where called_at < now() - interval '40 days';  -- держим месяц генераций
+
+    -- админ (владелец) — без лимитов, но пишем строку для статистики
+    if exists (select 1 from profiles where id=uid and is_admin) then
+      insert into ai_calls (user_id, kind, cost_energy, is_generation, refund_token)
+        values (uid, v_kind, 0, p_generation, v_tok);
+      return;
+    end if;
+
+    -- часовой предохранитель от скриптов (по классу доступа)
+    select count(*) into n from ai_calls where user_id=uid and called_at > now() - interval '1 hour';
+    if n >= (case when public.has_paid_access(uid) then 200 when public.has_premium_access(uid) then 90 else 40 end)
+      then raise exception 'RECALL_RATE_HOUR'; end if;
+
+    -- ГЕНЕРАЦИЯ: месячный лимит по пулу учителя
+    if p_generation then
+      select * into src from public.energy_source(uid);
+      select count(*) into gen_used from ai_calls
+        where pool_owner = src.pool_owner and is_generation and called_at >= public.recall_month_start();
+      if gen_used >= src.gen_limit then raise exception 'RECALL_GEN_LIMIT'; end if;
+      insert into ai_calls (user_id, kind, cost_energy, pool_owner, is_generation, refund_token)
+        values (uid, 'heavy', 0, src.pool_owner, true, v_tok);
+      return;
+    end if;
+
+    -- LIGHT/SPEECH (0 энергии): только суточный анти-абьюз-кэп по классу
+    if v_kind in ('light','speech') then
+      select count(*) into n from ai_calls
+        where user_id=uid and ai_calls.kind=v_kind and called_at >= day0;
+      if n >= (case v_kind
+          when 'light' then case when public.has_paid_access(uid) then 900 when public.has_premium_access(uid) then 150 else 100 end
+          else case when public.has_paid_access(uid) then 400 when public.has_premium_access(uid) then 150 else 50 end end) then
+        if v_kind='light' then raise exception 'RECALL_LIGHT_LIMIT'; else raise exception 'RECALL_SPEECH_LIMIT'; end if;
+      end if;
+      insert into ai_calls (user_id, kind, cost_energy, refund_token)
+        values (uid, v_kind, 0, v_tok);
+      return;
+    end if;
+
+    -- ЭНЕРГИЯ (heavy): дневной пул + под-кап на аккаунт в студии
+    select * into src from public.energy_source(uid);
+    select coalesce(sum(cost_energy),0) into pool_spent from ai_calls
+      where pool_owner = src.pool_owner and called_at >= day0;
+    if pool_spent + p_cost > src.day_budget then
+      if src.in_studio then raise exception 'RECALL_ENERGY_POOL';
+      elsif public.has_premium_access(uid) then raise exception 'RECALL_ENERGY_DAY';
+      else raise exception 'RECALL_FREE_LIMIT'; end if;
+    end if;
+    if src.in_studio and src.pool_owner <> uid then
+      select coalesce(sum(cost_energy),0) into self_spent from ai_calls
+        where user_id = uid and called_at >= day0;
+      if self_spent + p_cost > (src.day_budget / 2) then raise exception 'RECALL_ENERGY_SUBCAP'; end if;
+    end if;
+    insert into ai_calls (user_id, kind, cost_energy, pool_owner, refund_token)
+      values (uid, 'heavy', p_cost, src.pool_owner, v_tok);
+  end $fn$;
+
+  -- Возврат ровно одного списания по серверному токену.
+  -- Окно 10 минут: дольше живой запрос не идёт, а старый токен не должен
+  -- оставаться отмычкой. Чужие строки недоступны (user_id = auth.uid()).
+  create or replace function public.refund_ai_call(p_nonce text)
+  returns boolean language plpgsql security definer set search_path = public as $fn$
+  declare uid uuid := auth.uid(); v_tok uuid; v_id bigint;
+  begin
+    if uid is null then raise exception 'RECALL_NO_AUTH'; end if;
+    begin v_tok := nullif(p_nonce, '')::uuid; exception when others then return false; end;
+    if v_tok is null then return false; end if;
+    perform pg_advisory_xact_lock(hashtext('ai_quota:' || uid::text));
+    select id into v_id from ai_calls
+      where refund_token = v_tok and user_id = uid
+        and called_at > now() - interval '10 minutes'
+      limit 1;
+    if v_id is null then return false; end if;
+    delete from ai_calls where id = v_id;
+    return true;
+  end $fn$;
+
+  -- --------------------------------------------------------------------------
+  -- 2. ДВЕ ПРОБНЫЕ ГЕНЕРАЦИИ РЕПЕТИТОРУ БЕЗ УЧЕНИКОВ
+  --
+  -- Было: у триального учителя без учеников gen_limit = 0, и на ПЕРВОЙ же
+  -- попытке он читал «Лимит генераций на этот месяц исчерпан» — сообщение,
+  -- которое вдобавок неправда: лимит не исчерпан, его не было. Человек,
+  -- пришедший оценить продукт, не мог увидеть главное, за что мы просим денег.
+  -- Стало (решение владельца 07.08.2026): 2 генерации — ровно один материал
+  -- целиком (план + текст). Пул энергии по-прежнему требует ученика: там счёт
+  -- идёт на сотни действий, здесь — на одну демонстрацию.
+  -- --------------------------------------------------------------------------
+  create or replace function public.energy_source(
+    uid uuid, out pool_owner uuid, out day_budget int, out in_studio boolean, out gen_limit int
+  ) language plpgsql stable security definer set search_path = public as $fn$
+  declare me record; t record; v_teacher uuid; paid_teacher boolean; has_students boolean;
+  begin
+    select role, plan, plan_expires_at, trial_until, created_at into me from profiles where id = uid;
+    has_students := false;
+    -- 1) сам аккаунт-учитель → свой пул студии. Роль сама по себе пул НЕ даёт:
+    --    на триале он включается только с появлением первого ученика.
+    if me.role = 'teacher' then
+      paid_teacher := me.plan like 'teacher_%' and me.plan_expires_at > now();
+      select exists (select 1 from teacher_students where teacher_id = uid) into has_students;
+      day_budget := case
+        when paid_teacher then public.teacher_energy_pool(me.plan)
+        when me.trial_until > now() and has_students then 40
+        else 0 end;
+      if day_budget > 0 then
+        pool_owner := uid; in_studio := true;
+        gen_limit := case
+          when paid_teacher then public.teacher_gen_limit(me.plan)
+          else 3 end;
+        return;
+      end if;
+    end if;
+    -- 2) ученик, ПОКРЫТЫЙ тарифом преподавателя → пул этого преподавателя
+    v_teacher := public.covering_teacher(uid);
+    if v_teacher is not null then
+      select case
+        when tp.plan like 'teacher_%' and tp.plan_expires_at > now() then public.teacher_energy_pool(tp.plan)
+        when tp.trial_until > now() then 40 else 0 end as pool
+        into t
+        from profiles tp where tp.id = v_teacher;
+      if t.pool > 0 then
+        pool_owner := v_teacher; day_budget := t.pool; in_studio := true; gen_limit := 0; return;
+      end if;
+    end if;
+    -- 3) свой premium → 30; триал → 30 первые 3 дня, дальше 15; 4) free → 5
+    if public.has_premium_access(uid) then
+      pool_owner := uid; in_studio := false;
+      -- две пробные генерации — только роли teacher и пока нет учеников
+      gen_limit := case when me.role = 'teacher' and not has_students then 2 else 0 end;
+      if me.plan <> 'free' and me.plan_expires_at is not null and me.plan_expires_at > now() then
+        day_budget := 30;
+      elsif me.created_at > now() - interval '3 days' then
+        day_budget := 30;
+      else
+        day_budget := 15;
+      end if;
+      return;
+    end if;
+    pool_owner := uid; day_budget := 5; in_studio := false; gen_limit := 0;
+  end $fn$;
+
+end $$;
+
+-- ПОСЛЕ общего revoke в конце файла новым функциям нужны гранты поимённо,
+-- иначе сервер получит «permission denied» на первом же вызове.
+revoke execute on function public.energy_source(uuid) from public, anon, authenticated;
+grant execute on function public.spend_energy(text, int, boolean, text) to authenticated;
+grant execute on function public.refund_ai_call(text) to authenticated;

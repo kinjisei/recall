@@ -9,7 +9,7 @@ import type { ChatTurn } from '../src/types/index.js'
 // не находит модуль без расширения (FUNCTION_INVOCATION_FAILED при старте)
 import { callGemini, GEMINI_TIER_CHAINS, type AiTier } from './_core.js'
 import { groqChat, DEFAULT_GROQ_MODEL, FAST_GROQ_MODEL } from './_groq.js'
-import { authorize, applyCors, isTeacher } from './_auth.js'
+import { authorize, applyCors, isTeacher, refundAiCall } from './_auth.js'
 import { taskSpec } from './_tasks.js'
 
 // Генерация материала занимает 20–40 с (два запроса к Gemini), плюс повторы
@@ -101,15 +101,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(access.status).json({ error: access.error })
   }
 
+  // Энергия уже списана. Дальше действует правило: НЕ ДОСТАВИЛИ ОТВЕТ — НЕ
+  // БЕРЁМ ПЛАТУ. Раньше при выгорании всей цепочки моделей (у Google суточные
+  // лимиты общие на проект, а не на человека) пользователь терял ⚡ и получал
+  // отказ — то есть расплачивался за чужую активность.
+  const refund = () => refundAiCall(req, access.refundToken)
+
   const apiKey = process.env.GEMINI_API_KEY
   const groqKey = process.env.GROQ_API_KEY
   if (!apiKey && !groqKey) {
-    return res.status(500).json({ error: 'AI-ключи не настроены на сервере' })
+    await refund()
+    // имя переменной окружения наружу не отдаём — это подсказка для атакующего
+    return res.status(500).json({ error: 'AI на сервере не настроен. Мы уже знаем и чиним.' })
   }
 
-  const fail = (e: unknown, fallbackMsg: string) => {
+  const fail = async (e: unknown, fallbackMsg: string) => {
+    await refund()
     const msg = e instanceof Error ? e.message : fallbackMsg
     return res.status(msg.includes('лимит') || msg.includes('исчерпан') ? 429 : 502).json({ error: msg })
+  }
+
+  /** Отказ без ответа модели — тоже возвращаем списание. */
+  const unavailable = async () => {
+    await refund()
+    return res.status(502).json({
+      error: 'AI сейчас не отвечает. Энергия не потрачена — попробуй через минуту.',
+    })
   }
 
   try {
@@ -123,7 +140,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           /* Groq лёг/лимит — уходим на Gemini-lite */
         }
       }
-      if (!apiKey) return res.status(502).json({ error: 'Сервис AI временно недоступен' })
+      if (!apiKey) return unavailable()
       const chain = GEMINI_TIER_CHAINS.lite
       return res.status(200).json({ text: await callGemini(messages, system, apiKey, chain[0], chain.slice(1), 'lite') })
     }
@@ -138,13 +155,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       try {
         return res.status(200).json({ text: await callGemini(messages, system, apiKey, chain[0], chain, aiTier) })
       } catch (e) {
-        if (!groqKey) return fail(e, 'Ошибка Gemini')
+        if (!groqKey) return await fail(e, 'Ошибка Gemini')
         /* вся Gemini-цепочка легла — последний рубеж Groq */
       }
     }
-    if (!groqKey) return res.status(502).json({ error: 'Сервис AI временно недоступен' })
+    if (!groqKey) return unavailable()
     return res.status(200).json({ text: await groqChat(messages, system, groqKey, DEFAULT_GROQ_MODEL) })
   } catch (e) {
-    return fail(e, 'Ошибка AI')
+    return await fail(e, 'Ошибка AI')
   }
 }

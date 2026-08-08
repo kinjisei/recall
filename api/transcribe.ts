@@ -6,7 +6,7 @@
 // ============================================================================
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 // расширение .js обязательно в ESM ("type": "module")
-import { authorize, applyCors } from './_auth.js'
+import { authorize, applyCors, refundAiCall } from './_auth.js'
 import { transcribeWithGroq } from './_stt.js'
 
 export const config = { maxDuration: 30 }
@@ -20,7 +20,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Только POST' })
 
   const apiKey = process.env.GROQ_API_KEY
-  if (!apiKey) return res.status(500).json({ error: 'GROQ_API_KEY не настроен на сервере' })
+  // имя переменной окружения наружу не отдаём — подсказка для атакующего
+  if (!apiKey) {
+    return res.status(500).json({ error: 'Распознавание речи на сервере не настроено.' })
+  }
 
   // Валидация аудио ДО списания квоты: пустой/битый base64 не должен жечь
   // единицу дневного speech-лимита (иначе несколько сбойных попыток выбивают
@@ -54,6 +57,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const text = await transcribeWithGroq(buf, mime || 'audio/webm', speechLang, apiKey)
     return res.status(200).json({ text })
   } catch (e) {
+    // то же правило, что в api/gemini: не распознали — не берём плату.
+    // У «Речи» свой суточный карман, и терять его попытки из-за сбоя
+    // поставщика особенно обидно: тренажёр произношения — наше отличие.
+    await refundAiCall(req, access.refundToken)
     const msg = e instanceof Error ? e.message : 'Ошибка распознавания'
     return res.status(msg.includes('лимит') ? 429 : 502).json({ error: msg })
   }

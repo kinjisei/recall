@@ -4,11 +4,12 @@
 // Сами экраны — в features/teacher/materials/* (форма/план/предпросмотр/деталь/
 // список по уровням). Здесь только состояние Mode и разводка.
 // ============================================================================
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { LoadError } from '../../components/LoadError'
 import { useAsyncData } from '../../lib/useAsyncData'
+import { getMyPlan } from '../../lib/billing'
 import {
   listMyMaterials,
   listSubmittedWorks,
@@ -56,6 +57,20 @@ export function MaterialsSection({
   // какую именно работу открыть на проверке (вход из блока «На проверку»);
   // в адрес не выносим — это указание «открой сразу проверку», а не место
   const [review, setReview] = useState<{ a: MaterialAssignment; name: string } | undefined>()
+  // остаток генераций (get_my_plan): показываем заранее, а не по факту отказа
+  const [gens, setGens] = useState<{ left: number; limit: number } | null>(null)
+  useEffect(() => {
+    let alive = true
+    getMyPlan()
+      .then((p) => {
+        if (!alive || !p || typeof p.gen_limit !== 'number') return
+        setGens({ left: Math.max(0, p.gen_limit - (p.gen_used ?? 0)), limit: p.gen_limit })
+      })
+      .catch(() => {}) // счётчик необязателен — молча без него
+    return () => {
+      alive = false
+    }
+  }, [])
   // ошибка RLS/сети не должна выглядеть как «материалов нет»
   const {
     data: materials,
@@ -184,6 +199,21 @@ export function MaterialsSection({
         <Button className="mt-3" onClick={() => setMode({ name: 'form' })}>
           + Создать материал
         </Button>
+        {/* Остаток генераций ДО того, как в него упрёшься. Раньше о лимите
+            узнавали только по отказу в середине работы — а один материал
+            стоит двух генераций (план + текст), и это тоже стоит сказать. */}
+        {gens && (
+          <p className="mt-2 text-xs text-[var(--night-text-40)]">
+            {gens.left > 0 ? (
+              <>
+                Осталось генераций в этом месяце: {gens.left} из {gens.limit}
+                {gens.left < 2 && ' — на целый материал нужно две (план и текст)'}
+              </>
+            ) : (
+              <>Генерации в этом месяце закончились — обновятся 1-го числа.</>
+            )}
+          </p>
+        )}
       </Card>
 
       {loadingMaterials ? (

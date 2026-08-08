@@ -9,12 +9,17 @@
 // Любой AI-эндпоинт обязан пройти через authorize(), иначе открытый прокси
 // позволит жечь бесплатную квоту.
 // ============================================================================
+import { randomUUID } from 'node:crypto'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
 // CORS: только известные origin'ы (реальный фронт ходит same-origin).
 export const ALLOWED_ORIGINS = ['https://recall-pgkz.vercel.app', 'http://localhost:5173']
 
-export type AuthResult = { ok: true } | { ok: false; status: number; error: string }
+export type AuthResult =
+  /** refundToken — серверная метка списания: по ней и только по ней его можно
+   *  вернуть, если ответа от AI так и не случилось (см. refundAiCall). */
+  | { ok: true; refundToken?: string }
+  | { ok: false; status: number; error: string }
 
 /**
  * Класс запроса — от него зависит, из какого «кармана» списывается лимит:
@@ -110,14 +115,29 @@ export async function authorize(
 
     // Основной путь — энергия (E1). Фолбэки на старую RPC держат деплой безопасным
     // и до, и после миграции (клиент/сервер не ломаются в переходный момент).
-    let r = await rpc('spend_energy', JSON.stringify({ p_kind: kind, p_cost, p_generation: generation }))
+    // Токен возврата рождается ЗДЕСЬ, на сервере, и клиенту не уходит. Иначе
+    // возврат стал бы отмычкой: RPC доступна пользователю с его же токеном, и
+    // «верни последнее списание» означало бы безлимитный AI в один вызов.
+    const nonce = randomUUID()
+    let refundable = true
+    let r = await rpc(
+      'spend_energy',
+      JSON.stringify({ p_kind: kind, p_cost, p_generation: generation, p_nonce: nonce }),
+    )
+    if (r.status === 404) {
+      // База ещё без параметра p_nonce (миграция этапа 2 не залита) — пробуем
+      // прежнюю сигнатуру. Возврат в этом случае невозможен, и это честнее,
+      // чем притворяться: сервер просто не станет его звать.
+      refundable = false
+      r = await rpc('spend_energy', JSON.stringify({ p_kind: kind, p_cost, p_generation: generation }))
+    }
     if (r.status === 404) {
       // spend_energy ещё нет — старый путь по классам (блок «КЛАССЫ КВОТ»)…
       r = await rpc('consume_ai_quota', JSON.stringify({ p_kind: kind }))
       // …а если и её нет (совсем старая база) — по-старому без класса
       if (r.status === 404) r = await rpc('consume_ai_quota', '{}')
     }
-    if (r.ok) return { ok: true }
+    if (r.ok) return { ok: true, refundToken: refundable ? nonce : undefined }
     if (r.status === 401 || r.status === 403) return DENIED
 
     const body = await r.text()
@@ -153,9 +173,13 @@ export async function authorize(
       return {
         ok: false,
         status: 429,
+        // Раньше репетитор на триале читал это на ПЕРВОЙ же попытке, хотя
+        // лимита у него не было вовсе (0 генераций). Теперь пробных две —
+        // ровно один материал целиком, — и сообщение стало правдой.
         error:
-          'Лимит генераций материалов и программ на этот месяц исчерпан. ' +
-          'Он обновится 1-го числа, либо доступен на тарифе побольше.',
+          'Генерации материалов и программ на этот месяц закончились. ' +
+          'На пробном периоде их две — на один материал целиком; ' +
+          'дальше их даёт оплаченный тариф репетитора.',
       }
     }
     if (body.includes('RECALL_BLOCKED')) {
@@ -253,4 +277,35 @@ export function applyCors(req: VercelRequest, res: VercelResponse): boolean {
     return true
   }
   return false
+}
+
+/**
+ * Возврат списания, если ответа от AI так и не было.
+ *
+ * Зовётся ТОЛЬКО сервером и только с токеном, который сам же и выдал в
+ * authorize. Пользователь этого токена не видит, поэтому вернуть чужое или
+ * своё «по желанию» не может. Ошибки глушим: не смогли вернуть — человек
+ * потерял одну единицу энергии, это неприятно, но безопасно; уронить ответ
+ * из-за неудачного возврата было бы хуже.
+ */
+export async function refundAiCall(req: VercelRequest, token?: string): Promise<void> {
+  if (!token) return
+  const auth = req.headers.authorization
+  const jwt = auth?.startsWith('Bearer ') ? auth.slice(7) : null
+  const url = process.env.VITE_SUPABASE_URL
+  const anon = process.env.VITE_SUPABASE_ANON_KEY
+  if (!jwt || !url || !anon) return
+  try {
+    await fetch(`${url}/rest/v1/rpc/refund_ai_call`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${jwt}`,
+        apikey: anon,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ p_nonce: token }),
+    })
+  } catch {
+    /* возврат — «лучшее усилие», молча */
+  }
 }
