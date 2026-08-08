@@ -612,7 +612,13 @@
     values (auth.uid(), p_student_id, p_card_ids);
   end $fn$;
 
-  -- Ученица сдаёт перепроверку (идемпотентно: только если ещё не завершена)
+  -- Ученик сдаёт перепроверку (идемпотентно: только если ещё не завершена).
+  --
+  -- ⚠️ Ниже по файлу (блок «ЭТАП 3 РЕМОНТА») эта функция ПЕРЕОПРЕДЕЛЯЕТСЯ и
+  -- возвращает jsonb: вердикт считает сервер. Здесь исторический вариант с
+  -- boolean, и без этого drop повторная заливка файла в уже обновлённую базу
+  -- падала бы («cannot change return type of existing function»).
+  drop function if exists public.submit_word_check(uuid, jsonb);
   create or replace function public.submit_word_check(p_id uuid, p_results jsonb)
   returns boolean language plpgsql security definer set search_path = public as $fn$
   declare n int;
@@ -3722,3 +3728,33 @@ do $$ begin
 end $$;
 
 grant execute on function public.admin_recent_errors(int, int) to authenticated;
+
+-- ============================================================================
+-- ЦЕЛЬ ОБУЧЕНИЯ (2026-08-08)
+--
+-- Зачем. Мы спрашивали язык и уровень, но не спрашивали главного — ЗАЧЕМ
+-- человек пришёл. А у школьника, у готовящегося к IELTS и у того, кто учит
+-- «для себя», это разные занятия. Преподаватель хотел бы видеть цель первой
+-- строкой в карточке ученика (находка ревью 1А).
+--
+-- Хранение — в profiles: цель меняется редко и нужна и клиенту, и учителю,
+-- отдельная таблица тут была бы лишней сущностью.
+-- ============================================================================
+do $$ begin
+
+  alter table public.profiles add column if not exists goal text;
+
+  -- Ограничиваем набор значений: цель попадает в промпты AI и в карточку
+  -- ученика, произвольный текст оттуда пришлось бы чистить.
+  alter table public.profiles drop constraint if exists profiles_goal_check;
+  alter table public.profiles add constraint profiles_goal_check
+    check (goal is null or goal in ('exam', 'school', 'work', 'travel', 'self'));
+
+end $$;
+
+-- ⚠️ У profiles КОЛОНОЧНЫЕ гранты (блок «УТЕЧКА ПРОФИЛЯ»): select и update
+-- разрешены поимённо. Новая колонка без явного гранта была бы невидима
+-- клиенту и не сохранялась бы — молча, без ошибки в интерфейсе.
+grant select (id, display_name, level, native_lang, role, blocked, created_at, goal)
+  on public.profiles to authenticated;
+grant update (display_name, level, native_lang, goal) on public.profiles to authenticated;

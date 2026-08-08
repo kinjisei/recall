@@ -7,7 +7,7 @@
 import { supabase, requireUserId } from './supabase'
 import { dbError } from './dbError'
 import { SUPPORT_EMAIL } from './contacts'
-import { PROFILE_COLUMNS, invalidateProfile } from './profile'
+import { selectProfiles, invalidateProfile } from './profile'
 import { track } from './analytics'
 import type { Card, Deck, Profile } from '../types'
 
@@ -147,10 +147,10 @@ export async function getMyTeachers(): Promise<Profile[]> {
   const ids = (links ?? []).map((l) => l.teacher_id as string)
   if (ids.length === 0) return []
 
-  const { data: profiles, error: pErr } = await supabase
-    .from('profiles')
-    .select(PROFILE_COLUMNS)
-    .in('id', ids)
+  // selectProfiles: переживает отставание базы от кода (см. lib/profile)
+  const { data: profiles, error: pErr } = await selectProfiles<Profile[]>((cols) =>
+    supabase.from('profiles').select(cols).in('id', ids) as never,
+  )
   if (pErr) throw pErr
   return (profiles ?? []) as Profile[]
 }
@@ -186,7 +186,7 @@ export async function getMyStudents(): Promise<StudentInfo[]> {
   )
 
   const [profilesRes, activityRes, assignRes] = await Promise.all([
-    supabase.from('profiles').select(PROFILE_COLUMNS).in('id', ids),
+    selectProfiles<Profile[]>((cols) => supabase.from('profiles').select(cols).in('id', ids) as never),
     supabase
       .from('activity_log')
       .select('user_id, day, items_done')

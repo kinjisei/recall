@@ -13,7 +13,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { supabase } from '../../lib/supabase'
 import type { TablesUpdate } from '../../lib/database.types'
-import { invalidateProfile, PROFILE_COLUMNS } from '../../lib/profile'
+import { invalidateProfile, selectProfiles } from '../../lib/profile'
 import { speak } from '../../lib/speech'
 import {
   SPEECH_RATES,
@@ -56,11 +56,9 @@ export function SettingsPage() {
 
   useEffect(() => {
     if (!user) return
-    supabase
-      .from('profiles')
-      .select(PROFILE_COLUMNS)
-      .eq('id', user.id)
-      .single()
+    void selectProfiles<Profile>((cols) =>
+      supabase.from('profiles').select(cols).eq('id', user.id).single() as never,
+    )
       .then(({ data }) => {
         const p = data as Profile | null
         setProfile(p)

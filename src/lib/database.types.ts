@@ -583,6 +583,7 @@ export type Database = {
           is_admin: boolean
           level: string | null
           native_lang: string | null
+          goal: string | null
           plan: string
           plan_expires_at: string | null
           role: string | null
@@ -597,6 +598,7 @@ export type Database = {
           is_admin?: boolean
           level?: string | null
           native_lang?: string | null
+          goal?: string | null
           plan?: string
           plan_expires_at?: string | null
           role?: string | null
@@ -611,6 +613,7 @@ export type Database = {
           is_admin?: boolean
           level?: string | null
           native_lang?: string | null
+          goal?: string | null
           plan?: string
           plan_expires_at?: string | null
           role?: string | null

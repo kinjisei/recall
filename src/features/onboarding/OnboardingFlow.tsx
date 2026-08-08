@@ -24,7 +24,7 @@ import { markOnboarded } from '../../lib/onboarding'
 import { startGuidedRoute } from '../../lib/guided'
 import { track, setSelfReportedSource } from '../../lib/analytics'
 import { celebrate } from '../../components/Confetti'
-import type { AppLang, CEFRLevel } from '../../types'
+import { GOAL_LABELS, type AppLang, type CEFRLevel, type LearningGoal } from '../../types'
 
 // A1 добавлен: profiles.level и тест уровня теперь допускают его (новичок с нуля)
 const EN_LEVELS: CEFRLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1']
@@ -38,23 +38,30 @@ export function OnboardingFlow() {
   const { lang, setLang } = useLanguage()
   const [step, setStep] = useState(0)
   const [level, setLevel] = useState<CEFRLevel | null>(null)
+  // Зачем человек учит язык. Спрашиваем на том же шаге, что и уровень: это
+  // родственные вопросы, а удлинять онбординг четвёртым экраном не хочется —
+  // короткий путь до первого занятия важнее полноты анкеты.
+  const [goal, setGoal] = useState<LearningGoal | null>(null)
 
-  // уровень английского храним в профиле, испанского — локально
+  // Уровень английского храним в профиле, испанского — локально; цель всегда
+  // в профиле (она не зависит от языка и нужна преподавателю).
   const saveLevel = async () => {
-    if (!level) return
-    if (lang === 'es') setEsLevel(level)
-    else if (user) {
-      // supabase-js не бросает на ошибке — берём её из ответа. Если запись не
-      // удалась, не инвалидируем кэш зря, но пользователя не держим: онбординг
-      // всё равно завершаем (уровень можно задать позже в «Настройках»).
-      const { error } = await supabase.from('profiles').update({ level }).eq('id', user.id)
-      if (!error) invalidateProfile()
-    }
+    if (lang === 'es' && level) setEsLevel(level)
+    if (!user) return
+    const patch: { level?: CEFRLevel; goal?: LearningGoal } = {}
+    if (level && lang === 'en') patch.level = level
+    if (goal) patch.goal = goal
+    if (Object.keys(patch).length === 0) return
+    // supabase-js не бросает на ошибке — берём её из ответа. Если запись не
+    // удалась, не инвалидируем кэш зря, но пользователя не держим: онбординг
+    // всё равно завершаем (всё это можно задать позже в «Настройках»).
+    const { error } = await supabase.from('profiles').update(patch).eq('id', user.id)
+    if (!error) invalidateProfile()
   }
 
   const finish = async () => {
     await saveLevel()
-    void track('onboarding_done', { lang, level })
+    void track('onboarding_done', { lang, level, goal })
     markOnboarded()
     celebrate()
     // «Начать первое занятие» — сразу ведомая сессия. Куда именно вести,
@@ -93,6 +100,8 @@ export function OnboardingFlow() {
         <StepLevel
           lang={lang}
           level={level}
+          goal={goal}
+          onGoal={setGoal}
           onPick={setLevel}
           onSkip={() => setStep(2)}
           onNext={() => setStep(2)}
@@ -151,6 +160,8 @@ function StepLanguage({ onPick }: { onPick: (l: AppLang) => void }) {
 function StepLevel({
   lang,
   level,
+  goal,
+  onGoal,
   onPick,
   onSkip,
   onNext,
@@ -158,6 +169,8 @@ function StepLevel({
 }: {
   lang: AppLang
   level: CEFRLevel | null
+  goal: LearningGoal | null
+  onGoal: (g: LearningGoal) => void
   onPick: (l: CEFRLevel) => void
   onSkip: () => void
   onNext: () => void
@@ -169,6 +182,29 @@ function StepLevel({
         title="Определим уровень"
         desc="Короткий тест подстроит тексты, подсказки и «Диалог» — или выбери уровень сам."
       />
+
+      {/* Зачем человек учит язык. Раньше не спрашивали вовсе — а у школьника,
+          у готовящегося к IELTS и у того, кто учит «для себя», это разные
+          занятия. Цель видна преподавателю и уходит в подсказки AI.
+          Спрашиваем ПЕРВЫМ: ответить на неё легче, чем оценить свой уровень. */}
+      <div className="flex flex-col gap-2">
+        <p className="text-sm text-[var(--night-text-70)]">Зачем тебе язык?</p>
+        <div className="flex flex-wrap gap-2">
+          {(Object.keys(GOAL_LABELS) as LearningGoal[]).map((g) => (
+            <button
+              key={g}
+              onClick={() => onGoal(g)}
+              className={`min-h-11 rounded-full px-3.5 text-sm transition-colors ${
+                goal === g
+                  ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
+                  : 'bg-white/[0.06] text-[var(--night-text-70)]'
+              }`}
+            >
+              {GOAL_LABELS[g]}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Тест уровня доступен для ОБОИХ языков (EN-тест теперь есть). Ниже — для
           EN ещё и ручной выбор, чтобы не заставлять новичка проходить тест. */}

@@ -19,7 +19,7 @@ import { logActivity } from '../../lib/activity'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { getEsLevel } from '../../lib/esLevel'
-import type { AppLang, CEFRLevel, ChatTurn } from '../../types'
+import type { AppLang, CEFRLevel, ChatTurn, LearningGoal } from '../../types'
 
 type Mode = 'chat' | 'writing'
 
@@ -33,6 +33,8 @@ export function ConversationPage() {
   const { lang } = useLanguage()
   const [mode, setMode] = useState<Mode>('chat')
   const [profileLevel, setProfileLevel] = useState<CEFRLevel>('B1')
+  // цель обучения из профиля — уходит в промпт (см. goalHint)
+  const [goal, setGoal] = useState<LearningGoal | null>(null)
 
   // Уровень из профиля — от него зависят промпты (B1 проще, C1 богаче).
   // Профильный уровень описывает английский; испанский пока считаем A1–A2.
@@ -41,6 +43,7 @@ export function ConversationPage() {
     // кэш профиля — без лишнего запроса при каждом заходе во вкладку
     getProfile(user.id).then((p) => {
       if (p?.level) setProfileLevel(p.level as CEFRLevel)
+      setGoal(p?.goal ?? null)
     })
   }, [user])
 
@@ -61,7 +64,7 @@ export function ConversationPage() {
 
       {/* key={lang}: при смене языка начинаем чат/проверку заново */}
       {mode === 'chat' ? (
-        <ChatSection key={lang} level={level} lang={lang} />
+        <ChatSection key={lang} level={level} lang={lang} goal={goal} />
       ) : (
         <WritingSection key={lang} level={level} lang={lang} />
       )}
@@ -73,7 +76,26 @@ export function ConversationPage() {
 // Режим «Чат» — AI-собеседник. Переписка сохраняется в conversations/messages.
 // ---------------------------------------------------------------------------
 
-function chatSystemPrompt(level: CEFRLevel, lang: AppLang): string {
+/** Подсказка AI о том, ЗАЧЕМ человек учит язык. Без неё разговор одинаков и
+ *  для школьника, и для готовящегося к IELTS — а это разные занятия. */
+function goalHint(goal: LearningGoal | null): string {
+  switch (goal) {
+    case 'exam':
+      return 'The learner is preparing for an English exam (IELTS/TOEFL). Favour exam-style topics and academic phrasing, and point out where a phrase would be too informal for the exam.'
+    case 'school':
+      return 'The learner studies at school or university. Keep topics close to school subjects and homework, and explain rules the way a teacher would.'
+    case 'work':
+      return 'The learner needs the language for work. Favour workplace situations: meetings, email, small talk with colleagues, polite requests.'
+    case 'travel':
+      return 'The learner needs the language for travel and living abroad. Favour practical situations: transport, renting, doctor, shops, paperwork.'
+    case 'self':
+      return 'The learner studies for personal interest. Keep it relaxed and follow whatever topics they enjoy.'
+    default:
+      return ''
+  }
+}
+
+function chatSystemPrompt(level: CEFRLevel, lang: AppLang, goal: LearningGoal | null): string {
   const language = lang === 'es' ? 'Spanish' : 'English'
   const levelHint =
     lang === 'es'
@@ -94,6 +116,7 @@ function chatSystemPrompt(level: CEFRLevel, lang: AppLang): string {
   return [
     `You are a friendly ${language} conversation partner AND a patient ${language} teacher in the language-learning app "Recall".`,
     `The learner is a native Russian speaker at CEFR level ${level} in ${language}.`,
+    goalHint(goal),
     '',
     'EVERY reply has this structure:',
     '',
@@ -153,7 +176,15 @@ function AssistantText({ content }: { content: string }) {
   )
 }
 
-function ChatSection({ level, lang }: { level: CEFRLevel; lang: AppLang }) {
+function ChatSection({
+  level,
+  lang,
+  goal,
+}: {
+  level: CEFRLevel
+  lang: AppLang
+  goal: LearningGoal | null
+}) {
   const { user } = useAuth()
   const [msgs, setMsgs] = useState<ChatTurn[]>([])
   const [input, setInput] = useState('')
@@ -202,7 +233,7 @@ function ChatSection({ level, lang }: { level: CEFRLevel; lang: AppLang }) {
     try {
       // отправляем только последние 20 реплик — экономим бесплатные токены
       const reply = await chat(history.slice(-20), {
-        system: chatSystemPrompt(level, lang),
+        system: chatSystemPrompt(level, lang, goal),
         task: 'dialog',
       })
       setMsgs([...history, { role: 'assistant', content: reply }])

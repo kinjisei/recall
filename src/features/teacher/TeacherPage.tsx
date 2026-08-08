@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { IconGraduation, IconFlame, IconBadgeCheck } from '../../components/icons'
 import { BackHeader } from '../../components/BackButton'
+import { GOAL_LABELS } from '../../types'
 import { useUrlState } from '../../lib/useUrlState'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
@@ -407,6 +408,14 @@ function StudentCard({
             {student.streak} ·{' '}
             {student.doneToday ? 'сегодня ✓' : 'сегодня —'}
           </p>
+          {/* Цель ученика — то, ради чего он вообще пришёл. Преподавателю она
+              нужна раньше любых цифр: у готовящегося к IELTS и у школьника
+              занятия строятся по-разному. */}
+          {p.goal && (
+            <p className="mt-0.5 text-sm text-[var(--night-accent-text)]">
+              Цель: {GOAL_LABELS[p.goal]}
+            </p>
+          )}
           {seatsKnown && !covered && (
             <p className="mt-1 inline-block rounded-lg bg-amber-500/10 px-2 py-1 text-xs text-amber-200">
               Вне мест тарифа — занимается на бесплатных лимитах AI

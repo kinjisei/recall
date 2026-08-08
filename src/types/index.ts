@@ -40,6 +40,20 @@ export interface Profile {
   native_lang: string
   role: Role
   created_at: string
+  /** Зачем человек учит язык. Влияет на подсказки AI и видна преподавателю. */
+  goal: LearningGoal | null
+}
+
+/** Цель обучения. Список закрытый: значение попадает в промпты AI. */
+export type LearningGoal = 'exam' | 'school' | 'work' | 'travel' | 'self'
+
+/** Подписи целей для интерфейса. */
+export const GOAL_LABELS: Record<LearningGoal, string> = {
+  exam: 'Экзамен (IELTS/TOEFL)',
+  school: 'Школа или университет',
+  work: 'Работа',
+  travel: 'Поездки и жизнь за границей',
+  self: 'Для себя',
 }
 
 export interface Deck {
