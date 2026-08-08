@@ -190,16 +190,28 @@ async function main() {
     // ---- 0d. Слово дня с кнопкой «В колоду» ----
     await page.goto(BASE + '/', { waitUntil: 'networkidle2' })
     await sleep(1500)
-    const wodBefore = await page.evaluate(() => ({
-      shown: (document.body.textContent || '').includes('Слово дня'),
-      addBtn: !!document.querySelector('button[aria-label="Добавить в колоду"]'),
-    }))
-    check('Слово дня: новое слово с кнопкой добавления', wodBefore.shown && wodBefore.addBtn, JSON.stringify(wodBefore))
-    if (wodBefore.addBtn) {
-      await page.evaluate(() => document.querySelector('button[aria-label="Добавить в колоду"]').click())
-      await sleep(1500)
-      const added = await page.evaluate(() => !!document.querySelector('button[aria-label="Слово в колоде"]'))
-      check('Слово дня добавляется в колоду', added)
+    // «Слово дня» — строка на Главной; карточка со словом и кнопкой «В колоду»
+    // открывается шторкой по тапу (раньше кнопка висела прямо на Главной, и
+    // проверка искала её там — падала вхолостую на исправном экране)
+    const wodShown = await page.evaluate(() =>
+      (document.body.textContent || '').includes('Слово дня'),
+    )
+    check('Слово дня: строка на Главной', wodShown)
+    if (wodShown) {
+      await clickByText(page, 'button', 'Слово дня')
+      await sleep(1200)
+      const addBtn = await page.evaluate(() =>
+        [...document.querySelectorAll('button')].some((b) => b.textContent.trim() === 'В колоду'),
+      )
+      check('Слово дня: в шторке есть кнопка «В колоду»', addBtn)
+      if (addBtn) {
+        await clickByText(page, 'button', 'В колоду')
+        await sleep(2000)
+        const added = await page.evaluate(() =>
+          [...document.querySelectorAll('button')].some((b) => b.textContent.trim() === 'В колоде'),
+        )
+        check('Слово дня добавляется в колоду', added)
+      }
     }
 
     // ---- 1. Спринт ----
@@ -292,6 +304,10 @@ async function main() {
     // ---- 5. Мои ошибки в грамматике ----
     await page.goto(BASE + '/grammar', { waitUntil: 'networkidle2' })
     await sleep(1500)
+    // Список уроков спрятан за аккордеоном уровня — без раскрытия кнопок с
+    // «упр.» на экране НОЛЬ, и проверка молча ничего не делала.
+    await clickByText(page, 'button', 'A1')
+    await sleep(900)
     // открываем первую тему A1
     await page.evaluate(() => {
       const cards = [...document.querySelectorAll('button')].filter((b) =>
@@ -307,12 +323,12 @@ async function main() {
     let gotWrong = false
     for (let step = 0; step < 5 && !gotWrong; step++) {
       const kind = await page.evaluate(() => {
-        if (document.querySelector('input[placeholder="Ваш ответ…"]')) return 'fill'
+        if (document.querySelector('input[placeholder="Твой ответ…"]')) return 'fill'
         if (document.querySelector('button.rounded-xl.text-left')) return 'mcq'
         return 'other'
       })
       if (kind === 'fill') {
-        await page.type('input[placeholder="Ваш ответ…"]', 'zzzz')
+        await page.type('input[placeholder="Твой ответ…"]', 'zzzz')
         await clickByText(page, 'button', 'Проверить')
         await sleep(300)
         gotWrong = true
@@ -327,7 +343,13 @@ async function main() {
           if (!moved) break
           await sleep(300)
         }
-      } else break
+      } else {
+        // упражнение другого типа (порядок слов) — пропускаем его и пробуем
+        // следующее; раньше цикл здесь обрывался и ошибка так и не возникала
+        const moved = await clickByText(page, 'button', 'Дальше')
+        if (!moved) break
+        await sleep(300)
+      }
     }
     // выходим к списку уроков
     await page.evaluate(() => document.querySelector('button[aria-label="Назад"]')?.click())
@@ -343,7 +365,9 @@ async function main() {
       const body = document.body.textContent || ''
       return {
         noEmoji: !body.includes('💬') && !body.includes('✍️'),
-        segment: !!document.querySelector('[role="group"][aria-label="Режим"]'),
+        // TabPicker отдаёт role="tablist" (правильная роль для вкладок);
+        // проверка искала устаревший role="group" и падала на исправной вёрстке
+        segment: !!document.querySelector('[role="tablist"][aria-label="Режим"]'),
         send: !!document.querySelector('button[aria-label="Отправить"].h-12'),
       }
     })

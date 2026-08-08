@@ -233,6 +233,53 @@ async function main() {
       marker: null,
       backMarker: 'Повторение',
     },
+    {
+      // свой текст живёт в localStorage устройства — сеем его прямо туда
+      name: 'Учёба → свой текст',
+      reach: async () => {
+        await page.goto(`${BASE}/study`, { waitUntil: 'networkidle2' })
+        await page.evaluate(() => {
+          localStorage.setItem(
+            'recall.my_texts.en',
+            JSON.stringify([
+              {
+                id: 'nav-smoke-1',
+                title: 'Мой проверочный текст',
+                body: 'A short text pasted by the learner for the navigation smoke.',
+                createdAt: Date.now(),
+              },
+            ]),
+          )
+        })
+        await page.goto(`${BASE}/study?view=reader`, { waitUntil: 'networkidle2' })
+        await sleep(1800)
+        return tap(page, 'Мой проверочный текст')
+      },
+      marker: null,
+      backMarker: 'Тексты',
+    },
+    {
+      // испанская читалка — отдельный компонент со своим параметром (?es=)
+      name: 'Учёба ES → испанский текст',
+      reach: async () => {
+        await page.goto(`${BASE}/study`, { waitUntil: 'networkidle2' })
+        // язык хранится СЫРОЙ строкой (writeRaw в LanguageContext), не JSON:
+        // '"es"' с кавычками молча оставлял тест на английском
+        await page.evaluate(() => localStorage.setItem('recall.lang', 'es'))
+        await page.goto(`${BASE}/study?view=reader`, { waitUntil: 'networkidle2' })
+        await sleep(2500) // испанский контент грузится отдельным чанком
+        return page.evaluate(() => {
+          const el = [...document.querySelectorAll('button')].find((e) => {
+            const t = (e.textContent || '').trim()
+            return t.length > 14 && !/Назад|Тексты|Диалоги|^A1|^A2|^B1|^B2/.test(t)
+          })
+          if (el) el.click()
+          return !!el
+        })
+      },
+      marker: null,
+      backMarker: 'Диалоги',
+    },
   ]
 
   for (const s of scenarios) {
@@ -293,6 +340,68 @@ async function main() {
       home ? 'выкинуло на Главную' : page.url(),
     )
   }
+
+  // --- Студия преподавателя: вкладка и открытый материал в адресе -----------
+  // Отдельным блоком, потому что нужна роль teacher и материал в БД. Материал
+  // вставляем напрямую: живая генерация жжёт дорогую квоту Pro-моделей.
+  await admin.from('profiles').update({ role: 'teacher' }).eq('id', userId)
+  const { data: mat } = await admin
+    .from('materials')
+    .insert({
+      teacher_id: userId,
+      lang: 'en',
+      level: 'B1',
+      topic: 'Навигационная проверка',
+      format: 'article',
+      length_range: 'short',
+      title: 'Материал для смоука навигации',
+      body: 'A short body for the navigation smoke.',
+      exercises: [],
+    })
+    .select('id')
+    .single()
+
+  await page.goto(`${BASE}/teacher?tab=materials`, { waitUntil: 'networkidle2' })
+  await sleep(2500)
+  check(
+    'Студия: вкладка «Материалы» открывается по адресу',
+    await seen(page, 'Материал для смоука навигации'),
+    page.url(),
+  )
+
+  await tap(page, 'Материал для смоука навигации')
+  await sleep(1800)
+  const matUrl = page.url()
+  check('Студия: открытый материал попал в адрес', matUrl.includes('mat='), matUrl)
+
+  await page.reload({ waitUntil: 'networkidle2' })
+  await sleep(2500)
+  check(
+    'Студия: F5 оставляет в материале',
+    await seen(page, 'Материал для смоука навигации'),
+    page.url(),
+  )
+
+  await page.goBack({ waitUntil: 'networkidle2' }).catch(() => {})
+  await sleep(2000)
+  check(
+    'Студия: «назад» из материала возвращает к списку',
+    !(await onHome(page)) && page.url().includes('tab=materials') && !page.url().includes('mat='),
+    page.url(),
+  )
+
+  // чужой/удалённый id не должен давать пустой экран
+  await page.goto(`${BASE}/teacher?tab=materials&mat=00000000-0000-0000-0000-000000000000`, {
+    waitUntil: 'networkidle2',
+  })
+  await sleep(2500)
+  check(
+    'Студия: несуществующий материал показывает список',
+    await seen(page, 'Создать материал'),
+    page.url(),
+  )
+
+  if (mat?.id) await admin.from('materials').delete().eq('id', mat.id)
 
   check('JS-ошибок за прогон нет', jsErrors.length === 0, jsErrors.slice(0, 2).join(' | '))
 

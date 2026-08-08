@@ -5,8 +5,9 @@
  */
 import { createClient } from '@supabase/supabase-js'
 import { spawn } from 'node:child_process'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import puppeteer from 'puppeteer-core'
 
 const EDGE = 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'
@@ -24,6 +25,26 @@ const env = Object.fromEntries(
 const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SERVICE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 })
+
+/**
+ * PDF с текстовым слоем для проверки извлечения.
+ *
+ * Раньше путь вёл в scratchpad давно закрытой сессии: файл удалили вместе с
+ * временной папкой, и проверка стала падать «по коду», хотя код был цел.
+ * Теперь фикстуру печатает сам браузер — смоук ни от чего внешнего не зависит.
+ */
+async function ensurePdf(browser) {
+  if (existsSync(PDF)) return PDF
+  const out = join(tmpdir(), 'recall-mytexts-fixture.pdf')
+  const p = await browser.newPage()
+  await p.setContent(
+    '<p style="font:16px Georgia">The waterfall was loud that morning, and the path' +
+      ' along the river stayed wet until noon.</p>',
+  )
+  await p.pdf({ path: out, format: 'A4', printBackground: false })
+  await p.close()
+  return out
+}
 
 const results = []
 const check = (name, ok, extra = '') => {
@@ -139,11 +160,23 @@ try {
     })
     await page.waitForSelector('input[type="file"]', { timeout: 10000 })
     const fileInput = await page.$('input[type="file"]')
-    await fileInput.uploadFile(PDF)
+    await fileInput.uploadFile(await ensurePdf(browser))
+    // ensurePdf открывал вторую вкладку для печати — эта уходила в фон
+    await page.bringToFront()
     try {
       await page.waitForFunction(
-        () => document.querySelector('textarea[aria-label="Текст"]')?.value.includes('waterfall'),
-        { timeout: 30000 }, // ленивый чанк pdfjs + парсинг
+        // ⚠️ ?. защищает только querySelector: если поля ещё нет, .includes
+        // вызывался у undefined, предикат падал с TypeError и ожидание
+        // обрывалось СРАЗУ — выглядело как «PDF не извлёкся», хотя текст был
+        () =>
+          (document.querySelector('textarea[aria-label="Текст"]')?.value ?? '').includes(
+            'waterfall',
+          ),
+        // ленивый чанк pdfjs (~425 КБ) на холодной загрузке не укладывался в
+        // 30 секунд: текст извлекался, но проверка успевала истечь
+        // polling по таймеру, а не requestAnimationFrame: в фоновой вкладке
+        // rAF не тикает, и ожидание молча висело до таймаута
+        { timeout: 90000, polling: 500 },
       )
       check('PDF с текстовым слоем извлечён (waterfall найден)', true)
     } catch {
