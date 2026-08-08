@@ -338,7 +338,7 @@
       raise exception 'Код не найден. Проверь код у преподавателя.';
     end if;
     if t_id = auth.uid() then
-      raise exception 'Нельзя привязать саму себя.';
+      raise exception 'Это твой собственный код — привязаться к себе нельзя.';
     end if;
     insert into teacher_students (teacher_id, student_id)
     values (t_id, auth.uid())
@@ -511,7 +511,7 @@
         -- код занят, пробуем ещё
       end;
     end loop;
-    raise exception 'Не удалось сгенерировать код, попробуйте ещё раз.';
+    raise exception 'Не удалось создать код. Попробуй ещё раз.';
   end $fn$;
 
   -- ---- material_assignments: запись только через функции ----
@@ -535,7 +535,7 @@
   begin
     if not public.material_owned_by(p_material_id, auth.uid())
       or not public.is_student_of(auth.uid(), p_student_id) then
-      raise exception 'Нет прав назначить этот материал этой ученице.';
+      raise exception 'Нет прав назначить этот материал этому ученику.';
     end if;
     insert into material_assignments (material_id, student_id)
     values (p_material_id, p_student_id)
@@ -546,7 +546,7 @@
   returns void language plpgsql security definer set search_path = public as $fn$
   begin
     if not public.material_owned_by(p_material_id, auth.uid()) then
-      raise exception 'Нет прав.';
+      raise exception 'Нет прав: этот материал не твой.';
     end if;
     delete from material_assignments where material_id = p_material_id and student_id = p_student_id;
   end $fn$;
@@ -558,7 +558,7 @@
     if not exists (
       select 1 from material_assignments ma
       where ma.id = p_id and public.material_owned_by(ma.material_id, auth.uid())
-    ) then raise exception 'Нет прав.'; end if;
+    ) then raise exception 'Нет прав: этот материал не твой.'; end if;
     update material_assignments set ai_review = p_review where id = p_id;
   end $fn$;
 
@@ -585,7 +585,7 @@
       select 1 from material_assignments ma
       where ma.id = p_id and public.material_owned_by(ma.material_id, auth.uid())
         and public.is_student_of(auth.uid(), ma.student_id)
-    ) then raise exception 'Нет прав.'; end if;
+    ) then raise exception 'Нет прав: этот материал не твой.'; end if;
     select jsonb_build_object(
       'answers', answers, 'auto_score', auto_score, 'auto_total', auto_total,
       'teacher_review', teacher_review, 'submitted_at', submitted_at,
@@ -606,7 +606,7 @@
   returns void language plpgsql security definer set search_path = public as $fn$
   begin
     if not public.is_student_of(auth.uid(), p_student_id) then
-      raise exception 'Это не ваша ученица.';
+      raise exception 'Это не твой ученик.';
     end if;
     insert into word_checks (teacher_id, student_id, card_ids)
     values (auth.uid(), p_student_id, p_card_ids);
@@ -682,7 +682,7 @@
   returns void language plpgsql security definer set search_path = public as $fn$
   begin
     if not public.is_student_of(auth.uid(), p_student_id) then
-      raise exception 'Это не ваша ученица.';
+      raise exception 'Это не твой ученик.';
     end if;
     if exists (
       select 1 from jsonb_array_elements_text(p_card_ids) cid
@@ -691,7 +691,7 @@
         where c.id = cid::uuid and d.owner_id = p_student_id
       )
     ) then
-      raise exception 'Среди слов есть карточки, не принадлежащие этой ученице.';
+      raise exception 'Среди слов есть карточки, которые не принадлежат этому ученику.';
     end if;
     insert into word_checks (teacher_id, student_id, card_ids)
     values (auth.uid(), p_student_id, p_card_ids);
@@ -1099,10 +1099,10 @@
   declare qid uuid;
   begin
     if not public.is_student_of(auth.uid(), p_student_id) then
-      raise exception 'Это не ваша ученица.';
+      raise exception 'Это не твой ученик.';
     end if;
     if trim(coalesce(p_topic, '')) = '' or trim(coalesce(p_scenario, '')) = '' then
-      raise exception 'Укажите тему и сценарий.';
+      raise exception 'Укажи тему и сценарий.';
     end if;
     insert into grammar_quests (teacher_id, student_id, lang, level, topic, scenario, target)
     values (auth.uid(), p_student_id, p_lang, p_level,
@@ -1910,7 +1910,7 @@
       raise exception 'Код не найден. Проверь код у преподавателя.';
     end if;
     if t.id = auth.uid() then
-      raise exception 'Нельзя привязать саму себя.';
+      raise exception 'Это твой собственный код — привязаться к себе нельзя.';
     end if;
 
     -- ЛОК на преподавателя: без него N параллельных join_teacher с одним кодом
@@ -2077,7 +2077,7 @@
         -- код занят, пробуем ещё
       end;
     end loop;
-    raise exception 'Не удалось сгенерировать код, попробуйте ещё раз.';
+    raise exception 'Не удалось создать код. Попробуй ещё раз.';
   end $fn$;
 
   grant execute on function public.regenerate_invite_code() to authenticated;
@@ -2130,7 +2130,7 @@
   declare new_id uuid;
   begin
     if not public.is_student_of(auth.uid(), p_student_id) then
-      raise exception 'Это не ваша ученица.';
+      raise exception 'Это не твой ученик.';
     end if;
     if p_lang not in ('en', 'es') then
       raise exception 'Неизвестный язык.';
@@ -2354,7 +2354,7 @@
       raise exception 'Код не найден. Проверь код у преподавателя.';
     end if;
     if t.id = auth.uid() then
-      raise exception 'Нельзя привязать саму себя.';
+      raise exception 'Это твой собственный код — привязаться к себе нельзя.';
     end if;
 
     perform pg_advisory_xact_lock(hashtext('join_teacher:' || t.id::text));
@@ -2459,7 +2459,7 @@
   begin
     if not public.writing_task_owned_by(p_task_id, auth.uid())
       or not public.is_student_of(auth.uid(), p_student_id) then
-      raise exception 'Нет прав назначить это задание этой ученице.';
+      raise exception 'Нет прав назначить это задание этому ученику.';
     end if;
     insert into writing_task_assignments (task_id, student_id)
     values (p_task_id, p_student_id)
@@ -2470,7 +2470,7 @@
   returns void language plpgsql security definer set search_path = public as $fn$
   begin
     if not public.writing_task_owned_by(p_task_id, auth.uid()) then
-      raise exception 'Нет прав.';
+      raise exception 'Нет прав: этот материал не твой.';
     end if;
     delete from writing_task_assignments where task_id = p_task_id and student_id = p_student_id;
   end $fn$;
@@ -2520,7 +2520,7 @@
       select 1 from writing_task_assignments wa
       where wa.id = p_id and public.writing_task_owned_by(wa.task_id, auth.uid())
         and public.is_student_of(auth.uid(), wa.student_id)
-    ) then raise exception 'Нет прав.'; end if;
+    ) then raise exception 'Нет прав: этот материал не твой.'; end if;
     select jsonb_array_length(coalesce(attempts, '[]'::jsonb)) into n
       from writing_task_assignments where id = p_id;
     update writing_task_assignments
@@ -2840,7 +2840,7 @@
       raise exception 'Код не найден. Проверь код у преподавателя.';
     end if;
     if t.id = auth.uid() then
-      raise exception 'Нельзя привязать самого себя.';
+      raise exception 'Это твой собственный код — привязаться к себе нельзя.';
     end if;
 
     perform pg_advisory_xact_lock(hashtext('join_teacher:' || t.id::text));
