@@ -3572,3 +3572,102 @@ end $$;
 revoke execute on function public.energy_source(uuid) from public, anon, authenticated;
 grant execute on function public.spend_energy(text, int, boolean, text) to authenticated;
 grant execute on function public.refund_ai_call(text) to authenticated;
+
+-- ============================================================================
+-- ЭТАП 3 РЕМОНТА: ПЕРЕПРОВЕРКА СЛОВ СЧИТАЕТСЯ НА СЕРВЕРЕ (2026-08-08)
+-- Выполнять ЦЕЛИКОМ вместе с файлом (идемпотентно).
+-- ============================================================================
+do $$ begin
+
+  -- --------------------------------------------------------------------------
+  -- Проблема. submit_word_check принимала ГОТОВЫЙ вердикт от клиента: массив
+  -- results, где у каждого слова уже проставлен ok. Прямым вызовом RPC ученик
+  -- мог отправить «всё верно» — и получить сразу две выгоды:
+  --   • в отчёте преподавателю нарисовалась бы ложная картина знаний;
+  --   • ни одно слово не получило бы «again», то есть штраф FSRS не наступил.
+  -- Оттуда же брались front/back для отчёта — то есть в отчёт можно было
+  -- подставить любые слова, даже не те, что назначали.
+  --
+  -- Это ровно тот класс дыры, который закрывали ревью безопасности 20.07
+  -- (submit_material пересчитывает балл сам) — одно место тогда пропустили.
+  --
+  -- Стало. Клиент присылает только ОТВЕТЫ (card_id + given). Сервер сам берёт
+  -- слово из карточки, сам сверяет по тем же правилам, что и клиент
+  -- (norm_answer + варианты через «/» — см. lib/text.ts answerMatches), и сам
+  -- складывает results. Возвращает список НЕВЕРНЫХ карточек, чтобы клиент
+  -- применил «again» именно к ним, а не к тем, что сам себе назначил.
+  --
+  -- Карточки берём ТОЛЬКО из card_ids этой перепроверки: подсунуть чужой
+  -- card_id и подменить отчёт нельзя.
+  -- --------------------------------------------------------------------------
+
+  -- Возвращаемый тип меняется (boolean → jsonb), поэтому старую версию
+  -- обязательно удаляем: create or replace такое не умеет.
+  drop function if exists public.submit_word_check(uuid, jsonb);
+
+  create or replace function public.submit_word_check(p_id uuid, p_results jsonb)
+  returns jsonb language plpgsql security definer set search_path = public as $fn$
+  declare
+    v_cards jsonb;
+    v_out jsonb := '[]'::jsonb;
+    v_wrong jsonb := '[]'::jsonb;
+    r jsonb;
+    v_card_id uuid;
+    v_given text;
+    v_front text;
+    v_back text;
+    v_ok boolean;
+    n int;
+  begin
+    -- перепроверка должна быть своей и ещё не завершённой
+    select card_ids into v_cards from word_checks
+      where id = p_id and student_id = auth.uid() and completed_at is null;
+    if v_cards is null then
+      return jsonb_build_object('counted', false, 'wrong', '[]'::jsonb);
+    end if;
+
+    for r in select value from jsonb_array_elements(coalesce(p_results, '[]'::jsonb)) loop
+      begin v_card_id := (r->>'card_id')::uuid; exception when others then continue; end;
+      -- слово должно быть из ЭТОЙ перепроверки
+      if not (v_cards @> to_jsonb(v_card_id::text)) then continue; end if;
+
+      v_given := coalesce(r->>'given', '');
+      select c.front, c.back into v_front, v_back from cards c where c.id = v_card_id;
+
+      if v_front is null then
+        -- карточку удалили между назначением и сдачей: проверить нечем.
+        -- Отмечаем неверным и берём слово из присланного — только для отчёта,
+        -- зачесть такое «верно» нельзя.
+        v_front := coalesce(r->>'front', '');
+        v_back := r->>'back';
+        v_ok := false;
+      else
+        -- те же правила, что на клиенте: варианты через «/», нормализация
+        select coalesce(bool_or(public.norm_answer(v) = public.norm_answer(v_given)), false)
+          into v_ok
+          from unnest(string_to_array(v_front, '/')) as v;
+      end if;
+
+      v_out := v_out || jsonb_build_array(jsonb_build_object(
+        'card_id', v_card_id, 'front', v_front, 'back', v_back,
+        'given', v_given, 'ok', v_ok));
+      if not v_ok then
+        v_wrong := v_wrong || jsonb_build_array(v_card_id::text);
+      end if;
+    end loop;
+
+    update word_checks set results = v_out, completed_at = now()
+    where id = p_id and student_id = auth.uid() and completed_at is null;
+    get diagnostics n = row_count;  -- row_count это int, не boolean
+
+    if n = 0 then
+      -- кто-то успел завершить между select и update (двойная отправка)
+      return jsonb_build_object('counted', false, 'wrong', '[]'::jsonb);
+    end if;
+    return jsonb_build_object('counted', true, 'wrong', v_wrong);
+  end $fn$;
+
+end $$;
+
+-- после общего revoke в конце файла — грант поимённо
+grant execute on function public.submit_word_check(uuid, jsonb) to authenticated;

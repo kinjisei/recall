@@ -127,20 +127,29 @@ export async function submitWordCheck(
   const userId = await requireUserId()
 
   // Помечаем перепроверку завершённой через RPC (атомарно, только если ещё не
-  // завершена). Возвращает true только тому, кто засчитал её сейчас — иначе
+  // завершена). counted=true только тому, кто засчитал её сейчас — иначе
   // (ретрай/повтор) НЕ начисляем again повторно (двойной штраф FSRS).
-  const { data: didComplete, error } = await supabase.rpc('submit_word_check', {
+  //
+  // ⚠️ Вердикт ставит СЕРВЕР. Раньше клиент присылал готовое ok по каждому
+  // слову, и прямым вызовом RPC можно было отправить «всё верно»: отчёт
+  // преподавателю врал, а штраф FSRS не наступал. Теперь мы шлём только
+  // ответы, а какие слова неверны — говорит сервер, и «ещё раз» получают
+  // именно они.
+  const { data, error } = await supabase.rpc('submit_word_check', {
     p_id: check.id,
     p_results: toJson(results),
   })
   if (error) throw dbError(error, 'сохранить результат перепроверки')
-  if (!didComplete) return // уже завершена — идемпотентно
+  const verdict = data as unknown as { counted?: boolean; wrong?: string[] } | boolean | null
+  // старая версия RPC (миграция ещё не залита) отвечала boolean — не ломаемся
+  const counted = typeof verdict === 'boolean' ? verdict : Boolean(verdict?.counted)
+  if (!counted) return // уже завершена — идемпотентно
 
-  // неверные слова → again (вернутся в колоду; FSRS сожмёт интервал)
-  const wrong = results.filter((r) => !r.ok)
-  if (wrong.length === 0) return
-
-  const ids = wrong.map((r) => r.card_id)
+  const ids =
+    typeof verdict === 'boolean' || !Array.isArray(verdict?.wrong)
+      ? results.filter((r) => !r.ok).map((r) => r.card_id) // старый путь
+      : verdict.wrong
+  if (ids.length === 0) return
   const [cardsRes, statesRes] = await Promise.all([
     supabase.from('cards').select('*').in('id', ids),
     supabase.from('review_states').select('*').eq('user_id', userId).in('card_id', ids),
