@@ -312,7 +312,10 @@ function WordsStudy({ onBack }: { onBack: () => void }) {
   const [rawSub, setRawSub] = useUrlState('sub', (v) => v === 'review' || v === 'mywords')
   const sub = (rawSub as 'review' | 'mywords' | null) ?? 'menu'
   const setSub = (s: 'menu' | 'review' | 'mywords') => setRawSub(s === 'menu' ? null : s)
-  const [sheet, setSheet] = useState<null | 'add' | 'packs'>(null)
+  // Открытая шторка — тоже в адресе (?sheet=packs). Нужна не ради истории, а
+  // чтобы на неё можно было ПРИВЕСТИ: пустая колода зовёт «Добавить первые
+  // слова», и человек должен попасть сразу к наборам, а не в общий список.
+  const [sheet, setSheet] = useUrlState('sheet', (v) => v === 'packs' || v === 'add')
   // «Мои слова» — длинный список: без сброса открывался на прежней прокрутке меню
   useScrollTop(sub)
 
@@ -345,7 +348,7 @@ function WordsStudy({ onBack }: { onBack: () => void }) {
         <Button
           variant="secondary"
           className="px-3 py-2 text-sm"
-          onClick={() => setSheet((s) => (s === 'packs' ? null : 'packs'))}
+          onClick={() => setSheet(sheet === 'packs' ? null : 'packs')}
         >
           {sheet === 'packs' ? (
             'Закрыть'
@@ -358,7 +361,7 @@ function WordsStudy({ onBack }: { onBack: () => void }) {
         <Button
           variant="secondary"
           className="px-3 py-2 text-sm"
-          onClick={() => setSheet((s) => (s === 'add' ? null : 'add'))}
+          onClick={() => setSheet(sheet === 'add' ? null : 'add')}
         >
           {sheet === 'add' ? (
             'Закрыть'

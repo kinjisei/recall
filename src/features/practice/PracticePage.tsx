@@ -31,6 +31,7 @@ import {
   IconCards,
 } from '../../components/icons'
 import { Card } from '../../components/Card'
+import { Button } from '../../components/Button'
 import { useLanguage } from '../../context/LanguageContext'
 import { getDueCards } from '../../lib/fsrs'
 import { countMyWords } from '../../lib/cards'
@@ -279,10 +280,21 @@ export function PracticePage() {
         </span>
       </button>
 
-      <p className="text-sm text-[var(--night-text-40)]">
-        Игры используют твои слова и уроки твоего уровня. Ошибка вернёт слово
-        или упражнение на повтор. Добавить слова — в «Учёба → Слова».
-      </p>
+      {/* Абзац-инструкция отсюда убран (замер ревью 1Б: из-за него ни одна из
+          13 плиток не была видна без прокрутки, а первым, что читал новичок,
+          было предложение уйти в другой раздел). Подсказка осталась только там,
+          где она нужна — когда слов действительно нет, и тогда это не совет,
+          а кнопка. */}
+      {words === 0 && (
+        <Card className="flex flex-col gap-2">
+          <p className="text-sm text-[var(--night-text-70)]">
+            Играть пока не с чем — сначала нужны слова.
+          </p>
+          <Button onClick={() => navigate('/study?view=words&sheet=packs')}>
+            Взять готовый набор
+          </Button>
+        </Card>
+      )}
 
       <SectionTitle>Слова</SectionTitle>
       <TileGrid tiles={wordTiles} onOpen={open} />

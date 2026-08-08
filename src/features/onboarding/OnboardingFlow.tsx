@@ -217,7 +217,17 @@ function StepLevel({
         </>
       )}
 
+      {/* Раньше главная кнопка была серой и неактивной, пока уровень не выбран,
+          без единого слова о том, чего от человека ждут, — а выход («Пропустить»)
+          был мельче тупика. Получалось наоборот: сломанным выглядело нужное
+          действие. Теперь есть подпись, а «Не знаю» — полноценная вторая кнопка:
+          не знать свой уровень нормально, мы его и так определим по ходу. */}
       <div className="mt-auto flex flex-col gap-3">
+        {lang === 'en' && !level && (
+          <p className="text-center text-sm text-[var(--night-text-40)]">
+            Выбери уровень — или нажми «Не знаю», подберём сами.
+          </p>
+        )}
         <button
           onClick={onNext}
           disabled={lang === 'en' && !level}
@@ -225,8 +235,11 @@ function StepLevel({
         >
           Дальше
         </button>
-        <button onClick={onSkip} className="py-1 text-sm text-[var(--night-text-40)]">
-          Пропустить
+        <button
+          onClick={onSkip}
+          className="h-13 rounded-2xl border border-white/[0.12] py-3.5 font-medium text-[var(--night-text-70)] transition-[filter,transform] active:scale-[0.98]"
+        >
+          Не знаю свой уровень
         </button>
       </div>
     </div>
