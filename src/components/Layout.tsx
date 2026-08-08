@@ -92,7 +92,11 @@ function AvatarMenu() {
           {/* не-преподавателю показываем вход в режим: до A1 попасть в студию
               самостоятельно было нельзя вообще, роль выдавалась вручную SQL-ом */}
           <Link to="/teacher" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
-            <IconTeacher size={17} /> {isTeacher ? 'Мои ученики' : 'Я веду учеников'}
+            {/* Экран /teacher зовётся «Преподаватель» и в заголовке, и на
+                Главной: раньше меню обещало «Мои ученики», а открывался экран
+                с другим названием и четырьмя вкладками (ревью 1Г). Для НЕ
+                преподавателя это по-прежнему приглашение, а не название. */}
+            <IconTeacher size={17} /> {isTeacher ? 'Преподаватель' : 'Я веду учеников'}
           </Link>
           <Link to="/pricing" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
             <IconCards size={17} /> Тарифы

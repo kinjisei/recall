@@ -34,12 +34,16 @@ export function LoginPage() {
 
   // /login?role=teacher — пришёл с лендинга для репетиторов. Запоминаем сразу:
   // после подтверждения почты страница откроется заново, и параметра уже не будет.
-  const { search } = useLocation()
+  const { search, state } = useLocation()
   useEffect(() => {
     rememberPendingRole(search)
   }, [search])
 
-  if (user) return <Navigate to="/" replace />
+  // ⚠️ state берём из useLocation, а не из глобального location: у window
+  // такого поля нет, и адрес молча оказывался бы undefined.
+  // ProtectedRoute кладёт сюда адрес, с которого человека увели на вход.
+  const from = (state as { from?: string } | null)?.from
+  if (user) return <Navigate to={from && from !== '/login' ? from : '/'} replace />
 
   const signup = mode === 'signup'
 

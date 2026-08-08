@@ -74,15 +74,30 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
             </a>
             , починю.
           </p>
-          <button
-            onClick={() => {
-              sessionStorage.removeItem(RELOAD_AT)
-              window.location.reload()
-            }}
-            className="rounded-xl bg-[var(--night-accent)] px-5 py-2.5 font-semibold text-white hover:brightness-110"
-          >
-            Обновить
-          </button>
+          {/* ⚠️ Раньше здесь была только «Обновить», а она перезагружает ТОТ ЖЕ
+              адрес — то есть возвращает ровно в ту поломку, из которой человек
+              пытается выбраться. Экран ошибок стоит снаружи роутера, уйти с
+              него навигацией нельзя, поэтому нужен явный выход на Главную. */}
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <button
+              onClick={() => {
+                sessionStorage.removeItem(RELOAD_AT)
+                window.location.reload()
+              }}
+              className="min-h-11 rounded-xl bg-[var(--night-accent)] px-5 py-2.5 font-semibold text-white hover:brightness-110"
+            >
+              Обновить
+            </button>
+            <button
+              onClick={() => {
+                sessionStorage.removeItem(RELOAD_AT)
+                window.location.assign('/')
+              }}
+              className="min-h-11 rounded-xl border border-white/[0.12] px-5 py-2.5 font-medium text-[var(--night-text-70)]"
+            >
+              На главную
+            </button>
+          </div>
         </div>
       )
     }

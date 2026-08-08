@@ -15,7 +15,7 @@ import { BlockedScreen } from './BlockedScreen'
  */
 export function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth()
-  const { pathname } = useLocation()
+  const { pathname, search } = useLocation()
   const [blocked, setBlocked] = useState<boolean | null>(null)
   // флаг «уже прошёл» читаем синхронно: иначе после завершения онбординга
   // редирект успевал вернуть пользователя обратно на первый шаг
@@ -79,7 +79,12 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
     )
   }
 
-  if (!user) return <Navigate to="/login" replace />
+  // Куда человек шёл, туда и вернём после входа. Раньше ссылка, открытая без
+  // входа (например, «прочитай вот этот текст» от преподавателя), после логина
+  // забывалась — человек оказывался на Главной и искал заново (ревью 1Г).
+  if (!user) {
+    return <Navigate to="/login" replace state={{ from: pathname + search }} />
+  }
 
   if (blocked) return <BlockedScreen />
 

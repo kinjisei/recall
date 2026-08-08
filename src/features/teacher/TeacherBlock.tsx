@@ -52,7 +52,8 @@ function TeacherCard() {
     <Link to="/teacher">
       <Card className="flex items-center justify-between transition-transform active:scale-[0.99]">
         <div>
-          <p className="font-semibold">Мои ученики</p>
+          {/* то же имя, что у экрана и в меню аватара */}
+          <p className="font-semibold">Преподаватель</p>
           <p className="text-sm text-[var(--night-text-40)]">
             {pending > 0
               ? `Работ на проверку: ${pending}`

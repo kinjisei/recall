@@ -18,6 +18,7 @@ import {
   IconCaretDown,
 } from '../../components/icons'
 import { BackHeader } from '../../components/BackButton'
+import { useSmartBack } from '../../components/SmartBack'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { TabPicker } from '../../components/TabPicker'
@@ -102,9 +103,15 @@ export function GrammarPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lang])
 
+  const goBack = useSmartBack('/study')
+
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-medium tracking-tight">Грамматика</h1>
+      {/* Каретка возврата: «Грамматика» была единственным экраном-разделом без
+          неё (замер ревью 1Б) — попасть сюда можно только из «Учёбы», а уйти
+          обратно было нечем, кроме нижней навигации. useSmartBack возвращает
+          туда, откуда пришли, а не в жёстко зашитый хаб. */}
+      <BackHeader onBack={goBack} title="Грамматика" label="К учёбе" />
       <TabPicker options={sections} value={section} onChange={setSection} ariaLabel="Раздел грамматики" />
 
       {section === 'lessons' ? (
