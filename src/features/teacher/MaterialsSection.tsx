@@ -18,6 +18,7 @@ import {
 } from '../../lib/materials'
 import type { StudentInfo } from '../../lib/teacher'
 import { useScrollTop } from '../../lib/useScrollTop'
+import { useUrlState } from '../../lib/useUrlState'
 import type { Material, MaterialAssignment, MaterialPlan } from '../../types'
 import { MaterialsByLevel } from './materials/MaterialsByLevel'
 import { RequestForm } from './materials/RequestForm'
@@ -31,8 +32,6 @@ type Mode =
   | { name: 'plan'; req: MaterialRequest; plan: MaterialPlan }
   // own: материал по своему тексту преподавателя (плана нет, назад — к форме)
   | { name: 'preview'; req: MaterialRequest; plan: MaterialPlan; content: MaterialContent; own?: boolean }
-  // review — сразу открыть проверку конкретной работы (из блока «На проверку»)
-  | { name: 'detail'; material: Material; review?: { a: MaterialAssignment; name: string } }
 
 export function MaterialsSection({
   students,
@@ -45,6 +44,18 @@ export function MaterialsSection({
   const [mode, setMode] = useState<Mode>({ name: 'list' })
   // список → форма → предпросмотр → материал: каждый шаг с верха экрана
   useScrollTop(mode.name)
+
+  // Открытый материал — в адресе (?mat=<id>): «назад» возвращает к списку
+  // материалов, а не выбрасывает из студии, и на материал можно дать ссылку.
+  //
+  // ⚠️ Шаги мастера генерации (plan, preview) в адрес НЕ выносим сознательно:
+  // они держат в памяти уже сгенерированный AI-ответ, восстановить его по
+  // ссылке нельзя. Адресуемая ссылка открывала бы пустой мастер и выглядела
+  // как поломка — честнее, чтобы этих шагов в истории не было.
+  const [matId, setMatId] = useUrlState('mat')
+  // какую именно работу открыть на проверке (вход из блока «На проверку»);
+  // в адрес не выносим — это указание «открой сразу проверку», а не место
+  const [review, setReview] = useState<{ a: MaterialAssignment; name: string } | undefined>()
   // ошибка RLS/сети не должна выглядеть как «материалов нет»
   const {
     data: materials,
@@ -58,6 +69,32 @@ export function MaterialsSection({
     [],
     'Не удалось загрузить работы',
   )
+
+  // адрес — источник правды для «какой материал открыт»; mode отвечает только
+  // за шаги мастера. Материал ищем в уже загруженном списке: чужой или
+  // удалённый id показывает список, а не пустой экран.
+  const openMaterial = matId ? (materials ?? []).find((m) => m.id === matId) : undefined
+  if (matId && openMaterial) {
+    return (
+      <MaterialDetail
+        material={openMaterial}
+        students={students}
+        initialReview={review}
+        onWorksChanged={onWorksChanged}
+        onDeleted={() => {
+          reload()
+          setReview(undefined)
+          setMatId(null)
+        }}
+        onBack={() => {
+          reloadWorks() // проверенная работа должна исчезнуть из «На проверку»
+          onWorksChanged?.() // и бейдж вкладки пересчитать
+          setReview(undefined)
+          setMatId(null)
+        }}
+      />
+    )
+  }
 
   if (mode.name === 'form') {
     return (
@@ -91,7 +128,7 @@ export function MaterialsSection({
         onRegenerated={(content) => setMode({ ...mode, content })}
         onSaved={(material) => {
           reload()
-          setMode({ name: 'detail', material })
+          setMatId(material.id)
         }}
         onBack={() =>
           mode.own
@@ -101,26 +138,6 @@ export function MaterialsSection({
       />
     )
   }
-  if (mode.name === 'detail') {
-    return (
-      <MaterialDetail
-        material={mode.material}
-        students={students}
-        initialReview={mode.review}
-        onWorksChanged={onWorksChanged}
-        onDeleted={() => {
-          reload()
-          setMode({ name: 'list' })
-        }}
-        onBack={() => {
-          reloadWorks() // проверенная работа должна исчезнуть из «На проверку»
-          onWorksChanged?.() // и бейдж вкладки пересчитать
-          setMode({ name: 'list' })
-        }}
-      />
-    )
-  }
-
   const pending = works ?? []
   return (
     <div className="flex flex-col gap-3">
@@ -133,13 +150,10 @@ export function MaterialsSection({
           {pending.map((w) => (
             <button
               key={w.assignment.id}
-              onClick={() =>
-                setMode({
-                  name: 'detail',
-                  material: w.material,
-                  review: { a: w.assignment, name: w.studentName },
-                })
-              }
+              onClick={() => {
+                setReview({ a: w.assignment, name: w.studentName })
+                setMatId(w.material.id)
+              }}
               className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.08] px-3 py-2 text-left transition-transform active:scale-[0.99]"
             >
               <span className="min-w-0">
@@ -181,7 +195,7 @@ export function MaterialsSection({
       ) : (
         <MaterialsByLevel
           materials={materials ?? []}
-          onOpen={(material) => setMode({ name: 'detail', material })}
+          onOpen={(material) => setMatId(material.id)}
         />
       )}
     </div>

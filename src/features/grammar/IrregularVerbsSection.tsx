@@ -15,6 +15,7 @@ import { speak } from '../../lib/speech'
 import { logActivity } from '../../lib/activity'
 import { getVerbMistakes, addVerbMistake, removeVerbMistake } from '../../lib/verbMistakes'
 import { answerMatches } from '../../lib/text'
+import { useUrlState } from '../../lib/useUrlState'
 import type {
   IrregularGroup,
   IrregularVerb,
@@ -26,7 +27,12 @@ type Mode = 'reference' | 'trainer'
 
 export function IrregularVerbsSection() {
   const [groups, setGroups] = useState<IrregularGroup[] | null>(null)
-  const [mode, setMode] = useState<Mode>('reference')
+  // Режим — в адресе (?vm=trainer): «назад» из тренажёра должен возвращать в
+  // справочник, а не выбрасывать из «Грамматики» (см. lib/useUrlState). Ход
+  // самого раунда в адрес НЕ выносим — после F5 раунд честно начинается заново.
+  const [vm, setVm] = useUrlState('vm', (v) => v === 'trainer')
+  const mode: Mode = vm === 'trainer' ? 'trainer' : 'reference'
+  const setMode = (m: Mode) => setVm(m === 'trainer' ? 'trainer' : null)
 
   useEffect(() => {
     let alive = true

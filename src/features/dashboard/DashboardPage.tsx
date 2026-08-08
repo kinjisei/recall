@@ -42,7 +42,7 @@ import { getEsLevel } from '../../lib/esLevel'
 import { getMyPlans, isProgramSeen } from '../../lib/studyPlan'
 import { getMyPlan, type MyPlan } from '../../lib/billing'
 import { EnergyBar } from '../../components/EnergyBar'
-import { startGuided } from '../../lib/guided'
+import { startGuidedRoute } from '../../lib/guided'
 import { speak } from '../../lib/speech'
 import { RowCard } from '../../components/RowCard'
 import {
@@ -258,9 +258,11 @@ export function DashboardPage() {
         />
       )}
 
-      {/* 4. Начать занятие */}
+      {/* 4. Начать занятие. Куда вести — решаем ДО перехода, иначе хаб
+          «Практика» открывается зря и через несколько секунд сам меняется
+          под пальцем (замер ревью 1А). */}
       <button
-        onClick={() => navigate(startGuided())}
+        onClick={() => void startGuidedRoute(lang).then((r) => navigate(r))}
         className="lift animate-fade-up flex h-[58px] items-center justify-center gap-2.5 rounded-2xl border border-[var(--night-accent-45)] bg-[linear-gradient(135deg,rgba(145,132,217,.22),rgba(145,132,217,.10))] font-medium text-[var(--night-text)]"
         style={{ animationDelay: '.12s' }}
       >

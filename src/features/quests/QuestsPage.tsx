@@ -19,6 +19,7 @@ import { celebrate } from '../../components/Confetti'
 import { chat } from '../../lib/gemini'
 import { logActivity } from '../../lib/activity'
 import { useAsyncData } from '../../lib/useAsyncData'
+import { useUrlState } from '../../lib/useUrlState'
 import {
   listMyQuests,
   questCorrectAnswer,
@@ -65,19 +66,33 @@ function parseReply(raw: string): { verdict: 'CORRECT' | 'TRY_AGAIN' | 'START'; 
 
 export function QuestsPage() {
   const navigate = useNavigate()
-  const [active, setActive] = useState<GrammarQuest | null>(null)
+  // Открытый чат — в адресе (?q=<id>), а не в useState: иначе «назад» из квеста
+  // уводил на Главную мимо списка, а свайп-назад в PWA — единственный выход.
+  // Правило пуш/replace — в lib/useUrlState.ts.
+  const [questId, setQuestId] = useUrlState('q')
   const { data: quests, error, loading, reload } = useAsyncData<GrammarQuest[]>(
     () => listMyQuests(),
     [],
     'Не удалось загрузить квесты',
   )
 
+  const active = questId ? ((quests ?? []).find((q) => q.id === questId) ?? null) : null
+
+  // Квест сняли или ссылка чужая: показываем список, а не пустой экран. Ждём
+  // именно загрузки quests — иначе F5 внутри чата выбрасывал бы наружу.
+  useEffect(() => {
+    if (questId && quests && !quests.some((q) => q.id === questId)) setQuestId(null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [questId, quests])
+
   if (active) {
     return (
       <QuestChat
+        // разные квесты — разные переписки: без key чат остался бы от прежнего
+        key={active.id}
         quest={active}
         onBack={() => {
-          setActive(null)
+          setQuestId(null)
           reload()
         }}
       />
@@ -115,7 +130,7 @@ export function QuestsPage() {
               }`}
               active={q.status === 'assigned'}
               muted={q.status === 'completed'}
-              onClick={() => setActive(q)}
+              onClick={() => setQuestId(q.id)}
             />
           ))}
         </div>

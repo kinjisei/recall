@@ -7,7 +7,6 @@
 // глаголы (IrregularVerbsSection).
 // ============================================================================
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
 import {
   IconArrowRight,
   IconGap,
@@ -26,6 +25,7 @@ import { RoundResult, RoundProgress } from '../../components/RoundResult'
 import { speak } from '../../lib/speech'
 import { logActivity } from '../../lib/activity'
 import { useScrollTop } from '../../lib/useScrollTop'
+import { useUrlStates } from '../../lib/useUrlState'
 import {
   addMistake,
   getMistakes,
@@ -55,21 +55,48 @@ const sections: { id: Section; label: string; Icon: (p: IconProps) => React.JSX.
   { id: 'verbs', label: 'Глаголы', Icon: IconShuffle },
 ]
 
+// Все «где я нахожусь» экрана — в адресе. Ключи перечислены одним списком и
+// правятся одним вызовом (useUrlStates), потому что переключение раздела должно
+// ЧИСТИТЬ чужие параметры: иначе, уйдя из урока в «Глаголы» и вернувшись в
+// «Уроки», ученик молча проваливался в урок, открытый десять шагов назад.
+// Список на уровне модуля — useUrlStates держит его в зависимостях useCallback.
+const NAV_KEYS = ['verbs', 'lesson', 'topic', 'mistakes', 'vk', 'vm', 'tense']
+const NAV_EMPTY: Record<string, string | null> = Object.fromEntries(
+  NAV_KEYS.map((k) => [k, null]),
+)
+const VERB_KIND_KEYS = ['vk', 'vm']
+// Урок и банк ошибок правим вместе: ?topic= — синоним ?lesson= (старый
+// deep-link из разбора, AnalyzedItemsView), и при выходе из урока снять надо
+// оба ключа, иначе забытый ?topic= тут же вернул бы ученика обратно в урок.
+const LESSON_KEYS = ['lesson', 'topic', 'mistakes']
+
 /**
  * «Грамматика»: уроки (EN и ES) + глаголы (ES — спряжения, EN — неправильные).
  * Query-параметры для входа из «Практики»: ?verbs=1 — сразу раздел «Глаголы»,
- * ?mistakes=1 — сразу повтор банка «Мои ошибки».
+ * ?mistakes=1 — сразу повтор банка «Мои ошибки». Открытый урок — ?lesson=<id>
+ * (?topic=<id> — тот же смысл, старый deep-link из разбора).
  */
 export function GrammarPage() {
   const { lang } = useLanguage()
-  const [params] = useSearchParams()
-  const [section, setSection] = useState<Section>(() =>
-    params.get('verbs') ? 'verbs' : 'lessons',
-  )
+  const [nav, setNav] = useUrlStates(NAV_KEYS)
+  const section: Section = nav.verbs ? 'verbs' : 'lessons'
+  // «Уроки» — раздел по умолчанию, поэтому возврат в него параметры снимает
+  // (запись в истории не плодится, см. правило в lib/useUrlState)
+  const setSection = (s: Section) =>
+    setNav({ ...NAV_EMPTY, verbs: s === 'verbs' ? '1' : null })
 
-  // при смене языка возвращаемся к урокам (контент «Глаголов» разный)
+  // Сравниваем со ЗНАЧЕНИЕМ прошлого языка, а не считаем прогоны эффекта:
+  // в dev StrictMode монтирует дважды, и счётчик «первый прогон пропускаем»
+  // на втором заходе стирал ссылку-вход /grammar?verbs=1 — параметры слетали
+  // при каждом открытии по прямой ссылке.
+  const prevLang = useRef(lang)
   useEffect(() => {
-    setSection(params.get('verbs') ? 'verbs' : 'lessons')
+    // при смене языка возвращаемся к урокам: контент «Глаголов» разный, а id
+    // урока или времени из другого языка ведёт в никуда
+    if (prevLang.current !== lang) {
+      prevLang.current = lang
+      setSection('lessons')
+    }
     // разовая заливка старого localStorage-банка ошибок в БД (для диагностики)
     syncMistakesToDb(lang)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -81,12 +108,7 @@ export function GrammarPage() {
       <TabPicker options={sections} value={section} onChange={setSection} ariaLabel="Раздел грамматики" />
 
       {section === 'lessons' ? (
-        <LessonsSection
-          key={lang}
-          lang={lang}
-          initialMistakes={params.get('mistakes') === '1'}
-          initialTopic={params.get('topic')}
-        />
+        <LessonsSection key={lang} lang={lang} />
       ) : lang === 'es' ? (
         <ConjugationSection />
       ) : (
@@ -101,7 +123,13 @@ export function GrammarPage() {
  * (В ES вместо этого спряжения — ConjugationSection.)
  */
 function EnglishVerbs() {
-  const [kind, setKind] = useState<'irregular' | 'phrasal'>('irregular')
+  // ?vk=phrasal — какой из двух наборов открыт. Заодно снимаем ?vm: у каждого
+  // набора свой «Справочник/Тренажёр», и раньше (когда режим жил в useState)
+  // переключение набора всегда открывало справочник — сохраняем это.
+  const [nav, setNav] = useUrlStates(VERB_KIND_KEYS)
+  const kind = nav.vk === 'phrasal' ? 'phrasal' : 'irregular'
+  const setKind = (k: 'irregular' | 'phrasal') =>
+    setNav({ vk: k === 'phrasal' ? 'phrasal' : null, vm: null })
   return (
     <div className="flex flex-col gap-4">
       <TabPicker
@@ -118,21 +146,26 @@ function EnglishVerbs() {
   )
 }
 
-function LessonsSection({
-  lang,
-  initialMistakes = false,
-  initialTopic = null,
-}: {
-  lang: AppLang
-  initialMistakes?: boolean
-  /** id урока из ?topic= (deep-link из разбора) — открыть сразу этот урок. */
-  initialTopic?: string | null
-}) {
+function LessonsSection({ lang }: { lang: AppLang }) {
   const [topics, setTopics] = useState<GrammarTopic[] | null>(null)
   // ничего не раскрыто по умолчанию — уровни разворачиваются по тапу
   const [openLevel, setOpenLevel] = useState<string | null>(null)
-  const [selected, setSelected] = useState<GrammarTopic | null>(null)
-  const [reviewMistakes, setReviewMistakes] = useState(initialMistakes)
+  const [nav, setNav] = useUrlStates(LESSON_KEYS)
+  const lessonId = nav.lesson ?? nav.topic
+  const reviewMistakes = nav.mistakes === '1'
+  const openLesson = (id: number) => setNav({ lesson: String(id), topic: null })
+  const closeLesson = () => setNav({ lesson: null, topic: null })
+  // Урок ищем по id из адреса. Пока темы не загрузились — selected пуст, и
+  // экран честно показывает «Загрузка…», а не пустоту.
+  const selected = topics?.find((t) => String(t.id) === lessonId) ?? null
+
+  // Чужая или устаревшая ссылка (урок удалён, id из другого языка): молча
+  // возвращаемся к списку вместо белого экрана. Снимаем параметр заменой, а не
+  // новой записью, — «назад» не должен упираться в тот же битый адрес.
+  useEffect(() => {
+    if (topics && lessonId && !selected) closeLesson()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [topics, lessonId, selected])
 
   // При открытии темы (и возврате к списку) прокручиваем наверх — иначе
   // урок открывался на прежней прокрутке списка, показывая свою нижнюю часть.
@@ -158,17 +191,6 @@ function LessonsSection({
     }
   }, [lang])
 
-  // deep-link из разбора (?topic=<id>): один раз открываем нужный урок
-  const appliedTopic = useRef(false)
-  useEffect(() => {
-    if (appliedTopic.current || !topics || !initialTopic) return
-    const t = topics.find((x) => x.id === Number(initialTopic))
-    if (t) {
-      setSelected(t)
-      appliedTopic.current = true
-    }
-  }, [topics, initialTopic])
-
   const byLevel = useMemo(() => {
     const groups: Record<string, GrammarTopic[]> = {}
     for (const t of topics ?? []) {
@@ -179,11 +201,15 @@ function LessonsSection({
   }, [topics])
 
   if (selected) {
-    return <TopicScreen topic={selected} lang={lang} onBack={() => setSelected(null)} />
+    return <TopicScreen topic={selected} lang={lang} onBack={closeLesson} />
   }
   if (reviewMistakes && topics) {
     return (
-      <MistakesScreen lang={lang} topics={topics} onBack={() => setReviewMistakes(false)} />
+      <MistakesScreen
+        lang={lang}
+        topics={topics}
+        onBack={() => setNav({ mistakes: null })}
+      />
     )
   }
 
@@ -196,7 +222,7 @@ function LessonsSection({
       </p>
 
       {mistakeCount > 0 && (
-        <button onClick={() => setReviewMistakes(true)} className="text-left">
+        <button onClick={() => setNav({ mistakes: '1' })} className="text-left">
           <Card className="flex items-center justify-between gap-2 border-[var(--night-accent-45)] transition-transform active:scale-[0.99]">
             <span className="flex min-w-0 items-center gap-2 font-medium">
               <IconRefresh size={18} className="shrink-0 text-[var(--night-accent-text)]" />
@@ -234,7 +260,7 @@ function LessonsSection({
               {isOpen && (
                 <div className="mt-2 flex flex-col gap-2">
                   {list.map((t) => (
-                    <button key={t.id} onClick={() => setSelected(t)} className="text-left">
+                    <button key={t.id} onClick={() => openLesson(t.id)} className="text-left">
                       <Card className="flex items-center justify-between gap-2 transition-transform active:scale-[0.99]">
                         <span className="min-w-0 truncate font-medium">{t.title}</span>
                         <span className="shrink-0 text-xs text-[var(--night-text-40)]">

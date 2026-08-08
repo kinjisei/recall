@@ -21,7 +21,7 @@ import { supabase } from '../../lib/supabase'
 import { invalidateProfile } from '../../lib/profile'
 import { setEsLevel } from '../../lib/esLevel'
 import { markOnboarded } from '../../lib/onboarding'
-import { startGuided } from '../../lib/guided'
+import { startGuidedRoute } from '../../lib/guided'
 import { track, setSelfReportedSource } from '../../lib/analytics'
 import { celebrate } from '../../components/Confetti'
 import type { AppLang, CEFRLevel } from '../../types'
@@ -57,10 +57,12 @@ export function OnboardingFlow() {
     void track('onboarding_done', { lang, level })
     markOnboarded()
     celebrate()
-    // «Начать первое занятие» — сразу запускаем ведомую сессию (та же, что
-    // кнопка «Начать занятие» на Главной); пустой шаг повторения при нуле слов
-    // Практика пропустит сама (skipReviewIfNoWords) и уведёт на чтение
-    setTimeout(() => navigate(startGuided(), { replace: true }), 600)
+    // «Начать первое занятие» — сразу ведомая сессия. Куда именно вести,
+    // выясняем ЗАРАНЕЕ (startGuidedRoute), пока идёт празднование: у новичка
+    // слов нет, и он должен попасть на чтение сразу, а не смотреть на хаб,
+    // который через пять секунд сам сменится (замер ревью 1А).
+    const route = startGuidedRoute(lang)
+    setTimeout(() => void route.then((r) => navigate(r, { replace: true })), 600)
   }
 
   return (

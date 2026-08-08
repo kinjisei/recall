@@ -180,7 +180,9 @@ async function main() {
         packs: b.includes('Паки слов'),
         add: b.includes('Своё слово'),
         my: b.includes('Мои слова'),
-        deck: b.includes('Повторение колоды'),
+        // строка называется «Повторение слов» (не «…колоды») — проверка искала
+        // старое название и падала вхолостую, маскируя настоящие поломки
+        deck: b.includes('Повторение слов'),
       }
     })
     check('Учёба → Слова: паки, своё слово, мои слова, колода', Object.values(wordsState).every(Boolean), JSON.stringify(wordsState))

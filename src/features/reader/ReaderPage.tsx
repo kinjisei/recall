@@ -14,10 +14,11 @@ const SpanishReaderPage = lazy(() =>
   import('./SpanishReader').then((m) => ({ default: m.SpanishReaderPage })),
 )
 import { AddTextForm, MyTextReader, MyTextsList } from './MyTextsBlock'
-import type { MyText } from '../../lib/myTexts'
+import { listMyTexts } from '../../lib/myTexts'
 import { sampleTexts, type SampleText } from './sampleTexts'
 import type { CEFRLevel } from '../../types'
 import { useScrollTop } from '../../lib/useScrollTop'
+import { useUrlState } from '../../lib/useUrlState'
 
 const levels: CEFRLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1']
 
@@ -33,26 +34,44 @@ export function ReaderPage({
   onBack?: () => void
 }) {
   const { lang } = useLanguage()
-  // свои тексты: 'add' — форма добавления, MyText — чтение
-  const [my, setMy] = useState<'add' | MyText | null>(null)
-  useEffect(() => setMy(null), [lang])
+  // Свои тексты — тоже в адресе (?mine=add | ?mine=<id>): без этого «назад» из
+  // своего текста уводил из «Учёбы» целиком, а F5 терял открытое. Тексты живут
+  // в localStorage устройства, поэтому ссылка работает только на нём — но
+  // «назад» и перезагрузка должны работать везде одинаково.
+  const [mineKey, setMineKey] = useUrlState(
+    'mine',
+    (v) => v === 'add' || listMyTexts(lang).some((t) => t.id === v),
+  )
+  const myText = mineKey && mineKey !== 'add'
+    ? (listMyTexts(lang).find((t) => t.id === mineKey) ?? null)
+    : null
+  // Смена языка закрывает открытое (свои тексты у каждого языка свои).
+  // ⚠️ Только при РЕАЛЬНОЙ смене: эффект с [lang] срабатывает и на первом
+  // рендере, а это стёрло бы ?mine= из прямой ссылки ещё до показа текста.
+  const prevLang = useRef(lang)
+  useEffect(() => {
+    if (prevLang.current !== lang) {
+      prevLang.current = lang
+      setMineKey(null)
+    }
+  }, [lang, setMineKey])
 
-  if (my === 'add') {
+  if (mineKey === 'add') {
     return (
       <AddTextForm
         lang={lang}
-        onDone={(t) => setMy(t ?? null)}
+        onDone={(t) => setMineKey(t ? t.id : null)}
       />
     )
   }
-  if (my) {
-    return <MyTextReader text={my} lang={lang} onBack={() => setMy(null)} />
+  if (myText) {
+    return <MyTextReader text={myText} lang={lang} onBack={() => setMineKey(null)} />
   }
 
   const fullHeader = (
     <>
       {header}
-      <MyTextsList lang={lang} onAdd={() => setMy('add')} onOpen={(t) => setMy(t)} />
+      <MyTextsList lang={lang} onAdd={() => setMineKey('add')} onOpen={(t) => setMineKey(t.id)} />
     </>
   )
   if (lang === 'es')
@@ -74,7 +93,14 @@ function EnglishReaderPage({
   onBack?: () => void
 }) {
   const [level, setLevel] = useState<CEFRLevel>('B1')
-  const [active, setActive] = useState<SampleText | null>(null)
+  // Открытый текст — в адресе (?text=12). Даёт три вещи: «назад» возвращает в
+  // список, а не на Главную; F5 не теряет текст; преподаватель может прислать
+  // ссылку «прочитай вот это». Несуществующий id трактуется как «текст не
+  // выбран» — чужая или устаревшая ссылка показывает список, а не пустоту.
+  const [textId, setTextId] = useUrlState('text', (v) =>
+    sampleTexts.some((t) => String(t.id) === v),
+  )
+  const active = textId ? (sampleTexts.find((t) => String(t.id) === textId) ?? null) : null
   useScrollTop(active)
   // пока не пришёл уровень из профиля, не перещёлкивать вкладку под пальцем
   const userPicked = useRef(false)
@@ -96,7 +122,7 @@ function EnglishReaderPage({
   const texts = sampleTexts.filter((t) => t.level === level)
 
   if (active) {
-    return <Reader text={active} onBack={() => setActive(null)} />
+    return <Reader text={active} onBack={() => setTextId(null)} />
   }
 
   return (
@@ -126,7 +152,7 @@ function EnglishReaderPage({
 
       <div className="flex flex-col gap-3">
         {texts.map((t) => (
-          <button key={t.id} onClick={() => setActive(t)} className="text-left">
+          <button key={t.id} onClick={() => setTextId(String(t.id))} className="text-left">
             <Card className="transition-transform active:scale-[0.99]">
               <p className="font-semibold">{t.title}</p>
               <p className="mt-1 line-clamp-2 text-sm text-[var(--night-text-40)]">{t.body}</p>

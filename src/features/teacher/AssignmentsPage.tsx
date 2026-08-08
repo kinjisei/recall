@@ -3,7 +3,7 @@
 // Прохождение: чтение → упражнения (общий движок) → сдача (авто-балл, статус
 // submitted). Проверка преподавателем — следующая фаза фичи.
 // ============================================================================
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BackHeader } from '../../components/BackButton'
 import { Card } from '../../components/Card'
@@ -20,6 +20,7 @@ import {
   submitAssignment,
 } from '../../lib/materials'
 import { useScrollTop } from '../../lib/useScrollTop'
+import { useUrlStates } from '../../lib/useUrlState'
 import type {
   AppLang,
   AssignmentAnswer,
@@ -29,12 +30,30 @@ import type {
 
 type Row = MaterialAssignment & { material: Material }
 
+/**
+ * Стадия прохождения задания — живёт в адресе (?stage=).
+ * Итога раунда здесь нет намеренно: результат — это ход раунда, а не место.
+ * После F5 он показал бы честный «0 из 13» вместо набранного, поэтому остаётся
+ * локальным состоянием раннера (правило из lib/useUrlState.ts).
+ */
+type Stage = 'read' | 'exercises' | 'review'
+const STAGES: string[] = ['read', 'exercises', 'review']
+/** Константа, а не литерал на каждый рендер: иначе set из хука пересоздаётся зря. */
+const URL_KEYS = ['a', 'stage']
+
+/** Черновик прохождения: что уже отвечено и на каком упражнении человек стоит. */
+type Draft = { answers: Record<number, AssignmentAnswer>; index: number }
+
 export function AssignmentsPage() {
   const navigate = useNavigate()
-  const [active, setActive] = useState<Row | null>(null)
-  useScrollTop(active)
-  // повторное прохождение проверенной работы — тренировка без пересдачи
-  const [retry, setRetry] = useState(false)
+  // Открытое задание и стадия — в адресе (?a=<id>&stage=read), а не в useState.
+  // Раньше «назад» из упражнений выбрасывал на Главную мимо списка заданий,
+  // F5 терял место, а по адресу нельзя было понять, что вообще открыто.
+  // Именно useUrlStates: id и стадия меняются ОДНИМ движением, два отдельных
+  // useUrlState затёрли бы друг друга (каждый читает свой снимок params).
+  const [url, setUrl] = useUrlStates(URL_KEYS)
+  // ?? null — из-за noUncheckedIndexedAccess чтение по ключу даёт ещё и undefined
+  const activeId = url.a ?? null
 
   // при сбое показываем ошибку, а не «Заданий пока нет»: раньше ученик
   // думал, что работы нет, и не повторял попытку
@@ -45,20 +64,50 @@ export function AssignmentsPage() {
     reload,
   } = useAsyncData<Row[]>(() => getMyAssignments(), [], 'Не удалось загрузить задания')
 
-  const close = () => {
-    setActive(null)
-    setRetry(false)
-  }
+  const active = activeId ? ((rows ?? []).find((r) => r.id === activeId) ?? null) : null
+  // стадия по умолчанию зависит от работы: проверенную открываем с разбора
+  // преподавателя, остальные — с текста. Мусор в адресе трактуется как «нет».
+  const stage: Stage = STAGES.includes(url.stage ?? '')
+    ? (url.stage as Stage)
+    : active?.status === 'reviewed'
+      ? 'review'
+      : 'read'
+
+  useScrollTop(activeId)
+
+  // Ответы переживают уход из задания: вышел кареткой в список, вернулся —
+  // набранное на месте (раньше любой выход обнулял работу — главная жалоба
+  // ревью навигации). ref, а не state: список от черновика не зависит,
+  // перерисовывать его из-за каждой буквы незачем.
+  const draftsRef = useRef<Record<string, Draft>>({})
+
+  const open = (row: Row) =>
+    setUrl({ a: row.id, stage: row.status === 'reviewed' ? 'review' : 'read' })
+  const close = () => setUrl({ a: null, stage: null })
+  const setStage = (s: Stage) => setUrl({ a: activeId, stage: s })
+
+  // Чужая или устаревшая ссылка (задание сняли, id из чужой переписки): такого
+  // задания у ученика нет — возвращаем в список, а не показываем пустоту.
+  // Ждём именно загрузки rows, иначе F5 внутри задания вышибал бы наружу.
+  useEffect(() => {
+    if (activeId && rows && !rows.some((r) => r.id === activeId)) close()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeId, rows])
 
   if (active) {
     // проверенная работа — сначала разбор от преподавателя;
     // «Пройти заново» переключает на упражнения (без пересдачи)
-    if (active.status === 'reviewed' && !retry) {
-      return <ReviewedView row={active} onBack={close} onRetry={() => setRetry(true)} />
+    if (stage === 'review') {
+      return <ReviewedView row={active} onBack={close} onRetry={() => setStage('read')} />
     }
     return (
       <AssignmentRunner
+        // смена задания через адрес (?a=другое) обязана начинать раннер заново
+        key={active.id}
         row={active}
+        stage={stage}
+        onStage={setStage}
+        drafts={draftsRef.current}
         onDone={() => {
           close()
           reload()
@@ -93,7 +142,7 @@ export function AssignmentsPage() {
             <section className="flex flex-col gap-2">
               <h2 className="text-sm font-semibold text-[var(--night-text-40)]">Новые</h2>
               {pending.map((r) => (
-                <AssignmentCard key={r.id} row={r} onOpen={() => setActive(r)} />
+                <AssignmentCard key={r.id} row={r} onOpen={() => open(r)} />
               ))}
             </section>
           )}
@@ -101,7 +150,7 @@ export function AssignmentsPage() {
             <section className="flex flex-col gap-2">
               <h2 className="text-sm font-semibold text-[var(--night-text-40)]">Выполненные</h2>
               {done.map((r) => (
-                <AssignmentCard key={r.id} row={r} onOpen={() => setActive(r)} />
+                <AssignmentCard key={r.id} row={r} onOpen={() => open(r)} />
               ))}
             </section>
           )}
@@ -245,20 +294,39 @@ function ReviewedView({
 
 function AssignmentRunner({
   row,
+  stage,
+  onStage,
+  drafts,
   onDone,
   onBack,
 }: {
   row: Row
+  stage: Stage
+  onStage: (s: Stage) => void
+  /** Общий на всю страницу склад черновиков — переживает размонтирование раннера. */
+  drafts: Record<string, Draft>
   onDone: () => void
   onBack: () => void
 }) {
   const m = row.material
-  const [stage, setStage] = useState<'read' | 'exercises' | 'result'>('read')
   useScrollTop(stage)
-  const [index, setIndex] = useState(0)
+  // стартуем с того места, где человек остановился в прошлый заход
+  const [index, setIndex] = useState(() => drafts[row.id]?.index ?? 0)
   // ответы по индексу упражнения (а не push) — повторный ответ на то же
   // упражнение перезаписывает запись, не задваивая балл и не плодя дубли.
-  const [answerMap, setAnswerMap] = useState<Record<number, AssignmentAnswer>>({})
+  const [answerMap, setAnswerMap] = useState<Record<number, AssignmentAnswer>>(
+    () => drafts[row.id]?.answers ?? {},
+  )
+  // Итог раунда в адрес не пишем (см. Stage), но и залипать на нём нельзя:
+  // системная кнопка «назад» меняет стадию — значит, итог надо снять.
+  const [finished, setFinished] = useState(false)
+  useEffect(() => {
+    setFinished(false)
+  }, [stage])
+  // черновик наружу — чтобы выход в список не стирал набранное
+  useEffect(() => {
+    drafts[row.id] = { answers: answerMap, index }
+  }, [drafts, row.id, answerMap, index])
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
@@ -290,7 +358,10 @@ function AssignmentRunner({
   }
 
   const finish = async () => {
-    setStage('result')
+    setFinished(true)
+    // раунд закончен — черновик больше не нужен: следующий заход («тренироваться
+    // ещё раз») должен начинаться с чистого листа, а не с прошлых ответов
+    delete drafts[row.id]
     if (alreadyDone) return
     setSaving(true)
     try {
@@ -301,6 +372,26 @@ function AssignmentRunner({
     } finally {
       setSaving(false)
     }
+  }
+
+  if (finished) {
+    return (
+      <RoundResult
+        correct={correct}
+        total={total}
+        note={
+          alreadyDone
+            ? undefined
+            : saving
+              ? 'Отправляю работу преподавателю…'
+              : saveError
+                ? saveError
+                : 'Работа отправлена преподавателю на проверку ✓'
+        }
+        restartLabel="К заданиям"
+        onRestart={onDone}
+      />
+    )
   }
 
   if (stage === 'read') {
@@ -323,7 +414,7 @@ function AssignmentRunner({
           </p>
           <TappableBody body={m.body} lang={m.lang} />
         </Card>
-        <Button onClick={() => setStage('exercises')}>
+        <Button onClick={() => onStage('exercises')}>
           {alreadyDone ? 'Пройти ещё раз (без пересдачи) →' : `К упражнениям (${total}) →`}
         </Button>
         {alreadyDone && (
@@ -335,26 +426,6 @@ function AssignmentRunner({
     )
   }
 
-  if (stage === 'result') {
-    return (
-      <RoundResult
-        correct={correct}
-        total={total}
-        note={
-          alreadyDone
-            ? undefined
-            : saving
-              ? 'Отправляю работу преподавателю…'
-              : saveError
-                ? saveError
-                : 'Работа отправлена преподавателю на проверку ✓'
-        }
-        restartLabel="К заданиям"
-        onRestart={onDone}
-      />
-    )
-  }
-
   // index всегда в границах [0, total-1] пока stage === 'exercises' (next()
   // увеличивает index только пока index + 1 < total, иначе завершает раунд) —
   // подстраховка для noUncheckedIndexedAccess.
@@ -362,8 +433,14 @@ function AssignmentRunner({
 
   return (
     <div className="flex flex-col gap-3">
+      {/* Заголовок с возвратом есть и на упражнениях: раньше здесь не было ни
+          того, ни другого — ученик не видел, какое задание выполняет, и выйти
+          мог только системным «назад». Каретка ведёт в СПИСОК заданий, а не на
+          шаг вверх: «перечитать текст» рядом и так есть, а лишний push в
+          историю возвращал бы свайпом обратно в упражнения. */}
+      <BackHeader onBack={onBack} title={m.title ?? m.topic} label="К заданиям" />
       <div className="flex items-center justify-between text-sm text-[var(--night-text-40)]">
-        <button onClick={() => setStage('read')} className="font-medium text-[var(--night-accent-text)] hover:underline">
+        <button onClick={() => onStage('read')} className="font-medium text-[var(--night-accent-text)] hover:underline">
           ↑ перечитать текст
         </button>
         <span>

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { IconGraduation, IconFlame, IconBadgeCheck } from '../../components/icons'
 import { BackHeader } from '../../components/BackButton'
+import { useUrlState } from '../../lib/useUrlState'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { getProfile } from '../../lib/profile'
@@ -137,7 +138,13 @@ function BecomeTeacher({ onDone, onBack }: { onDone: () => void; onBack: () => v
 type TeacherTab = 'students' | 'materials' | 'writing' | 'guide'
 
 function TeacherDashboard() {
-  const [tab, setTab] = useState<TeacherTab>('students')
+  // вкладка — в адресе: «назад» из «Методички» уводил на Главную, а не на
+  // предыдущую вкладку (замер ревью 1Г); заодно на вкладку можно дать ссылку
+  const [rawTab, setRawTab] = useUrlState('tab', (v) =>
+    ['materials', 'writing', 'guide'].includes(v),
+  )
+  const tab = (rawTab as TeacherTab | null) ?? 'students'
+  const setTab = (t: TeacherTab) => setRawTab(t === 'students' ? null : t)
   const [code, setCode] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [regenerating, setRegenerating] = useState(false)
@@ -218,7 +225,13 @@ function TeacherDashboard() {
         )}
       </header>
 
-      <div className="flex gap-2">
+      {/* Перенос строки, а не горизонтальная прокрутка. Замер ревью 1В: ряду
+          из четырёх вкладок нужно 415px, а на iPhone 12 доступно 348 — четвёртая
+          («Методичка») уезжала за край, прокрутки у контейнера не было, и
+          добраться до неё можно было только сдвигая вбок всю страницу. Скрытая
+          прокрутка лечила бы обрезку, но не саму проблему: человек по-прежнему
+          не знает, что там есть ещё вкладка. Перенос показывает все четыре. */}
+      <div className="flex flex-wrap gap-2">
         {(
           [
             ['students', 'Ученики'],
@@ -230,7 +243,7 @@ function TeacherDashboard() {
           <button
             key={id}
             onClick={() => setTab(id)}
-            className={`rounded-lg px-4 py-2 text-sm font-semibold ${
+            className={`min-h-11 rounded-lg px-4 py-2 text-sm font-semibold ${
               tab === id
                 ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
                 : 'bg-white/[0.07] text-[var(--night-text-70)]'

@@ -8,8 +8,8 @@
 //   Твой уровень      → /placement (доступен всегда)
 // Ведомая сессия «Начать занятие» открывает читалку сразу (?view=reader).
 // ============================================================================
-import { lazy, Suspense, useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { useUrlState } from '../../lib/useUrlState'
 import {
   IconGap,
   IconSparkle,
@@ -49,11 +49,17 @@ type View = 'hub' | 'reader' | 'words'
 export function StudyPage() {
   const { user } = useAuth()
   const { lang } = useLanguage()
-  const [params] = useSearchParams()
-  // ведомая сессия или прямая ссылка ?view=reader — сразу к текстам
-  const [view, setView] = useState<View>(() =>
-    params.get('view') === 'reader' || currentGuidedStep() === 'reader' ? 'reader' : 'hub',
-  )
+  // Внутренний экран — в адресе (?view=reader), а не в useState: иначе «назад»
+  // и свайп на телефоне уводили сразу на Главную мимо хаба, а F5 терял место.
+  // Общее правило и оговорки — в lib/useUrlState.ts.
+  const [rawView, setRawView] = useUrlState('view', (v) => v === 'reader' || v === 'words')
+  const view: View = (rawView as View | null) ?? 'hub'
+  const setView = (v: View) => setRawView(v === 'hub' ? null : v)
+  // ведомая сессия «Начать занятие» открывает чтение сразу
+  useEffect(() => {
+    if (view === 'hub' && currentGuidedStep() === 'reader') setRawView('reader')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   // переход хаб ↔ читалка ↔ слова — всегда с верха экрана
   useScrollTop(view)
   // повторный тап по вкладке «Учёба» (BottomNav шлёт событие) → назад к хабу
@@ -63,6 +69,7 @@ export function StudyPage() {
     }
     window.addEventListener('recall:reset-tab', reset)
     return () => window.removeEventListener('recall:reset-tab', reset)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   const [esLevel, setEsLevel] = useState<string | null>(null)
   // мгновенный старт из localStorage-кэша: undefined только на самом первом
@@ -300,14 +307,25 @@ export function StudyPage() {
 
 function WordsStudy({ onBack }: { onBack: () => void }) {
   const { lang } = useLanguage()
-  const [sub, setSub] = useState<'menu' | 'review' | 'mywords'>('menu')
+  // подэкран — тоже в адресе (?sub=review): «назад» из повторения должен
+  // возвращать в «Слова», а не выбрасывать из «Учёбы» целиком
+  const [rawSub, setRawSub] = useUrlState('sub', (v) => v === 'review' || v === 'mywords')
+  const sub = (rawSub as 'review' | 'mywords' | null) ?? 'menu'
+  const setSub = (s: 'menu' | 'review' | 'mywords') => setRawSub(s === 'menu' ? null : s)
   const [sheet, setSheet] = useState<null | 'add' | 'packs'>(null)
   // «Мои слова» — длинный список: без сброса открывался на прежней прокрутке меню
   useScrollTop(sub)
 
+  // ⚠️ Сброс — только при РЕАЛЬНОЙ смене языка: эффект с [lang] срабатывает и
+  // на первом рендере, а это стёрло бы ?sub= из прямой ссылки.
+  const prevLang = useRef(lang)
   useEffect(() => {
-    setSub('menu')
-    setSheet(null)
+    if (prevLang.current !== lang) {
+      prevLang.current = lang
+      setSub('menu')
+      setSheet(null)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lang])
 
   if (sub === 'review') return <DeckReview onBack={() => setSub('menu')} />

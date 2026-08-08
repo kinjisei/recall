@@ -25,6 +25,7 @@ import {
 } from '../../data/spanish'
 import type { SpanishDialogue, SpanishReading } from '../../types'
 import { useScrollTop } from '../../lib/useScrollTop'
+import { useUrlState } from '../../lib/useUrlState'
 
 type Kind = 'texts' | 'dialogues'
 
@@ -44,15 +45,29 @@ export function SpanishReaderPage({
 }) {
   const [kind, setKind] = useState<Kind>('texts')
   const [level, setLevel] = useState<string>('A1')
-  const [reading, setReading] = useState<SpanishReading | null>(null)
-  const [dialogue, setDialogue] = useState<SpanishDialogue | null>(null)
-  useScrollTop(reading ?? dialogue)
+  // Открытый текст/диалог — в адресе (?es=text-12 или ?es=dlg-5), как в
+  // английской читалке: «назад» возвращает в список, F5 не теряет место,
+  // ссылку можно прислать ученику. Неизвестный ключ (устаревшая ссылка)
+  // трактуется как «ничего не открыто» — показывается список.
+  const [esKey, setEsKey] = useUrlState(
+    'es',
+    (v) =>
+      spanishReadings.some((r) => `text-${r.id}` === v) ||
+      spanishDialogues.some((d) => `dlg-${d.id}` === v),
+  )
+  const reading = esKey?.startsWith('text-')
+    ? (spanishReadings.find((r) => `text-${r.id}` === esKey) ?? null)
+    : null
+  const dialogue = esKey?.startsWith('dlg-')
+    ? (spanishDialogues.find((d) => `dlg-${d.id}` === esKey) ?? null)
+    : null
+  useScrollTop(esKey)
 
   if (reading) {
-    return <ReadingView reading={reading} onBack={() => setReading(null)} />
+    return <ReadingView reading={reading} onBack={() => setEsKey(null)} />
   }
   if (dialogue) {
-    return <DialogueView dialogue={dialogue} onBack={() => setDialogue(null)} />
+    return <DialogueView dialogue={dialogue} onBack={() => setEsKey(null)} />
   }
 
   const readings = spanishReadings.filter((r) => r.level === level)
@@ -85,7 +100,7 @@ export function SpanishReaderPage({
       <div className="flex flex-col gap-3">
         {kind === 'texts'
           ? readings.map((r) => (
-              <button key={r.id} onClick={() => setReading(r)} className="text-left">
+              <button key={r.id} onClick={() => setEsKey(`text-${r.id}`)} className="text-left">
                 <Card className="transition-transform active:scale-[0.99]">
                   <p className="font-semibold">{r.title}</p>
                   <p className="mt-1 text-sm text-[var(--night-text-40)]">{r.titleRu}</p>
@@ -93,7 +108,7 @@ export function SpanishReaderPage({
               </button>
             ))
           : dialogues.map((d) => (
-              <button key={d.id} onClick={() => setDialogue(d)} className="text-left">
+              <button key={d.id} onClick={() => setEsKey(`dlg-${d.id}`)} className="text-left">
                 <Card className="transition-transform active:scale-[0.99]">
                   <p className="font-semibold">{d.title}</p>
                   <p className="mt-1 text-sm text-[var(--night-text-40)]">

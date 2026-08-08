@@ -13,6 +13,7 @@ import { RoundResult, RoundProgress } from '../../components/RoundResult'
 import type { ReviewItem } from '../../components/RoundReview'
 import { speak } from '../../lib/speech'
 import { logActivity } from '../../lib/activity'
+import { useUrlState, useUrlStates } from '../../lib/useUrlState'
 import { getVerbMistakes, addVerbMistake, removeVerbMistake } from '../../lib/verbMistakes'
 import type {
   ConjugationReference,
@@ -29,9 +30,19 @@ interface Data {
   exercises: EndingsExercise[]
 }
 
+// Ключи адреса раздела: ?vm=trainer — тренажёр вместо справочника,
+// ?tense=<id> — открытое время. Правятся вместе, потому что уход в тренажёр
+// должен снимать открытое время (раньше ReferenceView просто размонтировался
+// и «выбранное» терялось — сохраняем то же поведение).
+const TAB_KEYS = ['vm', 'tense']
+
 export function ConjugationSection() {
   const [data, setData] = useState<Data | null>(null)
-  const [tab, setTab] = useState<Tab>('reference')
+  // Вкладка — в адресе: без этого «назад» из тренажёра выбрасывал из
+  // «Грамматики» целиком, а F5 возвращал в справочник (см. lib/useUrlState).
+  const [nav, setNav] = useUrlStates(TAB_KEYS)
+  const tab: Tab = nav.vm === 'trainer' ? 'trainer' : 'reference'
+  const setTab = (t: Tab) => setNav({ vm: t === 'trainer' ? 'trainer' : null, tense: null })
 
   useEffect(() => {
     let alive = true
@@ -95,7 +106,16 @@ function SubTab({
 
 function ReferenceView({ reference }: { reference: ConjugationReference }) {
   const [openLevel, setOpenLevel] = useState<string | null>('A1')
-  const [selected, setSelected] = useState<ConjugationTense | null>(null)
+  // Открытое время — в адресе (?tense=pres_ind): «назад» возвращает к списку
+  // времён, а не выбрасывает из грамматики, и F5 время не теряет. Неизвестный
+  // id (чужая или устаревшая ссылка) хук трактует как «ничего не открыто» —
+  // показывается список.
+  const [tenseId, setTenseId] = useUrlState('tense', (v) =>
+    reference.tenses.some((t) => String(t.id) === v),
+  )
+  const selected = tenseId
+    ? (reference.tenses.find((t) => String(t.id) === tenseId) ?? null)
+    : null
 
   const byLevel = useMemo(() => {
     const groups: Record<string, ConjugationTense[]> = { A1: [], A2: [], B1: [], B2: [] }
@@ -111,7 +131,7 @@ function ReferenceView({ reference }: { reference: ConjugationReference }) {
       <TenseDetail
         tense={selected}
         persons={reference.persons}
-        onBack={() => setSelected(null)}
+        onBack={() => setTenseId(null)}
       />
     )
   }
@@ -138,7 +158,7 @@ function ReferenceView({ reference }: { reference: ConjugationReference }) {
             {isOpen && (
               <div className="mt-2 flex flex-col gap-2">
                 {list.map((t) => (
-                  <button key={t.id} onClick={() => setSelected(t)} className="text-left">
+                  <button key={t.id} onClick={() => setTenseId(String(t.id))} className="text-left">
                     <Card className="transition-transform active:scale-[0.99]">
                       <p className="font-medium">{t.nameRu}</p>
                       <p className="text-xs text-[var(--night-text-40)]">{t.name}</p>
