@@ -77,22 +77,41 @@ try {
   p = await plan(trialNew)
   ok('триал, день 1: energy_max = 30', p.energy_max === 30, `got ${p.energy_max}`)
 
-  // переводы: было 300 в сутки, стало 150. Набиваем 149 записей напрямую,
+  // Переводы: было 300 в сутки, стало 150. Набиваем 149 записей напрямую,
   // 150-я должна пройти через RPC, 151-я — упереться.
-  // called_at на 2 часа назад: часовой предохранитель (90 запросов/час у
+  //
+  // Записи ставим на 2 часа назад: часовой предохранитель (90 запросов/час у
   // премиум-уровня) сработал бы раньше суточного и проверял бы не то.
-  const twoHoursAgo = new Date(Date.now() - 2 * 3600e3).toISOString()
-  await admin.from('ai_calls').insert(
-    Array.from({ length: 149 }, () => ({
-      user_id: ids.trialNew.id, kind: 'light', cost_energy: 0, called_at: twoHoursAgo,
-    })),
-  )
-  ok('триал: 150-й перевод проходит', !(await spend(trialNew, 0, 'light')))
-  ok(
-    'триал: 151-й перевод упирается (лимит 150, а не 300)',
-    (await spend(trialNew, 0, 'light')) === 'RECALL_LIGHT_LIMIT',
-  )
-  await admin.from('ai_calls').delete().eq('user_id', ids.trialNew.id)
+  //
+  // ⚠️ Полтора часа после местной полуночи проверить это НЕЛЬЗЯ, и раньше
+  // смоук там честно краснел на исправном коде. Причина: суточный счётчик
+  // считает от начала дня в Алматы, а «2 часа назад» в 00:30 — это ещё вчера,
+  // и подсев не учитывается. Сдвинуть подсев внутрь суток тоже не выйдет:
+  // тогда 149 записей попадут в текущий час и первым сработает ЧАСОВОЙ лимит.
+  // Окна физически не пересекаются — поэтому в это время шаг пропускается
+  // ГРОМКО, а не превращается в ложный отказ.
+  const dayStartMs = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Almaty' }))
+    .setHours(0, 0, 0, 0)
+  const sinceDayStartMin = (Date.now() - dayStartMs) / 60000
+  if (sinceDayStartMin < 100) {
+    console.log(
+      `⏭ пропущено: суточный лимит переводов (прошло ${Math.round(sinceDayStartMin)} мин ` +
+        'от начала суток — суточное и часовое окна пересекаются)',
+    )
+  } else {
+    const twoHoursAgo = new Date(Date.now() - 2 * 3600e3).toISOString()
+    await admin.from('ai_calls').insert(
+      Array.from({ length: 149 }, () => ({
+        user_id: ids.trialNew.id, kind: 'light', cost_energy: 0, called_at: twoHoursAgo,
+      })),
+    )
+    ok('триал: 150-й перевод проходит', !(await spend(trialNew, 0, 'light')))
+    ok(
+      'триал: 151-й перевод упирается (лимит 150, а не 300)',
+      (await spend(trialNew, 0, 'light')) === 'RECALL_LIGHT_LIMIT',
+    )
+    await admin.from('ai_calls').delete().eq('user_id', ids.trialNew.id)
+  }
 
   // Тот же аккаунт, но «зарегистрирован» 5 дней назад → хвост триала
   await admin
