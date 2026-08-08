@@ -59,10 +59,22 @@ function tidy(definition: string, word: string): string {
  * Годится ли определение после маскировки. Словарь часто толкует слово через
  * него же («protest» → «A protest.»), и от такого определения остаются одни
  * точки — в игре это бесполезная подсказка.
+ *
+ * ВАЖНО: порог НИКОГДА не должен быть строже, чем требует промпт. Для новичка
+ * (simple) мы сами просим «максимум 8 слов, как объяснил бы ребёнку» — и
+ * идеальное детское определение «not afraid» (2 слова, 10 значимых символов)
+ * раньше отбраковывалось за простоту, а слово молча выпадало из раунда
+ * (запасного пути у A1/A2 нет: Free Dictionary там пропускается). Поэтому в
+ * простом режиме достаточно 2 слов и 6 символов — «A …» (одно слово, толкование
+ * через само себя) всё равно отсеивается. Порог именно 6, а не 8: живой прогон
+ * дал «huge → very big» ровно на 8 символах, то есть 8 — это уже граница, за
+ * которой честные «not sad», «too big» снова начали бы выпадать.
  */
-function isUsable(masked: string): boolean {
+function isUsable(masked: string, simple = false): boolean {
   const meaningful = masked.replace(/…/g, '').replace(/[^\p{L}\p{N}]+/gu, ' ').trim()
-  return meaningful.length >= 12 && meaningful.split(/\s+/).length >= 3
+  const minChars = simple ? 6 : 12
+  const minWords = simple ? 2 : 3
+  return meaningful.length >= minChars && meaningful.split(/\s+/).length >= minWords
 }
 
 /** Часть речи, которую подсказывает русский перевод карточки. */
@@ -134,10 +146,11 @@ async function fromGemini(words: string[], simple: boolean): Promise<Record<stri
     'Ты англо-английский словарь для изучающих язык. Отвечай ТОЛЬКО JSON-объектом ' +
     'вида {"слово": "определение"}. ' +
     (simple
-      ? 'Определение — ОЧЕНЬ простой английский для новичка (A1–A2): максимум 8 слов, ' +
+      ? 'Определение — ОЧЕНЬ простой английский для новичка (A1–A2): от 3 до 8 слов, ' +
         'только самые частотные слова, как объяснил бы ребёнку. Пример: chair → ' +
-        '"you sit on it". Никаких научных или энциклопедических формулировок. '
-      : 'Определение — простой английский (уровень B1), одна короткая фраза до 12 слов. ') +
+        '"you sit on it", brave → "not afraid of danger". Никаких научных или ' +
+        'энциклопедических формулировок. '
+      : 'Определение — простой английский (уровень B1), одна короткая фраза из 4-12 слов. ') +
     'БЕЗ использования самого слова.'
   try {
     const raw = await chat([{ role: 'user', content: `Words: ${words.join(', ')}` }], {
@@ -150,7 +163,7 @@ async function fromGemini(words: string[], simple: boolean): Promise<Record<stri
     for (const [w, d] of Object.entries(parsed)) {
       if (typeof d !== 'string' || !d.trim()) continue
       const masked = tidy(d, w)
-      if (isUsable(masked)) out[w.toLowerCase()] = masked
+      if (isUsable(masked, simple)) out[w.toLowerCase()] = masked
     }
     return out
   } catch {

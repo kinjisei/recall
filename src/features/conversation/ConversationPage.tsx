@@ -123,6 +123,11 @@ function chatSystemPrompt(level: CEFRLevel, lang: AppLang, goal: LearningGoal | 
     `1) Check the learner's LAST message for mistakes. Find ALL of them, not only the main one: grammar, spelling, capitalization, articles, prepositions, word order, unnatural word choice. One line per mistake, exactly:`,
     '[fix] фрагмент с ошибкой → исправление — короткое объяснение по-русски',
     'Count even small mistakes (i → I; go → went; to shop → to the shop; yesterdi → yesterday). Do NOT invent mistakes; informal style is not a mistake. If the message is correct, write exactly one line: [ok] Без ошибок!',
+    // Ошибка В ИСПРАВЛЕНИИ опаснее пропущенной: новичок не может её перепроверить.
+    // Два правила ниже — против двух реальных промахов из ревью 2Б: «he don't like»
+    // правилось на «he didn't like» (сдвиг времени), а верное «too» вычёркивалось.
+    'NEVER change the tense, the time frame or the meaning of what the learner wrote: fix the mistake INSIDE their own sentence. A present-tense sentence stays present: "he don\'t like it" → "he doesn\'t like it", NEVER "he didn\'t like it"; "I am agree" → "I agree", NEVER "I agreed". If both a present and a past version are possible, show both: "he don\'t → he doesn\'t / he didn\'t (сейчас / в прошлом)".',
+    'Before writing a [fix] line, check: is this fragment really WRONG in English? Leave alone anything that is already correct, even if you would have phrased the thought differently — e.g. "My sister works in a school too" is fully correct and "too" must NOT be removed. If you are not sure what the learner meant, do NOT correct it: ask a short question in Russian instead.',
     '',
     `2) Then continue the conversation naturally: 2-4 sentences in ${language} for level ${level}, ending with a question. ${levelHint}`,
     '',
@@ -132,7 +137,7 @@ function chatSystemPrompt(level: CEFRLevel, lang: AppLang, goal: LearningGoal | 
     grammarRef,
     '- If the learner agrees (давай, да, ok, yes), switch to practice mode: give ONE short exercise at a time (перевод короткой фразы с русского or fill-the-gap), wait for the answer, check it with a one-line explanation, 3-5 exercises total. Then praise the learner and return to the conversation with a new question.',
     '- If the learner asks about grammar or a word, explain in Russian with 2-3 examples before continuing.',
-    `- ALL explanations (in Russian) must match a ${level} learner: short, simple everyday words, no linguistic or academic jargon. Explain the way you would to a school student, e.g. chair = «стул — то, на чём сидят», NOT a dictionary-style scientific definition.`,
+    `- ALL explanations (in Russian) must match a ${level} learner: short, simple everyday words, no linguistic or academic jargon. Explain the way you would to a school student, e.g. chair = «стул — то, на чём сидят», NOT a dictionary-style scientific definition. In Russian always address the learner as «ты» (never «вы») — the whole app speaks «ты».`,
     '- Plain text only, no markdown formatting. Never skip part 1.',
     '- Service lines MUST start with the EXACT text tags [fix], [ok], [topic] (in square brackets, lowercase). Do NOT use emoji anywhere in your reply.',
   ].join('\n')
@@ -366,9 +371,14 @@ function writingSystemPrompt(level: CEFRLevel, lang: AppLang): string {
     'ОШИБКИ',
     'нумерованный список: «цитата» → исправление — короткое объяснение.',
     'Если ошибок нет — напиши «Ошибок не нашёл».',
+    // То же правило, что в промпте чата: не сдвигать время и не выдумывать ошибки.
+    'Не выдумывай ошибки: то, что написано верно, не трогай. Исправляй ошибку ВНУТРИ фразы ученика, не меняя её смысл и время (настоящее остаётся настоящим). Если неверно выбрано САМО время — это ошибка, назови её отдельным пунктом с объяснением.',
     '',
     'УЛУЧШЕННАЯ ВЕРСИЯ',
     `тот же текст на естественном ${textLang} (чуть выше уровня ученика).`,
+    // Ревью 2Б: в «улучшенной версии» молча правились ошибки, которых не было в
+    // списке (как раз согласование времён — то, что и надо объяснять).
+    'Сначала полностью составь список ОШИБКИ, потом пиши улучшенную версию и меняй в ней ТОЛЬКО то, что уже названо в списке. Ничего не исправляй молча: заметил по ходу ещё одну ошибку — вернись и допиши её в список. Правку, которая не ошибка, а стиль, тоже вынеси в список строкой «стиль: было → стало».',
     '',
     'СОВЕТ',
     '1-2 предложения: что подтянуть в первую очередь.',

@@ -6,6 +6,7 @@
 // ============================================================================
 import { chat } from './gemini'
 import type { AppLang, WritingGrade, WritingTask } from '../types'
+import { CORRECTION_RULES } from './correctionRules'
 
 function asStr(v: unknown): string {
   return typeof v === 'string' ? v : ''
@@ -106,6 +107,9 @@ export async function gradeWriting(
         '"topics":["тема грамматики для повторения"],"words":["полезное слово"],' +
         '"rewrites":[{"was":"слабое предложение","better":"улучшенный вариант"}]}',
       'band и criteria — по шкале 0-9 (допускается .5). Считай РЕАЛЬНЫЕ ошибки, не выдумывай.',
+      // те же правила, что в «Диалоге» (lib/correctionRules): не сдвигать время
+      // в исправлении и не выдумывать ошибок — здесь тот же разбор чужого текста
+      ...CORRECTION_RULES,
       'errors — конкретные цитаты из текста ученика и их исправления. strengths/improve/topics/words/rewrites — по-русски там, где это пояснение; сами английские слова/фразы — на английском.',
     ]
       .filter(Boolean)
@@ -135,6 +139,7 @@ export async function gradeWriting(
       '"topics":["тема для повторения"],"words":["полезное слово"],' +
       '"rewrites":[{"was":"слабое предложение","better":"лучше"}]}',
     'targetWords/targetGrammar — по КАЖДОМУ целевому слову/структуре из списков выше: реально ли ученик его употребил (used). Ошибки реальные, не выдумывай. Пояснения по-русски, целевые слова/фразы — на изучаемом языке.',
+    ...CORRECTION_RULES,
   ].join('\n')
   const raw = await chat([{ role: 'user', content: `Задание:\n${task.prompt}\n\nТекст ученика:\n${essay}` }], {
     system,
