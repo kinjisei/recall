@@ -151,14 +151,14 @@ async function main() {
       return {
         rows: rows.map((r) => r.slice(0, 20)),
         hasReader: rows.some((r) => r.includes('Тексты и диалоги')),
-        hasWords: rows.some((r) => r.startsWith('Слова')),
+        hasWords: rows.some((r) => r.startsWith('Мой словарь')),
         hasGrammar: rows.some((r) => r.includes('Грамматика')),
         noPractice: !rows.some((r) => r.includes('мини-игры')),
         noTextList: !(document.body.textContent || '').includes('Выбери текст'),
       }
     })
     check(
-      'Учёба-хаб: Тексты/Грамматика/Слова, без «Практики», тексты спрятаны',
+      'Учёба-хаб: Тексты/Грамматика/Мой словарь, без «Практики», тексты спрятаны',
       studyState.hasReader && studyState.hasWords && studyState.hasGrammar && studyState.noPractice && studyState.noTextList,
       JSON.stringify(studyState),
     )
@@ -172,7 +172,7 @@ async function main() {
     // «Слова» в Учёбе: паки/своё слово/мои слова/колода
     await page.evaluate(() => document.querySelector('button[aria-label="Назад"]').click())
     await sleep(500)
-    await clickByText(page, 'button', 'Слова')
+    await clickByText(page, 'button', 'Мой словарь')
     await sleep(600)
     const wordsState = await page.evaluate(() => {
       const b = document.body.textContent || ''
@@ -180,12 +180,12 @@ async function main() {
         packs: b.includes('Паки слов'),
         add: b.includes('Своё слово'),
         my: b.includes('Мои слова'),
-        // строка называется «Повторение слов» (не «…колоды») — проверка искала
-        // старое название и падала вхолостую, маскируя настоящие поломки
-        deck: b.includes('Повторение слов'),
+        // Повторение отсюда УБРАНО намеренно: тот же экран открывался и во
+        // вкладке «Практика», разным числом тапов. Вместо дубля — указатель.
+        signpost: b.includes('во вкладке «Практика»'),
       }
     })
-    check('Учёба → Слова: паки, своё слово, мои слова, колода', Object.values(wordsState).every(Boolean), JSON.stringify(wordsState))
+    check('Учёба → Мой словарь: паки, своё слово, мои слова, указатель', Object.values(wordsState).every(Boolean), JSON.stringify(wordsState))
 
     // ---- 0d. Слово дня с кнопкой «В колоду» ----
     await page.goto(BASE + '/', { waitUntil: 'networkidle2' })

@@ -165,13 +165,13 @@ async function main() {
    */
   const scenarios = [
     {
-      name: 'Практика → режим «Перевод» (эталон: режим в адресе)',
+      name: 'Практика → режим «Перевод слова» (эталон: режим в адресе)',
       reach: async () => {
         await page.goto(`${BASE}/practice`, { waitUntil: 'networkidle2' })
         await sleep(1500)
-        return tap(page, 'Быстрый перевод')
+        return tap(page, 'Перевод слова')
       },
-      marker: 'Быстрый перевод',
+      marker: 'Перевод слова',
       backMarker: 'Повторение',
     },
     {

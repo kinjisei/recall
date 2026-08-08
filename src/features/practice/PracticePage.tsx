@@ -214,21 +214,26 @@ export function PracticePage() {
     )
   }
 
+  // Подпись у КАЖДОЙ плитки начинается с действия: «Выбери», «Впиши»,
+  // «Соедини», «Собери». Ревью 1Б замерило, что «Пропущенное слово» и «Впиши
+  // слово» неразличимы по названию, хотя в одном выбирают из вариантов, а в
+  // другом печатают руками; «Значения» и «Быстрый перевод» тоже не сообщали,
+  // что вообще делать. Глагол в первом слове снимает вопрос до тапа.
   const wordTiles: Tile[] = [
-    { mode: 'match', Icon: IconMeaning, title: 'Значения', desc: 'Слово ↔ значение' },
-    { mode: 'gap', Icon: IconGap, title: 'Пропущенное слово', desc: 'Слово в предложении' },
-    { mode: 'translate', Icon: IconTranslate, title: 'Быстрый перевод', desc: 'Выбери верный' },
+    { mode: 'match', Icon: IconMeaning, title: 'Значения', desc: 'Соедини пары' },
+    { mode: 'gap', Icon: IconGap, title: 'Пропуск в предложении', desc: 'Выбери слово из четырёх' },
+    { mode: 'translate', Icon: IconTranslate, title: 'Перевод слова', desc: 'Выбери перевод из четырёх' },
     { mode: 'listening', Icon: IconHeadphones, title: 'Аудирование', desc: 'Услышь и выбери' },
-    { mode: 'sprint', Icon: IconTimer, title: 'Спринт', desc: 'Верно или нет · 60 сек' },
-    { mode: 'dictation', Icon: IconKeyboard, title: 'Диктант', desc: 'Услышь и напиши' },
-    { mode: 'sentence', Icon: IconPuzzle, title: 'Собери фразу', desc: 'Фраза из слов' },
+    { mode: 'sprint', Icon: IconTimer, title: 'Спринт', desc: 'Верно или нет · 60 секунд' },
+    { mode: 'dictation', Icon: IconKeyboard, title: 'Диктант', desc: 'Услышь и впиши' },
+    { mode: 'sentence', Icon: IconPuzzle, title: 'Собери фразу', desc: 'Собери из слов' },
   ]
 
   const mistakes = getMistakes(lang).length
   const grammarTiles: Tile[] = [
-    { mode: 'gr-mcq', Icon: IconMcq, title: 'Выбери форму', desc: 'Тест с вариантами' },
-    { mode: 'gr-fill', Icon: IconPencil, title: 'Впиши слово', desc: 'Заполни пропуск' },
-    { mode: 'gr-order', Icon: IconRows, title: 'Собери предложение', desc: 'Порядок слов' },
+    { mode: 'gr-mcq', Icon: IconMcq, title: 'Выбери форму', desc: 'Выбери из вариантов' },
+    { mode: 'gr-fill', Icon: IconPencil, title: 'Впиши форму', desc: 'Впечатай руками' },
+    { mode: 'gr-order', Icon: IconRows, title: 'Собери предложение', desc: 'Расставь слова по порядку' },
     {
       to: '/grammar?mistakes=1',
       Icon: IconRefresh,

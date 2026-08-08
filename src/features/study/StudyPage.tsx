@@ -8,7 +8,7 @@
 //   Твой уровень      → /placement (доступен всегда)
 // Ведомая сессия «Начать занятие» открывает читалку сразу (?view=reader).
 // ============================================================================
-import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { useUrlState } from '../../lib/useUrlState'
 import {
   IconGap,
@@ -23,6 +23,7 @@ import {
   IconPackage,
 } from '../../components/icons'
 import { RowCard } from '../../components/RowCard'
+import { LoadError } from '../../components/LoadError'
 import { BackHeader } from '../../components/BackButton'
 import { Button } from '../../components/Button'
 import { useAuth } from '../../context/AuthContext'
@@ -97,32 +98,66 @@ export function StudyPage() {
     getProfile(user.id).then((p) => setEnLevel(p?.level ?? null))
   }, [lang, user])
 
-  useEffect(() => {
-    let alive = true
-    Promise.all([
-      getMyAssignments()
-        .then((rows) => ({
-          total: rows.length,
-          pending: rows.filter((r) => r.status === 'assigned').length,
-        }))
-        .catch(() => null), // строка просто не появится
-      countMyWritingTasks().catch(() => null),
-      listMyQuests()
-        .then((rows) => ({
-          total: rows.length,
-          active: rows.filter((r) => r.status === 'assigned').length,
-        }))
-        .catch(() => null),
-      getMyPlans().catch(() => null),
-      // назначил ли преподаватель тест уровня по текущему языку
-      myPendingPlacement(lang).catch(() => null),
-    ]).then(([assignments, writing, quests, plans, placement]) => {
-      if (alive) setHub({ assignments, writing, quests, plans, placement })
-    })
-    return () => {
-      alive = false
+  // Сколько входов не ответило: если не ответил НИ ОДИН, это почти наверняка
+  // потеря связи, а не «у тебя ничего не назначено». Раньше строки заданий,
+  // квестов и программы в офлайне просто исчезали — человек думал, что учитель
+  // ничего не давал (находка ревью 1Г).
+  const [failed, setFailed] = useState(0)
+
+  const loadHub = useCallback(() => {
+    setHub(null)
+    setFailed(0)
+    let failures = 0
+    const miss = () => {
+      failures++
+      return null
     }
+    // ⚠️ Ждём не бесконечно. Живая проба с заблокированной базой показала, что
+    // при недоступном сервере запросы не отвечают ВООБЩЕ (клиент Supabase
+    // уходит в свои повторы), и хаб навсегда застывал на скелетонах — человек
+    // смотрел на серые прямоугольники, не понимая, чего ждёт. Через 12 секунд
+    // показываем что есть и честно говорим про связь.
+    const withTimeout = <T,>(p: Promise<T>): Promise<T | null> =>
+      Promise.race([
+        p,
+        new Promise<null>((resolve) =>
+          setTimeout(() => {
+            failures++
+            resolve(null)
+          }, 12_000),
+        ),
+      ])
+
+    return Promise.all([
+      withTimeout(
+        getMyAssignments()
+          .then((rows) => ({
+            total: rows.length,
+            pending: rows.filter((r) => r.status === 'assigned').length,
+          }))
+          .catch(miss),
+      ),
+      withTimeout(countMyWritingTasks().catch(miss)),
+      withTimeout(
+        listMyQuests()
+          .then((rows) => ({
+            total: rows.length,
+            active: rows.filter((r) => r.status === 'assigned').length,
+          }))
+          .catch(miss),
+      ),
+      withTimeout(getMyPlans().catch(miss)),
+      // назначил ли преподаватель тест уровня по текущему языку
+      withTimeout(myPendingPlacement(lang).catch(miss)),
+    ]).then(([assignments, writing, quests, plans, placement]) => {
+      setHub({ assignments, writing, quests, plans, placement })
+      setFailed(failures)
+    })
   }, [lang])
+
+  useEffect(() => {
+    void loadHub()
+  }, [loadHub])
 
   if (view === 'reader') {
     return <ReaderPage title="Тексты и диалоги" onBack={() => setView('hub')} />
@@ -158,6 +193,18 @@ export function StudyPage() {
         </div>
       ) : (
         <div className="flex flex-col gap-2.5">
+          {/* Хотя бы один вход не ответил — картина неполная, и молчать нельзя:
+              человек решит, что преподаватель ничего не назначал.
+              ⚠️ Условие «упали ВСЕ пять» не годилось: часть функций гасит ошибку
+              внутри себя и возвращает пустоту, поэтому счётчик до пяти не
+              доходил и плашка не показывалась (поймано живой пробой с
+              заблокированной базой). */}
+          {failed > 0 && (
+            <LoadError
+              message="Часть разделов не загрузилась — похоже, пропала связь. Тексты и грамматика ниже работают и без интернета."
+              onRetry={() => void loadHub()}
+            />
+          )}
           {assignments && assignments.total > 0 && (
             <RowCard
               Icon={IconMaterials}
@@ -261,10 +308,14 @@ export function StudyPage() {
             className="animate-fade-up"
             style={stagger()}
           />
+          {/* «Мой словарь», а не «Слова»: во вкладке «Практика» есть своя секция
+              «Слова» — с играми. Одно и то же название для управления словами и
+              для тренировок заставляло гадать, куда идти (находка ревью 1Б).
+              Здесь — мои слова и наборы, там — тренировки на них. */}
           <RowCard
             Icon={IconCards}
-            title="Слова"
-            desc="Паки по уровням, свои слова и повторение"
+            title="Мой словарь"
+            desc="Наборы по уровням, свои слова, список выученного"
             onClick={() => setView('words')}
             className="animate-fade-up"
             style={stagger()}
@@ -331,6 +382,9 @@ function WordsStudy({ onBack }: { onBack: () => void }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lang])
 
+  // Кнопки «Повторение» здесь больше нет (см. ниже), но ссылку ?sub=review
+  // оставляем рабочей: она могла остаться в закладке или в истории, и лучше
+  // открыть ожидаемый экран, чем чужой.
   if (sub === 'review') return <DeckReview onBack={() => setSub('menu')} />
   if (sub === 'mywords') {
     return (
@@ -342,7 +396,7 @@ function WordsStudy({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <BackHeader onBack={onBack} title="Слова" />
+      <BackHeader onBack={onBack} title="Мой словарь" />
 
       <div className="flex gap-2">
         <Button
@@ -378,22 +432,22 @@ function WordsStudy({ onBack }: { onBack: () => void }) {
 
       <div className="flex flex-col gap-2.5">
         <RowCard
-          Icon={IconCards}
-          title="Повторение слов"
-          desc="Повторяем слова, пока не забылись — приложение само напоминает вовремя"
-          onClick={() => setSub('review')}
-          active
-          className="animate-fade-up"
-        />
-        <RowCard
           Icon={IconRows}
           title="Мои слова"
           desc="Список, поиск, правка, статусы"
           onClick={() => setSub('mywords')}
           className="animate-fade-up"
-          style={{ animationDelay: '.05s' }}
         />
       </div>
+
+      {/* Повторение отсюда убрано: тот же экран открывался и во вкладке
+          «Практика», только разным числом тапов, и ничто не подсказывало, куда
+          идти (замер ревью 1Б: 3 тапа против 2). Теперь у каждой вкладки одна
+          роль — здесь слова собирают, там на них тренируются, — а вместо
+          спрятанного дубля стоит указатель. */}
+      <p className="text-sm text-[var(--night-text-40)]">
+        Повторение и игры на этих словах — во вкладке «Практика».
+      </p>
     </div>
   )
 }
