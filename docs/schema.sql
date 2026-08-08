@@ -3812,3 +3812,196 @@ do $$ begin
 end $$;
 
 grant execute on function public.stop_teaching() to authenticated;
+
+-- ============================================================================
+-- НОРМАЛИЗАЦИЯ ПЕЧАТНОГО ОТВЕТА: ДЕФИС, АПОСТРОФ, ФИНАЛЬНАЯ ТОЧКА (2026-08-09)
+--
+-- Проблема (находка ревью 2А №7). Сверка ответов дублируется: на клиенте
+-- lib/text.ts answerMatches, на сервере norm_answer + submit_material. Обе
+-- стороны снимали регистр, диакритику и лишние пробелы — и на этом всё.
+-- Значит «well known» против «well-known», «dont» против «don't» и «Yes.»
+-- против «Yes» считались РАЗНЫМИ ответами.
+--
+-- В статике это пока не бьёт (проверено: 0 из 385 fill-упражнений содержат
+-- дефис или финальную пунктуацию в ответе), но материалы преподавателя пишет
+-- AI свободным текстом — «twenty-one» и кавычка ’ вместо ' там вопрос времени.
+--
+-- Почему НЕ правим сам norm_answer. Его же использует ветка mcq: там сервер
+-- сравнивает ТЕКСТ выбранного варианта с текстом правильного. Если сделать
+-- norm_answer слепым к апострофам, пара вариантов «It's» / «Its» — классика
+-- грамматического теста — схлопнется в один, и неверный выбор получил бы балл.
+-- Поэтому мягкие правила живут в отдельной функции norm_typed и применяются
+-- только к НАПЕЧАТАННЫМ ответам (fill, order, перепроверка слов).
+--
+-- Проверено на всех статических упражнениях: новых коллизий среди вариантов
+-- mcq нормализация не создаёт (0). Клиентский юнит-тест —
+-- scripts/test-answermatches.mjs.
+--
+-- ⚠️ Правило обязано совпадать с lib/text.ts normalizeAnswer. Меняешь там —
+-- меняй здесь, иначе клиент покажет «верно», а балл не начислится.
+-- ============================================================================
+do $$ begin
+
+  -- norm_answer (регистр + диакритика + пробелы) остаётся как есть — на нём
+  -- строимся. Сверху: апострофы удаляем, дефисы и тире считаем пробелом,
+  -- финальную пунктуацию срезаем. Ещё ё→е и й→и: клиентский NFD снимает
+  -- диакритику и с кириллицы, без этого JS и SQL расходились бы на русских
+  -- ответах (сейчас их нет, но расхождение было бы молчаливым).
+  create or replace function public.norm_typed(s text)
+  returns text language plpgsql stable as $fn$
+  declare raw text; b text; t text;
+  begin
+    raw := btrim(lower(coalesce(s, '')));
+    if raw = '' then return ''; end if;
+    b := public.norm_answer(s);
+    b := translate(b, '''‘’ʼ´`', '');       -- апострофы всех начертаний → ничего
+    b := translate(b, '-‐‑‒–—', '      ');  -- дефисы и тире → пробел
+    b := translate(b, 'ёЁйЙ', 'еЕиИ');
+    b := btrim(regexp_replace(b, '\s+', ' ', 'g'));
+    t := btrim(regexp_replace(b, '[.!?,;:…]+$', ''));
+    -- непустой ответ не должен схлопнуться в пустую строку: иначе ответ «-» или
+    -- «’» сравнялся бы с пустым полем. Откатываемся к предыдущей форме.
+    if t <> '' then return t; end if;
+    if b <> '' then return b; end if;
+    return raw;
+  end $fn$;
+
+  -- ---- submit_material: fill и order считаем по norm_typed ------------------
+  -- Тело функции повторяет версию из блока «РЕВЬЮ БЕЗОПАСНОСТИ» без изменений,
+  -- кроме двух веток сверки. mcq намеренно остаётся на norm_answer.
+  create or replace function public.submit_material(
+    p_id uuid, p_answers jsonb, p_auto_score int, p_auto_total int
+  ) returns void language plpgsql security definer set search_path = public as $fn$
+  declare
+    m_exercises jsonb;
+    ex jsonb;
+    ans jsonb;
+    idx int := 0;
+    score int := 0;
+    total int := 0;
+    given_text text;
+    correct_text text;
+    ex_type text;
+    is_correct boolean;
+  begin
+    -- упражнения берём из материала; клиентские p_auto_score/p_auto_total игнорируем
+    select mat.exercises into m_exercises
+      from material_assignments ma
+      join materials mat on mat.id = ma.material_id
+    where ma.id = p_id and ma.student_id = auth.uid() and ma.status = 'assigned';
+    if m_exercises is null then
+      raise exception 'Работа не найдена или уже сдана.';
+    end if;
+
+    for ex in select value from jsonb_array_elements(m_exercises) loop
+      total := total + 1;
+      ex_type := ex->>'type';
+      select value into ans
+        from jsonb_array_elements(coalesce(p_answers, '[]'::jsonb))
+      where (value->>'index')::int = idx
+      limit 1;
+      given_text := ans->>'given';
+      is_correct := false;
+      if given_text is not null then
+        if ex_type = 'mcq' then
+          -- выбор из готовых вариантов: строгая нормализация (см. шапку блока)
+          correct_text := ex->'options'->>((ex->>'answer')::int);
+          is_correct := correct_text is not null
+            and public.norm_answer(given_text) = public.norm_answer(correct_text);
+        elsif ex_type = 'fill' then
+          -- варианты через «/»: верен любой из них
+          select bool_or(public.norm_typed(v) = public.norm_typed(given_text))
+            into is_correct
+            from unnest(string_to_array(ex->>'answer', '/')) as v;
+          is_correct := coalesce(is_correct, false);
+        elsif ex_type = 'order' then
+          select string_agg(value#>>'{}', ' ' order by ordinality) into correct_text
+            from jsonb_array_elements(ex->'answer') with ordinality;
+          is_correct := correct_text is not null
+            and public.norm_typed(given_text) = public.norm_typed(correct_text);
+        end if;
+      end if;
+      if is_correct then
+        score := score + 1;
+      end if;
+      idx := idx + 1;
+    end loop;
+
+    update material_assignments
+      set answers = p_answers, auto_score = score, auto_total = total,
+          status = 'submitted', submitted_at = now()
+    where id = p_id and student_id = auth.uid() and status = 'assigned';
+    if not found then raise exception 'Работа не найдена или уже сдана.'; end if;
+  end $fn$;
+
+  -- ---- submit_word_check: печатное слово тоже по norm_typed -----------------
+  -- Тело — версия из блока «ПЕРЕПРОВЕРКА СЛОВ СЧИТАЕТСЯ НА СЕРВЕРЕ», изменена
+  -- одна строка сверки. Здесь ученик печатает слово руками, значит правило
+  -- ровно то же, что у клиента в answerMatches.
+  create or replace function public.submit_word_check(p_id uuid, p_results jsonb)
+  returns jsonb language plpgsql security definer set search_path = public as $fn$
+  declare
+    v_cards jsonb;
+    v_out jsonb := '[]'::jsonb;
+    v_wrong jsonb := '[]'::jsonb;
+    r jsonb;
+    v_card_id uuid;
+    v_given text;
+    v_front text;
+    v_back text;
+    v_ok boolean;
+    n int;
+  begin
+    select card_ids into v_cards from word_checks
+      where id = p_id and student_id = auth.uid() and completed_at is null;
+    if v_cards is null then
+      return jsonb_build_object('counted', false, 'wrong', '[]'::jsonb);
+    end if;
+
+    for r in select value from jsonb_array_elements(coalesce(p_results, '[]'::jsonb)) loop
+      begin v_card_id := (r->>'card_id')::uuid; exception when others then continue; end;
+      -- слово должно быть из ЭТОЙ перепроверки
+      if not (v_cards @> to_jsonb(v_card_id::text)) then continue; end if;
+
+      v_given := coalesce(r->>'given', '');
+      select c.front, c.back into v_front, v_back from cards c where c.id = v_card_id;
+
+      if v_front is null then
+        -- карточку удалили между назначением и сдачей: проверить нечем
+        v_front := coalesce(r->>'front', '');
+        v_back := r->>'back';
+        v_ok := false;
+      else
+        -- те же правила, что на клиенте: варианты через «/», нормализация
+        select coalesce(bool_or(public.norm_typed(v) = public.norm_typed(v_given)), false)
+          into v_ok
+          from unnest(string_to_array(v_front, '/')) as v;
+      end if;
+
+      v_out := v_out || jsonb_build_array(jsonb_build_object(
+        'card_id', v_card_id, 'front', v_front, 'back', v_back,
+        'given', v_given, 'ok', v_ok));
+      if not v_ok then
+        v_wrong := v_wrong || jsonb_build_array(v_card_id::text);
+      end if;
+    end loop;
+
+    update word_checks set results = v_out, completed_at = now()
+    where id = p_id and student_id = auth.uid() and completed_at is null;
+    get diagnostics n = row_count;  -- row_count это int, не boolean
+
+    if n = 0 then
+      -- кто-то успел завершить между select и update (двойная отправка)
+      return jsonb_build_object('counted', false, 'wrong', '[]'::jsonb);
+    end if;
+    return jsonb_build_object('counted', true, 'wrong', v_wrong);
+  end $fn$;
+
+end $$;
+
+-- Блок идёт ПОСЛЕ общего `revoke execute on all functions` — правами для новой
+-- функции распоряжаемся явно. norm_typed вызывают только security definer
+-- функции (они выполняются от владельца), клиенту она не нужна.
+revoke execute on function public.norm_typed(text) from public, anon, authenticated;
+grant execute on function public.submit_material(uuid, jsonb, int, int) to authenticated;
+grant execute on function public.submit_word_check(uuid, jsonb) to authenticated;

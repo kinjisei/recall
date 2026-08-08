@@ -27,7 +27,21 @@ export interface StudentWord {
   intervalDays: number // текущий интервал повторения (0 для новых)
 }
 
-export function statusOf(state: ReviewState | null): { status: WordStatus; intervalDays: number } {
+/** Минимум, из которого считается статус: экраны, которым не нужны все поля
+ *  расписания (например /progress), выбирают только эти три колонки. */
+export type StatusInput = Pick<ReviewState, 'state' | 'due' | 'last_review'>
+
+/**
+ * ЕДИНОЕ правило «новое / учу / изучено» для всего приложения: «Мои слова»,
+ * выбор слов преподавателем, диагностическая карта, отчёт родителям и метрика
+ * «Слов изучено» на /progress.
+ *
+ * ⚠️ Не заводить рядом «свой» вариант подсчёта: /progress считал изученным
+ * любое слово в состоянии review, без порога по интервалу, и на одной и той же
+ * колоде ученица видела 4, а преподаватель в диагностике — 3 (находка ревью
+ * 2А №5). Порог 21 день здесь — единственное место, где он задан.
+ */
+export function statusOf(state: StatusInput | null): { status: WordStatus; intervalDays: number } {
   if (!state || state.state === 'new') return { status: 'new', intervalDays: 0 }
   const last = state.last_review ? new Date(state.last_review).getTime() : Date.now()
   const days = Math.max(0, Math.round((new Date(state.due).getTime() - last) / 86400000))

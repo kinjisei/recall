@@ -33,7 +33,7 @@ import {
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { useLanguage } from '../../context/LanguageContext'
-import { getDueCards } from '../../lib/fsrs'
+import { countDueCards } from '../../lib/fsrs'
 import { countMyWords } from '../../lib/cards'
 import { currentGuidedStep, skipReviewIfNoWords } from '../../lib/guided'
 import { getMistakes } from '../../lib/mistakes'
@@ -185,8 +185,11 @@ export function PracticePage() {
   // счётчик для плитки: сколько к повторению и есть ли слова вообще
   useEffect(() => {
     let alive = true
-    getDueCards(50, lang)
-      .then((d) => alive && setDue(d.length))
+    // ⚠️ Считаем countDueCards, а НЕ длину getDueCards(50): вторая упирается в
+    // потолок раунда, и у кого 60 карточек, Главная писала 60, а «Практика» —
+    // 50. Одно и то же число на двух экранах должно совпадать (ревью 2А).
+    countDueCards(lang)
+      .then((n) => alive && setDue(Math.min(n, 99)))
       .catch(() => alive && setDue(null))
     countMyWords(lang)
       .then((n) => alive && setWords(n))
@@ -198,7 +201,7 @@ export function PracticePage() {
 
   const back = () => {
     setMode('hub')
-    getDueCards(50, lang).then((d) => setDue(d.length)).catch(() => {})
+    countDueCards(lang).then((n) => setDue(Math.min(n, 99))).catch(() => {})
   }
 
   if (mode === 'review') return <DeckReview onBack={back} />

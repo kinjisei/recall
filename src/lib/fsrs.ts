@@ -147,10 +147,20 @@ export async function getDueCards(limit = 50, lang?: AppLang): Promise<DueCard[]
 /**
  * Сколько карточек к повторению (те же условия, что в getDueCards), но без
  * выкачивания строк — только count-запросы. Для счётчиков на Главной.
+ *
+ * until — до какого момента считать. По умолчанию «сейчас» (карточки, которые
+ * уже пора повторить). /progress передаёт конец завтрашнего дня для метрики
+ * «К завтрашнему дню».
+ *
+ * ⚠️ Совсем новые карточки (ещё без review_states) входят в счёт ВСЕГДА: их
+ * можно взять в работу в любой момент, поэтому они «к повторению» и сегодня, и
+ * к завтрашнему дню. Раньше /progress считал их по своей формуле — только по
+ * таблице review_states — и на одной и той же колоде Главная показывала 5, а
+ * /progress 3. Единственная формула теперь здесь (находка ревью 2А №6).
  */
-export async function countDueCards(lang?: AppLang): Promise<number> {
+export async function countDueCards(lang?: AppLang, until?: Date): Promise<number> {
   const userId = await requireUserId()
-  const nowIso = new Date().toISOString()
+  const untilIso = (until ?? new Date()).toISOString()
 
   const deckIds = lang ? await getDeckIds(lang) : null
   if (deckIds && deckIds.length === 0) return 0
@@ -165,7 +175,7 @@ export async function countDueCards(lang?: AppLang): Promise<number> {
     .from('review_states')
     .select('id, cards!inner(id)', { count: 'exact', head: true })
     .eq('user_id', userId)
-    .lte('due', nowIso)
+    .lte('due', untilIso)
   if (deckIds) dueQuery = dueQuery.in('cards.deck_id', deckIds)
 
   const [newRes, dueRes] = await Promise.all([newQuery, dueQuery])

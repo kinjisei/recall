@@ -20,6 +20,8 @@ import { useLanguage } from '../../context/LanguageContext'
 import { supabase, currentUserId } from '../../lib/supabase'
 import { getBestStreak, getStreak, getWeek, type WeekDay } from '../../lib/activity'
 import { getDeckIds } from '../../lib/cards'
+import { countDueCards } from '../../lib/fsrs'
+import { statusOf, type StatusInput } from '../../lib/wordChecks'
 
 interface Metrics {
   learned: number
@@ -27,6 +29,9 @@ interface Metrics {
   best: number
   tomorrow: number
 }
+
+/** Строка расписания в том виде, в каком её выбирает loadMetrics. */
+type MetricRow = StatusInput & { reps: number | null; lapses: number | null }
 
 /** Метрики по колоде текущего языка: выучено, точность, к повторению завтра. */
 async function loadMetrics(lang: 'en' | 'es'): Promise<Omit<Metrics, 'best'>> {
@@ -38,23 +43,32 @@ async function loadMetrics(lang: 'en' | 'es'): Promise<Omit<Metrics, 'best'>> {
 
   const { data } = await supabase
     .from('review_states')
-    .select('state, reps, lapses, due, cards!inner(deck_id)')
+    .select('state, reps, lapses, due, last_review, cards!inner(deck_id)')
     .eq('user_id', userId)
     .in('cards.deck_id', deckIds)
 
-  const rows = data ?? []
-  const learned = rows.filter((r) => r.state === 'review').length
+  const rows = (data ?? []) as unknown as MetricRow[]
+
+  // «Изучено» — общий statusOf (review + интервал ≥ 21 дня). Своей формулы тут
+  // быть не должно: раньше считалось любое слово в состоянии review, и ученица
+  // на этом экране видела больше «изученных», чем преподаватель в её же
+  // диагностической карте.
+  const learned = rows.filter((r) => statusOf(r).status === 'learned').length
 
   // Истории отдельных оценок мы не храним, поэтому точность считаем как долю
   // повторений, прошедших без срыва: (все reps − все lapses) / все reps.
-  const reps = rows.reduce((n, r) => n + ((r.reps as number) ?? 0), 0)
-  const lapses = rows.reduce((n, r) => n + ((r.lapses as number) ?? 0), 0)
+  const reps = rows.reduce((n, r) => n + (r.reps ?? 0), 0)
+  const lapses = rows.reduce((n, r) => n + (r.lapses ?? 0), 0)
   const accuracy = reps > 0 ? Math.round(((reps - lapses) / reps) * 100) : null
 
+  // «К завтрашнему дню» — тот же countDueCards, что и счётчик на Главной,
+  // только с горизонтом до конца завтрашнего дня. Считать по одной таблице
+  // review_states нельзя: совсем новые карточки в неё ещё не попали, и число
+  // выходило меньше, чем на Главной.
   const until = new Date()
   until.setDate(until.getDate() + 1)
   until.setHours(23, 59, 59, 999)
-  const tomorrow = rows.filter((r) => new Date(r.due as string) <= until).length
+  const tomorrow = await countDueCards(lang, until)
 
   return { learned, accuracy, tomorrow }
 }
