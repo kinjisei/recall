@@ -8,7 +8,14 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
-import { findUsers, setPlan, type AdminUserRow, type PlanId } from '../../lib/admin'
+import {
+  findUsers,
+  listRecentErrors,
+  setPlan,
+  type AdminUserRow,
+  type ClientErrorRow,
+  type PlanId,
+} from '../../lib/admin'
 import { Button } from '../../components/Button'
 import { IconSearch, IconWarning, IconSpinner, IconHome } from '../../components/icons'
 
@@ -120,6 +127,7 @@ function AdminConsole() {
       </header>
 
       <Funnel />
+      <RecentErrors />
 
       <div className="flex gap-2">
         <input
@@ -370,6 +378,103 @@ function Funnel() {
             </div>
           )}
         </>
+      )}
+    </section>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Ошибки с прода.
+//
+// Раньше о поломке у пользователя мы узнавали, только если он напишет — а он
+// обычно не пишет, а уходит. Теперь клиент записывает ошибки событием
+// client_error (src/lib/errorLog.ts), а здесь они видны там же, где воронка:
+// в отдельную панель стороннего сервиса владелец бы просто не заходил.
+// ---------------------------------------------------------------------------
+
+function RecentErrors() {
+  const [days, setDays] = useState(7)
+  const [rows, setRows] = useState<ClientErrorRow[] | null>(null)
+  const [err, setErr] = useState<string | null>(null)
+  const [open, setOpen] = useState<string | null>(null)
+
+  useEffect(() => {
+    let alive = true
+    listRecentErrors(days, 50)
+      .then((r) => alive && setRows(r))
+      // как и у воронки: миграция может быть не залита — показываем текст,
+      // а не пустой экран
+      .catch((e) => alive && setErr(e instanceof Error ? e.message : 'не удалось'))
+    return () => {
+      alive = false
+    }
+  }, [days])
+
+  return (
+    <section className="mt-8">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-lg font-medium">Ошибки у пользователей</h2>
+        <div className="flex gap-1">
+          {[1, 7, 30].map((d) => (
+            <button
+              key={d}
+              onClick={() => setDays(d)}
+              className={`min-h-11 rounded-lg px-3 text-sm font-medium ${
+                days === d
+                  ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
+                  : 'bg-white/[0.06] text-[var(--night-text-40)]'
+              }`}
+            >
+              {d} дн.
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {err ? (
+        <p className="mt-3 text-sm text-[var(--night-text-40)]">{err}</p>
+      ) : rows === null ? (
+        <p className="mt-3 text-sm text-[var(--night-text-40)]">Загрузка…</p>
+      ) : rows.length === 0 ? (
+        <p className="mt-3 text-sm text-[var(--night-text-40)]">
+          За этот период ошибок не было.
+        </p>
+      ) : (
+        <div className="mt-3 flex flex-col gap-2">
+          {rows.map((r) => {
+            const key = `${r.where_}|${r.message}`
+            return (
+              <button
+                key={key}
+                onClick={() => setOpen(open === key ? null : key)}
+                className="rounded-xl border border-white/[0.08] p-3 text-left"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <span className="min-w-0 text-sm font-medium">{r.message ?? '(без текста)'}</span>
+                  <span className="shrink-0 text-xs text-[var(--night-text-40)]">
+                    {r.times}× · {r.people} чел.
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-[var(--night-text-40)]">
+                  {r.where_} · {new Date(r.last_at).toLocaleString('ru-RU')}
+                  {!r.any_online && ' · офлайн'}
+                </p>
+                {open === key && (
+                  <div className="mt-2 border-t border-white/[0.08] pt-2">
+                    <p className="text-xs text-[var(--night-text-40)]">
+                      Экран: {r.last_path ?? '—'}
+                    </p>
+                    {r.last_stack && (
+                      <pre className="mt-1 overflow-x-auto whitespace-pre-wrap break-all text-[11px] text-[var(--night-text-40)]">
+                        {r.last_stack}
+                      </pre>
+                    )}
+                  </div>
+                )}
+              </button>
+            )
+          })}
+        </div>
       )}
     </section>
   )

@@ -218,7 +218,17 @@ async function main() {
     await page.goto(BASE + '/practice', { waitUntil: 'networkidle2' })
     await sleep(800)
     const sprintOpened = await clickByText(page, 'button', 'Спринт')
-    await sleep(2500) // пул слов грузится
+    // Ждём ПОЯВЛЕНИЯ кнопок, а не «примерно столько, сколько грузится пул»:
+    // фиксированная пауза изредка не покрывала загрузку словаря, и проверка
+    // падала на исправном экране. Опрос по таймеру, а не по кадрам отрисовки
+    // (в фоновой вкладке requestAnimationFrame не тикает).
+    await page
+      .waitForFunction(
+        () =>
+          [...document.querySelectorAll('button')].some((b) => b.textContent.includes('Верно')),
+        { timeout: 20000, polling: 300 },
+      )
+      .catch(() => {}) // не дождались — пусть проверка ниже честно покажет, чего нет
     const sprintState = await page.evaluate(() => ({
       hasTimer: /\d+ с/.test(document.body.textContent || ''),
       hasPair: /=/.test(document.body.textContent || ''),

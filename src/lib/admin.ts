@@ -61,3 +61,33 @@ export async function setPlan(
   if (error) throw dbError(error, 'изменить тариф')
   return data as unknown as AdminSetPlanResult
 }
+
+/** Ошибка у пользователей, сгруппированная по «где + текст». */
+export interface ClientErrorRow {
+  where_: string | null
+  message: string | null
+  times: number
+  people: number
+  last_at: string
+  last_path: string | null
+  last_stack: string | null
+  any_online: boolean
+}
+
+/**
+ * Ошибки с прода за последние дни (RPC admin_recent_errors, только владельцу).
+ *
+ * ⚠️ Приведение типа — потому что database.types.ts сгенерированы до появления
+ * этой функции. После заливки схемы типы стоит перегенерировать (ARCHITECTURE
+ * §5), и приведение уйдёт. Держим его ЗДЕСЬ, чтобы не размазывать по экрану.
+ */
+export async function listRecentErrors(days = 7, limit = 50): Promise<ClientErrorRow[]> {
+  const { data, error } = await (
+    supabase.rpc as unknown as (
+      fn: string,
+      args: Record<string, unknown>,
+    ) => Promise<{ data: unknown; error: { message: string } | null }>
+  )('admin_recent_errors', { p_days: days, p_limit: limit })
+  if (error) throw new Error(error.message)
+  return (data as ClientErrorRow[] | null) ?? []
+}

@@ -1,0 +1,76 @@
+# Ежедневный бэкап базы.
+#
+# Зачем. Supabase на бесплатном тарифе бэкапы НЕ делает. До этого файла любая
+# порча данных была необратимой: слова учеников, сданные работы, программы
+# обучения. Один неудачный запрос — и возвращать нечего.
+#
+# Дамп шифруется ПЕРЕД загрузкой: артефакт лежит в чужом облаке, а внутри
+# персональные данные учеников. Пароль знает только владелец.
+#
+# Секреты (Settings → Secrets and variables → Actions):
+#   SUPABASE_DB_URL   — строка подключения (Supabase → Project Settings →
+#                       Database → Connection string → URI, режим Session).
+#   BACKUP_PASSPHRASE — пароль шифрования. Потеряете его — дамп бесполезен.
+name: Бэкап базы
+
+on:
+  schedule:
+    # 03:00 UTC = 09:00 в Алматы: если что-то пойдёт не так, владелец увидит
+    # это утром, а не ночью
+    - cron: '0 3 * * *'
+  workflow_dispatch: # можно запустить руками перед рискованной миграцией
+
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Клиент PostgreSQL 17
+        # версия клиента должна быть НЕ НИЖЕ сервера, иначе pg_dump откажется
+        run: |
+          sudo sh -c 'echo "deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /usr/share/keyrings/pgdg.gpg
+          sudo sed -i 's|deb |deb [signed-by=/usr/share/keyrings/pgdg.gpg] |' /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-17
+
+      - name: Снять дамп и зашифровать
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          if [ -z "${DB_URL:-}" ] || [ -z "${PASSPHRASE:-}" ]; then
+            echo "::error::Нет секретов SUPABASE_DB_URL и/или BACKUP_PASSPHRASE"
+            exit 1
+          fi
+          STAMP=$(date -u +%Y-%m-%d)
+          # --no-owner/--no-acl: восстанавливать будем в другой проект, где
+          # ролей Supabase может не быть
+          pg_dump "$DB_URL" --no-owner --no-acl --clean --if-exists \
+            | gzip -9 \
+            | gpg --batch --yes --symmetric --cipher-algo AES256 \
+                  --passphrase "$PASSPHRASE" \
+                  -o "recall-$STAMP.sql.gz.gpg"
+          ls -lh recall-*.sql.gz.gpg
+          # пустой дамп — тоже авария, лучше упасть громко
+          SIZE=$(stat -c%s recall-$STAMP.sql.gz.gpg)
+          if [ "$SIZE" -lt 10240 ]; then
+            echo "::error::Дамп подозрительно мал ($SIZE байт) — проверьте подключение"
+            exit 1
+          fi
+          echo "STAMP=$STAMP" >> "$GITHUB_ENV"
+          # Дамп 1-го числа держим дольше: порчу, замеченную через месяц,
+          # двухнедельными копиями уже не откатить.
+          if [ "$(date -u +%d)" = "01" ]; then
+            echo "KEEP=90" >> "$GITHUB_ENV"
+          else
+            echo "KEEP=14" >> "$GITHUB_ENV"
+          fi
+
+      - name: Сохранить артефакт
+        uses: actions/upload-artifact@v4
+        with:
+          name: recall-backup-${{ env.STAMP }}
+          path: recall-*.sql.gz.gpg
+          retention-days: ${{ env.KEEP }}
+          if-no-files-found: error

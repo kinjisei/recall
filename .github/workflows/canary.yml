@@ -1,0 +1,50 @@
+# Сторож прода: ходит по живому приложению как обычный пользователь.
+#
+# Зачем. Мы деплоим часто, а о поломке узнаём, только если человек напишет —
+# обычно он не пишет, а уходит. Сбор ошибок тут не спасает: он ждёт первого
+# пострадавшего. Сторож находит поломку сам, даже когда в приложении никого нет.
+#
+# Секрет (Settings → Secrets and variables → Actions):
+#   CANARY_PASSWORD — пароль постоянного аккаунта canary@recall.test.
+# Адрес и anon-ключ Supabase секретами НЕ являются: они и так лежат в бандле
+# фронтенда. service_role здесь не используется намеренно — доступ к
+# репозиторию не должен означать доступ к данным учеников.
+name: Сторож прода
+
+on:
+  schedule:
+    - cron: '30 3 * * *' # 09:30 в Алматы, сразу после бэкапа
+  push:
+    branches: [main] # и после каждой выкатки
+  workflow_dispatch:
+
+# Выкатка Vercel идёт параллельно с этим прогоном: если пушей несколько подряд,
+# проверять имеет смысл только последний.
+concurrency:
+  group: canary
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci --omit=dev --ignore-scripts
+      - name: Дать выкатке доехать
+        if: github.event_name == 'push'
+        # Vercel собирает проект около минуты; без паузы сторож проверил бы
+        # предыдущую версию и отчитался «всё хорошо» о невыкаченном коде
+        run: sleep 120
+      - name: Прогон
+        env:
+          # Адрес и anon-ключ не секреты: они по замыслу публичные и лежат в
+          # бандле фронтенда у каждого пользователя. Данные закрывает RLS, а не
+          # тайна ключа. Держим здесь, чтобы не заводить лишних настроек.
+          SUPABASE_URL: https://qyvkyyjqqqirmdliddsn.supabase.co
+          SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5dmt5eWpxcXFpcm1kbGlkZHNuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4NTI5MzcsImV4cCI6MjA5ODQyODkzN30.MUqKgsN_MYDDn8jxW6qnMJIExQu3mVWd7FZJmkzxCug
+          CANARY_EMAIL: canary@recall.test
+          CANARY_PASSWORD: ${{ secrets.CANARY_PASSWORD }}
+        run: node scripts/canary-prod.mjs

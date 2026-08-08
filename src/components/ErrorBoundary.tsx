@@ -8,6 +8,7 @@
 import { Component, type ReactNode } from 'react'
 import { supportMailto } from '../lib/contacts'
 import { IconWarning } from './icons'
+import { logError } from '../lib/errorLog'
 
 const RELOAD_AT = 'recall.chunk_reload_at'
 // Между перезагрузками — окно: если чанк снова не грузится СРАЗУ после reload,
@@ -34,6 +35,10 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
   }
 
   componentDidCatch(error: unknown) {
+    // Сбой рендера — самый заметный для человека (белый экран вместо приложения),
+    // и до сих пор он никуда не записывался: мы узнавали о нём, только если
+    // пользователь напишет.
+    logError('render', error)
     // Устаревший ленивый чанк после деплоя (частая причина «ошибки» в мини-играх
     // и placement на установленном PWA). Перезагружаемся на свежую версию, но не
     // чаще раза в COOLDOWN — иначе при реальной ошибке был бы вечный reload.

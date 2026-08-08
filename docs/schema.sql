@@ -3671,3 +3671,54 @@ end $$;
 
 -- после общего revoke в конце файла — грант поимённо
 grant execute on function public.submit_word_check(uuid, jsonb) to authenticated;
+
+-- ============================================================================
+-- ЭТАП 3, НАБЛЮДАЕМОСТЬ: ОШИБКИ С ПРОДА ВИДНЫ ВЛАДЕЛЬЦУ (2026-08-08)
+-- ============================================================================
+do $$ begin
+
+  -- Раньше об ошибке у пользователя мы узнавали, только если он напишет — а он
+  -- обычно не пишет, а уходит. Клиент теперь пишет их событием client_error
+  -- (src/lib/errorLog.ts) в уже существующую таблицу events: отдельного сервиса
+  -- заводить не пришлось, данные учеников никуда не уезжают, а смотреть их
+  -- владелец будет там же, где воронку, — в /admin.
+  --
+  -- Таблица events закрыта для чтения всем (revoke all), поэтому нужна
+  -- security-definer функция с проверкой is_admin — как у admin_funnel.
+  create or replace function public.admin_recent_errors(
+    p_days int default 7, p_limit int default 50
+  )
+  returns json language plpgsql security definer set search_path = public as $fn$
+  declare
+    d timestamptz := now() - make_interval(days => greatest(1, least(coalesce(p_days, 7), 90)));
+    lim int := greatest(1, least(coalesce(p_limit, 50), 200));
+  begin
+    if not exists (select 1 from profiles where id = auth.uid() and is_admin) then
+      raise exception 'RECALL_NOT_ADMIN';
+    end if;
+    -- Группируем по «где + текст»: одна и та же поломка у десяти человек должна
+    -- быть одной строкой с числом, а не десятью одинаковыми записями.
+    return coalesce((
+      select json_agg(row_to_json(t))
+      from (
+        select
+          props->>'where'   as where_,
+          props->>'message' as message,
+          count(*)                          as times,
+          count(distinct coalesce(user_id::text, anon_id::text)) as people,
+          max(created_at)                   as last_at,
+          (array_agg(props->>'path' order by created_at desc))[1] as last_path,
+          (array_agg(props->>'stack' order by created_at desc))[1] as last_stack,
+          bool_or(coalesce((props->>'online')::boolean, true)) as any_online
+        from events
+        where name = 'client_error' and created_at >= d
+        group by 1, 2
+        order by max(created_at) desc
+        limit lim
+      ) t
+    ), '[]'::json);
+  end $fn$;
+
+end $$;
+
+grant execute on function public.admin_recent_errors(int, int) to authenticated;
