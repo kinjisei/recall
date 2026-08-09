@@ -149,8 +149,15 @@ async function main() {
   await page.type('#fb-contact', '@smoke')
   await sleep(300)
   await tap(page, 'Отправить')
-  await sleep(1200)
-  const thanks = await page.evaluate(() => (document.body.innerText || '').includes('Спасибо, дошло'))
+  // ⚠️ ждём подтверждение, а не «полторы секунды»: отправка идёт по сети, и
+  // фиксированная пауза давала мигающую проверку на медленном ответе
+  const thanks = await page
+    .waitForFunction(() => (document.body.innerText || '').includes('Спасибо, дошло'), {
+      timeout: 10000,
+      polling: 200,
+    })
+    .then(() => true)
+    .catch(() => false)
   check('показано подтверждение', thanks)
 
   // ---- 4. запись реально в базе ------------------------------------------
@@ -174,10 +181,44 @@ async function main() {
     // под service_role auth.uid() пуст, поэтому ждём именно отказ по правам:
     // это доказывает, что функция есть и проверку админа делает
     check(
-      'admin_feedback существует и требует прав',
+      'посторонний отзывы не читает',
       /RECALL_NOT_ADMIN/.test(rpcErr?.message ?? ''),
       rpcErr?.message ?? 'без ошибки',
     )
+
+    // И главное: НАСТОЯЩИЙ владелец отзыв действительно видит. Без этой
+    // проверки было бы доказано только, что функция отказывает чужим, — а то,
+    // ради чего её заливали, осталось бы непроверенным.
+    const adminEmail = 'fb-admin-smoke@recall.test'
+    await admin.from('allowed_emails').upsert({ email: adminEmail, note: 'feedback-smoke (временный)' })
+    const { data: au } = await admin.auth.admin.createUser({
+      email: adminEmail,
+      password: PASSWORD,
+      email_confirm: true,
+    })
+    let adminId = au?.user?.id ?? null
+    if (!adminId) {
+      const { data: l } = await admin.auth.admin.listUsers({ perPage: 1000 })
+      adminId = l.users.find((u) => (u.email ?? '').toLowerCase() === adminEmail)?.id ?? null
+    }
+    // is_admin ставится ТОЛЬКО так: колонка закрыта грантами от пользователя
+    await admin.from('profiles').update({ is_admin: true }).eq('id', adminId)
+
+    const asAdmin = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    })
+    await asAdmin.auth.signInWithPassword({ email: adminEmail, password: PASSWORD })
+    const { data: fb, error: fbErr } = await asAdmin.rpc('admin_feedback', { p_days: 1, p_limit: 50 })
+    const list = Array.isArray(fb) ? fb : []
+    check('владелец читает отзывы', !fbErr, fbErr?.message ?? `записей: ${list.length}`)
+    check(
+      'наш отзыв виден владельцу целиком',
+      list.some((r) => r.text === MARK && r.rating === 'down' && r.contact === '@smoke'),
+      list[0] ? JSON.stringify(list[0]).slice(0, 80) : 'пусто',
+    )
+
+    await admin.auth.admin.deleteUser(adminId).catch(() => {})
+    await admin.from('allowed_emails').delete().eq('email', adminEmail)
   }
 
   check('JS-ошибок за прогон нет', jsErrors.length === 0, jsErrors[0] ?? '')
