@@ -17,6 +17,7 @@ import { lookupInContext, type ContextLookup } from '../lib/contextDict'
 import { logActivity } from '../lib/activity'
 import { speak } from '../lib/speech'
 import type { AppLang } from '../types'
+import { Thinking } from './Thinking'
 
 /** Выбранное слово + предложение, в котором оно встретилось. */
 export interface WordPick {
@@ -277,7 +278,7 @@ export function WordSheet({
           {ipa && <p className="mt-1 text-[var(--night-text-40)]">/{ipa}/</p>}
 
           {!ctx && !ctxError && (
-            <p className="mt-3 text-[var(--night-text-40)]">Перевожу в контексте…</p>
+            <Thinking label="Перевожу в контексте" className="mt-3" />
           )}
           {ctx && (
             <div className="mt-3">

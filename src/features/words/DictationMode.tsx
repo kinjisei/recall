@@ -228,7 +228,7 @@ export function DictationMode({ lang, onBack }: { lang: AppLang; onBack: () => v
               </p>
             )}
             {checked === true && (
-              <p className="text-sm font-semibold text-emerald-400">Верно!</p>
+              <p className="animate-answer-pop text-sm font-semibold text-emerald-400">Верно!</p>
             )}
 
             {checked === null ? (

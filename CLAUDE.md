@@ -198,6 +198,26 @@ premium → free. Суммы — в `docs/schema.sql`, функция `energy_so
 Контраст токенов пересчитан под фон `#161826`: `--night-text-25` (~3.3:1) —
 **только для иконок и разделителей**, в тексте не использовать.
 
+### Движение
+
+Библиотек анимации нет и не планируется (разбор — `docs/motion-plan.md`).
+Всё на CSS и браузерном View Transitions API; вся плавность продукта стоит
+**0,8 КБ gzip**.
+
+- Переходы между экранами — `lib/viewTransition.ts`, включены в `useUrlState`,
+  то есть на всех 12 внутренних экранах разом. Шапка и навигация помечены
+  `.vt-topbar` / `.vt-nav` — так они выпадают из снимка и не едут вместе с
+  содержимым.
+- ⚠️ **Внутри `<main>` ничего не помечать `view-transition-name`**: элемент
+  получает layout-containment и становится containing block для `fixed`
+  потомков — шторки начнут позиционироваться от контента, а не от экрана.
+- Ожидание AI — `components/Thinking.tsx` (6 мест), верный ответ —
+  `.animate-answer-pop` (10 мест). Это КЛАССЫ: добавляешь новую игру или новое
+  ожидание — подключай их же, иначе продукт разъедется.
+- Любая анимация — только `transform`/`opacity` и обязана попадать под
+  `prefers-reduced-motion`.
+- Проверка: `node scripts/smoke-motion.mjs`.
+
 ---
 
 ## Как запустить и как проверять
@@ -208,6 +228,7 @@ npm run build          # tsc -b + сборка — обязательно пос
 node scripts/ux-audit.mjs          # 15 экранов: контраст, тач-цели, подписи
 node scripts/smoke-features.mjs    # интерактивный обход фич
 node scripts/smoke-navigation.mjs  # адресуемость экранов
+node scripts/smoke-motion.mjs      # переходы, вкладки, живые ожидания и ответы
 node scripts/check-schema.mjs      # перед заливкой схемы
 node scripts/validate-schema-dryrun.mjs   # прогон schema.sql с откатом
 ```

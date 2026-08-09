@@ -7,6 +7,7 @@ import { createPortal } from 'react-dom'
 import { analyzeSelection, type Analysis } from '../lib/analyze'
 import { AnalyzedItemsView } from './AnalyzedItemsView'
 import type { AppLang } from '../types'
+import { Thinking } from './Thinking'
 
 export function AnalysisSheet({
   text,
@@ -49,7 +50,7 @@ export function AnalysisSheet({
           <p className="mt-0.5 text-[15px] font-medium leading-snug">«{text}»</p>
 
           {!data && !error && (
-            <p className="mt-4 text-sm text-[var(--night-text-40)]">Разбираю фрагмент…</p>
+            <Thinking label="Разбираю фрагмент" className="mt-4 text-sm" />
           )}
           {error && <p className="mt-4 text-sm text-red-400">{error}</p>}
 

@@ -18,6 +18,7 @@
 // ============================================================================
 import { useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { withViewTransition } from './viewTransition'
 
 /**
  * Один параметр адреса как состояние экрана.
@@ -48,7 +49,10 @@ export function useUrlState(
       else nextParams.set(key, next)
       // заход внутрь — новая запись в истории; возврат — замена текущей.
       // Без этого «назад» после выхода кареткой возвращал обратно внутрь.
-      setParams(nextParams, { replace: next === null })
+      // Направление перехода берём отсюда же: null — выход наружу.
+      withViewTransition(next === null ? 'out' : 'in', () => {
+        setParams(nextParams, { replace: next === null })
+      })
     },
     [params, setParams, key],
   )
@@ -80,7 +84,9 @@ export function useUrlStates(
       // если после правки ни одного «внутреннего» ключа не осталось — это
       // выход наружу, запись в историю не нужна
       const wentOut = keys.every((k) => !nextParams.get(k))
-      setParams(nextParams, { replace: wentOut })
+      withViewTransition(wentOut ? 'out' : 'in', () => {
+        setParams(nextParams, { replace: wentOut })
+      })
     },
     [params, setParams, keys],
   )

@@ -20,6 +20,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { getEsLevel } from '../../lib/esLevel'
 import type { AppLang, CEFRLevel, ChatTurn, LearningGoal } from '../../types'
+import { Thinking } from '../../components/Thinking'
 
 type Mode = 'chat' | 'writing'
 
@@ -315,7 +316,7 @@ function ChatSection({
         ))}
         {busy && (
           <div className="self-start rounded-2xl rounded-bl-md border border-white/[0.08] bg-[var(--night-surface)] px-4 py-2.5 text-[var(--night-text-40)]">
-            печатает…
+            <Thinking label="печатает" />
           </div>
         )}
       </div>

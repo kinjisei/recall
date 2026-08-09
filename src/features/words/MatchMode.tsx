@@ -234,8 +234,9 @@ function MatchRound({
           const rDone = matched.has(r.id)
           const sel = selected === l.id
           const isWrong = wrong === r.id
+          // пара сошлась — короткий «клевок» (тот же класс, что в остальных играх)
           const doneCls =
-            'border-emerald-500/60 bg-emerald-500/12 text-emerald-300'
+            'border-emerald-500/60 bg-emerald-500/12 text-emerald-300 animate-answer-pop'
           return (
             <Fragment key={l.id}>
               <button

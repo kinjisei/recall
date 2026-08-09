@@ -443,12 +443,14 @@ function TrainerRunner({
               else if (isPicked) cls = 'border-red-500 bg-red-950/40'
               else cls = 'border-white/[0.08] opacity-60'
             }
+            // празднуем только собственный верный ответ (см. exercises.tsx)
+            const pop = isPicked && isAnswer ? ' animate-answer-pop' : ''
             return (
               <button
                 key={i}
                 onClick={() => choose(i)}
                 disabled={picked !== null}
-                className={`rounded-xl border px-4 py-2.5 text-left transition-colors ${cls}`}
+                className={`rounded-xl border px-4 py-2.5 text-left transition-colors ${cls}${pop}`}
               >
                 {opt}
               </button>

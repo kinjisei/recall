@@ -8,6 +8,7 @@
 // её под-кап, но не больше остатка общего пула. У админа и без данных — не рисуем.
 // ============================================================================
 import { IconSparkle } from './icons'
+import { useCountUp } from '../lib/useCountUp'
 import type { MyPlan } from '../lib/billing'
 
 export function energyLeft(plan: MyPlan): { left: number; cap: number; studio: boolean } | null {
@@ -23,6 +24,9 @@ export function energyLeft(plan: MyPlan): { left: number; cap: number; studio: b
 
 export function EnergyBar({ plan, className = '' }: { plan: MyPlan; className?: string }) {
   const e = energyLeft(plan)
+  // ⚠️ хук зовём ДО раннего выхода: порядок хуков должен быть одинаковым при
+  // каждом рендере, иначе React упадёт, когда полоска то показывается, то нет
+  const shownLeft = useCountUp(e?.left ?? 0)
   if (!e || e.cap <= 0) return null
   const pct = Math.round((e.left / e.cap) * 100)
   const low = e.left <= Math.max(1, Math.round(e.cap * 0.2))
@@ -35,13 +39,13 @@ export function EnergyBar({ plan, className = '' }: { plan: MyPlan; className?: 
           Энергия AI
         </span>
         <span className={low ? 'text-amber-400' : 'text-[var(--night-text-70)]'}>
-          {e.left} из {e.cap}
+          {shownLeft} из {e.cap}
         </span>
       </div>
       <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/[0.07]">
         <div
-          className={`h-full rounded-full transition-[width] duration-500 ${low ? 'bg-amber-400' : 'bg-[var(--night-accent)]'}`}
-          style={{ width: `${pct}%` }}
+          className={`h-full w-full origin-left rounded-full transition-transform duration-500 [transition-timing-function:cubic-bezier(.22,1,.36,1)] ${low ? 'bg-amber-400' : 'bg-[var(--night-accent)]'}`}
+          style={{ transform: `scaleX(${pct / 100})` }}
         />
       </div>
       <p className="mt-1.5 text-xs text-[var(--night-text-40)]">

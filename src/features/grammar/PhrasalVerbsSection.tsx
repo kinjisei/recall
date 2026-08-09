@@ -296,7 +296,9 @@ function Trainer({ entries }: { entries: PhrasalEntry[] }) {
             chosen === null
               ? 'border-white/[0.12] text-[var(--night-text-70)]'
               : i === q.answer
-                ? 'border-emerald-400/60 bg-emerald-400/10 text-emerald-300'
+                ? `border-emerald-400/60 bg-emerald-400/10 text-emerald-300${
+                    i === chosen ? ' animate-answer-pop' : ''
+                  }`
                 : i === chosen
                   ? 'border-red-400/60 bg-red-400/10 text-red-300'
                   : 'border-white/[0.08] text-[var(--night-text-40)]'

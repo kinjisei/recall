@@ -175,12 +175,14 @@ export function QuizRunner({
                   : isPicked
                     ? 'border-red-500 bg-red-500/15 text-red-300'
                     : 'border-white/[0.08] opacity-60'
+            // празднуем только собственный верный ответ (см. exercises.tsx)
+            const pop = isPicked && isAnswer ? ' animate-answer-pop' : ''
             return (
               <button
                 key={i}
                 onClick={() => choose(i)}
                 disabled={picked !== null}
-                className={`rounded-xl border px-3 py-2.5 text-left transition-[transform,background-color,border-color,color] duration-150 ${cls}`}
+                className={`rounded-xl border px-3 py-2.5 text-left transition-[transform,background-color,border-color,color] duration-150 ${cls}${pop}`}
               >
                 {opt}
               </button>

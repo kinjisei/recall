@@ -27,6 +27,7 @@ import {
   saveQuestMessages,
 } from '../../lib/quests'
 import type { ChatTurn, GrammarQuest } from '../../types'
+import { Thinking } from '../../components/Thinking'
 
 /** Скрытая реплика, которой клиент запускает квест (не рендерится). */
 const START_MARK = '/start'
@@ -272,7 +273,7 @@ function QuestChat({ quest, onBack }: { quest: GrammarQuest; onBack: () => void 
           ))}
         {busy && (
           <div className="self-start rounded-2xl rounded-bl-md border border-white/[0.08] bg-[var(--night-surface)] px-4 py-2.5 text-[var(--night-text-40)]">
-            печатает…
+            <Thinking label="печатает" />
           </div>
         )}
         {error && <p className="text-sm text-red-500">{error}</p>}

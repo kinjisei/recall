@@ -208,6 +208,24 @@ a,
 .animate-grow-bar { animation: grow-bar 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; transform-origin: left; }
 .animate-pulse-ring { animation: pulse-ring 2s ease-in-out infinite; }
 
+/* Ожидание ответа AI: три точки. Человек ждёт модель 3–8 секунд (генерация
+   материала — до минуты) и смотрит сюда дольше, чем в любую карточку;
+   статичный текст не отвечает на вопрос «оно вообще живое?». */
+@keyframes dot-bounce {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+  40% { transform: translateY(-3px); opacity: 1; }
+}
+.dot-bounce { animation: dot-bounce 1.2s ease-in-out infinite; }
+
+/* Момент правильного ответа — единственное место, где у обучающего приложения
+   есть право на маленький праздник. Быстрый «клевок», без сдвига раскладки. */
+@keyframes answer-pop {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.035); }
+  100% { transform: scale(1); }
+}
+.animate-answer-pop { animation: answer-pop 0.4s cubic-bezier(0.22, 1, 0.36, 1); }
+
 /* Подъём карточек-строк на ховер и «вдавливание» на тап. */
 .lift {
   transition:
@@ -219,6 +237,47 @@ a,
 .lift:hover { transform: translateY(-2px); }
 .lift:active { transform: scale(0.97); transition-duration: 0.1s; }
 
+/* ==========================================================================
+   Переход между экранами (View Transitions API). Запускается из
+   lib/viewTransition.ts, направление приезжает атрибутом data-vt на <html>.
+
+   ⚠️ Внутри <main> НИЧЕГО не именуем: элемент с view-transition-name получает
+   layout-containment и становится containing block для fixed-потомков — ровно
+   та поломка, о которой предупреждает комментарий к fade-in выше (шторки
+   начинали позиционироваться от контента, а не от экрана).
+   Вместо этого именуем шапку и навигацию: так они ВЫПАДАЮТ из корневого
+   снимка и остаются неподвижными, пока экран под ними меняется.
+   ========================================================================== */
+.vt-topbar { view-transition-name: recall-topbar; }
+.vt-nav { view-transition-name: recall-nav; }
+
+@keyframes vt-out-left {
+  to { opacity: 0; transform: translateX(-18px); }
+}
+@keyframes vt-in-right {
+  from { opacity: 0; transform: translateX(18px); }
+}
+@keyframes vt-out-right {
+  to { opacity: 0; transform: translateX(18px); }
+}
+@keyframes vt-in-left {
+  from { opacity: 0; transform: translateX(-18px); }
+}
+
+html[data-vt]::view-transition-old(root),
+html[data-vt]::view-transition-new(root) {
+  animation-duration: 240ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Браузер по умолчанию смешивает кадры через plus-lighter — это верно для
+     чистого кросс-фейда, когда картинки совпадают. У нас они сдвинуты, и
+     сложение яркостей давало бы засветку на перекрытии. */
+  mix-blend-mode: normal;
+}
+html[data-vt='in']::view-transition-old(root) { animation-name: vt-out-left; }
+html[data-vt='in']::view-transition-new(root) { animation-name: vt-in-right; }
+html[data-vt='out']::view-transition-old(root) { animation-name: vt-out-right; }
+html[data-vt='out']::view-transition-new(root) { animation-name: vt-in-left; }
+
 /* Уважаем настройку «уменьшить движение». */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -227,6 +286,15 @@ a,
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
+  }
+
+  /* Псевдоэлементы перехода живут вне дерева документа, под `*` не попадают —
+     их приходится глушить отдельно. Сам переход и так не запускается
+     (lib/viewTransition.ts проверяет настройку), это страховка. */
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
 }
 

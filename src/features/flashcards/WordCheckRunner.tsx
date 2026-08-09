@@ -150,7 +150,7 @@ export function WordCheckRunner({
         {checked && (
           <div className="flex flex-col items-center gap-1">
             {ok ? (
-              <p className="font-semibold text-emerald-400">Верно! ✓</p>
+              <p className="animate-answer-pop font-semibold text-emerald-400">Верно! ✓</p>
             ) : (
               <p className="text-sm">
                 <span className="text-red-500">Правильно: </span>

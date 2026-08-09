@@ -8,6 +8,7 @@ import { createPortal } from 'react-dom'
 import { IconCheck, IconClose } from './icons'
 import { explainMistake } from '../lib/explain'
 import type { AppLang } from '../types'
+import { Thinking } from './Thinking'
 
 export interface ReviewItem {
   /** Текст вопроса/задания. */
@@ -86,7 +87,7 @@ export function RoundReview({
                           {why[i]}
                         </p>
                       ) : loading[i] ? (
-                        <p className="mt-1 text-sm text-[var(--night-text-40)]">Думаю…</p>
+                        <Thinking label="Думаю" className="mt-1 text-sm" />
                       ) : (
                         <button
                           onClick={() => explain(i, it)}

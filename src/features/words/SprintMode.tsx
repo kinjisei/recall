@@ -180,7 +180,7 @@ export function SprintMode({ lang, onBack }: { lang: AppLang; onBack: () => void
       <Card
         className={`items-center gap-2 py-12 text-center transition-colors ${
           flash === 'ok'
-            ? 'border-emerald-500/60'
+            ? 'border-emerald-500/60 animate-answer-pop'
             : flash === 'bad'
               ? 'border-red-500/60'
               : ''

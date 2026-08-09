@@ -69,12 +69,15 @@ export function McqExercise({
             else if (isPicked) cls = 'border-red-500 bg-red-950/40'
             else cls = 'border-white/[0.08] opacity-60'
           }
+          // «клевок» только когда человек ответил ВЕРНО сам. Правильный вариант
+          // подсвечивается и после ошибки, но праздновать там нечего.
+          const pop = isPicked && isAnswer ? ' animate-answer-pop' : ''
           return (
             <button
               key={i}
               onClick={() => choose(i)}
               disabled={picked !== null}
-              className={`rounded-xl border px-4 py-2.5 text-left transition-colors ${cls}`}
+              className={`rounded-xl border px-4 py-2.5 text-left transition-colors ${cls}${pop}`}
             >
               {opt}
             </button>
@@ -149,7 +152,7 @@ export function FillExercise({
         </p>
       )}
       {checked && ok && (
-        <p className="text-sm font-semibold text-emerald-400">
+        <p className="animate-answer-pop text-sm font-semibold text-emerald-400">
           Верно! ✓
         </p>
       )}
@@ -262,7 +265,7 @@ export function OrderExercise({
         </p>
       )}
       {checked && ok && (
-        <p className="text-sm font-semibold text-emerald-400">
+        <p className="animate-answer-pop text-sm font-semibold text-emerald-400">
           Верно! ✓
         </p>
       )}

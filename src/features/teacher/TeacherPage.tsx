@@ -320,7 +320,11 @@ function TeacherDashboard() {
                 {code ?? '……'}
               </span>
               <Button variant="secondary" className="px-3 py-2 text-sm" onClick={copyCode}>
-                {copied ? 'Скопирован ✓' : 'Скопировать'}
+                {/* подтверждение «клюёт» — иначе подмена текста на секунду
+                    проходит мимо глаза, и человек жмёт второй раз */}
+                <span key={copied ? 'yes' : 'no'} className={copied ? 'animate-pop-in' : ''}>
+                  {copied ? 'Скопирован ✓' : 'Скопировать'}
+                </span>
               </Button>
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-2">

@@ -14,6 +14,7 @@ import { addCard } from '../lib/cards'
 import { speak } from '../lib/speech'
 import { logActivity } from '../lib/activity'
 import type { AppLang } from '../types'
+import { Thinking } from './Thinking'
 
 export interface PhrasePick {
   text: string
@@ -93,7 +94,7 @@ export function PhraseSheet({
             </div>
 
             {tr === null && !failed && (
-              <p className="mt-3 text-sm text-[var(--night-text-40)]">Перевожу…</p>
+              <Thinking label="Перевожу" className="mt-3 text-sm" />
             )}
             {failed && <p className="mt-3 text-sm text-[var(--night-text-40)]">{failed}</p>}
             {tr && (

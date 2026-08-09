@@ -202,7 +202,7 @@ function BuildTask({
       {checked && (
         <div className="flex items-center gap-2 text-sm">
           {ok ? (
-            <span className="font-semibold text-emerald-400">Верно! ✓</span>
+            <span className="animate-answer-pop font-semibold text-emerald-400">Верно! ✓</span>
           ) : (
             <span>
               <span className="text-red-500">Правильно: </span>

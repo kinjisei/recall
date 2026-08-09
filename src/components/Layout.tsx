@@ -121,7 +121,9 @@ function AvatarMenu() {
 function TopBar() {
   const { lang, setLang } = useLanguage()
   return (
-    <header className="sticky top-0 z-20 border-b border-white/[0.06] bg-[rgba(22,24,38,.82)] pt-[env(safe-area-inset-top)] backdrop-blur-xl">
+    // vt-topbar — шапка не участвует в переходе между экранами и стоит
+    // неподвижно, пока содержимое под ней меняется (см. index.css)
+    <header className="vt-topbar sticky top-0 z-20 border-b border-white/[0.06] bg-[rgba(22,24,38,.82)] pt-[env(safe-area-inset-top)] backdrop-blur-xl">
       <div className="mx-auto flex max-w-screen-sm items-center justify-between px-4 py-3">
         {/* полный логотип из макета (слово на флеш-карточке) вместо знака+текста */}
         <Link to="/" className="flex min-h-[44px] items-center" aria-label="На главную">
