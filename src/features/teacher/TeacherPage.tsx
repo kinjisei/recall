@@ -712,10 +712,17 @@ function StudioEnergy({ plan }: { plan: MyPlan }) {
       {genLim > 0 && (
         <div>
           <div className="flex items-center justify-between text-sm">
-            <span className="text-[var(--night-text-70)]">Материалы и программы (месяц)</span>
+            {/* Раньше подпись называла только материалы и программы, а тот же
+                счётчик тратят вопрос и график «Письма» — репетитор видел, как
+                лимит тает от действий, которые материалами не считал. */}
+            <span className="text-[var(--night-text-70)]">Генерации AI за месяц</span>
             <span className="font-medium">{genUsed} из {genLim}</span>
           </div>
           {bar(genUsed, genLim)}
+          <p className="mt-1 text-xs text-[var(--night-text-40)]">
+            Материалы, программы и задания «Письма». Материал стоит двух генераций
+            (план и текст), каждая переделка — ещё одной.
+          </p>
         </div>
       )}
     </Card>

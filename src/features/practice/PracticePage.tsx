@@ -8,7 +8,7 @@
 //   ГРАММАТИКА      — Выбери форму · Впиши слово · Собери предложение
 //                     (GrammarMixMode по типам заданий, всё — под уровень) ·
 //                     Мои ошибки (банк из lib/mistakes) · Глаголы
-//   РЕЧЬ            — слушай и повторяй за диктором (features/pronunciation)
+//   РЕЧЬ            — слушай фразу и повторяй вслух (features/pronunciation)
 // ============================================================================
 import type React from 'react'
 import { lazy, Suspense, useEffect, useState } from 'react'
@@ -259,7 +259,8 @@ export function PracticePage() {
 
   const speechTiles: Tile[] = [
     // название плитки = заголовок экрана, куда она ведёт (h1 «Речь»)
-    { to: '/pronunciation', Icon: IconMic, title: 'Речь', desc: 'Слушай и повторяй за диктором' },
+    // «за диктором» — диктора нет, фразу читает синтез речи браузера
+    { to: '/pronunciation', Icon: IconMic, title: 'Речь', desc: 'Слушай фразу и повторяй вслух' },
   ]
 
   const open = (t: Tile) => {

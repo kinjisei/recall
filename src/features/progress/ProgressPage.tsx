@@ -50,8 +50,8 @@ async function loadMetrics(lang: 'en' | 'es'): Promise<Omit<Metrics, 'best'>> {
   const rows = (data ?? []) as unknown as MetricRow[]
 
   // «Изучено» — общий statusOf (review + интервал ≥ 21 дня). Своей формулы тут
-  // быть не должно: раньше считалось любое слово в состоянии review, и ученица
-  // на этом экране видела больше «изученных», чем преподаватель в её же
+  // быть не должно: раньше считалось любое слово в состоянии review, и ученик
+  // на этом экране видел больше «изученных», чем преподаватель в его же
   // диагностической карте.
   const learned = rows.filter((r) => statusOf(r).status === 'learned').length
 

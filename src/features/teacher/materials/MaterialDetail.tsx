@@ -1,6 +1,7 @@
 // Карточка сохранённого материала: показ текста, печать, назначение ученикам,
 // открытие проверки сданной работы, удаление.
 import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Card } from '../../../components/Card'
 import { Button } from '../../../components/Button'
 import { BackHeader } from '../../../components/BackButton'
@@ -171,7 +172,16 @@ export function MaterialDetail({
         ) : assignments === null ? (
           <p className="text-sm text-[var(--night-text-40)]">Загрузка…</p>
         ) : students.length === 0 ? (
-          <p className="text-sm text-[var(--night-text-40)]">Пока нет привязанных учеников.</p>
+          // Пустое состояние без выхода: материал уже стоил двух генераций, а
+          // код-приглашение живёт на другой вкладке, и здесь о нём не говорили
+          // ни слова (находка ревью 2В).
+          <p className="text-sm text-[var(--night-text-40)]">
+            Учеников пока нет. Отправь код-приглашение — он на вкладке{' '}
+            <Link to="/teacher" className="text-[var(--night-accent-text)] underline underline-offset-2">
+              «Ученики»
+            </Link>
+            . Как только кто-то привяжется, материал назначается в один тап.
+          </p>
         ) : (
           students.map((s) => {
             const a = (assignments ?? []).find((x) => x.student_id === s.profile.id)
@@ -189,7 +199,7 @@ export function MaterialDetail({
                       {a.status === 'assigned'
                         ? 'ещё не выполнено'
                         : a.status === 'submitted'
-                          ? `⏳ на проверке · авто ${a.auto_score}/${a.auto_total}`
+                          ? `на проверке · авто ${a.auto_score}/${a.auto_total}`
                           : `✓ проверено: ${teacherOk}/${a.auto_total}`}
                     </p>
                   )}

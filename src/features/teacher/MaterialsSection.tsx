@@ -225,7 +225,7 @@ export function MaterialsSection({
       ) : loadError ? (
         <LoadError message={loadError} onRetry={reload} />
       ) : (materials ?? []).length === 0 ? (
-        <p className="text-sm text-[var(--night-text-40)]">Пока нет сохранённых материалов.</p>
+        <p className="text-sm text-[var(--night-text-40)]">Библиотека пустая. Созданные материалы останутся здесь: их можно назначать разным ученикам и печатать.</p>
       ) : (
         <MaterialsByLevel
           materials={materials ?? []}

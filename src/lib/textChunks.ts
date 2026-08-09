@@ -28,7 +28,7 @@ export function splitChunks(text: string, targetWords = 200): string[] {
   return chunks.length ? chunks : [t]
 }
 
-/** Оценка стоимости разбора в AI-действиях = части + 1 (синтез). */
+/** Оценка стоимости разбора в энергии (⚡) = части + 1 (синтез); 1 запрос = 1 ⚡. */
 export function estimateCost(text: string): number {
   return splitChunks(text).length + 1
 }

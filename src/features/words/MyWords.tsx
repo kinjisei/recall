@@ -8,6 +8,7 @@
 // ============================================================================
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useNavigate } from 'react-router-dom'
 import {
   IconSearch,
   IconPencil,
@@ -42,6 +43,7 @@ const STATUS_CHIP: Record<WordStatus, { label: string; cls: string }> = {
 }
 
 export function MyWords({ lang, onBack }: { lang: AppLang; onBack: () => void }) {
+  const navigate = useNavigate()
   const [words, setWords] = useState<MyWord[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [query, setQuery] = useState('')
@@ -192,9 +194,18 @@ export function MyWords({ lang, onBack }: { lang: AppLang; onBack: () => void })
           </p>
           <p className="mt-1 text-sm text-[var(--night-text-40)]">
             {counts.all === 0
-              ? 'Добавляй слова тапом в разделе «Учёба» или кнопкой «Паки» в повторении.'
+              ? 'Возьми готовый набор по уровню — или тапни по незнакомому слову в любом тексте.'
               : 'Попробуй другой запрос или фильтр.'}
           </p>
+          {/* Раньше здесь стоял совет «кнопкой „Паки“ в повторении» — такой
+              кнопки в повторении давно нет, а «Паки слов» лежат экраном выше,
+              на который человек из пустого списка не догадается вернуться
+              (находка ревью 2В). Вместо совета — кнопка прямо к наборам. */}
+          {counts.all === 0 && (
+            <Button className="mt-4" onClick={() => navigate('/study?view=words&sheet=packs')}>
+              Взять готовый набор
+            </Button>
+          )}
         </Card>
       ) : (
         <div className="flex flex-col gap-2.5">

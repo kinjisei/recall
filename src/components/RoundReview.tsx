@@ -37,8 +37,14 @@ export function RoundReview({
     try {
       const t = await explainMistake(it.prompt, it.given, it.correct, lang)
       setWhy((w) => ({ ...w, [i]: t }))
-    } catch {
-      setWhy((w) => ({ ...w, [i]: 'Не удалось объяснить. Попробуй ещё раз.' }))
+    } catch (e) {
+      // причину не глотаем: сервер объясняет, что именно случилось («энергия
+      // на сегодня кончилась», «нет связи») — иначе человек жмёт «Почему?»
+      // вслепую и получает одно и то же (находка ревью 2В)
+      setWhy((w) => ({
+        ...w,
+        [i]: e instanceof Error ? e.message : 'Не удалось объяснить. Попробуй ещё раз.',
+      }))
     } finally {
       setLoading((l) => ({ ...l, [i]: false }))
     }

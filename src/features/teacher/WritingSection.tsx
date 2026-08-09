@@ -4,6 +4,7 @@
 // Оценка и проверка работ — в 5b/5c. Механика назначения — как в «Материалах».
 // ============================================================================
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { BackHeader } from '../../components/BackButton'
@@ -473,7 +474,14 @@ function WritingDetail({
         ) : loading ? (
           <p className="text-sm text-[var(--night-text-40)]">Загрузка…</p>
         ) : students.length === 0 ? (
-          <p className="text-sm text-[var(--night-text-40)]">Пока нет привязанных учеников.</p>
+          // то же пустое состояние-тупик, что было в карточке материала
+          <p className="text-sm text-[var(--night-text-40)]">
+            Учеников пока нет. Отправь код-приглашение — он на вкладке{' '}
+            <Link to="/teacher" className="text-[var(--night-accent-text)] underline underline-offset-2">
+              «Ученики»
+            </Link>
+            . Как только кто-то привяжется, задание назначается в один тап.
+          </p>
         ) : (
           students.map((st) => {
             const a = (assignments ?? []).find((x) => x.student_id === st.profile.id)
@@ -490,7 +498,7 @@ function WritingDetail({
                       {a.status === 'assigned'
                         ? 'ещё не выполнено'
                         : a.status === 'submitted'
-                          ? '⏳ на проверке'
+                          ? 'на проверке'
                           : `✓ проверено${a.band ? ` · ${a.band}` : ''}`}
                     </p>
                   )}

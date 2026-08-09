@@ -38,7 +38,7 @@ export type StatusInput = Pick<ReviewState, 'state' | 'due' | 'last_review'>
  *
  * ⚠️ Не заводить рядом «свой» вариант подсчёта: /progress считал изученным
  * любое слово в состоянии review, без порога по интервалу, и на одной и той же
- * колоде ученица видела 4, а преподаватель в диагностике — 3 (находка ревью
+ * колоде ученик видел 4, а преподаватель в диагностике — 3 (находка ревью
  * 2А №5). Порог 21 день здесь — единственное место, где он задан.
  */
 export function statusOf(state: StatusInput | null): { status: WordStatus; intervalDays: number } {

@@ -88,6 +88,7 @@ export async function listRecentErrors(days = 7, limit = 50): Promise<ClientErro
       args: Record<string, unknown>,
     ) => Promise<{ data: unknown; error: { message: string } | null }>
   )('admin_recent_errors', { p_days: days, p_limit: limit })
-  if (error) throw new Error(error.message)
+  // последнее место в src/lib, где сырой текст postgrest уходил на экран
+  if (error) throw dbError(error, 'загрузить журнал ошибок')
   return (data as ClientErrorRow[] | null) ?? []
 }

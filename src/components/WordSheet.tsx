@@ -8,7 +8,7 @@
 // ============================================================================
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { IconSpeaker } from './icons'
+import { IconSearch, IconSpeaker } from './icons'
 import { Button } from './Button'
 import { AnalysisSheet } from './AnalysisSheet'
 import { addCard } from '../lib/cards'
@@ -306,7 +306,7 @@ export function WordSheet({
             onClick={() => setAnalyze(true)}
             className="lift mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl border border-[var(--night-accent-45)] bg-[rgba(145,132,217,.10)] py-2.5 text-sm font-medium text-[var(--night-accent-100)]"
           >
-            🔍 Разбор предложения
+            <IconSearch size={16} /> Разбор предложения
           </button>
         </div>
 

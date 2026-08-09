@@ -419,7 +419,7 @@ export function PronunciationPage() {
         <Card className="border-[var(--night-accent-30)]">
           <p className="text-sm text-[var(--night-text-70)]">
             На этом устройстве нет доступа к микрофону. Послушай эталон (в т.ч.
-            «Медленно») и повтори вслух за диктором — это главная тренировка.
+            «Медленно») и повтори вслух — это главная тренировка.
           </p>
         </Card>
       )}

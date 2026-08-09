@@ -78,7 +78,12 @@ export async function extractFileText(file: File): Promise<string> {
       if (parts.join('\n\n').length > MY_TEXT_LIMIT * 1.2) break
     }
     const text = parts.join('\n\n').trim()
-    if (!text) throw new Error('В этом PDF нет текстового слоя (это скан) — распознать его нельзя.')
+    // причину называем, но не бросаем человека без выхода: распознавать
+    // картинки мы не умеем, а скопировать текст руками — умеет он
+    if (!text)
+      throw new Error(
+        'В этом PDF нет текстового слоя — похоже, это скан. Скопируй текст руками в поле выше или возьми другой файл.',
+      )
     return text
   }
   if (name.endsWith('.docx')) {
@@ -89,5 +94,7 @@ export async function extractFileText(file: File): Promise<string> {
     const { value } = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() })
     return value
   }
-  throw new Error('Поддерживаются файлы .txt, .pdf и .docx')
+  throw new Error(
+    'Такой файл я не прочитаю. Подойдут .txt, .pdf и .docx — или вставь текст в поле выше.',
+  )
 }

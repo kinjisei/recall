@@ -90,7 +90,7 @@ async function synthesize(
 
 /**
  * Полный разбор текста. onProgress(done, total) — для прогресса в UI.
- * Стоимость (AI-действий) = число частей + 1; сверяется с estimateCost().
+ * Стоимость (⚡ энергии) = число частей + 1; сверяется с estimateCost().
  */
 export async function analyzeText(
   text: string,

@@ -45,7 +45,11 @@ export async function startRecording(): Promise<Recorder> {
   try {
     stream = await navigator.mediaDevices.getUserMedia({ audio: true })
   } catch {
-    throw new Error('Нет доступа к микрофону. Разреши доступ в настройках браузера.')
+    // На айфоне разрешение живёт не в настройках браузера, а в меню самой
+    // страницы — без этой подсказки человек ищет там, где ничего нет.
+    throw new Error(
+      'Нет доступа к микрофону. Разреши его для этого сайта: на айфоне — значок «АА» слева в адресной строке → «Настройки для этого веб-сайта»; в Chrome — замок рядом с адресом.',
+    )
   }
 
   const mime = pickMime()

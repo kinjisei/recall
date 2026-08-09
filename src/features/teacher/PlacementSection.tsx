@@ -94,8 +94,8 @@ export function PlacementSection({
       {open && (
         <div className="flex flex-col gap-3 border-t border-white/[0.08] px-3 py-3">
           <p className="text-xs leading-relaxed text-[var(--night-text-40)]">
-            Назначь тест, если не знаешь уровень {studentName}. Она увидит его в
-            «Учёбе», а результат вернётся сюда.
+            Назначь тест, если не знаешь уровень {studentName}. Тест появится у
+            ученика в «Учёбе», а результат вернётся сюда.
           </p>
 
           <div className="flex flex-wrap gap-2">
