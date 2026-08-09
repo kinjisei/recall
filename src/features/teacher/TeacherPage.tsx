@@ -374,7 +374,28 @@ function TeacherDashboard() {
               </p>
             </Card>
           ) : (
-            students.map((s, i) => {
+            <>
+            {/* Сводка вверху списка: без неё пропавшего надо было ВЫСМАТРИВАТЬ
+                среди всех — при пяти учениках упражнение на внимательность,
+                при десяти лотерея. Порядок списка НЕ трогаем: по нему считается,
+                кто попадает в места тарифа (первые N по дате привязки). */}
+            {students.filter(lost).length > 0 && (
+              <Card className="border-amber-300/40 bg-amber-400/[0.06]">
+                <p className="text-sm font-semibold text-amber-200">
+                  Пропали из занятий: {students.filter(lost).length}
+                </p>
+                <p className="mt-1 text-sm text-[var(--night-text-70)]">
+                  {students
+                    .filter(lost)
+                    .map((s) => `${s.profile.display_name ?? 'Без имени'} — ${lastSeen(s)}`)
+                    .join(' · ')}
+                </p>
+                <p className="mt-2 text-xs text-[var(--night-text-40)]">
+                  Неделя без занятий — обычно момент, когда стоит написать самому.
+                </p>
+              </Card>
+            )}
+            {students.map((s, i) => {
               // то же правило, что в БД: пока мест никто не выбирал, их держат
               // первые N по дате привязки; как только выбор сделан — решает он
               const covered =
@@ -402,12 +423,27 @@ function TeacherDashboard() {
                   onOpen={() => setOpenStudent(s.profile.id)}
                 />
               )
-            })
+            })}
+            </>
           )}
         </>
       )}
     </div>
   )
+}
+
+/** Пропал ли ученик: неделя без занятий или ни одного занятия вообще. */
+function lost(s: StudentInfo): boolean {
+  return s.daysSinceActive === null || s.daysSinceActive >= 7
+}
+
+/** Человеческий срок последнего занятия. */
+function lastSeen(s: StudentInfo): string {
+  const d = s.daysSinceActive
+  if (d === null) return 'ещё не начинал'
+  if (d === 0) return 'занимался сегодня'
+  if (d === 1) return 'был вчера'
+  return `не заходил ${d} ${d < 5 ? 'дня' : 'дней'}`
 }
 
 /**
@@ -441,7 +477,10 @@ function StudentRow({
           </span>
           <span className="mt-0.5 block text-sm text-[var(--night-text-40)]">
             <IconFlame size={13} className="inline align-text-bottom" /> {student.streak} ·{' '}
-            {student.doneToday ? 'сегодня ✓' : 'сегодня —'}
+            {/* «Сегодня ✓» ничего не говорит о том, кто пропал: у отсутствующего
+                там просто прочерк, одинаковый и на второй день, и на третью
+                неделю. Пишем срок прямо. */}
+            <span className={lost(student) ? 'text-amber-200' : ''}>{lastSeen(student)}</span>
           </span>
           {seatsKnown && !covered && (
             <span className="mt-1 inline-block rounded-lg bg-amber-500/10 px-2 py-1 text-xs text-amber-200">

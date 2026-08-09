@@ -17,6 +17,12 @@ export interface StudentInfo {
   streak: number
   doneToday: boolean
   weekItems: number
+  /**
+   * Сколько дней прошло с последнего занятия: 0 — занимался сегодня,
+   * null — не занимался НИ РАЗУ (привязался и пропал).
+   * Считается из тех же строк активности, что и стрик, — лишнего запроса нет.
+   */
+  daysSinceActive: number | null
   assignedDeckIds: string[]
   /** Занимает ли место тарифа (только оно даёт повышенные лимиты AI). */
   seat: boolean
@@ -29,6 +35,20 @@ function localDay(offsetDays = 0): string {
   const m = String(d.getMonth() + 1).padStart(2, '0')
   const dd = String(d.getDate()).padStart(2, '0')
   return `${d.getFullYear()}-${m}-${dd}`
+}
+
+/**
+ * Сколько дней назад человек занимался в последний раз. null — ни разу.
+ *
+ * Нужно преподавателю, чтобы заметить пропавшего: стрик обнуляется и молчит,
+ * а «не заходил 9 дней» — это уже повод написать. Ищем в окне 60 дней (столько
+ * и грузим); если за это время ничего нет, считаем, что не занимался вовсе.
+ */
+function daysSince(days: Set<string>): number | null {
+  for (let i = 0; i <= 60; i++) {
+    if (days.has(localDay(-i))) return i
+  }
+  return null
 }
 
 /** Стрик по множеству дней с активностью (вчерашняя серия ещё жива). */
@@ -236,6 +256,7 @@ export async function getMyStudents(): Promise<StudentInfo[]> {
       streak: streakFromDays(days),
       doneToday: days.has(localDay(0)),
       weekItems,
+      daysSinceActive: daysSince(days),
       assignedDeckIds: (assignRes.data ?? [])
         .filter((a) => a.student_id === profile.id)
         .map((a) => a.deck_id as string),
