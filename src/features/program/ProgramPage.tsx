@@ -13,6 +13,7 @@ import { useAsyncData } from '../../lib/useAsyncData'
 import { currentWeekIndex, getMyPlans, markProgramSeen } from '../../lib/studyPlan'
 import { PlanView } from './PlanView'
 import type { StudyPlan } from '../../types'
+import { RowsSkeleton } from '../../components/Loading'
 
 export function ProgramPage() {
   const navigate = useNavigate()
@@ -32,7 +33,7 @@ export function ProgramPage() {
       <BackHeader onBack={() => navigate('/study')} title="Моя программа" />
 
       {loading ? (
-        <p className="text-[var(--night-text-40)]">Загрузка…</p>
+        <RowsSkeleton count={3} />
       ) : error ? (
         <LoadError message={error} onRetry={reload} />
       ) : (plans ?? []).length === 0 ? (

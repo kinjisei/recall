@@ -75,6 +75,10 @@ export function DashboardPage() {
   // пока activity_log не пришёл — не показываем «0 серия» с анимацией пламени
   // (первый экран приложения мигал нулём и пустой неделей до сети)
   const [homeLoaded, setHomeLoaded] = useState(false)
+  /** Все входы первого кадра пришли — экран рисуется целиком, а не по кускам. */
+  const [ready, setReady] = useState(false)
+  /** Слово дня ещё считается: место под него держим, чтобы низ не прыгал. */
+  const [wordPending, setWordPending] = useState(true)
   const [doneToday, setDoneToday] = useState<Set<ActivityType>>(new Set())
   const [dueCount, setDueCount] = useState<number | null>(null)
   // сколько всего своих слов: 0 — колода пуста, новичка не путаем «Всё повторено»
@@ -94,42 +98,59 @@ export function DashboardPage() {
     activeQuests: number
   } | null>(null)
 
+  // ⚠️ ОДИН согласованный первый кадр, а не шесть независимых.
+  // Было: шесть запросов, каждый рисовал свой кусок по мере прихода — стрик,
+  // потом полоска энергии в середине (двигая всё вниз), потом план, потом
+  // карточка программы. Экран собирался на глазах рывками, и это первое, что
+  // человек видит при каждом запуске. Теперь ждём все входы разом и рисуем
+  // целиком; пока ждём — скелетон той же раскладки, поэтому ничего не прыгает.
+  // Страховка по времени: если сеть висит, через 4 с показываем что есть.
   useEffect(() => {
     if (!user) return
-    getProfile(user.id).then(setProfile)
-    // стрик + неделя + сделанное сегодня — одним запросом к activity_log
-    // (было три отдельных на каждый вход на Главную)
-    loadHomeActivity()
-      .then((a) => {
-        setStreak(a.streak)
-        setWeek(a.week)
-        setDoneToday(a.todayTypes)
-      })
-      .catch(() => {})
-      .finally(() => setHomeLoaded(true))
+    let alive = true
+    const guard = window.setTimeout(() => alive && setReady(true), 4000)
+
     Promise.all([
+      getProfile(user.id).catch(() => null),
+      // стрик + неделя + сделанное сегодня — одним запросом к activity_log
+      loadHomeActivity().catch(() => null),
       loadAssignmentCounts().catch(() => ({ total: 0, pending: 0 })),
       getMyDailyPlanConfig().catch(() => null),
       listMyQuests()
         .then((qs) => qs.filter((q) => q.status === 'assigned').length)
         .catch(() => 0),
-    ]).then(([counts, dailyCfg, activeQuests]) => {
+      getMyPlan().catch(() => null),
+      // таблицы может не быть — карточка просто не покажется
+      getMyPlans().catch(() => []),
+    ]).then(([prof, activity, counts, dailyCfg, activeQuests, plan, programs]) => {
+      if (!alive) return
+      if (prof) setProfile(prof)
+      if (activity) {
+        setStreak(activity.streak)
+        setWeek(activity.week)
+        setDoneToday(activity.todayTypes)
+      }
+      setHomeLoaded(true)
       setAssignments(counts)
       setPlanInputs({ dailyCfg, activeQuests })
-    })
-    getMyPlan().then(setMyPlan).catch(() => {})
-    getMyPlans()
-      .then((plans) => {
-        const unseen = plans.find((p) => {
+      if (plan) setMyPlan(plan)
+      setNewProgram(
+        programs.find((p) => {
           try {
             return !isProgramSeen(p.id)
           } catch {
             return false
           }
-        })
-        setNewProgram(unseen ?? null)
-      })
-      .catch(() => {}) // таблицы может не быть — карточка просто не покажется
+        }) ?? null,
+      )
+      window.clearTimeout(guard)
+      setReady(true)
+    })
+
+    return () => {
+      alive = false
+      window.clearTimeout(guard)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id])
 
@@ -156,13 +177,16 @@ export function DashboardPage() {
     const cached = cachedWordOfDay(lang)
     let idleId = 0
     let usedIdle = false
+    setWordPending(true)
     if (cached !== undefined) {
       setWordOfDay(cached)
+      setWordPending(false)
     } else {
       const load = () => {
         newWordOfDay(lang)
           .then((w) => alive && setWordOfDay(w))
           .catch(() => {})
+          .finally(() => alive && setWordPending(false))
       }
       if (typeof requestIdleCallback === 'function') {
         usedIdle = true
@@ -221,6 +245,8 @@ export function DashboardPage() {
       : dueCount === 0
         ? 'Всё повторено'
         : `К повторению: ${dueCount}${dueCount >= 99 ? '+' : ''}`
+
+  if (!ready) return <HomeSkeleton />
 
   return (
     <div className="flex flex-col gap-6">
@@ -327,8 +353,15 @@ export function DashboardPage() {
         )}
       </section>
 
-      {/* 6. Слово дня — новое слово уровня, можно сразу добавить в колоду */}
-      {wordOfDay && <WordOfDay word={wordOfDay} lang={lang} />}
+      {/* 6. Слово дня — новое слово уровня, можно сразу добавить в колоду.
+          Считается отдельно: тянет ленивый чанк словаря (в ES ~836 КБ), поэтому
+          ждать его в общем кадре нельзя. Но место под него держим — иначе
+          через пару секунд оно раздвигает низ экрана под пальцем. */}
+      {wordOfDay ? (
+        <WordOfDay word={wordOfDay} lang={lang} />
+      ) : wordPending ? (
+        <div aria-hidden className="h-[104px] animate-pulse rounded-2xl bg-white/[0.04]" />
+      ) : null}
 
       {/* 7. Сданное задание уезжает вниз + блок преподавателя */}
       <AssignmentsNotice placement="bottom" counts={assignments} />
@@ -338,6 +371,33 @@ export function DashboardPage() {
 }
 
 // ---------------------------------------------------------------------------
+
+/**
+ * Скелетон Главной — повторяет РАСКЛАДКУ, а не просто «что-то серое».
+ * Смысл в том, чтобы после загрузки ничего не сдвинулось: высоты блоков здесь
+ * те же, что у настоящих (герой 196, кнопка 58, строки плана 74).
+ */
+function HomeSkeleton() {
+  return (
+    <div className="flex flex-col gap-6" aria-busy="true" aria-label="Загружаем главную">
+      <header>
+        <div className="h-7 w-44 animate-pulse rounded-lg bg-white/[0.06]" />
+        <div className="mt-2 h-4 w-60 animate-pulse rounded bg-white/[0.04]" />
+      </header>
+      <div className="h-[196px] animate-pulse rounded-3xl border border-[var(--night-accent-45)] bg-white/[0.04]" />
+      <div className="h-[86px] animate-pulse rounded-2xl bg-white/[0.04]" />
+      <div className="h-[58px] animate-pulse rounded-2xl border border-[var(--night-accent-45)] bg-white/[0.04]" />
+      <section>
+        <div className="mb-3 h-6 w-40 animate-pulse rounded bg-white/[0.06]" />
+        <div className="flex flex-col gap-2.5">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="h-[74px] animate-pulse rounded-2xl bg-white/[0.04]" />
+          ))}
+        </div>
+      </section>
+    </div>
+  )
+}
 
 function StreakHero({
   streak,

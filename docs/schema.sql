@@ -4071,3 +4071,55 @@ do $$ begin
 end $$;
 
 grant execute on function public.start_own_writing(text, text, text, text, jsonb) to authenticated;
+
+-- ============================================================================
+-- ОТЗЫВЫ (2026-08-09)
+--
+-- Сообщить нам что-либо человек не мог вообще: ни ученик, ни репетитор.
+-- Единственным каналом было «напишет на почту сам», а обычно человек не
+-- пишет, а уходит.
+--
+-- Отдельную таблицу НЕ заводим: отзыв — это событие, и events для него уже
+-- есть вместе с RPC track_event (доступной в том числе анониму, значит отзыв
+-- можно оставить и с публичного лендинга). Плюс сбор начинает работать сразу
+-- после деплоя, не дожидаясь заливки схемы, — а это ровно тот случай, когда
+-- ждать нельзя: обратная связь нужна с первого дня.
+--
+-- Здесь — только чтение для владельца: таблица events закрыта грантами
+-- (revoke all), поэтому нужна security-definer функция с проверкой is_admin,
+-- как у admin_funnel и admin_recent_errors.
+-- ============================================================================
+create or replace function public.admin_feedback(
+  p_days int default 90, p_limit int default 100
+)
+returns json language plpgsql security definer set search_path = public as $fn$
+declare
+  d timestamptz := now() - make_interval(days => greatest(1, least(coalesce(p_days, 90), 365)));
+  lim int := greatest(1, least(coalesce(p_limit, 100), 500));
+begin
+  if not exists (select 1 from profiles where id = auth.uid() and is_admin) then
+    raise exception 'RECALL_NOT_ADMIN';
+  end if;
+  return coalesce((
+    select json_agg(row_to_json(t) order by t.created_at desc)
+    from (
+      select
+        e.created_at,
+        e.props->>'rating'  as rating,
+        e.props->>'text'    as text,
+        e.props->>'contact' as contact,
+        e.props->>'where'   as where_,
+        -- имя показываем, чтобы понимать, ученик это или преподаватель;
+        -- почта не нужна — если человек хочет ответа, он оставил контакт сам
+        p.display_name,
+        p.role
+      from events e
+      left join profiles p on p.id = e.user_id
+      where e.name = 'feedback' and e.created_at >= d
+      order by e.created_at desc
+      limit lim
+    ) t
+  ), '[]'::json);
+end $fn$;
+
+grant execute on function public.admin_feedback(int, int) to authenticated;

@@ -15,10 +15,13 @@ import {
   type AdminUserRow,
   type ClientErrorRow,
   type PlanId,
+  listFeedback,
+  type FeedbackRow,
 } from '../../lib/admin'
 import { Button } from '../../components/Button'
 import { IconSearch, IconWarning, IconSpinner, IconHome } from '../../components/icons'
 import { AppLink } from '../../components/AppLink'
+import { RowsSkeleton } from '../../components/Loading'
 
 const PLAN_LABELS: Record<PlanId, string> = {
   free: 'Free',
@@ -128,6 +131,7 @@ function AdminConsole() {
       </header>
 
       <Funnel />
+      <FeedbackList />
       <RecentErrors />
 
       <div className="flex gap-2">
@@ -435,7 +439,7 @@ function RecentErrors() {
       {err ? (
         <p className="mt-3 text-sm text-[var(--night-text-40)]">{err}</p>
       ) : rows === null ? (
-        <p className="mt-3 text-sm text-[var(--night-text-40)]">Загрузка…</p>
+        <RowsSkeleton count={3} height={56} />
       ) : rows.length === 0 ? (
         <p className="mt-3 text-sm text-[var(--night-text-40)]">
           За этот период ошибок не было.
@@ -475,6 +479,67 @@ function RecentErrors() {
               </button>
             )
           })}
+        </div>
+      )}
+    </section>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Отзывы пользователей.
+//
+// Отзыв — это событие в events (см. lib/feedback.ts), отдельной таблицы нет.
+// Поэтому сбор работает сразу после деплоя, а вот чтение требует RPC
+// admin_feedback: если схему ещё не залили, блок честно об этом скажет,
+// а не покажет «отзывов нет» — разница принципиальная.
+// ---------------------------------------------------------------------------
+
+function FeedbackList() {
+  const [rows, setRows] = useState<FeedbackRow[] | null>(null)
+  const [err, setErr] = useState<string | null>(null)
+
+  useEffect(() => {
+    let alive = true
+    listFeedback(90, 100)
+      .then((r) => alive && setRows(r))
+      .catch((e) => alive && setErr(e instanceof Error ? e.message : 'не удалось'))
+    return () => {
+      alive = false
+    }
+  }, [])
+
+  return (
+    <section className="mt-8">
+      <h2 className="text-lg font-medium">Отзывы за 90 дней</h2>
+      {err ? (
+        <p className="mt-3 text-sm text-[var(--night-text-40)]">{err}</p>
+      ) : rows === null ? (
+        <RowsSkeleton count={3} height={56} />
+      ) : rows.length === 0 ? (
+        <p className="mt-3 text-sm text-[var(--night-text-40)]">
+          Пока никто не написал. Кнопка есть в меню под аватаром и в настройках.
+        </p>
+      ) : (
+        <div className="mt-3 flex flex-col gap-2">
+          {rows.map((r, i) => (
+            <div key={i} className="rounded-xl border border-white/[0.08] p-3">
+              <div className="flex items-start justify-between gap-3">
+                <span className="text-sm">
+                  {r.rating === 'up' ? '👍 ' : r.rating === 'down' ? '👎 ' : ''}
+                  {r.text || '(без текста)'}
+                </span>
+                <span className="shrink-0 text-xs text-[var(--night-text-40)]">
+                  {new Date(r.created_at).toLocaleDateString('ru-RU')}
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-[var(--night-text-40)]">
+                {r.display_name ?? 'без имени'}
+                {r.role === 'teacher' ? ' · преподаватель' : ''}
+                {r.where_ ? ` · ${r.where_}` : ''}
+                {r.contact ? ` · ${r.contact}` : ''}
+              </p>
+            </div>
+          ))}
         </div>
       )}
     </section>

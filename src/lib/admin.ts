@@ -92,3 +92,34 @@ export async function listRecentErrors(days = 7, limit = 50): Promise<ClientErro
   if (error) throw dbError(error, 'загрузить журнал ошибок')
   return (data as ClientErrorRow[] | null) ?? []
 }
+
+export interface FeedbackRow {
+  created_at: string
+  rating: 'up' | 'down' | null
+  text: string | null
+  contact: string | null
+  where_: string | null
+  display_name: string | null
+  role: string | null
+}
+
+/**
+ * Отзывы пользователей (RPC admin_feedback, только владельцу).
+ *
+ * Отдельной таблицы у отзывов нет — они лежат событиями в events, поэтому
+ * СБОР работает и до заливки схемы, а вот чтение здесь без RPC невозможно
+ * (таблица закрыта грантами). Пока функции нет, экран честно скажет об этом.
+ *
+ * ⚠️ Приведение типа — по той же причине, что у listRecentErrors:
+ * database.types.ts сгенерированы раньше этой функции.
+ */
+export async function listFeedback(days = 90, limit = 100): Promise<FeedbackRow[]> {
+  const { data, error } = await (
+    supabase.rpc as unknown as (
+      fn: string,
+      args: Record<string, unknown>,
+    ) => Promise<{ data: unknown; error: { message: string } | null }>
+  )('admin_feedback', { p_days: days, p_limit: limit })
+  if (error) throw dbError(error, 'загрузить отзывы')
+  return (data as FeedbackRow[] | null) ?? []
+}

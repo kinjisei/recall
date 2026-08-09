@@ -42,6 +42,7 @@ import { PacksSheet } from '../flashcards/PacksSheet'
 import { AddCardForm } from '../words/AddCardForm'
 import { DeckReview } from '../flashcards/DeckReview'
 import { useScrollTop } from '../../lib/useScrollTop'
+import { Loading } from '../../components/Loading'
 
 const MyWords = lazy(() => import('../words/MyWords').then((m) => ({ default: m.MyWords })))
 
@@ -394,7 +395,7 @@ function WordsStudy({ onBack }: { onBack: () => void }) {
   if (sub === 'review') return <DeckReview onBack={() => setSub('menu')} />
   if (sub === 'mywords') {
     return (
-      <Suspense fallback={<p className="text-[var(--night-text-40)]">Загрузка…</p>}>
+      <Suspense fallback={<Loading label="Открываем экран" />}>
         <MyWords lang={lang} onBack={() => setSub('menu')} />
       </Suspense>
     )

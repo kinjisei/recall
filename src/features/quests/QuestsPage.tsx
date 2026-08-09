@@ -28,6 +28,7 @@ import {
 } from '../../lib/quests'
 import type { ChatTurn, GrammarQuest } from '../../types'
 import { Thinking } from '../../components/Thinking'
+import { RowsSkeleton } from '../../components/Loading'
 
 /** Скрытая реплика, которой клиент запускает квест (не рендерится). */
 const START_MARK = '/start'
@@ -113,7 +114,7 @@ export function QuestsPage() {
       </p>
 
       {loading ? (
-        <p className="text-[var(--night-text-40)]">Загрузка…</p>
+        <RowsSkeleton count={3} />
       ) : error ? (
         <LoadError message={error} onRetry={reload} />
       ) : (quests ?? []).length === 0 ? (

@@ -4,7 +4,8 @@
 // ============================================================================
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { Outlet } from 'react-router-dom'
-import { IconChart, IconTeacher, IconGear, IconSignOut, IconCards, IconBadgeCheck } from './icons'
+import { IconChart, IconTeacher, IconGear, IconSignOut, IconCards, IconBadgeCheck, IconThumbsUp } from './icons'
+import { FeedbackSheet } from './FeedbackSheet'
 import { getProfile } from '../lib/profile'
 import { getMyPlan } from '../lib/billing'
 import { BottomNav } from './BottomNav'
@@ -27,6 +28,7 @@ const langTabs: { id: AppLang; label: string }[] = [
 function AvatarMenu() {
   const { user, signOut } = useAuth()
   const [open, setOpen] = useState(false)
+  const [feedback, setFeedback] = useState(false)
   const [isTeacher, setIsTeacher] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const boxRef = useRef<HTMLDivElement>(null)
@@ -105,6 +107,18 @@ function AvatarMenu() {
           <AppLink to="/settings" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
             <IconGear size={17} /> Настройки
           </AppLink>
+          {/* Отзыв — прямо в меню: до этого сообщить нам что-либо было НЕЧЕМ,
+              и человек, которому что-то мешало, просто уходил молча. */}
+          <button
+            role="menuitem"
+            onClick={() => {
+              setOpen(false)
+              setFeedback(true)
+            }}
+            className={itemCls}
+          >
+            <IconThumbsUp size={17} /> Оставить отзыв
+          </button>
           {isAdmin && (
             <AppLink to="/admin" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
               <IconBadgeCheck size={17} /> Админка
@@ -115,6 +129,7 @@ function AvatarMenu() {
           </button>
         </div>
       )}
+      {feedback && <FeedbackSheet where="menu" onClose={() => setFeedback(false)} />}
     </div>
   )
 }

@@ -34,6 +34,7 @@ import { LEVELS, inputClass } from './materials/shared'
 import { ChartView } from '../../components/ChartView'
 import { WritingReviewScreen } from '../writing/WritingReviewScreen'
 import { AppLink } from '../../components/AppLink'
+import { RowsSkeleton } from '../../components/Loading'
 
 const CHART_KINDS: { id: ChartSpec['kind']; label: string }[] = [
   { id: 'bar', label: 'Столбцы' },
@@ -97,7 +98,7 @@ export function WritingSection({ students }: { students: StudentInfo[] }) {
       {error ? (
         <LoadError message={error} onRetry={reload} />
       ) : loading ? (
-        <p className="text-sm text-[var(--night-text-40)]">Загрузка…</p>
+        <RowsSkeleton count={2} height={56} />
       ) : (tasks ?? []).length === 0 ? (
         <Card className="text-center">
           <p className="font-semibold">Пока нет заданий</p>
@@ -473,7 +474,7 @@ function WritingDetail({
         {error ? (
           <LoadError message={error} onRetry={reload} />
         ) : loading ? (
-          <p className="text-sm text-[var(--night-text-40)]">Загрузка…</p>
+          <RowsSkeleton count={2} height={56} />
         ) : students.length === 0 ? (
           // то же пустое состояние-тупик, что было в карточке материала
           <p className="text-sm text-[var(--night-text-40)]">

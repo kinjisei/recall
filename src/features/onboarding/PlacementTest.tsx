@@ -22,6 +22,7 @@ import { invalidateProfile } from '../../lib/profile'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import type { AppLang, CEFRLevel, PlacementQuestion } from '../../types'
+import { Loading } from '../../components/Loading'
 
 const LEVELS_BY_LANG: Record<AppLang, CEFRLevel[]> = {
   es: ['A1', 'A2', 'B1', 'B2'],
@@ -104,7 +105,7 @@ export function PlacementTest() {
     return (
       <div className="flex flex-col gap-4">
         <TopBack onBack={back} />
-        <p className="text-[var(--night-text-40)]">Загрузка…</p>
+        <Loading label="Готовим тест" />
       </div>
     )
   }

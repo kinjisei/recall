@@ -21,6 +21,7 @@ import {
 } from '../../lib/materials'
 import { useScrollTop } from '../../lib/useScrollTop'
 import { useUrlStates } from '../../lib/useUrlState'
+import { RowsSkeleton } from '../../components/Loading'
 import type {
   AppLang,
   AssignmentAnswer,
@@ -125,7 +126,7 @@ export function AssignmentsPage() {
       <BackHeader onBack={() => navigate('/study')} title="Задания" label="К учёбе" />
 
       {loading ? (
-        <p className="text-[var(--night-text-40)]">Загрузка…</p>
+        <RowsSkeleton count={3} />
       ) : error ? (
         <LoadError message={error} onRetry={reload} />
       ) : (rows ?? []).length === 0 ? (

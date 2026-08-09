@@ -10,6 +10,7 @@ import { LoadError } from '../../components/LoadError'
 import { useAsyncData } from '../../lib/useAsyncData'
 import { assignQuest, deleteQuest, listStudentQuests } from '../../lib/quests'
 import type { AppLang, GrammarQuest } from '../../types'
+import { RowsSkeleton } from '../../components/Loading'
 
 const LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1'] as const
 
@@ -106,7 +107,7 @@ export function QuestSection({ studentId }: { studentId: string }) {
     <div className="flex flex-col gap-3 rounded-xl border border-white/[0.08] p-3">
       {/* назначенные квесты */}
       {loading ? (
-        <p className="text-sm text-[var(--night-text-40)]">Загрузка…</p>
+        <RowsSkeleton count={2} height={56} />
       ) : error ? (
         <LoadError message={error} onRetry={reload} />
       ) : (quests ?? []).length === 0 ? (

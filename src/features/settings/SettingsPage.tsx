@@ -7,7 +7,7 @@
 import { useEffect, useState } from 'react'
 
 import { SUPPORT_EMAIL, SUPPORT_SLA, supportMailto } from '../../lib/contacts'
-import { IconBack, IconSpeaker, IconCheck } from '../../components/icons'
+import { IconBack, IconSpeaker, IconCheck, IconThumbsUp } from '../../components/icons'
 import { useSmartBack } from '../../components/SmartBack'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
@@ -26,6 +26,7 @@ import { getEsLevel, setEsLevel } from '../../lib/esLevel'
 import { Button } from '../../components/Button'
 import type { CEFRLevel, Profile } from '../../types'
 import { AppLink } from '../../components/AppLink'
+import { FeedbackSheet } from '../../components/FeedbackSheet'
 
 // A1 включён: тест уровня может дать A1, и без кнопки его нельзя было выбрать —
 // у пользователя с уровнем A1 не подсвечивалась ни одна кнопка, а сохранение
@@ -54,6 +55,7 @@ export function SettingsPage() {
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [local, setLocal] = useState(getSettings)
+  const [feedback, setFeedback] = useState(false)
 
   useEffect(() => {
     if (!user) return
@@ -222,13 +224,26 @@ export function SettingsPage() {
         <p className="mt-1 text-sm text-[var(--night-text-70)]">
           Напиши мне — починю или объясню. {SUPPORT_SLA}.
         </p>
-        <a
-          href={supportMailto()}
-          className="mt-3 inline-flex min-h-11 items-center rounded-xl bg-[var(--night-accent-900)] px-4 text-sm font-medium text-[var(--night-accent-100)]"
-        >
-          Написать на {SUPPORT_EMAIL}
-        </a>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {/* Отзыв — отдельно от письма: письмо человек пишет, когда что-то
+              сломалось, а «чего не хватает» так никто не расскажет. Порог
+              должен быть в один тап. */}
+          <button
+            onClick={() => setFeedback(true)}
+            className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[var(--night-accent-900)] px-4 text-sm font-medium text-[var(--night-accent-100)]"
+          >
+            <IconThumbsUp size={16} /> Оставить отзыв
+          </button>
+          <a
+            href={supportMailto()}
+            className="inline-flex min-h-11 items-center rounded-xl border border-white/[0.10] px-4 text-sm font-medium text-[var(--night-text-70)]"
+          >
+            Написать на {SUPPORT_EMAIL}
+          </a>
+        </div>
       </div>
+
+      {feedback && <FeedbackSheet where="settings" onClose={() => setFeedback(false)} />}
 
       {/* Link, не <a>: обычная ссылка перезагружает всё приложение и рвёт
           историю — «Назад» с тех страниц переставал возвращать сюда */}

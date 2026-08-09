@@ -26,6 +26,7 @@ import { RequestForm } from './materials/RequestForm'
 import { PlanScreen } from './materials/PlanScreen'
 import { PreviewScreen } from './materials/PreviewScreen'
 import { MaterialDetail } from './materials/MaterialDetail'
+import { RowsSkeleton } from '../../components/Loading'
 
 type Mode =
   | { name: 'list' }
@@ -221,7 +222,7 @@ export function MaterialsSection({
       </Card>
 
       {loadingMaterials ? (
-        <p className="text-[var(--night-text-40)]">Загрузка…</p>
+        <RowsSkeleton count={3} />
       ) : loadError ? (
         <LoadError message={loadError} onRetry={reload} />
       ) : (materials ?? []).length === 0 ? (

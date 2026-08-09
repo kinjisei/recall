@@ -68,6 +68,36 @@ async function tap(page, text, sel = 'button, a, [role=button]') {
 }
 
 /**
+ * Дождаться текста на экране. Возвращает false, если не дождались.
+ *
+ * ⚠️ Сравниваем ПОДСТРОКОЙ, а не регуляркой: заголовки уроков содержат «:», а
+ * названия глаголов — скобки, и экранировать их каждый раз значит однажды
+ * ошибиться и получить «проверка не дождалась» вместо настоящей причины.
+ */
+async function waitText(page, needle, timeout = 8000) {
+  return page
+    .waitForFunction((t) => (document.body.innerText || '').includes(t), { timeout, polling: 200 }, needle)
+    .then(() => true)
+    .catch(() => false)
+}
+
+
+/**
+ * Дождаться, пока перехватчик запишет кадр перехода.
+ *
+ * ⚠️ Не «поспать N мс»: в headless вкладка считается скрытой, а там браузер
+ * тормозит таймеры примерно до одного в секунду — из-за этого ожидание
+ * перерисовки (domSettled) иногда не успевало, и проверка падала с «кадр не
+ * снят», хотя продукт исправен. Ждём условие, а не время.
+ */
+async function waitFrame(page, timeout = 6000) {
+  return page
+    .waitForFunction(() => (window.__vtFrames || []).length > 0, { timeout, polling: 100 })
+    .then(() => true)
+    .catch(() => false)
+}
+
+/**
  * Перехватчик переходов. Считает вызовы, запоминает направление и — главное —
  * СРАВНИВАЕТ кадры.
  *
@@ -264,6 +294,7 @@ async function main() {
   await sleep(2500)
   await page.evaluate(() => (window.__vt = 0))
   const entered = await tap(page, 'Тексты и диалоги')
+  await waitFrame(page)
   const inState = await page.evaluate(() => ({ vt: window.__vt, frames: window.__vtFrames }))
   check('заход внутрь запускает переход', entered && inState.vt >= 1, `вызовов: ${inState.vt}`)
   const f0 = inState.frames[0]
@@ -352,11 +383,19 @@ async function main() {
       )
       if (acc) acc.click()
     })
-    await sleep(600)
+    await waitText(page, lesson.title.slice(0, 12))
     const openedLesson = await tap(page, lesson.title)
-    check('урок открылся', openedLesson)
+    check('урок открылся', openedLesson && (await waitText(page, 'Упражнения')))
     const toExercises = await tap(page, 'Упражнения')
-    check('вкладка упражнений открылась', toExercises)
+    // ждём, пока на экране появятся варианты ответа, а не «через 900 мс»
+    const ready = await page
+      .waitForFunction(
+        () => [...document.querySelectorAll('button')].some((b) => /rounded-xl border/.test(b.className)),
+        { timeout: 8000, polling: 200 },
+      )
+      .then(() => true)
+      .catch(() => false)
+    check('вкладка упражнений открылась', toExercises && ready)
 
     const verdict = await page.evaluate(
       async ([right, wrong]) => {
@@ -391,9 +430,16 @@ async function main() {
       )
       if (acc) acc.click()
     })
-    await sleep(600)
+    await waitText(page, lesson.title.slice(0, 12))
     await tap(page, lesson.title)
+    await waitText(page, 'Упражнения')
     await tap(page, 'Упражнения')
+    await page
+      .waitForFunction(
+        () => [...document.querySelectorAll('button')].some((b) => /rounded-xl border/.test(b.className)),
+        { timeout: 8000, polling: 200 },
+      )
+      .catch(() => {})
     const popped = await page.evaluate(
       async (right) => {
         const wait = (ms) => new Promise((r) => setTimeout(r, ms))
@@ -428,7 +474,9 @@ async function main() {
       )
       if (el) el.click()
     }, label)
-    await sleep(1600)
+    await waitFrame(page)
+    // даём анимации доиграть, иначе dataset.vt ещё стоит
+    await sleep(600)
     return page.evaluate(() => ({
       vt: window.__vt,
       dirs: window.__vtDirs,
@@ -459,7 +507,38 @@ async function main() {
   const again = await tapTab('Практика')
   check('повторный тап по своей вкладке перехода не запускает', again.vt === 0, `вызовов: ${again.vt}`)
 
-  // ---- 8. «уменьшить движение» выключает переходы ---------------------------
+  // ---- 8. Главная собирается ОДНИМ кадром -----------------------------------
+  // Было: шесть независимых запросов, каждый дорисовывал свой кусок — экран
+  // складывался рывками, и позиция содержимого менялась на глазах. Проверяем
+  // не «красиво», а измеримое: после появления контента он больше не двигается.
+  await page.goto(`${BASE}/`, { waitUntil: 'networkidle2' })
+  const gotPlan = await page
+    .waitForFunction(
+      () => [...document.querySelectorAll('h2')].some((h) => h.textContent?.includes('План на сегодня')),
+      { timeout: 15000, polling: 200 },
+    )
+    .then(() => true)
+    .catch(() => false)
+  check('Главная догрузилась', gotPlan)
+
+  const posOf = () =>
+    page.evaluate(() => {
+      const h = [...document.querySelectorAll('h2')].find((x) =>
+        x.textContent?.includes('План на сегодня'),
+      )
+      return h ? Math.round(h.getBoundingClientRect().top) : null
+    })
+  const firstY = await posOf()
+  // 3.5 с — заведомо дольше, чем идёт отложенное «слово дня» (idle + чанк)
+  await sleep(3500)
+  const laterY = await posOf()
+  check(
+    'после загрузки содержимое Главной не прыгает',
+    firstY !== null && firstY === laterY,
+    `${firstY} → ${laterY}`,
+  )
+
+  // ---- 9. «уменьшить движение» выключает переходы ---------------------------
   await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }])
   await page.goto(`${BASE}/study`, { waitUntil: 'networkidle2' })
   await sleep(2500)

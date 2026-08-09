@@ -16,6 +16,8 @@ import { logActivity } from '../../lib/activity'
 import { getVerbMistakes, addVerbMistake, removeVerbMistake } from '../../lib/verbMistakes'
 import { answerMatches } from '../../lib/text'
 import { useUrlState } from '../../lib/useUrlState'
+import { RowsSkeleton } from '../../components/Loading'
+import { Reveal } from '../../components/Reveal'
 import type {
   IrregularGroup,
   IrregularVerb,
@@ -44,7 +46,7 @@ export function IrregularVerbsSection() {
     }
   }, [])
 
-  if (!groups) return <p className="text-[var(--night-text-40)]">Загрузка…</p>
+  if (!groups) return <RowsSkeleton count={5} />
 
   return (
     <div className="flex flex-col gap-4">
@@ -115,7 +117,7 @@ function Reference({ groups }: { groups: IrregularGroup[] }) {
               <span className="text-[var(--night-text-40)]">{isOpen ? '▾' : '▸'}</span>
             </button>
 
-            {isOpen && (
+            <Reveal open={isOpen}>
               <Card className="mt-2 overflow-x-auto p-0">
                 <p className="px-3 pt-3 text-xs text-[var(--night-text-40)]">{g.note}</p>
                 <table className="mt-2 min-w-full text-sm">
@@ -153,7 +155,7 @@ function Reference({ groups }: { groups: IrregularGroup[] }) {
                   </tbody>
                 </table>
               </Card>
-            )}
+            </Reveal>
           </div>
         )
       })}

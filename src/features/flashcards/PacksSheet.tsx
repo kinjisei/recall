@@ -3,6 +3,7 @@ import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { getDefaultDeck, addCardsBulk } from '../../lib/cards'
 import type { AppLang, WordTopic } from '../../types'
+import { Loading } from '../../components/Loading'
 
 const LEVEL_ORDER = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const
 
@@ -121,7 +122,7 @@ export function PacksSheet({ lang, onAdded }: { lang: AppLang; onAdded: () => vo
   if (!data) {
     return (
       <Card>
-        <p className="text-sm text-[var(--night-text-40)]">Загружаю словарь…</p>
+        <Loading label="Открываем словарь" />
       </Card>
     )
   }

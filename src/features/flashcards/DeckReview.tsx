@@ -23,6 +23,7 @@ import { GuidedNext } from '../../components/GuidedNext'
 import { SwipeCard, SwipeTutorial } from './SwipeCard'
 import { WordCheckRunner } from './WordCheckRunner'
 import type { Card as CardType, WordCheck } from '../../types'
+import { Loading } from '../../components/Loading'
 
 const TUTORIAL_KEY = 'recall.deck_tutorial_seen'
 
@@ -206,7 +207,7 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
       )}
 
       {loading ? (
-        <p className="text-[var(--night-text-40)]">Загрузка…</p>
+        <Loading label="Готовим карточки" />
       ) : current ? (
         <>
           {/* прогресс раунда: полоска + счётчик (очередь растёт от «ещё раз») */}

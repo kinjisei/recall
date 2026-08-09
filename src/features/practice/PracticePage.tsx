@@ -40,6 +40,8 @@ import { getMistakes } from '../../lib/mistakes'
 import { DeckReview } from '../flashcards/DeckReview'
 import { useScrollTop } from '../../lib/useScrollTop'
 import { useFocusMode } from '../../components/Layout'
+import { Loading } from '../../components/Loading'
+import { markMorph } from '../../lib/morph'
 
 const MatchMode = lazy(() => import('../words/MatchMode').then((m) => ({ default: m.MatchMode })))
 const GapMode = lazy(() => import('../words/QuizModes').then((m) => ({ default: m.GapMode })))
@@ -102,7 +104,12 @@ function TileGrid({
       {tiles.map((t, i) => (
         <button
           key={t.title}
-          onClick={() => onOpen(t)}
+          onClick={(e) => {
+            // плитка «вырастает» в экран игры: помечаем её общим элементом
+            // перехода ДО смены состояния (см. lib/morph.ts)
+            markMorph(e.currentTarget)
+            onOpen(t)
+          }}
           className="animate-fade-up text-left focus-visible:outline-none"
           style={{ animationDelay: `${delayBase + 0.05 + i * 0.04}s` }}
         >
@@ -207,7 +214,7 @@ export function PracticePage() {
   if (mode === 'review') return <DeckReview onBack={back} />
   if (mode !== 'hub') {
     return (
-      <Suspense fallback={<p className="text-[var(--night-text-40)]">Загрузка…</p>}>
+      <Suspense fallback={<Loading label="Готовим игру" />}>
         {mode === 'match' && <MatchMode lang={lang} onBack={back} />}
         {mode === 'gap' && <GapMode lang={lang} onBack={back} />}
         {mode === 'translate' && <TranslateMode lang={lang} onBack={back} />}

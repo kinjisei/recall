@@ -15,6 +15,8 @@ import { speak } from '../../lib/speech'
 import { logActivity } from '../../lib/activity'
 import { useUrlState, useUrlStates } from '../../lib/useUrlState'
 import { getVerbMistakes, addVerbMistake, removeVerbMistake } from '../../lib/verbMistakes'
+import { RowsSkeleton } from '../../components/Loading'
+import { Reveal } from '../../components/Reveal'
 import type {
   ConjugationReference,
   ConjugationTense,
@@ -55,7 +57,7 @@ export function ConjugationSection() {
     }
   }, [])
 
-  if (!data) return <p className="text-[var(--night-text-40)]">Загрузка…</p>
+  if (!data) return <RowsSkeleton count={5} />
 
   return (
     <div className="flex flex-col gap-4">
@@ -155,7 +157,7 @@ function ReferenceView({ reference }: { reference: ConjugationReference }) {
               <span className="text-[var(--night-text-40)]">{isOpen ? '▾' : '▸'}</span>
             </button>
 
-            {isOpen && (
+            <Reveal open={isOpen}>
               <div className="mt-2 flex flex-col gap-2">
                 {list.map((t) => (
                   <button key={t.id} onClick={() => setTenseId(String(t.id))} className="text-left">
@@ -166,7 +168,7 @@ function ReferenceView({ reference }: { reference: ConjugationReference }) {
                   </button>
                 ))}
               </div>
-            )}
+            </Reveal>
           </div>
         )
       })}

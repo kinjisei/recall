@@ -220,9 +220,24 @@ premium → free. Суммы — в `docs/schema.sql`, функция `energy_so
 - Ожидание AI — `components/Thinking.tsx` (6 мест), верный ответ —
   `.animate-answer-pop` (10 мест). Это КЛАССЫ: добавляешь новую игру или новое
   ожидание — подключай их же, иначе продукт разъедется.
+- Ожидание AI — `components/Thinking.tsx`, ожидание экрана — `Loading` /
+  `RowsSkeleton` из `components/Loading.tsx`, раскрывашки — `components/Reveal.tsx`
+  (высоту считает CSS-грид, содержимое монтируется только пока раскрыто).
 - Любая анимация — только `transform`/`opacity` и обязана попадать под
   `prefers-reduced-motion`.
+- **Ничто не появляется без зарезервированного места.** Главная собирается одним
+  кадром (`Promise.all` + скелетон той же раскладки); всё, что грузится позже,
+  держит слот. Проверка меряет это буквально: позиция заголовка не должна
+  измениться через 3,5 с.
 - Проверка: `node scripts/smoke-motion.mjs`.
+
+### Обратная связь
+
+`components/FeedbackSheet.tsx` + `lib/feedback.ts`. Хранится событием в `events`
+через `track_event` — отдельной таблицы нет намеренно: сбор работает сразу
+после деплоя, без заливки схемы. Чтение владельцем — RPC `admin_feedback`
+(блок в `/admin`). Вход: меню под аватаром и «Настройки».
+Проверка: `node scripts/smoke-feedback.mjs`.
 
 ---
 
@@ -285,8 +300,9 @@ node scripts/validate-schema-dryrun.mjs   # прогон schema.sql с отка�
 ## Что ждёт владельца (не код)
 
 - **Confirm email** в Supabase Auth.
-- **`docs/open-registration.sql`** — только в день запуска. Регистрация сейчас
-  закрыта белым списком `allowed_emails`.
+- ~~Открыть регистрацию~~ — **сделано 07.08.2026**: `app_settings.registration_open
+  = true`, белый список `allowed_emails` больше не действует (он работает,
+  только пока регистрация закрыта). `docs/open-registration.sql` — исторический.
 - **Vercel Pro** ($20/мес) — приём оплаты это коммерческое использование,
   Hobby его запрещает.
 - Домен, статус ИП, 10 интервью с репетиторами.

@@ -18,6 +18,7 @@ import type { Material, MaterialAssignment } from '../../../types'
 import { ReviewScreen } from '../ReviewScreen'
 import { PrintSheet } from '../PrintSheet'
 import { AppLink } from '../../../components/AppLink'
+import { RowsSkeleton } from '../../../components/Loading'
 
 export function MaterialDetail({
   material,
@@ -171,7 +172,7 @@ export function MaterialDetail({
         {loadError ? (
           <LoadError message={loadError} onRetry={reload} />
         ) : assignments === null ? (
-          <p className="text-sm text-[var(--night-text-40)]">Загрузка…</p>
+          <RowsSkeleton count={2} height={56} />
         ) : students.length === 0 ? (
           // Пустое состояние без выхода: материал уже стоил двух генераций, а
           // код-приглашение живёт на другой вкладке, и здесь о нём не говорили

@@ -19,6 +19,7 @@ import { sampleTexts, type SampleText } from './sampleTexts'
 import type { CEFRLevel } from '../../types'
 import { useScrollTop } from '../../lib/useScrollTop'
 import { useUrlState } from '../../lib/useUrlState'
+import { Loading } from '../../components/Loading'
 
 const levels: CEFRLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1']
 
@@ -76,7 +77,7 @@ export function ReaderPage({
   )
   if (lang === 'es')
     return (
-      <Suspense fallback={<Card>Загрузка…</Card>}>
+      <Suspense fallback={<Loading label="Открываем текст" />}>
         <SpanishReaderPage title={title} header={fullHeader} onBack={onBack} />
       </Suspense>
     )

@@ -18,6 +18,7 @@ import { getUserLevel } from '../../lib/level'
 import { shuffle } from '../../lib/wordPool'
 import { GameHeader } from '../words/GameShell'
 import type { AppLang, GrammarExercise, GrammarTopic } from '../../types'
+import { Loading } from '../../components/Loading'
 
 const ROUND = 8
 const CEFR = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
@@ -102,7 +103,7 @@ export function GrammarMixMode({
     return (
       <div className="flex flex-col gap-4">
         <GameHeader title={title} onBack={onBack} />
-        <p className="text-[var(--night-text-40)]">Готовлю раунд…</p>
+        <Loading label="Готовим раунд" />
       </div>
     )
   }

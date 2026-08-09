@@ -19,6 +19,8 @@ import { logActivity } from '../../lib/activity'
 import { shuffle, sample } from '../../lib/random'
 import { useUrlState } from '../../lib/useUrlState'
 import type { PhrasalEntry, PhrasalItem } from '../../data/english/phrasal'
+import { RowsSkeleton } from '../../components/Loading'
+import { Reveal } from '../../components/Reveal'
 
 const ROUND_SIZE = 10
 
@@ -43,7 +45,7 @@ export function PhrasalVerbsSection() {
     }
   }, [])
 
-  if (!entries) return <p className="text-[var(--night-text-40)]">Загрузка…</p>
+  if (!entries) return <RowsSkeleton count={5} />
 
   return (
     <div className="flex flex-col gap-4">
@@ -114,7 +116,7 @@ function Reference({ entries }: { entries: PhrasalEntry[] }) {
               <span className="text-[var(--night-text-40)]">{isOpen ? '▾' : '▸'}</span>
             </button>
 
-            {isOpen && (
+            <Reveal open={isOpen}>
               <Card className="mt-2 flex flex-col gap-3">
                 {e.items.map((i, idx) => (
                   <div key={`${i.phrase}-${idx}`} className="border-t border-white/[0.06] pt-2.5 first:border-t-0 first:pt-0">
@@ -148,7 +150,7 @@ function Reference({ entries }: { entries: PhrasalEntry[] }) {
                   </div>
                 ))}
               </Card>
-            )}
+            </Reveal>
           </div>
         )
       })}

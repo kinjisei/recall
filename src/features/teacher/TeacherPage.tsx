@@ -37,6 +37,7 @@ import { getMyPlan, type MyPlan } from '../../lib/billing'
 import { IconSparkle } from '../../components/icons'
 import type { Deck, Profile } from '../../types'
 import { AppLink } from '../../components/AppLink'
+import { Loading, RowsSkeleton } from '../../components/Loading'
 
 export function TeacherPage() {
   const { user } = useAuth()
@@ -55,7 +56,7 @@ export function TeacherPage() {
 
   useEffect(reload, [reload])
 
-  if (loading) return <p className="text-[var(--night-text-40)]">Загрузка…</p>
+  if (loading) return <Loading label="Открываем студию" />
 
   if (profile?.role !== 'teacher') {
     return <BecomeTeacher onDone={reload} onBack={() => navigate('/')} />
@@ -368,7 +369,7 @@ function TeacherDashboard() {
           )}
 
           {loading ? (
-            <p className="text-[var(--night-text-40)]">Загрузка…</p>
+            <RowsSkeleton count={3} />
           ) : students.length === 0 ? (
             <Card className="text-center">
               <IconGraduation size={40} className="mx-auto block text-[var(--night-text-40)]" />

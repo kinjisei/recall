@@ -9,6 +9,7 @@ import { useCallback, useState } from 'react'
 import { Button } from '../../components/Button'
 import { LoadError } from '../../components/LoadError'
 import { useAsyncData } from '../../lib/useAsyncData'
+import { RowsSkeleton } from '../../components/Loading'
 import {
   getStudentDailyPlan,
   setDailyPlan,
@@ -36,7 +37,7 @@ export function DailyPlanSection({ studentId }: { studentId: string }) {
   const [notice, setNotice] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
 
-  if (loading) return <p className="text-sm text-[var(--night-text-40)]">Загрузка…</p>
+  if (loading) return <RowsSkeleton count={2} height={44} />
   if (error) return <LoadError message={error} onRetry={reload} />
 
   // draft: undefined — ещё не трогали (показываем сохранённое)

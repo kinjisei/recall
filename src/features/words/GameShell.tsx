@@ -15,7 +15,9 @@ import type { PoolItem } from '../../lib/wordPool'
 import type { AppLang } from '../../types'
 
 export function GameHeader({ title, onBack }: { title: string; onBack: () => void }) {
-  return <BackHeader onBack={onBack} title={title} />
+  // morph: если сюда пришли тапом по плитке «Практики», заголовок и плитка —
+  // один элемент перехода, и экран вырастает из неё (lib/morph.ts)
+  return <BackHeader onBack={onBack} title={title} morph />
 }
 
 export function GameLoading({ title, onBack }: { title: string; onBack: () => void }) {

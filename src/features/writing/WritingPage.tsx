@@ -20,6 +20,7 @@ import type { AppLang, CEFRLevel, WritingGrade, WritingTask, WritingTaskAssignme
 import { WritingGradeView } from './WritingGradeView'
 import { WritingHistory } from './WritingHistory'
 import { ChartView } from '../../components/ChartView'
+import { RowsSkeleton } from '../../components/Loading'
 
 type Row = WritingTaskAssignment & { task: WritingTask }
 
@@ -69,7 +70,7 @@ export function WritingPage() {
       {error ? (
         <LoadError message={error} onRetry={load} />
       ) : rows === null ? (
-        <p className="text-sm text-[var(--night-text-40)]">Загрузка…</p>
+        <RowsSkeleton count={2} height={56} />
       ) : picking ? (
         <TopicPicker
           level={level}

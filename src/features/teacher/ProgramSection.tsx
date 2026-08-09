@@ -19,6 +19,7 @@ import {
 } from '../../lib/studyPlan'
 import { PlanView } from '../program/PlanView'
 import type { AppLang, StudyPlan } from '../../types'
+import { RowsSkeleton } from '../../components/Loading'
 
 const LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1'] as const
 const WEEK_OPTIONS = [2, 3, 4, 6, 8] as const
@@ -60,7 +61,7 @@ export function ProgramSection({ studentId }: { studentId: string }) {
       </div>
 
       {loading ? (
-        <p className="text-sm text-[var(--night-text-40)]">Загрузка…</p>
+        <RowsSkeleton count={2} height={56} />
       ) : error ? (
         // до выполнения SQL таблицы нет — подсказываем, не падаем
         error.includes('study_plans') ? (

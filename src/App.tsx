@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import { routeScreens } from './lib/routeChunks'
+import { Loading } from './components/Loading'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { LanguageProvider } from './context/LanguageContext'
@@ -41,7 +42,7 @@ const TeachersPage = routeScreens['/teachers']
 const AdminPage = routeScreens['/admin']
 
 function PageFallback() {
-  return <p className="p-6 text-center text-[var(--night-text-40)]">Загрузка…</p>
+  return <Loading label="Открываем экран" />
 }
 
 export default function App() {

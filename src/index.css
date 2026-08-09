@@ -226,6 +226,26 @@ a,
 }
 .animate-answer-pop { animation: answer-pop 0.4s cubic-bezier(0.22, 1, 0.36, 1); }
 
+/* Плавная раскрывашка без измерения высоты.
+   Идея из ActivitiesCard/DisclosureCard подборки: содержимое не появляется
+   рывком, а «разворачивается». Обычно для этого меряют высоту через
+   ResizeObserver и анимируют её — здесь то же самое делает grid: строка
+   0fr → 1fr, никакого JS и никакой библиотеки.
+   ⚠️ Внутреннему элементу обязателен overflow: hidden и min-height: 0,
+   иначе содержимое вылезает за пределы схлопнутого блока. */
+.reveal {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal[data-open='true'] {
+  grid-template-rows: 1fr;
+}
+.reveal > * {
+  overflow: hidden;
+  min-height: 0;
+}
+
 /* Подъём карточек-строк на ховер и «вдавливание» на тап. */
 .lift {
   transition:

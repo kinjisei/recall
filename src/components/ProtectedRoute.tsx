@@ -6,6 +6,7 @@ import { isBlocked } from '../lib/access'
 import { hasPendingTeacherRole, clearPendingRole } from '../lib/pendingRole'
 import { becomeTeacher } from '../lib/teacher'
 import { BlockedScreen } from './BlockedScreen'
+import { Loading } from './Loading'
 
 /**
  * Пускает дальше только авторизованных; иначе — на страницу входа.
@@ -73,8 +74,8 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
 
   if (loading || (user && (needsOnboarding === null || blocked === null))) {
     return (
-      <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--night-bg)] text-[var(--night-text-40)]">
-        Загрузка…
+      <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--night-bg)]">
+        <Loading label="Проверяем вход" />
       </div>
     )
   }

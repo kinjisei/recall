@@ -40,6 +40,8 @@ import { useExerciseReview } from '../../components/useExerciseReview'
 import { ConjugationSection } from './ConjugationSection'
 import { IrregularVerbsSection } from './IrregularVerbsSection'
 import { PhrasalVerbsSection } from './PhrasalVerbsSection'
+import { RowsSkeleton } from '../../components/Loading'
+import { Reveal } from '../../components/Reveal'
 import type {
   AppLang,
   GrammarExercise,
@@ -243,7 +245,7 @@ function LessonsSection({ lang }: { lang: AppLang }) {
       )}
 
       {!topics ? (
-        <p className="text-[var(--night-text-40)]">Загрузка…</p>
+        <RowsSkeleton count={5} />
       ) : (
         LEVELS.map((level) => {
           const list = byLevel[level] ?? []
@@ -264,20 +266,23 @@ function LessonsSection({ lang }: { lang: AppLang }) {
                 </span>
               </button>
 
-              {isOpen && (
-                <div className="mt-2 flex flex-col gap-2">
-                  {list.map((t) => (
-                    <button key={t.id} onClick={() => openLesson(t.id)} className="text-left">
-                      <Card className="flex items-center justify-between gap-2 transition-transform active:scale-[0.99]">
-                        <span className="min-w-0 truncate font-medium">{t.title}</span>
-                        <span className="shrink-0 text-xs text-[var(--night-text-40)]">
-                          {t.exercises.length} упр.
-                        </span>
-                      </Card>
-                    </button>
-                  ))}
-                </div>
-              )}
+              {/* Раскрывашка уровня разворачивается, а не прыгает: список из
+                  двенадцати уроков появлялся мгновенно и сбивал позицию
+                  прокрутки. Высоту считает grid (см. .reveal в index.css). */}
+              <Reveal open={isOpen}>
+                  <div className="mt-2 flex flex-col gap-2">
+                    {list.map((t) => (
+                      <button key={t.id} onClick={() => openLesson(t.id)} className="text-left">
+                        <Card className="flex items-center justify-between gap-2 transition-transform active:scale-[0.99]">
+                          <span className="min-w-0 truncate font-medium">{t.title}</span>
+                          <span className="shrink-0 text-xs text-[var(--night-text-40)]">
+                            {t.exercises.length} упр.
+                          </span>
+                        </Card>
+                      </button>
+                    ))}
+                  </div>
+              </Reveal>
             </div>
           )
         })
@@ -359,9 +364,20 @@ function TheoryView({
 }) {
   return (
     <div className="flex flex-col gap-3">
+      {/* Блоки теории проявляются каскадом сверху вниз — идея ActivitiesCard
+          из подборки владельца. Смысл не в украшении: урок открывается сразу
+          целой стеной текста, и глазу негде зацепиться. Каскад задаёт порядок
+          чтения. Задержка мелкая (40 мс) и упирается в потолок, чтобы длинный
+          урок не «доезжал» полсекунды. */}
       <Card className="flex flex-col gap-4">
         {topic.theory.map((block, i) => (
-          <TheoryBlock key={i} block={block} lang={lang} />
+          <div
+            key={i}
+            className="animate-fade-up"
+            style={{ animationDelay: `${Math.min(i * 0.04, 0.32)}s` }}
+          >
+            <TheoryBlock block={block} lang={lang} />
+          </div>
         ))}
       </Card>
       {onStart && <Button onClick={onStart}>Перейти к упражнениям →</Button>}

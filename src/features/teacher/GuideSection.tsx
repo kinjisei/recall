@@ -6,6 +6,7 @@
 import { useState } from 'react'
 import { Card } from '../../components/Card'
 import { teacherGuide, type GuideBlock } from '../../data/teacher-guide'
+import { Reveal } from '../../components/Reveal'
 
 function BlockView({ block }: { block: GuideBlock }) {
   return (
@@ -69,7 +70,7 @@ export function GuideSection() {
               <span className="text-sm font-bold">{s.title}</span>
               <span className="text-[var(--night-text-40)]">{isOpen ? '▾' : '▸'}</span>
             </button>
-            {isOpen && (
+            <Reveal open={isOpen}>
               <Card className="mt-2 flex flex-col gap-3">
                 {s.intro && (
                   <p className="text-sm leading-relaxed text-[var(--night-text-60)]">{s.intro}</p>
@@ -78,7 +79,7 @@ export function GuideSection() {
                   <BlockView key={b.title} block={b} />
                 ))}
               </Card>
-            )}
+            </Reveal>
           </div>
         )
       })}

@@ -27,6 +27,7 @@ import { englishSentences } from '../../data/english'
 import { speak, scorePronunciation, type PronunciationScore } from '../../lib/speech'
 import { startRecording, transcribe, isMicSupported, type Recorder } from '../../lib/transcribe'
 import type { AppLang } from '../../types'
+import { Loading } from '../../components/Loading'
 
 /** Фраза для тренировки; hint — русский перевод, level — уровень CEFR. */
 interface Phrase {
@@ -244,7 +245,7 @@ export function PronunciationPage() {
           <BackButton onClick={() => navigate('/practice')} label="К практике" />
           <h1 className="text-2xl font-medium tracking-tight">Речь</h1>
         </div>
-        <p className="text-[var(--night-text-40)]">Загрузка…</p>
+        <Loading label="Готовим фразы" />
       </div>
     )
   }
