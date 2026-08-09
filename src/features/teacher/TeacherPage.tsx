@@ -145,6 +145,12 @@ function TeacherDashboard() {
   const [rawTab, setRawTab] = useUrlState('tab', (v) =>
     ['materials', 'writing', 'guide'].includes(v),
   )
+  // Открытый ученик — в адресе. Замер 09.08: карточка со всеми разделами
+  // занимает ~700px, и пятеро учеников превращали список в 3.9 экрана и
+  // ТРИДЦАТЬ раскрывашек; на тарифе с десятью было бы семь экранов и
+  // шестьдесят. Список должен оставаться списком, а разделы — открываться
+  // отдельным экраном (заодно на ученика можно дать ссылку).
+  const [openStudent, setOpenStudent] = useUrlState('student')
   const tab = (rawTab as TeacherTab | null) ?? 'students'
   const setTab = (t: TeacherTab) => setRawTab(t === 'students' ? null : t)
   const [code, setCode] = useState<string | null>(null)
@@ -368,28 +374,84 @@ function TeacherDashboard() {
               </p>
             </Card>
           ) : (
-            students.map((s, i) => (
-              <StudentCard
-                key={s.profile.id}
-                student={s}
-                decks={decks}
-                onChanged={load}
-                // то же правило, что в БД: пока мест никто не выбирал, их держат
-                // первые N по дате привязки; как только выбор сделан — решает он
-                covered={
-                  typeof myPlan?.seats !== 'number'
-                    ? true
-                    : students.some((x) => x.seat)
-                      ? s.seat
-                      : i < myPlan.seats
-                }
-                seatsKnown={typeof myPlan?.seats === 'number'}
-              />
-            ))
+            students.map((s, i) => {
+              // то же правило, что в БД: пока мест никто не выбирал, их держат
+              // первые N по дате привязки; как только выбор сделан — решает он
+              const covered =
+                typeof myPlan?.seats !== 'number'
+                  ? true
+                  : students.some((x) => x.seat)
+                    ? s.seat
+                    : i < myPlan.seats
+              return openStudent === s.profile.id ? (
+                <StudentCard
+                  key={s.profile.id}
+                  student={s}
+                  decks={decks}
+                  onChanged={load}
+                  covered={covered}
+                  seatsKnown={typeof myPlan?.seats === 'number'}
+                  onBack={() => setOpenStudent(null)}
+                />
+              ) : openStudent ? null : (
+                <StudentRow
+                  key={s.profile.id}
+                  student={s}
+                  covered={covered}
+                  seatsKnown={typeof myPlan?.seats === 'number'}
+                  onOpen={() => setOpenStudent(s.profile.id)}
+                />
+              )
+            })
           )}
         </>
       )}
     </div>
+  )
+}
+
+/**
+ * Строка ученика в списке. Показывает ровно то, что нужно, чтобы выбрать, кем
+ * заняться: имя, уровень, цель и серия. Всё остальное — за тапом.
+ *
+ * Раньше каждый ученик разворачивался в карточку с шестью раскрывашками прямо
+ * в списке: пятеро давали 3.9 экрана прокрутки и тридцать одинаковых строк-
+ * переключателей, и выбрать взглядом было невозможно (замер 09.08).
+ */
+function StudentRow({
+  student,
+  covered,
+  seatsKnown,
+  onOpen,
+}: {
+  student: StudentInfo
+  covered: boolean
+  seatsKnown: boolean
+  onOpen: () => void
+}) {
+  const p = student.profile
+  return (
+    <button onClick={onOpen} className="text-left">
+      <Card interactive className="flex items-center justify-between gap-3">
+        <span className="min-w-0">
+          <span className="block truncate font-semibold">{p.display_name ?? 'Без имени'}</span>
+          <span className="block truncate text-sm text-[var(--night-text-40)]">
+            {p.level ? `Уровень ${p.level}` : 'Уровень не определён'}
+            {p.goal ? ` · ${GOAL_LABELS[p.goal]}` : ''}
+          </span>
+          <span className="mt-0.5 block text-sm text-[var(--night-text-40)]">
+            <IconFlame size={13} className="inline align-text-bottom" /> {student.streak} ·{' '}
+            {student.doneToday ? 'сегодня ✓' : 'сегодня —'}
+          </span>
+          {seatsKnown && !covered && (
+            <span className="mt-1 inline-block rounded-lg bg-amber-500/10 px-2 py-1 text-xs text-amber-200">
+              Вне мест тарифа
+            </span>
+          )}
+        </span>
+        <span className="shrink-0 text-sm font-medium text-[var(--night-accent-text)]">›</span>
+      </Card>
+    </button>
   )
 }
 
@@ -399,10 +461,13 @@ function StudentCard({
   onChanged,
   covered = true,
   seatsKnown = false,
+  onBack,
 }: {
   student: StudentInfo
   decks: Deck[]
   onChanged: () => void
+  /** Возврат к списку учеников (карточка теперь отдельный экран). */
+  onBack?: () => void
   /** Покрыт ли ученик тарифом: сверх мест AI-возможности у него обычные, бесплатные. */
   covered?: boolean
   /** Есть ли вообще ограничение мест (на тарифе без лимита переключать нечего). */
@@ -440,6 +505,10 @@ function StudentCard({
   }
 
   return (
+    <div className="flex flex-col gap-3">
+      {/* Карточка ученика стала отдельным экраном — значит нужен возврат
+          к списку (общий BackHeader, как на всех внутренних экранах). */}
+      {onBack && <BackHeader onBack={onBack} title={p.display_name ?? 'Ученик'} label="К списку" />}
     <Card className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
         <div>
@@ -625,6 +694,7 @@ function StudentCard({
         </Button>
       </div>
     </Card>
+    </div>
   )
 }
 
