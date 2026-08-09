@@ -44,6 +44,33 @@ export async function createWritingTask(input: WritingTaskInput): Promise<Writin
   return data as WritingTask
 }
 
+/**
+ * Начать письменную работу САМОМУ, без преподавателя.
+ *
+ * Проверка по критериям IELTS — самое сильное в продукте, и она была доступна
+ * только ученику преподавателя: задание создать человек мог, а назначить его
+ * себе — нет (assign_writing_task требует быть чужим учеником). RPC делает оба
+ * шага одной транзакцией: сбой на втором иначе оставлял бы задание-сироту.
+ *
+ * Возвращает id назначения — с ним экран сразу открывает работу.
+ */
+export async function startOwnWriting(input: WritingTaskInput): Promise<string> {
+  const { data, error } = await (
+    supabase.rpc as unknown as (
+      fn: string,
+      args: Record<string, unknown>,
+    ) => Promise<{ data: unknown; error: { message: string } | null }>
+  )('start_own_writing', {
+    p_lang: input.lang,
+    p_mode: input.mode,
+    p_level: input.level,
+    p_prompt: input.prompt,
+    p_settings: toJson(input.settings),
+  })
+  if (error) throw dbError(error, 'начать письменную работу')
+  return data as string
+}
+
 export async function listMyWritingTasks(): Promise<WritingTask[]> {
   const userId = await requireUserId()
   const { data, error } = await supabase

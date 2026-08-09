@@ -11,9 +11,12 @@ import { Button } from '../../components/Button'
 import { BackButton, BackHeader } from '../../components/BackButton'
 import { LoadError } from '../../components/LoadError'
 import { useScrollTop } from '../../lib/useScrollTop'
-import { getMyWritingAssignments, submitWriting } from '../../lib/writing'
+import { getMyWritingAssignments, startOwnWriting, submitWriting } from '../../lib/writing'
+import { useLanguage } from '../../context/LanguageContext'
+import { getUserLevel } from '../../lib/level'
+import { promptsFor, type WritingPrompt } from '../../data/writingPrompts'
 import { gradeWriting, bandLabel } from '../../lib/writingGrade'
-import type { WritingGrade, WritingTask, WritingTaskAssignment } from '../../types'
+import type { AppLang, CEFRLevel, WritingGrade, WritingTask, WritingTaskAssignment } from '../../types'
 import { WritingGradeView } from './WritingGradeView'
 import { WritingHistory } from './WritingHistory'
 import { ChartView } from '../../components/ChartView'
@@ -24,6 +27,15 @@ export function WritingPage() {
   const [rows, setRows] = useState<Row[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [activeId, setActiveId] = useState<string | null>(null)
+  // выбор темы для самостоятельной работы
+  const [picking, setPicking] = useState(false)
+  const [starting, setStarting] = useState<string | null>(null)
+  const [level, setLevel] = useState<CEFRLevel | null>(null)
+  const { lang } = useLanguage()
+
+  useEffect(() => {
+    void getUserLevel(lang).then((l) => setLevel((l as CEFRLevel | null) ?? null))
+  }, [lang])
   const navigate = useNavigate()
   useScrollTop(activeId ?? 'list')
 
@@ -58,12 +70,44 @@ export function WritingPage() {
         <LoadError message={error} onRetry={load} />
       ) : rows === null ? (
         <p className="text-sm text-[var(--night-text-40)]">Загрузка…</p>
+      ) : picking ? (
+        <TopicPicker
+          level={level}
+          lang={lang}
+          starting={starting}
+          onStart={async (p) => {
+            setStarting(p.id)
+            setError(null)
+            try {
+              const id = await startOwnWriting({
+                lang,
+                mode: p.mode,
+                level: p.level,
+                prompt: p.prompt,
+                settings: {},
+              })
+              const fresh = await getMyWritingAssignments()
+              setRows(fresh)
+              setPicking(false)
+              setActiveId(id)
+            } catch (e) {
+              setError(e instanceof Error ? e.message : 'Не получилось начать работу')
+            } finally {
+              setStarting(null)
+            }
+          }}
+          onCancel={() => setPicking(false)}
+        />
       ) : rows.length === 0 ? (
         <Card className="text-center">
-          <p className="font-semibold">Заданий пока нет</p>
+          <p className="font-semibold">Пока ни одной работы</p>
           <p className="mt-1 text-sm text-[var(--night-text-40)]">
-            Преподаватель назначит письменную работу — она появится здесь.
+            Напиши текст — AI разберёт его по критериям экзамена и покажет, что
+            подтянуть. Преподаватель, если он есть, тоже может назначить работу.
           </p>
+          <Button className="mt-4" onClick={() => setPicking(true)}>
+            Выбрать тему
+          </Button>
         </Card>
       ) : (
         rows.map((r) => {
@@ -233,6 +277,78 @@ function WritingRunner({
           )}
         </>
       )}
+    </div>
+  )
+}
+
+
+// ---------------------------------------------------------------------------
+// Выбор темы для самостоятельной работы.
+//
+// Темы берутся из списка (src/data/writingPrompts.ts), а не генерируются AI:
+// тема нужна мгновенно и бесплатно, а ценность — в разборе готового текста,
+// и его AI по-прежнему делает.
+// ---------------------------------------------------------------------------
+
+function TopicPicker({
+  level,
+  lang,
+  starting,
+  onStart,
+  onCancel,
+}: {
+  level: CEFRLevel | null
+  lang: AppLang
+  starting: string | null
+  onStart: (p: WritingPrompt) => void
+  onCancel: () => void
+}) {
+  const all = promptsFor(level)
+  const ielts = all.filter((p) => p.mode === 'ielts')
+  const regular = all.filter((p) => p.mode === 'regular')
+
+  const group = (title: string, note: string, items: WritingPrompt[]) =>
+    items.length === 0 ? null : (
+      <div className="flex flex-col gap-2">
+        <h2 className="mt-2 text-xs font-semibold uppercase tracking-widest text-[var(--night-text-40)]">
+          {title}
+        </h2>
+        <p className="-mt-1 text-sm text-[var(--night-text-40)]">{note}</p>
+        {items.map((p) => (
+          <button key={p.id} onClick={() => onStart(p)} disabled={starting !== null} className="text-left">
+            <Card interactive className="flex items-center justify-between gap-3">
+              <span className="min-w-0">
+                <span className="block font-medium">{p.title}</span>
+                <span className="block truncate text-sm text-[var(--night-text-40)]">
+                  {p.level} · {p.prompt.slice(0, 60)}…
+                </span>
+              </span>
+              <span className="shrink-0 text-sm font-medium text-[var(--night-accent-text)]">
+                {starting === p.id ? '…' : '›'}
+              </span>
+            </Card>
+          </button>
+        ))}
+      </div>
+    )
+
+  return (
+    <div className="flex flex-col gap-2">
+      <BackHeader onBack={onCancel} title="Выбор темы" label="Назад" />
+      {lang === 'es' && (
+        <Card>
+          <p className="text-sm text-[var(--night-text-70)]">
+            Темы пока только для английского. Испанские добавим — напиши, если
+            нужны раньше.
+          </p>
+        </Card>
+      )}
+      {group(
+        'Экзамен',
+        'Формулировки как на IELTS: разбор будет по экзаменационным критериям.',
+        ielts,
+      )}
+      {group('Свободные темы', 'Без экзаменационных критериев — просто письмо и разбор ошибок.', regular)}
     </div>
   )
 }

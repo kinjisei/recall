@@ -4014,3 +4014,60 @@ end $$;
 revoke execute on function public.norm_typed(text) from public, anon, authenticated;
 grant execute on function public.submit_material(uuid, jsonb, int, int) to authenticated;
 grant execute on function public.submit_word_check(uuid, jsonb) to authenticated;
+
+-- ============================================================================
+-- «ПИСЬМО» БЕЗ ПРЕПОДАВАТЕЛЯ (2026-08-09)
+--
+-- Проблема. Проверка письменной работы по критериям IELTS — самое сильное, что
+-- есть в продукте, и она была доступна ТОЛЬКО ученику преподавателя. Человек,
+-- который занимается сам (а таких большинство среди пришедших с улицы), не мог
+-- ею воспользоваться вообще: задание создать он технически может (RLS разрешает
+-- writing_tasks с teacher_id = собой), но назначить его себе — нет, потому что
+-- assign_writing_task требует is_student_of, а самому себе учеником не будешь.
+--
+-- Решение: одна RPC, которая создаёт задание И назначение себе за одну
+-- транзакцию. Не двумя вызовами с клиента: сбой на втором шаге оставил бы
+-- задание-сироту (тот же урок, что и с программой обучения в блоке
+-- «АТОМАРНОСТЬ»).
+--
+-- Проверка работы дальше идёт ровно тем же путём, что у ученика преподавателя:
+-- submit_writing, те же лимиты энергии, тот же разбор. Никаких послаблений.
+-- ============================================================================
+do $$ begin
+
+  create or replace function public.start_own_writing(
+    p_lang text, p_mode text, p_level text, p_prompt text, p_settings jsonb default '{}'::jsonb
+  )
+  returns uuid language plpgsql security definer set search_path = public as $fn$
+  declare uid uuid := auth.uid(); v_task uuid; v_assign uuid; n int;
+  begin
+    if uid is null then raise exception 'RECALL_NO_AUTH'; end if;
+    if p_lang not in ('en','es') then raise exception 'Неизвестный язык.'; end if;
+    if p_mode not in ('ielts','regular') then raise exception 'Неизвестный тип работы.'; end if;
+    if p_level not in ('A1','A2','B1','B2','C1','C2') then raise exception 'Неизвестный уровень.'; end if;
+    if coalesce(btrim(p_prompt), '') = '' then raise exception 'Нужно задание.'; end if;
+    if char_length(p_prompt) > 4000 then raise exception 'Задание слишком длинное.'; end if;
+
+    -- Потолок на незавершённые работы: без него скриптом можно наплодить
+    -- сколько угодно строк. Пять начатых одновременно — с запасом для живого
+    -- человека, а завершённые не мешают начать новую.
+    select count(*) into n
+      from writing_task_assignments wa
+      join writing_tasks wt on wt.id = wa.task_id
+     where wa.student_id = uid and wt.teacher_id = uid and wa.status = 'assigned';
+    if n >= 5 then
+      raise exception 'Сначала закончи начатые работы — их уже %.', n;
+    end if;
+
+    insert into writing_tasks (teacher_id, lang, mode, level, prompt, settings)
+      values (uid, p_lang, p_mode, p_level, btrim(p_prompt), coalesce(p_settings, '{}'::jsonb))
+      returning id into v_task;
+    insert into writing_task_assignments (task_id, student_id)
+      values (v_task, uid)
+      returning id into v_assign;
+    return v_assign;
+  end $fn$;
+
+end $$;
+
+grant execute on function public.start_own_writing(text, text, text, text, jsonb) to authenticated;
