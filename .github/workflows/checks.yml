@@ -1,0 +1,58 @@
+# Проверки на каждый пуш.
+#
+# Зачем. Смоуки и юнит-тесты в проекте есть, но запускались руками — то есть
+# ловили регрессию только пока о них помнят. Достаточно одной сессии, где
+# «сборка прошла, значит нормально», чтобы сломанное уехало в прод.
+#
+# Здесь только то, чему НЕ нужны ни база, ни браузер, ни секреты: типы, сборка,
+# чистые тесты логики и валидаторы данных. Браузерные смоуки (навигация,
+# офлайн, фичи) требуют dev-сервера и service_role — их по-прежнему гоняем
+# локально, а прод стережёт отдельный сторож (canary.yml).
+name: Проверки
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Типы и сборка
+        run: npm run build
+
+      - name: Чистые тесты логики
+        # Каждый скрипт сам ставит ненулевой код возврата при провале.
+        # Прогоняем ВСЕ, а не до первого падения: полезнее увидеть сразу все
+        # сломанные места, чем чинить их по одному.
+        run: |
+          set +e
+          fail=0
+          for f in \
+            test-answermatches test-dailyplan test-distractors test-wordpool \
+            test-cefr test-textchunks test-sentence-around test-dynamics \
+            test-assignment-score test-aitasks test-fsrs-graduation
+          do
+            if [ -f "scripts/$f.mjs" ]; then
+              echo "── $f"
+              node "scripts/$f.mjs" || { echo "::error::$f упал"; fail=1; }
+            fi
+          done
+          exit $fail
+
+      - name: Валидаторы данных и схемы
+        run: |
+          set +e
+          fail=0
+          node scripts/validate-exercises.mjs || { echo "::error::упражнения"; fail=1; }
+          node scripts/check-schema.mjs      || { echo "::error::схема"; fail=1; }
+          exit $fail

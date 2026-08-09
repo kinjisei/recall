@@ -135,3 +135,61 @@ console.log(
   `  было: ${beforeState}, интервал ${before} дн.\n` +
     `  стало после одной ошибки: ${stateName(c.state)}, интервал ${intervalDays(c)} дн., lapses ${c.lapses}`,
 )
+
+// ---------------------------------------------------------------------------
+// ПРОВЕРКИ. До 09.08 этот файл был чистой демонстрацией: печатал числа и всегда
+// возвращал успех. В наборе автопроверок такое хуже отсутствия — вечно зелёная
+// строка создаёт ощущение, что ядро повторений под присмотром, хотя его никто
+// не сторожит. Утверждения ниже сторожат ровно то, на чём стоит продукт:
+// слово доходит до «изучено» за разумный срок, а ошибка возвращает его в работу.
+// Они поймают смену параметров FSRS и обновление библиотеки.
+// ---------------------------------------------------------------------------
+const results = []
+const check = (name, ok, extra = '') => {
+  results.push(ok)
+  console.log(`${ok ? '✓' : '✗'} ${name}${extra ? ' — ' + extra : ''}`)
+}
+
+console.log('\n=== Проверки ===')
+
+// 1. Честное ежедневное повторение доводит слово до «изучено» за месяц-полтора.
+let good = createEmptyCard(new Date(Date.UTC(2026, 0, 1, 9, 0)))
+let learnedDay = null
+for (let d = 0; d < 60 && learnedDay === null; d++) {
+  let now = new Date(Date.UTC(2026, 0, 1 + d, 9, 0))
+  let guard = 0
+  while (good.due <= now && guard++ < 10) {
+    good = scheduler.next(good, now, Rating.Good).card
+    now = new Date(now.getTime() + 11 * 60000)
+  }
+  if (isLearned(good)) learnedDay = d
+}
+check(
+  'слово доходит до «изучено» за 60 дней честных повторений',
+  learnedDay !== null && learnedDay <= 60,
+  learnedDay === null ? 'не дошло' : `на день ${learnedDay}`,
+)
+
+// 2. Одна ошибка по зрелому слову возвращает его в работу: состояние
+//    relearning, срок обнуляется, счётчик срывов растёт. На этом стоит связь
+//    «ошибся в игре → слово вернётся на повтор».
+let mature = createEmptyCard(new Date(Date.UTC(2026, 0, 1, 9, 0)))
+for (let d = 0; d < 40; d++) {
+  let now = new Date(Date.UTC(2026, 0, 1 + d, 9, 0))
+  let guard = 0
+  while (mature.due <= now && guard++ < 10) {
+    mature = scheduler.next(mature, now, Rating.Good).card
+    now = new Date(now.getTime() + 11 * 60000)
+  }
+}
+const lapsesBefore = mature.lapses
+const after = scheduler.next(mature, new Date(Date.UTC(2026, 1, 10, 20, 0)), Rating.Again).card
+check('ошибка переводит зрелое слово в relearning', stateName(after.state) === 'relearning', stateName(after.state))
+check('ошибка обнуляет интервал', intervalDays(after) === 0, `${intervalDays(after)} дн.`)
+check('ошибка увеличивает счётчик срывов', after.lapses === lapsesBefore + 1, `${lapsesBefore} → ${after.lapses}`)
+check('после ошибки слово больше не «изучено»', !isLearned(after))
+
+const okCount = results.filter(Boolean).length
+console.log(`
+Итог: ${okCount}/${results.length}`)
+process.exitCode = okCount === results.length ? 0 : 1
