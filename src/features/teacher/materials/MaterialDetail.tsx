@@ -1,7 +1,7 @@
 // Карточка сохранённого материала: показ текста, печать, назначение ученикам,
 // открытие проверки сданной работы, удаление.
 import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+
 import { Card } from '../../../components/Card'
 import { Button } from '../../../components/Button'
 import { BackHeader } from '../../../components/BackButton'
@@ -17,6 +17,7 @@ import type { StudentInfo } from '../../../lib/teacher'
 import type { Material, MaterialAssignment } from '../../../types'
 import { ReviewScreen } from '../ReviewScreen'
 import { PrintSheet } from '../PrintSheet'
+import { AppLink } from '../../../components/AppLink'
 
 export function MaterialDetail({
   material,
@@ -177,9 +178,9 @@ export function MaterialDetail({
           // ни слова (находка ревью 2В).
           <p className="text-sm text-[var(--night-text-40)]">
             Учеников пока нет. Отправь код-приглашение — он на вкладке{' '}
-            <Link to="/teacher" className="text-[var(--night-accent-text)] underline underline-offset-2">
+            <AppLink to="/teacher" className="text-[var(--night-accent-text)] underline underline-offset-2">
               «Ученики»
-            </Link>
+            </AppLink>
             . Как только кто-то привяжется, материал назначается в один тап.
           </p>
         ) : (

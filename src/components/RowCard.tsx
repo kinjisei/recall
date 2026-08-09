@@ -4,8 +4,9 @@
 // Используется в хабе «Учёба», плане дня на Главной и других списках.
 // ============================================================================
 import type { ReactNode } from 'react'
-import { Link } from 'react-router-dom'
+
 import { IconArrowRight, type IconLike } from './icons'
+import { AppLink } from './AppLink'
 
 export interface RowCardProps {
   Icon: IconLike
@@ -71,9 +72,9 @@ export function RowCard({
 
   if (to) {
     return (
-      <Link to={to} className={cls} style={style}>
+      <AppLink to={to} className={cls} style={style}>
         {inner}
-      </Link>
+      </AppLink>
     )
   }
   return (

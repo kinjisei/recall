@@ -5,7 +5,7 @@
 // локально (lib/settings.ts), у каждого устройства свои.
 // ============================================================================
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+
 import { SUPPORT_EMAIL, SUPPORT_SLA, supportMailto } from '../../lib/contacts'
 import { IconBack, IconSpeaker, IconCheck } from '../../components/icons'
 import { useSmartBack } from '../../components/SmartBack'
@@ -25,6 +25,7 @@ import {
 import { getEsLevel, setEsLevel } from '../../lib/esLevel'
 import { Button } from '../../components/Button'
 import type { CEFRLevel, Profile } from '../../types'
+import { AppLink } from '../../components/AppLink'
 
 // A1 включён: тест уровня может дать A1, и без кнопки его нельзя было выбрать —
 // у пользователя с уровнем A1 не подсвечивалась ни одна кнопка, а сохранение
@@ -232,17 +233,17 @@ export function SettingsPage() {
       {/* Link, не <a>: обычная ссылка перезагружает всё приложение и рвёт
           историю — «Назад» с тех страниц переставал возвращать сюда */}
       <p className="px-1 text-xs text-[var(--night-text-40)]">
-        <Link to="/terms" className="underline hover:text-[var(--night-text-70)]">
+        <AppLink to="/terms" className="underline hover:text-[var(--night-text-70)]">
           Условия использования
-        </Link>{' '}
+        </AppLink>{' '}
         ·{' '}
-        <Link to="/privacy" className="underline hover:text-[var(--night-text-70)]">
+        <AppLink to="/privacy" className="underline hover:text-[var(--night-text-70)]">
           Политика конфиденциальности
-        </Link>{' '}
+        </AppLink>{' '}
         ·{' '}
-        <Link to="/pricing" className="underline hover:text-[var(--night-text-70)]">
+        <AppLink to="/pricing" className="underline hover:text-[var(--night-text-70)]">
           Тарифы
-        </Link>
+        </AppLink>
       </p>
     </div>
   )

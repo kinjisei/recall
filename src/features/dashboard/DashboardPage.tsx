@@ -7,7 +7,7 @@
 // ============================================================================
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import {
   IconFlame,
   IconArrowRight,
@@ -52,6 +52,7 @@ import {
   type AssignmentCounts,
 } from '../teacher/TeacherBlock'
 import type { ActivityType, Profile, StudyPlan } from '../../types'
+import { AppLink } from '../../components/AppLink'
 
 /** Иконки пунктов плана дня (сами пункты строит lib/dailyPlan). */
 const PLAN_ICONS: Record<string, IconLike> = {
@@ -413,12 +414,12 @@ function StreakHero({
         ))}
       </div>
 
-      <Link
+      <AppLink
         to="/progress"
         className="relative mt-3 inline-flex min-h-[44px] items-center gap-1 text-sm text-[var(--night-accent-text)] hover:underline"
       >
         Мой прогресс <IconArrowRight size={14} />
-      </Link>
+      </AppLink>
     </div>
   )
 }

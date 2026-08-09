@@ -1,10 +1,11 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { joinTeacher, getMyTeachers } from '../../lib/teacher'
 import { countSubmittedWorks, getMyAssignments } from '../../lib/materials'
 import type { Profile } from '../../types'
+import { AppLink } from '../../components/AppLink'
 
 /** Сколько заданий у ученика всего и сколько ещё не сдано. */
 export interface AssignmentCounts {
@@ -49,7 +50,7 @@ function TeacherCard() {
   }, [])
 
   return (
-    <Link to="/teacher">
+    <AppLink to="/teacher">
       <Card className="flex items-center justify-between transition-transform active:scale-[0.99]">
         <div>
           {/* то же имя, что у экрана и в меню аватара */}
@@ -68,7 +69,7 @@ function TeacherCard() {
           <span className="text-[var(--night-text-40)]">→</span>
         )}
       </Card>
-    </Link>
+    </AppLink>
   )
 }
 
@@ -93,7 +94,7 @@ export function AssignmentsNotice({
 
   if (placement === 'top') {
     return (
-      <Link to="/assignments">
+      <AppLink to="/assignments">
         <Card className="flex items-center justify-between border-amber-700 bg-amber-950/30 transition-transform active:scale-[0.99]">
           <div>
             <p className="font-semibold text-amber-200">
@@ -109,12 +110,12 @@ export function AssignmentsNotice({
             {counts.pending}
           </span>
         </Card>
-      </Link>
+      </AppLink>
     )
   }
 
   return (
-    <Link to="/assignments">
+    <AppLink to="/assignments">
       <Card className="flex items-center justify-between transition-transform active:scale-[0.99]">
         <div>
           <p className="font-semibold">Задания от преподавателя</p>
@@ -124,7 +125,7 @@ export function AssignmentsNotice({
         </div>
         <span className="text-[var(--night-text-40)]">→</span>
       </Card>
-    </Link>
+    </AppLink>
   )
 }
 

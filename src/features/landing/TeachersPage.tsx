@@ -9,9 +9,10 @@
 // Копирайт: конкретика вместо обещаний, боль → механизм → цена; без
 // выдуманных отзывов (соц. доказательства появятся после пилота).
 // ============================================================================
-import { Link } from 'react-router-dom'
+
 import { SUPPORT_SLA, supportMailto } from '../../lib/contacts'
 import { BrandLogo } from '../../components/Brand'
+import { AppLink } from '../../components/AppLink'
 import {
   IconCheck,
   IconMaterials,
@@ -27,12 +28,12 @@ import {
 function CTA({ label = 'Попробовать 14 дней бесплатно' }: { label?: string }) {
   return (
     <div className="flex flex-col items-center gap-1.5">
-      <Link
+      <AppLink
         to="/login?role=teacher"
         className="lift inline-flex min-h-[52px] items-center justify-center rounded-2xl bg-[var(--night-accent)] px-7 font-medium text-white"
       >
         {label}
-      </Link>
+      </AppLink>
       <span className="text-xs text-[var(--night-text-40)]">Карта не нужна · отмена в любой момент · регистрация открыта</span>
     </div>
   )
@@ -103,12 +104,12 @@ export function TeachersPage() {
       <header className="sticky top-0 z-20 border-b border-white/[0.06] bg-[rgba(22,24,38,.85)] pt-[env(safe-area-inset-top)] backdrop-blur-xl">
         <div className="mx-auto flex max-w-screen-md items-center justify-between px-5 py-3">
           <BrandLogo width={92} />
-          <Link
+          <AppLink
             to="/login?role=teacher"
             className="flex min-h-[40px] items-center rounded-full border border-white/[0.12] px-4 text-sm text-[var(--night-text-70)]"
           >
             Войти
-          </Link>
+          </AppLink>
         </div>
       </header>
 
@@ -296,9 +297,9 @@ export function TeachersPage() {
             . {SUPPORT_SLA}.
           </p>
           <p className="mt-4 text-xs text-[var(--night-text-40)]">
-            <Link to="/pricing" className="underline">Все тарифы</Link> ·{' '}
-            <Link to="/terms" className="underline">Условия</Link> ·{' '}
-            <Link to="/privacy" className="underline">Конфиденциальность</Link>
+            <AppLink to="/pricing" className="underline">Все тарифы</AppLink> ·{' '}
+            <AppLink to="/terms" className="underline">Условия</AppLink> ·{' '}
+            <AppLink to="/privacy" className="underline">Конфиденциальность</AppLink>
           </p>
         </section>
       </div>

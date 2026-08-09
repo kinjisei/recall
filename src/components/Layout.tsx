@@ -3,7 +3,7 @@
 // и плавающая нижняя навигация. Контент — Outlet.
 // ============================================================================
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
-import { Link, Outlet } from 'react-router-dom'
+import { Outlet } from 'react-router-dom'
 import { IconChart, IconTeacher, IconGear, IconSignOut, IconCards, IconBadgeCheck } from './icons'
 import { getProfile } from '../lib/profile'
 import { getMyPlan } from '../lib/billing'
@@ -12,6 +12,7 @@ import { BrandLogo } from './Brand'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
 import type { AppLang } from '../types'
+import { AppLink } from './AppLink'
 
 const langTabs: { id: AppLang; label: string }[] = [
   { id: 'en', label: 'EN' },
@@ -86,28 +87,28 @@ function AvatarMenu() {
           className="animate-fade-up absolute right-0 top-11 z-30 w-56 overflow-hidden rounded-2xl border border-white/[0.10] bg-[rgba(30,32,48,.96)] py-1 backdrop-blur-xl"
         >
           <p className="truncate px-4 pb-2 pt-1.5 text-xs text-[var(--night-text-40)]">{name}</p>
-          <Link to="/progress" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
+          <AppLink to="/progress" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
             <IconChart size={17} /> Мой прогресс
-          </Link>
+          </AppLink>
           {/* не-преподавателю показываем вход в режим: до A1 попасть в студию
               самостоятельно было нельзя вообще, роль выдавалась вручную SQL-ом */}
-          <Link to="/teacher" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
+          <AppLink to="/teacher" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
             {/* Экран /teacher зовётся «Преподаватель» и в заголовке, и на
                 Главной: раньше меню обещало «Мои ученики», а открывался экран
                 с другим названием и четырьмя вкладками (ревью 1Г). Для НЕ
                 преподавателя это по-прежнему приглашение, а не название. */}
             <IconTeacher size={17} /> {isTeacher ? 'Преподаватель' : 'Я веду учеников'}
-          </Link>
-          <Link to="/pricing" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
+          </AppLink>
+          <AppLink to="/pricing" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
             <IconCards size={17} /> Тарифы
-          </Link>
-          <Link to="/settings" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
+          </AppLink>
+          <AppLink to="/settings" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
             <IconGear size={17} /> Настройки
-          </Link>
+          </AppLink>
           {isAdmin && (
-            <Link to="/admin" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
+            <AppLink to="/admin" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
               <IconBadgeCheck size={17} /> Админка
-            </Link>
+            </AppLink>
           )}
           <button role="menuitem" onClick={() => void signOut()} className={itemCls}>
             <IconSignOut size={17} /> Выйти
@@ -126,9 +127,9 @@ function TopBar() {
     <header className="vt-topbar sticky top-0 z-20 border-b border-white/[0.06] bg-[rgba(22,24,38,.82)] pt-[env(safe-area-inset-top)] backdrop-blur-xl">
       <div className="mx-auto flex max-w-screen-sm items-center justify-between px-4 py-3">
         {/* полный логотип из макета (слово на флеш-карточке) вместо знака+текста */}
-        <Link to="/" className="flex min-h-[44px] items-center" aria-label="На главную">
+        <AppLink to="/" className="flex min-h-[44px] items-center" aria-label="На главную">
           <BrandLogo width={96} />
-        </Link>
+        </AppLink>
 
         <div className="flex items-center gap-3">
           <div

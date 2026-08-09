@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { IconGraduation, IconFlame, IconBadgeCheck } from '../../components/icons'
 import { BackHeader } from '../../components/BackButton'
 import { GOAL_LABELS } from '../../types'
@@ -36,6 +36,7 @@ import { countSubmittedWriting } from '../../lib/writing'
 import { getMyPlan, type MyPlan } from '../../lib/billing'
 import { IconSparkle } from '../../components/icons'
 import type { Deck, Profile } from '../../types'
+import { AppLink } from '../../components/AppLink'
 
 export function TeacherPage() {
   const { user } = useAuth()
@@ -762,9 +763,9 @@ function Seats({ plan, used }: { plan: MyPlan | null; used: number }) {
         <p className="mt-1.5 text-xs text-[var(--night-text-40)]">
           Сейчас у каждого ученика обычный бесплатный запас AI. Общий запас на всю студию и
           генерация материалов —{' '}
-          <Link to="/pricing" className="text-[var(--night-accent)] underline underline-offset-2">
+          <AppLink to="/pricing" className="text-[var(--night-accent)] underline underline-offset-2">
             на тарифе для преподавателей
-          </Link>
+          </AppLink>
           .
         </p>
       </div>
@@ -783,9 +784,9 @@ function Seats({ plan, used }: { plan: MyPlan | null; used: number }) {
           {onTrialSeats
             ? `Пока идёт пробный период, учеников можно вести до ${total} — зато у каждого повышенный запас AI. Чтобы взять больше — `
             : 'Места тарифа заняты. Чтобы взять больше учеников — '}
-          <Link to="/pricing" className="text-[var(--night-accent)] underline underline-offset-2">
+          <AppLink to="/pricing" className="text-[var(--night-accent)] underline underline-offset-2">
             подключи тариф
-          </Link>
+          </AppLink>
           . Уже привязанные ученики останутся в любом случае.
         </p>
       )}

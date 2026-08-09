@@ -9,13 +9,15 @@
  * экран и не знает про остальные девять.
  *
  * Что проверяет:
- *   1. переход между экранами реально запускается (перехватываем вызов API);
- *   2. при «уменьшить движение» — НЕ запускается;
+ *   1. переход реально МЕНЯЕТ картинку: кадры «до» и «после» разные и на
+ *      новом не заглушка (только счётчик вызовов однажды уже соврал);
+ *   2. при «уменьшить движение» переход не запускается, но экран меняется;
  *   3. шапка и навигация из перехода исключены (иначе они ехали бы вместе);
  *   4. подложка вкладок реально едет (сравниваем transform на двух вкладках);
  *   5. верный ответ «клюёт» (проходим упражнение правильно);
  *   6. класс мест не разъехался — все шесть ожиданий AI на общем компоненте;
- *   7. keyframes живы в собранном CSS.
+ *   7. keyframes живы в собранном CSS;
+ *   8. вкладки: направление по порядку, повторный тап не плодит переходов.
  *
  * Запуск: dev-сервер на 5173, затем `node scripts/smoke-motion.mjs`.
  * Аккаунт создаётся и удаляется сам (service_role из .env.local).
@@ -66,14 +68,32 @@ async function tap(page, text, sel = 'button, a, [role=button]') {
 }
 
 /**
- * Счётчик вызовов startViewTransition. Ставим ДО загрузки приложения:
- * обёртка сохраняет поведение (переход играет), но оставляет след.
+ * Перехватчик переходов. Считает вызовы, запоминает направление и — главное —
+ * СРАВНИВАЕТ кадры.
+ *
+ * ⚠️ Без сравнения кадров проверка бессмысленна. Первая версия смоука считала
+ * только вызовы и была зелёной, пока переход анимировал два ОДИНАКОВЫХ кадра:
+ * React Router откладывает обновление, и на момент снимка «после» экран был
+ * ещё старый. Настоящая смена происходила потом, рывком. Считаем не факт
+ * запуска, а то, что кадры разные и на новом не заглушка.
  */
 const COUNTER = `
   window.__vt = 0;
+  window.__vtDirs = [];
+  window.__vtFrames = [];
   if (document.startViewTransition) {
     const orig = document.startViewTransition.bind(document);
-    document.startViewTransition = (cb) => { window.__vt++; return orig(cb); };
+    const seen = () => (document.querySelector('main')?.innerText || '').replace(/\\s+/g, ' ').trim().slice(0, 80);
+    document.startViewTransition = (cb) => {
+      window.__vt++;
+      // направление кладут на <html> ДО запуска — здесь оно уже стоит
+      window.__vtDirs.push(document.documentElement.dataset.vt || null);
+      const before = seen();
+      return orig(async () => {
+        await cb();
+        window.__vtFrames.push({ before, after: seen() });
+      });
+    };
   }
 `
 
@@ -244,8 +264,14 @@ async function main() {
   await sleep(2500)
   await page.evaluate(() => (window.__vt = 0))
   const entered = await tap(page, 'Тексты и диалоги')
-  const vtIn = await page.evaluate(() => window.__vt)
-  check('заход внутрь запускает переход', entered && vtIn >= 1, `вызовов: ${vtIn}`)
+  const inState = await page.evaluate(() => ({ vt: window.__vt, frames: window.__vtFrames }))
+  check('заход внутрь запускает переход', entered && inState.vt >= 1, `вызовов: ${inState.vt}`)
+  const f0 = inState.frames[0]
+  check(
+    'кадры «до» и «после» разные, а не один и тот же экран',
+    !!f0 && f0.before !== f0.after && !/Загрузка…/.test(f0.after),
+    f0 ? `${f0.before.slice(0, 24)} → ${f0.after.slice(0, 24)}` : 'кадр не снят',
+  )
 
   // направление легло на <html> и снялось после
   const dirCleared = await page.evaluate(() => document.documentElement.dataset.vt === undefined)
@@ -387,7 +413,53 @@ async function main() {
     check('верный ответ отмечается анимацией', !!popped.ok, popped.reason ?? popped.cls ?? '')
   }
 
-  // ---- 7. «уменьшить движение» выключает переходы ---------------------------
+  // ---- 7. переходы между ВКЛАДКАМИ ------------------------------------------
+  // Тут главный риск не в анимации, а в ленивых чанках: если запустить переход
+  // до загрузки экрана, «новым» кадром снимется заглушка «Загрузка…».
+  const tapTab = async (label) => {
+    await page.evaluate(() => {
+      window.__vt = 0
+      window.__vtDirs = []
+      window.__vtFrames = []
+    })
+    await page.evaluate((t) => {
+      const el = [...document.querySelectorAll('nav.vt-nav a')].find(
+        (a) => (a.textContent || '').trim() === t,
+      )
+      if (el) el.click()
+    }, label)
+    await sleep(1600)
+    return page.evaluate(() => ({
+      vt: window.__vt,
+      dirs: window.__vtDirs,
+      frames: window.__vtFrames,
+      body: (document.body.innerText || '').slice(0, 120),
+    }))
+  }
+
+  // холодный старт: чанк «Учёбы» ещё не качали в этой вкладке
+  await page.goto(`${BASE}/`, { waitUntil: 'networkidle2' })
+  await sleep(2500)
+  const toStudy = await tapTab('Учёба')
+  check('переход по вкладке запускается', toStudy.vt >= 1, `вызовов: ${toStudy.vt}`)
+  const tf = toStudy.frames[0]
+  check(
+    'на новом кадре следующий экран, а не «Загрузка…» и не прежний',
+    !!tf && tf.before !== tf.after && !/Загрузка…/.test(tf.after),
+    tf ? `${tf.before.slice(0, 22)} → ${tf.after.slice(0, 22)}` : 'кадр не снят',
+  )
+  check('вкладка вправо — экран приезжает справа', toStudy.dirs[0] === 'in', String(toStudy.dirs[0]))
+
+  const backHome = await tapTab('Главная')
+  check('вкладка влево — экран приезжает слева', backHome.dirs[0] === 'out', String(backHome.dirs[0]))
+
+  // повторный тап по своей вкладке не должен плодить историю и переходы
+  await page.goto(`${BASE}/practice`, { waitUntil: 'networkidle2' })
+  await sleep(2000)
+  const again = await tapTab('Практика')
+  check('повторный тап по своей вкладке перехода не запускает', again.vt === 0, `вызовов: ${again.vt}`)
+
+  // ---- 8. «уменьшить движение» выключает переходы ---------------------------
   await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }])
   await page.goto(`${BASE}/study`, { waitUntil: 'networkidle2' })
   await sleep(2500)

@@ -6,7 +6,7 @@
 // экран не-владельцу.
 // ============================================================================
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+
 import { supabase } from '../../lib/supabase'
 import {
   findUsers,
@@ -18,6 +18,7 @@ import {
 } from '../../lib/admin'
 import { Button } from '../../components/Button'
 import { IconSearch, IconWarning, IconSpinner, IconHome } from '../../components/icons'
+import { AppLink } from '../../components/AppLink'
 
 const PLAN_LABELS: Record<PlanId, string> = {
   free: 'Free',
@@ -80,11 +81,11 @@ export function AdminPage() {
         <p className="max-w-xs text-sm text-[var(--night-text-40)]">
           У этого аккаунта нет прав администратора.
         </p>
-        <Link to="/">
+        <AppLink to="/">
           <Button variant="secondary" className="mt-2">
             <IconHome size={18} /> На главную
           </Button>
-        </Link>
+        </AppLink>
       </div>
     )
   }

@@ -7,7 +7,8 @@
 // уроки грамматики, тест уровня), Практика — тренируюсь (повторение колоды,
 // все мини-игры, речь), Диалог — общаюсь с AI.
 // ============================================================================
-import { Link, useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
+import { AppLink } from './AppLink'
 import { useKeyboardInset } from '../lib/useKeyboardInset'
 import {
   IconHome,
@@ -98,13 +99,16 @@ export function BottomNav() {
           const active = i === activeIndex
           const TabIcon = active ? IconFill : Icon
           return (
-            <Link
+            <AppLink
               key={to}
               to={to}
+              // экран едет в ту сторону, в какую человек двигается по вкладкам:
+              // вправо по ряду — контент приезжает справа, и наоборот
+              direction={activeIndex >= 0 && i < activeIndex ? 'out' : 'in'}
               onClick={() => {
                 // повторный тап по активной вкладке, когда мы уже на её роуте
-                // (напр. /study с внутренним экраном «Мои слова»): Link ведёт «в
-                // никуда», поэтому шлём событие — экран сам сбросится к хабу.
+                // (напр. /study с внутренним экраном «Мои слова»): ссылка ведёт
+                // «в никуда», поэтому шлём событие — экран сам сбросится к хабу.
                 if (pathname === to) {
                   window.dispatchEvent(new CustomEvent('recall:reset-tab', { detail: to }))
                 }
@@ -123,7 +127,7 @@ export function BottomNav() {
                 }`}
               />
               <span>{label}</span>
-            </Link>
+            </AppLink>
           )
         })}
       </div>

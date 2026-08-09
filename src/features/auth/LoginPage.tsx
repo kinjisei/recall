@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Link, Navigate, useLocation } from 'react-router-dom'
+import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { BrandLogo, BrandMark } from '../../components/Brand'
 import { IconEye } from '../../components/icons'
@@ -7,6 +7,7 @@ import { describeAuthError, describeSignUpError } from '../../lib/access'
 import { supabase } from '../../lib/supabase'
 import { rememberPendingRole } from '../../lib/pendingRole'
 import { track } from '../../lib/analytics'
+import { AppLink } from '../../components/AppLink'
 
 /**
  * Экран входа/регистрации Recall — тёмная версия «Nocturne».
@@ -208,13 +209,13 @@ export function LoginPage() {
             {signup && (
               <p className="text-center text-xs leading-relaxed text-[var(--night-text-40)]">
                 Создавая аккаунт, ты принимаешь{' '}
-                <Link to="/terms" className="underline hover:text-[var(--night-text-70)]">
+                <AppLink to="/terms" className="underline hover:text-[var(--night-text-70)]">
                   условия
-                </Link>{' '}
+                </AppLink>{' '}
                 и{' '}
-                <Link to="/privacy" className="underline hover:text-[var(--night-text-70)]">
+                <AppLink to="/privacy" className="underline hover:text-[var(--night-text-70)]">
                   политику конфиденциальности
-                </Link>
+                </AppLink>
               </p>
             )}
           </form>
