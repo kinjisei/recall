@@ -12,6 +12,7 @@ import { LoadError } from '../../components/LoadError'
 import { useAsyncData } from '../../lib/useAsyncData'
 import { listDeckCards, assignSelectedWords } from '../../lib/teacher'
 import type { Card, Deck } from '../../types'
+import { RowsSkeleton } from '../../components/Loading'
 
 const SEARCH_FROM = 30 // поиск показываем только на длинных списках
 
@@ -75,7 +76,7 @@ export function DeckWordsPicker({
     }
   }
 
-  if (loading) return <p className="px-1 text-sm text-[var(--night-text-40)]">Загрузка слов…</p>
+  if (loading) return <RowsSkeleton count={3} height={44} />
   if (error) return <LoadError message={error} onRetry={reload} />
   if ((cards ?? []).length === 0) {
     return <p className="px-1 text-sm text-[var(--night-text-40)]">В наборе пока нет слов.</p>

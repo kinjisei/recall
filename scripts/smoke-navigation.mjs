@@ -169,6 +169,8 @@ async function main() {
       reach: async () => {
         await page.goto(`${BASE}/practice`, { waitUntil: 'networkidle2' })
         await sleep(1500)
+        // «Практика» сгруппирована: сначала раздел «Слова», потом игра
+        await tap(page, 'Слова')
         return tap(page, 'Перевод слова')
       },
       marker: 'Перевод слова',
@@ -228,6 +230,7 @@ async function main() {
       reach: async () => {
         await page.goto(`${BASE}/practice`, { waitUntil: 'networkidle2' })
         await sleep(1500)
+        await tap(page, 'Слова')
         return tap(page, 'Спринт')
       },
       marker: null,

@@ -13,6 +13,7 @@ import { speak } from '../../lib/speech'
 import { markWrong } from './gameUtils'
 import type { PoolItem } from '../../lib/wordPool'
 import type { AppLang } from '../../types'
+import { Loading } from '../../components/Loading'
 
 export function GameHeader({ title, onBack }: { title: string; onBack: () => void }) {
   // morph: если сюда пришли тапом по плитке «Практики», заголовок и плитка —
@@ -24,7 +25,7 @@ export function GameLoading({ title, onBack }: { title: string; onBack: () => vo
   return (
     <div className="flex flex-col gap-4">
       <GameHeader title={title} onBack={onBack} />
-      <p className="text-[var(--night-text-40)]">Готовлю раунд…</p>
+      <Loading label="Готовим раунд" />
     </div>
   )
 }

@@ -133,6 +133,9 @@ async function main() {
     check('Хаб Практика: секции Слова/Грамматика/Речь', hubSections)
 
     // ---- 0b. Грамматическая игра «Выбери форму» (mcq по уровню) ----
+    // «Практика» сгруппирована: сначала раскрываем раздел, потом игру
+    await clickByText(page, 'button', 'Грамматика')
+    await sleep(700)
     const mixOpened = await clickByText(page, 'button', 'Выбери форму')
     await sleep(2000)
     const mixState = await page.evaluate(() => ({
@@ -189,7 +192,14 @@ async function main() {
 
     // ---- 0d. Слово дня с кнопкой «В колоду» ----
     await page.goto(BASE + '/', { waitUntil: 'networkidle2' })
-    await sleep(1500)
+    // ⚠️ «Слово дня» считается отдельно (тянет ленивый чанк словаря), поэтому
+    // ждём строку, а не фиксированную паузу: иначе проверка мигает.
+    await page
+      .waitForFunction(() => (document.body.textContent || '').includes('Слово дня'), {
+        timeout: 15000,
+        polling: 300,
+      })
+      .catch(() => {})
     // «Слово дня» — строка на Главной; карточка со словом и кнопкой «В колоду»
     // открывается шторкой по тапу (раньше кнопка висела прямо на Главной, и
     // проверка искала её там — падала вхолостую на исправном экране)
@@ -217,6 +227,8 @@ async function main() {
     // ---- 1. Спринт ----
     await page.goto(BASE + '/practice', { waitUntil: 'networkidle2' })
     await sleep(800)
+    await clickByText(page, 'button', 'Слова')
+    await sleep(700)
     const sprintOpened = await clickByText(page, 'button', 'Спринт')
     // Ждём ПОЯВЛЕНИЯ кнопок, а не «примерно столько, сколько грузится пул»:
     // фиксированная пауза изредка не покрывала загрузку словаря, и проверка
@@ -247,6 +259,8 @@ async function main() {
     // ---- 2. Диктант ----
     await page.goto(BASE + '/practice', { waitUntil: 'networkidle2' })
     await sleep(800)
+    await clickByText(page, 'button', 'Слова')
+    await sleep(700)
     const dictOpened = await clickByText(page, 'button', 'Диктант')
     await sleep(2500)
     const hasInput = await page.$('input[aria-label="Услышанное слово"]')
@@ -264,6 +278,8 @@ async function main() {
     // ---- 3. Собери фразу (EN) ----
     await page.goto(BASE + '/practice', { waitUntil: 'networkidle2' })
     await sleep(800)
+    await clickByText(page, 'button', 'Слова')
+    await sleep(700)
     const sbOpened = await clickByText(page, 'button', 'Собери фразу')
     await sleep(1500)
     const sbState = await page.evaluate(() => ({

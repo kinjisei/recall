@@ -71,7 +71,10 @@ export function IrregularVerbsSection() {
 
 function Reference({ groups }: { groups: IrregularGroup[] }) {
   const [query, setQuery] = useState('')
-  const [open, setOpen] = useState<string | null>(groups[0]?.title ?? null)
+  // Ничего не раскрыто: экран открывается СПИСКОМ групп, а не одной развёрнутой.
+  // Раньше первая группа была раскрыта — вход выглядел так, будто ты уже внутри
+  // «put-put-put», и остальных групп будто нет. Список уроков ведёт себя так же.
+  const [open, setOpen] = useState<string | null>(null)
 
   const q = query.trim().toLowerCase()
   const filtered = useMemo(() => {

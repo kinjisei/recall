@@ -507,6 +507,41 @@ async function main() {
   const again = await tapTab('Практика')
   check('повторный тап по своей вкладке перехода не запускает', again.vt === 0, `вызовов: ${again.vt}`)
 
+  // ---- 7б. «Практика»: раскрыт один раздел, остальные свёрнуты --------------
+  // Идея MinimalCarousel: карточки не подменяются, а меняются местами и
+  // размером. Проверяем, что имена перехода стоят на ОБОИХ состояниях —
+  // без них браузер показал бы обычную смену содержимого.
+  await page.goto(`${BASE}/practice`, { waitUntil: 'networkidle2' })
+  await sleep(2000)
+  const hub = await page.evaluate(() => {
+    const named = [...document.querySelectorAll('*')].filter((el) =>
+      (getComputedStyle(el).viewTransitionName || '').startsWith('pg-'),
+    )
+    return {
+      named: named.length,
+      collapsed: [...document.querySelectorAll('button')].filter((b) =>
+        ['Слова', 'Грамматика', 'Речь', 'Повторение'].includes((b.textContent || '').trim()),
+      ).length,
+      body: (document.body.innerText || '').slice(0, 80).replace(/\s+/g, ' '),
+    }
+  })
+  check('в «Практике» четыре раздела с именами перехода', hub.named === 4, JSON.stringify(hub))
+
+  await page.evaluate(() => (window.__vtFrames = []))
+  const switched = await page.evaluate(() => {
+    const b = [...document.querySelectorAll('button')].find((x) => (x.textContent || '').trim() === 'Слова')
+    if (b) b.click()
+    return !!b
+  })
+  await waitFrame(page)
+  await sleep(500)
+  const opened = await page.evaluate(() => ({
+    url: location.search,
+    hasGames: (document.body.innerText || '').includes('Спринт'),
+  }))
+  check('раздел раскрывается и попадает в адрес', switched && opened.url.includes('g=words'), opened.url)
+  check('в раскрытом разделе видны его игры', opened.hasGames)
+
   // ---- 8. Главная собирается ОДНИМ кадром -----------------------------------
   // Было: шесть независимых запросов, каждый дорисовывал свой кусок — экран
   // складывался рывками, и позиция содержимого менялась на глазах. Проверяем

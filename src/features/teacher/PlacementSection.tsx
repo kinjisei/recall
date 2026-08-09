@@ -17,6 +17,7 @@ import {
   type PlacementRequest,
 } from '../../lib/placement'
 import type { AppLang } from '../../types'
+import { RowsSkeleton } from '../../components/Loading'
 
 const LANGS: { id: AppLang; label: string }[] = [
   { id: 'en', label: 'Английский' },
@@ -118,7 +119,7 @@ export function PlacementSection({
           {loadError ? (
             <LoadError message={loadError} onRetry={load} />
           ) : rows === null ? (
-            <p className="text-sm text-[var(--night-text-40)]">Загружаю…</p>
+            <RowsSkeleton count={2} height={44} />
           ) : rows.length === 0 ? (
             <p className="text-sm text-[var(--night-text-40)]">Тестов пока не было.</p>
           ) : (

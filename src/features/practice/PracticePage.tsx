@@ -42,6 +42,7 @@ import { useScrollTop } from '../../lib/useScrollTop'
 import { useFocusMode } from '../../components/Layout'
 import { Loading } from '../../components/Loading'
 import { markMorph } from '../../lib/morph'
+import { withViewTransition } from '../../lib/viewTransition'
 
 const MatchMode = lazy(() => import('../words/MatchMode').then((m) => ({ default: m.MatchMode })))
 const GapMode = lazy(() => import('../words/QuizModes').then((m) => ({ default: m.GapMode })))
@@ -131,12 +132,35 @@ function TileGrid({
   )
 }
 
-function SectionTitle({ children }: { children: string }) {
-  return (
-    <h2 className="mt-1 text-xs font-semibold uppercase tracking-widest text-[var(--night-text-40)]">
-      {children}
-    </h2>
-  )
+/** Раздел «Практики»: раскрыт один, остальные свёрнуты рядом. */
+type GroupId = 'review' | 'words' | 'grammar' | 'speech'
+const GROUP_IDS = new Set<string>(['review', 'words', 'grammar', 'speech'])
+
+interface PracticeGroup {
+  id: GroupId
+  title: string
+  Icon: (p: { size?: number; className?: string }) => React.JSX.Element
+  hint: string
+  badge?: number
+}
+
+const GROUP_KEY = 'recall.practice_group'
+
+/** Раздел, раскрытый в прошлый раз. Приватный режим — просто «Повторение». */
+function lastGroup(): GroupId {
+  try {
+    const v = localStorage.getItem(GROUP_KEY)
+    return v && GROUP_IDS.has(v) ? (v as GroupId) : 'review'
+  } catch {
+    return 'review'
+  }
+}
+function rememberGroup(g: GroupId): void {
+  try {
+    localStorage.setItem(GROUP_KEY, g)
+  } catch {
+    /* не критично */
+  }
 }
 
 const GAME_MODES = new Set<Mode>([
@@ -170,6 +194,28 @@ export function PracticePage() {
   // и переключается программно (ведомая сессия ниже).
   const setMode = (m: Mode) =>
     setSearchParams(m === 'hub' ? {} : { m }, { replace: m === 'hub' })
+
+  // Раскрытый раздел — в адресе (?g=words), чтобы возврат из игры возвращал в
+  // тот же раздел, а не в начало. Смена раздела ЗАМЕНЯЕТ запись в истории:
+  // это фильтр внутри экрана, а не заход вглубь, — иначе «назад» пришлось бы
+  // жать столько раз, сколько разделов человек посмотрел.
+  const rawGroup = searchParams.get('g')
+  // Последний раздел помним между заходами. Группировка сделала игры на тап
+  // дальше — это плата за то, что новичок больше не упирается в стену из
+  // тринадцати одинаковых квадратов. Но тому, кто каждый день играет в
+  // «Спринт», платить этим тапом ежедневно незачем: возвращаем туда, где он
+  // был. По умолчанию (первый заход) раскрыто «Повторение» — оно важнее игр.
+  const group: GroupId =
+    rawGroup && GROUP_IDS.has(rawGroup) ? (rawGroup as GroupId) : lastGroup()
+  const setGroup = (g: GroupId) => {
+    rememberGroup(g)
+    withViewTransition('in', () => {
+      const next = new URLSearchParams(searchParams)
+      if (g === 'review') next.delete('g')
+      else next.set('g', g)
+      setSearchParams(next, { replace: true })
+    })
+  }
 
   // ведомая сессия («Начать занятие» на Главной): при входе без параметра
   // открываем сразу повторение; если слов ещё нет — пропускаем пустой шаг
@@ -275,31 +321,33 @@ export function PracticePage() {
     else if (t.to) navigate(t.to)
   }
 
+  const dueText =
+    due === null
+      ? 'Слова по расписанию'
+      : due > 0
+        ? `К повторению: ${due}`
+        : words === 0
+          ? 'Пока нет слов — добавь первые в Учёбе'
+          : 'На сегодня всё повторено'
+
+  const groups: PracticeGroup[] = [
+    { id: 'review', title: 'Повторение', Icon: IconCards, hint: dueText, badge: due || undefined },
+    { id: 'words', title: 'Слова', Icon: IconMeaning, hint: `${wordTiles.length} игры` },
+    {
+      id: 'grammar',
+      title: 'Грамматика',
+      Icon: IconMcq,
+      hint: mistakes > 0 ? `Ошибок: ${mistakes}` : `${grammarTiles.length} режима`,
+      badge: mistakes || undefined,
+    },
+    { id: 'speech', title: 'Речь', Icon: IconMic, hint: 'Проговори вслух' },
+  ]
+  const active: PracticeGroup = groups.find((g) => g.id === group) ?? groups[0]!
+  const rest = groups.filter((g) => g.id !== active.id)
+
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-medium tracking-tight">Практика</h1>
-
-      {/* Повторение — главный режим, широкой плиткой */}
-      <button
-        onClick={() => setMode('review')}
-        className="lift animate-fade-up flex items-center gap-4 rounded-2xl border border-[var(--night-accent-45)] bg-[linear-gradient(135deg,rgba(145,132,217,.20),rgba(145,132,217,.08))] px-4 py-4 text-left"
-      >
-        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[var(--night-accent-900)] text-[var(--night-accent-100)]">
-          <IconCards size={28} />
-        </span>
-        <span className="min-w-0">
-          <span className="block font-medium">Повторение</span>
-          <span className="block text-sm text-[var(--night-text-40)]">
-            {due === null
-              ? 'Слова по расписанию'
-              : due > 0
-                ? `К повторению: ${due}`
-                : words === 0
-                  ? 'Пока нет слов — добавь первые в Учёбе'
-                  : 'На сегодня всё повторено'}
-          </span>
-        </span>
-      </button>
 
       {/* Абзац-инструкция отсюда убран (замер ревью 1Б: из-за него ни одна из
           13 плиток не была видна без прокрутки, а первым, что читал новичок,
@@ -317,14 +365,61 @@ export function PracticePage() {
         </Card>
       )}
 
-      <SectionTitle>Слова</SectionTitle>
-      <TileGrid tiles={wordTiles} onOpen={open} />
+      {/* Раскрытая группа. Раньше все тринадцать плиток лежали одним свитком:
+          новичок видел стену одинаковых квадратов и не понимал, с чего начать.
+          Теперь на экране один раскрытый раздел и три свёрнутых — идея
+          MinimalCarousel из подборки владельца. Общее имя перехода (pg-*)
+          заставляет браузер показать, как одна карточка выросла, а другая
+          сжалась: те же элементы, а не подмена содержимого. */}
+      <div
+        className="animate-fade-up flex flex-col gap-3 rounded-3xl border border-[var(--night-accent-45)] bg-[linear-gradient(135deg,rgba(145,132,217,.16),rgba(145,132,217,.05))] p-4"
+        style={{ viewTransitionName: `pg-${active.id}` }}
+      >
+        <div className="flex items-center gap-3">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--night-accent-900)] text-[var(--night-accent-100)]">
+            <active.Icon size={24} />
+          </span>
+          <span className="min-w-0">
+            <span className="block text-lg font-medium">{active.title}</span>
+            <span className="block text-sm text-[var(--night-text-40)]">{active.hint}</span>
+          </span>
+        </div>
 
-      <SectionTitle>Грамматика</SectionTitle>
-      <TileGrid tiles={grammarTiles} onOpen={open} delayBase={0.1} />
+        {active.id === 'review' ? (
+          <Button onClick={() => setMode('review')} className="w-full">
+            {due && due > 0 ? `Повторить ${due}` : 'Открыть повторение'}
+          </Button>
+        ) : (
+          <TileGrid
+            tiles={
+              active.id === 'words' ? wordTiles : active.id === 'grammar' ? grammarTiles : speechTiles
+            }
+            onOpen={open}
+          />
+        )}
+      </div>
 
-      <SectionTitle>Речь</SectionTitle>
-      <TileGrid tiles={speechTiles} onOpen={open} delayBase={0.15} />
+      {/* Свёрнутые разделы — рядом, в один ряд. */}
+      <div className="grid grid-cols-3 gap-2.5">
+        {rest.map((g) => (
+          <button
+            key={g.id}
+            onClick={() => setGroup(g.id)}
+            style={{ viewTransitionName: `pg-${g.id}` }}
+            className="lift relative flex flex-col items-center gap-1.5 rounded-2xl border border-white/[0.08] bg-[var(--night-surface)] px-2 py-3 text-center"
+          >
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.06] text-[var(--night-text-70)]">
+              <g.Icon size={20} />
+            </span>
+            <span className="text-[13px] font-medium leading-tight">{g.title}</span>
+            {g.badge !== undefined && (
+              <span className="absolute right-1.5 top-1.5 rounded-full bg-[var(--night-accent)] px-1.5 text-[11px] font-medium text-white">
+                {g.badge}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
     </div>
   )
 }

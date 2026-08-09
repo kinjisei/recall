@@ -4123,3 +4123,26 @@ begin
 end $fn$;
 
 grant execute on function public.admin_feedback(int, int) to authenticated;
+
+-- ============================================================================
+-- ПАМЯТЬ ДИАЛОГА (2026-08-09)
+--
+-- Половина фичи существовала с самого начала: реплики ИСПРАВНО писались в
+-- conversations/messages — и никогда не читались обратно. Стоило уйти со
+-- экрана посмотреть слово или урок, и чат начинался с нуля. Для тренировки
+-- разговора это обессмысливает сам разговор.
+--
+-- Нужна одна колонка: у английского и испанского чата истории разные, а
+-- отличить их было нечем.
+-- ============================================================================
+alter table public.conversations add column if not exists lang text;
+alter table public.conversations drop constraint if exists conversations_lang_check;
+alter table public.conversations add constraint conversations_lang_check
+  check (lang is null or lang in ('en', 'es'));
+
+-- Загружаем последнюю переписку по паре (пользователь, язык) — нужен индекс,
+-- запрос идёт при каждом открытии «Диалога».
+create index if not exists conversations_user_lang_time
+  on public.conversations (user_id, lang, started_at desc);
+create index if not exists messages_conversation_time
+  on public.messages (conversation_id, created_at);

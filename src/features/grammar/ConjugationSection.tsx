@@ -107,7 +107,8 @@ function SubTab({
 // ---------------------------------------------------------------------------
 
 function ReferenceView({ reference }: { reference: ConjugationReference }) {
-  const [openLevel, setOpenLevel] = useState<string | null>('A1')
+  // см. IrregularVerbsSection: вход — список уровней, ничего не раскрыто
+  const [openLevel, setOpenLevel] = useState<string | null>(null)
   // Открытое время — в адресе (?tense=pres_ind): «назад» возвращает к списку
   // времён, а не выбрасывает из грамматики, и F5 время не теряет. Неизвестный
   // id (чужая или устаревшая ссылка) хук трактует как «ничего не открыто» —

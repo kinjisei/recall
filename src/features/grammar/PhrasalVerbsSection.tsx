@@ -70,7 +70,8 @@ export function PhrasalVerbsSection() {
 
 function Reference({ entries }: { entries: PhrasalEntry[] }) {
   const [query, setQuery] = useState('')
-  const [open, setOpen] = useState<string | null>(entries[0]?.verb ?? null)
+  // см. IrregularVerbsSection: вход — список глаголов, а не раскрытый «look»
+  const [open, setOpen] = useState<string | null>(null)
 
   const q = query.trim().toLowerCase()
   const filtered = useMemo(() => {

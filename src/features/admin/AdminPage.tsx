@@ -336,7 +336,7 @@ function Funnel() {
       </div>
 
       {err && <p className="mt-3 text-sm text-amber-300">Аналитика недоступна: {err}</p>}
-      {!err && !data && <p className="mt-3 text-sm text-[var(--night-text-40)]">Считаю…</p>}
+      {!err && !data && <RowsSkeleton count={2} height={44} />}
 
       {data && (
         <>

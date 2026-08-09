@@ -17,6 +17,8 @@ import { getProfile } from '../../lib/profile'
 import { chat } from '../../lib/gemini'
 import { logActivity } from '../../lib/activity'
 import { useAuth } from '../../context/AuthContext'
+import { loadLastChat, startNewChat } from '../../lib/chatHistory'
+import { Loading } from '../../components/Loading'
 import { useLanguage } from '../../context/LanguageContext'
 import { getEsLevel } from '../../lib/esLevel'
 import type { AppLang, CEFRLevel, ChatTurn, LearningGoal } from '../../types'
@@ -209,24 +211,43 @@ function ChatSection({
   const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // пока история поднимается — не показываем «пустой чат», иначе на секунду
+  // мигает приглашение начать разговор, который на самом деле уже идёт
+  const [loadingHistory, setLoadingHistory] = useState(true)
   const convIdRef = useRef<string | null>(null)
   const kb = useKeyboardInset() // высота клавиатуры — панель ввода над ней
   // лента скроллится ВНУТРИ себя (мессенджер-паттерн): шапка всегда видна,
   // клавиатура сжимает список, новые сообщения показывают низ ленты
   const { listRef, height } = useChatList(kb, [msgs, busy])
 
+  // Поднимаем прошлую переписку этого языка. Раньше реплики писались в базу и
+  // НИКОГДА не читались: уход за словом или уроком обнулял чат.
+  useEffect(() => {
+    if (!user) return
+    let alive = true
+    setLoadingHistory(true)
+    setMsgs([])
+    convIdRef.current = null
+    loadLastChat(user.id, lang)
+      .then((prev) => {
+        if (!alive || !prev) return
+        convIdRef.current = prev.id
+        setMsgs(prev.turns)
+      })
+      .finally(() => alive && setLoadingHistory(false))
+    return () => {
+      alive = false
+    }
+  }, [user?.id, lang])
+
   // Сохраняем реплики в БД; сбой сохранения не должен ломать сам чат.
   const persist = async (turns: ChatTurn[]) => {
     if (!user) return
     try {
       if (!convIdRef.current) {
-        const { data, error: cErr } = await supabase
-          .from('conversations')
-          .insert({ user_id: user.id })
-          .select('id')
-          .single()
-        if (cErr) throw cErr
-        convIdRef.current = data.id as string
+        const id = await startNewChat(user.id, lang)
+        if (!id) throw new Error('не удалось создать переписку')
+        convIdRef.current = id
       }
       const rows = turns.map((t) => ({
         conversation_id: convIdRef.current,
@@ -275,6 +296,13 @@ function ChatSection({
     setMsgs([])
     setError(null)
     convIdRef.current = null
+    // Заводим новую переписку сразу, а не при первой реплике: иначе выход и
+    // возврат поднимали бы прежнюю — ту самую, с которой только что попрощались.
+    if (user) {
+      void startNewChat(user.id, lang).then((id) => {
+        if (id) convIdRef.current = id
+      })
+    }
   }
 
   return (
@@ -286,7 +314,10 @@ function ChatSection({
         style={height ? { height } : undefined}
         className="flex flex-col gap-3 overflow-y-auto overscroll-contain"
       >
-      {msgs.length === 0 && (
+      {/* пока поднимаем прошлую переписку — не мигаем приглашением начать
+          разговор, который на самом деле уже идёт */}
+      {loadingHistory && msgs.length === 0 && <Loading label="Открываем диалог" />}
+      {!loadingHistory && msgs.length === 0 && (
         <Card className="flex-none">
           <p className="text-[var(--night-text-70)]">
             {lang === 'es'

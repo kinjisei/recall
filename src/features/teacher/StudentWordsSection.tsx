@@ -13,6 +13,7 @@ import {
   type StudentWord,
 } from '../../lib/wordChecks'
 import type { WordCheck } from '../../types'
+import { RowsSkeleton } from '../../components/Loading'
 
 // цвета — общий WORD_STATUS_CLS (тот же, что видит ученик); подписи от 3-го лица
 const statusChip = {
@@ -74,7 +75,7 @@ export function StudentWordsSection({ studentId }: { studentId: string }) {
   // ошибка загрузки — отдельно от «слов нет»: иначе преподаватель видел бы
   // пустой список у ученика, у которого слова есть
   if (loadError) return <LoadError message={loadError} onRetry={reload} />
-  if (words === null) return <p className="text-sm text-[var(--night-text-40)]">Загружаю слова…</p>
+  if (words === null) return <RowsSkeleton count={3} height={44} />
 
   return (
     <div className="flex flex-col gap-2">
