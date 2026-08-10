@@ -115,6 +115,7 @@ export function MaterialsSection({
   if (mode.name === 'form') {
     return (
       <RequestForm
+        students={students}
         onCancel={() => setMode({ name: 'list' })}
         onPlanned={(req, plan) => setMode({ name: 'plan', req, plan })}
         onOwnGenerated={(req, plan, content) =>

@@ -6,6 +6,8 @@
 import { supabase, requireUserId, toJson } from './supabase'
 import { dbError } from './dbError'
 import { chat } from './gemini'
+import { getStudentDiagnostics } from './diagnostics'
+import { diagnosticsBrief, grammarCatalog } from './diagnosticsBrief'
 import { track } from './analytics'
 import type {
   AppLang,
@@ -27,6 +29,15 @@ export interface MaterialRequest {
   lengthRange: '50-100' | '100-250' | '250-350'
   vocabulary: string
   grammar: string
+  /**
+   * Для кого собираем. Необязательно: материал по-прежнему можно сделать
+   * «вообще» и назначить нескольким. Но если ученик указан, AI получает его
+   * диагностику — буксующие слова и темы, где он реально ошибается.
+   *
+   * Ради этого поля всё и затевалось: без него генератор материалов делает то
+   * же, что любой чат, и платить за него незачем.
+   */
+  studentId?: string | null
 }
 
 export const MATERIAL_FORMATS = [
@@ -54,6 +65,35 @@ function parseJson<T>(raw: string): T {
     throw new Error('AI вернул повреждённый JSON. Попробуй ещё раз.')
   }
 }
+
+/**
+ * Абзац «что известно про этого ученика» для промпта. Пустая строка, если
+ * ученик не выбран или диагностика не поднялась: задание должно собраться в
+ * любом случае — персонализация это усиление, а не условие работы.
+ */
+async function studentBrief(req: MaterialRequest): Promise<string> {
+  if (!req.studentId) return ''
+  try {
+    const [{ topics }, diag] = await Promise.all([
+      grammarCatalog(req.lang),
+      getStudentDiagnostics(req.studentId),
+    ])
+    const titles = new Map(topics.map((t) => [t.id, t.title]))
+    const brief = diagnosticsBrief(diag, titles, req.lang)
+    return brief ? `\nЧто известно про этого ученика (реальные данные приложения):\n${brief}` : ''
+  } catch {
+    return ''
+  }
+}
+
+/** Инструкция AI, как пользоваться диагностикой. Без неё сводка — просто текст. */
+const USE_DIAGNOSTICS = [
+  'Если ниже дана диагностика ученика — опирайся на неё, а не на общие соображения:',
+  '- буксующие слова ОБЯЗАТЕЛЬНО включи в текст (естественно, по смыслу) и хотя бы в одно упражнение;',
+  '- слабые темы грамматики бери как приоритет, даже если преподаватель не назвал тему;',
+  '- категорию, где балл ниже прочих, усиль на одно-два упражнения;',
+  '- НЕ упоминай диагностику в самом материале: ученик не должен читать про свои слабые места.',
+].join('\n')
 
 function requestDescription(req: MaterialRequest): string {
   return [
@@ -125,11 +165,15 @@ export async function generateMaterialPlan(
     '',
     `Правила: вопросов на понимание (comprehension) — ${comprehensionRange(req.lengthRange)} (длина текста ${req.lengthRange} слов).`,
     'Грамматических и словарных упражнений — по 4-6, если тема/слова заданы; kind "grammar" пропусти, если грамматика не задана.',
+    '',
+    USE_DIAGNOSTICS,
+    'В comments отдельной фразой скажи, что именно взял из диагностики — преподаватель должен видеть, почему план такой.',
   ].join('\n')
 
   const userMsg = [
     'Заявка преподавателя:',
     requestDescription(req),
+    await studentBrief(req),
     feedback ? `\nПравки преподавателя к прошлому плану: ${feedback}` : '',
   ].join('\n')
 
@@ -185,11 +229,14 @@ export async function generateMaterialContent(
       'не ставь «/» как часть самого ответа (даты, дроби) — иначе он не засчитается.',
     '7. Словарные (vocab) — матч по определению: prompt — простое определение слова на целевом языке (уровня ученика, БЕЗ самого слова), options — 4 слова: правильное + 3 других слова из текста или того же уровня, answer — индекс правильного.',
     '8. Порядок упражнений: сначала comprehension, потом grammar, потом vocab.',
+    '',
+    USE_DIAGNOSTICS,
   ].join('\n')
 
   const userMsg = [
     'Заявка:',
     requestDescription(req),
+    await studentBrief(req),
     '',
     'Утверждённый план:',
     JSON.stringify(plan),

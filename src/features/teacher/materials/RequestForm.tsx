@@ -15,13 +15,17 @@ import {
 } from '../../../lib/materials'
 import { MY_TEXT_LIMIT } from '../../../lib/myTexts'
 import type { AppLang, CEFRLevel, MaterialPlan } from '../../../types'
+import type { StudentInfo } from '../../../lib/teacher'
 import { LEVELS, inputClass } from './shared'
 
 export function RequestForm({
+  students,
   onCancel,
   onPlanned,
   onOwnGenerated,
 }: {
+  /** Для кого можно собрать материал — чтобы AI увидел диагностику ученика. */
+  students: StudentInfo[]
   onCancel: () => void
   onPlanned: (req: MaterialRequest, plan: MaterialPlan) => void
   /** «Мой текст»: упражнения готовы, сразу в предпросмотр (плана нет). */
@@ -36,6 +40,8 @@ export function RequestForm({
   const [vocabulary, setVocabulary] = useState('')
   const [grammar, setGrammar] = useState('')
   const [body, setBody] = useState('')
+  // Кому адресован материал. null — «всем»: старое поведение, материал общий.
+  const [studentId, setStudentId] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -51,6 +57,7 @@ export function RequestForm({
       lengthRange,
       vocabulary,
       grammar,
+      studentId,
     }
     try {
       const plan = await generateMaterialPlan(req)
@@ -116,6 +123,34 @@ export function RequestForm({
           ))}
         </div>
       </div>
+
+      {/* Для кого. Это не формальность: выбранному ученику AI получает его
+          диагностику — буксующие слова и темы, где он реально ошибается, — и
+          строит задание вокруг них. Без выбора материал общий, как раньше. */}
+      {students.length > 0 && (
+        <div>
+          <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">Для кого</p>
+          <div className="flex flex-wrap gap-2">
+            <button className={chip(studentId === null)} onClick={() => setStudentId(null)}>
+              Общий материал
+            </button>
+            {students.map((st) => (
+              <button
+                key={st.profile.id}
+                className={chip(studentId === st.profile.id)}
+                onClick={() => setStudentId(st.profile.id)}
+              >
+                {st.profile.display_name || 'без имени'}
+              </button>
+            ))}
+          </div>
+          <p className="mt-1 text-xs text-[var(--night-text-40)]">
+            {studentId
+              ? 'AI учтёт слова и темы, где этот ученик ошибается.'
+              : 'Без ученика материал соберётся по общим правилам уровня.'}
+          </p>
+        </div>
+      )}
 
       {source === 'generate' ? (
         <>
