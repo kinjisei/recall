@@ -27,11 +27,17 @@ interface LoadedChat {
  * а не роняем экран. Тот же приём, что в lib/profile.ts (selectProfiles).
  */
 async function lastConversationId(userId: string, lang: AppLang): Promise<string | null> {
-  // ⚠️ Приведение: database.types.ts сгенерированы до колонки lang. Уйдёт,
-  // когда типы перегенерируют после заливки схемы (ARCHITECTURE §5).
+  // ⚠️ «lang = язык ИЛИ lang пустой» — не перестраховка.
+  // Колонка появилась позже самой переписки: у всех, кто общался до миграции,
+  // язык не проставлен. Фильтр строго по языку сделал бы их историю невидимой
+  // — человек открыл бы «Диалог» и увидел пустой экран вместо своего разговора.
+  // Пустые записи появляются и сейчас: у кого в PWA закэширован старый клиент,
+  // тот пишет переписку без языка, пока не обновится.
+  //
+  // Приведение типа — потому что database.types.ts сгенерированы до колонки.
   const byLang = await (supabase.from('conversations').select('id') as never as {
     eq: (c: string, v: string) => {
-      eq: (c: string, v: string) => {
+      or: (f: string) => {
         order: (c: string, o: { ascending: boolean }) => {
           limit: (n: number) => Promise<{ data: { id: string }[] | null; error: unknown }>
         }
@@ -39,7 +45,7 @@ async function lastConversationId(userId: string, lang: AppLang): Promise<string
     }
   })
     .eq('user_id', userId)
-    .eq('lang', lang)
+    .or(`lang.eq.${lang},lang.is.null`)
     .order('started_at', { ascending: false })
     .limit(1)
   if (!byLang.error) return (byLang.data?.[0]?.id as string | undefined) ?? null

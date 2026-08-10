@@ -4140,6 +4140,14 @@ alter table public.conversations drop constraint if exists conversations_lang_ch
 alter table public.conversations add constraint conversations_lang_check
   check (lang is null or lang in ('en', 'es'));
 
+-- ⚠️ У переписок, созданных ДО этой миграции, lang пустой — и это не чинится
+-- задним числом: понять, на каком языке был разговор, нечем. Поэтому клиент
+-- ищет «язык совпал ИЛИ язык не указан» (lib/chatHistory.ts). Иначе после
+-- заливки вся прошлая переписка стала бы невидимой: человек открыл бы «Диалог»
+-- и увидел пустой экран вместо своего разговора. Смоук это ловит —
+-- scripts/smoke-chat-history.mjs сеет запись без языка НАМЕРЕННО.
+-- Новые записи язык проставляют всегда, так что со временем пустые исчезнут.
+
 -- Загружаем последнюю переписку по паре (пользователь, язык) — нужен индекс,
 -- запрос идёт при каждом открытии «Диалога».
 create index if not exists conversations_user_lang_time

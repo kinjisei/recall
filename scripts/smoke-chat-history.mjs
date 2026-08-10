@@ -91,6 +91,22 @@ async function main() {
     { conversation_id: conv.id, role: 'user', content: 'ВОПРОС ДВА', created_at: t2 },
   ])
 
+  // ---- вторая переписка, ЯВНО испанская: в английском чате её быть не должно
+  const { data: esConv } = await admin
+    .from('conversations')
+    .insert({ user_id: userId, lang: 'es' })
+    .select('id')
+    .single()
+  await admin.from('messages').insert([
+    {
+      conversation_id: esConv.id,
+      role: 'user',
+      content: 'ИСПАНСКАЯ РЕПЛИКА',
+      // свежее английской: если бы язык не учитывался, подняли бы именно её
+      created_at: new Date().toISOString(),
+    },
+  ])
+
   const PORT = 9400 + Math.floor(Math.random() * 500)
   spawn(
     EDGE,
@@ -157,6 +173,11 @@ async function main() {
     JSON.stringify(order) ===
       JSON.stringify(['ВОПРОС ОДИН', 'ОТВЕТ ОДИН', 'ВОПРОС ДВА', 'ОТВЕТ ДВА']),
     order.join(' → ') || 'реплик не нашлось',
+  )
+
+  check(
+    'испанская переписка не попала в английский чат',
+    !(await page.evaluate(() => (document.body.innerText || '').includes('ИСПАНСКАЯ РЕПЛИКА'))),
   )
 
   // «Начать заново» — старая переписка не должна возвращаться после выхода
