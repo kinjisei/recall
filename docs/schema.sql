@@ -4154,3 +4154,191 @@ create index if not exists conversations_user_lang_time
   on public.conversations (user_id, lang, started_at desc);
 create index if not exists messages_conversation_time
   on public.messages (conversation_id, created_at);
+
+-- ============================================================================
+-- СЛОВА УЧЕНИКА: ВЫДАЧА ИЗ ГОТОВЫХ ПАКОВ И УДАЛЕНИЕ (2026-08-10)
+--
+-- Учитель мог назначить ученику ТОЛЬКО свои слова: список источников в студии
+-- ограничивался его собственными колодами. Готовые паки приложения (4844 слова
+-- в английском, 4668 в испанском) были доступны только самому ученику.
+--
+-- Попутно закрывается дыра, которую нашли при разборе. Выданные слова жили в
+-- колоде-КОПИИ, принадлежащей учителю, а lib/wordChecks.getStudentWords читает
+-- только колоды с owner_id = ученик. То есть учитель выдавал слова и дальше не
+-- видел по ним ни прогресса, ни возможности назначить перепроверку.
+--
+-- Решение владельца: слова кладём СРАЗУ в личную колоду ученика. Тогда они
+-- ничем не отличаются от взятых им самим — идут в FSRS, видны в «Словах» со
+-- статусом, попадают в перепроверку. Цена: отозвать нельзя, поэтому учителю
+-- даётся удаление (с предупреждением, что стирается и прогресс).
+-- ============================================================================
+
+-- Происхождение карточки. Нужно обеим сторонам: ученик видит «от
+-- преподавателя» в «Моём словаре», учитель — «выдал я» / «добавил ученик»
+-- перед удалением. Без этого учитель стирал бы месяц чужой работы вслепую.
+alter table public.cards drop constraint if exists cards_source_check;
+alter table public.cards add constraint cards_source_check
+  check (source in ('manual', 'reader', 'ai', 'teacher'));
+
+-- ---- Выдача слов ученику ----------------------------------------------------
+-- Пишем в ЧУЖУЮ колоду, поэтому только security definer: прямой insert в чужие
+-- карточки закрыт политикой «cards via own deck» и открывать её нельзя.
+create or replace function public.assign_words_to_student(
+  p_student_id uuid, p_lang text, p_words jsonb
+)
+returns int
+language plpgsql
+security definer
+set search_path = public
+as $fn$
+declare
+  v_deck uuid;
+  added int;
+begin
+  if auth.uid() is null then raise exception 'RECALL_NO_AUTH'; end if;
+  if not public.is_student_of(auth.uid(), p_student_id) then
+    raise exception 'RECALL_NOT_YOUR_STUDENT';
+  end if;
+  if p_lang not in ('en', 'es') then raise exception 'Неизвестный язык.'; end if;
+  if p_words is null or jsonb_typeof(p_words) <> 'array'
+     or jsonb_array_length(p_words) = 0 or jsonb_array_length(p_words) > 500
+     or pg_column_size(p_words) > 200 * 1024 then
+    raise exception 'RECALL_BAD_CARDS';
+  end if;
+
+  -- Колода ученика этого языка. Обе колоды создаёт триггер регистрации, но
+  -- аккаунты бывают старше триггера — тогда заводим.
+  select id into v_deck from decks
+   where owner_id = p_student_id and lang = p_lang
+   order by created_at nulls first, id limit 1;
+  if v_deck is null then
+    insert into decks (owner_id, title, lang)
+      values (p_student_id, case when p_lang = 'es' then 'Mis palabras' else 'Мои слова' end, p_lang)
+      returning id into v_deck;
+  end if;
+
+  -- ⚠️ Отсев дублей ЗДЕСЬ, а не на клиенте. Клиент их тоже показывает снятыми,
+  -- но это подсказка; если два учителя выдадут один пак одновременно, в колоде
+  -- окажется два одинаковых слова с разным прогрессом — и повторение сломается
+  -- тихо. Сверяем по front без регистра и краевых пробелов.
+  -- ⚠️ distinct on, а не «сравнить с первым таким же»: первая версия сверяла
+  -- значение с самим собой и пропускала ОБЕ строки — в колоде оказывались два
+  -- одинаковых слова с разным расписанием. Поймано смоуком.
+  insert into cards (deck_id, front, back, example, source)
+    select distinct on (lower(btrim(w->>'front')))
+           v_deck,
+           left(btrim(w->>'front'), 200),
+           nullif(left(w->>'back', 400), ''),
+           nullif(left(w->>'example', 600), ''),
+           'teacher'
+      from jsonb_array_elements(p_words) w
+     where coalesce(btrim(w->>'front'), '') <> ''
+       and not exists (
+         select 1 from cards c join decks d on d.id = c.deck_id
+          where d.owner_id = p_student_id and d.lang = p_lang
+            and lower(btrim(c.front)) = lower(btrim(w->>'front'))
+       )
+     order by lower(btrim(w->>'front'));
+  get diagnostics added = row_count;
+  return added;
+end $fn$;
+
+-- ---- Удаление слов ученика --------------------------------------------------
+-- Решение владельца: учитель может удалить ЛЮБОЕ слово ученика, а не только
+-- выданное им. Интерфейс показывает происхождение и предупреждает, что вместе
+-- со словом уходит его прогресс; запрет на чужое здесь — только по ученику.
+create or replace function public.teacher_delete_student_cards(
+  p_student_id uuid, p_card_ids jsonb
+)
+returns int
+language plpgsql
+security definer
+set search_path = public
+as $fn$
+declare removed int;
+begin
+  if auth.uid() is null then raise exception 'RECALL_NO_AUTH'; end if;
+  if not public.is_student_of(auth.uid(), p_student_id) then
+    raise exception 'RECALL_NOT_YOUR_STUDENT';
+  end if;
+  if p_card_ids is null or jsonb_typeof(p_card_ids) <> 'array'
+     or jsonb_array_length(p_card_ids) > 500 then
+    raise exception 'RECALL_BAD_CARDS';
+  end if;
+
+  -- Удаляем ТОЛЬКО карточки из колод ЭТОГО ученика: иначе, подсунув чужой
+  -- card_id, учитель стёр бы слово у человека, к которому не имеет отношения.
+  -- review_states уходят каскадом (FK on delete cascade).
+  delete from cards c
+   using decks d
+   where d.id = c.deck_id
+     and d.owner_id = p_student_id
+     and c.id in (
+       select (value #>> '{}')::uuid from jsonb_array_elements(p_card_ids)
+     );
+  get diagnostics removed = row_count;
+  return removed;
+end $fn$;
+
+-- ---- Перенос уже назначенных колод в колоды учеников ------------------------
+-- Назначение колоды ЦЕЛИКОМ убирается: слова всегда попадают к ученику и всегда
+-- видны в прогрессе. Уже назначенное переносим, иначе у людей просто пропали бы
+-- слова из повторения.
+--
+-- ⚠️ Переносим НЕ ТОЛЬКО карточки, но и review_states. Копия карточки — это
+-- новая строка с новым id, и без переноса расписания ученик получил бы свои же
+-- слова «новыми»: месяц повторений обнулился бы молча, а FSRS начал бы с нуля.
+--
+-- Guard встроен: в конце deck_assignments очищается, поэтому повторный запуск
+-- файла проходит вхолостую.
+do $mig$
+declare
+  a record;
+  c record;
+  v_deck uuid;
+  v_new uuid;
+begin
+  for a in
+    select da.student_id, d.id as src_deck, coalesce(d.lang, 'en') as lang
+      from deck_assignments da
+      join decks d on d.id = da.deck_id
+  loop
+    select id into v_deck from decks
+     where owner_id = a.student_id and lang = a.lang
+     order by created_at nulls first, id limit 1;
+    if v_deck is null then
+      insert into decks (owner_id, title, lang)
+        values (a.student_id,
+                case when a.lang = 'es' then 'Mis palabras' else 'Мои слова' end,
+                a.lang)
+        returning id into v_deck;
+    end if;
+
+    for c in select * from cards where deck_id = a.src_deck loop
+      -- слово уже есть у ученика — пропускаем: у его карточки своё расписание,
+      -- и затирать его копией было бы хуже, чем не переносить
+      if exists (
+        select 1 from cards c2 join decks d2 on d2.id = c2.deck_id
+         where d2.owner_id = a.student_id and d2.lang = a.lang
+           and lower(btrim(c2.front)) = lower(btrim(c.front))
+      ) then
+        continue;
+      end if;
+
+      insert into cards (deck_id, front, back, example, ipa, audio_url, source)
+        values (v_deck, c.front, c.back, c.example, c.ipa, c.audio_url, 'teacher')
+        returning id into v_new;
+
+      -- расписание переносим на новую карточку (у ученика оно одно на карточку)
+      update review_states set card_id = v_new
+       where card_id = c.id and user_id = a.student_id;
+    end loop;
+  end loop;
+
+  delete from deck_assignments;
+end $mig$;
+
+-- Гранты — ПОСЛЕ финального `revoke execute on all functions` в конце файла,
+-- иначе первый же вызов упрётся в permission denied.
+grant execute on function public.assign_words_to_student(uuid, text, jsonb) to authenticated;
+grant execute on function public.teacher_delete_student_cards(uuid, jsonb) to authenticated;

@@ -3,45 +3,16 @@ import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { getDefaultDeck, addCardsBulk } from '../../lib/cards'
 import type { AppLang, WordTopic } from '../../types'
+import {
+  loadPacks,
+  packCategory,
+  PACK_CATEGORY_LABEL,
+  type LoadedPacks,
+  type PackWord,
+} from '../../lib/wordPacks'
 import { Loading } from '../../components/Loading'
 
 const LEVEL_ORDER = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const
-
-/** Слово пака в общем виде — уже как будущая карточка. */
-interface PackWord {
-  front: string
-  back: string
-  example?: string
-}
-
-interface Loaded {
-  topics: WordTopic[]
-  wordsByTopic: Map<number, PackWord[]>
-}
-
-/** Ленивая загрузка словаря нужного языка (каждый — отдельный чанк). */
-async function loadPacks(lang: AppLang): Promise<Loaded> {
-  const map = new Map<number, PackWord[]>()
-  let topics: WordTopic[]
-  if (lang === 'es') {
-    const m = await import('../../data/spanish/words')
-    topics = m.allTopics
-    for (const w of m.allWords) {
-      const arr = map.get(w.topic_id) ?? []
-      arr.push({ front: w.spanish, back: w.russian, example: w.example_es })
-      map.set(w.topic_id, arr)
-    }
-  } else {
-    const m = await import('../../data/english/words')
-    topics = m.allTopics
-    for (const w of m.allWords) {
-      const arr = map.get(w.topic_id) ?? []
-      arr.push({ front: w.english, back: w.russian, example: w.example_en })
-      map.set(w.topic_id, arr)
-    }
-  }
-  return { topics, wordsByTopic: map }
-}
 
 /**
  * Паки слов по темам: испанский (~281 тема из приложения spanish) и
@@ -50,7 +21,7 @@ async function loadPacks(lang: AppLang): Promise<Loaded> {
  * текущего языка; дубликаты пропускаются.
  */
 export function PacksSheet({ lang, onAdded }: { lang: AppLang; onAdded: () => void }) {
-  const [data, setData] = useState<Loaded | null>(null)
+  const [data, setData] = useState<LoadedPacks | null>(null)
   const [query, setQuery] = useState('')
   const [openLevel, setOpenLevel] = useState<string | null>(null)
   const [busyTopic, setBusyTopic] = useState<number | null>(null)
@@ -66,11 +37,7 @@ export function PacksSheet({ lang, onAdded }: { lang: AppLang; onAdded: () => vo
       // авто-раскрытие первого уровня; ключ теперь «категория:уровень»
       const first = loaded.topics[0]
       if (first) {
-        const cat = first.name.startsWith('База')
-          ? 'base'
-          : first.name.startsWith('Идиомы')
-            ? 'idioms'
-            : 'themes'
+        const cat = packCategory(first.name)
         setOpenLevel(`${cat}:${first.level}`)
       }
     })
@@ -87,7 +54,7 @@ export function PacksSheet({ lang, onAdded }: { lang: AppLang; onAdded: () => vo
       const words = data.wordsByTopic.get(topicId) ?? []
       const added = await addCardsBulk(
         deck.id,
-        words.map((w) => ({ front: w.front, back: w.back, example: w.example })),
+        words.map((w: PackWord) => ({ front: w.front, back: w.back, example: w.example })),
       )
       setResults((r) => ({
         ...r,
@@ -113,7 +80,7 @@ export function PacksSheet({ lang, onAdded }: { lang: AppLang; onAdded: () => vo
     if (!data) return cats
     for (const t of data.topics) {
       if (q && !t.name.toLowerCase().includes(q)) continue
-      const cat = t.name.startsWith('База') ? 'base' : t.name.startsWith('Идиомы') ? 'idioms' : 'themes'
+      const cat = packCategory(t.name)
       ;((cats[cat] ??= {})[t.level] ??= []).push(t)
     }
     return cats
@@ -147,9 +114,9 @@ export function PacksSheet({ lang, onAdded }: { lang: AppLang; onAdded: () => vo
 
       {(
         [
-          ['base', '⭐ База уровня — самые нужные слова'],
-          ['themes', 'Темы'],
-          ['idioms', 'Идиомы'],
+          ['base', PACK_CATEGORY_LABEL.base],
+          ['themes', PACK_CATEGORY_LABEL.themes],
+          ['idioms', PACK_CATEGORY_LABEL.idioms],
         ] as [string, string][]
       ).map(([cat, catLabel]) => {
         const levels = byCategory[cat]

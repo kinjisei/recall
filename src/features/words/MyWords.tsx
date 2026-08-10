@@ -288,12 +288,22 @@ function WordCardSheet({
             </button>
           </div>
 
-          <span
-            className={`mt-2 inline-block rounded-full px-2.5 py-1 text-[11px] font-medium ${chip.cls}`}
-          >
-            {chip.label}
-            {intervalDays > 0 ? ` · повтор через ${intervalDays} дн.` : ''}
-          </span>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <span
+              className={`inline-block rounded-full px-2.5 py-1 text-[11px] font-medium ${chip.cls}`}
+            >
+              {chip.label}
+              {intervalDays > 0 ? ` · повтор через ${intervalDays} дн.` : ''}
+            </span>
+            {/* Откуда слово. Преподаватель кладёт слова прямо в словарь ученика,
+                и без пометки человек не поймёт, почему у него вдруг чужие
+                слова — а это первое, что он подумает. */}
+            {card.source === 'teacher' && (
+              <span className="inline-block rounded-full bg-[var(--night-accent-900)] px-2.5 py-1 text-[11px] font-medium text-[var(--night-accent-100)]">
+                от преподавателя
+              </span>
+            )}
+          </div>
 
           {card.back ? (
             <p className="mt-3 text-lg leading-relaxed">{card.back}</p>

@@ -13,7 +13,10 @@ export type Rating = 'again' | 'hard' | 'good' | 'easy'
 
 export type Role = 'learner' | 'teacher'
 
-export type CardSource = 'manual' | 'reader' | 'ai'
+// 'teacher' — слово выдал преподаватель из карточки ученика. Нужно обеим
+// сторонам: ученик видит «от преподавателя» в «Моём словаре», учитель — «выдал
+// я» / «ученик» перед удалением (иначе стирал бы чужую работу вслепую).
+export type CardSource = 'manual' | 'reader' | 'ai' | 'teacher'
 
 export type ReviewStateName = 'new' | 'learning' | 'review' | 'relearning'
 

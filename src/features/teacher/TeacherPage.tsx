@@ -16,9 +16,6 @@ import {
   setStudentSeat,
   unlinkStudent,
   getMyStudents,
-  getMyDecks,
-  assignDeck,
-  unassignDeck,
   type StudentInfo,
 } from '../../lib/teacher'
 import { MaterialsSection } from './MaterialsSection'
@@ -28,14 +25,13 @@ import { QuestSection } from './QuestSection'
 import { DiagnosticsSection } from './DiagnosticsSection'
 import { PlacementSection } from './PlacementSection'
 import { ProgramSection } from './ProgramSection'
-import { DeckWordsPicker } from './DeckWordsPicker'
 import { GuideSection } from './GuideSection'
 import { DailyPlanSection } from './DailyPlanSection'
 import { countSubmittedWorks } from '../../lib/materials'
 import { countSubmittedWriting } from '../../lib/writing'
 import { getMyPlan, type MyPlan } from '../../lib/billing'
 import { IconSparkle } from '../../components/icons'
-import type { Deck, Profile } from '../../types'
+import type { Profile } from '../../types'
 import { AppLink } from '../../components/AppLink'
 import { Loading, RowsSkeleton } from '../../components/Loading'
 
@@ -160,7 +156,6 @@ function TeacherDashboard() {
   const [regenerating, setRegenerating] = useState(false)
   const [stopping, setStopping] = useState(false)
   const [students, setStudents] = useState<StudentInfo[]>([])
-  const [decks, setDecks] = useState<Deck[]>([])
   const [pendingWorks, setPendingWorks] = useState(0)
   const [pendingWriting, setPendingWriting] = useState(0)
   const [myPlan, setMyPlan] = useState<MyPlan | null>(null)
@@ -172,16 +167,14 @@ function TeacherDashboard() {
   const load = useCallback(async () => {
     setError(null)
     try {
-      const [c, s, d, pending, pendingW] = await Promise.all([
+      const [c, s, pending, pendingW] = await Promise.all([
         getOrCreateInviteCode(),
         getMyStudents(),
-        getMyDecks(),
         countSubmittedWorks().catch(() => 0), // был отдельным шагом ПОСЛЕ Promise.all
         countSubmittedWriting().catch(() => 0),
       ])
       setCode(c)
       setStudents(s)
-      setDecks(d)
       setPendingWorks(pending)
       setPendingWriting(pendingW)
       getMyPlan().then(setMyPlan).catch(() => {})
@@ -414,7 +407,6 @@ function TeacherDashboard() {
                 <StudentCard
                   key={s.profile.id}
                   student={s}
-                  decks={decks}
                   onChanged={load}
                   covered={covered}
                   seatsKnown={typeof myPlan?.seats === 'number'}
@@ -502,14 +494,12 @@ function StudentRow({
 
 function StudentCard({
   student,
-  decks,
   onChanged,
   covered = true,
   seatsKnown = false,
   onBack,
 }: {
   student: StudentInfo
-  decks: Deck[]
   onChanged: () => void
   /** Возврат к списку учеников (карточка теперь отдельный экран). */
   onBack?: () => void
@@ -520,34 +510,14 @@ function StudentCard({
 }) {
   const [seatBusy, setSeatBusy] = useState(false)
   const [unlinking, setUnlinking] = useState(false)
-  const [showDecks, setShowDecks] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [showWords, setShowWords] = useState(false)
   const [showQuests, setShowQuests] = useState(false)
   const [showDiag, setShowDiag] = useState(false)
   const [showProgram, setShowProgram] = useState(false)
   const [showPlanDay, setShowPlanDay] = useState(false)
-  /** id набора, чьи слова сейчас раскрыты (просмотр + выборочное назначение). */
-  const [openDeck, setOpenDeck] = useState<string | null>(null)
-  const [busyDeck, setBusyDeck] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
   const p = student.profile
 
-  const toggleDeck = async (deck: Deck) => {
-    setBusyDeck(deck.id)
-    setError(null)
-    try {
-      if (student.assignedDeckIds.includes(deck.id)) {
-        await unassignDeck(deck.id, p.id)
-      } else {
-        await assignDeck(deck.id, p.id)
-      }
-      onChanged()
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Не удалось изменить назначение')
-    } finally {
-      setBusyDeck(null)
-    }
-  }
 
   return (
     <div className="flex flex-col gap-3">
@@ -591,58 +561,11 @@ function StudentCard({
         </p>
       </div>
 
-      <button
-        onClick={() => setShowDecks((v) => !v)}
-        className="text-left text-sm font-medium text-[var(--night-accent-text)] hover:underline"
-      >
-        {showDecks ? '▾ Скрыть наборы слов' : `▸ Наборы слов (назначено: ${student.assignedDeckIds.length})`}
-      </button>
-
-      {showDecks && (
-        <div className="flex flex-col gap-2">
-          {decks.map((d) => {
-            const assigned = student.assignedDeckIds.includes(d.id)
-            const opened = openDeck === d.id
-            return (
-              <div
-                key={d.id}
-                className="flex flex-col gap-2 rounded-xl border border-white/[0.08] px-3 py-2"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  {/* тап по названию раскрывает слова — назначение больше не вслепую */}
-                  <button
-                    onClick={() => setOpenDeck(opened ? null : d.id)}
-                    className="min-h-[44px] min-w-0 flex-1 text-left text-sm font-medium"
-                    aria-expanded={opened}
-                  >
-                    <span className="truncate">{d.title}</span>{' '}
-                    <span className="text-xs text-[var(--night-text-40)]">
-                      ({d.lang ?? 'en'}) {opened ? '▾' : '▸ слова'}
-                    </span>
-                  </button>
-                  <Button
-                    variant={assigned ? 'ghost' : 'secondary'}
-                    className="shrink-0 px-3 py-1.5 text-sm"
-                    disabled={busyDeck !== null}
-                    onClick={() => toggleDeck(d)}
-                  >
-                    {busyDeck === d.id ? '…' : assigned ? 'Убрать ✓' : 'Назначить'}
-                  </Button>
-                </div>
-                {opened && (
-                  <DeckWordsPicker
-                    deck={d}
-                    studentId={p.id}
-                    studentName={p.display_name ?? 'ученика'}
-                    onAssigned={onChanged}
-                  />
-                )}
-              </div>
-            )
-          })}
-          {error && <p className="text-sm text-red-500">{error}</p>}
-        </div>
-      )}
+      {/* Раздел «Наборы слов» убран (2026-08-10). Выдача слов переехала в
+          «Слова», где виден весь словарь ученика со статусами. Раньше выданное
+          жило в колоде-КОПИИ учителя, а getStudentWords читает только колоды
+          ученика — то есть учитель выдавал слова и больше их не видел: ни
+          прогресса, ни возможности назначить по ним перепроверку. */}
 
       {/* Тест уровня — ПЕРВЫМ. Комментарий в коде и методичка всегда говорили,
           что с нового ученика надо начинать именно с него, но на экране он
@@ -681,7 +604,9 @@ function StudentCard({
       >
         {showWords ? '▾ Скрыть слова' : '▸ Слова и перепроверка'}
       </button>
-      {showWords && <StudentWordsSection studentId={p.id} />}
+      {showWords && (
+        <StudentWordsSection studentId={p.id} studentLevel={p.level ?? null} />
+      )}
 
       <button
         onClick={() => setShowQuests((v) => !v)}
@@ -690,6 +615,8 @@ function StudentCard({
         {showQuests ? '▾ Скрыть AI-квесты' : '▸ AI-квесты по грамматике'}
       </button>
       {showQuests && <QuestSection studentId={p.id} />}
+
+      {error && <p className="text-sm text-red-500">{error}</p>}
 
       <div className="mt-1 flex flex-wrap items-center gap-2 border-t border-white/[0.06] pt-3">
         {seatsKnown && (

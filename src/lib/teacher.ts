@@ -9,7 +9,7 @@ import { dbError } from './dbError'
 import { SUPPORT_EMAIL } from './contacts'
 import { selectProfiles, invalidateProfile } from './profile'
 import { track } from './analytics'
-import type { Card, Deck, Profile } from '../types'
+import type { AppLang, Card, Deck, Profile } from '../types'
 
 /** Сводка по ученику для экрана преподавателя. */
 export interface StudentInfo {
@@ -277,47 +277,68 @@ export async function listDeckCards(deckId: string): Promise<Card[]> {
 }
 
 /**
- * Назначить ученику ВЫБОРКУ слов из набора: колода-копия + карточки +
- * назначение — ОДНОЙ транзакцией (RPC assign_selected_words): раньше сбой на
- * середине оставлял колоду-сироту, а ретраи плодили дубликаты (ревью
- * 2026-07-24). Возвращает число скопированных карточек.
+ * Выдать ученику слова — из готового пака или из своей колоды.
+ *
+ * ⚠️ Слова кладутся в ЛИЧНУЮ колоду ученика, а не в колоду-копию учителя.
+ * Раньше было наоборот, и это тихо ломало полпродукта: lib/wordChecks
+ * .getStudentWords читает только колоды с owner_id = ученик, поэтому выданные
+ * слова не попадали ни в раздел «Слова», ни в перепроверку — учитель выдавал
+ * их и больше никогда не видел.
+ *
+ * Дубли отсеивает СЕРВЕР (RPC assign_words_to_student): клиент их тоже
+ * показывает снятыми, но это подсказка, а не гарантия.
+ *
+ * @returns сколько слов реально добавлено (без дублей)
  */
-export async function assignSelectedWords(
-  sourceDeck: Deck,
+export async function assignWordsToStudent(
   studentId: string,
-  studentName: string,
-  cards: Card[],
+  lang: AppLang,
+  words: { front: string; back?: string | null; example?: string | null }[],
 ): Promise<number> {
-  if (cards.length === 0) return 0
-  const title = `${sourceDeck.title} — выборка для ${studentName}`
-  const { data, error } = await supabase.rpc('assign_selected_words', {
+  if (words.length === 0) return 0
+  const { data, error } = await (
+    supabase.rpc as unknown as (
+      fn: string,
+      args: Record<string, unknown>,
+    ) => Promise<{ data: unknown; error: { message: string } | null }>
+  )('assign_words_to_student', {
     p_student_id: studentId,
-    p_title: title,
-    p_lang: sourceDeck.lang ?? 'en',
-    p_cards: cards.map((c) => ({
-      front: c.front,
-      back: c.back ?? '',
-      example: c.example ?? '',
+    p_lang: lang,
+    p_words: words.map((w) => ({
+      front: w.front,
+      back: w.back ?? '',
+      example: w.example ?? '',
     })),
   })
-  if (error) throw dbError(error, 'назначить слова ученику')
-  return (data as number) ?? cards.length
+  if (error) throw dbError(error, 'выдать слова ученику')
+  return (data as number) ?? 0
 }
 
-/** Назначить колоду ученику. */
-export async function assignDeck(deckId: string, studentId: string): Promise<void> {
-  const { error } = await supabase
-    .from('deck_assignments')
-    .insert({ deck_id: deckId, student_id: studentId })
-  if (error && !error.message.includes('duplicate')) throw error
+/**
+ * Удалить слова из словаря ученика.
+ *
+ * Решение владельца: учитель ведёт весь словарь, поэтому может удалить и то,
+ * что ученик добавил сам. Интерфейс обязан показать происхождение и
+ * предупредить, что вместе со словом уходит его прогресс, — сервер этого не
+ * знает и проверяет только принадлежность ученику.
+ *
+ * @returns сколько слов удалено
+ */
+export async function deleteStudentCards(
+  studentId: string,
+  cardIds: string[],
+): Promise<number> {
+  if (cardIds.length === 0) return 0
+  const { data, error } = await (
+    supabase.rpc as unknown as (
+      fn: string,
+      args: Record<string, unknown>,
+    ) => Promise<{ data: unknown; error: { message: string } | null }>
+  )('teacher_delete_student_cards', {
+    p_student_id: studentId,
+    p_card_ids: cardIds,
+  })
+  if (error) throw dbError(error, 'удалить слова ученика')
+  return (data as number) ?? 0
 }
 
-/** Снять назначение колоды. */
-export async function unassignDeck(deckId: string, studentId: string): Promise<void> {
-  const { error } = await supabase
-    .from('deck_assignments')
-    .delete()
-    .eq('deck_id', deckId)
-    .eq('student_id', studentId)
-  if (error) throw error
-}
