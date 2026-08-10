@@ -10,6 +10,8 @@ import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { RoundResult, ScoreGlyph } from '../../components/RoundResult'
 import { ExerciseView } from '../../components/exercises'
+import { correctAnswerText } from '../../lib/text'
+import type { ReviewItem } from '../../components/RoundReview'
 import { MarkableText } from '../../components/MarkableText'
 import { logActivity } from '../../lib/activity'
 import { useAsyncData } from '../../lib/useAsyncData'
@@ -375,11 +377,30 @@ function AssignmentRunner({
     }
   }
 
+  // Разбор ошибок для итогового экрана. Собираем из УЖЕ имеющихся данных
+  // (ответы + сами упражнения) — отдельный сборщик тут не нужен.
+  //
+  // Зачем: в практике после раунда есть «Почему?» — короткое объяснение от AI,
+  // а в заданиях от преподавателя не было ничего. Ученик видел «неверно» и
+  // правильный ответ, но не узнавал, чем плох его собственный, — то есть
+  // ошибка ничему не учила. Механика была написана и просто не подключена.
+  const reviewItems: ReviewItem[] = m.exercises.map((ex, i) => {
+    const a = answerMap[i]
+    return {
+      prompt: ex.prompt,
+      given: a?.given ?? '(нет ответа)',
+      correct: correctAnswerText(ex),
+      ok: a?.auto_ok ?? false,
+    }
+  })
+
   if (finished) {
     return (
       <RoundResult
         correct={correct}
         total={total}
+        review={reviewItems}
+        lang={m.lang}
         note={
           alreadyDone
             ? undefined

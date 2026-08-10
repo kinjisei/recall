@@ -12,6 +12,7 @@ import {
 } from '../../../lib/materials'
 import type { Material, MaterialPlan } from '../../../types'
 import { inputClass } from './shared'
+import { correctAnswerText } from '../../../lib/text'
 
 export function PreviewScreen({
   req,
@@ -99,6 +100,12 @@ export function PreviewScreen({
             )}
             {e.type === 'fill' && (
               <p className="mt-0.5 text-emerald-400">✓ {e.answer}</p>
+            )}
+            {e.type === 'order' && (
+              <p className="mt-0.5 text-emerald-400">
+                ✓ {correctAnswerText(e)}
+                <span className="text-[var(--night-text-40)]"> (слова: {e.words.join(' · ')})</span>
+              </p>
             )}
           </div>
         ))}

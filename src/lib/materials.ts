@@ -6,6 +6,8 @@
 import { supabase, requireUserId, toJson } from './supabase'
 import { dbError } from './dbError'
 import { chat } from './gemini'
+import { correctAnswerText } from './text'
+import { validExercises } from './materialExercises'
 import { getStudentDiagnostics } from './diagnostics'
 import { diagnosticsBrief, grammarCatalog } from './diagnosticsBrief'
 import { track } from './analytics'
@@ -119,26 +121,6 @@ export function lengthRangeOf(body: string): MaterialRequest['lengthRange'] {
   return n < 100 ? '50-100' : n <= 250 ? '100-250' : '250-350'
 }
 
-/** Валидные упражнения из ответа AI (общая для генерации текста и «Мой текст»). */
-function validExercises(list: MaterialExercise[]): MaterialExercise[] {
-  return (list ?? []).filter((e) => {
-    if (!e || typeof e !== 'object') return false
-    if (e.type === 'mcq') {
-      return (
-        typeof e.prompt === 'string' &&
-        Array.isArray(e.options) &&
-        e.options.length >= 2 &&
-        typeof e.answer === 'number' &&
-        e.answer >= 0 &&
-        e.answer < e.options.length
-      )
-    }
-    if (e.type === 'fill') {
-      return typeof e.prompt === 'string' && typeof e.answer === 'string' && e.answer.length > 0
-    }
-    return false
-  })
-}
 
 /** Шаг 1: AI проверяет заявку и предлагает план материала. */
 export async function generateMaterialPlan(
@@ -159,12 +141,15 @@ export async function generateMaterialPlan(
     '  "exercise_plan": [',
     '    {"kind":"comprehension","type":"mcq","count":N,"note":"вопросы по смыслу текста"},',
     '    {"kind":"grammar","type":"fill","count":N,"note":"что именно тренируем"},',
+    '    {"kind":"grammar","type":"order","count":N,"note":"собрать предложение из слов"},',
     '    {"kind":"vocab","type":"mcq","count":N,"note":"матч: определение слова → выбор из 4 слов"}',
     '  ]',
     '}',
     '',
     `Правила: вопросов на понимание (comprehension) — ${comprehensionRange(req.lengthRange)} (длина текста ${req.lengthRange} слов).`,
     'Грамматических и словарных упражнений — по 4-6, если тема/слова заданы; kind "grammar" пропусти, если грамматика не задана.',
+    'Грамматику ОБЯЗАТЕЛЬНО раздели на два типа: часть fill (вписать), часть order (собрать предложение из слов). ' +
+      'Одинаковые упражнения подряд превращают задание в механическую работу; ученик должен и вписывать, и строить фразу целиком.',
     '',
     USE_DIAGNOSTICS,
     'В comments отдельной фразой скажи, что именно взял из диагностики — преподаватель должен видеть, почему план такой.',
@@ -214,6 +199,7 @@ export async function generateMaterialContent(
     '  "exercises": [',
     '    {"kind":"comprehension","type":"mcq","prompt":"вопрос по смыслу на целевом языке","options":["A","B","C","D"],"answer":0},',
     '    {"kind":"grammar","type":"fill","prompt":"предложение ИЗ текста с пропуском ___","answer":"пропущенная часть","hint":"подсказка по-русски"},',
+    '    {"kind":"grammar","type":"order","prompt":"перевод предложения по-русски","words":["слова","в","любом","порядке"],"answer":["слова","в","правильном","порядке"]},',
     '    {"kind":"vocab","type":"mcq","prompt":"определение/объяснение целевого слова НА ЦЕЛЕВОМ ЯЗЫКЕ (само слово не называть!)","options":["слово1","слово2","слово3","слово4"],"answer":0}',
     '  ]',
     '}',
@@ -229,6 +215,7 @@ export async function generateMaterialContent(
       'не ставь «/» как часть самого ответа (даты, дроби) — иначе он не засчитается.',
     '7. Словарные (vocab) — матч по определению: prompt — простое определение слова на целевом языке (уровня ученика, БЕЗ самого слова), options — 4 слова: правильное + 3 других слова из текста или того же уровня, answer — индекс правильного.',
     '8. Порядок упражнений: сначала comprehension, потом grammar, потом vocab.',
+    '9. В order: answer — предложение из текста, разбитое на слова В ПРАВИЛЬНОМ ПОРЯДКЕ (3-10 слов); words — РОВНО ТЕ ЖЕ слова, ничего не добавляя и не убирая (порядок неважен, приложение перемешает). prompt — перевод этого предложения на русский. Если состав words и answer разойдётся, упражнение станет несобираемым и будет выброшено.',
     '',
     USE_DIAGNOSTICS,
   ].join('\n')
@@ -286,17 +273,21 @@ export async function generateExercisesForText(
     '  "exercises": [',
     '    {"kind":"comprehension","type":"mcq","prompt":"вопрос по смыслу на целевом языке","options":["A","B","C","D"],"answer":0},',
     '    {"kind":"grammar","type":"fill","prompt":"предложение ИЗ текста с пропуском ___","answer":"пропущенная часть","hint":"подсказка по-русски"},',
+    '    {"kind":"grammar","type":"order","prompt":"перевод предложения по-русски","words":["слова","в","любом","порядке"],"answer":["слова","в","правильном","порядке"]},',
     '    {"kind":"vocab","type":"mcq","prompt":"определение слова НА ЦЕЛЕВОМ ЯЗЫКЕ (само слово не называть!)","options":["слово1","слово2","слово3","слово4"],"answer":0}',
     '  ]',
     '}',
     '',
     'Жёсткие требования:',
     '1. ВСЕ упражнения строго по содержанию ДАННОГО текста. Не выдумывай фактов, которых в тексте нет.',
-    `2. Вопросов на понимание (comprehension) — ${compr}; грамматических (fill, предложения ИЗ текста) — 3-6; словарных (vocab) — 3-6.`,
+    `2. Вопросов на понимание (comprehension) — ${compr}; грамматических — 3-6 (часть fill, часть order, чтобы задание не было однообразным); словарных (vocab) — 3-6.`,
     opts?.grammar?.trim() ? `3. Сделай акцент на грамматике: ${opts.grammar.trim()}.` : '',
     opts?.vocabulary?.trim() ? `4. В словарных упражнениях приоритет словам: ${opts.vocabulary.trim()}.` : '',
     'В fill ответ (answer) — ровно то, что пропущено на месте ___; «/» только для равноправных вариантов (was/were), не как часть самого ответа.',
     'В vocab prompt — простое определение слова уровня ученика БЕЗ самого слова; options — 4 слова (правильное + 3 из текста/того же уровня); answer — индекс правильного.',
+    'В order: answer — предложение ИЗ текста, разбитое на слова в правильном порядке (3-10 слов); ' +
+      'words — РОВНО ТЕ ЖЕ слова (порядок неважен, приложение перемешает); prompt — перевод предложения на русский. ' +
+      'Разошёлся состав words и answer — упражнение несобираемое, оно будет выброшено.',
     'Порядок упражнений: сначала comprehension, потом grammar, потом vocab.',
   ]
     .filter(Boolean)
@@ -513,7 +504,7 @@ export async function generateAiReview(
       index: i,
       kind: ex.kind,
       prompt: ex.prompt,
-      correct: ex.type === 'mcq' ? ex.options[ex.answer] : ex.type === 'fill' ? ex.answer : '',
+      correct: correctAnswerText(ex),
       options: ex.type === 'mcq' ? ex.options : undefined,
       given: a?.given ?? '(нет ответа)',
       auto_ok: a?.auto_ok ?? false,

@@ -26,12 +26,9 @@ export function ExerciseView({
   return <OrderExercise exercise={exercise} {...cb} />
 }
 
-/** Текст верного ответа упражнения (для разбора результатов «Посмотреть результаты»). */
-export function correctAnswerText(exercise: GrammarExercise): string {
-  if (exercise.type === 'mcq') return exercise.options[exercise.answer] ?? ''
-  if (exercise.type === 'fill') return exercise.answer
-  return exercise.answer.join(' ')
-}
+// correctAnswerText переехал в lib/text.ts — им пользуются и разбор работ,
+// и предпросмотр материала; правило «как выглядит верный ответ» должно быть одно.
+export { correctAnswerText } from '../lib/text'
 
 function NextButton({ onNext, isLast }: { onNext: () => void; isLast: boolean }) {
   return <Button onClick={onNext}>{isLast ? 'Завершить' : 'Дальше →'}</Button>

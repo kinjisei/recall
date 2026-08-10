@@ -3,6 +3,7 @@
 // один и тот же ответ мог считаться верным в игре и неверным в грамматике.
 // ============================================================================
 
+import type { GrammarExercise } from '../types'
 /**
  * Нормализация НАПЕЧАТАННОГО ответа перед сравнением. Снимаем всё, что не
  * относится к сути ответа:
@@ -65,4 +66,18 @@ export function normalizeAnswer(s: string): string {
 export function answerMatches(given: string, expected: string): boolean {
   const g = normalizeAnswer(given)
   return expected.split('/').some((variant) => normalizeAnswer(variant) === g)
+}
+
+/**
+ * Текст верного ответа упражнения — одной строкой.
+ *
+ * Живёт здесь, а не в компоненте: то же самое нужно разбору сданной работы
+ * (lib/materials) и предпросмотру материала у преподавателя. Пока правило было
+ * в трёх местах, «собери предложение» в двух из них давало ПУСТУЮ строку —
+ * преподаватель не видел ответа, а AI-проверяющий получал «правильный ответ: ».
+ */
+export function correctAnswerText(exercise: GrammarExercise): string {
+  if (exercise.type === 'mcq') return exercise.options[exercise.answer] ?? ''
+  if (exercise.type === 'fill') return exercise.answer
+  return exercise.answer.join(' ')
 }
