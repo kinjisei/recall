@@ -59,11 +59,19 @@ export async function loadLastChat(userId: string, lang: AppLang): Promise<Loade
   try {
     const id = await lastConversationId(userId, lang)
     if (!id) return null
+    // ⚠️ Вторая сортировка по role — не украшение, а починка УЖЕ СОХРАНЁННЫХ
+    // переписок. Пара «вопрос + ответ» долго писалась одним insert-ом, и обе
+    // строки получали одинаковый created_at (now() в Postgres — время
+    // транзакции). Порядок внутри пары становился произвольным, и чат
+    // открывался вывернутым: сначала ответ AI, под ним вопрос к нему.
+    // По убыванию 'user' идёт раньше 'assistant' — то есть в паре вопрос
+    // впереди. Когда времена разные (новые записи), эта сортировка не влияет.
     const { data, error } = await supabase
       .from('messages')
       .select('role, content, created_at')
       .eq('conversation_id', id)
       .order('created_at', { ascending: false })
+      .order('role', { ascending: true })
       .limit(HISTORY_LIMIT)
     if (error) throw error
     const turns = (data ?? [])

@@ -241,7 +241,13 @@ function ChatSection({
   }, [user?.id, lang])
 
   // Сохраняем реплики в БД; сбой сохранения не должен ломать сам чат.
-  const persist = async (turns: ChatTurn[]) => {
+  //
+  // ⚠️ Время у каждой реплики СВОЁ и проставляется явно. Раньше обе строки
+  // уходили одним insert-ом с created_at = now(), а now() в Postgres — время
+  // ТРАНЗАКЦИИ, то есть одинаковое для обеих. При загрузке сортировка по
+  // времени становилась произвольной, и переписка открывалась вывернутой:
+  // сначала ответ AI, под ним вопрос, на который он отвечает.
+  const persist = async (turns: { role: ChatTurn['role']; content: string; at: Date }[]) => {
     if (!user) return
     try {
       if (!convIdRef.current) {
@@ -253,6 +259,7 @@ function ChatSection({
         conversation_id: convIdRef.current,
         role: t.role,
         content: t.content,
+        created_at: t.at.toISOString(),
       }))
       const { error: mErr } = await supabase.from('messages').insert(rows)
       if (mErr) throw mErr
@@ -267,6 +274,7 @@ function ChatSection({
     if (!text || busy) return
     setError(null)
     setInput('')
+    const askedAt = new Date()
     const history: ChatTurn[] = [...msgs, { role: 'user', content: text }]
     setMsgs(history)
     setBusy(true)
@@ -279,8 +287,8 @@ function ChatSection({
       setMsgs([...history, { role: 'assistant', content: reply }])
       void logActivity('conversation')
       void persist([
-        { role: 'user', content: text },
-        { role: 'assistant', content: reply },
+        { role: 'user', content: text, at: askedAt },
+        { role: 'assistant', content: reply, at: new Date() },
       ])
     } catch (err) {
       // возвращаем текст в поле ввода, чтобы не потерять написанное

@@ -69,7 +69,12 @@ psql "postgresql://postgres.НОВЫЙ_ПРОЕКТ:ПАРОЛЬ@aws-1-eu-centra
 
 - **«Нет секретов»** — не заведён `SUPABASE_DB_URL` или `BACKUP_PASSPHRASE`.
 - **Ошибка подключения** — сменился пароль базы. Обновите секрет
-  `SUPABASE_DB_URL` (Supabase → Connect → Session pooler).
+  `SUPABASE_DB_URL` (Supabase → Connect → **Session pooler**).
+
+  ⚠️ Именно pooler, а НЕ «Direct connection»: прямой хост Supabase отвечает
+  только по IPv6, которого у раннеров GitHub нет, и дамп падает за секунды.
+  Workflow теперь проверяет это ДО дампа и пишет причину прямо в сводку
+  прогона — читать логи не нужно.
 - **«Дамп подозрительно мал»** — подключение прошло, но данных не пришло.
   Проверьте строку: возможно, взят Transaction pooler (порт 6543) вместо
   Session pooler (5432).
