@@ -7,12 +7,22 @@
 # Дамп шифруется ПЕРЕД загрузкой: артефакт лежит в чужом облаке, а внутри
 # персональные данные учеников. Пароль знает только владелец.
 #
+# ⚠️ ПАДЕНИЕ ОБЪЯСНЯЕТ СЕБЯ САМО. Прогон #4 упал за 21 секунду с кодом 1, и
+# единственным способом узнать причину было открыть логи Actions — а владелец
+# видит только красный значок в почте. Поэтому: причина, которую можно поймать
+# заранее, ловится ДО дампа, а если pg_dump всё-таки упал — его stderr едет в
+# сводку прогона вместе с расшифровкой (.github/scripts/backup-explain.mjs,
+# у него есть локальный тест `node scripts/test-backup-explain.mjs`).
+# Секреты в сводку не попадают: GitHub маскирует их в логах, но не в сводке.
+#
 # Секреты (Settings → Secrets and variables → Actions):
-#   SUPABASE_DB_URL   — строка подключения. ⚠️ ОБЯЗАТЕЛЬНО «Session pooler»,
-#                       а НЕ «Direct connection»: прямой хост Supabase отвечает
-#                       только по IPv6, а у раннеров GitHub его нет — соединение
-#                       падает за секунды. Нужный адрес в Supabase → Connect →
-#                       Session pooler (хост вида ...pooler.supabase.com).
+#   SUPABASE_DB_URL   — строка подключения. ⚠️ ОБЯЗАТЕЛЬНО «Session pooler»
+#                       (порт 5432), а НЕ «Direct connection» и НЕ «Transaction
+#                       pooler» (6543). Прямой хост Supabase отвечает только по
+#                       IPv6, которого у раннеров GitHub нет; транзакционный пул
+#                       рвёт сессию между запросами, а pg_dump держит её целиком.
+#                       Нужный адрес: Supabase → Connect → Session pooler
+#                       (хост вида ...pooler.supabase.com, порт 5432).
 #   BACKUP_PASSPHRASE — пароль шифрования. Потеряете его — дамп бесполезен.
 name: Бэкап базы
 
@@ -27,62 +37,72 @@ jobs:
   dump:
     runs-on: ubuntu-latest
     steps:
-      - name: Проверить секреты
+      # Скрипты предпроверки и разбора ошибок лежат в репозитории, поэтому
+      # без checkout шаги не найдут их и упадут на ровном месте.
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      # Всё, что можно поймать ДО дампа, ловится здесь: пропущенные секреты и
+      # три способа испортить строку подключения на одном экране Supabase
+      # (Direct connection, транзакционный пул 6543, логин без кода проекта).
+      # Разбор строки живёт в скрипте, а не в этом YAML: YAML нельзя прогнать
+      # локально, а у скрипта есть тест — node scripts/test-backup-precheck.mjs.
+      - name: Проверить секреты и строку подключения
         env:
           DB_URL: ${{ secrets.SUPABASE_DB_URL }}
           PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
         run: |
-          fail=0
-          if [ -z "${DB_URL:-}" ]; then
-            echo "::error::Нет секрета SUPABASE_DB_URL"
-            echo "❌ Не задан секрет **SUPABASE_DB_URL**" >> "$GITHUB_STEP_SUMMARY"
-            fail=1
+          if ! node .github/scripts/backup-precheck.mjs >> "$GITHUB_STEP_SUMMARY"; then
+            echo "::error::Предпроверка бэкапа не прошла — причина в сводке прогона"
+            exit 1
           fi
-          if [ -z "${PASSPHRASE:-}" ]; then
-            echo "::error::Нет секрета BACKUP_PASSPHRASE"
-            echo "❌ Не задан секрет **BACKUP_PASSPHRASE**" >> "$GITHUB_STEP_SUMMARY"
-            fail=1
-          fi
-          # Самая частая причина падения: взяли «Direct connection». Он живёт
-          # только на IPv6, которого у раннера нет, и дамп умирает за секунды с
-          # невнятным «could not translate host name». Проверяем ДО дампа и
-          # пишем в сводку прогона — чтобы причина была видна без чтения логов.
-          if [ "$fail" = "0" ] && ! printf '%s' "$DB_URL" | grep -q 'pooler\.supabase\.com'; then
-            echo "::error::SUPABASE_DB_URL похож на Direct connection (IPv6). Нужен Session pooler."
-            {
-              echo "❌ **SUPABASE_DB_URL указывает не на пул соединений.**"
-              echo ""
-              echo "У раннеров GitHub нет IPv6, а прямой хост Supabase доступен только по нему."
-              echo "Возьмите строку из Supabase → **Connect → Session pooler**"
-              echo "(хост вида \`...pooler.supabase.com\`) и обновите секрет."
-            } >> "$GITHUB_STEP_SUMMARY"
-            fail=1
-          fi
-          exit $fail
 
       - name: Снять дамп и зашифровать
         env:
           DB_URL: ${{ secrets.SUPABASE_DB_URL }}
           PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
         run: |
-          set -euo pipefail
+          set -uo pipefail
           STAMP=$(date -u +%Y-%m-%d)
           # pg_dump берём ОБРАЗОМ, а не из apt: версия клиента должна быть не
           # ниже серверной, и подключать репозиторий PostgreSQL на каждом
           # прогоне — лишняя точка отказа (ключи, зеркала, смена релиза Ubuntu).
           # Образ даёт ровно ту версию, которую мы назвали.
+          #
+          # stderr pg_dump уходит в файл, а не в никуда: именно там лежит
+          # единственное внятное объяснение падения, и без него сводка прогона
+          # сообщала бы «код 1» — ровно то, ради чего пришлось бы лезть в логи.
+          # errexit на время конвейера снят, чтобы успеть прочитать PIPESTATUS.
+          set +e
           docker run --rm -i -e PGCONNECT_TIMEOUT=15 postgres:17 \
-            pg_dump "$DB_URL" --no-owner --no-acl --clean --if-exists \
+            pg_dump "$DB_URL" --no-owner --no-acl --clean --if-exists 2> pg_dump.err \
             | gzip -9 \
             | gpg --batch --yes --symmetric --cipher-algo AES256 \
                   --passphrase "$PASSPHRASE" \
                   -o "recall-$STAMP.sql.gz.gpg"
+          codes=("${PIPESTATUS[@]}")
+          set -e
+          dump_code=${codes[0]:-0}; gzip_code=${codes[1]:-0}; gpg_code=${codes[2]:-0}
+          if [ "$dump_code" != "0" ] || [ "$gzip_code" != "0" ] || [ "$gpg_code" != "0" ]; then
+            if [ "$dump_code" != "0" ]; then stage=dump; code=$dump_code
+            elif [ "$gzip_code" != "0" ]; then stage=gzip; code=$gzip_code
+            else stage=gpg; code=$gpg_code; fi
+            echo "::error::Бэкап упал на этапе $stage (код $code) — расшифровка в сводке прогона"
+            node .github/scripts/backup-explain.mjs pg_dump.err "$code" "$stage" >> "$GITHUB_STEP_SUMMARY"
+            # сам stderr — в лог шага целиком; секреты там маскирует GitHub
+            echo "--- pg_dump stderr ---"; cat pg_dump.err || true
+            exit 1
+          fi
           ls -lh recall-*.sql.gz.gpg
-          # пустой дамп — тоже авария, лучше упасть громко
+          # пустой дамп — тоже авария, лучше упасть громко. Такое бывает, когда
+          # pg_dump достучался, но не увидел данных (нет прав на схему): код
+          # возврата нулевой, а бэкапа нет — молчаливая потеря, самая дорогая.
           SIZE=$(stat -c%s "recall-$STAMP.sql.gz.gpg")
           if [ "$SIZE" -lt 10240 ]; then
-            echo "::error::Дамп подозрительно мал ($SIZE байт) — проверьте подключение"
-            echo "❌ Дамп всего $SIZE байт — похоже, подключение не удалось" >> "$GITHUB_STEP_SUMMARY"
+            echo "::error::Дамп подозрительно мал ($SIZE байт) — проверьте подключение и права"
+            node .github/scripts/backup-explain.mjs pg_dump.err "$SIZE" size >> "$GITHUB_STEP_SUMMARY"
+            echo "--- pg_dump stderr ---"; cat pg_dump.err || true
             exit 1
           fi
           echo "STAMP=$STAMP" >> "$GITHUB_ENV"
