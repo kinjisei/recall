@@ -9,6 +9,7 @@ import { spawn } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import puppeteer from 'puppeteer-core'
+import { profileDir } from './_profile.mjs'
 
 const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
 const BASE = process.env.AUDIT_BASE_URL || 'http://localhost:5173'
@@ -52,7 +53,7 @@ try {
       '--headless=new',
       '--disable-gpu',
       `--remote-debugging-port=${PORT}`,
-      `--user-data-dir=${tmpdir()}\\recall-phrasal-smoke-${Date.now()}`,
+      `--user-data-dir=${profileDir('recall-phrasal-smoke')}`,
       '--no-first-run',
       'about:blank',
     ],
@@ -104,10 +105,24 @@ try {
       return !!btn
     })
     check('сегмент «Фразовые» найден', segOk)
+    // Группы свёрнуты по умолчанию (раньше первая раскрывалась сама и человек
+    // видел чужой глагол вместо списка) — значит фразы показываются только
+    // после нажатия на глагол. Проверяем именно это.
+    await page.waitForFunction(
+      () => [...document.querySelectorAll('button')].some((b) => b.textContent.trim().startsWith('look')),
+      { timeout: 15000 },
+    )
+    const collapsed = await page.evaluate(() => !document.body.textContent.includes('look after'))
+    check('группы глаголов свёрнуты — чужой глагол не раскрыт', collapsed)
+    await page.evaluate(() => {
+      ;[...document.querySelectorAll('button')]
+        .find((b) => b.textContent.trim().startsWith('look'))
+        ?.click()
+    })
     await page.waitForFunction(() => document.body.textContent.includes('look after'), {
       timeout: 15000,
     })
-    check('справочник отрисован (look after виден)', true)
+    check('справочник отрисован (look after виден после раскрытия)', true)
 
     // поиск
     await page.type('input[aria-label="Поиск по фразовым глаголам"]', 'откладывать')

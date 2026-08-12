@@ -8,6 +8,7 @@ import { spawn } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import puppeteer from 'puppeteer-core'
+import { profileDir } from './_profile.mjs'
 
 const EDGE = 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'
 const BASE = process.env.AUDIT_BASE_URL || 'http://localhost:5173'
@@ -45,7 +46,7 @@ try {
 
   const PORT = 9357
   spawn(EDGE, ['--headless=new', '--disable-gpu', `--remote-debugging-port=${PORT}`,
-    `--user-data-dir=${tmpdir()}/recall-markwords-${Date.now()}`, '--no-first-run', 'about:blank'],
+    `--user-data-dir=${profileDir('recall-markwords')}`, '--no-first-run', 'about:blank'],
     { detached: true, stdio: 'ignore' }).unref()
   let browser = null
   for (let i = 0; i < 30 && !browser; i++) {

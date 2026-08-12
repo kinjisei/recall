@@ -27,6 +27,7 @@ import { spawn } from 'node:child_process'
 import { readFileSync, readdirSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 import puppeteer from 'puppeteer-core'
+import { profileDir } from './_profile.mjs'
 
 const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
 const BASE = 'http://localhost:5173'
@@ -251,7 +252,7 @@ async function main() {
       `--remote-debugging-port=${PORT}`,
       '--no-first-run',
       '--disable-gpu',
-      `--user-data-dir=${process.env.TEMP}\\motion-smoke-${Date.now()}`,
+      `--user-data-dir=${profileDir('motion-smoke')}`,
       'about:blank',
     ],
     { detached: true, stdio: 'ignore' },

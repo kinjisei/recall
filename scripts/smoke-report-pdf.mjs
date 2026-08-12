@@ -12,6 +12,7 @@ import { spawn } from 'node:child_process'
 import { readFileSync, statSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import puppeteer from 'puppeteer-core'
+import { profileDir } from './_profile.mjs'
 
 const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
 const BASE = process.env.AUDIT_BASE_URL || 'http://localhost:5173'
@@ -117,7 +118,7 @@ try {
       '--headless=new',
       '--disable-gpu',
       `--remote-debugging-port=${PORT}`,
-      `--user-data-dir=${tmpdir()}\\recall-report-smoke-${Date.now()}`,
+      `--user-data-dir=${profileDir('recall-report-smoke')}`,
       '--no-first-run',
       'about:blank',
     ],
@@ -155,8 +156,11 @@ try {
     await page.click('button[type="submit"]')
     await page.waitForFunction(() => location.pathname !== '/login', { timeout: 20000 })
 
-    await page.goto(BASE + '/teacher', { waitUntil: 'networkidle2', timeout: 30000 })
-    await new Promise((r) => setTimeout(r, 1500))
+    // Карточка ученика адресуемая (?student=id): на голом /teacher лежит список,
+    // и кнопки карточки там просто нет. Раньше смоук стучался в /teacher и ждал
+    // диагностику — с тех пор как экран стал адресуемым, он ждал впустую.
+    await page.goto(BASE + `/teacher?student=${sId}`, { waitUntil: 'networkidle2', timeout: 30000 })
+    await new Promise((r) => setTimeout(r, 2500))
 
     // раскрыть диагностику
     const opened = await page.evaluate(() => {

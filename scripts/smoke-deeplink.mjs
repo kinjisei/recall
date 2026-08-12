@@ -14,6 +14,7 @@ import { readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import puppeteer from 'puppeteer-core'
+import { profileDir } from './_profile.mjs'
 
 const EDGE = 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'
 const env = Object.fromEntries(
@@ -40,7 +41,7 @@ await admin.from('profiles').update({ level: 'B1' }).eq('id', id)
 
 const PORT = 9400 + Math.floor(Math.random() * 500)
 spawn(EDGE, ['--headless=new', `--remote-debugging-port=${PORT}`, '--no-first-run', '--disable-gpu',
-  `--user-data-dir=${join(tmpdir(), 'dl-' + Date.now())}`, 'about:blank'],
+  `--user-data-dir=${profileDir('dl')}`, 'about:blank'],
   { detached: true, stdio: 'ignore' }).unref()
 let b = null
 for (let i = 0; i < 30 && !b; i++) {

@@ -11,6 +11,7 @@ import { spawn } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import puppeteer from 'puppeteer-core'
+import { profileDir } from './_profile.mjs'
 
 const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
 const BASE = process.argv[2] || 'https://recall-pgkz.vercel.app'
@@ -51,7 +52,7 @@ const main = async () => {
   let id = null
   const PORT = 9800 + (Date.now() % 150)
   spawn(EDGE, ['--headless=new', '--disable-gpu', `--remote-debugging-port=${PORT}`,
-    `--user-data-dir=${tmpdir()}\\recall-startup-${Date.now()}`, '--no-first-run', 'about:blank'],
+    `--user-data-dir=${profileDir('recall-startup')}`, '--no-first-run', 'about:blank'],
     { detached: true, stdio: 'ignore' }).unref()
   let browser = null
   for (let i = 0; i < 30 && !browser; i++) {

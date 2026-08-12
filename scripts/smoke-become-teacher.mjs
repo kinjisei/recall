@@ -261,16 +261,19 @@ try {
     .eq('teacher_id', tId)
   check('преподаватель отвязал ученика', !del.error && leftLinks === 3, `связей: ${leftLinks}`)
 
-  // 6f. РОЛЬ САМА ПО СЕБЕ НИЧЕГО НЕ ДАЁТ: пул студии и генерации на триале
-  //     включаются только с первым учеником. Иначе любой аккаунт одним нажатием
-  //     получал 40 ⚡/день вместо 30/15 и 10 генераций на Pro-моделях.
+  // 6f. РОЛЬ САМА ПО СЕБЕ ПУЛА НЕ ДАЁТ: студия на триале включается только с
+  //     первым учеником — иначе любой аккаунт одним нажатием получал 40 ⚡/день
+  //     вместо 30/15. Но и полный ноль генераций был неправильным: репетитор на
+  //     первой же попытке читал «Лимит генераций исчерпан» и не мог увидеть
+  //     главное, за что мы просим денег. С 07.08.2026 ему выдаются ДВЕ пробные
+  //     генерации — ровно один материал целиком (план + текст).
   const lonely = await makeUser('become-lonely@recall.test')
   await admin.from('profiles').update({ role: 'teacher' }).eq('id', lonely)
   const lonelyClient = await signIn('become-lonely@recall.test')
   const lonelyPlan = (await lonelyClient.rpc('get_my_plan')).data
   check(
-    'преподаватель БЕЗ учеников: пула студии нет',
-    lonelyPlan?.in_studio === false && lonelyPlan?.gen_limit === 0,
+    'преподаватель БЕЗ учеников: пула студии нет, но 2 пробные генерации есть',
+    lonelyPlan?.in_studio === false && lonelyPlan?.gen_limit === 2,
     `in_studio=${lonelyPlan?.in_studio}, gen_limit=${lonelyPlan?.gen_limit}`,
   )
   check(
@@ -278,13 +281,24 @@ try {
     lonelyPlan?.energy_max === 30,
     `energy_max=${lonelyPlan?.energy_max}`,
   )
-  const lonelyGen = await lonelyClient.rpc('spend_energy', {
-    p_kind: 'heavy', p_cost: 0, p_generation: true,
-  })
+  // Проверяем ГРАНИЦУ, а не факт отказа: две проходят, третья — нет. Проверка
+  // только на отказ была бы зелёной и при gen_limit = 0, то есть при
+  // возвращении ровно того поведения, от которого ушли.
+  const lonelyGens = []
+  for (let i = 0; i < 3; i++) {
+    lonelyGens.push(
+      await lonelyClient.rpc('spend_energy', { p_kind: 'heavy', p_cost: 0, p_generation: true }),
+    )
+  }
   check(
-    'преподаватель БЕЗ учеников: генерация отклонена',
-    !!lonelyGen.error && /GEN_LIMIT/.test(lonelyGen.error.message),
-    lonelyGen.error?.message ?? 'ПРОШЛА',
+    'преподаватель БЕЗ учеников: две пробные генерации проходят',
+    !lonelyGens[0].error && !lonelyGens[1].error,
+    `1-я: ${lonelyGens[0].error?.message ?? 'ок'}, 2-я: ${lonelyGens[1].error?.message ?? 'ок'}`,
+  )
+  check(
+    'преподаватель БЕЗ учеников: третья генерация отклонена',
+    !!lonelyGens[2].error && /GEN_LIMIT/.test(lonelyGens[2].error.message),
+    lonelyGens[2].error?.message ?? 'ПРОШЛА',
   )
 
   // привязываем одного ученика — студия оживает

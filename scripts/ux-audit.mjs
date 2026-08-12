@@ -13,6 +13,7 @@ import { spawn } from 'node:child_process'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import puppeteer from 'puppeteer-core'
+import { profileDir } from './_profile.mjs'
 
 const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
 const BASE = process.env.AUDIT_BASE_URL || 'http://localhost:5173'
@@ -234,7 +235,7 @@ const main = async () => {
       `--remote-debugging-port=${PORT}`,
       // уникальный профиль на запуск: иначе второй прогон делегируется
       // зависшему процессу прошлого и порт не открывается
-      `--user-data-dir=${tmpdir()}\\recall-ux-audit-${Date.now()}`,
+      `--user-data-dir=${profileDir('recall-ux-audit')}`,
       '--no-first-run',
       'about:blank',
     ],

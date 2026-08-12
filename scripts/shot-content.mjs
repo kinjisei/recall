@@ -7,6 +7,7 @@ import { spawn } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import puppeteer from 'puppeteer-core'
+import { profileDir } from './_profile.mjs'
 
 const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
 const BASE = 'http://localhost:5173'
@@ -38,7 +39,7 @@ try {
 
   const PORT = 9345
   spawn(EDGE, ['--headless=new', '--disable-gpu', `--remote-debugging-port=${PORT}`,
-    `--user-data-dir=${tmpdir()}\\recall-shot-${Date.now()}`, '--no-first-run', 'about:blank'],
+    `--user-data-dir=${profileDir('recall-shot')}`, '--no-first-run', 'about:blank'],
     { detached: true, stdio: 'ignore' }).unref()
   let browser = null
   for (let i = 0; i < 30 && !browser; i++) {
@@ -88,7 +89,7 @@ try {
   await page.goto(BASE + '/study', { waitUntil: 'networkidle2' })
   await new Promise((r) => setTimeout(r, 900))
   await page.evaluate(() => {
-    const el = [...document.querySelectorAll('button, a')].find((b) => b.textContent.includes('Слова'))
+    const el = [...document.querySelectorAll('button, a')].find((b) => b.textContent.includes('Мой словарь'))
     el?.click()
   })
   await new Promise((r) => setTimeout(r, 700))
