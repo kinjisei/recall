@@ -2,22 +2,22 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { BrandLogo, BrandMark } from '../../components/Brand'
-import { IconEye } from '../../components/icons'
 import { describeAuthError, describeSignUpError } from '../../lib/access'
 import { supabase } from '../../lib/supabase'
 import { rememberPendingRole } from '../../lib/pendingRole'
 import { track } from '../../lib/analytics'
 import { AppLink } from '../../components/AppLink'
+import { AuroraBg, EyeIcon, InputGroup, inputClass } from './authUi'
 
 /**
  * Экран входа/регистрации Recall — тёмная версия «Nocturne».
  * Desktop (lg+): слева hero-панель с «авророй» (переливающийся фон) и 3 шагами.
  * Mobile: аврора — фон всего экрана, форма на полупрозрачной glass-панели.
  * Токены --night-* и keyframes — в index.css (см. index.css.additions.css).
+ *
+ * Фон, поля и глазок живут в authUi: те же детали нужны экранам восстановления
+ * пароля, а скопированная «аврора» разъехалась бы при первой правке фона.
  */
-
-const inputClass =
-  'h-11 w-full rounded-xl border-none bg-[var(--night-input)] px-4 text-sm text-[var(--night-text)] placeholder:text-[var(--night-text-40)] outline-none focus:ring-2 focus:ring-[var(--night-accent-45)]'
 
 export function LoginPage() {
   const { user, signIn, signUp } = useAuth()
@@ -186,8 +186,17 @@ export function LoginPage() {
                   <EyeIcon off={showPw} />
                 </button>
               </div>
-              {signup && (
+              {signup ? (
                 <p className="text-xs text-[var(--night-text-40)]">Минимум 8 символов.</p>
+              ) : (
+                // Ссылка живёт рядом с полем пароля, а не внизу экрана: человек
+                // вспоминает, что пароля не знает, ровно в этот момент.
+                <AppLink
+                  to="/forgot"
+                  className="self-start text-xs text-[var(--night-text-40)] underline hover:text-[var(--night-text-70)]"
+                >
+                  Забыли пароль?
+                </AppLink>
               )}
             </div>
 
@@ -338,19 +347,6 @@ function CheckEmail({
   )
 }
 
-/** Переливающийся фон: глубокий индиго-градиент + 3 дрейфующих blur-пятна + блик. */
-function AuroraBg() {
-  return (
-    <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
-      <div className="absolute inset-0 bg-[radial-gradient(130%_110%_at_25%_0%,#232449_0%,#14152a_58%,#0f1020_100%)]" />
-      <div className="absolute -left-[18%] -top-[12%] aspect-square w-[75%] animate-blob-a rounded-full bg-[radial-gradient(circle,rgba(145,132,217,.5),transparent_65%)] blur-[70px]" />
-      <div className="absolute -bottom-[15%] -right-[20%] aspect-square w-[70%] animate-blob-b rounded-full bg-[radial-gradient(circle,rgba(76,70,160,.65),transparent_62%)] blur-[80px]" />
-      <div className="absolute left-[20%] top-[30%] aspect-square w-[55%] animate-blob-c rounded-full bg-[radial-gradient(circle,rgba(120,105,205,.35),transparent_60%)] blur-[60px]" />
-      <div className="absolute -inset-[20%] animate-sheen bg-[conic-gradient(from_0deg_at_50%_50%,transparent_0deg,rgba(145,132,217,.08)_90deg,transparent_180deg,rgba(145,132,217,.06)_270deg,transparent_360deg)]" />
-    </div>
-  )
-}
-
 function StepItem({
   number,
   text,
@@ -385,51 +381,3 @@ function StepItem({
   )
 }
 
-function InputGroup({
-  label,
-  placeholder,
-  type = 'text',
-  value,
-  onChange,
-  autoComplete,
-  required = false,
-}: {
-  label: string
-  placeholder: string
-  type?: string
-  value: string
-  onChange: (v: string) => void
-  autoComplete?: string
-  required?: boolean
-}) {
-  const fieldId = 'f-' + label.toLowerCase().replace(/[^a-zа-я0-9]+/gi, '-')
-  return (
-    <div className="flex flex-col gap-2">
-      <label htmlFor={fieldId} className="text-sm font-medium">
-        {label}
-      </label>
-      <input
-        id={fieldId}
-        className={inputClass}
-        type={type}
-        placeholder={placeholder}
-        autoComplete={autoComplete}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        required={required}
-      />
-    </div>
-  )
-}
-
-/** Фирменный IconEye; в состоянии «скрыть» поверх — диагональная черта. */
-function EyeIcon({ off }: { off: boolean }) {
-  return (
-    <span className="relative inline-flex" aria-hidden="true">
-      <IconEye size={18} />
-      {off && (
-        <span className="absolute left-1/2 top-1/2 h-[1.75px] w-[20px] -translate-x-1/2 -translate-y-1/2 rotate-45 rounded-full bg-current" />
-      )}
-    </span>
-  )
-}

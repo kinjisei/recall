@@ -34,6 +34,8 @@ const AssignmentsPage = routeScreens['/assignments']
 const WritingPage = routeScreens['/writing']
 const QuestsPage = routeScreens['/quests']
 const ProgramPage = routeScreens['/program']
+const ForgotPasswordPage = routeScreens['/forgot']
+const ResetPasswordPage = routeScreens['/reset-password']
 const PrivacyPage = routeScreens['/privacy']
 const TermsPage = routeScreens['/terms']
 const PricingPage = routeScreens['/pricing']
@@ -57,6 +59,26 @@ export default function App() {
           <PageTracker />
           <Routes>
             <Route path="/login" element={<LoginPage />} />
+            {/* Восстановление пароля — публичное: человек сюда и приходит
+                именно потому, что войти не может. /reset-password открывается
+                по ссылке из письма, поэтому адрес обязан быть в списке
+                Redirect URLs в панели Supabase. */}
+            <Route
+              path="/forgot"
+              element={
+                <Suspense fallback={<PageFallback />}>
+                  <ForgotPasswordPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/reset-password"
+              element={
+                <Suspense fallback={<PageFallback />}>
+                  <ResetPasswordPage />
+                </Suspense>
+              }
+            />
             {/* юридические страницы — публичные (ссылки со входа) */}
             <Route
               path="/privacy"

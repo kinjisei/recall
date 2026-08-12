@@ -6,6 +6,7 @@
 // ============================================================================
 import { useEffect, useState } from 'react'
 
+import { SecuritySection } from './SecuritySection'
 import { SUPPORT_EMAIL, SUPPORT_SLA, supportMailto } from '../../lib/contacts'
 import { IconBack, IconSpeaker, IconCheck, IconThumbsUp } from '../../components/icons'
 import { useSmartBack } from '../../components/SmartBack'
@@ -211,6 +212,10 @@ export function SettingsPage() {
           ))}
         </div>
       </Section>
+
+      {/* Безопасность — отдельным файлом: форма со своим состоянием и
+          проверкой текущего пароля, в общий экран настроек её мешать незачем. */}
+      <SecuritySection />
 
       <p className="px-1 text-xs text-[var(--night-text-40)]">
         Скорость озвучки и размер текста сохраняются на этом устройстве.

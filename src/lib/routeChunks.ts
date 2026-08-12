@@ -50,6 +50,10 @@ function makeRoute<M>(load: () => Promise<M>, pick: (m: M) => ComponentType): Ro
  * поэтому «/teachers» не путается с «/teacher».
  */
 export const routeScreens = {
+  // Восстановление пароля — публичные экраны, в стартовый бандл не тянем:
+  // на них попадают один раз и по ссылке из письма.
+  '/forgot': makeRoute(() => import('../features/auth/ForgotPasswordPage'), (m) => m.ForgotPasswordPage),
+  '/reset-password': makeRoute(() => import('../features/auth/ResetPasswordPage'), (m) => m.ResetPasswordPage),
   '/practice': makeRoute(() => import('../features/practice/PracticePage'), (m) => m.PracticePage),
   '/pronunciation': makeRoute(() => import('../features/pronunciation/PronunciationPage'), (m) => m.PronunciationPage),
   '/conversation': makeRoute(() => import('../features/conversation/ConversationPage'), (m) => m.ConversationPage),

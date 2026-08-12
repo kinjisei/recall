@@ -52,13 +52,19 @@ export function describeSignUpError(raw: string): string {
 export function describeAuthError(raw: string): string {
   const s = raw.toLowerCase()
   if (s.includes('invalid login credentials'))
-    return 'Неверная почта или пароль. Проверь раскладку и заглавные буквы.'
+    return 'Неверная почта или пароль. Проверь раскладку и заглавные буквы, а если пароль забылся — нажми «Забыли пароль?».'
   if (s.includes('email not confirmed'))
     return 'Почта ещё не подтверждена — открой письмо от нас и нажми ссылку. Письма нет? Загляни в «Спам».'
   if (s.includes('password should be at least'))
     return 'Пароль слишком короткий — нужно минимум 8 символов.'
+  // ⚠️ Существование аккаунта НЕ раскрываем: перебирая адреса, посторонний
+  // собрал бы список тех, кто у нас учится. Сам Supabase эту ошибку на
+  // регистрацию занятого адреса больше не отдаёт (проверено на проекте:
+  // приходит успех с пустым identities, и мы показываем экран «проверь почту»
+  // — ровно то, что нужно). Ветка остаётся страховкой на случай старого
+  // поведения и отвечает нейтрально.
   if (s.includes('user already registered') || s.includes('already been registered'))
-    return 'Такая почта уже зарегистрирована. Войди с ней или восстанови пароль.'
+    return 'Если такой адрес у нас есть, письмо уже в пути. Пароль не помнишь — нажми «Забыли пароль?» на входе.'
   if (s.includes('unable to validate email') || s.includes('invalid format'))
     return 'Почта написана с ошибкой — проверь адрес.'
   if (s.includes('rate limit') || s.includes('you can only request this after'))
