@@ -397,18 +397,29 @@ try {
   await page.goto(`${BASE}/reset-password`, { waitUntil: 'networkidle2', timeout: 30000 })
   await sleep(700)
   check('без ссылки экран просит адрес и код', await seen(page, 'Код из письма'))
+  // ⚠️ Пароля на этом шаге быть НЕ должно: пока код не принят, менять нечего.
+  check('до проверки кода поля пароля нет', (await page.$('#f-new-password')) === null)
 
+  // ---- 7б. неверный код до пароля не пускает -------------------------------
   await typeInto(page, '#f-email', EMAIL)
+  await typeInto(page, '#f-code', '00000000')
+  await tap(page, 'Проверить код')
+  check('неверный код отклонён на экране', await waitText(page, 'Код не подошёл', 10000))
+  check('после неверного кода пароль всё ещё скрыт', (await page.$('#f-new-password')) === null)
+
+  // ---- 7в. верный код открывает смену пароля -------------------------------
   await typeInto(page, '#f-code', code)
+  await tap(page, 'Проверить код')
+  check('верный код принят — открылась смена пароля', await waitText(page, 'Код принят', 10000))
   await typeInto(page, '#f-new-password', PASS_CODE)
   await tap(page, 'Сохранить пароль и войти')
   check('пароль по коду сменён', await waitText(page, 'Пароль изменён'))
   const afterCode = await canSignIn(PASS_CODE)
   check('пароль из кода работает', afterCode.ok, afterCode.error ?? '')
 
-  // ---- 8. чужой код не подходит -------------------------------------------
+  // ---- 8. чужой код не подходит и на стороне сервера -----------------------
   const wrong = await anon().auth.verifyOtp({ type: 'recovery', email: EMAIL, token: '00000000' })
-  check('выдуманный код отклонён', !!wrong.error, wrong.error?.message ?? 'ПРОШЁЛ')
+  check('выдуманный код отклонён сервером', !!wrong.error, wrong.error?.message ?? 'ПРОШЁЛ')
 
   // ---- 9. смена пароля в Настройках ---------------------------------------
   // Заново входить не нужно и НЕЛЬЗЯ: после сброса вкладка уже в аккаунте, и

@@ -126,6 +126,30 @@ export async function requestReset(email: string): Promise<{ error?: string }> {
   return error ? { error: describeResetError(error.message) } : {}
 }
 
+/**
+ * Проверка кода из письма ОТДЕЛЬНЫМ шагом: пока код не принят, поле нового
+ * пароля не показывается.
+ *
+ * Так человек узнаёт про опечатку сразу, а не после того, как придумал пароль:
+ * при одной общей форме отказ приходил уже с набранным паролем, и было
+ * непонятно, что именно не подошло — код или пароль.
+ *
+ * ⚠️ Для ссылки такой шаг НЕВОЗМОЖЕН: её открывают за человека почтовые
+ * сканеры, и ранняя проверка сожгла бы одноразовый токен. Там проверка
+ * по-прежнему откладывается до отправки формы — см. completeReset.
+ */
+export async function verifyRecoveryCode(
+  email: string,
+  code: string,
+): Promise<{ error?: string }> {
+  const { error } = await supabase.auth.verifyOtp({
+    type: 'recovery',
+    email: email.trim(),
+    token: cleanCode(code),
+  })
+  return error ? { error: describeResetError(error.message) } : {}
+}
+
 export interface CompleteResetResult {
   error?: string
   /** Токен уже потрачен: повторно проверять его нельзя, он одноразовый. */

@@ -24,6 +24,7 @@ import {
   isCodeLike,
   recoveryToken,
   rememberRecoveryToken,
+  verifyRecoveryCode,
 } from '../../lib/passwordReset'
 import { AuthCard, InputGroup, PasswordField, PrimaryButton } from './authUi'
 
@@ -66,6 +67,20 @@ export function ResetPasswordPage() {
   /** Токен уже принят — он одноразовый, второй раз показывать его нельзя. */
   const [verified, setVerified] = useState(false)
 
+  /** Шаг 1 для пути по коду: проверяем код и только потом пускаем к паролю. */
+  const checkCode = async (e: FormEvent) => {
+    e.preventDefault()
+    setBusy(true)
+    setError(null)
+    const { error } = await verifyRecoveryCode(email, code)
+    setBusy(false)
+    if (error) {
+      setError(error)
+      return
+    }
+    setVerified(true)
+  }
+
   const submit = async (e: FormEvent) => {
     e.preventDefault()
     setBusy(true)
@@ -107,68 +122,86 @@ export function ResetPasswordPage() {
     )
   }
 
-  const canSubmit =
-    password.length >= MIN_PASSWORD &&
-    (verified || fromLink || (isCodeLike(code) && email.trim().includes('@')))
+  // Пока код не принят — только он и адрес. Пароль появится следующим шагом.
+  // Пришёл по ссылке — шага с кодом нет вовсе: он уже подтвердил владение
+  // почтой, а проверять токен раньше отправки нельзя (сканеры).
+  const askCode = !fromLink && !verified
+  const canCheck = isCodeLike(code) && email.trim().includes('@')
 
   return (
     <AuthCard
-      title="Новый пароль"
+      title={askCode ? 'Код из письма' : 'Новый пароль'}
       subtitle={
-        fromLink
-          ? 'Ссылка из письма подошла. Придумай пароль, с которым будешь входить.'
-          : 'Введи адрес и код из письма, а затем новый пароль.'
+        askCode
+          ? 'Введи адрес и код — проверим, и откроем смену пароля.'
+          : verified
+            ? 'Код принят. Придумай пароль, с которым будешь входить.'
+            : 'Ссылка из письма подошла. Придумай пароль, с которым будешь входить.'
       }
     >
-      <form onSubmit={submit} className="flex flex-col gap-5">
-        {/* Пришёл по ссылке — адрес и код не спрашиваем: это лишние два поля
-            там, где человек уже всё подтвердил. */}
-        {!fromLink && !verified && (
-          <>
-            <InputGroup
-              label="Email"
-              placeholder="you@example.com"
-              type="email"
-              inputMode="email"
-              value={email}
-              onChange={setEmail}
-              autoComplete="email"
-              required
-            />
-            <InputGroup
-              id="f-code"
-              label="Код из письма"
-              placeholder="12345678"
-              inputMode="numeric"
-              value={code}
-              onChange={setCode}
-              autoComplete="one-time-code"
-              required
-              hint="Цифры из последнего письма. Код живёт 30 минут."
-            />
-          </>
-        )}
+      {askCode ? (
+        <form onSubmit={checkCode} className="flex flex-col gap-5">
+          <InputGroup
+            label="Email"
+            placeholder="you@example.com"
+            type="email"
+            inputMode="email"
+            value={email}
+            onChange={setEmail}
+            autoComplete="email"
+            required
+          />
+          <InputGroup
+            id="f-code"
+            label="Код из письма"
+            placeholder="12345678"
+            inputMode="numeric"
+            value={code}
+            onChange={setCode}
+            autoComplete="one-time-code"
+            required
+            hint="Цифры из последнего письма. Живёт 30 минут."
+          />
 
-        <PasswordField
-          id="f-new-password"
-          label="Новый пароль"
-          value={password}
-          onChange={setPassword}
-          autoComplete="new-password"
-          minLength={MIN_PASSWORD}
-          hint={`Минимум ${MIN_PASSWORD} символов.`}
-        />
+          {error && (
+            <p role="alert" className="text-sm text-red-400">
+              {error}
+            </p>
+          )}
 
-        {error && (
-          <p role="alert" className="text-sm text-red-400">
-            {error}
-          </p>
-        )}
+          <PrimaryButton disabled={busy || !canCheck}>
+            {busy ? '…' : 'Проверить код'}
+          </PrimaryButton>
+        </form>
+      ) : (
+        <form onSubmit={submit} className="flex flex-col gap-5">
+          {/* Скрытое поле с адресом — чтобы менеджер паролей понял, к какому
+              аккаунту относится новый пароль. */}
+          {email && (
+            <input type="text" name="username" autoComplete="username" value={email} readOnly hidden />
+          )}
 
-        <PrimaryButton disabled={busy || !canSubmit}>
-          {busy ? '…' : 'Сохранить пароль и войти'}
-        </PrimaryButton>
-      </form>
+          <PasswordField
+            id="f-new-password"
+            label="Новый пароль"
+            value={password}
+            onChange={setPassword}
+            autoComplete="new-password"
+            minLength={MIN_PASSWORD}
+            hint={`Минимум ${MIN_PASSWORD} символов.`}
+          />
+
+          {error && (
+            <p role="alert" className="text-sm text-red-400">
+              {error}
+            </p>
+          )}
+
+          <PrimaryButton disabled={busy || password.length < MIN_PASSWORD}>
+            {busy ? '…' : 'Сохранить пароль и войти'}
+          </PrimaryButton>
+        </form>
+      )}
 
       <div className="flex flex-col gap-2 text-center text-sm">
         <AppLink
