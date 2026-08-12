@@ -9,7 +9,7 @@ import type { ChatTurn } from '../src/types/index.js'
 // не находит модуль без расширения (FUNCTION_INVOCATION_FAILED при старте)
 import { callGemini, GEMINI_TIER_CHAINS, type AiTier } from './_core.js'
 import { groqChat, DEFAULT_GROQ_MODEL, FAST_GROQ_MODEL } from './_groq.js'
-import { authorize, applyCors, isTeacher, refundAiCall } from './_auth.js'
+import { authorize, applyCors, authDenied, isTeacher, refundAiCall } from './_auth.js'
 import { taskSpec } from './_tasks.js'
 
 // Генерация материала занимает 20–40 с (два запроса к Gemini), плюс повторы
@@ -97,7 +97,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const access = await authorize(req, quota, energyCost, generation)
-  if (!access.ok) {
+  if (authDenied(access)) {
     return res.status(access.status).json({ error: access.error })
   }
 

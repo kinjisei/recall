@@ -6,7 +6,7 @@
 // ============================================================================
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 // расширение .js обязательно в ESM ("type": "module")
-import { authorize, applyCors, refundAiCall } from './_auth.js'
+import { authorize, applyCors, authDenied, refundAiCall } from './_auth.js'
 import { transcribeWithGroq } from './_stt.js'
 
 export const config = { maxDuration: 30 }
@@ -51,7 +51,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // класс speech: у произношения свой щедрый лимит — попытки шэдоуинга не
   // должны съедать дневные «AI-действия» Диалога (их всего 12 на триале)
   const access = await authorize(req, 'speech')
-  if (!access.ok) return res.status(access.status).json({ error: access.error })
+  if (authDenied(access)) return res.status(access.status).json({ error: access.error })
 
   try {
     const text = await transcribeWithGroq(buf, mime || 'audio/webm', speechLang, apiKey)

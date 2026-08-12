@@ -375,7 +375,18 @@ node scripts/smoke-navigation.mjs  # адресуемость экранов
 node scripts/smoke-motion.mjs      # переходы, вкладки, живые ожидания и ответы
 node scripts/check-schema.mjs      # перед заливкой схемы
 node scripts/validate-schema-dryrun.mjs   # прогон schema.sql с откатом
+node scripts/check-api-vercel.mjs  # api/ так, как их собирает Vercel
 ```
+
+⚠️ **`npm run build` не видит того, на чём падает Vercel.** Мы проверяем `api/`
+по `tsconfig.node.json` со `strict: true`, а Vercel читает КОРНЕВОЙ
+`tsconfig.json`. Пока в нём не было `compilerOptions`, функции компилировались
+со `strictNullChecks: false`, а в этом режиме TypeScript не сужает размеченные
+объединения: `if (!access.ok) return res.status(access.status)` падало с
+«Property 'status' does not exist on type AuthResult» — на Vercel и только там.
+Лечится явным предикатом (`authDenied` в `api/_auth.ts`), а не приведением типа.
+В корневом tsconfig теперь есть строгие настройки, и `check-api-vercel.mjs`
+проверяет api/ в самом слабом режиме — оба конца класса закрыты.
 
 Смоуки сами создают и удаляют тестовые аккаунты через `SUPABASE_SERVICE_KEY`
 (в `.env.local`, gitignored). Нужен запущенный dev-сервер.

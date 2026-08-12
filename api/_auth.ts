@@ -21,6 +21,24 @@ export type AuthResult =
   | { ok: true; refundToken?: string }
   | { ok: false; status: number; error: string }
 
+/** Отказ авторизации — та ветка AuthResult, где есть код ответа и текст. */
+export type AuthDenied = Extract<AuthResult, { ok: false }>
+
+/**
+ * Проверка «не пустили» ЯВНЫМ предикатом, а не через `if (!access.ok)`.
+ *
+ * ⚠️ Так надо, и вот почему. Наш `npm run build` проверяет `api/` по
+ * tsconfig.node.json со `strict: true`, а Vercel собирает функции по КОРНЕВОМУ
+ * tsconfig.json — а он у нас файл-решение, из одних `references`, без
+ * compilerOptions. Значит на Vercel действует `strictNullChecks: false`, и в
+ * этом режиме TypeScript НЕ сужает размеченное объединение по `!access.ok`:
+ * сборка падает с «Property 'status' does not exist on type AuthResult», хотя
+ * локально всё зелено. Предикат сужает при любых флагах.
+ */
+export function authDenied(result: AuthResult): result is AuthDenied {
+  return !result.ok
+}
+
 /**
  * Класс запроса — от него зависит, из какого «кармана» списывается лимит:
  *   heavy  — Диалог, письмо, квесты, разбор работ, материалы (это и есть

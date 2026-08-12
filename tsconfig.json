@@ -1,4 +1,24 @@
 {
+  // ⚠️ Этот файл — «решение»: сборкой занимаются проекты из references, и
+  // compilerOptions отсюда на них НЕ влияют. Но его читают инструменты, которые
+  // про references не знают, — и главный из них Vercel, собирающий функции
+  // api/*. Раньше здесь не было ни строчки настроек, поэтому у Vercel
+  // действовал strictNullChecks: false, а в этом режиме TypeScript не сужает
+  // размеченные объединения: сборка падала на `if (!access.ok)` с «Property
+  // 'status' does not exist on type AuthResult», хотя локально всё зелено.
+  //
+  // Держим здесь те же строгие правила, что в tsconfig.app/node.json, чтобы
+  // «снаружи» проект проверялся так же, как изнутри.
+  "compilerOptions": {
+    "strict": true,
+    "strictNullChecks": true,
+    "skipLibCheck": true,
+    "target": "ES2022",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "esModuleInterop": true,
+    "noEmit": true
+  },
   "files": [],
   "references": [
     { "path": "./tsconfig.app.json" },
