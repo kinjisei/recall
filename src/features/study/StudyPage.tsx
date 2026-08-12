@@ -36,7 +36,7 @@ import { listMyQuests } from '../../lib/quests'
 import { currentWeekIndex, getMyPlans } from '../../lib/studyPlan'
 import { myPendingPlacement, type PlacementRequest } from '../../lib/placement'
 import type { StudyPlan } from '../../types'
-import { currentGuidedStep } from '../../lib/guided'
+import { markAutoOpened, shouldAutoOpen } from '../../lib/guided'
 import { ReaderPage } from '../reader/ReaderPage'
 import { PacksSheet } from '../flashcards/PacksSheet'
 import { AddCardForm } from '../words/AddCardForm'
@@ -57,9 +57,16 @@ export function StudyPage() {
   const [rawView, setRawView] = useUrlState('view', (v) => v === 'reader' || v === 'words')
   const view: View = (rawView as View | null) ?? 'hub'
   const setView = (v: View) => setRawView(v === 'hub' ? null : v)
-  // ведомая сессия «Начать занятие» открывает чтение сразу
+  // Ведомая сессия «Начать занятие» открывает чтение сразу — но РОВНО ОДИН
+  // РАЗ (то же правило, что в «Практике»: shouldAutoOpen в lib/guided).
+  // Раньше условие проверяло только текущий шаг, и выход из читалки к хабу
+  // «Учёбы» тут же возвращал обратно — из шага нельзя было выйти, не закрыв
+  // вкладку.
   useEffect(() => {
-    if (view === 'hub' && currentGuidedStep() === 'reader') setRawView('reader')
+    if (view === 'hub' && shouldAutoOpen('reader')) {
+      markAutoOpened('reader')
+      setRawView('reader')
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   // переход хаб ↔ читалка ↔ слова — всегда с верха экрана

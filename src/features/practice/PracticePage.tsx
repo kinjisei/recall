@@ -35,7 +35,7 @@ import { Button } from '../../components/Button'
 import { useLanguage } from '../../context/LanguageContext'
 import { countDueCards } from '../../lib/fsrs'
 import { countMyWords } from '../../lib/cards'
-import { currentGuidedStep, skipReviewIfNoWords } from '../../lib/guided'
+import { markAutoOpened, shouldAutoOpen, skipReviewIfNoWords } from '../../lib/guided'
 import { getMistakes } from '../../lib/mistakes'
 import { DeckReview } from '../flashcards/DeckReview'
 import { useScrollTop } from '../../lib/useScrollTop'
@@ -217,14 +217,19 @@ export function PracticePage() {
     })
   }
 
-  // ведомая сессия («Начать занятие» на Главной): при входе без параметра
-  // открываем сразу повторение; если слов ещё нет — пропускаем пустой шаг
-  // и уводим сессию сразу на чтение (skipReviewIfNoWords в lib/guided)
+  // Ведомая сессия («Начать занятие» на Главной): при входе без параметра
+  // открываем сразу повторение; если слов ещё нет — пропускаем пустой шаг и
+  // уводим сессию на чтение (skipReviewIfNoWords в lib/guided).
+  //
+  // ⚠️ Уводим РОВНО ОДИН РАЗ. Правило спрашиваем у guided.ts, а не решаем
+  // здесь: тот же перехват есть в «Учёбе», и два экземпляра условия разошлись
+  // бы молча. Отметку ставим в момент самой навигации — см. shouldAutoOpen.
   useEffect(() => {
-    if (currentGuidedStep() === 'flashcards' && !searchParams.get('m')) {
+    if (shouldAutoOpen('flashcards') && !searchParams.get('m')) {
       let alive = true
       void skipReviewIfNoWords(lang).then((route) => {
         if (!alive) return
+        markAutoOpened('flashcards')
         if (route) navigate(route, { replace: true })
         else setSearchParams({ m: 'review' }, { replace: true })
       })

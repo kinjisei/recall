@@ -39,6 +39,29 @@ const check = (name, ok, extra = '') => {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
+/**
+ * Дождаться текста на экране вместо фиксированной паузы.
+ *
+ * Переход между экранами идёт через View Transitions: браузер вызывает колбэк
+ * обновления АСИНХРОННО, а в headless вкладка считается скрытой и таймеры там
+ * притормаживают. Из-за этого «подождать 800 мс» иногда не хватало, и смоук
+ * краснел на исправном продукте — каждый прогон на другой проверке.
+ */
+async function waitText(page, needle, timeout = 12000) {
+  return page
+    .waitForFunction((t) => (document.body.innerText || '').includes(t), { timeout, polling: 200 }, needle)
+    .then(() => true)
+    .catch(() => false)
+}
+
+/** Дождаться элемента по селектору (кнопки, поля ввода). */
+async function waitSel(page, sel, timeout = 12000) {
+  return page
+    .waitForSelector(sel, { timeout })
+    .then(() => true)
+    .catch(() => false)
+}
+
 /** Клик по элементу, найденному по тексту. */
 async function clickByText(page, selector, text) {
   return page.evaluate(
@@ -137,7 +160,10 @@ async function main() {
     await clickByText(page, 'button', 'Грамматика')
     await sleep(700)
     const mixOpened = await clickByText(page, 'button', 'Выбери форму')
-    await sleep(2000)
+    // ⚠️ Ждём именно СОДЕРЖИМОЕ, а не каретку: каретка появляется сразу, а
+    // упражнение — после загрузки чанка грамматики. Первая версия ждала
+    // каретку и падала стабильно.
+    await waitText(page, 'Тема:')
     const mixState = await page.evaluate(() => ({
       theme: (document.body.textContent || '').includes('Тема:'),
       exercise: !!document.querySelector('button.rounded-xl.text-left'),
@@ -166,7 +192,7 @@ async function main() {
       JSON.stringify(studyState),
     )
     await clickByText(page, 'button', 'Тексты и диалоги')
-    await sleep(800)
+    await waitText(page, 'Выбери текст')
     const readerOpened = await page.evaluate(() => ({
       list: (document.body.textContent || '').includes('Выбери текст'),
       back: !!document.querySelector('button[aria-label="Назад"]'),
@@ -262,7 +288,7 @@ async function main() {
     await clickByText(page, 'button', 'Слова')
     await sleep(700)
     const dictOpened = await clickByText(page, 'button', 'Диктант')
-    await sleep(2500)
+    await waitSel(page, 'input[aria-label="Услышанное слово"]')
     const hasInput = await page.$('input[aria-label="Услышанное слово"]')
     check('Диктант открылся', dictOpened && !!hasInput)
     if (hasInput) {
@@ -281,7 +307,7 @@ async function main() {
     await clickByText(page, 'button', 'Слова')
     await sleep(700)
     const sbOpened = await clickByText(page, 'button', 'Собери фразу')
-    await sleep(1500)
+    await waitText(page, 'Переведи на английский')
     const sbState = await page.evaluate(() => ({
       prompt: (document.body.textContent || '').includes('Переведи на английский'),
       bank: [...document.querySelectorAll('button')].filter((b) => /^[A-Za-z'’.,!?]+$/.test(b.textContent.trim())).length,

@@ -10,6 +10,24 @@ import type { AppLang } from '../types'
 
 const KEY = 'recall.guided'
 
+/**
+ * Шаг, на который человека УЖЕ увели автоматически.
+ *
+ * ⚠️ Без этой отметки сессия превращалась в ловушку. Шаг переключается только
+ * через nextGuidedStep(), то есть когда раунд доведён до конца и нажато
+ * «Дальше». Бросил на середине — шаг навсегда остался прежним, и КАЖДЫЙ вход в
+ * «Практику» снова кидал в повторение; нижней навигации в раунде нет, выйти
+ * можно только кареткой. Человек, решивший заняться другим, упирался в это
+ * бесконечно (жалоба владельца: «приходилось выходить, чтобы выбрать что-то
+ * другое»). Симптом выглядел плавающим, потому что sessionStorage очищается
+ * при закрытии вкладки.
+ *
+ * Теперь автоперехват срабатывает РОВНО ОДИН РАЗ на шаг — сразу после
+ * «Начать занятие». Сама сессия живёт дальше: кнопка «Дальше» на экране
+ * результата работает как раньше.
+ */
+const OPENED_KEY = 'recall.guided.opened'
+
 /** Порядок шагов ведомой сессии. */
 export const GUIDED_STEPS = ['flashcards', 'reader', 'pronunciation'] as const
 export type GuidedStep = (typeof GUIDED_STEPS)[number]
@@ -29,6 +47,8 @@ const TITLES: Record<GuidedStep, string> = {
 /** Начать сессию с первого шага. */
 export function startGuided(): string {
   sessionStorage.setItem(KEY, GUIDED_STEPS[0])
+  // новая сессия — право на автопереход возвращается
+  sessionStorage.removeItem(OPENED_KEY)
   return ROUTES[GUIDED_STEPS[0]]
 }
 
@@ -82,6 +102,27 @@ export function currentGuidedStep(): GuidedStep | null {
 
 export function stopGuided(): void {
   sessionStorage.removeItem(KEY)
+  sessionStorage.removeItem(OPENED_KEY)
+}
+
+/**
+ * Надо ли экрану увести человека на свой guided-шаг.
+ *
+ * Спрашивают экраны («Практика» — про flashcards, «Учёба» — про reader), а
+ * решает guided.ts: правило одно на все перехваты, иначе они разъедутся.
+ *
+ * ⚠️ Это ЧИСТЫЙ вопрос, отметку он не ставит. Отметку ставит markAutoOpened в
+ * момент самой навигации — иначе в StrictMode (он включён) двойной прогон
+ * эффекта съедал бы разрешение, первый заход отменялся своей же чисткой, а
+ * второй уже не имел права уводить: сессия не начиналась бы вовсе.
+ */
+export function shouldAutoOpen(step: GuidedStep): boolean {
+  return currentGuidedStep() === step && sessionStorage.getItem(OPENED_KEY) !== step
+}
+
+/** Отметить, что на этот шаг уже увели. Звать в момент навигации. */
+export function markAutoOpened(step: GuidedStep): void {
+  sessionStorage.setItem(OPENED_KEY, step)
 }
 
 /**
