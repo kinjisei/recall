@@ -109,11 +109,32 @@ try {
     check('текст открылся в читалке', true)
 
     // режим «Выделить фразу» → тап первого и последнего слова → шторка фразы → «в колоду»
-    await page.evaluate(() => {
-      ;[...document.querySelectorAll('button')]
-        .find((b) => b.textContent.includes('Выделить фразу'))?.click()
-    })
-    await new Promise((r) => setTimeout(r, 400))
+    // ⚠️ Щелчок по кнопке, которой ещё нет в DOM, пропадает молча: `?.click()`
+    // ничего не делает, и дальше смоук тапал слова в ОБЫЧНОМ режиме — в колоду
+    // уезжало одно слово вместо фразы. Ждём кнопку, жмём, убеждаемся, что режим
+    // включился (кнопка стала «Отмена»), и при промахе пробуем ещё раз.
+    const enterPhraseMode = async () => {
+      await page.waitForFunction(
+        () => [...document.querySelectorAll('button')].some((b) => b.textContent.includes('Выделить фразу')),
+        { timeout: 10000 },
+      )
+      for (let attempt = 0; attempt < 3; attempt++) {
+        await page.evaluate(() => {
+          ;[...document.querySelectorAll('button')]
+            .find((b) => b.textContent.includes('Выделить фразу'))?.click()
+        })
+        const on = await page
+          .waitForFunction(
+            () => [...document.querySelectorAll('button')].some((b) => b.textContent.trim() === 'Отмена'),
+            { timeout: 2000 },
+          )
+          .then(() => true)
+          .catch(() => false)
+        if (on) return true
+      }
+      return false
+    }
+    check('режим «Выделить фразу» включился', await enterPhraseMode())
     const tapWord = (w) =>
       page.evaluate((word) => {
         const el = [...document.querySelectorAll('span')].find(
@@ -121,10 +142,18 @@ try {
         )
         el && el.click()
       }, w)
-    // между тапами пауза: React должен успеть записать «начало» (startIdx),
-    // иначе второй тап читает старое состояние — как быстрый двойной тап
+    // ⚠️ Между тапами дожидаемся, что React ЗАПИСАЛ начало фразы: первое слово
+    // получает обводку (ring-1). Раньше здесь стояла пауза в 350 мс, и раз
+    // через раз второй тап читал старое состояние — начиналась новая фраза, в
+    // колоду уезжала одна «library», а проверка падала «по-разному».
     await tapWord('ancient')
-    await new Promise((r) => setTimeout(r, 350))
+    await page.waitForFunction(
+      () =>
+        [...document.querySelectorAll('span')].some(
+          (x) => x.textContent.trim() === 'ancient' && x.className.includes('ring-1'),
+        ),
+      { timeout: 10000 },
+    )
     await tapWord('library')
     // шторка фразы открылась (WordSheet для фразы «ancient library»)
     await page.waitForFunction(
@@ -135,12 +164,16 @@ try {
     await page.evaluate(() => {
       ;[...document.querySelectorAll('button')].find((b) => /В мои слова/i.test(b.textContent))?.click()
     })
-    await new Promise((r) => setTimeout(r, 2000))
+    // Запись идёт в базу — опрашиваем её, а не спим наугад: две секунды то
+    // лишние, то мало, и «мало» выглядит как сломанная фича.
     const { data: decks } = await admin.from('decks').select('id').eq('owner_id', userId)
-    const { data: cards } = await admin
-      .from('cards')
-      .select('front, back')
-      .in('deck_id', decks.map((d) => d.id))
+    const deckIds = (decks ?? []).map((d) => d.id)
+    let cards = []
+    for (let i = 0; i < 20 && cards.length === 0; i++) {
+      const res = await admin.from('cards').select('front, back').in('deck_id', deckIds)
+      cards = res.data ?? []
+      if (cards.length === 0) await new Promise((r) => setTimeout(r, 400))
+    }
     check(
       'фраза добавлена одной карточкой',
       (cards ?? []).some((c) => /ancient library/i.test(c.front)),

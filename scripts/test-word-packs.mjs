@@ -1,5 +1,5 @@
 /**
- * Разбиение больших паков на порции (splitTopicWords / splitLargePacks
+ * Сборка паков: склейка одноимённых тем и разбиение на порции (splitTopicWords / preparePacks
  * из src/lib/wordPacks.ts).
  *
  * Зачем отдельным файлом. Пак должен помещаться в неделю между уроками, а
@@ -22,7 +22,7 @@ import {
   PACK_MIN_PART,
   PACK_PART_SIZE,
   PACK_SPLIT_OVER,
-  splitLargePacks,
+  preparePacks,
   splitTopicWords,
 } from '../src/lib/wordPacks.ts'
 
@@ -132,7 +132,7 @@ check('константы правила', PACK_PART_SIZE === 20 && PACK_SPLIT_O
     [3, topicOf(100, 'base')],
     [7, topicOf(12, 'food')],
   ])
-  const out = splitLargePacks({ topics, wordsByTopic })
+  const out = preparePacks({ topics, wordsByTopic })
 
   check('маленькая тема осталась одной', out.topics.filter((t) => t.name.startsWith('Еда')).length === 1)
   check('маленькая тема сохранила имя без номера', out.topics.some((t) => t.name === 'Еда'))
@@ -160,9 +160,56 @@ check('константы правила', PACK_PART_SIZE === 20 && PACK_SPLIT_O
   check('части стоят на месте исходной темы', out.topics[0].name === 'База A2 · 1/5' && out.topics[5].name === 'Еда')
 }
 
+// ---- одна тема, описанная дважды -------------------------------------------
+{
+  // Ровно случай испанских «Природы · A2» (14 слов + 26) и «Описания людей · B1»
+  // (12 + 30, причём sociable и callado есть в обоих файлах).
+  const topics = [
+    { id: 63, name: 'Природа', level: 'A2', icon: 'palette' },
+    { id: 1041, name: 'Природа', level: 'A2', icon: 'menu_book' },
+    { id: 1070, name: 'Природа', level: 'B2', icon: 'menu_book' },
+  ]
+  const wordsByTopic = new Map([
+    [63, [{ front: 'la montaña', back: 'гора' }, { front: 'el valle', back: 'долина' }]],
+    [1041, [{ front: 'la Montaña ', back: 'гора' }, { front: 'selva', back: 'джунгли' }]],
+    [1070, [{ front: 'corteza', back: 'кора' }]],
+  ])
+  const out = preparePacks({ topics, wordsByTopic })
+
+  const a2 = out.topics.filter((t) => t.level === 'A2')
+  check('одноимённые темы одного уровня склеились в один пак', a2.length === 1, `паков: ${a2.length}`)
+  check('разные уровни НЕ склеиваются', out.topics.filter((t) => t.name === 'Природа').length === 2)
+
+  const words = out.wordsByTopic.get(a2[0].id).map((w) => w.front)
+  check('слова обоих описаний на месте', words.includes('el valle') && words.includes('selva'), words.join(', '))
+  check('повтор снят с точностью до регистра и пробелов', words.length === 3, words.join(', '))
+  check('порядок: сперва первое описание, потом второе', words[0] === 'la montaña' && words[2] === 'selva',
+    words.join(', '))
+  check('склеенный пак сохранил id и иконку первого описания',
+    a2[0].id === 63 && a2[0].icon === 'palette')
+
+  // Слияние может перевалить за 30 — тогда работает обычное правило частей.
+  const big = preparePacks({
+    topics: [
+      { id: 1, name: 'Еда', level: 'A1', icon: '·' },
+      { id: 2, name: 'Еда', level: 'A1', icon: '·' },
+    ],
+    wordsByTopic: new Map([
+      [1, topicOf(14, 'a')],
+      [2, topicOf(26, 'b')],
+    ]),
+  })
+  check('склейка 14 + 26 даёт 40 слов и две части по 20',
+    big.topics.length === 2 &&
+      big.topics[0].name === 'Еда · 1/2' &&
+      big.wordsByTopic.get(big.topics[0].id).length === 20 &&
+      big.wordsByTopic.get(big.topics[1].id).length === 20,
+    big.topics.map((t) => `${t.name}:${big.wordsByTopic.get(t.id).length}`).join(', '))
+}
+
 // ---- пустая тема не ломает правило -----------------------------------------
 {
-  const out = splitLargePacks({
+  const out = preparePacks({
     topics: [{ id: 1, name: 'Пустая', level: 'A1', icon: '·' }],
     wordsByTopic: new Map(),
   })
@@ -187,18 +234,82 @@ function realPacks(lang) {
   return { topics, wordsByTopic: map }
 }
 
-for (const lang of ['en', 'es']) {
-  const before = realPacks(lang)
-  // Считаем по УНИКАЛЬНЫМ id: в испанском каталоге «Фразы из диалогов» описаны
-  // в двух файлах одной и той же темой, и суммирование по строкам списка
-  // насчитало бы их слова дважды.
-  const beforeIds = [...new Set(before.topics.map((t) => t.id))]
-  const beforeCount = beforeIds.reduce((s, id) => s + (before.wordsByTopic.get(id)?.length ?? 0), 0)
-  const after = splitLargePacks(before)
-  const afterCount = after.topics.reduce((s, t) => s + (after.wordsByTopic.get(t.id)?.length ?? 0), 0)
-  check(`${lang.toUpperCase()}: слов после разбиения столько же`, beforeCount === afterCount,
-    `было ${beforeCount}, стало ${afterCount}`)
+const packKeyOf = (t) => `${t.name.trim().toLowerCase()}|${t.level}`
+const wordKeyOf = (w) => w.front.trim().toLowerCase()
 
+/** Слова каждого пака (имя+уровень) в виде множества — исходные данные. */
+function expectedPacks({ topics, wordsByTopic }) {
+  const packs = new Map()
+  const takenIds = new Map()
+  for (const t of topics) {
+    const key = packKeyOf(t)
+    const ids = takenIds.get(key) ?? new Set()
+    if (ids.has(t.id)) continue // одна тема описана дважды под одним id
+    ids.add(t.id)
+    takenIds.set(key, ids)
+    const set = packs.get(key) ?? new Set()
+    for (const w of wordsByTopic.get(t.id) ?? []) set.add(wordKeyOf(w))
+    packs.set(key, set)
+  }
+  return packs
+}
+
+for (const lang of ['en', 'es']) {
+  const L = lang.toUpperCase()
+  const before = realPacks(lang)
+  const after = preparePacks(before)
+  const expected = expectedPacks(before)
+
+  // Главная проверка: в каждом паке ровно те слова, что были в исходных данных.
+  // Не «столько же слов», а «те же»: склейка одноимённых тем и снятие повторов
+  // меняют счёт (в ES sociable и callado лежали в обоих описаниях «Описание
+  // людей»), но потерять или подменить слово не имеют права.
+  const actual = new Map()
+  for (const t of after.topics) {
+    const key = packKeyOf({ ...t, name: t.name.replace(/ · \d+\/\d+$/, '') })
+    const set = actual.get(key) ?? new Set()
+    for (const w of after.wordsByTopic.get(t.id) ?? []) set.add(wordKeyOf(w))
+    actual.set(key, set)
+  }
+  let sameSets = true
+  let diff = ''
+  for (const [key, want] of expected) {
+    const got = actual.get(key)
+    if (!got) {
+      sameSets = false
+      diff = `пак пропал: ${key}`
+      break
+    }
+    const missing = [...want].filter((w) => !got.has(w))
+    const extra = [...got].filter((w) => !want.has(w))
+    if (missing.length || extra.length) {
+      sameSets = false
+      diff = `${key}: нет ${missing.slice(0, 3).join(', ') || '—'}; лишние ${extra.slice(0, 3).join(', ') || '—'}`
+      break
+    }
+  }
+  check(`${L}: в каждом паке ровно те же слова, что в словаре`, sameSets, diff)
+  check(`${L}: паков ровно столько, сколько тем в словаре`, actual.size === expected.size,
+    `ожидали ${expected.size}, вышло ${actual.size}`)
+
+  // Внутри пака слово встречается один раз: повтор дал бы ученику две
+  // одинаковые карточки в колоде.
+  //
+  // ⚠️ Считаем по паку ЦЕЛИКОМ, а не по строке списка. Повторы «Описания людей»
+  // (sociable, callado) расходятся по разным частям — проверка внутри одной
+  // части их не видит и остаётся зелёной, даже если снятие повторов сломано.
+  const packWords = new Map()
+  for (const t of after.topics) {
+    const key = packKeyOf({ ...t, name: t.name.replace(/ · \d+\/\d+$/, '') })
+    const list = packWords.get(key) ?? []
+    list.push(...(after.wordsByTopic.get(t.id) ?? []).map(wordKeyOf))
+    packWords.set(key, list)
+  }
+  const dupPack = [...packWords].find(([, ws]) => new Set(ws).size !== ws.length)
+  check(`${L}: внутри пака нет повторяющихся слов`, dupPack === undefined,
+    dupPack ? `${dupPack[0]}: ${dupPack[1].filter((w, i) => dupPack[1].indexOf(w) !== i).slice(0, 3).join(', ')}` : '')
+
+  const beforeIds = [...new Set(before.topics.map((t) => t.id))]
   const ids = after.topics.map((t) => t.id)
   check(`${lang.toUpperCase()}: id частей ни с чем не столкнулись`, new Set(ids).size === ids.length,
     `тем ${ids.length}, уникальных ${new Set(ids).size}`)
@@ -214,28 +325,16 @@ for (const lang of ['en', 'es']) {
   check(`${lang.toUpperCase()}: нет частей-огрызков`, orphans.length === 0,
     orphans.length ? `${orphans[0].name}: ${after.wordsByTopic.get(orphans[0].id).length}` : '')
 
-  // Одинаковые названия у РАЗНЫХ тем в словарях есть и без нас («Идиомы: Деньги»
-  // в EN, «Абстрактные понятия» в ES). Правило не обязано их чинить — но и
-  // плодить новые столкновения не должно: каждое совпадение имён после
-  // разбиения обязано объясняться совпадением в исходных данных.
-  const base = (n) => n.replace(/ · \d+\/\d+$/, '')
-  const dupBefore = new Set(
-    beforeIds
-      .map((id) => before.topics.find((t) => t.id === id).name)
-      .filter((n, _i, all) => all.filter((x) => x === n).length > 1),
-  )
-  const afterNames = after.topics.map((t) => t.name)
-  const newDup = afterNames.filter(
-    (n, i) => afterNames.indexOf(n) !== i && !dupBefore.has(base(n)),
-  )
-  check(`${lang.toUpperCase()}: разбиение не создало новых одинаковых названий`,
-    newDup.length === 0, newDup[0] ?? '')
-  if (dupBefore.size > 0) {
-    console.log(`  ${lang.toUpperCase()}: одинаковые имена были и до разбиения — ${[...dupBefore].join(', ')}`)
-  }
+  // Двух одинаковых строк в списке быть не должно: человек выбирал бы между
+  // ними наугад. Одинаковое имя на РАЗНЫХ уровнях — это разные паки, они лежат
+  // под разными заголовками и не путаются.
+  const rows = after.topics.map((t) => `${t.name}|${t.level}`)
+  const twin = rows.find((r, i) => rows.indexOf(r) !== i)
+  check(`${L}: в списке нет двух одинаковых паков`, twin === undefined, twin ?? '')
 
   const split = after.topics.filter((t) => / · \d+\/\d+$/.test(t.name)).length
-  console.log(`  ${lang.toUpperCase()}: тем было ${beforeIds.length}, стало ${after.topics.length} (частей: ${split})`)
+  const words = after.topics.reduce((s, t) => s + (after.wordsByTopic.get(t.id)?.length ?? 0), 0)
+  console.log(`  ${L}: тем ${beforeIds.length} → паков ${expected.size}, строк ${after.topics.length} (частей: ${split}), слов ${words}`)
 }
 
 console.log(`\nИтог: ${pass}/${pass + fail}`)
