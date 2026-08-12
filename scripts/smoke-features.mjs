@@ -124,7 +124,7 @@ async function main() {
 
     // логин
     await page.goto(BASE + '/login', { waitUntil: 'networkidle2' })
-    await page.waitForSelector('#f-password', { timeout: 15000 })
+    await page.waitForSelector('#f-password', { timeout: 15000, polling: 250 })
     await page.evaluate(() => {
       const btn = [...document.querySelectorAll('button[type="button"]')].find(
         (b) => b.textContent.trim() === 'Войти',
@@ -134,7 +134,7 @@ async function main() {
     await page.type('#f-email', EMAIL)
     await page.type('#f-password', PASSWORD)
     await page.click('button[type="submit"]')
-    await page.waitForFunction(() => location.pathname !== '/login', { timeout: 20000 })
+    await page.waitForFunction(() => location.pathname !== '/login', { timeout: 20000, polling: 250 })
     check('логин', true)
 
     // ---- 0. Навигация: 4 вкладки, редирект /flashcards → /practice ----

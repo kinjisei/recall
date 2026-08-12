@@ -22,7 +22,7 @@
  * Локально: node scripts/canary-prod.mjs (возьмёт значения из .env.local).
  */
 import { createClient } from '@supabase/supabase-js'
-import { existsSync, readFileSync } from 'node:fs'
+import { appendFileSync, existsSync, readFileSync } from 'node:fs'
 
 const localEnv = (() => {
   const p = new URL('../.env.local', import.meta.url)
@@ -44,7 +44,7 @@ const PASSWORD = cfg.CANARY_PASSWORD
 
 const results = []
 const check = (name, ok, extra = '') => {
-  results.push({ name, ok })
+  results.push({ name, ok, extra })
   console.log(`${ok ? '✓' : '✗'} ${name}${extra ? ' — ' + extra : ''}`)
 }
 
@@ -127,9 +127,47 @@ try {
 }
 
 const ok = results.filter((r) => r.ok).length
+const failed = results.filter((x) => !x.ok)
 console.log(`\nИтог: ${ok}/${results.length}`)
-if (ok !== results.length) {
+if (failed.length) {
   console.log('\nУпало:')
-  for (const r of results.filter((x) => !x.ok)) console.log('  • ' + r.name)
+  for (const r of failed) console.log('  • ' + r.name)
+}
+
+// Сводка прогона — чтобы причина была видна из письма о красном прогоне, без
+// открытия логов Actions. Тот же принцип, что у бэкапа: владелец видит значок в
+// почте, а не консоль. Секретов здесь нет — только названия проверок и то, что
+// вернуло приложение.
+if (process.env.GITHUB_STEP_SUMMARY) {
+  // ⚠️ Отличаем «прод сломан» от «сторож не смог отработать». Ложная тревога
+  // дороже молчания: пару раз испугав зря, она приучает не открывать письмо —
+  // и настоящую поломку тогда тоже никто не увидит.
+  const setupOnly = failed.length === 1 && failed[0].name === 'прогон завершился'
+  const lines = !failed.length
+    ? [`✅ Сторож прода: ${ok} из ${results.length} — приложение отвечает как надо (${SITE}).`]
+    : setupOnly
+      ? [
+          '⚠️ **Сторож прода не смог отработать** — это не поломка приложения.',
+          '',
+          `Причина: ${String(failed[0].extra || 'не указана').slice(0, 200)}`,
+          '',
+          'Чаще всего не задан секрет `CANARY_PASSWORD` (Settings → Secrets and',
+          'variables → Actions) или удалён аккаунт `canary@recall.test`.',
+        ]
+      : [
+          `❌ **Сторож прода: ${failed.length} из ${results.length} проверок не прошли.**`,
+          '',
+          `Адрес: ${SITE}`,
+          '',
+          ...failed.map((r) => `- **${r.name}**${r.extra ? ` — ${String(r.extra).slice(0, 200)}` : ''}`),
+          '',
+          'Это видят и настоящие пользователи. Если чинить сейчас некогда —',
+          'откатите последнюю выкатку в Vercel.',
+        ]
+  try {
+    appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n') + '\n')
+  } catch {
+    /* сводка не главное — код возврата всё равно верный */
+  }
 }
 process.exitCode = ok === results.length ? 0 : 1

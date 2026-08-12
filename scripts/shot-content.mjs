@@ -63,7 +63,7 @@ try {
   await page.type('#f-email', EMAIL)
   await page.type('#f-password', PASSWORD)
   await page.click('button[type="submit"]')
-  await page.waitForFunction(() => location.pathname !== '/login', { timeout: 20000 })
+  await page.waitForFunction(() => location.pathname !== '/login', { timeout: 20000, polling: 250 })
 
   // 1. фразовые: справочник
   await page.goto(BASE + '/grammar?verbs=1', { waitUntil: 'networkidle2' })

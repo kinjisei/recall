@@ -57,7 +57,7 @@ const seen = (page, t) => page.evaluate((x) => (document.body.innerText || '').i
  */
 const waitText = (page, text, ms = 15000) =>
   page
-    .waitForFunction((t) => document.body.innerText.includes(t), { timeout: ms }, text)
+    .waitForFunction((t) => document.body.innerText.includes(t), { timeout: ms, polling: 250 }, text)
     .then(() => true)
     .catch(() => false)
 /**
@@ -75,7 +75,7 @@ const tap = async (page, text, ms = 6000) => {
         [...document.querySelectorAll('button, a, [role=button]')].some(
           (e) => (e.textContent || '').trim().includes(t) && !e.disabled,
         ),
-      { timeout: ms },
+      { timeout: ms, polling: 250 },
       text,
     )
     .then(() => true)
@@ -104,7 +104,7 @@ const tap = async (page, text, ms = 6000) => {
  * страшнее падения.
  */
 const typeInto = async (page, selector, value) => {
-  await page.waitForSelector(selector, { timeout: 10000 })
+  await page.waitForSelector(selector, { timeout: 10000, polling: 250 })
   await page.$eval(
     selector,
     (el, v) => {
@@ -193,7 +193,7 @@ try {
   await tab.goto(`${BASE}/login`, { waitUntil: 'networkidle2', timeout: 30000 })
   await tap(tab, 'Войти') // переключиться со вкладки регистрации на вход
   const hasForgot = await tap(tab, 'Забыли пароль?')
-  await tab.waitForFunction(() => location.pathname === '/forgot', { timeout: 10000 }).catch(() => {})
+  await tab.waitForFunction(() => location.pathname === '/forgot', { timeout: 10000, polling: 250 }).catch(() => {})
   check('со входа есть «Забыли пароль?» и она ведёт на /forgot', hasForgot && tab.url().includes('/forgot'), tab.url())
 
   // ---- 3. запрос письма: перехватываем, письма не шлём ---------------------
@@ -231,6 +231,7 @@ try {
   await tab
     .waitForFunction(() => document.body.innerText.includes('Если такой адрес у нас есть'), {
       timeout: 10000,
+      polling: 250,
     })
     .catch(() => {})
   check('запрос ушёл с верным адресом', recoverBody?.email === EMAIL, JSON.stringify(recoverBody))
@@ -249,7 +250,7 @@ try {
   // Тот же экран для адреса, которого нет: текст обязан совпасть слово в слово,
   // иначе разница сама по себе и есть ответ «такой аккаунт существует».
   await tap(tab, 'Ошибся в адресе')
-  await tab.waitForSelector('#f-email', { timeout: 10000 })
+  await tab.waitForSelector('#f-email', { timeout: 10000, polling: 250 })
   await typeInto(tab, '#f-email', 'no-such-person-zzz@recall.test')
   const typed = await tab.$eval('#f-email', (el) => el.value)
   const clicked = await tap(tab, 'Прислать письмо')
@@ -260,6 +261,7 @@ try {
   await tab
     .waitForFunction(() => document.body.innerText.includes('Если такой адрес у нас есть'), {
       timeout: 10000,
+      polling: 250,
     })
     .catch(() => {})
   const ghostText = await tab.evaluate(() => document.body.innerText.trim())
@@ -298,7 +300,7 @@ try {
   const hashPrefetch = linkPrefetch.data?.properties?.hashed_token
   await page.goto(`${BASE}/reset-password?token_hash=${hashPrefetch}&type=recovery`, {
     waitUntil: 'networkidle2',
-    timeout: 30000,
+    timeout: 30000, polling: 250,
   })
   await sleep(1500)
   const stillAlive = await anon().auth.verifyOtp({ type: 'recovery', token_hash: hashPrefetch })
@@ -361,6 +363,27 @@ try {
   // ---- 6. ссылка одноразовая ----------------------------------------------
   const reuse = await anon().auth.verifyOtp({ type: 'recovery', token_hash: tokenHash })
   check('та же ссылка второй раз не срабатывает', !!reuse.error, reuse.error?.message ?? 'СРАБОТАЛА')
+
+  // ---- 6б. протухшая ссылка не запирает экран ------------------------------
+  // Ссылка гаснет легко: полчаса на размышления или повторный запрос письма.
+  // Экран обязан после отказа вернуть поля кода — иначе человек с новым письмом
+  // в руках не может ничего ввести и остаётся в тупике.
+  const linkStale = await admin.auth.admin.generateLink({ type: 'recovery', email: EMAIL })
+  const staleHash = linkStale.data?.properties?.hashed_token
+  await page.goto(`${BASE}/reset-password?token_hash=${staleHash}&type=recovery`, {
+    waitUntil: 'networkidle2',
+    timeout: 30000,
+  })
+  await sleep(700)
+  // гасим эту ссылку, запросив следующую — как сделал бы нетерпеливый человек
+  await admin.auth.admin.generateLink({ type: 'recovery', email: EMAIL })
+  await typeInto(page, '#f-new-password', 'Stale!Password2026')
+  await tap(page, 'Сохранить пароль и войти')
+  check(
+    'протухшая ссылка объясняет себя',
+    await waitText(page, 'недействительны', 10000),
+  )
+  check('после отказа экран возвращает поля кода', await seen(page, 'Код из письма'))
 
   // ---- 7. путь по КОДУ (человек за другим компьютером) ---------------------
   const link2 = await admin.auth.admin.generateLink({ type: 'recovery', email: EMAIL })

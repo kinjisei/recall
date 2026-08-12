@@ -92,7 +92,7 @@ try {
     await page.type('#f-email', EMAIL)
     await page.type('#f-password', PASSWORD)
     await page.click('button[type="submit"]')
-    await page.waitForFunction(() => location.pathname !== '/login', { timeout: 20000 })
+    await page.waitForFunction(() => location.pathname !== '/login', { timeout: 20000, polling: 250 })
 
     // грамматика → Глаголы → Фразовые
     await page.goto(BASE + '/grammar?verbs=1', { waitUntil: 'networkidle2', timeout: 30000 })
@@ -110,7 +110,7 @@ try {
     // после нажатия на глагол. Проверяем именно это.
     await page.waitForFunction(
       () => [...document.querySelectorAll('button')].some((b) => b.textContent.trim().startsWith('look')),
-      { timeout: 15000 },
+      { timeout: 15000, polling: 250 },
     )
     const collapsed = await page.evaluate(() => !document.body.textContent.includes('look after'))
     check('группы глаголов свёрнуты — чужой глагол не раскрыт', collapsed)
@@ -120,7 +120,7 @@ try {
         ?.click()
     })
     await page.waitForFunction(() => document.body.textContent.includes('look after'), {
-      timeout: 15000,
+      timeout: 15000, polling: 250,
     })
     check('справочник отрисован (look after виден после раскрытия)', true)
 
@@ -141,7 +141,7 @@ try {
       )
       btn?.click()
     })
-    await page.waitForFunction(() => document.body.textContent.includes('___'), { timeout: 10000 })
+    await page.waitForFunction(() => document.body.textContent.includes('___'), { timeout: 10000, polling: 250 })
     const q = await page.evaluate(() => {
       // 4 варианта-частицы в сетке
       const grid = document.querySelector('.grid.grid-cols-2')

@@ -90,7 +90,7 @@ try {
     await page.type('#f-email', EMAIL)
     await page.type('#f-password', PASSWORD)
     await page.click('button[type="submit"]')
-    await page.waitForFunction(() => location.pathname !== '/login', { timeout: 20000 })
+    await page.waitForFunction(() => location.pathname !== '/login', { timeout: 20000, polling: 250 })
 
     // Учёба → Мой словарь → Паки
     await page.goto(BASE + '/study', { waitUntil: 'networkidle2', timeout: 30000 })
@@ -112,7 +112,7 @@ try {
     check('кнопка «Паки слов» найдена', packsOpened)
 
     await page.waitForFunction(() => document.body.textContent.includes('База уровня'), {
-      timeout: 20000,
+      timeout: 20000, polling: 250,
     })
     // раскрыть «Уровень A2» (существует только в категории «База»)
     await page.evaluate(() => {

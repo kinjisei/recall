@@ -78,7 +78,7 @@ try {
     await page.type('#f-email', EMAIL)
     await page.type('#f-password', PASSWORD)
     await page.click('button[type="submit"]')
-    await page.waitForFunction(() => location.pathname !== '/login', { timeout: 20000 })
+    await page.waitForFunction(() => location.pathname !== '/login', { timeout: 20000, polling: 250 })
 
     // читалка → Свой текст
     await page.goto(BASE + '/study?view=reader', { waitUntil: 'networkidle2', timeout: 30000 })
@@ -104,7 +104,7 @@ try {
         .find((b) => b.textContent.includes('Сохранить и читать'))?.click()
     })
     await page.waitForFunction(() => document.body.textContent.includes('ancient library'), {
-      timeout: 10000,
+      timeout: 10000, polling: 250,
     })
     check('текст открылся в читалке', true)
 
@@ -116,7 +116,7 @@ try {
     const enterPhraseMode = async () => {
       await page.waitForFunction(
         () => [...document.querySelectorAll('button')].some((b) => b.textContent.includes('Выделить фразу')),
-        { timeout: 10000 },
+        { timeout: 10000, polling: 250 },
       )
       for (let attempt = 0; attempt < 3; attempt++) {
         await page.evaluate(() => {
@@ -126,7 +126,7 @@ try {
         const on = await page
           .waitForFunction(
             () => [...document.querySelectorAll('button')].some((b) => b.textContent.trim() === 'Отмена'),
-            { timeout: 2000 },
+            { timeout: 2000, polling: 250 },
           )
           .then(() => true)
           .catch(() => false)
@@ -152,13 +152,13 @@ try {
         [...document.querySelectorAll('span')].some(
           (x) => x.textContent.trim() === 'ancient' && x.className.includes('ring-1'),
         ),
-      { timeout: 10000 },
+      { timeout: 10000, polling: 250 },
     )
     await tapWord('library')
     // шторка фразы открылась (WordSheet для фразы «ancient library»)
     await page.waitForFunction(
       () => [...document.querySelectorAll('button')].some((b) => /мои слова/i.test(b.textContent)),
-      { timeout: 10000 },
+      { timeout: 10000, polling: 250 },
     )
     check('шторка фразы открылась', true)
     await page.evaluate(() => {

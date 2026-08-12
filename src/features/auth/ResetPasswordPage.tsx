@@ -20,6 +20,7 @@ import { supportMailto } from '../../lib/contacts'
 import {
   MIN_PASSWORD,
   completeReset,
+  forgetRecoveryToken,
   isCodeLike,
   recoveryToken,
   rememberRecoveryToken,
@@ -30,21 +31,31 @@ export function ResetPasswordPage() {
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
 
-  // Токен читаем один раз, кладём в sessionStorage и убираем из адреса. В
-  // память компонента его класть нельзя: обновление страницы (своё или PWA)
-  // стёрло бы единственную копию, и человек с рабочей ссылкой оказался бы
-  // перед формой ввода кода, которого он не знает.
-  const [fromLink, setFromLink] = useState(() => !!recoveryToken())
+  // Токен из адреса ГЛАВНЕЕ сохранённого и используется сразу, ещё до того как
+  // эффект перепишет хранилище.
+  //
+  // ⚠️ Иначе гонка: человек открывает вторую ссылку (первую бросил полчаса
+  // назад), экран мгновенно готов к отправке — но с прежним, уже негодным
+  // токеном из sessionStorage. Успел нажать раньше эффекта — получил
+  // «ссылка недействительна» по свежей ссылке.
+  //
+  // В sessionStorage кладём в эффекте, чтобы пережить перезагрузку: из адреса
+  // токен мы убираем (история браузера, заголовок Referer), и другой копии
+  // после F5 не остаётся.
+  const urlToken = params.get('token_hash')
+  const [stored, setStored] = useState<string | null>(() => recoveryToken())
   useEffect(() => {
-    const hash = params.get('token_hash')
-    if (!hash) return
-    rememberRecoveryToken(hash)
-    setFromLink(true)
+    if (!urlToken) return
+    rememberRecoveryToken(urlToken)
+    setStored(urlToken)
     const next = new URLSearchParams(params)
     next.delete('token_hash')
     next.delete('type')
     setParams(next, { replace: true })
-  }, [params, setParams])
+  }, [urlToken, params, setParams])
+
+  const token = urlToken ?? stored
+  const fromLink = !!token
 
   const [email, setEmail] = useState('')
   const [code, setCode] = useState('')
@@ -61,7 +72,7 @@ export function ResetPasswordPage() {
     setError(null)
     const res = await completeReset({
       password,
-      tokenHash: recoveryToken() ?? undefined,
+      tokenHash: token ?? undefined,
       code: verified ? undefined : code,
       email: verified ? undefined : email,
       alreadyVerified: verified,
@@ -69,6 +80,14 @@ export function ResetPasswordPage() {
     setBusy(false)
     if (res.verified) setVerified(true)
     if (res.error) {
+      // ⚠️ Ссылка не подошла — забываем её и показываем поля кода. Без этого
+      // экран остаётся в режиме «пришёл по ссылке» и кода ввести НЕГДЕ: человек
+      // с новым письмом в руках упирается в тупик. А протухает ссылка легко —
+      // полчаса на размышления или повторный запрос письма гасит прежнюю.
+      if (!res.verified && token) {
+        forgetRecoveryToken()
+        setStored(null)
+      }
       setError(res.error)
       return
     }

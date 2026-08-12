@@ -99,7 +99,7 @@ try {
     await page.type('#f-email', EMAIL)
     await page.type('#f-password', PASSWORD)
     await page.click('button[type="submit"]')
-    await page.waitForFunction(() => location.pathname !== '/login', { timeout: 20000 })
+    await page.waitForFunction(() => location.pathname !== '/login', { timeout: 20000, polling: 250 })
 
     // читалка → Свой текст
     await page.goto(BASE + '/study?view=reader', { waitUntil: 'networkidle2', timeout: 30000 })
@@ -125,7 +125,7 @@ try {
         .find((b) => b.textContent.includes('Сохранить и читать'))?.click()
     })
     await page.waitForFunction(() => document.body.textContent.includes('ancient library'), {
-      timeout: 10000,
+      timeout: 10000, polling: 250,
     })
     check('текст открылся в читалке', true)
 
@@ -139,7 +139,7 @@ try {
     })
     await page.waitForFunction(
       () => [...document.querySelectorAll('button')].some((b) => /мои слова/i.test(b.textContent)),
-      { timeout: 25000 }, // ждём AI-перевод
+      { timeout: 25000, polling: 250 }, // ждём AI-перевод
     )
     await page.evaluate(() => {
       ;[...document.querySelectorAll('button')].find((b) => /мои слова/i.test(b.textContent))?.click()

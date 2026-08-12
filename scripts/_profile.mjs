@@ -15,6 +15,7 @@
 //   3) и просто всё старше трёх часов — на случай, если pid успели переиспользовать.
 // Параллельный прогон не заденем: его процесс жив, а папка молодая.
 // ============================================================================
+import { execFileSync } from 'node:child_process'
 import { mkdirSync, readdirSync, rmSync, statSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -62,6 +63,7 @@ export function profileDir(name) {
   const dir = join(ROOT, `${name}-${process.pid}-${Date.now()}`)
   mkdirSync(dir, { recursive: true })
   process.on('exit', () => {
+    killBrowsersUsing(dir)
     try {
       rmSync(dir, { recursive: true, force: true })
     } catch {
@@ -69,4 +71,44 @@ export function profileDir(name) {
     }
   })
   return dir
+}
+
+/**
+ * Гасит браузер, поднятый под ЭТОТ профиль.
+ *
+ * Скрипты запускают msedge через spawn(..., { detached: true }).unref() — иначе
+ * puppeteer.connect не к чему цепляться. Обратная сторона: браузер переживает
+ * свой скрипт. Пока прогон завершается штатно, его закрывает browser.close(),
+ * но при падении по таймауту протокола или необработанном исключении в шаге
+ * закрывать становится некому — и headless-браузер остаётся жить с открытыми
+ * вкладками. За день их накопилось два десятка, и владелец увидел это как
+ * «почему у меня 17 вкладок Recall».
+ *
+ * Ищем по пути профиля: он уникален для прогона, так что личный Edge не
+ * заденем ни при каких обстоятельствах.
+ */
+export function killBrowsersUsing(dir) {
+  if (process.platform !== 'win32') return
+  try {
+    // ⚠️ Путь подставляем в ОДИНАРНЫЕ кавычки PowerShell и экранируем только
+    // сам апостроф. Бэкслеши там ничего не экранируют: попытка удвоить их
+    // ломала совпадение, команда молча ничего не находила, и браузеры
+    // продолжали копиться — ровно тот случай, когда «уборка есть», а мусор
+    // остаётся.
+    const pattern = `*${dir.replace(/'/g, "''")}*`
+    execFileSync(
+      'powershell.exe',
+      [
+        '-NoProfile',
+        '-NonInteractive',
+        '-Command',
+        `Get-CimInstance Win32_Process -Filter "Name='msedge.exe'" | ` +
+          `Where-Object { $_.CommandLine -like '${pattern}' } | ` +
+          `ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }`,
+      ],
+      { stdio: 'ignore', timeout: 15000 },
+    )
+  } catch {
+    // не нашли, не хватило прав, не успели — профиль всё равно подметут позже
+  }
 }

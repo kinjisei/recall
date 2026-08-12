@@ -90,7 +90,7 @@ try {
     await page.type('#f-email', EMAIL)
     await page.type('#f-password', PASSWORD)
     await page.click('button[type="submit"]')
-    await page.waitForFunction(() => location.pathname !== '/login', { timeout: 20000 })
+    await page.waitForFunction(() => location.pathname !== '/login', { timeout: 20000, polling: 250 })
 
     // Учёба → Мой словарь → Паки
     await page.goto(BASE + '/study', { waitUntil: 'networkidle2', timeout: 30000 })
@@ -116,7 +116,7 @@ try {
     await page.waitForSelector('input[placeholder="Поиск темы…"]', { timeout: 20000 })
     await page.type('input[placeholder="Поиск темы…"]', 'Идиомы')
     await page.waitForFunction(() => document.body.textContent.includes('Идиомы:'), {
-      timeout: 20000,
+      timeout: 20000, polling: 250,
     })
     const topicOk = await page.evaluate(
       () =>

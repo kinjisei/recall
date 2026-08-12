@@ -154,7 +154,7 @@ try {
     await page.type('#f-email', T_EMAIL)
     await page.type('#f-password', PASSWORD)
     await page.click('button[type="submit"]')
-    await page.waitForFunction(() => location.pathname !== '/login', { timeout: 20000 })
+    await page.waitForFunction(() => location.pathname !== '/login', { timeout: 20000, polling: 250 })
 
     // Карточка ученика адресуемая (?student=id): на голом /teacher лежит список,
     // и кнопки карточки там просто нет. Раньше смоук стучался в /teacher и ждал
@@ -173,7 +173,7 @@ try {
     check('кнопка «Диагностическая карта» найдена', opened)
     await page.waitForFunction(
       () => document.body.textContent.includes('Динамика за месяц'),
-      { timeout: 15000 },
+      { timeout: 15000, polling: 250 },
     )
     const trendOk = await page.evaluate(
       () =>
