@@ -23,7 +23,11 @@ import puppeteer from 'puppeteer-core'
 import { profileDir } from './_profile.mjs'
 
 const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
-const BASE = 'http://localhost:5173'
+// По умолчанию локальный сервер. Прод проверяется тем же прогоном:
+//   AUDIT_BASE_URL=https://recall-pgkz.vercel.app node scripts/smoke-password-reset.mjs
+// База у прода и у dev одна и та же, так что временный аккаунт и ссылки
+// восстановления работают одинаково — писем по-прежнему не отправляется.
+const BASE = process.env.AUDIT_BASE_URL || 'http://localhost:5173'
 const EMAIL = 'pwreset-smoke@recall.test'
 const PASS_OLD = 'Old!Password2026'
 const PASS_LINK = 'Link!Password2026'
