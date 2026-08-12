@@ -18,6 +18,7 @@ import { createClient } from '@supabase/supabase-js'
 import { spawn } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import puppeteer from 'puppeteer-core'
+import { profileDir } from './_profile.mjs'
 
 const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
 const BASE = 'http://localhost:5173'
@@ -99,7 +100,7 @@ async function main() {
       `--remote-debugging-port=${PORT}`,
       '--no-first-run',
       '--disable-gpu',
-      `--user-data-dir=${process.env.TEMP}\\guided-${Date.now()}`,
+      `--user-data-dir=${profileDir('guided')}`,
       'about:blank',
     ],
     { detached: true, stdio: 'ignore' },
@@ -200,6 +201,60 @@ async function main() {
   await sleep(2500)
   const readerAgain = await page.evaluate(() => /view=reader/.test(location.search))
   check('повторный вход в «Учёбу» НЕ уводит в чтение', !readerAgain)
+
+  // ---- 3б. брошенная сессия НЕ двигается сама -----------------------------
+  // Раньше шаг переключался в инициализаторе useState баннера «Дальше», то есть
+  // САМИМ ФАКТОМ отрисовки экрана результата: бросил занятие, потом дошёл до
+  // конца любого раунда — и сессия молча уезжала на чтение.
+  //
+  // ⚠️ Раунд здесь не проходим: он свайповый, и «прокликать» его хрупко.
+  // Первая версия проверки так и делала — кнопок не находила, до баннера не
+  // доходила и оставалась зелёной даже на сломанном коде (поймано мутацией).
+  // Вместо этого отодвигаем расписание: очередь пуста → экран сразу показывает
+  // итог, а вместе с ним и баннер. Именно его отрисовка и была триггером.
+  const { data: cards } = await admin.from('cards').select('id').eq('deck_id', deck.id)
+  const soon = new Date(Date.now() + 30 * 86400_000).toISOString()
+  await admin.from('review_states').upsert(
+    (cards ?? []).map((c) => ({
+      card_id: c.id,
+      user_id: userId,
+      state: 'review',
+      due: soon,
+      last_review: new Date().toISOString(),
+      reps: 3,
+      lapses: 0,
+    })),
+    { onConflict: 'card_id,user_id' },
+  )
+  await page.evaluate(() => {
+    sessionStorage.setItem('recall.guided', 'flashcards')
+    sessionStorage.setItem('recall.guided.opened', 'flashcards')
+  })
+  await page.goto(`${BASE}/practice?m=review`, { waitUntil: 'networkidle2' })
+  const bannerShown = await page
+    // ⚠️ Регистронезависимо: у подписи CSS uppercase, и innerText отдаёт её
+    // уже преобразованной («ЗАНЯТИЕ ПРОДОЛЖАЕТСЯ»). На этом смоук уже спотыкался.
+    .waitForFunction(() => /занятие продолжается/i.test(document.body.innerText || ''), {
+      timeout: 15000,
+      polling: 300,
+    })
+    .then(() => true)
+    .catch(() => false)
+  check(
+    'баннер «Занятие продолжается» отрисован',
+    bannerShown,
+    bannerShown
+      ? ''
+      : (await page.evaluate(() => (document.body.innerText || '').replace(/\s+/g, ' ').slice(0, 160))) +
+        ' | шаг: ' +
+        (await page.evaluate(() => sessionStorage.getItem('recall.guided'))),
+  )
+  const stepAfterBanner = await page.evaluate(() => sessionStorage.getItem('recall.guided'))
+  check(
+    'сама отрисовка баннера сессию НЕ двигает',
+    stepAfterBanner === 'flashcards',
+    `шаг: ${stepAfterBanner}`,
+  )
 
   // ---- 4. новая сессия снова имеет право увести ----------------------------
   await page.goto(`${BASE}/`, { waitUntil: 'networkidle2' })
