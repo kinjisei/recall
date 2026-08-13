@@ -2250,6 +2250,14 @@
     on conflict (user_id, day, type) do update
       set items_done   = activity_log.items_done + v_items,
           duration_sec = activity_log.duration_sec + v_sec;
+
+    -- Ученик что-то сделал — проверяем, не закрылся ли пункт домашки. Эта
+    -- функция — ЕДИНСТВЕННАЯ точка, через которую проходит любое действие
+    -- ученика (карточки, чтение, речь, письмо, квесты, задания), поэтому
+    -- автозачёт по счётчикам занятий висит здесь, а не в пяти местах клиента.
+    -- Завершения, которые не логируются как занятие (сданная работа, материал,
+    -- квест), закрываются триггерами на своих таблицах — см. блок «Домашка».
+    perform public.refresh_homework_for(uid);
   end $fn$;
 
   grant execute on function public.log_activity(text, date, int, int) to authenticated;
@@ -4448,8 +4456,6 @@ begin
   v_since := hw.created_at;
 
   if it.kind = 'words' then
-    -- Считаем РАЗНЫЕ карточки, а не заходы: пять повторений одного слова —
-    -- это не пять слов.
     select count(distinct rs.card_id) into v_count
       from review_states rs
       join cards c on c.id = rs.card_id
@@ -4477,8 +4483,19 @@ begin
        and (it.ref_id is null or q.id = it.ref_id);
 
   elsif it.kind = 'writing' then
-    select count(*) into v_count from writing_submissions ws
-     where ws.user_id = hw.student_id and ws.created_at >= v_since;
+    -- ⚠️ Два источника, и «учительский» тут главный: работа по заданию учителя
+    -- лежит в writing_task_assignments, свободное письмо — в writing_submissions.
+    -- Считать только второе означало не закрывать пункт как раз тогда, когда
+    -- ученик сделал ровно то, что задали.
+    select
+      (select count(*) from writing_submissions ws
+        where ws.user_id = hw.student_id and ws.created_at >= v_since)
+      +
+      (select count(*) from writing_task_assignments wa
+        where wa.student_id = hw.student_id
+          and wa.submitted_at is not null and wa.submitted_at >= v_since
+          and (it.ref_id is null or wa.task_id = it.ref_id))
+    into v_count;
 
   elsif it.kind = 'speech' then
     select coalesce(sum(al.items_done), 0) into v_count from activity_log al
@@ -4486,7 +4503,6 @@ begin
        and al.created_at >= v_since;
 
   else
-    -- 'free' — измерить нечем, закрывается только галочкой ученика.
     v_count := 0;
   end if;
 
@@ -4578,11 +4594,14 @@ returns void language plpgsql security definer set search_path = public as $fn$
 declare it record;
 begin
   if auth.uid() is null then raise exception 'RECALL_NO_AUTH'; end if;
-  select i.id as item_id, i.done_at, h.student_id into it
+  select i.id as item_id, i.done_at, i.kind, h.student_id into it
     from homework_items i join homework h on h.id = i.homework_id
    where i.id = p_item;
   if it is null then raise exception 'RECALL_NO_ITEM'; end if;
   if it.student_id <> auth.uid() then raise exception 'RECALL_NOT_YOURS'; end if;
+  -- ⚠️ Галочка возможна ТОЛЬКО там, где измерить нечем. Иначе весь экран
+  -- преподавателя превращается в то, что ученик о себе сообщил.
+  if it.kind <> 'free' then raise exception 'RECALL_MEASURED_ITEM'; end if;
   if it.done_at is not null then return; end if;
 
   update homework_items set done_at = now(), done_by = 'student' where id = p_item;
@@ -4607,8 +4626,18 @@ begin
 
   perform public.refresh_homework_for(v_student);
 
-  select * into v_hw from homework
-   where student_id = v_student order by created_at desc limit 1;
+  -- ⚠️ Ученик видит свою последнюю домашку от кого угодно, преподаватель —
+  -- только СВОЮ. У ученика бывает два репетитора, и заметка одного не должна
+  -- попадать на экран другому: это чужая работа и чужие слова о ребёнке.
+  if v_student = auth.uid() then
+    select * into v_hw from homework
+     where student_id = v_student
+     order by created_at desc limit 1;
+  else
+    select * into v_hw from homework
+     where student_id = v_student and teacher_id = auth.uid()
+     order by created_at desc limit 1;
+  end if;
   if v_hw is null then return null; end if;
 
   select jsonb_agg(jsonb_build_object(
@@ -4626,36 +4655,6 @@ begin
   );
 end $fn$;
 
--- ---------------------------------------------------------------------------
--- Автозачёт вешаем на log_activity — ЕДИНСТВЕННУЮ точку, через которую проходит
--- любое действие ученика. Тело повторено целиком (create or replace), добавлена
--- последняя строка.
--- ---------------------------------------------------------------------------
-create or replace function public.log_activity(
-  p_type text, p_day date, p_items int default 1, p_sec int default 0
-) returns void language plpgsql security definer set search_path = public as $fn$
-declare
-  uid uuid := auth.uid();
-  v_items int := least(greatest(coalesce(p_items, 0), 0), 100000);
-  v_sec   int := least(greatest(coalesce(p_sec, 0), 0), 86400);
-begin
-  if uid is null then raise exception 'RECALL_NO_AUTH'; end if;
-  if p_type not in ('flashcards','reader','pronunciation','conversation','writing',
-                    'grammar','quest','practice','assignment','perfect') then
-    raise exception 'RECALL_BAD_TYPE';
-  end if;
-  if p_day is null or p_day < current_date - 1 or p_day > current_date + 1 then
-    raise exception 'RECALL_BAD_DAY';
-  end if;
-  insert into activity_log (user_id, day, type, items_done, duration_sec)
-  values (uid, p_day, p_type, v_items, v_sec)
-  on conflict (user_id, day, type) do update
-    set items_done   = activity_log.items_done + v_items,
-        duration_sec = activity_log.duration_sec + v_sec;
-
-  -- Ученик что-то сделал — проверяем, не закрылся ли пункт домашки.
-  perform public.refresh_homework_for(uid);
-end $fn$;
 
 -- Гранты — ПОСЛЕ финального revoke в конце файла.
 -- homework_item_progress и refresh_homework_for клиенту НЕ отдаём: их зовут
@@ -4666,94 +4665,6 @@ grant execute on function public.create_homework(uuid, text, timestamptz, jsonb,
 grant execute on function public.complete_homework_item(uuid) to authenticated;
 grant execute on function public.get_homework(uuid) to authenticated;
 grant execute on function public.log_activity(text, date, int, int) to authenticated;
-
--- ============================================================================
--- ДОМАШКА: закрываем ВЕСЬ класс завершений (2026-08-13, тем же заходом)
---
--- Первая версия автозачёта висела только на log_activity — и этого не хватило.
--- Проверка показала: завершения бывают ДВУХ видов.
---   1. Счётчик занятия  (карточки, чтение, речь) — идёт через log_activity;
---   2. Запись в таблицу (сданная работа, сданный материал, пройденный квест) —
---      её делают серверные RPC, и log_activity там не вызывается вовсе.
---
--- Из-за этого пункт «письмо» не закрывался как раз в самом частом случае:
--- работа, ЗАДАННАЯ учителем, пишется в writing_task_assignments, а не в
--- writing_submissions, и её сдача не логируется как занятие. То есть ученик
--- делал именно то, что задали, а домашка оставалась открытой.
---
--- Лечим не приписыванием вызова в три RPC (четвёртый забудут — и молча), а
--- триггерами на самих таблицах. Тогда любой будущий способ записать «сдано»
--- закроет пункт сам.
--- ============================================================================
-
--- Пункт «письмо» закрывают ОБА пути: свободное письмо и работа от учителя.
-create or replace function public.homework_item_progress(p_item uuid)
-returns int language plpgsql stable security definer set search_path = public as $fn$
-declare
-  it      record;
-  hw      record;
-  v_since timestamptz;
-  v_count int := 0;
-begin
-  select * into it from homework_items where id = p_item;
-  if it is null then return 0; end if;
-  select * into hw from homework where id = it.homework_id;
-  if hw is null then return 0; end if;
-  v_since := hw.created_at;
-
-  if it.kind = 'words' then
-    select count(distinct rs.card_id) into v_count
-      from review_states rs
-      join cards c on c.id = rs.card_id
-      join decks d on d.id = c.deck_id
-     where rs.user_id = hw.student_id
-       and d.owner_id = hw.student_id
-       and d.lang = hw.lang
-       and rs.last_review >= v_since;
-
-  elsif it.kind = 'text' then
-    if it.ref_id is not null then
-      select count(*) into v_count from material_assignments ma
-       where ma.material_id = it.ref_id and ma.student_id = hw.student_id
-         and ma.submitted_at is not null and ma.submitted_at >= v_since;
-    else
-      select coalesce(sum(al.items_done), 0) into v_count from activity_log al
-       where al.user_id = hw.student_id and al.type = 'reader'
-         and al.created_at >= v_since;
-    end if;
-
-  elsif it.kind = 'quest' then
-    select count(*) into v_count from grammar_quests q
-     where q.student_id = hw.student_id and q.status = 'completed'
-       and q.completed_at >= v_since
-       and (it.ref_id is null or q.id = it.ref_id);
-
-  elsif it.kind = 'writing' then
-    -- ⚠️ Два источника, и «учительский» тут главный: работа по заданию учителя
-    -- лежит в writing_task_assignments, свободное письмо — в writing_submissions.
-    -- Считать только второе означало не закрывать пункт как раз тогда, когда
-    -- ученик сделал ровно то, что задали.
-    select
-      (select count(*) from writing_submissions ws
-        where ws.user_id = hw.student_id and ws.created_at >= v_since)
-      +
-      (select count(*) from writing_task_assignments wa
-        where wa.student_id = hw.student_id
-          and wa.submitted_at is not null and wa.submitted_at >= v_since
-          and (it.ref_id is null or wa.task_id = it.ref_id))
-    into v_count;
-
-  elsif it.kind = 'speech' then
-    select coalesce(sum(al.items_done), 0) into v_count from activity_log al
-     where al.user_id = hw.student_id and al.type = 'pronunciation'
-       and al.created_at >= v_since;
-
-  else
-    v_count := 0;
-  end if;
-
-  return coalesce(v_count, 0);
-end $fn$;
 
 -- ---------------------------------------------------------------------------
 -- Триггер: любая запись «сдано/пройдено» пересчитывает домашку этого ученика.
@@ -4801,3 +4712,4 @@ create trigger trg_homework_after_free_writing
 -- Триггерные функции клиенту не нужны — их зовёт только Postgres.
 revoke execute on function public.homework_refresh_trigger()  from public, anon, authenticated;
 revoke execute on function public.homework_refresh_by_user()  from public, anon, authenticated;
+

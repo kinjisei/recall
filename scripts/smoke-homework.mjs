@@ -309,6 +309,61 @@ try {
     afterMark.data.items.map((i) => `${i.kind}:${i.done_by}`).join(', '),
   )
 
+  // ---- 8б. галочкой НЕЛЬЗЯ закрыть измеримый пункт ---------------------------
+  // ⚠️ Найдено аудитом того же захода: complete_homework_item проверяла «твой ли
+  // пункт», но не проверяла ТИП. Ученик закрывал «повторить 20 слов» одним
+  // вызовом, не повторив ни одного. Клиент такую кнопку не рисует — но клиент
+  // здесь ничего не решает.
+  const hwCheat = await teacher.rpc('create_homework', {
+    p_student_id: ids.mate,
+    p_lang: 'en',
+    p_due: due,
+    p_items: [{ kind: 'words', title: 'Повторить 20 слов', target: 20 }],
+  })
+  check('домашка для проверки галочки выдана', !hwCheat.error, errText(hwCheat.error))
+  const cheatItems = (await mate.rpc('get_homework')).data.items
+  const cheatWords = cheatItems.find((i) => i.kind === 'words')
+  const cheat = await mate.rpc('complete_homework_item', { p_item: cheatWords.id })
+  check(
+    'галочкой нельзя закрыть измеримый пункт',
+    !!cheat.error && /MEASURED_ITEM/.test(errText(cheat.error)),
+    errText(cheat.error) || 'ЗАКРЫЛ БЕЗ ЕДИНОГО ПОВТОРЕНИЯ',
+  )
+  const { data: cheatRaw } = await admin
+    .from('homework_items')
+    .select('done_at, done_by')
+    .eq('id', cheatWords.id)
+    .single()
+  check('и в базе пункт остался открытым', !cheatRaw?.done_at, `done_by=${cheatRaw?.done_by ?? 'null'}`)
+
+  // ---- 8в. чужая домашка не видна другому преподавателю ----------------------
+  // ⚠️ У ученика бывает два репетитора. get_homework — security definer, то есть
+  // RLS ему не указ, и он отдавал последнюю домашку ЛЮБОГО учителя вместе с
+  // заметкой. Политика на таблице была строже — правой оказалась политика.
+  await admin
+    .from('teacher_students')
+    .upsert({ teacher_id: ids.other, student_id: ids.mate }, { onConflict: 'teacher_id,student_id' })
+  const secret = 'Личная заметка второго преподавателя'
+  await other.rpc('create_homework', {
+    p_student_id: ids.mate,
+    p_lang: 'en',
+    p_due: due,
+    p_items: [{ kind: 'free', title: 'Задание второго учителя', target: 1 }],
+    p_note: secret,
+  })
+  const firstSees = await teacher.rpc('get_homework', { p_student: ids.mate })
+  check(
+    'учитель не видит домашку другого учителя',
+    firstSees.data?.note !== secret,
+    firstSees.data?.note === secret ? 'ВИДИТ ЧУЖУЮ ЗАМЕТКУ' : '',
+  )
+  const studentSees = await mate.rpc('get_homework')
+  check(
+    'а ученик свою последнюю домашку видит',
+    studentSees.data?.note === secret,
+    `заметка: ${studentSees.data?.note ?? 'нет'}`,
+  )
+
   // ---- 9. чужой пункт закрыть нельзя ----------------------------------------
   const mateHw = await teacher.rpc('create_homework', {
     p_student_id: ids.mate,
