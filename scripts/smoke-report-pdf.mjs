@@ -159,18 +159,18 @@ try {
     // Карточка ученика адресуемая (?student=id): на голом /teacher лежит список,
     // и кнопки карточки там просто нет. Раньше смоук стучался в /teacher и ждал
     // диагностику — с тех пор как экран стал адресуемым, он ждал впустую.
-    await page.goto(BASE + `/teacher?student=${sId}`, { waitUntil: 'networkidle2', timeout: 30000 })
-    await new Promise((r) => setTimeout(r, 2500))
-
-    // раскрыть диагностику
-    const opened = await page.evaluate(() => {
-      const btn = [...document.querySelectorAll('button')].find((b) =>
-        b.textContent.includes('Диагностическая карта'),
-      )
-      btn?.click()
-      return !!btn
+    // Диагностика переехала под «Ещё», но осталась адресуемой: ?sec=diag
+    // открывает её сразу. Кликать по подписи не надо — и проверка перестаёт
+    // ломаться от каждого переименования раздела.
+    await page.goto(BASE + `/teacher?student=${sId}&sec=diag`, {
+      waitUntil: 'networkidle2',
+      timeout: 30000,
     })
-    check('кнопка «Диагностическая карта» найдена', opened)
+    await new Promise((r) => setTimeout(r, 2500))
+    const opened = await page.evaluate(() =>
+      document.body.innerText.includes('Диагностическая карта'),
+    )
+    check('диагностика открылась по адресу ?sec=diag', opened)
     await page.waitForFunction(
       () => document.body.textContent.includes('Динамика за месяц'),
       { timeout: 15000, polling: 250 },

@@ -195,8 +195,13 @@ async function main() {
   await sleep(2500)
   check('карточка ученика открылась', await seen(page, STUDENT_NAME))
   check('раздела «Наборы слов» больше нет', !(await seen(page, 'Наборы слов')))
+  check('домашка стоит первой в карточке', await seen(page, 'Домашк'))
 
-  await tap(page, 'Слова и перепроверка')
+  // Раздел стал адресуемым: ?sec=words открывает «Слова» сразу, без клика по
+  // «Ещё». Так проверка заодно сторожит саму адресуемость — потерять её при
+  // следующей перестройке экрана легко и незаметно.
+  await page.goto(`${BASE}/teacher?student=${studentId}&sec=words`, { waitUntil: 'networkidle2' })
+  await sleep(2000)
   const hasGive = await seen(page, 'Выдать слова')
   check('в «Словах» есть выдача', hasGive)
 
@@ -304,10 +309,8 @@ async function main() {
   await tapSheet(page, '← к наборам')
 
   // ---- удаление ------------------------------------------------------------
-  await page.goto(`${BASE}/teacher?student=${studentId}`, { waitUntil: 'networkidle2' })
-  await sleep(2000)
-  await tap(page, 'Слова и перепроверка')
-  await sleep(1000)
+  await page.goto(`${BASE}/teacher?student=${studentId}&sec=words`, { waitUntil: 'networkidle2' })
+  await sleep(2500)
   check('видно происхождение слова', await seen(page, 'выдал я'))
 
   const del = await page.evaluate(() => {

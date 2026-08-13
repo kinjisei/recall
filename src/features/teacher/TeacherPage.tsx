@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { IconGraduation, IconFlame, IconBadgeCheck } from '../../components/icons'
 import { BackHeader } from '../../components/BackButton'
-import { GOAL_LABELS } from '../../types'
+import { GOAL_LABELS, type AppLang } from '../../types'
 import { useUrlState } from '../../lib/useUrlState'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
@@ -27,6 +27,10 @@ import { PlacementSection } from './PlacementSection'
 import { ProgramSection } from './ProgramSection'
 import { GuideSection } from './GuideSection'
 import { DailyPlanSection } from './DailyPlanSection'
+import { HomeworkSection, StatTiles } from './HomeworkSection'
+import { HomeworkComposer } from './HomeworkComposer'
+import { Reveal } from '../../components/Reveal'
+import { getStudentDiagnostics, type StudentDiagnostics } from '../../lib/diagnostics'
 import { countSubmittedWorks } from '../../lib/materials'
 import { countSubmittedWriting } from '../../lib/writing'
 import { getMyPlan, type MyPlan } from '../../lib/billing'
@@ -492,6 +496,22 @@ function StudentRow({
   )
 }
 
+/**
+ * Разделы под «Ещё» — то, что нужно раз в месяц. Порядок значим: тест уровня
+ * первым, потому что с нового ученика начинают именно с него (это и в
+ * методичке, и в комментариях кода стояло всегда, а на экране — нет).
+ */
+const SECTIONS = [
+  { id: 'placement', title: 'Тест уровня' },
+  { id: 'diag', title: 'Диагностическая карта' },
+  { id: 'plan', title: 'План дня' },
+  { id: 'program', title: 'Программа обучения' },
+  { id: 'words', title: 'Слова и перепроверка' },
+  { id: 'quests', title: 'AI-квесты по грамматике' },
+] as const
+
+type StudentSection = (typeof SECTIONS)[number]['id']
+
 function StudentCard({
   student,
   onChanged,
@@ -511,12 +531,40 @@ function StudentCard({
   const [seatBusy, setSeatBusy] = useState(false)
   const [unlinking, setUnlinking] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [showWords, setShowWords] = useState(false)
-  const [showQuests, setShowQuests] = useState(false)
-  const [showDiag, setShowDiag] = useState(false)
-  const [showProgram, setShowProgram] = useState(false)
-  const [showPlanDay, setShowPlanDay] = useState(false)
   const p = student.profile
+
+  // ⚠️ Раскрытый раздел живёт в АДРЕСЕ, как на остальных 12 экранах: в PWA
+  // свайп-назад — единственный способ вернуться, и без этого он выбрасывал бы
+  // из карточки целиком вместо закрытия раздела. Пять отдельных булевых
+  // состояний заменены одним: открыт максимум один раздел, и это же чинит
+  // старую беду — раскрытые подряд диагностика с программой давали экран,
+  // который невозможно пролистать.
+  const [rawSection, setRawSection] = useUrlState('sec', (v) =>
+    SECTIONS.some((s) => s.id === v),
+  )
+  const section = rawSection as StudentSection | null
+  const setSection = (v: StudentSection | null) => setRawSection(v)
+  const [more, setMore] = useState(!!section)
+  const [composing, setComposing] = useState(false)
+  /** Растёт после выдачи домашки — блок перечитывает себя, карточка не мигает. */
+  const [hwVersion, setHwVersion] = useState(0)
+
+  // Числа для плашек берём из ОБЩЕЙ диагностики (lib/diagnostics), а не считаем
+  // рядом: второй счёт разошёлся бы с картой молча, и учитель увидел бы в
+  // карточке одно, а в разделе — другое.
+  const [diag, setDiag] = useState<StudentDiagnostics | null>(null)
+  useEffect(() => {
+    let alive = true
+    setDiag(null)
+    getStudentDiagnostics(p.id)
+      .then((d) => alive && setDiag(d))
+      .catch(() => {
+        /* плашки просто останутся пустыми: карточка из-за них падать не должна */
+      })
+    return () => {
+      alive = false
+    }
+  }, [p.id])
 
 
   return (
@@ -561,60 +609,70 @@ function StudentCard({
         </p>
       </div>
 
-      {/* Раздел «Наборы слов» убран (2026-08-10). Выдача слов переехала в
-          «Слова», где виден весь словарь ученика со статусами. Раньше выданное
-          жило в колоде-КОПИИ учителя, а getStudentWords читает только колоды
-          ученика — то есть учитель выдавал слова и больше их не видел: ни
-          прогресса, ни возможности назначить по ним перепроверку. */}
+      {/* 1. Домашка — первой: это единственное, что нужно и до урока, и после.
+             Раздел «Наборы слов» убран (2026-08-10), выдача слов живёт в
+             «Словах» — там виден весь словарь ученика со статусами. */}
+      <HomeworkSection
+        studentId={p.id}
+        reloadKey={hwVersion}
+        onCompose={() => setComposing(true)}
+      />
 
-      {/* Тест уровня — ПЕРВЫМ. Комментарий в коде и методичка всегда говорили,
-          что с нового ученика надо начинать именно с него, но на экране он
-          стоял третьим — после колод и диагностики (находка ревью 1В). */}
-      <PlacementSection studentId={p.id} studentName={p.display_name ?? 'ученик'} />
+      {/* 2. Три числа, за которыми преподаватель и приходит. */}
+      <StatTiles
+        struggling={diag?.words.struggling.length ?? 0}
+        weakTopics={diag?.mistakes.length ?? 0}
+        activeDays={diag?.activeDays14 ?? 0}
+        loading={!diag}
+      />
 
+      {/* 3. Всё остальное — под «Ещё». Оно нужно раз в месяц, а занимало весь
+             экран каждый раз. Тест уровня остаётся первым в списке: методичка
+             и код всегда говорили начинать нового ученика с него. */}
       <button
-        onClick={() => setShowDiag((v) => !v)}
-        className="text-left text-sm font-medium text-[var(--night-accent-text)] hover:underline"
+        onClick={() => {
+          const next = !more
+          setMore(next)
+          if (!next) setSection(null)
+        }}
+        aria-expanded={more}
+        className="mt-1 flex min-h-11 items-center gap-1.5 self-start text-sm font-medium text-[var(--night-accent-text)]"
       >
-        {showDiag ? '▾ Скрыть диагностику' : '▸ Диагностическая карта'}
+        {more ? '▾' : '▸'} Ещё: тест уровня, диагностика, программа, слова
       </button>
-      {showDiag && (
-        <DiagnosticsSection studentId={p.id} studentName={p.display_name ?? 'Ученик'} />
-      )}
 
-      <button
-        onClick={() => setShowPlanDay((v) => !v)}
-        className="text-left text-sm font-medium text-[var(--night-accent-text)] hover:underline"
-      >
-        {showPlanDay ? '▾ Скрыть план дня' : '▸ План дня'}
-      </button>
-      {showPlanDay && <DailyPlanSection studentId={p.id} />}
-
-      <button
-        onClick={() => setShowProgram((v) => !v)}
-        className="text-left text-sm font-medium text-[var(--night-accent-text)] hover:underline"
-      >
-        {showProgram ? '▾ Скрыть программу' : '▸ Программа обучения'}
-      </button>
-      {showProgram && <ProgramSection studentId={p.id} />}
-
-      <button
-        onClick={() => setShowWords((v) => !v)}
-        className="text-left text-sm font-medium text-[var(--night-accent-text)] hover:underline"
-      >
-        {showWords ? '▾ Скрыть слова' : '▸ Слова и перепроверка'}
-      </button>
-      {showWords && (
-        <StudentWordsSection studentId={p.id} studentLevel={p.level ?? null} />
-      )}
-
-      <button
-        onClick={() => setShowQuests((v) => !v)}
-        className="text-left text-sm font-medium text-[var(--night-accent-text)] hover:underline"
-      >
-        {showQuests ? '▾ Скрыть AI-квесты' : '▸ AI-квесты по грамматике'}
-      </button>
-      {showQuests && <QuestSection studentId={p.id} />}
+      <Reveal open={more}>
+        <div className="flex flex-col gap-2 pt-1">
+          {SECTIONS.map((s) => (
+            <div key={s.id}>
+              <button
+                onClick={() => setSection(section === s.id ? null : s.id)}
+                aria-expanded={section === s.id}
+                className="flex min-h-11 w-full items-center justify-between gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3.5 text-left text-sm"
+              >
+                <span>{s.title}</span>
+                <span className="text-[var(--night-text-40)]">{section === s.id ? '▾' : '▸'}</span>
+              </button>
+              <Reveal open={section === s.id}>
+                <div className="pt-2">
+                  {s.id === 'placement' && (
+                    <PlacementSection studentId={p.id} studentName={p.display_name ?? 'ученик'} />
+                  )}
+                  {s.id === 'diag' && (
+                    <DiagnosticsSection studentId={p.id} studentName={p.display_name ?? 'Ученик'} />
+                  )}
+                  {s.id === 'plan' && <DailyPlanSection studentId={p.id} />}
+                  {s.id === 'program' && <ProgramSection studentId={p.id} />}
+                  {s.id === 'words' && (
+                    <StudentWordsSection studentId={p.id} studentLevel={p.level ?? null} />
+                  )}
+                  {s.id === 'quests' && <QuestSection studentId={p.id} />}
+                </div>
+              </Reveal>
+            </div>
+          ))}
+        </div>
+      </Reveal>
 
       {error && <p className="text-sm text-red-500">{error}</p>}
 
@@ -666,6 +724,16 @@ function StudentCard({
         </Button>
       </div>
     </Card>
+
+    {composing && (
+      <HomeworkComposer
+        studentId={p.id}
+        studentName={p.display_name ?? 'ученика'}
+        lang={(p.native_lang === 'es' ? 'es' : 'en') as AppLang}
+        onClose={() => setComposing(false)}
+        onCreated={() => setHwVersion((v) => v + 1)}
+      />
+    )}
     </div>
   )
 }
