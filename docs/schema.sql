@@ -189,6 +189,10 @@
 
   -- ---------- ТРИГГЕР: при регистрации создаём профиль + колоды по умолчанию ----------
   -- Две колоды: английская и испанская (по одной на язык).
+  -- ── из перекрытых версий (история причин) ──────────────────
+  -- ---------- ТРИГГЕР: при регистрации создаём профиль + колоды по умолчанию ----------
+  -- Две колоды: английская и испанская (по одной на язык).
+  -- ───────────────────────────────────────────────────────────
   create or replace function public.handle_new_user()
   returns trigger
   language plpgsql
@@ -196,6 +200,24 @@
   set search_path = public
   as $$
   begin
+    -- Белый список действует, ТОЛЬКО пока регистрация закрыта. Открывается
+    -- одной строкой: update app_settings set value='true' where key='registration_open';
+    -- (готовая команда с проверками — docs/open-registration.sql)
+    --
+    -- Пропускаем, если в списке есть либо точный адрес, либо доменная запись
+    -- вида '@example.com' (тогда проходит любой адрес на этом домене).
+    -- ⚠️ НЕ вписывать публичные домены (@gmail.com и т.п.) — это открыло бы
+    -- регистрацию всему миру. Доменная запись — для своей команды/тестов.
+    if not public.registration_open() and not exists (
+      select 1 from public.allowed_emails a
+      where a.email = lower(trim(new.email))
+         or a.email = '@' || split_part(lower(trim(new.email)), '@', 2)
+    ) then
+      -- Текст ловится клиентом (src/lib/access.ts) и заменяется на понятный.
+      raise exception 'RECALL_NOT_INVITED'
+        using errcode = 'check_violation';
+    end if;
+
     insert into public.profiles (id, display_name)
     values (
       new.id,
@@ -321,6 +343,24 @@
     );
 
   -- Привязка по коду: security definer — ищет преподавателя по коду в обход RLS
+  -- ── из перекрытых версий (история причин) ──────────────────
+  -- Привязка по коду: security definer — ищет преподавателя по коду в обход RLS
+  -- ---- 6. Закрыть вызов серверных функций анонимом ----
+  -- (находка У4 #11) В Postgres EXECUTE по умолчанию у PUBLIC (⊇ anon,
+  -- authenticated). Явный «grant … to authenticated» его НЕ снимает — только
+  -- revoke. Из-за этого любую RPC (в т.ч. join_teacher) можно было вызвать БЕЗ
+  -- входа; join_teacher к тому же по-разному отвечал на верный/неверный код —
+  -- перебором находились коды-приглашения.
+  --
+  -- Сначала пересоздаём join_teacher (та же логика: лимит мест + advisory-лок)
+  -- с явной проверкой входа первой строкой — оракул закрыт и на уровне самой
+  -- функции. ЗАТЕМ отзываем execute у PUBLIC по ВСЕМ функциям и ре-грантим
+  -- вошедшему (grant … to authenticated не может «недодать» — каждая функция
+  -- проверяет права внутри). Именно этот revoke/grant идёт ПОСЛЕДНИМ, чтобы
+  -- накрыть и заново созданный join_teacher (иначе он получил бы PUBLIC-грант
+  -- обратно). Единственный анонимный вызов в приложении — get_my_plan на
+  -- публичной /pricing (getMyPlan() глотает ошибку в null) — страница работает.
+  -- ───────────────────────────────────────────────────────────
   create or replace function public.join_teacher(code text)
   returns text
   language plpgsql
@@ -328,22 +368,57 @@
   set search_path = public
   as $$
   declare
-    t_id uuid;
-    t_name text;
+    t record;
+    seats int;
+    taken int;
   begin
-    select id, coalesce(display_name, 'Преподаватель') into t_id, t_name
+    select id, coalesce(display_name, 'Преподаватель') as nm
+      into t
       from profiles
-    where invite_code = upper(trim(code)) and role = 'teacher';
-    if t_id is null then
+     where invite_code = upper(trim(code)) and role = 'teacher';
+    if t.id is null then
       raise exception 'Код не найден. Проверь код у преподавателя.';
     end if;
-    if t_id = auth.uid() then
+    if t.id = auth.uid() then
       raise exception 'Это твой собственный код — привязаться к себе нельзя.';
     end if;
+
+    perform pg_advisory_xact_lock(hashtext('join_teacher:' || t.id::text));
+
+    if exists (
+      select 1 from teacher_students
+      where teacher_id = t.id and student_id = auth.uid()
+    ) then
+      return t.nm;
+    end if;
+
+    -- null = без ограничения (преподаватель без тарифа и без триала: его
+    -- ученики не наследуют повышенных лимитов, считать нечего)
+    seats := public.teacher_seats_effective(t.id);
+    if seats is not null then
+      select count(*) into taken from teacher_students where teacher_id = t.id;
+      if taken >= seats then
+        -- один код на все случаи: ученику НЕ показываем, какой у преподавателя
+        -- тариф — это его дело (тот же принцип, что закрытые гранты на profiles)
+        raise exception 'RECALL_SEATS_FULL';
+      end if;
+    end if;
+
     insert into teacher_students (teacher_id, student_id)
-    values (t_id, auth.uid())
+    values (t.id, auth.uid())
     on conflict (teacher_id, student_id) do nothing;
-    return t_name;
+
+    -- Если преподаватель уже распределял места руками и свободное осталось —
+    -- занимаем его сразу: иначе новый ученик молча оказался бы «вне тарифа»
+    -- при оплаченном свободном месте. (Мы внутри лока на преподавателя.)
+    if exists (select 1 from teacher_students where teacher_id = t.id and seat) then
+      select count(*) into taken from teacher_students where teacher_id = t.id and seat;
+      if taken < coalesce(public.teacher_seats_effective(t.id), 0) then
+        update teacher_students set seat = true
+         where teacher_id = t.id and student_id = auth.uid();
+      end if;
+    end if;
+    return t.nm;
   end;
   $$;
 
@@ -518,12 +593,73 @@
   revoke insert, update, delete on public.material_assignments from authenticated;
 
   -- Ученица сдаёт работу (только свою, только из статуса assigned)
+  -- ── из перекрытых версий (история причин) ──────────────────
+  -- Ученица сдаёт работу (только свою, только из статуса assigned)
+  -- 2026-07-21: правила сверки согласованы с клиентом (lib/text.ts answerMatches):
+  --   fill — ответ с вариантами через «/» («was/were») принимает любой вариант;
+  --   order — given (собранное предложение) сверяется с join(answer, ' ')
+  --           (раньше order вообще не приносил балл — correct_text был null).
+  -- ───────────────────────────────────────────────────────────
   create or replace function public.submit_material(
     p_id uuid, p_answers jsonb, p_auto_score int, p_auto_total int
   ) returns void language plpgsql security definer set search_path = public as $fn$
+  declare
+    m_exercises jsonb;
+    ex jsonb;
+    ans jsonb;
+    idx int := 0;
+    score int := 0;
+    total int := 0;
+    given_text text;
+    correct_text text;
+    ex_type text;
+    is_correct boolean;
   begin
+    -- упражнения берём из материала; клиентские p_auto_score/p_auto_total игнорируем
+    select mat.exercises into m_exercises
+      from material_assignments ma
+      join materials mat on mat.id = ma.material_id
+    where ma.id = p_id and ma.student_id = auth.uid() and ma.status = 'assigned';
+    if m_exercises is null then
+      raise exception 'Работа не найдена или уже сдана.';
+    end if;
+
+    for ex in select value from jsonb_array_elements(m_exercises) loop
+      total := total + 1;
+      ex_type := ex->>'type';
+      select value into ans
+        from jsonb_array_elements(coalesce(p_answers, '[]'::jsonb))
+      where (value->>'index')::int = idx
+      limit 1;
+      given_text := ans->>'given';
+      is_correct := false;
+      if given_text is not null then
+        if ex_type = 'mcq' then
+          -- выбор из готовых вариантов: строгая нормализация (см. шапку блока)
+          correct_text := ex->'options'->>((ex->>'answer')::int);
+          is_correct := correct_text is not null
+            and public.norm_answer(given_text) = public.norm_answer(correct_text);
+        elsif ex_type = 'fill' then
+          -- варианты через «/»: верен любой из них
+          select bool_or(public.norm_typed(v) = public.norm_typed(given_text))
+            into is_correct
+            from unnest(string_to_array(ex->>'answer', '/')) as v;
+          is_correct := coalesce(is_correct, false);
+        elsif ex_type = 'order' then
+          select string_agg(value#>>'{}', ' ' order by ordinality) into correct_text
+            from jsonb_array_elements(ex->'answer') with ordinality;
+          is_correct := correct_text is not null
+            and public.norm_typed(given_text) = public.norm_typed(correct_text);
+        end if;
+      end if;
+      if is_correct then
+        score := score + 1;
+      end if;
+      idx := idx + 1;
+    end loop;
+
     update material_assignments
-      set answers = p_answers, auto_score = p_auto_score, auto_total = p_auto_total,
+      set answers = p_answers, auto_score = score, auto_total = total,
           status = 'submitted', submitted_at = now()
     where id = p_id and student_id = auth.uid() and status = 'assigned';
     if not found then raise exception 'Работа не найдена или уже сдана.'; end if;
@@ -608,6 +744,15 @@
     if not public.is_student_of(auth.uid(), p_student_id) then
       raise exception 'Это не твой ученик.';
     end if;
+    if exists (
+      select 1 from jsonb_array_elements_text(p_card_ids) cid
+      where not exists (
+        select 1 from cards c join decks d on d.id = c.deck_id
+        where c.id = cid::uuid and d.owner_id = p_student_id
+      )
+    ) then
+      raise exception 'Среди слов есть карточки, которые не принадлежат этому ученику.';
+    end if;
     insert into word_checks (teacher_id, student_id, card_ids)
     values (auth.uid(), p_student_id, p_card_ids);
   end $fn$;
@@ -620,13 +765,62 @@
   -- падала бы («cannot change return type of existing function»).
   drop function if exists public.submit_word_check(uuid, jsonb);
   create or replace function public.submit_word_check(p_id uuid, p_results jsonb)
-  returns boolean language plpgsql security definer set search_path = public as $fn$
-  declare n int;
+  returns jsonb language plpgsql security definer set search_path = public as $fn$
+  declare
+    v_cards jsonb;
+    v_out jsonb := '[]'::jsonb;
+    v_wrong jsonb := '[]'::jsonb;
+    r jsonb;
+    v_card_id uuid;
+    v_given text;
+    v_front text;
+    v_back text;
+    v_ok boolean;
+    n int;
   begin
-    update word_checks set results = p_results, completed_at = now()
+    select card_ids into v_cards from word_checks
+      where id = p_id and student_id = auth.uid() and completed_at is null;
+    if v_cards is null then
+      return jsonb_build_object('counted', false, 'wrong', '[]'::jsonb);
+    end if;
+
+    for r in select value from jsonb_array_elements(coalesce(p_results, '[]'::jsonb)) loop
+      begin v_card_id := (r->>'card_id')::uuid; exception when others then continue; end;
+      -- слово должно быть из ЭТОЙ перепроверки
+      if not (v_cards @> to_jsonb(v_card_id::text)) then continue; end if;
+
+      v_given := coalesce(r->>'given', '');
+      select c.front, c.back into v_front, v_back from cards c where c.id = v_card_id;
+
+      if v_front is null then
+        -- карточку удалили между назначением и сдачей: проверить нечем
+        v_front := coalesce(r->>'front', '');
+        v_back := r->>'back';
+        v_ok := false;
+      else
+        -- те же правила, что на клиенте: варианты через «/», нормализация
+        select coalesce(bool_or(public.norm_typed(v) = public.norm_typed(v_given)), false)
+          into v_ok
+          from unnest(string_to_array(v_front, '/')) as v;
+      end if;
+
+      v_out := v_out || jsonb_build_array(jsonb_build_object(
+        'card_id', v_card_id, 'front', v_front, 'back', v_back,
+        'given', v_given, 'ok', v_ok));
+      if not v_ok then
+        v_wrong := v_wrong || jsonb_build_array(v_card_id::text);
+      end if;
+    end loop;
+
+    update word_checks set results = v_out, completed_at = now()
     where id = p_id and student_id = auth.uid() and completed_at is null;
     get diagnostics n = row_count;  -- row_count это int, не boolean
-    return n > 0; -- true = засчитано сейчас (клиент начислит again неверным словам)
+
+    if n = 0 then
+      -- кто-то успел завершить между select и update (двойная отправка)
+      return jsonb_build_object('counted', false, 'wrong', '[]'::jsonb);
+    end if;
+    return jsonb_build_object('counted', true, 'wrong', v_wrong);
   end $fn$;
 
   -- ---- USING-фиксы: экс-преподаватель после отвязки теряет доступ ----
@@ -675,27 +869,6 @@
   -- в приложении пока не используется — снимаем право записи до появления фичи.
   revoke insert on public.content_items from authenticated;
 
-  -- ---- assign_word_check: проверять принадлежность карточек ученице ----
-  -- Раньше учитель мог назначить перепроверку по ЛЮБЫМ card_id (в т.ч. чужим).
-  -- Теперь требуем, чтобы все карточки принадлежали колодам именно этой ученицы.
-  create or replace function public.assign_word_check(p_student_id uuid, p_card_ids jsonb)
-  returns void language plpgsql security definer set search_path = public as $fn$
-  begin
-    if not public.is_student_of(auth.uid(), p_student_id) then
-      raise exception 'Это не твой ученик.';
-    end if;
-    if exists (
-      select 1 from jsonb_array_elements_text(p_card_ids) cid
-      where not exists (
-        select 1 from cards c join decks d on d.id = c.deck_id
-        where c.id = cid::uuid and d.owner_id = p_student_id
-      )
-    ) then
-      raise exception 'Среди слов есть карточки, которые не принадлежат этому ученику.';
-    end if;
-    insert into word_checks (teacher_id, student_id, card_ids)
-    values (auth.uid(), p_student_id, p_card_ids);
-  end $fn$;
 
   -- ---- submit_material: пересчитывать авто-балл на сервере ----
   -- Клиент присылал auto_score/auto_total — их можно было подделать. Теперь балл
@@ -715,73 +888,6 @@
       '\s+', ' ', 'g')
   $fn$;
 
-  -- 2026-07-21: правила сверки согласованы с клиентом (lib/text.ts answerMatches):
-  --   fill — ответ с вариантами через «/» («was/were») принимает любой вариант;
-  --   order — given (собранное предложение) сверяется с join(answer, ' ')
-  --           (раньше order вообще не приносил балл — correct_text был null).
-  create or replace function public.submit_material(
-    p_id uuid, p_answers jsonb, p_auto_score int, p_auto_total int
-  ) returns void language plpgsql security definer set search_path = public as $fn$
-  declare
-    m_exercises jsonb;
-    ex jsonb;
-    ans jsonb;
-    idx int := 0;
-    score int := 0;
-    total int := 0;
-    given_text text;
-    correct_text text;
-    ex_type text;
-    is_correct boolean;
-  begin
-    -- упражнения берём из материала; клиентские p_auto_score/p_auto_total игнорируем
-    select mat.exercises into m_exercises
-      from material_assignments ma
-      join materials mat on mat.id = ma.material_id
-    where ma.id = p_id and ma.student_id = auth.uid() and ma.status = 'assigned';
-    if m_exercises is null then
-      raise exception 'Работа не найдена или уже сдана.';
-    end if;
-
-    for ex in select value from jsonb_array_elements(m_exercises) loop
-      total := total + 1;
-      ex_type := ex->>'type';
-      select value into ans
-        from jsonb_array_elements(coalesce(p_answers, '[]'::jsonb))
-      where (value->>'index')::int = idx
-      limit 1;
-      given_text := ans->>'given';
-      is_correct := false;
-      if given_text is not null then
-        if ex_type = 'mcq' then
-          correct_text := ex->'options'->>((ex->>'answer')::int);
-          is_correct := correct_text is not null
-            and public.norm_answer(given_text) = public.norm_answer(correct_text);
-        elsif ex_type = 'fill' then
-          -- варианты через «/»: верен любой из них
-          select bool_or(public.norm_answer(v) = public.norm_answer(given_text))
-            into is_correct
-            from unnest(string_to_array(ex->>'answer', '/')) as v;
-          is_correct := coalesce(is_correct, false);
-        elsif ex_type = 'order' then
-          select string_agg(value#>>'{}', ' ' order by ordinality) into correct_text
-            from jsonb_array_elements(ex->'answer') with ordinality;
-          is_correct := correct_text is not null
-            and public.norm_answer(given_text) = public.norm_answer(correct_text);
-        end if;
-      end if;
-      if is_correct then
-        score := score + 1;
-      end if;
-      idx := idx + 1;
-    end loop;
-
-    update material_assignments
-      set answers = p_answers, auto_score = score, auto_total = total,
-          status = 'submitted', submitted_at = now()
-    where id = p_id and student_id = auth.uid() and status = 'assigned';
-    if not found then raise exception 'Работа не найдена или уже сдана.'; end if;
-  end $fn$;
 
   -- ---- review_states: расписание только для ДОСТУПНОЙ карточки ----
   -- Раньше with check проверял только user_id — можно было создать review_state
@@ -882,52 +988,6 @@
     select coalesce((select (value #>> '{}')::boolean from app_settings where key = 'registration_open'), false)
   $fn$;
 
-  -- ---- 3. Гейт на регистрацию ----
-  -- Триггер AFTER INSERT на auth.users: raise внутри него откатывает всю
-  -- транзакцию регистрации, поэтому запись в auth.users не остаётся —
-  -- «полурегистрации» без профиля возникнуть не может.
-  -- Тело функции: профиль + две стартовые колоды. Проверка белого списка
-  -- работает, только пока регистрация закрыта (см. app_settings выше).
-  create or replace function public.handle_new_user()
-  returns trigger
-  language plpgsql
-  security definer
-  set search_path = public
-  as $$
-  begin
-    -- Белый список действует, ТОЛЬКО пока регистрация закрыта. Открывается
-    -- одной строкой: update app_settings set value='true' where key='registration_open';
-    -- (готовая команда с проверками — docs/open-registration.sql)
-    --
-    -- Пропускаем, если в списке есть либо точный адрес, либо доменная запись
-    -- вида '@example.com' (тогда проходит любой адрес на этом домене).
-    -- ⚠️ НЕ вписывать публичные домены (@gmail.com и т.п.) — это открыло бы
-    -- регистрацию всему миру. Доменная запись — для своей команды/тестов.
-    if not public.registration_open() and not exists (
-      select 1 from public.allowed_emails a
-      where a.email = lower(trim(new.email))
-         or a.email = '@' || split_part(lower(trim(new.email)), '@', 2)
-    ) then
-      -- Текст ловится клиентом (src/lib/access.ts) и заменяется на понятный.
-      raise exception 'RECALL_NOT_INVITED'
-        using errcode = 'check_violation';
-    end if;
-
-    insert into public.profiles (id, display_name)
-    values (
-      new.id,
-      coalesce(new.raw_user_meta_data->>'display_name', split_part(new.email, '@', 1))
-    )
-    on conflict (id) do nothing;
-
-    insert into public.decks (owner_id, title, description, lang)
-    values
-      (new.id, 'Мои слова',    'Английские слова из чтения и добавленные вручную', 'en'),
-      (new.id, 'Mis palabras', 'Испанские слова из паков, чтения и добавленные вручную', 'es');
-
-    return new;
-  end;
-  $$;
 
   -- ---- 4. Обзор доступа (для владельца проекта) ----
   -- Показывает разом: кто приглашён, кто уже зарегистрировался, кто заблокирован.
@@ -972,61 +1032,7 @@
   revoke all on public.ai_calls from anon, authenticated;
   revoke all on sequence public.ai_calls_id_seq from anon, authenticated;
 
-  -- Единая проверка перед каждым обращением к Gemini: бан → блокировка → лимиты.
-  -- Вызывается сервером (api/gemini.ts) с JWT пользователя, поэтому auth.uid()
-  -- здесь — это именно тот, кто послал запрос, а подменить его нельзя.
-  --
-  -- Лимиты подобраны под живое использование одним человеком: типичное занятие
-  -- (диалог + разбор пары текстов) укладывается в 10-20 обращений. Менять здесь.
-  create or replace function public.consume_ai_quota()
-  returns void
-  language plpgsql
-  security definer
-  set search_path = public
-  as $fn$
-  declare
-    max_per_hour constant int := 40;
-    max_per_day  constant int := 200;
-    uid uuid := auth.uid();
-    n int;
-  begin
-    if uid is null then
-      raise exception 'RECALL_NO_AUTH';
-    end if;
 
-    -- Бан в Supabase (Authentication → Users → Ban user). PostgREST сам его не
-    -- проверяет: подписанный JWT остаётся валидным до истечения срока, поэтому
-    -- смотрим banned_until явно — иначе забаненный ещё час жёг бы квоту.
-    if exists (
-      select 1 from auth.users
-      where id = uid and banned_until is not null and banned_until > now()
-    ) then
-      raise exception 'RECALL_BLOCKED';
-    end if;
-
-    if exists (select 1 from profiles where id = uid and blocked) then
-      raise exception 'RECALL_BLOCKED';
-    end if;
-
-    -- Чистим старое, чтобы таблица не росла бесконечно.
-    delete from ai_calls where called_at < now() - interval '3 days';
-
-    select count(*) into n from ai_calls
-    where user_id = uid and called_at > now() - interval '1 hour';
-    if n >= max_per_hour then
-      raise exception 'RECALL_RATE_HOUR';
-    end if;
-
-    select count(*) into n from ai_calls
-    where user_id = uid and called_at > now() - interval '24 hours';
-    if n >= max_per_day then
-      raise exception 'RECALL_RATE_DAY';
-    end if;
-
-    insert into ai_calls (user_id) values (uid);
-  end $fn$;
-
-  grant execute on function public.consume_ai_quota() to authenticated;
 
   -- Сколько уже потрачено — для владельца проекта (из SQL Editor).
   create or replace view public.ai_usage_overview as
@@ -1199,6 +1205,13 @@
   -- ученица учителя с активным (оплаченным или триальным) teacher_*-планом.
   -- security definer: обходит RLS, чтобы увидеть teacher_students и профиль
   -- учителя целиком.
+  -- ── из перекрытых версий (история причин) ──────────────────
+  -- ---- 2. Есть ли у пользователя премиум-доступ к AI ----
+  -- true, если: активный триал; ЛИБО платный план не истёк; ЛИБО пользователь —
+  -- ученица учителя с активным (оплаченным или триальным) teacher_*-планом.
+  -- security definer: обходит RLS, чтобы увидеть teacher_students и профиль
+  -- учителя целиком.
+  -- ───────────────────────────────────────────────────────────
   create or replace function public.has_premium_access(uid uuid)
   returns boolean
   language sql
@@ -1214,117 +1227,59 @@
               and p.plan_expires_at > now())
         )
       )
-      or exists (
-        select 1 from teacher_students ts
-        join profiles tp on tp.id = ts.teacher_id
-        where ts.student_id = uid
-          and tp.plan like 'teacher_%'
-          and not coalesce(tp.blocked, false) -- блокировка учителя снимает бенефит ученицам
-          and (
-            (tp.plan_expires_at is not null and tp.plan_expires_at > now())
-            or tp.trial_until > now()
-          )
-      )
+      or public.covering_teacher(uid) is not null
   $fn$;
 
-  -- ---- 3. consume_ai_quota: лимиты зависят от уровня доступа ----
-  -- Прежняя логика (проверка бана/блокировки, чистка, счётчики по ai_calls)
-  -- сохранена дословно; добавлена развилка по has_premium_access:
-  --   премиум/триал → 40/час и 200/сутки (RECALL_RATE_HOUR / RECALL_RATE_DAY);
-  --   free          → 5/сутки (RECALL_FREE_LIMIT).
-  create or replace function public.consume_ai_quota()
-  returns void
-  language plpgsql
-  security definer
-  set search_path = public
-  as $fn$
-  declare
-    max_per_hour constant int := 40;
-    max_per_day  constant int := 200;
-    free_per_day constant int := 5;
-    uid uuid := auth.uid();
-    premium boolean;
-    n int;
-  begin
-    if uid is null then
-      raise exception 'RECALL_NO_AUTH';
-    end if;
 
-    -- Бан в Supabase (Authentication → Users → Ban user): JWT остаётся валидным
-    -- до истечения, поэтому смотрим banned_until явно.
-    if exists (
-      select 1 from auth.users
-      where id = uid and banned_until is not null and banned_until > now()
-    ) then
-      raise exception 'RECALL_BLOCKED';
-    end if;
-
-    if exists (select 1 from profiles where id = uid and blocked) then
-      raise exception 'RECALL_BLOCKED';
-    end if;
-
-    -- Чистим старое, чтобы таблица не росла бесконечно.
-    delete from ai_calls where called_at < now() - interval '3 days';
-
-    premium := public.has_premium_access(uid);
-
-    if premium then
-      select count(*) into n from ai_calls
-      where user_id = uid and called_at > now() - interval '1 hour';
-      if n >= max_per_hour then
-        raise exception 'RECALL_RATE_HOUR';
-      end if;
-
-      select count(*) into n from ai_calls
-      where user_id = uid and called_at > now() - interval '24 hours';
-      if n >= max_per_day then
-        raise exception 'RECALL_RATE_DAY';
-      end if;
-    else
-      -- Free-тариф: единый суточный лимит.
-      select count(*) into n from ai_calls
-      where user_id = uid and called_at > now() - interval '24 hours';
-      if n >= free_per_day then
-        raise exception 'RECALL_FREE_LIMIT';
-      end if;
-    end if;
-
-    insert into ai_calls (user_id) values (uid);
-  end $fn$;
-
-  grant execute on function public.consume_ai_quota() to authenticated;
 
   -- ---- 4. get_my_plan: сводка тарифа для клиента ----
   -- Счётчик ai_used_today и ai_day_limit берутся из тех же данных, что и
   -- consume_ai_quota (окно 24 часа; лимит 200 для премиума, 5 для free).
+  -- ── из перекрытых версий (история причин) ──────────────────
+  -- ---- 4. get_my_plan: сводка тарифа для клиента ----
+  -- Счётчик ai_used_today и ai_day_limit берутся из тех же данных, что и
+  -- consume_ai_quota (окно 24 часа; лимит 200 для премиума, 5 для free).
+  -- get_my_plan: честный дневной лимит по уровню доступа
+  -- get_my_plan: «AI-действия» считаем ТОЛЬКО класса heavy — именно они
+  -- ограничены в тарифах; переводы и произношение пользователя не тревожат.
+  -- get_my_plan v2: старые поля СОХРАНЕНЫ (текущий клиент их читает) + энергия.
+  -- ───────────────────────────────────────────────────────────
   create or replace function public.get_my_plan()
-  returns json
-  language plpgsql
-  security definer
-  set search_path = public
-  as $fn$
+  returns json language plpgsql security definer set search_path = public as $fn$
   declare
     uid uuid := auth.uid();
-    p record;
-    prem boolean;
-    used int;
+    p record; prem boolean; used int;
+    day0 timestamptz := public.recall_day_start();
+    src record; e_spent int; e_self int; g_used int;
+    v_seats int; v_seats_used int;
   begin
-    if uid is null then
-      raise exception 'RECALL_NO_AUTH';
-    end if;
-    select plan, plan_expires_at, trial_until, is_admin
-      into p from profiles where id = uid;
+    if uid is null then raise exception 'RECALL_NO_AUTH'; end if;
+    select plan, plan_expires_at, trial_until, is_admin, role into p from profiles where id = uid;
     prem := public.has_premium_access(uid);
     select count(*) into used from ai_calls
-      where user_id = uid and called_at > now() - interval '24 hours';
+      where user_id = uid and ai_calls.kind = 'heavy' and called_at > now() - interval '24 hours';
+    select * into src from public.energy_source(uid);
+    select coalesce(sum(cost_energy),0) into e_spent from ai_calls
+      where pool_owner = src.pool_owner and called_at >= day0;
+    select coalesce(sum(cost_energy),0) into e_self from ai_calls
+      where user_id = uid and called_at >= day0;
+    select count(*) into g_used from ai_calls
+      where pool_owner = src.pool_owner and is_generation and called_at >= public.recall_month_start();
+    -- seats: null = без ограничения (клиент так и покажет)
+    v_seats := public.teacher_seats_effective(uid);
+    select count(*) into v_seats_used from teacher_students where teacher_id = uid;
     return json_build_object(
-      'plan',            p.plan,
-      'plan_expires_at', p.plan_expires_at,
-      'trial_until',     p.trial_until,
-      'is_admin',        p.is_admin,
-      'premium',         prem,
-      'ai_used_today',   used,
-      'ai_day_limit',    case when prem then 200 else 5 end
+      'plan', p.plan, 'plan_expires_at', p.plan_expires_at, 'trial_until', p.trial_until,
+      'is_admin', p.is_admin, 'premium', prem,
+      'ai_used_today', used, 'ai_day_limit', case when p.is_admin then 999999 when prem then 200 else 5 end,
+      'energy_max', case when p.is_admin then 999999 else src.day_budget end,
+      'energy_spent', e_spent, 'energy_self', e_self,
+      'energy_subcap', case when src.in_studio and src.pool_owner <> uid then src.day_budget / 2 else null end,
+      'in_studio', src.in_studio,
+      'gen_limit', src.gen_limit, 'gen_used', g_used,
+      -- места (A1): сколько всего и сколько занято; для не-преподавателя seats = 0
+      'seats', v_seats, 'seats_used', v_seats_used,
+      'free_seats', public.free_teacher_seats()
     );
   end $fn$;
 
@@ -1335,6 +1290,9 @@
   -- на N месяцев после ручной оплаты (Kaspi). Любой не-админ → RECALL_NOT_ADMIN.
 
   -- Поиск по email (ilike, до 10 результатов). Возвращает JSON-массив.
+  -- ── из перекрытых версий (история причин) ──────────────────
+  -- Поиск по email (ilike, до 10 результатов). Возвращает JSON-массив.
+  -- ───────────────────────────────────────────────────────────
   create or replace function public.admin_find_user(q text)
   returns json
   language plpgsql
@@ -1348,7 +1306,9 @@
     return coalesce((
       select json_agg(row_to_json(t)) from (
         select u.id, u.email, p.display_name, p.plan,
-               p.plan_expires_at, p.trial_until
+               p.plan_expires_at, p.trial_until, p.role,
+               (select count(*) from teacher_students ts where ts.teacher_id = u.id) as students,
+               public.teacher_seats_effective(u.id) as seats
         from auth.users u
         join public.profiles p on p.id = u.id
         where u.email ilike '%' || trim(coalesce(q, '')) || '%'
@@ -1618,6 +1578,10 @@
 
   -- Полный (оплаченный) доступ: свой платный план, ученица платного учителя,
   -- или админ.
+  -- ── из перекрытых версий (история причин) ──────────────────
+  -- Полный (оплаченный) доступ: свой платный план, ученица платного учителя,
+  -- или админ.
+  -- ───────────────────────────────────────────────────────────
   create or replace function public.has_paid_access(uid uuid)
   returns boolean
   language sql
@@ -1633,109 +1597,10 @@
               and p.plan_expires_at > now())
         )
       )
-      or exists (
-        select 1 from teacher_students ts
-        join profiles tp on tp.id = ts.teacher_id
-        where ts.student_id = uid
-          and tp.plan like 'teacher_%'
-          and not coalesce(tp.blocked, false) -- блокировка учителя снимает бенефит ученицам
-          and tp.plan_expires_at is not null and tp.plan_expires_at > now()
-      )
+      or public.covering_teacher(uid, true) is not null
   $fn$;
 
-  create or replace function public.consume_ai_quota()
-  returns void
-  language plpgsql
-  security definer
-  set search_path = public
-  as $fn$
-  declare
-    max_per_hour  constant int := 40;
-    max_per_day   constant int := 200;
-    trial_per_day constant int := 12;
-    free_per_day  constant int := 5;
-    uid uuid := auth.uid();
-    n int;
-  begin
-    if uid is null then
-      raise exception 'RECALL_NO_AUTH';
-    end if;
 
-    if exists (
-      select 1 from auth.users
-      where id = uid and banned_until is not null and banned_until > now()
-    ) then
-      raise exception 'RECALL_BLOCKED';
-    end if;
-
-    if exists (select 1 from profiles where id = uid and blocked) then
-      raise exception 'RECALL_BLOCKED';
-    end if;
-
-    delete from ai_calls where called_at < now() - interval '3 days';
-
-    if public.has_paid_access(uid) then
-      select count(*) into n from ai_calls
-      where user_id = uid and called_at > now() - interval '1 hour';
-      if n >= max_per_hour then
-        raise exception 'RECALL_RATE_HOUR';
-      end if;
-      select count(*) into n from ai_calls
-      where user_id = uid and called_at > now() - interval '24 hours';
-      if n >= max_per_day then
-        raise exception 'RECALL_RATE_DAY';
-      end if;
-    elsif public.has_premium_access(uid) then
-      -- триал (свой или учителя): суточная проба
-      select count(*) into n from ai_calls
-      where user_id = uid and called_at > now() - interval '24 hours';
-      if n >= trial_per_day then
-        raise exception 'RECALL_TRIAL_LIMIT';
-      end if;
-    else
-      select count(*) into n from ai_calls
-      where user_id = uid and called_at > now() - interval '24 hours';
-      if n >= free_per_day then
-        raise exception 'RECALL_FREE_LIMIT';
-      end if;
-    end if;
-
-    insert into ai_calls (user_id) values (uid);
-  end $fn$;
-
-  -- get_my_plan: честный дневной лимит по уровню доступа
-  create or replace function public.get_my_plan()
-  returns json
-  language plpgsql
-  security definer
-  set search_path = public
-  as $fn$
-  declare
-    uid uuid := auth.uid();
-    p record;
-    paid boolean;
-    prem boolean;
-    used int;
-  begin
-    if uid is null then
-      raise exception 'RECALL_NO_AUTH';
-    end if;
-    select plan, plan_expires_at, trial_until, is_admin
-      into p from profiles where id = uid;
-    paid := public.has_paid_access(uid);
-    prem := public.has_premium_access(uid);
-    select count(*) into used from ai_calls
-      where user_id = uid and called_at > now() - interval '24 hours';
-    return json_build_object(
-      'plan',            p.plan,
-      'plan_expires_at', p.plan_expires_at,
-      'trial_until',     p.trial_until,
-      'is_admin',        p.is_admin,
-      'premium',         prem,
-      'ai_used_today',   used,
-      'ai_day_limit',    case when paid then 200 when prem then 12 else 5 end
-    );
-  end $fn$;
 
   -- ============================================================================
   -- КЛАССЫ КВОТ (2026-07-24) — исправление: раньше КАЖДЫЙ запрос к AI списывал
@@ -1756,200 +1621,6 @@
   create index if not exists ai_calls_user_kind_time
     on public.ai_calls (user_id, kind, called_at desc);
 
-  create or replace function public.consume_ai_quota(p_kind text default 'heavy')
-  returns void
-  language plpgsql
-  security definer
-  set search_path = public
-  as $fn$
-  declare
-    v_kind text := case when p_kind in ('light', 'speech') then p_kind else 'heavy' end;
-    uid uuid := auth.uid();
-    paid boolean;
-    prem boolean;
-    lim_day int;
-    n int;
-  begin
-    if uid is null then
-      raise exception 'RECALL_NO_AUTH';
-    end if;
-
-    if exists (
-      select 1 from auth.users
-      where id = uid and banned_until is not null and banned_until > now()
-    ) then
-      raise exception 'RECALL_BLOCKED';
-    end if;
-
-    if exists (select 1 from profiles where id = uid and blocked) then
-      raise exception 'RECALL_BLOCKED';
-    end if;
-
-    delete from ai_calls where called_at < now() - interval '3 days';
-
-    paid := public.has_paid_access(uid);
-    prem := public.has_premium_access(uid);   -- триал ИЛИ платный
-
-    -- Часовой предохранитель от скриптов — общий для всех классов.
-    select count(*) into n from ai_calls
-    where user_id = uid and called_at > now() - interval '1 hour';
-    if n >= (case when paid then 200 when prem then 90 else 40 end) then
-      raise exception 'RECALL_RATE_HOUR';
-    end if;
-
-    -- Суточный лимит своего класса.
-    lim_day := case v_kind
-      when 'heavy'  then case when paid then 200 when prem then  12 else   5 end
-      when 'light'  then case when paid then 900 when prem then 150 else 100 end
-      else               case when paid then 400 when prem then 150 else  50 end
-    end;
-
-    select count(*) into n from ai_calls
-    where user_id = uid and ai_calls.kind = v_kind
-      and called_at > now() - interval '24 hours';
-
-    if n >= lim_day then
-      if v_kind = 'light' then
-        raise exception 'RECALL_LIGHT_LIMIT';
-      elsif v_kind = 'speech' then
-        raise exception 'RECALL_SPEECH_LIMIT';
-      elsif paid then
-        raise exception 'RECALL_RATE_DAY';
-      elsif prem then
-        raise exception 'RECALL_TRIAL_LIMIT';
-      else
-        raise exception 'RECALL_FREE_LIMIT';
-      end if;
-    end if;
-
-    insert into ai_calls (user_id, kind) values (uid, v_kind);
-  end $fn$;
-
-  grant execute on function public.consume_ai_quota(text) to authenticated;
-
-  -- get_my_plan: «AI-действия» считаем ТОЛЬКО класса heavy — именно они
-  -- ограничены в тарифах; переводы и произношение пользователя не тревожат.
-  create or replace function public.get_my_plan()
-  returns json
-  language plpgsql
-  security definer
-  set search_path = public
-  as $fn$
-  declare
-    uid uuid := auth.uid();
-    p record;
-    paid boolean;
-    prem boolean;
-    used int;
-  begin
-    if uid is null then
-      raise exception 'RECALL_NO_AUTH';
-    end if;
-    select plan, plan_expires_at, trial_until, is_admin
-      into p from profiles where id = uid;
-    paid := public.has_paid_access(uid);
-    prem := public.has_premium_access(uid);
-    select count(*) into used from ai_calls
-      where user_id = uid and kind = 'heavy'
-        and called_at > now() - interval '24 hours';
-    return json_build_object(
-      'plan',            p.plan,
-      'plan_expires_at', p.plan_expires_at,
-      'trial_until',     p.trial_until,
-      'is_admin',        p.is_admin,
-      'premium',         prem,
-      'ai_used_today',   used,
-      'ai_day_limit',    case when paid then 200 when prem then 12 else 5 end
-    );
-  end $fn$;
-
-  -- ============================================================================
-  -- ЛИМИТ УЧЕНИЦ + ГОНКА КВОТЫ (2026-07-24, по находкам аудита 22.07).
-  -- 1) КРИТИЧНО: join_teacher не проверял лимит мест тарифа. Владелец
-  --    teacher_mini (3000₸, «до 5 учениц») мог раздать код-приглашение хоть
-  --    в чат на 200 человек — все привязывались и получали ПЛАТНУЮ квоту AI
-  --    (бенефит «ученица платного учителя»). Бизнес-модель обходилась одним
-  --    сообщением. Теперь место проверяется в БД при привязке.
-  -- 2) Гонка «посчитал → вставил» в consume_ai_quota: 50 параллельных запросов
-  --    видели n=0 и проходили все. Лечится advisory-локом на пользователя:
-  --    запросы одного аккаунта сериализуются, чужие друг друга не ждут.
-  -- Блок idempotent.
-  -- ============================================================================
-
-  -- Сколько учениц разрешено тарифу (0 — тариф не преподавательский).
-  create or replace function public.teacher_seat_limit(p_plan text)
-  returns int
-  language sql
-  immutable
-  as $fn$
-    select case p_plan
-      when 'teacher_mini'  then 5
-      when 'teacher_start' then 10
-      when 'teacher_pro'   then 30
-      else 0
-    end
-  $fn$;
-
-  create or replace function public.join_teacher(code text)
-  returns text
-  language plpgsql
-  security definer
-  set search_path = public
-  as $$
-  declare
-    t record;
-    t_name text;
-    seats int;
-    taken int;
-  begin
-    select id, coalesce(display_name, 'Преподаватель') as nm, plan, plan_expires_at, trial_until
-      into t
-      from profiles
-     where invite_code = upper(trim(code)) and role = 'teacher';
-    if t.id is null then
-      raise exception 'Код не найден. Проверь код у преподавателя.';
-    end if;
-    if t.id = auth.uid() then
-      raise exception 'Это твой собственный код — привязаться к себе нельзя.';
-    end if;
-
-    -- ЛОК на преподавателя: без него N параллельных join_teacher с одним кодом
-    -- (Promise.all) все читали taken до вставок и все проходили проверку мест —
-    -- тариф на 5 мест набирал сколько угодно учениц, каждая с платной AI-квотой
-    -- (та же гонка «посчитал → вставил», что уже закрыта в consume_ai_quota).
-    -- Разные преподаватели друг друга не ждут (лок по id учителя).
-    perform pg_advisory_xact_lock(hashtext('join_teacher:' || t.id::text));
-
-    -- уже привязана — просто возвращаем имя (идемпотентно, места не тратим)
-    if exists (
-      select 1 from teacher_students
-      where teacher_id = t.id and student_id = auth.uid()
-    ) then
-      return t.nm;
-    end if;
-
-    -- Лимит мест. На триале (план ещё не оплачен) даём место под 3 ученицы —
-    -- попробовать режим, но не раздавать платную квоту толпе.
-    seats := public.teacher_seat_limit(t.plan);
-    if seats = 0 then
-      seats := case when t.trial_until > now() then 3 else 0 end;
-    elsif t.plan_expires_at is null or t.plan_expires_at <= now() then
-      seats := least(seats, case when t.trial_until > now() then 3 else 0 end);
-    end if;
-
-    select count(*) into taken from teacher_students where teacher_id = t.id;
-    if taken >= seats then
-      raise exception 'RECALL_SEATS_FULL';
-    end if;
-
-    insert into teacher_students (teacher_id, student_id)
-    values (t.id, auth.uid())
-    on conflict (teacher_id, student_id) do nothing;
-    return t.nm;
-  end;
-  $$;
-
-  -- Сериализация квоты на уровне пользователя (лечит гонку параллельных вызовов)
   create or replace function public.consume_ai_quota(p_kind text default 'heavy')
   returns void
   language plpgsql
@@ -2020,6 +1691,38 @@
 
     insert into ai_calls (user_id, kind) values (uid, v_kind);
   end $fn$;
+
+  grant execute on function public.consume_ai_quota(text) to authenticated;
+
+
+  -- ============================================================================
+  -- ЛИМИТ УЧЕНИЦ + ГОНКА КВОТЫ (2026-07-24, по находкам аудита 22.07).
+  -- 1) КРИТИЧНО: join_teacher не проверял лимит мест тарифа. Владелец
+  --    teacher_mini (3000₸, «до 5 учениц») мог раздать код-приглашение хоть
+  --    в чат на 200 человек — все привязывались и получали ПЛАТНУЮ квоту AI
+  --    (бенефит «ученица платного учителя»). Бизнес-модель обходилась одним
+  --    сообщением. Теперь место проверяется в БД при привязке.
+  -- 2) Гонка «посчитал → вставил» в consume_ai_quota: 50 параллельных запросов
+  --    видели n=0 и проходили все. Лечится advisory-локом на пользователя:
+  --    запросы одного аккаунта сериализуются, чужие друг друга не ждут.
+  -- Блок idempotent.
+  -- ============================================================================
+
+  -- Сколько учениц разрешено тарифу (0 — тариф не преподавательский).
+  create or replace function public.teacher_seat_limit(p_plan text)
+  returns int
+  language sql
+  immutable
+  as $fn$
+    select case p_plan
+      when 'teacher_mini'  then 5
+      when 'teacher_start' then 10
+      when 'teacher_pro'   then 30
+      else 0
+    end
+  $fn$;
+
+
 
   -- ============================================================================
   -- УТЕЧКА ПРОФИЛЯ (заход 20). Блок idempotent — можно запускать повторно.
@@ -2325,73 +2028,6 @@
     before insert on public.grammar_mistakes
     for each row execute function public.cap_grammar_mistakes();
 
-  -- ---- 6. Закрыть вызов серверных функций анонимом ----
-  -- (находка У4 #11) В Postgres EXECUTE по умолчанию у PUBLIC (⊇ anon,
-  -- authenticated). Явный «grant … to authenticated» его НЕ снимает — только
-  -- revoke. Из-за этого любую RPC (в т.ч. join_teacher) можно было вызвать БЕЗ
-  -- входа; join_teacher к тому же по-разному отвечал на верный/неверный код —
-  -- перебором находились коды-приглашения.
-  --
-  -- Сначала пересоздаём join_teacher (та же логика: лимит мест + advisory-лок)
-  -- с явной проверкой входа первой строкой — оракул закрыт и на уровне самой
-  -- функции. ЗАТЕМ отзываем execute у PUBLIC по ВСЕМ функциям и ре-грантим
-  -- вошедшему (grant … to authenticated не может «недодать» — каждая функция
-  -- проверяет права внутри). Именно этот revoke/grant идёт ПОСЛЕДНИМ, чтобы
-  -- накрыть и заново созданный join_teacher (иначе он получил бы PUBLIC-грант
-  -- обратно). Единственный анонимный вызов в приложении — get_my_plan на
-  -- публичной /pricing (getMyPlan() глотает ошибку в null) — страница работает.
-  create or replace function public.join_teacher(code text)
-  returns text
-  language plpgsql
-  security definer
-  set search_path = public
-  as $$
-  declare
-    t record;
-    seats int;
-    taken int;
-  begin
-    if auth.uid() is null then
-      raise exception 'RECALL_NO_AUTH';
-    end if;
-    select id, coalesce(display_name, 'Преподаватель') as nm, plan, plan_expires_at, trial_until
-      into t
-      from profiles
-     where invite_code = upper(trim(code)) and role = 'teacher';
-    if t.id is null then
-      raise exception 'Код не найден. Проверь код у преподавателя.';
-    end if;
-    if t.id = auth.uid() then
-      raise exception 'Это твой собственный код — привязаться к себе нельзя.';
-    end if;
-
-    perform pg_advisory_xact_lock(hashtext('join_teacher:' || t.id::text));
-
-    if exists (
-      select 1 from teacher_students
-      where teacher_id = t.id and student_id = auth.uid()
-    ) then
-      return t.nm;
-    end if;
-
-    seats := public.teacher_seat_limit(t.plan);
-    if seats = 0 then
-      seats := case when t.trial_until > now() then 3 else 0 end;
-    elsif t.plan_expires_at is null or t.plan_expires_at <= now() then
-      seats := least(seats, case when t.trial_until > now() then 3 else 0 end);
-    end if;
-
-    select count(*) into taken from teacher_students where teacher_id = t.id;
-    if taken >= seats then
-      raise exception 'RECALL_SEATS_FULL';
-    end if;
-
-    insert into teacher_students (teacher_id, student_id)
-    values (t.id, auth.uid())
-    on conflict (teacher_id, student_id) do nothing;
-    return t.nm;
-  end;
-  $$;
 
   -- ============================================================================
   -- «ПИСЬМО» (Заход 5a): письменные задания (IELTS / обычное эссе). По образцу
@@ -2572,153 +2208,65 @@
   -- Дневной источник энергии пользователя. in_studio=true → пул общий (учитель+ученицы),
   -- тогда действует под-кап на аккаунт. gen_limit — месячный лимит генераций пула.
   -- Триал-учитель (plan='free', но trial_until>now, role='teacher') получает пул 40 / 10 генераций.
+  -- ── из перекрытых версий (история причин) ──────────────────
+  -- Дневной источник энергии пользователя. in_studio=true → пул общий (учитель+ученицы),
+  -- тогда действует под-кап на аккаунт. gen_limit — месячный лимит генераций пула.
+  -- Триал-учитель (plan='free', но trial_until>now, role='teacher') получает пул 40 / 10 генераций.
+  -- ───────────────────────────────────────────────────────────
   create or replace function public.energy_source(
     uid uuid, out pool_owner uuid, out day_budget int, out in_studio boolean, out gen_limit int
   ) language plpgsql stable security definer set search_path = public as $fn$
-  declare me record; t record;
+  declare me record; t record; v_teacher uuid; paid_teacher boolean; has_students boolean;
   begin
-    select role, plan, plan_expires_at, trial_until into me from profiles where id = uid;
-    -- 1) сам аккаунт-учитель с ненулевым пулом → свой пул студии
+    select role, plan, plan_expires_at, trial_until, created_at into me from profiles where id = uid;
+    has_students := false;
+    -- 1) сам аккаунт-учитель → свой пул студии. Роль сама по себе пул НЕ даёт:
+    --    на триале он включается только с появлением первого ученика.
     if me.role = 'teacher' then
+      paid_teacher := me.plan like 'teacher_%' and me.plan_expires_at > now();
+      select exists (select 1 from teacher_students where teacher_id = uid) into has_students;
       day_budget := case
-        when me.plan like 'teacher_%' and me.plan_expires_at > now() then public.teacher_energy_pool(me.plan)
-        when me.trial_until > now() then 40 else 0 end;
+        when paid_teacher then public.teacher_energy_pool(me.plan)
+        when me.trial_until > now() and has_students then 40
+        else 0 end;
       if day_budget > 0 then
         pool_owner := uid; in_studio := true;
         gen_limit := case
-          when me.plan like 'teacher_%' and me.plan_expires_at > now() then public.teacher_gen_limit(me.plan)
-          when me.trial_until > now() then 10 else 0 end;
+          when paid_teacher then public.teacher_gen_limit(me.plan)
+          else 3 end;
         return;
       end if;
     end if;
-    -- 2) ученица привязанного учителя с ненулевым пулом → пул этого учителя
-    select tp.id as tid,
-      case when tp.plan like 'teacher_%' and tp.plan_expires_at > now() then public.teacher_energy_pool(tp.plan)
-           when tp.trial_until > now() then 40 else 0 end as pool
-      into t
-      from teacher_students ts join profiles tp on tp.id = ts.teacher_id
-      where ts.student_id = uid and not coalesce(tp.blocked, false)
-      order by pool desc limit 1;
-    if t.tid is not null and t.pool > 0 then
-      pool_owner := t.tid; day_budget := t.pool; in_studio := true; gen_limit := 0; return;
+    -- 2) ученик, ПОКРЫТЫЙ тарифом преподавателя → пул этого преподавателя
+    v_teacher := public.covering_teacher(uid);
+    if v_teacher is not null then
+      select case
+        when tp.plan like 'teacher_%' and tp.plan_expires_at > now() then public.teacher_energy_pool(tp.plan)
+        when tp.trial_until > now() then 40 else 0 end as pool
+        into t
+        from profiles tp where tp.id = v_teacher;
+      if t.pool > 0 then
+        pool_owner := v_teacher; day_budget := t.pool; in_studio := true; gen_limit := 0; return;
+      end if;
     end if;
-    -- 3) сольный premium/триал → 30; 4) free → 5
+    -- 3) свой premium → 30; триал → 30 первые 3 дня, дальше 15; 4) free → 5
     if public.has_premium_access(uid) then
-      pool_owner := uid; day_budget := 30; in_studio := false; gen_limit := 0; return;
+      pool_owner := uid; in_studio := false;
+      -- две пробные генерации — только роли teacher и пока нет учеников
+      gen_limit := case when me.role = 'teacher' and not has_students then 2 else 0 end;
+      if me.plan <> 'free' and me.plan_expires_at is not null and me.plan_expires_at > now() then
+        day_budget := 30;
+      elsif me.created_at > now() - interval '3 days' then
+        day_budget := 30;
+      else
+        day_budget := 15;
+      end if;
+      return;
     end if;
     pool_owner := uid; day_budget := 5; in_studio := false; gen_limit := 0;
   end $fn$;
 
-  -- Списание энергии/генерации. Сервер (api/_auth) считает p_cost по типу задачи.
-  --   p_kind: heavy|light|speech (для анти-абьюз-кэпов light/speech и часового);
-  --   p_cost: энергия действия (0 для light/speech; N для heavy);
-  --   p_generation: true для материала/программы (месячный лимит вместо энергии).
-  create or replace function public.spend_energy(
-    p_kind text default 'heavy', p_cost int default 1, p_generation boolean default false
-  ) returns void language plpgsql security definer set search_path = public as $fn$
-  declare
-    v_kind text := case when p_kind in ('light','speech') then p_kind else 'heavy' end;
-    uid uuid := auth.uid();
-    day0 timestamptz := public.recall_day_start();
-    src record;
-    n int; pool_spent int; self_spent int; gen_used int;
-  begin
-    if uid is null then raise exception 'RECALL_NO_AUTH'; end if;
-    perform pg_advisory_xact_lock(hashtext('ai_quota:' || uid::text));
 
-    if exists (select 1 from auth.users where id=uid and banned_until is not null and banned_until>now())
-      then raise exception 'RECALL_BLOCKED'; end if;
-    if exists (select 1 from profiles where id=uid and blocked) then raise exception 'RECALL_BLOCKED'; end if;
-    delete from ai_calls where called_at < now() - interval '40 days';  -- держим месяц генераций
-
-    -- админ (владелец) — без лимитов, но пишем строку для статистики
-    if exists (select 1 from profiles where id=uid and is_admin) then
-      insert into ai_calls (user_id, kind, cost_energy, is_generation) values (uid, v_kind, 0, p_generation);
-      return;
-    end if;
-
-    -- часовой предохранитель от скриптов (по классу доступа)
-    select count(*) into n from ai_calls where user_id=uid and called_at > now() - interval '1 hour';
-    if n >= (case when public.has_paid_access(uid) then 200 when public.has_premium_access(uid) then 90 else 40 end)
-      then raise exception 'RECALL_RATE_HOUR'; end if;
-
-    -- ГЕНЕРАЦИЯ: месячный лимит по пулу учителя
-    if p_generation then
-      select * into src from public.energy_source(uid);
-      select count(*) into gen_used from ai_calls
-        where pool_owner = src.pool_owner and is_generation and called_at >= public.recall_month_start();
-      if gen_used >= src.gen_limit then raise exception 'RECALL_GEN_LIMIT'; end if;
-      insert into ai_calls (user_id, kind, cost_energy, pool_owner, is_generation)
-        values (uid, 'heavy', 0, src.pool_owner, true);
-      return;
-    end if;
-
-    -- LIGHT/SPEECH (0 энергии): только суточный анти-абьюз-кэп по классу
-    if v_kind in ('light','speech') then
-      select count(*) into n from ai_calls
-        where user_id=uid and ai_calls.kind=v_kind and called_at >= day0;
-      if n >= (case v_kind
-          -- триал/ученик студии: 300 → 150 (решение владельца 06.08.2026).
-          -- Живой человек тапает 20–50 слов за занятие, разницы не заметит,
-          -- а по стоимости это половина всей light-статьи триала.
-          when 'light' then case when public.has_paid_access(uid) then 900 when public.has_premium_access(uid) then 150 else 100 end
-          else case when public.has_paid_access(uid) then 400 when public.has_premium_access(uid) then 150 else 50 end end) then
-        if v_kind='light' then raise exception 'RECALL_LIGHT_LIMIT'; else raise exception 'RECALL_SPEECH_LIMIT'; end if;
-      end if;
-      insert into ai_calls (user_id, kind, cost_energy) values (uid, v_kind, 0);
-      return;
-    end if;
-
-    -- ЭНЕРГИЯ (heavy): дневной пул + под-кап на аккаунт в студии
-    select * into src from public.energy_source(uid);
-    select coalesce(sum(cost_energy),0) into pool_spent from ai_calls
-      where pool_owner = src.pool_owner and called_at >= day0;
-    if pool_spent + p_cost > src.day_budget then
-      if src.in_studio then raise exception 'RECALL_ENERGY_POOL';
-      elsif public.has_premium_access(uid) then raise exception 'RECALL_ENERGY_DAY';
-      else raise exception 'RECALL_FREE_LIMIT'; end if;
-    end if;
-    if src.in_studio and src.pool_owner <> uid then
-      select coalesce(sum(cost_energy),0) into self_spent from ai_calls
-        where user_id = uid and called_at >= day0;
-      if self_spent + p_cost > (src.day_budget / 2) then raise exception 'RECALL_ENERGY_SUBCAP'; end if;
-    end if;
-    insert into ai_calls (user_id, kind, cost_energy, pool_owner) values (uid, 'heavy', p_cost, src.pool_owner);
-  end $fn$;
-
-  -- get_my_plan v2: старые поля СОХРАНЕНЫ (текущий клиент их читает) + энергия.
-  create or replace function public.get_my_plan()
-  returns json language plpgsql security definer set search_path = public as $fn$
-  declare
-    uid uuid := auth.uid();
-    p record; prem boolean; used int;
-    day0 timestamptz := public.recall_day_start();
-    src record; e_spent int; e_self int; g_used int;
-  begin
-    if uid is null then raise exception 'RECALL_NO_AUTH'; end if;
-    select plan, plan_expires_at, trial_until, is_admin into p from profiles where id = uid;
-    prem := public.has_premium_access(uid);
-    select count(*) into used from ai_calls
-      where user_id = uid and ai_calls.kind = 'heavy' and called_at > now() - interval '24 hours';
-    select * into src from public.energy_source(uid);
-    select coalesce(sum(cost_energy),0) into e_spent from ai_calls
-      where pool_owner = src.pool_owner and called_at >= day0;
-    select coalesce(sum(cost_energy),0) into e_self from ai_calls
-      where user_id = uid and called_at >= day0;
-    select count(*) into g_used from ai_calls
-      where pool_owner = src.pool_owner and is_generation and called_at >= public.recall_month_start();
-    return json_build_object(
-      'plan', p.plan, 'plan_expires_at', p.plan_expires_at, 'trial_until', p.trial_until,
-      'is_admin', p.is_admin, 'premium', prem,
-      'ai_used_today', used, 'ai_day_limit', case when p.is_admin then 999999 when prem then 200 else 5 end,
-      -- энергия (E1): бюджет пула, потрачено пулом, потрачено этим аккаунтом, под-кап
-      'energy_max', case when p.is_admin then 999999 else src.day_budget end,
-      'energy_spent', e_spent, 'energy_self', e_self,
-      'energy_subcap', case when src.in_studio and src.pool_owner <> uid then src.day_budget / 2 else null end,
-      'in_studio', src.in_studio,
-      'gen_limit', src.gen_limit, 'gen_used', g_used
-    );
-  end $fn$;
 
   -- ============================================================================
   -- САМОСТОЯТЕЛЬНАЯ РОЛЬ ПРЕПОДАВАТЕЛЯ (2026-08-06, заход A1 из docs/mkt/19-fix-plan)
@@ -2823,113 +2371,7 @@
       on conflict (user_id) do nothing;
   end $fn$;
 
-  -- join_teacher: та же функция, что и раньше (лок, идемпотентность, коды ошибок
-  -- не менялись), но лимит мест теперь берётся из teacher_seats_effective —
-  -- одного места для всей логики. Прежний вариант считал места по триалу прямо
-  -- здесь и после его окончания оставлял бесплатному преподавателю 0 мест:
-  -- человек, попробовавший продукт в декабре, в январе не мог добавить ученика
-  -- вообще. Теперь бесплатных мест всегда 3.
-  create or replace function public.join_teacher(code text)
-  returns text
-  language plpgsql
-  security definer
-  set search_path = public
-  as $$
-  declare
-    t record;
-    seats int;
-    taken int;
-  begin
-    select id, coalesce(display_name, 'Преподаватель') as nm
-      into t
-      from profiles
-     where invite_code = upper(trim(code)) and role = 'teacher';
-    if t.id is null then
-      raise exception 'Код не найден. Проверь код у преподавателя.';
-    end if;
-    if t.id = auth.uid() then
-      raise exception 'Это твой собственный код — привязаться к себе нельзя.';
-    end if;
 
-    perform pg_advisory_xact_lock(hashtext('join_teacher:' || t.id::text));
-
-    if exists (
-      select 1 from teacher_students
-      where teacher_id = t.id and student_id = auth.uid()
-    ) then
-      return t.nm;
-    end if;
-
-    -- null = без ограничения (преподаватель без тарифа и без триала: его
-    -- ученики не наследуют повышенных лимитов, считать нечего)
-    seats := public.teacher_seats_effective(t.id);
-    if seats is not null then
-      select count(*) into taken from teacher_students where teacher_id = t.id;
-      if taken >= seats then
-        -- один код на все случаи: ученику НЕ показываем, какой у преподавателя
-        -- тариф — это его дело (тот же принцип, что закрытые гранты на profiles)
-        raise exception 'RECALL_SEATS_FULL';
-      end if;
-    end if;
-
-    insert into teacher_students (teacher_id, student_id)
-    values (t.id, auth.uid())
-    on conflict (teacher_id, student_id) do nothing;
-
-    -- Если преподаватель уже распределял места руками и свободное осталось —
-    -- занимаем его сразу: иначе новый ученик молча оказался бы «вне тарифа»
-    -- при оплаченном свободном месте. (Мы внутри лока на преподавателя.)
-    if exists (select 1 from teacher_students where teacher_id = t.id and seat) then
-      select count(*) into taken from teacher_students where teacher_id = t.id and seat;
-      if taken < coalesce(public.teacher_seats_effective(t.id), 0) then
-        update teacher_students set seat = true
-         where teacher_id = t.id and student_id = auth.uid();
-      end if;
-    end if;
-    return t.nm;
-  end;
-  $$;
-
-  -- get_my_plan v3: всё как в v2 + места (seats/seats_used) для подсказки
-  -- преподавателю «занято 3 из 3». Старые поля сохранены — клиент их читает.
-  create or replace function public.get_my_plan()
-  returns json language plpgsql security definer set search_path = public as $fn$
-  declare
-    uid uuid := auth.uid();
-    p record; prem boolean; used int;
-    day0 timestamptz := public.recall_day_start();
-    src record; e_spent int; e_self int; g_used int;
-    v_seats int; v_seats_used int;
-  begin
-    if uid is null then raise exception 'RECALL_NO_AUTH'; end if;
-    select plan, plan_expires_at, trial_until, is_admin, role into p from profiles where id = uid;
-    prem := public.has_premium_access(uid);
-    select count(*) into used from ai_calls
-      where user_id = uid and ai_calls.kind = 'heavy' and called_at > now() - interval '24 hours';
-    select * into src from public.energy_source(uid);
-    select coalesce(sum(cost_energy),0) into e_spent from ai_calls
-      where pool_owner = src.pool_owner and called_at >= day0;
-    select coalesce(sum(cost_energy),0) into e_self from ai_calls
-      where user_id = uid and called_at >= day0;
-    select count(*) into g_used from ai_calls
-      where pool_owner = src.pool_owner and is_generation and called_at >= public.recall_month_start();
-    -- seats: null = без ограничения (клиент так и покажет)
-    v_seats := public.teacher_seats_effective(uid);
-    select count(*) into v_seats_used from teacher_students where teacher_id = uid;
-    return json_build_object(
-      'plan', p.plan, 'plan_expires_at', p.plan_expires_at, 'trial_until', p.trial_until,
-      'is_admin', p.is_admin, 'premium', prem,
-      'ai_used_today', used, 'ai_day_limit', case when p.is_admin then 999999 when prem then 200 else 5 end,
-      'energy_max', case when p.is_admin then 999999 else src.day_budget end,
-      'energy_spent', e_spent, 'energy_self', e_self,
-      'energy_subcap', case when src.in_studio and src.pool_owner <> uid then src.day_budget / 2 else null end,
-      'in_studio', src.in_studio,
-      'gen_limit', src.gen_limit, 'gen_used', g_used,
-      -- места (A1): сколько всего и сколько занято; для не-преподавателя seats = 0
-      'seats', v_seats, 'seats_used', v_seats_used,
-      'free_seats', public.free_teacher_seats()
-    );
-  end $fn$;
 
   -- ============================================================================
   -- ПОКРЫТИЕ УЧЕНИКА ТАРИФОМ (2026-08-06, решение владельца)
@@ -3091,148 +2533,9 @@
     end if;
   end $mig$;
 
-  -- Три места, где жило наследование, теперь спрашивают привратника.
-  create or replace function public.has_premium_access(uid uuid)
-  returns boolean
-  language sql
-  security definer
-  stable
-  set search_path = public
-  as $fn$
-    select
-      exists (
-        select 1 from profiles p where p.id = uid and (
-          p.trial_until > now()
-          or (p.plan <> 'free' and p.plan_expires_at is not null
-              and p.plan_expires_at > now())
-        )
-      )
-      or public.covering_teacher(uid) is not null
-  $fn$;
 
-  create or replace function public.has_paid_access(uid uuid)
-  returns boolean
-  language sql
-  security definer
-  stable
-  set search_path = public
-  as $fn$
-    select
-      exists (
-        select 1 from profiles p where p.id = uid and (
-          p.is_admin
-          or (p.plan <> 'free' and p.plan_expires_at is not null
-              and p.plan_expires_at > now())
-        )
-      )
-      or public.covering_teacher(uid, true) is not null
-  $fn$;
 
-  create or replace function public.energy_source(
-    uid uuid, out pool_owner uuid, out day_budget int, out in_studio boolean, out gen_limit int
-  ) language plpgsql stable security definer set search_path = public as $fn$
-  declare me record; t record; v_teacher uuid; paid_teacher boolean; has_students boolean;
-  begin
-    select role, plan, plan_expires_at, trial_until, created_at into me from profiles where id = uid;
-    -- 1) сам аккаунт-учитель → свой пул студии
-    --
-    -- ⚠️ РОЛЬ САМА ПО СЕБЕ НЕ ДАЁТ НИЧЕГО (2026-08-06). Пока роль выдавалась
-    -- вручную SQL-ом, это было неважно. Но с самостоятельным включением (A1)
-    -- любой аккаунт на триале одним нажатием получал 40 ⚡/день вместо 30/15 и
-    -- 10 генераций на Pro-моделях (~22 ₸ штука) — то есть потолок бесплатного
-    -- аккаунта поднимался примерно с 330 ₸ до 770 ₸.
-    -- Теперь пул и генерации на триале включаются, только когда появился ХОТЯ БЫ
-    -- ОДИН привязанный ученик. Настоящему репетитору это ничего не стоит (он за
-    -- этим и пришёл), а «нажал посмотреть» перестаёт что-либо давать.
-    -- Оплаченный тариф работает сразу, без учеников: человек заплатил.
-    if me.role = 'teacher' then
-      paid_teacher := me.plan like 'teacher_%' and me.plan_expires_at > now();
-      select exists (select 1 from teacher_students where teacher_id = uid) into has_students;
-      day_budget := case
-        when paid_teacher then public.teacher_energy_pool(me.plan)
-        when me.trial_until > now() and has_students then 40
-        else 0 end;
-      if day_budget > 0 then
-        pool_owner := uid; in_studio := true;
-        gen_limit := case
-          when paid_teacher then public.teacher_gen_limit(me.plan)
-          -- на триале 3, а не 10: генерация материала/программы идёт на самых
-          -- дорогих моделях, и десять штук на бесплатный аккаунт — перебор.
-          -- Трёх хватает попробовать материал и программу с одной переделкой.
-          else 3 end;
-        return;
-      end if;
-    end if;
-    -- 2) ученик, ПОКРЫТЫЙ тарифом преподавателя → пул этого преподавателя.
-    --    Раньше здесь искался любой привязанный преподаватель — то есть сотый
-    --    ученик тарифа на пятерых пил из общего пула наравне с первым.
-    v_teacher := public.covering_teacher(uid);
-    if v_teacher is not null then
-      select case
-        when tp.plan like 'teacher_%' and tp.plan_expires_at > now() then public.teacher_energy_pool(tp.plan)
-        when tp.trial_until > now() then 40 else 0 end as pool
-        into t
-        from profiles tp where tp.id = v_teacher;
-      if t.pool > 0 then
-        pool_owner := v_teacher; day_budget := t.pool; in_studio := true; gen_limit := 0; return;
-      end if;
-    end if;
-    -- 3) свой premium → 30; триал → 30 первые 3 дня, дальше 15; 4) free → 5
-    --
-    -- Почему триал ступенькой (решение владельца 06.08.2026): человек решает,
-    -- нужен ли ему продукт, в первую сессию, а не на двенадцатый день. Первые
-    -- дни финансируем щедро, хвост — вдвое скромнее. Считаем не по деньгам
-    -- (мы на бесплатном тире), а по ОБЩЕЙ квоте моделей: сотня зашедших
-    -- посмотреть не должна оставлять без AI платящих и учеников студии.
-    -- Заодно триал перестаёт быть равен Premium — появляется, куда расти.
-    if public.has_premium_access(uid) then
-      pool_owner := uid; in_studio := false; gen_limit := 0;
-      if me.plan <> 'free' and me.plan_expires_at is not null and me.plan_expires_at > now() then
-        day_budget := 30;                      -- оплаченный Premium
-      elsif me.created_at > now() - interval '3 days' then
-        day_budget := 30;                      -- первые 3 дня триала
-      else
-        day_budget := 15;                      -- остаток триала
-      end if;
-      return;
-    end if;
-    pool_owner := uid; day_budget := 5; in_studio := false; gen_limit := 0;
-  end $fn$;
 
-  -- admin_find_user + число учеников. Зачем: у преподавателя БЕЗ тарифа мест
-  -- не ограничено (см. teacher_seats_effective), поэтому он может набрать
-  -- сколько угодно учеников, а потом купить самый младший тариф — и все они
-  -- разом унаследуют платные лимиты (900 переводов и 400 распознаваний в сутки
-  -- КАЖДОМУ, мимо пула). Проверка мест стоит только в момент привязки и при
-  -- активации тарифа не пересчитывается.
-  -- Пока оплата включается руками, самая дешёвая защита — показать число
-  -- учеников прямо в админке: владелец увидит «учеников: 50, тариф на 5» и
-  -- задаст вопрос. Когда оплата станет автоматической, это надо будет заменить
-  -- на жёсткое правило (бенефит только первым N ученикам по дате привязки).
-  create or replace function public.admin_find_user(q text)
-  returns json
-  language plpgsql
-  security definer
-  set search_path = public
-  as $fn$
-  begin
-    if not exists (select 1 from profiles where id = auth.uid() and is_admin) then
-      raise exception 'RECALL_NOT_ADMIN';
-    end if;
-    return coalesce((
-      select json_agg(row_to_json(t)) from (
-        select u.id, u.email, p.display_name, p.plan,
-               p.plan_expires_at, p.trial_until, p.role,
-               (select count(*) from teacher_students ts where ts.teacher_id = u.id) as students,
-               public.teacher_seats_effective(u.id) as seats
-        from auth.users u
-        join public.profiles p on p.id = u.id
-        where u.email ilike '%' || trim(coalesce(q, '')) || '%'
-        order by u.created_at desc
-        limit 10
-      ) t
-    ), '[]'::json);
-  end $fn$;
 
   -- ============================================================================
   -- АНАЛИТИКА (2026-08-06, блокер A3 из docs/mkt/19-fix-plan.md)
@@ -3515,69 +2818,6 @@ do $$ begin
     return true;
   end $fn$;
 
-  -- --------------------------------------------------------------------------
-  -- 2. ДВЕ ПРОБНЫЕ ГЕНЕРАЦИИ РЕПЕТИТОРУ БЕЗ УЧЕНИКОВ
-  --
-  -- Было: у триального учителя без учеников gen_limit = 0, и на ПЕРВОЙ же
-  -- попытке он читал «Лимит генераций на этот месяц исчерпан» — сообщение,
-  -- которое вдобавок неправда: лимит не исчерпан, его не было. Человек,
-  -- пришедший оценить продукт, не мог увидеть главное, за что мы просим денег.
-  -- Стало (решение владельца 07.08.2026): 2 генерации — ровно один материал
-  -- целиком (план + текст). Пул энергии по-прежнему требует ученика: там счёт
-  -- идёт на сотни действий, здесь — на одну демонстрацию.
-  -- --------------------------------------------------------------------------
-  create or replace function public.energy_source(
-    uid uuid, out pool_owner uuid, out day_budget int, out in_studio boolean, out gen_limit int
-  ) language plpgsql stable security definer set search_path = public as $fn$
-  declare me record; t record; v_teacher uuid; paid_teacher boolean; has_students boolean;
-  begin
-    select role, plan, plan_expires_at, trial_until, created_at into me from profiles where id = uid;
-    has_students := false;
-    -- 1) сам аккаунт-учитель → свой пул студии. Роль сама по себе пул НЕ даёт:
-    --    на триале он включается только с появлением первого ученика.
-    if me.role = 'teacher' then
-      paid_teacher := me.plan like 'teacher_%' and me.plan_expires_at > now();
-      select exists (select 1 from teacher_students where teacher_id = uid) into has_students;
-      day_budget := case
-        when paid_teacher then public.teacher_energy_pool(me.plan)
-        when me.trial_until > now() and has_students then 40
-        else 0 end;
-      if day_budget > 0 then
-        pool_owner := uid; in_studio := true;
-        gen_limit := case
-          when paid_teacher then public.teacher_gen_limit(me.plan)
-          else 3 end;
-        return;
-      end if;
-    end if;
-    -- 2) ученик, ПОКРЫТЫЙ тарифом преподавателя → пул этого преподавателя
-    v_teacher := public.covering_teacher(uid);
-    if v_teacher is not null then
-      select case
-        when tp.plan like 'teacher_%' and tp.plan_expires_at > now() then public.teacher_energy_pool(tp.plan)
-        when tp.trial_until > now() then 40 else 0 end as pool
-        into t
-        from profiles tp where tp.id = v_teacher;
-      if t.pool > 0 then
-        pool_owner := v_teacher; day_budget := t.pool; in_studio := true; gen_limit := 0; return;
-      end if;
-    end if;
-    -- 3) свой premium → 30; триал → 30 первые 3 дня, дальше 15; 4) free → 5
-    if public.has_premium_access(uid) then
-      pool_owner := uid; in_studio := false;
-      -- две пробные генерации — только роли teacher и пока нет учеников
-      gen_limit := case when me.role = 'teacher' and not has_students then 2 else 0 end;
-      if me.plan <> 'free' and me.plan_expires_at is not null and me.plan_expires_at > now() then
-        day_budget := 30;
-      elsif me.created_at > now() - interval '3 days' then
-        day_budget := 30;
-      else
-        day_budget := 15;
-      end if;
-      return;
-    end if;
-    pool_owner := uid; day_budget := 5; in_studio := false; gen_limit := 0;
-  end $fn$;
 
 end $$;
 
@@ -3617,73 +2857,16 @@ do $$ begin
 
   -- Возвращаемый тип меняется (boolean → jsonb), поэтому старую версию
   -- обязательно удаляем: create or replace такое не умеет.
-  drop function if exists public.submit_word_check(uuid, jsonb);
-
-  create or replace function public.submit_word_check(p_id uuid, p_results jsonb)
-  returns jsonb language plpgsql security definer set search_path = public as $fn$
-  declare
-    v_cards jsonb;
-    v_out jsonb := '[]'::jsonb;
-    v_wrong jsonb := '[]'::jsonb;
-    r jsonb;
-    v_card_id uuid;
-    v_given text;
-    v_front text;
-    v_back text;
-    v_ok boolean;
-    n int;
-  begin
-    -- перепроверка должна быть своей и ещё не завершённой
-    select card_ids into v_cards from word_checks
-      where id = p_id and student_id = auth.uid() and completed_at is null;
-    if v_cards is null then
-      return jsonb_build_object('counted', false, 'wrong', '[]'::jsonb);
-    end if;
-
-    for r in select value from jsonb_array_elements(coalesce(p_results, '[]'::jsonb)) loop
-      begin v_card_id := (r->>'card_id')::uuid; exception when others then continue; end;
-      -- слово должно быть из ЭТОЙ перепроверки
-      if not (v_cards @> to_jsonb(v_card_id::text)) then continue; end if;
-
-      v_given := coalesce(r->>'given', '');
-      select c.front, c.back into v_front, v_back from cards c where c.id = v_card_id;
-
-      if v_front is null then
-        -- карточку удалили между назначением и сдачей: проверить нечем.
-        -- Отмечаем неверным и берём слово из присланного — только для отчёта,
-        -- зачесть такое «верно» нельзя.
-        v_front := coalesce(r->>'front', '');
-        v_back := r->>'back';
-        v_ok := false;
-      else
-        -- те же правила, что на клиенте: варианты через «/», нормализация
-        select coalesce(bool_or(public.norm_answer(v) = public.norm_answer(v_given)), false)
-          into v_ok
-          from unnest(string_to_array(v_front, '/')) as v;
-      end if;
-
-      v_out := v_out || jsonb_build_array(jsonb_build_object(
-        'card_id', v_card_id, 'front', v_front, 'back', v_back,
-        'given', v_given, 'ok', v_ok));
-      if not v_ok then
-        v_wrong := v_wrong || jsonb_build_array(v_card_id::text);
-      end if;
-    end loop;
-
-    update word_checks set results = v_out, completed_at = now()
-    where id = p_id and student_id = auth.uid() and completed_at is null;
-    get diagnostics n = row_count;  -- row_count это int, не boolean
-
-    if n = 0 then
-      -- кто-то успел завершить между select и update (двойная отправка)
-      return jsonb_build_object('counted', false, 'wrong', '[]'::jsonb);
-    end if;
-    return jsonb_build_object('counted', true, 'wrong', v_wrong);
-  end $fn$;
 
 end $$;
 
 -- после общего revoke в конце файла — грант поимённо
+-- ⚠️ Явный revoke, а не «оно и так закрыто». Пока эта функция объявлялась НИЖЕ
+-- общего revoke execute on all functions … from public, anon, она получала
+-- права по умолчанию — и anon мог её вызывать. Данных это не давало (внутри
+-- student_id = auth.uid(), у анонима он null), но правило проекта «вызов RPC
+-- анонимом закрыт системно» нарушалось молча. Нашлось при сжатии схемы.
+revoke execute on function public.submit_word_check(uuid, jsonb) from public, anon;
 grant execute on function public.submit_word_check(uuid, jsonb) to authenticated;
 
 -- ============================================================================
@@ -3883,136 +3066,7 @@ do $$ begin
     return raw;
   end $fn$;
 
-  -- ---- submit_material: fill и order считаем по norm_typed ------------------
-  -- Тело функции повторяет версию из блока «РЕВЬЮ БЕЗОПАСНОСТИ» без изменений,
-  -- кроме двух веток сверки. mcq намеренно остаётся на norm_answer.
-  create or replace function public.submit_material(
-    p_id uuid, p_answers jsonb, p_auto_score int, p_auto_total int
-  ) returns void language plpgsql security definer set search_path = public as $fn$
-  declare
-    m_exercises jsonb;
-    ex jsonb;
-    ans jsonb;
-    idx int := 0;
-    score int := 0;
-    total int := 0;
-    given_text text;
-    correct_text text;
-    ex_type text;
-    is_correct boolean;
-  begin
-    -- упражнения берём из материала; клиентские p_auto_score/p_auto_total игнорируем
-    select mat.exercises into m_exercises
-      from material_assignments ma
-      join materials mat on mat.id = ma.material_id
-    where ma.id = p_id and ma.student_id = auth.uid() and ma.status = 'assigned';
-    if m_exercises is null then
-      raise exception 'Работа не найдена или уже сдана.';
-    end if;
 
-    for ex in select value from jsonb_array_elements(m_exercises) loop
-      total := total + 1;
-      ex_type := ex->>'type';
-      select value into ans
-        from jsonb_array_elements(coalesce(p_answers, '[]'::jsonb))
-      where (value->>'index')::int = idx
-      limit 1;
-      given_text := ans->>'given';
-      is_correct := false;
-      if given_text is not null then
-        if ex_type = 'mcq' then
-          -- выбор из готовых вариантов: строгая нормализация (см. шапку блока)
-          correct_text := ex->'options'->>((ex->>'answer')::int);
-          is_correct := correct_text is not null
-            and public.norm_answer(given_text) = public.norm_answer(correct_text);
-        elsif ex_type = 'fill' then
-          -- варианты через «/»: верен любой из них
-          select bool_or(public.norm_typed(v) = public.norm_typed(given_text))
-            into is_correct
-            from unnest(string_to_array(ex->>'answer', '/')) as v;
-          is_correct := coalesce(is_correct, false);
-        elsif ex_type = 'order' then
-          select string_agg(value#>>'{}', ' ' order by ordinality) into correct_text
-            from jsonb_array_elements(ex->'answer') with ordinality;
-          is_correct := correct_text is not null
-            and public.norm_typed(given_text) = public.norm_typed(correct_text);
-        end if;
-      end if;
-      if is_correct then
-        score := score + 1;
-      end if;
-      idx := idx + 1;
-    end loop;
-
-    update material_assignments
-      set answers = p_answers, auto_score = score, auto_total = total,
-          status = 'submitted', submitted_at = now()
-    where id = p_id and student_id = auth.uid() and status = 'assigned';
-    if not found then raise exception 'Работа не найдена или уже сдана.'; end if;
-  end $fn$;
-
-  -- ---- submit_word_check: печатное слово тоже по norm_typed -----------------
-  -- Тело — версия из блока «ПЕРЕПРОВЕРКА СЛОВ СЧИТАЕТСЯ НА СЕРВЕРЕ», изменена
-  -- одна строка сверки. Здесь ученик печатает слово руками, значит правило
-  -- ровно то же, что у клиента в answerMatches.
-  create or replace function public.submit_word_check(p_id uuid, p_results jsonb)
-  returns jsonb language plpgsql security definer set search_path = public as $fn$
-  declare
-    v_cards jsonb;
-    v_out jsonb := '[]'::jsonb;
-    v_wrong jsonb := '[]'::jsonb;
-    r jsonb;
-    v_card_id uuid;
-    v_given text;
-    v_front text;
-    v_back text;
-    v_ok boolean;
-    n int;
-  begin
-    select card_ids into v_cards from word_checks
-      where id = p_id and student_id = auth.uid() and completed_at is null;
-    if v_cards is null then
-      return jsonb_build_object('counted', false, 'wrong', '[]'::jsonb);
-    end if;
-
-    for r in select value from jsonb_array_elements(coalesce(p_results, '[]'::jsonb)) loop
-      begin v_card_id := (r->>'card_id')::uuid; exception when others then continue; end;
-      -- слово должно быть из ЭТОЙ перепроверки
-      if not (v_cards @> to_jsonb(v_card_id::text)) then continue; end if;
-
-      v_given := coalesce(r->>'given', '');
-      select c.front, c.back into v_front, v_back from cards c where c.id = v_card_id;
-
-      if v_front is null then
-        -- карточку удалили между назначением и сдачей: проверить нечем
-        v_front := coalesce(r->>'front', '');
-        v_back := r->>'back';
-        v_ok := false;
-      else
-        -- те же правила, что на клиенте: варианты через «/», нормализация
-        select coalesce(bool_or(public.norm_typed(v) = public.norm_typed(v_given)), false)
-          into v_ok
-          from unnest(string_to_array(v_front, '/')) as v;
-      end if;
-
-      v_out := v_out || jsonb_build_array(jsonb_build_object(
-        'card_id', v_card_id, 'front', v_front, 'back', v_back,
-        'given', v_given, 'ok', v_ok));
-      if not v_ok then
-        v_wrong := v_wrong || jsonb_build_array(v_card_id::text);
-      end if;
-    end loop;
-
-    update word_checks set results = v_out, completed_at = now()
-    where id = p_id and student_id = auth.uid() and completed_at is null;
-    get diagnostics n = row_count;  -- row_count это int, не boolean
-
-    if n = 0 then
-      -- кто-то успел завершить между select и update (двойная отправка)
-      return jsonb_build_object('counted', false, 'wrong', '[]'::jsonb);
-    end if;
-    return jsonb_build_object('counted', true, 'wrong', v_wrong);
-  end $fn$;
 
 end $$;
 
