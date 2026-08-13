@@ -91,11 +91,18 @@ function pctTone(pct: number): string {
 export function DiagnosticsSection({
   studentId,
   studentName,
+  preloaded,
 }: {
   studentId: string
   studentName: string
+  /**
+   * Уже загруженная карта из карточки ученика. Без неё раздел лез в базу
+   * второй раз за те же пять запросов: карточка считает по ним плашки, а
+   * человек открывает раздел следом.
+   */
+  preloaded?: StudentDiagnostics | null
 }) {
-  const [diag, setDiag] = useState<StudentDiagnostics | null>(null)
+  const [diag, setDiag] = useState<StudentDiagnostics | null>(preloaded ?? null)
   const [titles, setTitles] = useState<TopicTitles>(new Map())
   const [error, setError] = useState<string | null>(null)
   const [attempt, setAttempt] = useState(0)
@@ -104,7 +111,9 @@ export function DiagnosticsSection({
   useEffect(() => {
     let alive = true
     setError(null)
-    getStudentDiagnostics(studentId)
+    // Карта уже пришла сверху — второй запрос за теми же данными не делаем.
+    const source = preloaded ? Promise.resolve(preloaded) : getStudentDiagnostics(studentId)
+    source
       .then(async (d) => {
         if (!alive) return
         setDiag(d)
@@ -128,7 +137,7 @@ export function DiagnosticsSection({
     return () => {
       alive = false
     }
-  }, [studentId, attempt])
+  }, [studentId, attempt, preloaded])
 
   if (error) return <LoadError message={error} onRetry={() => setAttempt((n) => n + 1)} />
   if (!diag) return <p className="text-sm text-[var(--night-text-40)]">Собираю карту…</p>

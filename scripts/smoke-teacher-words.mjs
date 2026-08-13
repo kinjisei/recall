@@ -200,9 +200,17 @@ async function main() {
   // Раздел стал адресуемым: ?sec=words открывает «Слова» сразу, без клика по
   // «Ещё». Так проверка заодно сторожит саму адресуемость — потерять её при
   // следующей перестройке экрана легко и незаметно.
+  // ⚠️ Ждём САМ раздел, а не «пару секунд»: карточка теперь параллельно грузит
+  // ещё и диагностику для плашек, и раз в несколько прогонов «Слова» не
+  // успевали к фиксированной паузе — проверка краснела на исправном экране.
   await page.goto(`${BASE}/teacher?student=${studentId}&sec=words`, { waitUntil: 'networkidle2' })
-  await sleep(2000)
-  const hasGive = await seen(page, 'Выдать слова')
+  const hasGive = await page
+    .waitForFunction(() => (document.body.innerText || '').includes('Выдать слова'), {
+      timeout: 20000,
+      polling: 250,
+    })
+    .then(() => true)
+    .catch(() => false)
   check('в «Словах» есть выдача', hasGive)
 
   await tap(page, 'Выдать слова')
@@ -310,8 +318,14 @@ async function main() {
 
   // ---- удаление ------------------------------------------------------------
   await page.goto(`${BASE}/teacher?student=${studentId}&sec=words`, { waitUntil: 'networkidle2' })
-  await sleep(2500)
-  check('видно происхождение слова', await seen(page, 'выдал я'))
+  const sawOrigin = await page
+    .waitForFunction(() => (document.body.innerText || '').includes('выдал я'), {
+      timeout: 20000,
+      polling: 250,
+    })
+    .then(() => true)
+    .catch(() => false)
+  check('видно происхождение слова', sawOrigin)
 
   const del = await page.evaluate(() => {
     const b = [...document.querySelectorAll('button')].find((x) =>

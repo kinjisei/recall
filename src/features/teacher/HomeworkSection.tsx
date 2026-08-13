@@ -166,20 +166,20 @@ function ComposeButton({ onClick, label }: { onClick: () => void; label: string 
 
 /** Три числа, за которыми преподаватель и приходит: где буксует, где слабо, как часто занимается. */
 export function StatTiles({
-  struggling,
-  weakTopics,
-  activeDays,
+  diag,
   loading,
 }: {
-  struggling: number
-  weakTopics: number
-  activeDays: number
+  /** null после загрузки — карта не пришла: показываем «—», а не выдуманный ноль. */
+  diag: { struggling: number; weakTopics: number; activeDays: number } | null
   loading: boolean
 }) {
+  // ⚠️ Ноль и «неизвестно» — разные вещи. «0 буксующих слов» при упавшем
+  // запросе выглядит как хорошая новость, хотя мы просто ничего не знаем.
+  const val = (n: number | undefined, suffix = '') => (diag ? `${n}${suffix}` : '—')
   const tiles = [
-    { value: struggling, label: 'буксуют слов' },
-    { value: weakTopics, label: 'слабых тем' },
-    { value: `${activeDays}/14`, label: 'дней с занятиями', icon: true },
+    { value: val(diag?.struggling), label: 'буксуют слов' },
+    { value: val(diag?.weakTopics), label: 'слабых тем' },
+    { value: val(diag?.activeDays, '/14'), label: 'дней с занятиями', icon: true },
   ]
   return (
     <div className="grid grid-cols-3 gap-2">

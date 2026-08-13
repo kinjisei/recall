@@ -2,12 +2,13 @@ import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { IconGraduation, IconFlame, IconBadgeCheck } from '../../components/icons'
 import { BackHeader } from '../../components/BackButton'
-import { GOAL_LABELS, type AppLang } from '../../types'
+import { GOAL_LABELS } from '../../types'
 import { useUrlState } from '../../lib/useUrlState'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { getProfile } from '../../lib/profile'
 import { useAuth } from '../../context/AuthContext'
+import { useLanguage } from '../../context/LanguageContext'
 import {
   getOrCreateInviteCode,
   regenerateInviteCode,
@@ -528,6 +529,7 @@ function StudentCard({
   /** Есть ли вообще ограничение мест (на тарифе без лимита переключать нечего). */
   seatsKnown?: boolean
 }) {
+  const { lang: appLang } = useLanguage()
   const [seatBusy, setSeatBusy] = useState(false)
   const [unlinking, setUnlinking] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -553,14 +555,17 @@ function StudentCard({
   // рядом: второй счёт разошёлся бы с картой молча, и учитель увидел бы в
   // карточке одно, а в разделе — другое.
   const [diag, setDiag] = useState<StudentDiagnostics | null>(null)
+  const [diagLoading, setDiagLoading] = useState(true)
   useEffect(() => {
     let alive = true
     setDiag(null)
+    setDiagLoading(true)
     getStudentDiagnostics(p.id)
       .then((d) => alive && setDiag(d))
       .catch(() => {
-        /* плашки просто останутся пустыми: карточка из-за них падать не должна */
+        /* карточка из-за плашек падать не должна: покажем «—» вместо чисел */
       })
+      .finally(() => alive && setDiagLoading(false))
     return () => {
       alive = false
     }
@@ -620,10 +625,16 @@ function StudentCard({
 
       {/* 2. Три числа, за которыми преподаватель и приходит. */}
       <StatTiles
-        struggling={diag?.words.struggling.length ?? 0}
-        weakTopics={diag?.mistakes.length ?? 0}
-        activeDays={diag?.activeDays14 ?? 0}
-        loading={!diag}
+        diag={
+          diag
+            ? {
+                struggling: diag.words.struggling.length,
+                weakTopics: diag.mistakes.length,
+                activeDays: diag.activeDays14,
+              }
+            : null
+        }
+        loading={diagLoading}
       />
 
       {/* 3. Всё остальное — под «Ещё». Оно нужно раз в месяц, а занимало весь
@@ -659,7 +670,11 @@ function StudentCard({
                     <PlacementSection studentId={p.id} studentName={p.display_name ?? 'ученик'} />
                   )}
                   {s.id === 'diag' && (
-                    <DiagnosticsSection studentId={p.id} studentName={p.display_name ?? 'Ученик'} />
+                    <DiagnosticsSection
+                      studentId={p.id}
+                      studentName={p.display_name ?? 'Ученик'}
+                      preloaded={diag}
+                    />
                   )}
                   {s.id === 'plan' && <DailyPlanSection studentId={p.id} />}
                   {s.id === 'program' && <ProgramSection studentId={p.id} />}
@@ -729,7 +744,13 @@ function StudentCard({
       <HomeworkComposer
         studentId={p.id}
         studentName={p.display_name ?? 'ученика'}
-        lang={(p.native_lang === 'es' ? 'es' : 'en') as AppLang}
+        // ⚠️ Язык берём из переключателя EN/ES в шапке, как весь остальной
+        // раздел преподавателя (см. WordPicker). Сначала здесь стоял
+        // profile.native_lang — а это РОДНОЙ язык ученика (русский), не
+        // изучаемый: у преподавателя по испанскому домашка уходила бы с
+        // lang='en', и пункт «слова» считал бы английскую колоду, то есть не
+        // закрывался бы никогда.
+        lang={appLang}
         onClose={() => setComposing(false)}
         onCreated={() => setHwVersion((v) => v + 1)}
       />
