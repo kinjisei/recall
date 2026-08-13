@@ -1053,7 +1053,19 @@ export type Database = {
         Returns: undefined
       }
       cancel_placement: { Args: { p_id: string }; Returns: undefined }
+      complete_homework_item: { Args: { p_item: string }; Returns: undefined }
       consume_ai_quota: { Args: { p_kind?: string }; Returns: undefined }
+      create_homework: {
+        Args: {
+          p_due: string
+          p_items: Json
+          p_lang: string
+          p_note?: string | null
+          p_student_id: string
+        }
+        Returns: string
+      }
+      get_homework: { Args: { p_student?: string }; Returns: Json }
       deck_assigned_to: {
         Args: { d_id: string; s_id: string }
         Returns: boolean

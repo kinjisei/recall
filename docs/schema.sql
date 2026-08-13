@@ -4342,3 +4342,462 @@ end $mig$;
 -- иначе первый же вызов упрётся в permission denied.
 grant execute on function public.assign_words_to_student(uuid, text, jsonb) to authenticated;
 grant execute on function public.teacher_delete_student_cards(uuid, jsonb) to authenticated;
+
+-- ============================================================================
+-- ДОМАШКА НА НЕДЕЛЮ (2026-08-13)
+--
+-- Зачем. Преподаватель назначал слова, материалы, квесты и письменные работы в
+-- четырёх разных местах, и ответить на главный вопрос — «сделал ли ученик
+-- домашнее» — было нельзя ниоткуда. Каждый источник знал только про себя.
+--
+-- Домашка — ОДИН объект со сроком, внутри пункты разных типов. Учитель собирает
+-- в одном месте, ученик видит один список, обе стороны видят одну цифру «3 из 5».
+--
+-- ⚠️ ГЛАВНОЕ РЕШЕНИЕ: пункт закрывает СЕРВЕР там, где действие измеримо, и
+-- только там, где измерить нечем, — галочка ученика. В карточке видно, кто
+-- засчитал. Иначе цифра ничего не значит: ученик закроет всё за десять секунд
+-- перед уроком, и учитель будет планировать занятие по выдумке.
+--
+-- ⚠️ Автозачёт живёт в ОДНОМ месте — в log_activity. Через неё проходит любое
+-- действие ученика: карточки, чтение, речь, письмо, квесты, задания. Развесить
+-- проверку по пяти клиентским путям означало бы пять разных правил, которые
+-- разойдутся при первой же правке, причём молча.
+--
+-- ⚠️ ЧЕСТНАЯ ГРАНИЦА. «Засчитал сервер» здесь значит «сервер посчитал по данным
+-- занятий», а не «подделать невозможно». Расписание FSRS (review_states) и
+-- счётчики activity_log пишет сам ученик — это известный остаток архитектуры
+-- (см. docs/ARCHITECTURE.md, раздел про безопасность). То есть упорный ученик
+-- может надуть себе цифру и здесь.
+-- Разница с галочкой всё равно принципиальная: галочка — это один тап, а
+-- подделка требует лезть в запросы приложения. Обещать преподавателю больше
+-- этого нельзя, поэтому и в интерфейсе пишем «засчитано по занятиям», а не
+-- «проверено».
+-- ============================================================================
+do $$ begin
+
+  create table if not exists public.homework (
+    id         uuid primary key default gen_random_uuid(),
+    teacher_id uuid not null references public.profiles(id) on delete cascade,
+    student_id uuid not null references public.profiles(id) on delete cascade,
+    lang       text not null check (lang in ('en','es')) default 'en',
+    due_at     timestamptz not null,
+    note       text,
+    created_at timestamptz not null default now()
+  );
+  create index if not exists homework_student_idx on public.homework (student_id, created_at desc);
+  create index if not exists homework_teacher_idx on public.homework (teacher_id, created_at desc);
+
+  create table if not exists public.homework_items (
+    id          uuid primary key default gen_random_uuid(),
+    homework_id uuid not null references public.homework(id) on delete cascade,
+    -- kind определяет, ЧЕМ пункт закрывается:
+    --   words   — повторёнными карточками      (сервер)
+    --   text    — прочитанным текстом/материалом (сервер)
+    --   quest   — завершённым AI-квестом       (сервер)
+    --   writing — сданной письменной работой   (сервер)
+    --   speech  — заходами в тренажёр речи     (сервер)
+    --   free    — своими словами, вне приложения (только галочка ученика)
+    kind    text not null check (kind in ('words','text','quest','writing','speech','free')),
+    ref_id  uuid,
+    title   text not null,
+    target  int  not null default 1 check (target between 1 and 500),
+    done_at timestamptz,
+    done_by text check (done_by in ('server','student')),
+    pos     int  not null default 0
+  );
+  create index if not exists homework_items_hw_idx on public.homework_items (homework_id, pos);
+
+  alter table public.homework       enable row level security;
+  alter table public.homework_items enable row level security;
+
+  drop policy if exists "see own homework" on public.homework;
+  create policy "see own homework" on public.homework
+    for select using (auth.uid() in (student_id, teacher_id));
+
+  drop policy if exists "see own homework items" on public.homework_items;
+  create policy "see own homework items" on public.homework_items
+    for select using (exists (
+      select 1 from homework h
+       where h.id = homework_items.homework_id
+         and auth.uid() in (h.student_id, h.teacher_id)
+    ));
+
+  -- ⚠️ Всё, что можно подделать, считает сервер. Ученик, дописавший done_at
+  -- напрямую, обесценил бы весь экран преподавателя.
+  revoke insert, update, delete on public.homework       from authenticated;
+  revoke insert, update, delete on public.homework_items from authenticated;
+
+end $$;
+
+-- ---------------------------------------------------------------------------
+-- Сколько ученик уже сделал по пункту. Меряем ТОЛЬКО то, что случилось ПОСЛЕ
+-- выдачи домашки: иначе прошлые заслуги закрывали бы новое задание.
+-- ---------------------------------------------------------------------------
+create or replace function public.homework_item_progress(p_item uuid)
+returns int language plpgsql stable security definer set search_path = public as $fn$
+declare
+  it      record;
+  hw      record;
+  v_since timestamptz;
+  v_count int := 0;
+begin
+  select * into it from homework_items where id = p_item;
+  if it is null then return 0; end if;
+  select * into hw from homework where id = it.homework_id;
+  if hw is null then return 0; end if;
+  v_since := hw.created_at;
+
+  if it.kind = 'words' then
+    -- Считаем РАЗНЫЕ карточки, а не заходы: пять повторений одного слова —
+    -- это не пять слов.
+    select count(distinct rs.card_id) into v_count
+      from review_states rs
+      join cards c on c.id = rs.card_id
+      join decks d on d.id = c.deck_id
+     where rs.user_id = hw.student_id
+       and d.owner_id = hw.student_id
+       and d.lang = hw.lang
+       and rs.last_review >= v_since;
+
+  elsif it.kind = 'text' then
+    if it.ref_id is not null then
+      select count(*) into v_count from material_assignments ma
+       where ma.material_id = it.ref_id and ma.student_id = hw.student_id
+         and ma.submitted_at is not null and ma.submitted_at >= v_since;
+    else
+      select coalesce(sum(al.items_done), 0) into v_count from activity_log al
+       where al.user_id = hw.student_id and al.type = 'reader'
+         and al.created_at >= v_since;
+    end if;
+
+  elsif it.kind = 'quest' then
+    select count(*) into v_count from grammar_quests q
+     where q.student_id = hw.student_id and q.status = 'completed'
+       and q.completed_at >= v_since
+       and (it.ref_id is null or q.id = it.ref_id);
+
+  elsif it.kind = 'writing' then
+    select count(*) into v_count from writing_submissions ws
+     where ws.user_id = hw.student_id and ws.created_at >= v_since;
+
+  elsif it.kind = 'speech' then
+    select coalesce(sum(al.items_done), 0) into v_count from activity_log al
+     where al.user_id = hw.student_id and al.type = 'pronunciation'
+       and al.created_at >= v_since;
+
+  else
+    -- 'free' — измерить нечем, закрывается только галочкой ученика.
+    v_count := 0;
+  end if;
+
+  return coalesce(v_count, 0);
+end $fn$;
+
+-- ---------------------------------------------------------------------------
+-- Пересчёт: закрывает всё, что уже выполнено. Зовётся из log_activity (то есть
+-- после ЛЮБОГО действия ученика) и при чтении домашки — чтобы учитель видел
+-- свежее состояние.
+--
+-- Однажды закрытый пункт назад не открывается: домашку сдают, а не удерживают.
+-- ---------------------------------------------------------------------------
+create or replace function public.refresh_homework_for(p_student uuid)
+returns void language plpgsql security definer set search_path = public as $fn$
+declare it record;
+begin
+  if p_student is null then return; end if;
+  for it in
+    select i.id, i.target
+      from homework_items i
+      join homework h on h.id = i.homework_id
+     where h.student_id = p_student
+       and i.done_at is null
+       and i.kind <> 'free'
+       and h.due_at >= now() - interval '7 days'
+  loop
+    if public.homework_item_progress(it.id) >= it.target then
+      update homework_items
+         set done_at = now(), done_by = 'server'
+       where id = it.id and done_at is null;
+    end if;
+  end loop;
+end $fn$;
+
+-- ---------------------------------------------------------------------------
+-- Выдать домашку. Один вызов вместо обхода четырёх разделов.
+-- ---------------------------------------------------------------------------
+create or replace function public.create_homework(
+  p_student_id uuid, p_lang text, p_due timestamptz, p_items jsonb, p_note text default null
+)
+returns uuid language plpgsql security definer set search_path = public as $fn$
+declare
+  v_id   uuid;
+  v_item jsonb;
+  v_pos  int := 0;
+begin
+  if auth.uid() is null then raise exception 'RECALL_NO_AUTH'; end if;
+  if not public.is_student_of(auth.uid(), p_student_id) then
+    raise exception 'RECALL_NOT_YOUR_STUDENT';
+  end if;
+  if p_lang not in ('en','es') then raise exception 'RECALL_BAD_LANG'; end if;
+  if p_due is null or p_due < now() - interval '1 day' or p_due > now() + interval '90 days' then
+    raise exception 'RECALL_BAD_DUE';
+  end if;
+  if p_items is null or jsonb_typeof(p_items) <> 'array'
+     or jsonb_array_length(p_items) = 0 or jsonb_array_length(p_items) > 12 then
+    raise exception 'RECALL_BAD_ITEMS';
+  end if;
+
+  insert into homework (teacher_id, student_id, lang, due_at, note)
+    values (auth.uid(), p_student_id, p_lang, p_due, nullif(btrim(coalesce(p_note, '')), ''))
+    returning id into v_id;
+
+  for v_item in select * from jsonb_array_elements(p_items) loop
+    v_pos := v_pos + 1;
+    insert into homework_items (homework_id, kind, ref_id, title, target, pos)
+    values (
+      v_id,
+      coalesce(v_item->>'kind', 'free'),
+      nullif(v_item->>'ref_id', '')::uuid,
+      left(btrim(coalesce(v_item->>'title', 'Задание')), 200),
+      greatest(1, least(500, coalesce((v_item->>'target')::int, 1))),
+      v_pos
+    );
+  end loop;
+
+  -- Часть пунктов может быть выполнена ещё до выдачи — пересчитываем сразу,
+  -- чтобы учитель не смотрел на заведомо неверный ноль.
+  perform public.refresh_homework_for(p_student_id);
+  return v_id;
+end $fn$;
+
+-- ---------------------------------------------------------------------------
+-- Галочка ученика. Для пунктов, которые сервер измерить не может.
+-- ---------------------------------------------------------------------------
+create or replace function public.complete_homework_item(p_item uuid)
+returns void language plpgsql security definer set search_path = public as $fn$
+declare it record;
+begin
+  if auth.uid() is null then raise exception 'RECALL_NO_AUTH'; end if;
+  select i.id as item_id, i.done_at, h.student_id into it
+    from homework_items i join homework h on h.id = i.homework_id
+   where i.id = p_item;
+  if it is null then raise exception 'RECALL_NO_ITEM'; end if;
+  if it.student_id <> auth.uid() then raise exception 'RECALL_NOT_YOURS'; end if;
+  if it.done_at is not null then return; end if;
+
+  update homework_items set done_at = now(), done_by = 'student' where id = p_item;
+end $fn$;
+
+-- ---------------------------------------------------------------------------
+-- Чтение: последняя домашка с пунктами, уже пересчитанными.
+-- Ученик зовёт без аргумента, учитель — с id ученика.
+-- ---------------------------------------------------------------------------
+create or replace function public.get_homework(p_student uuid default null)
+returns jsonb language plpgsql security definer set search_path = public as $fn$
+declare
+  v_student uuid;
+  v_hw      record;
+  v_items   jsonb;
+begin
+  if auth.uid() is null then raise exception 'RECALL_NO_AUTH'; end if;
+  v_student := coalesce(p_student, auth.uid());
+  if v_student <> auth.uid() and not public.is_student_of(auth.uid(), v_student) then
+    raise exception 'RECALL_NOT_YOUR_STUDENT';
+  end if;
+
+  perform public.refresh_homework_for(v_student);
+
+  select * into v_hw from homework
+   where student_id = v_student order by created_at desc limit 1;
+  if v_hw is null then return null; end if;
+
+  select jsonb_agg(jsonb_build_object(
+           'id', i.id, 'kind', i.kind, 'ref_id', i.ref_id, 'title', i.title,
+           'target', i.target, 'progress', public.homework_item_progress(i.id),
+           'done_at', i.done_at, 'done_by', i.done_by
+         ) order by i.pos)
+    into v_items
+    from homework_items i where i.homework_id = v_hw.id;
+
+  return jsonb_build_object(
+    'id', v_hw.id, 'lang', v_hw.lang, 'due_at', v_hw.due_at, 'note', v_hw.note,
+    'created_at', v_hw.created_at,
+    'items', coalesce(v_items, '[]'::jsonb)
+  );
+end $fn$;
+
+-- ---------------------------------------------------------------------------
+-- Автозачёт вешаем на log_activity — ЕДИНСТВЕННУЮ точку, через которую проходит
+-- любое действие ученика. Тело повторено целиком (create or replace), добавлена
+-- последняя строка.
+-- ---------------------------------------------------------------------------
+create or replace function public.log_activity(
+  p_type text, p_day date, p_items int default 1, p_sec int default 0
+) returns void language plpgsql security definer set search_path = public as $fn$
+declare
+  uid uuid := auth.uid();
+  v_items int := least(greatest(coalesce(p_items, 0), 0), 100000);
+  v_sec   int := least(greatest(coalesce(p_sec, 0), 0), 86400);
+begin
+  if uid is null then raise exception 'RECALL_NO_AUTH'; end if;
+  if p_type not in ('flashcards','reader','pronunciation','conversation','writing',
+                    'grammar','quest','practice','assignment','perfect') then
+    raise exception 'RECALL_BAD_TYPE';
+  end if;
+  if p_day is null or p_day < current_date - 1 or p_day > current_date + 1 then
+    raise exception 'RECALL_BAD_DAY';
+  end if;
+  insert into activity_log (user_id, day, type, items_done, duration_sec)
+  values (uid, p_day, p_type, v_items, v_sec)
+  on conflict (user_id, day, type) do update
+    set items_done   = activity_log.items_done + v_items,
+        duration_sec = activity_log.duration_sec + v_sec;
+
+  -- Ученик что-то сделал — проверяем, не закрылся ли пункт домашки.
+  perform public.refresh_homework_for(uid);
+end $fn$;
+
+-- Гранты — ПОСЛЕ финального revoke в конце файла.
+-- homework_item_progress и refresh_homework_for клиенту НЕ отдаём: их зовут
+-- только другие функции, а снаружи они дали бы способ считать чужой прогресс.
+revoke execute on function public.homework_item_progress(uuid) from public, anon, authenticated;
+revoke execute on function public.refresh_homework_for(uuid)   from public, anon, authenticated;
+grant execute on function public.create_homework(uuid, text, timestamptz, jsonb, text) to authenticated;
+grant execute on function public.complete_homework_item(uuid) to authenticated;
+grant execute on function public.get_homework(uuid) to authenticated;
+grant execute on function public.log_activity(text, date, int, int) to authenticated;
+
+-- ============================================================================
+-- ДОМАШКА: закрываем ВЕСЬ класс завершений (2026-08-13, тем же заходом)
+--
+-- Первая версия автозачёта висела только на log_activity — и этого не хватило.
+-- Проверка показала: завершения бывают ДВУХ видов.
+--   1. Счётчик занятия  (карточки, чтение, речь) — идёт через log_activity;
+--   2. Запись в таблицу (сданная работа, сданный материал, пройденный квест) —
+--      её делают серверные RPC, и log_activity там не вызывается вовсе.
+--
+-- Из-за этого пункт «письмо» не закрывался как раз в самом частом случае:
+-- работа, ЗАДАННАЯ учителем, пишется в writing_task_assignments, а не в
+-- writing_submissions, и её сдача не логируется как занятие. То есть ученик
+-- делал именно то, что задали, а домашка оставалась открытой.
+--
+-- Лечим не приписыванием вызова в три RPC (четвёртый забудут — и молча), а
+-- триггерами на самих таблицах. Тогда любой будущий способ записать «сдано»
+-- закроет пункт сам.
+-- ============================================================================
+
+-- Пункт «письмо» закрывают ОБА пути: свободное письмо и работа от учителя.
+create or replace function public.homework_item_progress(p_item uuid)
+returns int language plpgsql stable security definer set search_path = public as $fn$
+declare
+  it      record;
+  hw      record;
+  v_since timestamptz;
+  v_count int := 0;
+begin
+  select * into it from homework_items where id = p_item;
+  if it is null then return 0; end if;
+  select * into hw from homework where id = it.homework_id;
+  if hw is null then return 0; end if;
+  v_since := hw.created_at;
+
+  if it.kind = 'words' then
+    select count(distinct rs.card_id) into v_count
+      from review_states rs
+      join cards c on c.id = rs.card_id
+      join decks d on d.id = c.deck_id
+     where rs.user_id = hw.student_id
+       and d.owner_id = hw.student_id
+       and d.lang = hw.lang
+       and rs.last_review >= v_since;
+
+  elsif it.kind = 'text' then
+    if it.ref_id is not null then
+      select count(*) into v_count from material_assignments ma
+       where ma.material_id = it.ref_id and ma.student_id = hw.student_id
+         and ma.submitted_at is not null and ma.submitted_at >= v_since;
+    else
+      select coalesce(sum(al.items_done), 0) into v_count from activity_log al
+       where al.user_id = hw.student_id and al.type = 'reader'
+         and al.created_at >= v_since;
+    end if;
+
+  elsif it.kind = 'quest' then
+    select count(*) into v_count from grammar_quests q
+     where q.student_id = hw.student_id and q.status = 'completed'
+       and q.completed_at >= v_since
+       and (it.ref_id is null or q.id = it.ref_id);
+
+  elsif it.kind = 'writing' then
+    -- ⚠️ Два источника, и «учительский» тут главный: работа по заданию учителя
+    -- лежит в writing_task_assignments, свободное письмо — в writing_submissions.
+    -- Считать только второе означало не закрывать пункт как раз тогда, когда
+    -- ученик сделал ровно то, что задали.
+    select
+      (select count(*) from writing_submissions ws
+        where ws.user_id = hw.student_id and ws.created_at >= v_since)
+      +
+      (select count(*) from writing_task_assignments wa
+        where wa.student_id = hw.student_id
+          and wa.submitted_at is not null and wa.submitted_at >= v_since
+          and (it.ref_id is null or wa.task_id = it.ref_id))
+    into v_count;
+
+  elsif it.kind = 'speech' then
+    select coalesce(sum(al.items_done), 0) into v_count from activity_log al
+     where al.user_id = hw.student_id and al.type = 'pronunciation'
+       and al.created_at >= v_since;
+
+  else
+    v_count := 0;
+  end if;
+
+  return coalesce(v_count, 0);
+end $fn$;
+
+-- ---------------------------------------------------------------------------
+-- Триггер: любая запись «сдано/пройдено» пересчитывает домашку этого ученика.
+-- Вешается на таблицы, а не на функции: RPC можно добавить новый и забыть про
+-- домашку, таблицу — нет.
+-- ---------------------------------------------------------------------------
+create or replace function public.homework_refresh_trigger()
+returns trigger language plpgsql security definer set search_path = public as $fn$
+begin
+  perform public.refresh_homework_for(new.student_id);
+  return null;                      -- AFTER-триггер, возвращаемое значение не важно
+end $fn$;
+
+drop trigger if exists trg_homework_after_writing on public.writing_task_assignments;
+create trigger trg_homework_after_writing
+  after update of submitted_at on public.writing_task_assignments
+  for each row when (new.submitted_at is not null)
+  execute function public.homework_refresh_trigger();
+
+drop trigger if exists trg_homework_after_material on public.material_assignments;
+create trigger trg_homework_after_material
+  after update of submitted_at on public.material_assignments
+  for each row when (new.submitted_at is not null)
+  execute function public.homework_refresh_trigger();
+
+drop trigger if exists trg_homework_after_quest on public.grammar_quests;
+create trigger trg_homework_after_quest
+  after update of status on public.grammar_quests
+  for each row when (new.status = 'completed')
+  execute function public.homework_refresh_trigger();
+
+-- Свободное письмо ученик пишет в таблицу сам — тот же приём.
+create or replace function public.homework_refresh_by_user()
+returns trigger language plpgsql security definer set search_path = public as $fn$
+begin
+  perform public.refresh_homework_for(new.user_id);
+  return null;
+end $fn$;
+
+drop trigger if exists trg_homework_after_free_writing on public.writing_submissions;
+create trigger trg_homework_after_free_writing
+  after insert on public.writing_submissions
+  for each row execute function public.homework_refresh_by_user();
+
+-- Триггерные функции клиенту не нужны — их зовёт только Postgres.
+revoke execute on function public.homework_refresh_trigger()  from public, anon, authenticated;
+revoke execute on function public.homework_refresh_by_user()  from public, anon, authenticated;
