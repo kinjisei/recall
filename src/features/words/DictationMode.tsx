@@ -14,6 +14,7 @@ import type { ReviewItem } from '../../components/RoundReview'
 import { logActivity } from '../../lib/activity'
 import { speak } from '../../lib/speech'
 import { answerMatches } from '../../lib/text'
+import { ATTEMPTS_BEFORE_ANSWER, mistakeHint } from '../../lib/selfCorrect'
 import {
   loadGamePool,
   recordShown,
@@ -39,6 +40,8 @@ export function DictationMode({ lang, onBack }: { lang: AppLang; onBack: () => v
   const [results, setResults] = useState<ReviewItem[]>([])
   const [value, setValue] = useState('')
   const [checked, setChecked] = useState<null | boolean>(null)
+  const [attempts, setAttempts] = useState(0)
+  const [hint, setHint] = useState<string | null>(null)
   const [revealed, setRevealed] = useState(false)
 
   const load = useCallback(
@@ -111,21 +114,34 @@ export function DictationMode({ lang, onBack }: { lang: AppLang; onBack: () => v
     )
   }
 
+  // ⚠️ Самокоррекция — то же правило, что в общем движке упражнений: первая
+  // ошибка показывает, ГДЕ она, ответ появляется со второй попытки или по
+  // кнопке. Результат раунда пишется по ПЕРВОЙ попытке (иначе «8 из 10»
+  // перестаёт значить «знает восемь»).
   const check = () => {
     if (checked !== null || !value.trim() || !current) return
     const ok = answerMatches(value, current.term)
-    setChecked(ok)
-    setResults((r) => [
-      ...r,
-      {
-        prompt: current.translation ? `На слух: «${current.translation}»` : 'Слово на слух',
-        given: value.trim(),
-        correct: current.term,
-        ok,
-      },
-    ])
-    if (ok) setCorrect((c) => c + 1)
-    else markWrong(current, lang)
+    const n = attempts + 1
+    setAttempts(n)
+    if (attempts === 0) {
+      setResults((r) => [
+        ...r,
+        {
+          prompt: current.translation ? `На слух: «${current.translation}»` : 'Слово на слух',
+          given: value.trim(),
+          correct: current.term,
+          ok,
+        },
+      ])
+      if (ok) setCorrect((c) => c + 1)
+      else markWrong(current, lang)
+    }
+    if (ok) {
+      setChecked(true)
+      return
+    }
+    if (n >= ATTEMPTS_BEFORE_ANSWER) setChecked(false)
+    else setHint(mistakeHint(value, current.term))
   }
 
   const next = () => {
@@ -133,6 +149,8 @@ export function DictationMode({ lang, onBack }: { lang: AppLang; onBack: () => v
     setValue('')
     setChecked(null)
     setRevealed(false)
+    setAttempts(0)
+    setHint(null)
   }
 
   const chip = (id: Source, label: string) => (
@@ -221,6 +239,19 @@ export function DictationMode({ lang, onBack }: { lang: AppLang; onBack: () => v
               )
             )}
 
+            {checked === null && hint && (
+              <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+                {hint} <span className="text-[var(--night-text-40)]">Попробуй ещё раз.</span>
+              </p>
+            )}
+            {checked === null && attempts > 0 && (
+              <button
+                onClick={() => setChecked(false)}
+                className="mx-auto min-h-11 text-sm font-medium text-[var(--night-accent-text)]"
+              >
+                Показать ответ
+              </button>
+            )}
             {checked === false && current && (
               <p className="text-sm">
                 <span className="text-red-500">Правильно: </span>
@@ -228,7 +259,9 @@ export function DictationMode({ lang, onBack }: { lang: AppLang; onBack: () => v
               </p>
             )}
             {checked === true && (
-              <p className="animate-answer-pop text-sm font-semibold text-emerald-400">Верно!</p>
+              <p className="animate-answer-pop text-sm font-semibold text-emerald-400">
+                {attempts > 1 ? 'Верно — со второй попытки!' : 'Верно!'}
+              </p>
             )}
 
             {checked === null ? (

@@ -67,16 +67,64 @@ export function WritingGradeView({ grade, mode }: { grade: WritingGrade; mode: W
         </div>
       )}
 
-      {grade.errors && grade.errors.length > 0 && (
-        <Section title="Ошибки">
-          <div className="flex flex-col gap-1.5">
-            {grade.errors.map((e, i) => (
-              <div key={i} className="rounded-xl border border-red-500/25 px-3 py-2 text-sm">
-                <p className="text-red-300 line-through decoration-red-500/60">{e.was}</p>
-                <p className="text-emerald-300">→ {e.fix}</p>
+      {/* ⚠️ Фокус — ПЕРВЫМ и вместо сплошной разметки. Двадцать пометок не
+          говорят, за что взяться, и вдобавок учат писать проще: безопаснее не
+          рисковать сложной конструкцией, чем снова получить россыпь красного.
+          Полный список никуда не делся — он ниже, за раскрывашкой. */}
+      {grade.focus && grade.focus.length > 0 && (
+        <Section title="Над чем поработать в этот раз">
+          <div className="flex flex-col gap-2.5">
+            {grade.focus.map((f, i) => (
+              <div
+                key={i}
+                className="rounded-xl border border-[var(--night-accent-45)]/40 bg-[var(--night-accent-900)]/25 px-3 py-2.5"
+              >
+                <p className="text-sm font-medium text-[var(--night-accent-100)]">{f.type}</p>
+                {f.why && (
+                  <p className="mt-0.5 text-sm text-[var(--night-text-70)]">{f.why}</p>
+                )}
+                <div className="mt-2 flex flex-col gap-1 text-sm">
+                  {f.examples.map((e, j) => (
+                    <p key={j}>
+                      <span className="text-red-300 line-through decoration-red-500/60">
+                        {e.was}
+                      </span>
+                      <span className="text-emerald-300"> → {e.fix}</span>
+                    </p>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
+        </Section>
+      )}
+
+      {grade.errors && grade.errors.length > 0 && (
+        <Section title={grade.focus?.length ? `Все правки · ${grade.errors.length}` : 'Ошибки'}>
+          {grade.focus?.length ? (
+            <details className="group">
+              <summary className="cursor-pointer list-none text-sm font-medium text-[var(--night-accent-text)]">
+                Показать полный разбор
+              </summary>
+              <div className="mt-2 flex flex-col gap-1.5">
+                {grade.errors.map((e, i) => (
+                  <div key={i} className="rounded-xl border border-red-500/25 px-3 py-2 text-sm">
+                    <p className="text-red-300 line-through decoration-red-500/60">{e.was}</p>
+                    <p className="text-emerald-300">→ {e.fix}</p>
+                  </div>
+                ))}
+              </div>
+            </details>
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              {grade.errors.map((e, i) => (
+                <div key={i} className="rounded-xl border border-red-500/25 px-3 py-2 text-sm">
+                  <p className="text-red-300 line-through decoration-red-500/60">{e.was}</p>
+                  <p className="text-emerald-300">→ {e.fix}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </Section>
       )}
 

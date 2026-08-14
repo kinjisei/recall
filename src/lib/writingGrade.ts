@@ -8,6 +8,25 @@ import { chat } from './gemini'
 import type { AppLang, WritingGrade, WritingTask } from '../types'
 import { CORRECTION_RULES } from './correctionRules'
 
+/**
+ * Сколько типов ошибок выносим в фокус.
+ *
+ * ⚠️ Направленная правка работает лучше сплошной: список из двадцати пометок
+ * не говорит, за что взяться, и вдобавок учит писать проще — безопаснее не
+ * рисковать сложной конструкцией, чем получить очередную россыпь красного.
+ * Три — потолок: больше уже неотличимо от «исправь всё».
+ */
+export const MAX_FOCUS = 3
+
+/** Одна и та же инструкция про фокус для обоих режимов — чтобы не разошлись. */
+const FOCUS_RULE = [
+  `focus — САМОЕ ВАЖНОЕ в ответе: 2-3 ПОВТОРЯЮЩИХСЯ типа ошибок, над которыми ученику стоит работать в этот раз.`,
+  'Тип — это закономерность («артикли перед исчисляемыми», «времена в придаточных»), а НЕ отдельная опечатка.',
+  'Бери только то, что встретилось НЕ МЕНЕЕ двух раз; если повторов нет — верни один-два самых мешающих понимаю типа.',
+  'why — одно предложение по-русски: чем это мешает читателю. examples — до трёх пар was/fix из текста ученика.',
+  'Остальные ошибки всё равно перечисли в errors — но фокус не раздувай: больше трёх типов не возвращай.',
+].join('\n')
+
 function asStr(v: unknown): string {
   return typeof v === 'string' ? v : ''
 }
@@ -40,9 +59,31 @@ function parseGrade(raw: string, mode: 'ielts' | 'regular'): WritingGrade {
     .filter((x) => x.was && x.better)
     .slice(0, 3)
 
+  // ⚠️ Не больше трёх фокусов и не больше трёх примеров в каждом. Модель охотно
+  // вернёт «восемь главных проблем» — а это снова сплошная разметка, только с
+  // заголовками: чинить всё сразу человек не станет.
+  const focus = (Array.isArray(o.focus) ? o.focus : [])
+    .map((x) => {
+      const it = (x ?? {}) as Record<string, unknown>
+      return {
+        type: asStr(it.type),
+        why: asStr(it.why),
+        examples: (Array.isArray(it.examples) ? it.examples : [])
+          .map((e) => {
+            const ex = (e ?? {}) as Record<string, unknown>
+            return { was: asStr(ex.was), fix: asStr(ex.fix) }
+          })
+          .filter((e) => e.was && e.fix)
+          .slice(0, 3),
+      }
+    })
+    .filter((f) => f.type && f.examples.length > 0)
+    .slice(0, MAX_FOCUS)
+
   const grade: WritingGrade = {
     errors,
     rewrites,
+    focus,
     strengths: asStrArr(o.strengths).slice(0, 6),
     improve: asStrArr(o.improve).slice(0, 6),
     topics: asStrArr(o.topics).slice(0, 8),
@@ -102,11 +143,13 @@ export async function gradeWriting(
         : '',
       'Верни ТОЛЬКО валидный JSON без markdown:',
       '{"band":0-9,"criteria":{"task":0-9,"coherence":0-9,"lexis":0-9,"grammar":0-9},' +
+        '"focus":[{"type":"тип повторяющейся ошибки","why":"чем мешает, по-русски","examples":[{"was":"цитата","fix":"как надо"}]}],' +
         '"errors":[{"was":"цитата из текста","fix":"исправление","type":"grammar|vocab|spelling"}],' +
         '"strengths":["сильная сторона"],"improve":["что подтянуть"],' +
         '"topics":["тема грамматики для повторения"],"words":["полезное слово"],' +
         '"rewrites":[{"was":"слабое предложение","better":"улучшенный вариант"}]}',
       'band и criteria — по шкале 0-9 (допускается .5). Считай РЕАЛЬНЫЕ ошибки, не выдумывай.',
+      FOCUS_RULE,
       // те же правила, что в «Диалоге» (lib/correctionRules): не сдвигать время
       // в исправлении и не выдумывать ошибок — здесь тот же разбор чужого текста
       ...CORRECTION_RULES,
@@ -134,11 +177,13 @@ export async function gradeWriting(
     'Верни ТОЛЬКО валидный JSON без markdown:',
     '{"level":"A1..C1 — уровень текста","targetWords":[{"w":"слово","used":true|false}],' +
       '"targetGrammar":[{"t":"структура","used":true|false}],' +
+      '"focus":[{"type":"тип повторяющейся ошибки","why":"чем мешает, по-русски","examples":[{"was":"цитата","fix":"как надо"}]}],' +
       '"errors":[{"was":"цитата","fix":"исправление","type":"grammar|vocab|spelling"}],' +
       '"strengths":["сильная сторона"],"improve":["что подтянуть"],' +
       '"topics":["тема для повторения"],"words":["полезное слово"],' +
       '"rewrites":[{"was":"слабое предложение","better":"лучше"}]}',
     'targetWords/targetGrammar — по КАЖДОМУ целевому слову/структуре из списков выше: реально ли ученик его употребил (used). Ошибки реальные, не выдумывай. Пояснения по-русски, целевые слова/фразы — на изучаемом языке.',
+    FOCUS_RULE,
     ...CORRECTION_RULES,
   ].join('\n')
   const raw = await chat([{ role: 'user', content: `Задание:\n${task.prompt}\n\nТекст ученика:\n${essay}` }], {

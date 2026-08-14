@@ -3,12 +3,53 @@
 // и материалами преподавателя. Перенесён из features/grammar/GrammarPage.
 // onGiven — необязательный колбэк: каким был ответ ученика (для проверки
 // учителем в материалах).
+//
+// ⚠️ САМОКОРРЕКЦИЯ. Ошибся — сперва показываем, ГДЕ ошибка, и даём вторую
+// попытку; правильный ответ появляется только после неё или по кнопке
+// «показать ответ». Готовый ответ, выданный сразу, закрывает работу: человек
+// сверяет две строки и идёт дальше, не найдя ошибку сам. Правило и подсказки —
+// в lib/selfCorrect, ОДНО место на все три типа упражнений.
+//
+// ⚠️ Балл — по ПЕРВОЙ попытке: onAnswered и onGiven вызываются ровно один раз.
+// Иначе «8 из 10» перестаёт значить «знает восемь», и преподаватель планирует
+// урок по завышенной цифре.
 // ============================================================================
 import { useMemo, useState } from 'react'
 import { Card } from './Card'
 import { Button } from './Button'
 import { answerMatches, normalizeAnswer } from '../lib/text'
+import { ATTEMPTS_BEFORE_ANSWER, mcqHint, mistakeHint, orderHint } from '../lib/selfCorrect'
 import type { GrammarExercise } from '../types'
+
+/** Подсказка о месте ошибки — одинаковая на всех типах упражнений. */
+function HintLine({ text }: { text: string }) {
+  return (
+    <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+      {text} <span className="text-[var(--night-text-40)]">Попробуй ещё раз.</span>
+    </p>
+  )
+}
+
+/** «Показать ответ» — выход для того, кто застрял; не прячем его. */
+function RevealButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="self-start text-sm font-medium text-[var(--night-accent-text)]"
+    >
+      Показать ответ
+    </button>
+  )
+}
+
+/** Итог после верного ответа. Со второй попытки — так и пишем. */
+function CorrectLine({ attempts }: { attempts: number }) {
+  return (
+    <p className="animate-answer-pop text-sm font-semibold text-emerald-400">
+      {attempts > 1 ? 'Верно — со второй попытки ✓' : 'Верно! ✓'}
+    </p>
+  )
+}
 
 export interface ExerciseCallbacks {
   onAnswered: (ok: boolean) => void
@@ -41,17 +82,35 @@ export function McqExercise({
   onNext,
   isLast,
 }: { exercise: Extract<GrammarExercise, { type: 'mcq' }> } & ExerciseCallbacks) {
-  const [picked, setPicked] = useState<number | null>(null)
+  // Все неверные варианты, которые человек уже перебрал.
+  const [wrong, setWrong] = useState<number[]>([])
+  const [solved, setSolved] = useState(false)
+  const [revealed, setRevealed] = useState(false)
+  const done = solved || revealed
+  const attempts = wrong.length + (solved ? 1 : 0)
 
   const choose = (i: number) => {
-    if (picked !== null) return
-    setPicked(i)
-    onAnswered(i === exercise.answer)
-    onGiven?.(exercise.options[i] ?? '')
+    if (done || wrong.includes(i)) return
+    const ok = i === exercise.answer
+    // ⚠️ Балл — по первой попытке: колбэки срабатывают один раз.
+    if (attempts === 0) {
+      onAnswered(ok)
+      onGiven?.(exercise.options[i] ?? '')
+    }
+    if (ok) {
+      setSolved(true)
+      return
+    }
+    const next = [...wrong, i]
+    setWrong(next)
+    // после второй ошибки прятать ответ уже незачем — иначе это не обучение,
+    // а угадайка по кругу
+    if (next.length >= ATTEMPTS_BEFORE_ANSWER) setRevealed(true)
   }
 
   // короткие варианты (слова) — сеткой 2×2, длинные фразы — столбиком
   const compact = exercise.options.every((o) => o.length <= 16)
+  const left = exercise.options.length - wrong.length
 
   return (
     <Card className="flex flex-col gap-3">
@@ -59,21 +118,22 @@ export function McqExercise({
       <div className={compact ? 'grid grid-cols-2 gap-2' : 'flex flex-col gap-2'}>
         {exercise.options.map((opt, i) => {
           const isAnswer = i === exercise.answer
-          const isPicked = i === picked
+          const isWrong = wrong.includes(i)
           let cls = 'border-white/[0.10] hover:border-[var(--night-accent-45)]'
-          if (picked !== null) {
+          // ⚠️ Правильный вариант подсвечиваем ТОЛЬКО когда всё кончено. Пока
+          // идёт вторая попытка, зелёная рамка была бы тем же готовым ответом.
+          if (isWrong) cls = 'border-red-500 bg-red-950/40 opacity-60'
+          else if (done) {
             if (isAnswer) cls = 'border-emerald-500 bg-emerald-950/40'
-            else if (isPicked) cls = 'border-red-500 bg-red-950/40'
             else cls = 'border-white/[0.08] opacity-60'
           }
-          // «клевок» только когда человек ответил ВЕРНО сам. Правильный вариант
-          // подсвечивается и после ошибки, но праздновать там нечего.
-          const pop = isPicked && isAnswer ? ' animate-answer-pop' : ''
+          // «клевок» только когда человек нашёл ответ сам
+          const pop = solved && isAnswer ? ' animate-answer-pop' : ''
           return (
             <button
               key={i}
               onClick={() => choose(i)}
-              disabled={picked !== null}
+              disabled={done || isWrong}
               className={`rounded-xl border px-4 py-2.5 text-left transition-colors ${cls}${pop}`}
             >
               {opt}
@@ -81,7 +141,11 @@ export function McqExercise({
           )
         })}
       </div>
-      {picked !== null && <NextButton onNext={onNext} isLast={isLast} />}
+
+      {!done && wrong.length > 0 && <HintLine text={mcqHint(left)} />}
+      {!done && wrong.length > 0 && <RevealButton onClick={() => setRevealed(true)} />}
+      {solved && <CorrectLine attempts={attempts} />}
+      {done && <NextButton onNext={onNext} isLast={isLast} />}
     </Card>
   )
 }
@@ -94,17 +158,32 @@ export function FillExercise({
   isLast,
 }: { exercise: Extract<GrammarExercise, { type: 'fill' }> } & ExerciseCallbacks) {
   const [value, setValue] = useState('')
-  const [checked, setChecked] = useState(false)
+  const [attempts, setAttempts] = useState(0)
+  const [solved, setSolved] = useState(false)
+  const [revealed, setRevealed] = useState(false)
+  const [hint, setHint] = useState<string | null>(null)
   const [showHint, setShowHint] = useState(false)
+  const done = solved || revealed
 
   // варианты через «/» («was/were») принимаются любым из значений
   const ok = answerMatches(value, exercise.answer)
 
   const check = () => {
-    if (checked || !value.trim()) return
-    setChecked(true)
-    onAnswered(ok)
-    onGiven?.(value.trim())
+    if (done || !value.trim()) return
+    const n = attempts + 1
+    setAttempts(n)
+    // ⚠️ Балл — по первой попытке (см. шапку файла).
+    if (attempts === 0) {
+      onAnswered(ok)
+      onGiven?.(value.trim())
+    }
+    if (ok) {
+      setSolved(true)
+      return
+    }
+    // Первая ошибка — говорим ГДЕ, ответ придержим. Вторая — показываем.
+    if (n >= ATTEMPTS_BEFORE_ANSWER) setRevealed(true)
+    else setHint(mistakeHint(value, exercise.answer))
   }
 
   return (
@@ -112,23 +191,29 @@ export function FillExercise({
       <p className="text-lg font-medium">{exercise.prompt}</p>
       <input
         className={`w-full rounded-lg border bg-[var(--night-input)] px-3 py-2 outline-none ${
-          checked
-            ? ok
+          done
+            ? solved
               ? 'border-emerald-500'
               : 'border-red-500'
-            : 'border-white/[0.10] focus:border-[var(--night-accent-45)]'
+            : hint
+              ? 'border-amber-500'
+              : 'border-white/[0.10] focus:border-[var(--night-accent-45)]'
         }`}
         placeholder="Твой ответ…"
         value={value}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={(e) => {
+          setValue(e.target.value)
+          setHint(null)
+        }}
         onKeyDown={(e) => e.key === 'Enter' && check()}
-        disabled={checked}
+        disabled={done}
         autoComplete="off"
         autoCorrect="off"
         autoCapitalize="off"
       />
 
-      {!checked && exercise.hint && (
+      {/* Подсказка автора задания — как была, до первой проверки. */}
+      {!done && attempts === 0 && exercise.hint && (
         <button
           onClick={() => setShowHint((s) => !s)}
           className="self-start text-xs font-semibold text-[var(--night-accent-text)]"
@@ -136,25 +221,22 @@ export function FillExercise({
           {showHint ? 'скрыть подсказку' : 'подсказка'}
         </button>
       )}
-      {!checked && showHint && exercise.hint && (
+      {!done && attempts === 0 && showHint && exercise.hint && (
         <p className="text-sm text-[var(--night-text-40)]">{exercise.hint}</p>
       )}
 
-      {checked && !ok && (
+      {!done && hint && <HintLine text={hint} />}
+      {!done && attempts > 0 && <RevealButton onClick={() => setRevealed(true)} />}
+
+      {done && !solved && (
         <p className="text-sm">
           <span className="text-red-500">Верный ответ: </span>
-          <span className="font-semibold text-emerald-400">
-            {exercise.answer}
-          </span>
+          <span className="font-semibold text-emerald-400">{exercise.answer}</span>
         </p>
       )}
-      {checked && ok && (
-        <p className="animate-answer-pop text-sm font-semibold text-emerald-400">
-          Верно! ✓
-        </p>
-      )}
+      {solved && <CorrectLine attempts={attempts} />}
 
-      {checked ? (
+      {done ? (
         <NextButton onNext={onNext} isLast={isLast} />
       ) : (
         <Button onClick={check} disabled={!value.trim()}>
@@ -186,7 +268,11 @@ export function OrderExercise({
   }, [exercise])
 
   const [built, setBuilt] = useState<{ w: string; i: number }[]>([])
-  const [checked, setChecked] = useState(false)
+  const [attempts, setAttempts] = useState(0)
+  const [solved, setSolved] = useState(false)
+  const [revealed, setRevealed] = useState(false)
+  const [hint, setHint] = useState<string | null>(null)
+  const checked = solved || revealed
 
   const usedIdx = new Set(built.map((b) => b.i))
   // сравниваем нормализованно: расхождение регистра/диакритики в данных
@@ -197,9 +283,19 @@ export function OrderExercise({
 
   const check = () => {
     if (checked || built.length !== exercise.words.length) return
-    setChecked(true)
-    onAnswered(ok)
-    onGiven?.(built.map((b) => b.w).join(' '))
+    const n = attempts + 1
+    setAttempts(n)
+    // ⚠️ Балл — по первой попытке (см. шапку файла).
+    if (attempts === 0) {
+      onAnswered(ok)
+      onGiven?.(built.map((b) => b.w).join(' '))
+    }
+    if (ok) {
+      setSolved(true)
+      return
+    }
+    if (n >= ATTEMPTS_BEFORE_ANSWER) setRevealed(true)
+    else setHint(orderHint(built.map((b) => b.w), exercise.answer))
   }
 
   return (
@@ -253,19 +349,16 @@ export function OrderExercise({
         ))}
       </div>
 
-      {checked && !ok && (
+      {!checked && hint && <HintLine text={hint} />}
+      {!checked && attempts > 0 && <RevealButton onClick={() => setRevealed(true)} />}
+
+      {revealed && !solved && (
         <p className="text-sm">
           <span className="text-red-500">Правильно: </span>
-          <span className="font-semibold text-emerald-400">
-            {exercise.answer.join(' ')}
-          </span>
+          <span className="font-semibold text-emerald-400">{exercise.answer.join(' ')}</span>
         </p>
       )}
-      {checked && ok && (
-        <p className="animate-answer-pop text-sm font-semibold text-emerald-400">
-          Верно! ✓
-        </p>
-      )}
+      {solved && <CorrectLine attempts={attempts} />}
 
       {checked ? (
         <NextButton onNext={onNext} isLast={isLast} />
@@ -279,7 +372,13 @@ export function OrderExercise({
             Проверить
           </Button>
           {built.length > 0 && (
-            <Button variant="ghost" onClick={() => setBuilt([])}>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setBuilt([])
+                setHint(null)
+              }}
+            >
               Сброс
             </Button>
           )}

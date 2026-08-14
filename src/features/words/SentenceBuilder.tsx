@@ -5,6 +5,7 @@ import { IconSpeaker } from '../../components/icons'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { RoundResult, RoundProgress } from '../../components/RoundResult'
+import { ATTEMPTS_BEFORE_ANSWER, orderHint } from '../../lib/selfCorrect'
 import type { ReviewItem } from '../../components/RoundReview'
 import { logActivity } from '../../lib/activity'
 import { getUserLevel } from '../../lib/level'
@@ -142,15 +143,30 @@ function BuildTask({
     [task],
   )
   const [built, setBuilt] = useState<{ w: string; i: number }[]>([])
-  const [checked, setChecked] = useState(false)
+  // ⚠️ Самокоррекция — то же правило, что в общем движке упражнений: первая
+  // ошибка даёт подсказку О МЕСТЕ, ответ появляется со второй попытки или по
+  // кнопке. Балл (onResult) — по ПЕРВОЙ попытке, иначе счёт раунда перестаёт
+  // что-либо значить.
+  const [attempts, setAttempts] = useState(0)
+  const [solved, setSolved] = useState(false)
+  const [revealed, setRevealed] = useState(false)
+  const [hint, setHint] = useState<string | null>(null)
+  const checked = solved || revealed
 
   const used = new Set(built.map((b) => b.i))
   const ok = normalize(built.map((b) => b.w).join(' ')) === normalize(task.target)
 
   const check = () => {
     if (checked || built.length !== task.words.length) return
-    setChecked(true)
-    onResult(ok, built.map((b) => b.w).join(' '))
+    const n = attempts + 1
+    setAttempts(n)
+    if (attempts === 0) onResult(ok, built.map((b) => b.w).join(' '))
+    if (ok) {
+      setSolved(true)
+      return
+    }
+    if (n >= ATTEMPTS_BEFORE_ANSWER) setRevealed(true)
+    else setHint(orderHint(built.map((b) => b.w), task.target.split(/\s+/)))
   }
 
   return (
@@ -199,10 +215,26 @@ function BuildTask({
         ))}
       </div>
 
+      {!checked && hint && (
+        <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+          {hint} <span className="text-[var(--night-text-40)]">Попробуй ещё раз.</span>
+        </p>
+      )}
+      {!checked && attempts > 0 && (
+        <button
+          onClick={() => setRevealed(true)}
+          className="self-start text-sm font-medium text-[var(--night-accent-text)]"
+        >
+          Показать ответ
+        </button>
+      )}
+
       {checked && (
         <div className="flex items-center gap-2 text-sm">
-          {ok ? (
-            <span className="animate-answer-pop font-semibold text-emerald-400">Верно! ✓</span>
+          {solved ? (
+            <span className="animate-answer-pop font-semibold text-emerald-400">
+              {attempts > 1 ? 'Верно — со второй попытки ✓' : 'Верно! ✓'}
+            </span>
           ) : (
             <span>
               <span className="text-red-500">Правильно: </span>

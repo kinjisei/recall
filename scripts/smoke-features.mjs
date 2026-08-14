@@ -310,11 +310,17 @@ async function main() {
     if (hasInput) {
       await page.type('input[aria-label="Услышанное слово"]', 'xyzzz')
       await clickByText(page, 'button', 'Проверить')
-      await sleep(300)
-      const showsCorrect = await page.evaluate(() =>
+      // ⚠️ Самокоррекция: после ПЕРВОЙ ошибки правильный ответ не показывается —
+      // сперва подсказка о месте ошибки и вторая попытка. Готовый ответ, выданный
+      // сразу, закрывает работу: человек сверяет две строки и идёт дальше.
+      const hintShown = await waitText(page, 'Попробуй ещё раз', 6000)
+      const leaked = await page.evaluate(() =>
         (document.body.textContent || '').includes('Правильно:'),
       )
-      check('Диктант: неверный ответ показывает правильный', showsCorrect)
+      check('Диктант: после ошибки — подсказка, а не ответ', hintShown && !leaked)
+      await clickByText(page, 'button', 'Показать ответ')
+      const showsCorrect = await waitText(page, 'Правильно:', 6000)
+      check('Диктант: ответ появляется по кнопке', showsCorrect)
     }
 
     // ---- 3. Собери фразу (EN) ----
