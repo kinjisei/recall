@@ -33,6 +33,7 @@ import { getEsLevel } from '../../lib/esLevel'
 import { getMyAssignments } from '../../lib/materials'
 import { countMyWritingTasks } from '../../lib/writing'
 import { listMyQuests } from '../../lib/quests'
+import { dueLabel, getHomework, homeworkProgress, type Homework } from '../../lib/homework'
 import { currentWeekIndex, getMyPlans } from '../../lib/studyPlan'
 import { myPendingPlacement, type PlacementRequest } from '../../lib/placement'
 import type { StudyPlan } from '../../types'
@@ -93,6 +94,8 @@ export function StudyPage() {
     plans: StudyPlan[] | null
     /** Тест уровня, назначенный преподавателем (null — не назначал). */
     placement: PlacementRequest | null
+    /** Домашка на неделю (null — преподаватель её не выдавал). */
+    homework: Homework | null
   } | null>(null)
 
   // уровень испанского хранится локально, английского — в профиле
@@ -157,8 +160,12 @@ export function StudyPage() {
       withTimeout(getMyPlans().catch(miss)),
       // назначил ли преподаватель тест уровня по текущему языку
       withTimeout(myPendingPlacement(lang).catch(miss)),
-    ]).then(([assignments, writing, quests, plans, placement]) => {
-      setHub({ assignments, writing, quests, plans, placement })
+      // ⚠️ Домашка НЕ считается сбоем, если её нет: getHomework вернёт null у
+      // любого, кто занимается сам. Ошибку глотаем отдельно от miss(), иначе
+      // плашка «часть разделов не загрузилась» висела бы у половины людей.
+      withTimeout(getHomework().catch(() => null)),
+    ]).then(([assignments, writing, quests, plans, placement, homework]) => {
+      setHub({ assignments, writing, quests, plans, placement, homework })
       setFailed(failures)
     })
   }, [lang])
@@ -181,6 +188,7 @@ export function StudyPage() {
   const writing = hub?.writing ?? null
   const quests = hub?.quests ?? null
   const plans = hub?.plans ?? null
+  const homework = hub?.homework ?? null
   // единый stagger: задержка растёт по ПОЗИЦИИ строки, какие бы строки ни были
   let rowIndex = 0
   const stagger = () => ({ animationDelay: `${rowIndex++ * 0.05}s` })
@@ -213,7 +221,38 @@ export function StudyPage() {
               onRetry={() => void loadHub()}
             />
           )}
-          {assignments && assignments.total > 0 && (
+          {/* ⚠️ Есть домашка — строка ОДНА и она про домашку. Раньше «что мне
+              задали» было размазано по трём строкам (задания, письмо, квесты),
+              и общего ответа не давала ни одна. Задания-материалы никуда не
+              делись: они внутри того же экрана, ниже домашки. */}
+          {homework ? (
+            (() => {
+              const p = homeworkProgress(homework)
+              const left = p.total - p.done
+              return (
+                <RowCard
+                  Icon={IconMaterials}
+                  title="Домашка на неделю"
+                  desc={
+                    left > 0
+                      ? `${p.done} из ${p.total} · ${dueLabel(homework.due_at)}`
+                      : 'Всё сделано ✓'
+                  }
+                  to="/assignments"
+                  active={left > 0}
+                  trailing={
+                    left > 0 ? (
+                      <span className="flex-none rounded-full bg-[var(--night-accent)] px-2 py-0.5 text-xs font-medium text-white">
+                        {left}
+                      </span>
+                    ) : undefined
+                  }
+                  className="animate-fade-up"
+                  style={stagger()}
+                />
+              )
+            })()
+          ) : assignments && assignments.total > 0 ? (
             <RowCard
               Icon={IconMaterials}
               title="Задания от преподавателя"
@@ -234,7 +273,7 @@ export function StudyPage() {
               className="animate-fade-up"
               style={stagger()}
             />
-          )}
+          ) : null}
           {/* Строка показывается ВСЕГДА, а не только при заданиях от
               преподавателя: проверка письма по критериям экзамена — самое
               сильное, что есть в продукте, и раньше она была закрыта от тех,

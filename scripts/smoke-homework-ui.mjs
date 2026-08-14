@@ -84,7 +84,7 @@ try {
       await sleep(500)
     }
   }
-  const page = await browser.newPage()
+  let page = await browser.newPage()
   await page.setViewport({ width: 420, height: 900 })
   const jsErrors = []
   page.on('pageerror', (e) => jsErrors.push(e.message))
@@ -136,7 +136,16 @@ try {
 
   const sent = await tap(page, 'Выдать домашку')
   check('домашка выдана', sent && (await waitText(page, 'Домашка на неделю')))
-  check('видно счёт', await seen(page, '0 из 3'))
+  // ⚠️ Точный текст элемента, а не вхождение в страницу: строка пункта со
+  // словами показывает «0 из 20», и поиск подстроки «0 из 2» нашёл бы её.
+  // На соседнем смоуке эта ловушка уже дала зелёную проверку при сломанном
+  // счёте — здесь закрываем её тем же приёмом.
+  const counterShown = await page.evaluate(() =>
+    [...document.querySelectorAll('span, p, div')].some(
+      (e) => (e.textContent || '').trim() === '0 из 3',
+    ),
+  )
+  check('видно счёт', counterShown)
 
   const { count } = await admin
     .from('homework')
@@ -162,6 +171,108 @@ try {
     'формулировка честная — не «проверено»',
     !overclaims,
     overclaims ? 'на экране обещано больше, чем мы можем измерить' : '',
+  )
+
+  // ---- 5. ТОТ ЖЕ ОБЪЕКТ ГЛАЗАМИ УЧЕНИКА -------------------------------------
+  //
+  // Раньше «что мне задали» ученик собирал из трёх экранов, и общего ответа не
+  // давал ни один. Проверяем ровно это: один список, прогресс ВНУТРИ пункта
+  // (незакрытое должно тянуть закончить), выбор из пары и галочка только там,
+  // где измерить нечем.
+  const teacherApi = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY)
+  await teacherApi.auth.signInWithPassword({ email: T_EMAIL, password: PASSWORD })
+  const { error: hw2err } = await teacherApi.rpc('create_homework', {
+    p_student_id: sId,
+    p_lang: 'en',
+    p_due: new Date(Date.now() + 7 * 86400000).toISOString(),
+    p_items: [
+      { kind: 'words', title: 'Слова: повторить 30', target: 30, pick_group: null },
+      { kind: 'free', title: 'Рассказать маме про выходные', target: 1, pick_group: null },
+      { kind: 'speech', title: 'Проговорить вслух 5 выученных слов', target: 5, pick_group: 1 },
+      { kind: 'quest', title: 'Пройти квест по Past Simple', target: 1, pick_group: 1 },
+    ],
+    p_note: 'Начни со слов',
+  })
+  check('выдана домашка с выбором и свободным пунктом', !hw2err, hw2err?.message ?? '')
+
+  // ⚠️ Повторяем карточки ПОСЛЕ выдачи. Двадцать повторений выше были сделаны
+  // до неё, и сервер их не засчитывает — правильно: прошлые заслуги не должны
+  // закрывать новое задание.
+  //
+  // ⚠️ Время берём ОТ СЕРВЕРА (created_at выданной домашки), а не от своей
+  // машины. Часы расходятся: в этом прогоне node отставал от базы почти на
+  // секунду, и «свежее» повторение оказывалось на 0,6 с РАНЬШЕ выдачи домашки.
+  // Проверка краснела на полностью исправном коде — самый дорогой вид ложного
+  // падения, потому что чинить начинают работающее.
+  const { data: hw2row } = await admin
+    .from('homework')
+    .select('created_at')
+    .eq('student_id', sId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single()
+  await admin
+    .from('review_states')
+    .update({ last_review: new Date(new Date(hw2row.created_at).getTime() + 1000).toISOString() })
+    .eq('user_id', sId)
+
+  // Вход учеником: сессия Supabase лежит в localStorage и общая на весь
+  // профиль браузера, поэтому учительскую надо снять.
+  //
+  // ⚠️ Чистим ДО загрузки приложения, в новой вкладке. Первая версия делала
+  // localStorage.clear() в живой вкладке — и вкладка падала («Target closed»):
+  // приложение уже работало со снятой из-под него сессией. sessionStorage-флаг
+  // нужен, чтобы очистка сработала ровно один раз и не выкинула ученика сразу
+  // после входа.
+  await page.close().catch(() => {})
+  page = await browser.newPage()
+  await page.setViewport({ width: 420, height: 900 })
+  page.on('pageerror', (e) => jsErrors.push(e.message))
+  await page.evaluateOnNewDocument(() => {
+    try {
+      if (!sessionStorage.getItem('smoke-cleared')) {
+        localStorage.clear()
+        sessionStorage.setItem('smoke-cleared', '1')
+      }
+      localStorage.setItem('recall.onboarded', '1')
+    } catch {}
+  })
+  await page.goto(`${BASE}/login`, { waitUntil: 'networkidle2', timeout: 30000 })
+  await tap(page, 'Войти')
+  await page.type('#f-email', S_EMAIL)
+  await page.type('#f-password', PASSWORD)
+  await page.click('button[type="submit"]')
+  await page.waitForFunction(() => location.pathname !== '/login', { timeout: 20000, polling: 250 })
+
+  await page.goto(`${BASE}/assignments`, { waitUntil: 'networkidle2', timeout: 30000 })
+  check('ученик видит домашку одним списком', await waitText(page, 'Домашка на неделю'))
+  check('виден срок', await seen(page, 'осталось'))
+  check('виден общий счёт', await waitText(page, 'из 3'))
+  check('заметка преподавателя дошла', await seen(page, 'Начни со слов'))
+
+  // Прогресс ВНУТРИ пункта: 20 карточек повторены выше, цель 30.
+  check('прогресс виден внутри пункта, а не только после', await waitText(page, '20 из 30'))
+  check('и подсказывает, сколько осталось', await seen(page, 'осталось 10'))
+
+  check('пункт ведёт в тот экран, где работа и делается', await seen(page, 'К словам'))
+  check('пара «на выбор» показана', await seen(page, 'сделай что-то одно'))
+
+  // Галочка — ТОЛЬКО у неизмеримого пункта. Если она появится у слов или речи,
+  // весь экран преподавателя превратится в то, что ученик о себе сообщил.
+  const marks = await page.$$eval('button', (bs) =>
+    bs.filter((b) => (b.textContent || '').includes('Отметить, что сделал')).length,
+  )
+  check('галочка ровно одна — у пункта «своими словами»', marks === 1, `кнопок: ${marks}`)
+
+  const chose = await tap(page, 'Выбрать это')
+  check('ученик может выбрать вариант', chose && (await waitText(page, 'Ты выбрал')))
+
+  // Хаб «Учёба»: одна строка про домашку вместо трёх разных списков.
+  await page.goto(`${BASE}/study`, { waitUntil: 'networkidle2', timeout: 30000 })
+  check('в «Учёбе» одна строка про домашку', await waitText(page, 'Домашка на неделю'))
+  check(
+    'старой строки «Задания от преподавателя» рядом нет',
+    !(await seen(page, 'Задания от преподавателя')),
   )
 
   check('JS-ошибок за прогон нет', jsErrors.length === 0, jsErrors[0] ?? '')

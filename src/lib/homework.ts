@@ -35,6 +35,10 @@ export interface HomeworkItem {
   progress: number
   done_at: string | null
   done_by: 'server' | 'student' | null
+  /** Пункты с одним номером — альтернативы: ученик делает ОДИН из них. */
+  pick_group: number | null
+  /** Когда ученик выбрал этот вариант (нажал сам или просто сделал). */
+  chosen_at: string | null
 }
 
 export interface Homework {
@@ -52,6 +56,9 @@ export interface NewHomeworkItem {
   title: string
   target?: number
   ref_id?: string | null
+  /** Одинаковый номер = альтернативы «на выбор». Группа из одного пункта
+   *  распускается сервером: выбор из одного варианта — не выбор. */
+  pickGroup?: number
 }
 
 export const KIND_LABEL: Record<HomeworkKind, string> = {
@@ -99,6 +106,7 @@ export async function createHomework(params: {
       title: i.title,
       target: i.target ?? 1,
       ref_id: i.ref_id ?? null,
+      pick_group: i.pickGroup ?? null,
     })),
     p_note: params.note ?? null,
   })
@@ -112,10 +120,65 @@ export async function completeItem(itemId: string): Promise<void> {
   if (error) throw error
 }
 
-/** «3 из 5» — одна цифра на оба экрана, чтобы они не разошлись. */
+/** Ученик выбирает один из альтернативных пунктов. */
+export async function chooseItem(itemId: string): Promise<void> {
+  const { error } = await supabase.rpc('choose_homework_item', { p_item: itemId })
+  if (error) throw error
+}
+
+/**
+ * Пункты, сгруппированные для показа и счёта: обычный пункт идёт один, а
+ * альтернативы — вместе, как ОДНА строка выбора.
+ *
+ * ⚠️ Группировка живёт здесь, а не на экранах. Их два (карточка преподавателя и
+ * список ученика), и разойдись они — один показал бы «3 из 5», другой «3 из 6»
+ * по одной и той же домашке.
+ */
+export interface HomeworkRow {
+  /** Один пункт, либо альтернативы одной группы. */
+  items: HomeworkItem[]
+  pickGroup: number | null
+  /** Выбранный вариант (или единственный пункт). */
+  chosen: HomeworkItem | null
+  done: boolean
+}
+
+export function homeworkRows(hw: Homework | null): HomeworkRow[] {
+  if (!hw) return []
+  const rows: HomeworkRow[] = []
+  const byGroup = new Map<number, HomeworkRow>()
+  for (const item of hw.items) {
+    if (item.pick_group == null) {
+      rows.push({ items: [item], pickGroup: null, chosen: item, done: !!item.done_at })
+      continue
+    }
+    let row = byGroup.get(item.pick_group)
+    if (!row) {
+      row = { items: [], pickGroup: item.pick_group, chosen: null, done: false }
+      byGroup.set(item.pick_group, row)
+      rows.push(row)
+    }
+    row.items.push(item)
+    // ⚠️ Сделанное важнее заявленного, и порядок проверок здесь имеет значение.
+    // Если пункт группы уже закрыт, он и есть выбор — заявка на другой вариант
+    // его не перебивает. Сервер такую заявку и не примет (RECALL_CHOICE_DONE),
+    // но экран обязан быть верным и на данных, пришедших из прошлого состояния:
+    // иначе строка показывала бы «квест · выбрал ученик» с галочкой, хотя
+    // выполнена была речь.
+    if (item.done_at) {
+      row.done = true
+      row.chosen = item
+    } else if (item.chosen_at && !row.done) {
+      row.chosen = item
+    }
+  }
+  return rows
+}
+
+/** «3 из 5» — одна цифра на оба экрана. Группа «на выбор» считается за один. */
 export function homeworkProgress(hw: Homework | null): { done: number; total: number } {
-  if (!hw) return { done: 0, total: 0 }
-  return { done: hw.items.filter((i) => i.done_at).length, total: hw.items.length }
+  const rows = homeworkRows(hw)
+  return { done: rows.filter((r) => r.done).length, total: rows.length }
 }
 
 /**

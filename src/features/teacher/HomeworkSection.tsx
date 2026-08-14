@@ -20,14 +20,25 @@ import {
   dueLabel,
   getHomework,
   homeworkProgress,
+  homeworkRows,
   isOverdue,
   type Homework,
-  type HomeworkItem,
+  type HomeworkRow,
 } from '../../lib/homework'
 
-/** Одна строка пункта: что задано, сделано ли и кто это засчитал. */
-function ItemRow({ item }: { item: HomeworkItem }) {
-  const done = !!item.done_at
+/**
+ * Одна строка домашки: обычный пункт или пара «на выбор».
+ *
+ * ⚠️ У пары показываем оба варианта и помечаем, что выбрал ученик. Без пометки
+ * преподаватель ждал бы выполнения обоих и счёл бы сделанное невыполнением —
+ * то есть выбор, который должен был помочь, вредил бы.
+ */
+function ItemRow({ row }: { row: HomeworkRow }) {
+  const done = row.done
+  const pair = row.pickGroup != null && row.items.length > 1
+  const head = pair ? (row.chosen ?? row.items[0]!) : row.items[0]!
+  const other = pair ? row.items.filter((i) => i.id !== head.id) : []
+
   return (
     <li className="flex items-start gap-2.5 py-1.5">
       <span
@@ -42,13 +53,20 @@ function ItemRow({ item }: { item: HomeworkItem }) {
       </span>
       <span className="min-w-0 flex-1">
         <span className={`block text-sm ${done ? 'text-[var(--night-text-70)]' : ''}`}>
-          {item.title}
+          {head.title}
         </span>
         <span className="text-xs text-[var(--night-text-40)]">
-          {KIND_LABEL[item.kind]}
-          {item.target > 1 && ` · ${Math.min(item.progress, item.target)} из ${item.target}`}
-          {done && (item.done_by === 'student' ? ' · отметил сам' : ' · засчитано по занятиям')}
+          {KIND_LABEL[head.kind]}
+          {head.target > 1 && ` · ${Math.min(head.progress, head.target)} из ${head.target}`}
+          {done && (head.done_by === 'student' ? ' · отметил сам' : ' · засчитано по занятиям')}
+          {pair && (row.chosen ? ' · выбрал ученик' : ' · на выбор, ещё не выбрал')}
         </span>
+        {pair &&
+          other.map((o) => (
+            <span key={o.id} className="block text-xs text-[var(--night-text-40)]">
+              вместо: {o.title}
+            </span>
+          ))}
       </span>
     </li>
   )
@@ -134,8 +152,8 @@ export function HomeworkSection({
           </div>
 
           <ul className="flex flex-col divide-y divide-white/[0.05]">
-            {hw.items.map((i) => (
-              <ItemRow key={i.id} item={i} />
+            {homeworkRows(hw).map((row) => (
+              <ItemRow key={row.items[0]!.id} row={row} />
             ))}
           </ul>
 

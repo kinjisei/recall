@@ -1053,6 +1053,7 @@ export type Database = {
         Returns: undefined
       }
       cancel_placement: { Args: { p_id: string }; Returns: undefined }
+      choose_homework_item: { Args: { p_item: string }; Returns: undefined }
       complete_homework_item: { Args: { p_item: string }; Returns: undefined }
       consume_ai_quota: { Args: { p_kind?: string }; Returns: undefined }
       create_homework: {

@@ -6,7 +6,7 @@
 import { supabase, requireUserId, toJson } from './supabase'
 import { dbError } from './dbError'
 import { reviewCard } from './fsrs'
-import type { Card, ReviewState, WordCheck, WordCheckResult } from '../types'
+import type { AppLang, Card, ReviewState, WordCheck, WordCheckResult } from '../types'
 
 /** Статус изученности слова (по интервалу FSRS). */
 export type WordStatus = 'new' | 'learning' | 'learned'
@@ -25,6 +25,10 @@ export interface StudentWord {
   state: ReviewState | null
   status: WordStatus
   intervalDays: number // текущий интервал повторения (0 для новых)
+  /** Язык КОЛОДЫ, в которой лежит карточка. У ученика их две (en и es), а у
+   *  самой карточки языка нет — он есть только у колоды. Без этого поля любой
+   *  подсчёт «слов ученика» молча складывает английские с испанскими. */
+  lang: AppLang
 }
 
 /** Минимум, из которого считается статус: экраны, которым не нужны все поля
@@ -54,11 +58,12 @@ export function statusOf(state: StatusInput | null): { status: WordStatus; inter
 export async function getStudentWords(studentId: string): Promise<StudentWord[]> {
   const { data: decks, error: dErr } = await supabase
     .from('decks')
-    .select('id')
+    .select('id, lang')
     .eq('owner_id', studentId)
   if (dErr) throw dErr
   const deckIds = (decks ?? []).map((d) => d.id as string)
   if (deckIds.length === 0) return []
+  const deckLang = new Map((decks ?? []).map((d) => [d.id as string, (d.lang ?? 'en') as AppLang]))
 
   const [cardsRes, statesRes] = await Promise.all([
     supabase.from('cards').select('*').in('deck_id', deckIds),
@@ -72,7 +77,7 @@ export async function getStudentWords(studentId: string): Promise<StudentWord[]>
 
   const words = ((cardsRes.data ?? []) as Card[]).map((card) => {
     const state = byCard.get(card.id) ?? null
-    return { card, state, ...statusOf(state) }
+    return { card, state, lang: deckLang.get(card.deck_id) ?? 'en', ...statusOf(state) }
   })
   // самые «изученные» (большой интервал) — наверху: их и стоит перепроверять
   words.sort((a, b) => b.intervalDays - a.intervalDays)

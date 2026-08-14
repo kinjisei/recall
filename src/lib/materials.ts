@@ -8,8 +8,7 @@ import { dbError } from './dbError'
 import { chat } from './gemini'
 import { correctAnswerText } from './text'
 import { validExercises } from './materialExercises'
-import { getStudentDiagnostics } from './diagnostics'
-import { diagnosticsBrief, grammarCatalog } from './diagnosticsBrief'
+import { studentBriefBlock } from './diagnosticsBrief'
 import { track } from './analytics'
 import type {
   AppLang,
@@ -69,24 +68,12 @@ function parseJson<T>(raw: string): T {
 }
 
 /**
- * Абзац «что известно про этого ученика» для промпта. Пустая строка, если
- * ученик не выбран или диагностика не поднялась: задание должно собраться в
- * любом случае — персонализация это усиление, а не условие работы.
+ * Абзац «что известно про этого ученика» для промпта — общий с программой
+ * обучения и сборкой домашки (lib/diagnosticsBrief.ts). Своей копии здесь нет
+ * намеренно: разъехавшись, три места представляли бы одного ученика по-разному.
  */
-async function studentBrief(req: MaterialRequest): Promise<string> {
-  if (!req.studentId) return ''
-  try {
-    const [{ topics }, diag] = await Promise.all([
-      grammarCatalog(req.lang),
-      getStudentDiagnostics(req.studentId),
-    ])
-    const titles = new Map(topics.map((t) => [t.id, t.title]))
-    const brief = diagnosticsBrief(diag, titles, req.lang)
-    return brief ? `\nЧто известно про этого ученика (реальные данные приложения):\n${brief}` : ''
-  } catch {
-    return ''
-  }
-}
+const studentBrief = (req: MaterialRequest): Promise<string> =>
+  studentBriefBlock(req.studentId, req.lang)
 
 /** Инструкция AI, как пользоваться диагностикой. Без неё сводка — просто текст. */
 const USE_DIAGNOSTICS = [

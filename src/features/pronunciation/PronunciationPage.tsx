@@ -34,6 +34,8 @@ interface Phrase {
   text: string
   hint?: string
   level?: string
+  /** Слово или пример из СВОЕЙ колоды — помечаем на экране, это разное дело. */
+  own?: boolean
 }
 
 const ROUND = 10 // фраз в одном раунде
@@ -43,13 +45,67 @@ const LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
 /** Скорость «медленной» озвучки для шэдоуинга. */
 const SLOW_RATE = 0.6
 
+/** Сколько своих слов берём в раунд: половина, остальное — встроенные фразы. */
+const OWN_IN_ROUND = 5
+
 /**
- * Собирает и перемешивает пул фраз под уровень ученика.
+ * Свои слова, которые ученик учил недавно, — и САМО СЛОВО, и пример к нему.
+ *
+ * ⚠️ Зачем именно слово, а не только пример. Проговорить вслух то, что только
+ * что выучил, — отдельный приём (production effect): произнесение закрепляет
+ * ФОРМУ слова, а не только узнавание. Раньше здесь стоял фильтр
+ * `/\s/.test(p)` — он выбрасывал всё, в чём нет пробела, то есть ровно слова.
+ * В тренажёр попадали только примеры-предложения, и связки «выучил → проговорил»
+ * не было вовсе. Заодно это работало ТОЛЬКО для английского: испанский ученик
+ * тренировал исключительно встроенные фразы, свои слова — никогда.
+ *
+ * Порядок — по последнему повторению: самое свежее сверху, оно и нуждается в
+ * проговаривании больше всего.
+ */
+async function recentCardPhrases(lang: AppLang): Promise<Phrase[]> {
+  const ids = await getDeckIds(lang)
+  if (ids.length === 0) return []
+  const { data: states } = await supabase
+    .from('review_states')
+    .select('card_id, last_review')
+    .not('last_review', 'is', null)
+    .order('last_review', { ascending: false })
+    .limit(60)
+  const order = new Map((states ?? []).map((s, i) => [s.card_id as string, i]))
+  const { data: cards } = await supabase
+    .from('cards')
+    .select('id, front, back, example')
+    .in('deck_id', ids)
+    .limit(200)
+
+  const rows = (cards ?? [])
+    .filter((c) => order.has(c.id as string))
+    .sort((a, b) => (order.get(a.id as string) ?? 0) - (order.get(b.id as string) ?? 0))
+
+  const out: Phrase[] = []
+  for (const c of rows) {
+    const word = (c.front as string | null)?.trim()
+    if (!word) continue
+    out.push({ text: word, hint: (c.back as string | null) ?? undefined, own: true })
+    const ex = (c.example as string | null)?.trim()
+    // пример берём только если он действительно фраза, а не копия слова
+    if (ex && /\s/.test(ex) && ex.toLowerCase() !== word.toLowerCase()) {
+      out.push({ text: ex, hint: (c.back as string | null) ?? undefined, own: true })
+    }
+  }
+  return out
+}
+
+/**
+ * Собирает пул фраз под уровень ученика.
  * Берём фразы своего уровня и ниже; если их меньше, чем на раунд —
  * подключаем все (лучше «трудноватая» фраза, чем пустой экран).
- * Английские фразы из карточек пользователя (уровня нет) идут всегда.
+ *
+ * ⚠️ Свои слова идут ПЕРВЫМИ и не перемешиваются со встроенными: иначе на
+ * раунд из десяти позиций их попадало бы одно-два случайно, и человек, который
+ * зашёл проговорить выученное, тренировал бы чужие фразы.
  */
-function buildPool(lang: AppLang, level: string | null, cardPhrases: string[]): Phrase[] {
+function buildPool(lang: AppLang, level: string | null, own: Phrase[]): Phrase[] {
   const base: Phrase[] =
     lang === 'es'
       ? spanishSentences.map((s) => ({ text: s.es, hint: s.ru, level: s.level }))
@@ -65,8 +121,7 @@ function buildPool(lang: AppLang, level: string | null, cardPhrases: string[]): 
     if (atOrBelow.length >= ROUND) picked = atOrBelow
   }
 
-  const cards: Phrase[] = cardPhrases.map((text) => ({ text }))
-  return shuffle([...picked, ...cards])
+  return [...own.slice(0, OWN_IN_ROUND), ...shuffle(picked)]
 }
 
 /** Человеческая подсказка по результату вместо «зелёные/красные слова». */
@@ -113,26 +168,9 @@ export function PronunciationPage() {
 
     void (async () => {
       const level = await getUserLevel(lang).catch(() => null)
-      let cardPhrases: string[] = []
-      if (lang === 'en') {
-        try {
-          const ids = await getDeckIds('en')
-          if (ids.length > 0) {
-            const { data } = await supabase
-              .from('cards')
-              .select('front, example')
-              .in('deck_id', ids)
-              .limit(50) // не тянем всю колоду — на раунд хватит
-            cardPhrases = (data ?? [])
-              .map((c) => (c.example && c.example.trim() ? c.example : c.front))
-              .filter((p): p is string => Boolean(p && /\s/.test(p)))
-          }
-        } catch {
-          /* остаёмся на встроенных фразах */
-        }
-      }
+      const mine = await recentCardPhrases(lang).catch(() => [] as Phrase[])
       if (!alive) return
-      const p = buildPool(lang, level, cardPhrases)
+      const p = buildPool(lang, level, mine)
       setPool(p)
       setRound(p.slice(0, ROUND))
     })()
@@ -304,6 +342,13 @@ export function PronunciationPage() {
 
       {/* Карточка фразы: чипы озвучки внутри, слова — тапабельные */}
       <Card className="flex flex-col gap-4">
+        {/* Своё слово помечаем: человек должен понимать, что проговаривает
+            именно то, что учил, — иначе это выглядит как случайная фраза. */}
+        {current.own && (
+          <p className="-mb-1 text-xs font-medium text-[var(--night-accent-100)]">
+            Из твоей колоды — проговори вслух то, что учил
+          </p>
+        )}
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => speak(current.text, { lang })}

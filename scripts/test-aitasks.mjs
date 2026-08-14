@@ -22,9 +22,20 @@ check(
   maxTasks.length > 0 && maxTasks.every(([, s]) => s.teacherOnly === true),
   maxTasks.map(([t]) => t).join(', '),
 )
+// ⚠️ Раньше здесь стояло «teacherOnly только у Pro-задач». Это было СОВПАДЕНИЕ,
+// а не правило: teacherOnly защищает не модель, а месячный лимит генераций, и
+// задача вполне может быть учительской на обычной модели (сборка домашки —
+// состав считают данные, модель лишь переписывает заголовки). Проверяем то,
+// ради чего флаг заведён.
+const genTasks = entries.filter(([, s]) => s.generation)
 check(
-  'teacherOnly стоит только у Pro-задач',
-  entries.filter(([, s]) => s.teacherOnly).every(([, s]) => s.tier === 'max'),
+  'любая генерация помечена teacherOnly — иначе ученик тратил бы месячный лимит учителя',
+  genTasks.length > 0 && genTasks.every(([, s]) => s.teacherOnly === true),
+  genTasks.map(([t]) => t).join(', '),
+)
+check(
+  'генерация не стоит энергии — иначе списание пройдёт дважды',
+  genTasks.every(([, s]) => s.energyCost === 0),
 )
 
 // --- согласованность уровня и кармана квоты ---

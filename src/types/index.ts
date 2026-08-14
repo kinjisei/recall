@@ -110,7 +110,7 @@ export interface ChatTurn {
  * каждой задачи уровень модели зафиксирован на сервере.
  *   word/definition/batch — перевод и определения слов (лёгкие модели);
  *   dialog/writing/quest/review — разговорные и проверочные задачи;
- *   material/program — генерация у преподавателя (Pro-модели, только role='teacher').
+ *   material/program/homework — генерация у преподавателя (только role='teacher').
  */
 export type AiTask =
   | 'word'
@@ -123,6 +123,7 @@ export type AiTask =
   | 'review'
   | 'material'
   | 'program'
+  | 'homework'
 
 /** AI-квест по грамматике: учитель назначает, ученик играет с AI. */
 export interface GrammarQuest {

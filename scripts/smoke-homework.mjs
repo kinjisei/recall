@@ -389,6 +389,84 @@ try {
     !!wordsUndo.done_at,
     wordsUndo.done_at ? '' : 'ОТКРЫЛСЯ',
   )
+
+  // ---- 11. ЧТЕНИЕ: две дороги к одной работе ведут себя одинаково ------------
+  //
+  // ⚠️ Класс, ради которого заход и делался. «Прочитать текст» можно закрыть
+  // читалкой (activity_log type='reader') ИЛИ разобрав задание преподавателя
+  // (type='assignment') — это одно и то же дело, просто открытое из разных
+  // списков. Пока в зачёт шло только 'reader', ученик делал заданный материал и
+  // видел пункт незакрытым.
+  //
+  // ⚠️ И вторая половина: занятия ДО выдачи не должны засчитываться. Проверяем
+  // это специально, потому что в activity_log одна строка на день и тип —
+  // наивный подсчёт «по created_at» ломался ровно здесь.
+  const dayNow = new Date().toISOString().slice(0, 10)
+  // читал ДО выдачи домашки — это не должно пойти в зачёт
+  await student.rpc('log_activity', { p_type: 'reader', p_day: dayNow, p_items: 4 })
+
+  const readHw = await teacher.rpc('create_homework', {
+    p_student_id: ids.student,
+    p_lang: 'en',
+    p_due: new Date(Date.now() + 7 * 86400000).toISOString(),
+    p_items: [{ kind: 'text', title: 'Прочитать и разобрать', target: 2 }],
+    p_note: null,
+  })
+  check('домашка на чтение выдана', !readHw.error, errText(readHw.error))
+
+  const readState = async () => {
+    const r = await teacher.rpc('get_homework', { p_student: ids.student })
+    return r.data.items[0]
+  }
+  const beforeAny = await readState()
+  check(
+    'прошлое чтение НЕ засчитано (счётчик снят на момент выдачи)',
+    beforeAny.progress === 0,
+    `прогресс: ${beforeAny.progress}`,
+  )
+
+  // одна единица чтения ПОСЛЕ выдачи
+  await student.rpc('log_activity', { p_type: 'reader', p_day: dayNow, p_items: 1 })
+  const afterRead = await readState()
+  check(
+    'чтение после выдачи засчитано, пункт ещё открыт',
+    afterRead.progress === 1 && !afterRead.done_at,
+    `прогресс: ${afterRead.progress}`,
+  )
+
+  // вторая единица — но уже ЗАДАНИЕМ преподавателя, другой дорогой
+  await student.rpc('log_activity', { p_type: 'assignment', p_day: dayNow, p_items: 1 })
+  const afterAssign = await readState()
+  check(
+    'разобранное задание закрывает тот же пункт, что и читалка',
+    afterAssign.progress >= 2 && !!afterAssign.done_at,
+    `прогресс: ${afterAssign.progress}, закрыт: ${!!afterAssign.done_at}`,
+  )
+  check('и закрыл его сервер, а не ученик', afterAssign.done_by === 'server', afterAssign.done_by)
+
+  // ---- 12. РЕЧЬ: тот же счётчик-от-отметки -----------------------------------
+  await student.rpc('log_activity', { p_type: 'pronunciation', p_day: dayNow, p_items: 9 })
+  const speechHw = await teacher.rpc('create_homework', {
+    p_student_id: ids.student,
+    p_lang: 'en',
+    p_due: new Date(Date.now() + 7 * 86400000).toISOString(),
+    p_items: [{ kind: 'speech', title: 'Проговорить вслух 5 выученных слов', target: 5 }],
+    p_note: null,
+  })
+  check('домашка на речь выдана', !speechHw.error, errText(speechHw.error))
+  const speechBefore = (await teacher.rpc('get_homework', { p_student: ids.student })).data.items[0]
+  check(
+    'девять прошлых заходов в речь не закрыли пункт на пять',
+    speechBefore.progress === 0 && !speechBefore.done_at,
+    `прогресс: ${speechBefore.progress}`,
+  )
+  await student.rpc('log_activity', { p_type: 'pronunciation', p_day: dayNow, p_items: 5 })
+  const speechAfter = (await teacher.rpc('get_homework', { p_student: ids.student })).data.items[0]
+  check(
+    'пять новых заходов пункт закрыли',
+    speechAfter.progress >= 5 && !!speechAfter.done_at,
+    `прогресс: ${speechAfter.progress}`,
+  )
 } catch (e) {
   console.error('СБОЙ:', e.message)
   results.push(false)

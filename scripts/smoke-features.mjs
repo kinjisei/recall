@@ -55,6 +55,26 @@ async function waitText(page, needle, timeout = 12000) {
     .catch(() => false)
 }
 
+/**
+ * Дождаться кнопки с ТОЧНОЙ подписью.
+ *
+ * ⚠️ Заводится не ради удобства. Три проверки здесь утверждали результат после
+ * фиксированной паузы: нажали «В колоду», подождали 2 с, посмотрели, стала ли
+ * кнопка «В колоде». Пока смоук запускали одиночно, паузы хватало; в цепочке за
+ * другими смоуками ответ базы приходил позже — и проверка краснела на исправном
+ * коде. Ложное падение дороже самой проверки: по нему чинят работающее.
+ */
+async function waitBtn(page, label, timeout = 12000) {
+  return page
+    .waitForFunction(
+      (t) => [...document.querySelectorAll('button')].some((b) => b.textContent.trim() === t),
+      { timeout, polling: 250 },
+      label,
+    )
+    .then(() => true)
+    .catch(() => false)
+}
+
 /** Дождаться элемента по селектору (кнопки, поля ввода). */
 async function waitSel(page, sel, timeout = 12000) {
   return page
@@ -236,17 +256,12 @@ async function main() {
     check('Слово дня: строка на Главной', wodShown)
     if (wodShown) {
       await clickByText(page, 'button', 'Слово дня')
-      await sleep(1200)
-      const addBtn = await page.evaluate(() =>
-        [...document.querySelectorAll('button')].some((b) => b.textContent.trim() === 'В колоду'),
-      )
+      const addBtn = await waitBtn(page, 'В колоду')
       check('Слово дня: в шторке есть кнопка «В колоду»', addBtn)
       if (addBtn) {
         await clickByText(page, 'button', 'В колоду')
-        await sleep(2000)
-        const added = await page.evaluate(() =>
-          [...document.querySelectorAll('button')].some((b) => b.textContent.trim() === 'В колоде'),
-        )
+        // ждём результат записи в базу, а не отмеренные две секунды
+        const added = await waitBtn(page, 'В колоде')
         check('Слово дня добавляется в колоду', added)
       }
     }
@@ -406,9 +421,8 @@ async function main() {
     }
     // выходим к списку уроков
     await page.evaluate(() => document.querySelector('button[aria-label="Назад"]')?.click())
-    await sleep(800)
-    const bodyAfter = await page.evaluate(() => document.body.textContent || '')
-    const mistakesRow = bodyAfter.includes('Мои ошибки')
+    // строка появляется после синка ошибки в базу — ждём её, а не 800 мс
+    const mistakesRow = await waitText(page, 'Мои ошибки', 8000)
     check('Грамматика: строка «Мои ошибки» появляется после ошибки', mistakesRow, mistakesRow ? '' : '(возможно, первый клик был верным ответом — не критично)')
 
     // ---- 6. Диалог: вкладки без эмодзи ----

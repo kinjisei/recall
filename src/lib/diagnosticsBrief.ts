@@ -6,7 +6,7 @@
 // не пишем — иначе через месяц у программы и у заданий будут разные
 // представления об одном ученике, и разойдутся они молча.
 // ============================================================================
-import { type StudentDiagnostics } from './diagnostics'
+import { getStudentDiagnostics, type StudentDiagnostics } from './diagnostics'
 import type { AppLang, GrammarTopic } from '../types'
 
 /** Каталог встроенных уроков грамматики: сами темы и их список строкой. */
@@ -65,4 +65,32 @@ export function diagnosticsBrief(
   }
   lines.push(`Активность: ${d.activeDays14} дней из последних 14.`)
   return lines.join('\n')
+}
+
+/**
+ * Готовый абзац для промпта: заголовок + сводка. Пустая строка, если ученик не
+ * выбран или диагностика не поднялась — персонализация это усиление, а не
+ * условие работы, и генерация обязана пройти в любом случае.
+ *
+ * ⚠️ Заголовок «Что известно про этого ученика» — тоже общий. Он живёт здесь, а
+ * не у каждого зовущего: по нему смоуки отличают персонализированный промпт от
+ * общего, и две разные формулировки означали бы, что одна из проверок молча
+ * перестала что-либо проверять.
+ */
+export async function studentBriefBlock(
+  studentId: string | null | undefined,
+  lang: AppLang,
+): Promise<string> {
+  if (!studentId) return ''
+  try {
+    const [{ topics }, diag] = await Promise.all([
+      grammarCatalog(lang),
+      getStudentDiagnostics(studentId),
+    ])
+    const titles = new Map(topics.map((t) => [t.id, t.title]))
+    const brief = diagnosticsBrief(diag, titles, lang)
+    return brief ? `\nЧто известно про этого ученика (реальные данные приложения):\n${brief}` : ''
+  } catch {
+    return ''
+  }
 }

@@ -3469,6 +3469,31 @@ do $$ begin
   );
   create index if not exists homework_items_hw_idx on public.homework_items (homework_id, pos);
 
+  -- Пункты НА ВЫБОР: одинаковый pick_group = альтернативы, ученик делает ОДИН
+  -- из них. Возможность выбрать заметно повышает шанс, что задание вообще
+  -- сделают, — но выбор имеет смысл, только если преподаватель видит, ЧТО
+  -- ученик выбрал: иначе он готовит урок под задание, которого не было.
+  --
+  -- Выбор фиксируется двумя путями и оба ведут сюда: явным нажатием ученика
+  -- (choose_homework_item) и первым же закрытым пунктом группы — сделал, значит
+  -- выбрал. Второй путь важнее: без него выбор существовал бы только там, где
+  -- ученик не поленился нажать кнопку.
+  alter table public.homework_items add column if not exists pick_group int;
+  alter table public.homework_items add column if not exists chosen_at timestamptz;
+
+  -- Отметка счётчика на момент выдачи — для пунктов, которые меряются по
+  -- activity_log (чтение и речь).
+  --
+  -- ⚠️ Зачем понадобилась. В activity_log ОДНА строка на (пользователь, день,
+  -- тип): повторные занятия увеличивают items_done, а created_at остаётся от
+  -- первого за день. Поэтому «считать то, что случилось после выдачи» по
+  -- created_at не работает: позанимался утром, получил домашку днём — и вечерние
+  -- занятия уже не попадают в строку, созданную утром. Прогресс замирал на нуле
+  -- при честно сделанной работе, а полоса «осталось 3» показывала неправду.
+  -- Считать по updated_at было бы не лучше: тогда в зачёт уходило бы и утреннее.
+  -- Поэтому запоминаем счётчик в момент выдачи и меряем прирост.
+  alter table public.homework_items add column if not exists base_count int not null default 0;
+
   alter table public.homework       enable row level security;
   alter table public.homework_items enable row level security;
 
@@ -3490,6 +3515,19 @@ do $$ begin
   revoke insert, update, delete on public.homework_items from authenticated;
 
 end $$;
+
+-- ---------------------------------------------------------------------------
+-- Сколько всего занятий данных типов у ученика (за всё время).
+-- Нужна двум местам — снятию отметки при выдаче и подсчёту прогресса, — и
+-- поэтому живёт отдельно: две копии этого запроса разошлись бы, и прогресс
+-- перестал бы сходиться с отметкой.
+-- ---------------------------------------------------------------------------
+create or replace function public.activity_total(p_user uuid, p_types text[])
+returns int language sql stable security definer set search_path = public as $fn$
+  select coalesce(sum(items_done), 0)::int
+    from activity_log
+   where user_id = p_user and type = any(p_types)
+$fn$;
 
 -- ---------------------------------------------------------------------------
 -- Сколько ученик уже сделал по пункту. Меряем ТОЛЬКО то, что случилось ПОСЛЕ
@@ -3525,9 +3563,13 @@ begin
        where ma.material_id = it.ref_id and ma.student_id = hw.student_id
          and ma.submitted_at is not null and ma.submitted_at >= v_since;
     else
-      select coalesce(sum(al.items_done), 0) into v_count from activity_log al
-       where al.user_id = hw.student_id and al.type = 'reader'
-         and al.created_at >= v_since;
+      -- ⚠️ Считаем и чтение, и сданные задания преподавателя ('assignment').
+      -- Это одно и то же дело: задание — тот же текст с разбором, просто
+      -- открытый из другого списка. Пока в зачёт шло только 'reader', ученик
+      -- разбирал заданный материал и видел пункт «прочитать текст» незакрытым —
+      -- то есть два пути к одной работе вели себя по-разному.
+      v_count := public.activity_total(hw.student_id, array['reader','assignment'])
+                 - it.base_count;
     end if;
 
   elsif it.kind = 'quest' then
@@ -3552,15 +3594,34 @@ begin
     into v_count;
 
   elsif it.kind = 'speech' then
-    select coalesce(sum(al.items_done), 0) into v_count from activity_log al
-     where al.user_id = hw.student_id and al.type = 'pronunciation'
-       and al.created_at >= v_since;
+    v_count := public.activity_total(hw.student_id, array['pronunciation']) - it.base_count;
 
   else
     v_count := 0;
   end if;
 
-  return coalesce(v_count, 0);
+  return greatest(coalesce(v_count, 0), 0);
+end $fn$;
+
+-- ---------------------------------------------------------------------------
+-- Зафиксировать выбор ученика внутри группы «на выбор».
+--
+-- ⚠️ ОДНО место на три пути: явное нажатие (choose_homework_item), автозачёт
+-- сервером (refresh_homework_for) и галочка (complete_homework_item). Три копии
+-- этой пары UPDATE разошлись бы при первой же правке, и группа осталась бы с
+-- двумя выбранными пунктами — то есть без выбора вообще.
+-- ---------------------------------------------------------------------------
+create or replace function public.mark_homework_choice(p_item uuid)
+returns void language plpgsql security definer set search_path = public as $fn$
+declare v_hw uuid; v_group int;
+begin
+  select homework_id, pick_group into v_hw, v_group
+    from homework_items where id = p_item;
+  if v_group is null then return; end if;   -- обычный пункт, выбирать нечего
+  update homework_items set chosen_at = now()
+   where id = p_item and chosen_at is null;
+  update homework_items set chosen_at = null
+   where homework_id = v_hw and pick_group = v_group and id <> p_item;
 end $fn$;
 
 -- ---------------------------------------------------------------------------
@@ -3576,20 +3637,65 @@ declare it record;
 begin
   if p_student is null then return; end if;
   for it in
-    select i.id, i.target
+    select i.id, i.target, i.pick_group
       from homework_items i
       join homework h on h.id = i.homework_id
      where h.student_id = p_student
        and i.done_at is null
        and i.kind <> 'free'
        and h.due_at >= now() - interval '7 days'
+       -- ⚠️ Если ученик уже выбрал в этой группе ДРУГОЙ пункт — этот не
+       -- закрываем. Иначе выбор ничего не значит: сделал речь по своим делам —
+       -- и закрылся квест, который ученик выбирать не собирался.
+       and not exists (
+         select 1 from homework_items s
+          where s.homework_id = i.homework_id
+            and s.pick_group is not null and s.pick_group = i.pick_group
+            and s.id <> i.id and s.chosen_at is not null
+       )
   loop
     if public.homework_item_progress(it.id) >= it.target then
       update homework_items
          set done_at = now(), done_by = 'server'
        where id = it.id and done_at is null;
+      -- сделал — значит выбрал: закрытый пункт становится выбором группы
+      if it.pick_group is not null then
+        perform public.mark_homework_choice(it.id);
+      end if;
     end if;
   end loop;
+end $fn$;
+
+-- ---------------------------------------------------------------------------
+-- Ученик выбирает, какой из альтернативных пунктов будет делать. Заранее, до
+-- выполнения: преподаватель видит намерение, а список ученика становится
+-- короче на один пункт.
+-- ---------------------------------------------------------------------------
+create or replace function public.choose_homework_item(p_item uuid)
+returns void language plpgsql security definer set search_path = public as $fn$
+declare it record;
+begin
+  if auth.uid() is null then raise exception 'RECALL_NO_AUTH'; end if;
+  select i.pick_group, i.homework_id, h.student_id into it
+    from homework_items i join homework h on h.id = i.homework_id
+   where i.id = p_item;
+  if it is null then raise exception 'RECALL_NO_ITEM'; end if;
+  if it.student_id <> auth.uid() then raise exception 'RECALL_NOT_YOURS'; end if;
+  -- Выбор возможен только там, где есть из чего выбирать. Иначе это был бы
+  -- способ пометить любой пункт «выбранным» и запутать преподавателя.
+  if it.pick_group is null then raise exception 'RECALL_NOT_A_CHOICE'; end if;
+  -- ⚠️ Группа уже закрыта — переигрывать поздно. Иначе получалось расхождение:
+  -- ученик делает речь (пункт закрывается сервером), потом нажимает «выбрать
+  -- квест» — и преподаватель видит «квест · выбрал ученик» с галочкой
+  -- выполнения, хотя квеста не было. Выбор — это заявка ДО работы.
+  if exists (
+    select 1 from homework_items s
+     where s.homework_id = it.homework_id and s.pick_group = it.pick_group
+       and s.done_at is not null
+  ) then
+    raise exception 'RECALL_CHOICE_DONE';
+  end if;
+  perform public.mark_homework_choice(p_item);
 end $fn$;
 
 -- ---------------------------------------------------------------------------
@@ -3623,16 +3729,35 @@ begin
 
   for v_item in select * from jsonb_array_elements(p_items) loop
     v_pos := v_pos + 1;
-    insert into homework_items (homework_id, kind, ref_id, title, target, pos)
+    insert into homework_items (homework_id, kind, ref_id, title, target, pos, pick_group)
     values (
       v_id,
       coalesce(v_item->>'kind', 'free'),
       nullif(v_item->>'ref_id', '')::uuid,
       left(btrim(coalesce(v_item->>'title', 'Задание')), 200),
       greatest(1, least(500, coalesce((v_item->>'target')::int, 1))),
-      v_pos
+      v_pos,
+      nullif(v_item->>'pick_group', '')::int
     );
   end loop;
+
+  -- ⚠️ Группа «на выбор» из одного пункта — это не выбор, а обычный пункт с
+  -- вводящей в заблуждение пометкой. Такие распускаем сразу: правило живёт и на
+  -- клиенте (applyRules), но сервер обязан устоять и против прямого вызова RPC.
+  update homework_items i set pick_group = null
+   where i.homework_id = v_id and i.pick_group is not null
+     and (select count(*) from homework_items s
+           where s.homework_id = v_id and s.pick_group = i.pick_group) < 2;
+
+  -- Снимаем отметку счётчиков для пунктов, которые меряются по activity_log
+  -- (см. комментарий у base_count): дальше прогресс считается как прирост.
+  update homework_items i
+     set base_count = public.activity_total(
+           p_student_id,
+           case when i.kind = 'speech' then array['pronunciation']
+                else array['reader','assignment'] end)
+   where i.homework_id = v_id
+     and (i.kind = 'speech' or (i.kind = 'text' and i.ref_id is null));
 
   -- Часть пунктов может быть выполнена ещё до выдачи — пересчитываем сразу,
   -- чтобы учитель не смотрел на заведомо неверный ноль.
@@ -3659,6 +3784,8 @@ begin
   if it.done_at is not null then return; end if;
 
   update homework_items set done_at = now(), done_by = 'student' where id = p_item;
+  -- отметил — значит выбрал (если пункт был из группы «на выбор»)
+  perform public.mark_homework_choice(p_item);
 end $fn$;
 
 -- ---------------------------------------------------------------------------
@@ -3697,7 +3824,8 @@ begin
   select jsonb_agg(jsonb_build_object(
            'id', i.id, 'kind', i.kind, 'ref_id', i.ref_id, 'title', i.title,
            'target', i.target, 'progress', public.homework_item_progress(i.id),
-           'done_at', i.done_at, 'done_by', i.done_by
+           'done_at', i.done_at, 'done_by', i.done_by,
+           'pick_group', i.pick_group, 'chosen_at', i.chosen_at
          ) order by i.pos)
     into v_items
     from homework_items i where i.homework_id = v_hw.id;
@@ -3715,8 +3843,16 @@ end $fn$;
 -- только другие функции, а снаружи они дали бы способ считать чужой прогресс.
 revoke execute on function public.homework_item_progress(uuid) from public, anon, authenticated;
 revoke execute on function public.refresh_homework_for(uuid)   from public, anon, authenticated;
+-- mark_homework_choice снаружи не нужна: она без проверки прав (её зовут уже
+-- проверившие вызывающие), и открытый доступ дал бы способ переставить чужой
+-- выбор.
+revoke execute on function public.mark_homework_choice(uuid)   from public, anon, authenticated;
+-- activity_total читает чужие занятия по любому uid — снаружи это способ
+-- узнать, сколько занимается другой человек. Зовут только функции домашки.
+revoke execute on function public.activity_total(uuid, text[])  from public, anon, authenticated;
 grant execute on function public.create_homework(uuid, text, timestamptz, jsonb, text) to authenticated;
 grant execute on function public.complete_homework_item(uuid) to authenticated;
+grant execute on function public.choose_homework_item(uuid) to authenticated;
 grant execute on function public.get_homework(uuid) to authenticated;
 grant execute on function public.log_activity(text, date, int, int) to authenticated;
 
@@ -3766,4 +3902,53 @@ create trigger trg_homework_after_free_writing
 -- Триггерные функции клиенту не нужны — их зовёт только Postgres.
 revoke execute on function public.homework_refresh_trigger()  from public, anon, authenticated;
 revoke execute on function public.homework_refresh_by_user()  from public, anon, authenticated;
+
+-- ============================================================================
+-- ФИНАЛЬНАЯ СТРАХОВКА: аноним не зовёт ничего, кроме одной разрешённой функции.
+-- Этот блок обязан оставаться ПОСЛЕДНИМ в файле.
+--
+-- Класс ошибки, который он закрывает (ловился дважды, оба раза случайно).
+-- В середине файла стоит `revoke execute on all functions … from public, anon`.
+-- Он действует на функции, существующие НА ТОТ МОМЕНТ. Функция, объявленная
+-- ниже, при СОЗДАНИИ получает права по умолчанию: PUBLIC — из самого Postgres,
+-- anon — из ALTER DEFAULT PRIVILEGES, которые настраивает Supabase. Рядом с
+-- ней обычно стоит аккуратный `grant … to authenticated`, и выглядит всё верно.
+--
+-- Точная механика (проверена на живой базе, а не додумана):
+--   • обычная функция открыта анониму ОТ своего создания ДО следующей полной
+--     заливки файла — тогда её накрывает revoke из середины. Окно длиной в один
+--     заход, и именно в нём сейчас находилась choose_homework_item;
+--   • функция, которую файл каждый раз DROP-ает и создаёт заново (так делают
+--     там, где менялся тип возврата), получает права по умолчанию НА КАЖДОЙ
+--     заливке — и остаётся открытой навсегда. Так жила submit_word_check.
+-- Обе первой строкой проверяют auth.uid(), то есть данных аноним не получал,
+-- но полагаться на то, что следующий автор эту строку не забудет, нельзя.
+--
+-- ⚠️ Честно про пользу этого блока: на ПОЛНОЙ повторной заливке он не меняет
+-- ничего — revoke из середины уже всё закрыл (доказано check-schema-equal:
+-- ноль расхождений с версией без блока). Он закрывает ровно два случая выше:
+-- первый заход новой функции и функции с drop/create. Поимённые revoke их не
+-- лечат: их надо не забыть, а забывают именно их.
+--
+-- Проверка со стороны живой базы: node scripts/check-anon-access.mjs
+--
+-- ⚠️ track_event — единственное исключение, и оно осознанное: визиты пишутся ДО
+-- регистрации, иначе у воронки нет знаменателя (см. блок «АНАЛИТИКА»).
+-- ============================================================================
+do $harden$
+declare f record;
+begin
+  for f in
+    select p.oid::regprocedure as sig
+      from pg_proc p
+      join pg_namespace n on n.oid = p.pronamespace
+     where n.nspname = 'public'
+       and p.prokind = 'f'
+       and p.proname <> 'track_event'
+  loop
+    execute format('revoke execute on function %s from public, anon', f.sig);
+  end loop;
+end $harden$;
+
+grant execute on function public.track_event(text, jsonb, uuid, text) to anon, authenticated;
 

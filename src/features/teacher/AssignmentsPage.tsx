@@ -1,7 +1,15 @@
 ﻿// ============================================================================
-// «Задания» ученика: назначенные преподавателем материалы — текст + упражнения.
-// Прохождение: чтение → упражнения (общий движок) → сдача (авто-балл, статус
-// submitted). Проверка преподавателем — следующая фаза фичи.
+// Экран «Домашка» у ученика (роут /assignments).
+//
+// Сверху — домашка на неделю одним списком: срок, счёт, пункты с прогрессом
+// внутри. Ниже — задания-материалы от преподавателя, как было. Раннер задания
+// (текст → упражнения → сдача) не изменился и живёт там же, под ?a=<id>.
+//
+// ⚠️ ПОЧЕМУ ДОМАШКА ЖИВЁТ ЗДЕСЬ, А НЕ ОТДЕЛЬНЫМ РОУТОМ. У одной работы должен
+// остаться ОДИН способ её сделать. Домашка — указатель: её пункты открывают те
+// же экраны (/quests, /writing, /practice, /pronunciation) и тот же раннер
+// задания. Заведи домашка свои кнопки «сдать» — и получилось бы два пути
+// закрыть одно и то же, а на «своём» экране работа осталась бы новой.
 // ============================================================================
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -21,6 +29,8 @@ import {
   getMyAssignments,
   submitAssignment,
 } from '../../lib/materials'
+import { getHomework, type Homework } from '../../lib/homework'
+import { StudentHomework } from '../homework/StudentHomework'
 import { useScrollTop } from '../../lib/useScrollTop'
 import { useUrlStates } from '../../lib/useUrlState'
 import { RowsSkeleton } from '../../components/Loading'
@@ -66,6 +76,14 @@ export function AssignmentsPage() {
     loading,
     reload,
   } = useAsyncData<Row[]>(() => getMyAssignments(), [], 'Не удалось загрузить задания')
+
+  // Домашку тянем отдельно и молча: если её нет или запрос упал, экран обязан
+  // остаться рабочим списком заданий — как был до этого захода.
+  const { data: hw, reload: reloadHw } = useAsyncData<Homework | null>(
+    () => getHomework().catch(() => null),
+    [],
+    '',
+  )
 
   const active = activeId ? ((rows ?? []).find((r) => r.id === activeId) ?? null) : null
   // стадия по умолчанию зависит от работы: проверенную открываем с разбора
@@ -123,27 +141,33 @@ export function AssignmentsPage() {
   const pending = (rows ?? []).filter((r) => r.status === 'assigned')
   const done = (rows ?? []).filter((r) => r.status !== 'assigned')
 
+  const nothingAtAll = !hw && (rows ?? []).length === 0
+
   return (
     <div className="flex flex-col gap-4">
-      <BackHeader onBack={() => navigate('/study')} title="Задания" label="К учёбе" />
+      <BackHeader onBack={() => navigate('/study')} title="Домашка" label="К учёбе" />
+
+      {hw && <StudentHomework hw={hw} onChanged={reloadHw} />}
 
       {loading ? (
         <RowsSkeleton count={3} />
       ) : error ? (
         <LoadError message={error} onRetry={reload} />
-      ) : (rows ?? []).length === 0 ? (
+      ) : nothingAtAll ? (
         <Card className="text-center">
           <IconTray size={38} className="mx-auto block text-[var(--night-text-40)]" />
-          <p className="mt-2 font-semibold">Заданий пока нет</p>
+          <p className="mt-2 font-semibold">Пока ничего не задано</p>
           <p className="mt-1 text-sm text-[var(--night-text-40)]">
-            Когда преподаватель назначит задание, оно появится здесь.
+            Когда преподаватель выдаст домашку или задание, они появятся здесь.
           </p>
         </Card>
       ) : (
         <>
           {pending.length > 0 && (
             <section className="flex flex-col gap-2">
-              <h2 className="text-sm font-semibold text-[var(--night-text-40)]">Новые</h2>
+              <h2 className="text-sm font-semibold text-[var(--night-text-40)]">
+                {hw ? 'Задания от преподавателя' : 'Новые'}
+              </h2>
               {pending.map((r) => (
                 <AssignmentCard key={r.id} row={r} onOpen={() => open(r)} />
               ))}

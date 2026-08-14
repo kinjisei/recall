@@ -49,6 +49,17 @@ export const AI_TASKS: Record<AiTask, TaskSpec> = {
   // Pro-модели: месячный лимит генераций (не энергия), только у преподавателя
   material: { tier: 'max', quota: 'heavy', energyCost: 0, generation: true, teacherOnly: true },
   program: { tier: 'max', quota: 'heavy', energyCost: 0, generation: true, teacherOnly: true },
+  // Сборка домашки: состав набора считают ДАННЫЕ (lib/homeworkRules), модель
+  // только переписывает заголовки и заметку — на это хватает обычной, а
+  // дефицитные Pro-модели остаются материалам и программам. Списание всё равно
+  // из месячного лимита генераций: это работа преподавателя, а не ученика.
+  homework: {
+    tier: 'standard',
+    quota: 'heavy',
+    energyCost: 0,
+    generation: true,
+    teacherOnly: true,
+  },
 }
 
 /** Спека задачи по присланному клиентом названию (undefined — название чужое). */
