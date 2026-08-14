@@ -1054,6 +1054,7 @@ export type Database = {
       }
       cancel_placement: { Args: { p_id: string }; Returns: undefined }
       choose_homework_item: { Args: { p_item: string }; Returns: undefined }
+      get_homework_many: { Args: Record<string, never>; Returns: Json }
       complete_homework_item: { Args: { p_item: string }; Returns: undefined }
       consume_ai_quota: { Args: { p_kind?: string }; Returns: undefined }
       create_homework: {

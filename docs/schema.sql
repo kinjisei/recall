@@ -3792,31 +3792,30 @@ end $fn$;
 -- Чтение: последняя домашка с пунктами, уже пересчитанными.
 -- Ученик зовёт без аргумента, учитель — с id ученика.
 -- ---------------------------------------------------------------------------
-create or replace function public.get_homework(p_student uuid default null)
-returns jsonb language plpgsql security definer set search_path = public as $fn$
-declare
-  v_student uuid;
-  v_hw      record;
-  v_items   jsonb;
+-- Сборка объекта домашки. Прав НЕ проверяет — это делают вызывающие; здесь
+-- только форма ответа.
+--
+-- ⚠️ ОДИН строитель на карточку ученика И на список учеников. Список показывает
+-- «3 из 5 · до вторника» по тем же данным, что открытая карточка, и считает их
+-- той же функцией на клиенте (homeworkProgress). Свой, «лёгкий» подсчёт для
+-- списка разошёлся бы с карточкой на первом же пункте «на выбор»: сервер видит
+-- два пункта, а человек делает один. Разойдясь, два числа обесценивают друг
+-- друга — преподаватель перестаёт верить обоим.
+--
+-- p_teacher: null — смотрит сам ученик (видит последнюю домашку от кого угодно);
+-- иначе только домашка ЭТОГО преподавателя (у ученика бывает два репетитора, и
+-- заметка одного не должна попадать на экран другому).
+create or replace function public.homework_json(p_student uuid, p_teacher uuid default null)
+returns jsonb language plpgsql stable security definer set search_path = public as $fn$
+declare v_hw record; v_items jsonb;
 begin
-  if auth.uid() is null then raise exception 'RECALL_NO_AUTH'; end if;
-  v_student := coalesce(p_student, auth.uid());
-  if v_student <> auth.uid() and not public.is_student_of(auth.uid(), v_student) then
-    raise exception 'RECALL_NOT_YOUR_STUDENT';
-  end if;
-
-  perform public.refresh_homework_for(v_student);
-
-  -- ⚠️ Ученик видит свою последнюю домашку от кого угодно, преподаватель —
-  -- только СВОЮ. У ученика бывает два репетитора, и заметка одного не должна
-  -- попадать на экран другому: это чужая работа и чужие слова о ребёнке.
-  if v_student = auth.uid() then
+  if p_teacher is null then
     select * into v_hw from homework
-     where student_id = v_student
+     where student_id = p_student
      order by created_at desc limit 1;
   else
     select * into v_hw from homework
-     where student_id = v_student and teacher_id = auth.uid()
+     where student_id = p_student and teacher_id = p_teacher
      order by created_at desc limit 1;
   end if;
   if v_hw is null then return null; end if;
@@ -3837,6 +3836,45 @@ begin
   );
 end $fn$;
 
+create or replace function public.get_homework(p_student uuid default null)
+returns jsonb language plpgsql security definer set search_path = public as $fn$
+declare v_student uuid;
+begin
+  if auth.uid() is null then raise exception 'RECALL_NO_AUTH'; end if;
+  v_student := coalesce(p_student, auth.uid());
+  if v_student <> auth.uid() and not public.is_student_of(auth.uid(), v_student) then
+    raise exception 'RECALL_NOT_YOUR_STUDENT';
+  end if;
+
+  perform public.refresh_homework_for(v_student);
+  return public.homework_json(
+    v_student,
+    case when v_student = auth.uid() then null else auth.uid() end
+  );
+end $fn$;
+
+-- Домашки всех своих учеников ОДНИМ запросом: {"<student_id>": {…} | null}.
+--
+-- Зачем не звать get_homework по разу на ученика: у преподавателя их до
+-- тридцати, и это тридцать round-trip при каждом открытии списка. Форму ответа
+-- строит тот же homework_json — значит список и карточка не могут разойтись.
+create or replace function public.get_homework_many()
+returns jsonb language plpgsql security definer set search_path = public as $fn$
+declare v_out jsonb := '{}'::jsonb; s record;
+begin
+  if auth.uid() is null then raise exception 'RECALL_NO_AUTH'; end if;
+  for s in
+    select student_id from teacher_students where teacher_id = auth.uid()
+  loop
+    perform public.refresh_homework_for(s.student_id);
+    v_out := v_out || jsonb_build_object(
+      s.student_id::text,
+      coalesce(public.homework_json(s.student_id, auth.uid()), 'null'::jsonb)
+    );
+  end loop;
+  return v_out;
+end $fn$;
+
 
 -- Гранты — ПОСЛЕ финального revoke в конце файла.
 -- homework_item_progress и refresh_homework_for клиенту НЕ отдаём: их зовут
@@ -3854,6 +3892,10 @@ grant execute on function public.create_homework(uuid, text, timestamptz, jsonb,
 grant execute on function public.complete_homework_item(uuid) to authenticated;
 grant execute on function public.choose_homework_item(uuid) to authenticated;
 grant execute on function public.get_homework(uuid) to authenticated;
+grant execute on function public.get_homework_many() to authenticated;
+-- homework_json прав не проверяет (их проверяют вызывающие) — снаружи она была
+-- бы способом прочитать чужую домашку по id.
+revoke execute on function public.homework_json(uuid, uuid) from public, anon, authenticated;
 grant execute on function public.log_activity(text, date, int, int) to authenticated;
 
 -- ---------------------------------------------------------------------------

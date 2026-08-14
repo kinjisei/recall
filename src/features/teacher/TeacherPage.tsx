@@ -30,6 +30,13 @@ import { GuideSection } from './GuideSection'
 import { DailyPlanSection } from './DailyPlanSection'
 import { HomeworkSection, StatTiles } from './HomeworkSection'
 import { HomeworkComposer } from './HomeworkComposer'
+import { getHomeworkMany, type Homework } from '../../lib/homework'
+import {
+  byAttention,
+  needAttention,
+  studentSignal,
+  type StudentSignal,
+} from '../../lib/studentSignals'
 import { Reveal } from '../../components/Reveal'
 import { getStudentDiagnostics, type StudentDiagnostics } from '../../lib/diagnostics'
 import { countSubmittedWorks } from '../../lib/materials'
@@ -161,6 +168,9 @@ function TeacherDashboard() {
   const [regenerating, setRegenerating] = useState(false)
   const [stopping, setStopping] = useState(false)
   const [students, setStudents] = useState<StudentInfo[]>([])
+  // Домашки всех учеников одним запросом. Пустая карта — либо их нет, либо
+  // запрос не прошёл: список обязан работать и без домашки, как раньше.
+  const [homeworks, setHomeworks] = useState<Map<string, Homework | null>>(new Map())
   const [pendingWorks, setPendingWorks] = useState(0)
   const [pendingWriting, setPendingWriting] = useState(0)
   const [myPlan, setMyPlan] = useState<MyPlan | null>(null)
@@ -172,14 +182,16 @@ function TeacherDashboard() {
   const load = useCallback(async () => {
     setError(null)
     try {
-      const [c, s, pending, pendingW] = await Promise.all([
+      const [c, s, pending, pendingW, hw] = await Promise.all([
         getOrCreateInviteCode(),
         getMyStudents(),
         countSubmittedWorks().catch(() => 0), // был отдельным шагом ПОСЛЕ Promise.all
         countSubmittedWriting().catch(() => 0),
+        getHomeworkMany().catch(() => new Map<string, Homework | null>()),
       ])
       setCode(c)
       setStudents(s)
+      setHomeworks(hw)
       setPendingWorks(pending)
       setPendingWriting(pendingW)
       getMyPlan().then(setMyPlan).catch(() => {})
@@ -383,61 +395,84 @@ function TeacherDashboard() {
                 среди всех — при пяти учениках упражнение на внимательность,
                 при десяти лотерея. Порядок списка НЕ трогаем: по нему считается,
                 кто попадает в места тарифа (первые N по дате привязки). */}
-            {students.filter(lost).length > 0 && (
-              <Card className="border-amber-300/40 bg-amber-400/[0.06]">
-                <p className="text-sm font-semibold text-amber-200">
-                  Пропали из занятий: {students.filter(lost).length}
-                </p>
-                <p className="mt-1 text-sm text-[var(--night-text-70)]">
-                  {students
-                    .filter(lost)
-                    .map((s) => `${s.profile.display_name ?? 'Без имени'} — ${lastSeen(s)}`)
-                    .join(' · ')}
-                </p>
-                <p className="mt-2 text-xs text-[var(--night-text-40)]">
-                  Неделя без занятий — обычно момент, когда стоит написать самому.
-                </p>
-              </Card>
-            )}
-            {students.map((s, i) => {
-              // то же правило, что в БД: пока мест никто не выбирал, их держат
-              // первые N по дате привязки; как только выбор сделан — решает он
-              const covered =
-                typeof myPlan?.seats !== 'number'
-                  ? true
-                  : students.some((x) => x.seat)
-                    ? s.seat
-                    : i < myPlan.seats
-              return openStudent === s.profile.id ? (
-                <StudentCard
-                  key={s.profile.id}
-                  student={s}
-                  onChanged={load}
-                  covered={covered}
-                  seatsKnown={typeof myPlan?.seats === 'number'}
-                  onBack={() => setOpenStudent(null)}
-                />
-              ) : openStudent ? null : (
-                <StudentRow
-                  key={s.profile.id}
-                  student={s}
-                  covered={covered}
-                  seatsKnown={typeof myPlan?.seats === 'number'}
-                  onOpen={() => setOpenStudent(s.profile.id)}
-                />
+            {(() => {
+              // ⚠️ Покрытие тарифом считаем ДО сортировки и по ИСХОДНОМУ
+              // порядку привязки: пока мест никто не выбирал, их держат первые N
+              // по дате (так же считает covering_teacher в БД). Отсортируй
+              // сначала — и значок «вне мест тарифа» уедет не на тех людей.
+              const rows = students.map((s, i) => ({
+                student: s,
+                signal: studentSignal(s, homeworks.get(s.profile.id) ?? null),
+                covered:
+                  typeof myPlan?.seats !== 'number'
+                    ? true
+                    : students.some((x) => x.seat)
+                      ? s.seat
+                      : i < myPlan.seats,
+              }))
+              const attention = needAttention(rows.map((r) => r.signal))
+              // Сортируем ПОКАЗ, а не данные: сперва те, к кому надо вернуться.
+              const shown = byAttention(rows, (r) => r.signal)
+              const lostRows = rows.filter((r) => r.signal.lost)
+
+              return (
+                <>
+                  {attention > 0 && (
+                    <Card className="border-amber-300/40 bg-amber-400/[0.06]">
+                      <p className="text-sm font-semibold text-amber-200">
+                        Нужно внимание: {attention}
+                      </p>
+                      <p className="mt-1 text-sm text-[var(--night-text-70)]">
+                        {shown
+                          .filter(
+                            (r) =>
+                              r.signal.attention === 'overdue' || r.signal.attention === 'lost',
+                          )
+                          .map(
+                            (r) =>
+                              `${r.student.profile.display_name ?? 'Без имени'} — ${
+                                r.signal.overdue ? 'домашка просрочена' : lastSeen(r.student)
+                              }`,
+                          )
+                          .join(' · ')}
+                      </p>
+                      <p className="mt-2 text-xs text-[var(--night-text-40)]">
+                        {lostRows.length > 0
+                          ? 'Неделя без занятий — обычно момент, когда стоит написать самому.'
+                          : 'Срок домашки прошёл, а сделано не всё.'}
+                      </p>
+                    </Card>
+                  )}
+                  {shown.map((r) =>
+                    openStudent === r.student.profile.id ? (
+                      <StudentCard
+                        key={r.student.profile.id}
+                        student={r.student}
+                        onChanged={load}
+                        covered={r.covered}
+                        seatsKnown={typeof myPlan?.seats === 'number'}
+                        onBack={() => setOpenStudent(null)}
+                      />
+                    ) : openStudent ? null : (
+                      <StudentRow
+                        key={r.student.profile.id}
+                        student={r.student}
+                        signal={r.signal}
+                        covered={r.covered}
+                        seatsKnown={typeof myPlan?.seats === 'number'}
+                        onOpen={() => setOpenStudent(r.student.profile.id)}
+                      />
+                    ),
+                  )}
+                </>
               )
-            })}
+            })()}
             </>
           )}
         </>
       )}
     </div>
   )
-}
-
-/** Пропал ли ученик: неделя без занятий или ни одного занятия вообще. */
-function lost(s: StudentInfo): boolean {
-  return s.daysSinceActive === null || s.daysSinceActive >= 7
 }
 
 /** Человеческий срок последнего занятия. */
@@ -459,11 +494,14 @@ function lastSeen(s: StudentInfo): string {
  */
 function StudentRow({
   student,
+  signal,
   covered,
   seatsKnown,
   onOpen,
 }: {
   student: StudentInfo
+  /** Числа строки — те же, что в карточке (см. lib/studentSignals). */
+  signal: StudentSignal
   covered: boolean
   seatsKnown: boolean
   onOpen: () => void
@@ -474,17 +512,39 @@ function StudentRow({
       <Card interactive className="flex items-center justify-between gap-3">
         <span className="min-w-0">
           <span className="block truncate font-semibold">{p.display_name ?? 'Без имени'}</span>
+
+          {/* Домашка — первое, что нужно перед уроком: «3 из 5 · до вторника».
+              Раньше её тут не было вовсе, и ответ на главный вопрос требовал
+              открыть карточку каждого. */}
+          {signal.homeworkText ? (
+            <span
+              className={`block truncate text-sm ${
+                signal.overdue ? 'text-amber-200' : 'text-[var(--night-text-70)]'
+              }`}
+            >
+              {signal.homeworkText} · {signal.dueText}
+            </span>
+          ) : (
+            <span className="block truncate text-sm text-[var(--night-text-40)]">
+              Домашка не выдана
+            </span>
+          )}
+
           <span className="block truncate text-sm text-[var(--night-text-40)]">
             {p.level ? `Уровень ${p.level}` : 'Уровень не определён'}
             {p.goal ? ` · ${GOAL_LABELS[p.goal]}` : ''}
           </span>
+
+          {/* ⚠️ Регулярность, а не объём. «120 карточек» — это один просиженный
+              вечер, «занимался 5 дней из 7» — привычка; для прогресса частота
+              значит больше суммы. Стрик оставляем рядом: он про то же, но
+              обнуляется от одного пропуска и в одиночку молчит о пропавшем. */}
           <span className="mt-0.5 block text-sm text-[var(--night-text-40)]">
-            <IconFlame size={13} className="inline align-text-bottom" /> {student.streak} ·{' '}
-            {/* «Сегодня ✓» ничего не говорит о том, кто пропал: у отсутствующего
-                там просто прочерк, одинаковый и на второй день, и на третью
-                неделю. Пишем срок прямо. */}
-            <span className={lost(student) ? 'text-amber-200' : ''}>{lastSeen(student)}</span>
+            <IconFlame size={13} className="inline align-text-bottom" /> {student.streak} ·
+            занимался {signal.regularity} ·{' '}
+            <span className={signal.lost ? 'text-amber-200' : ''}>{lastSeen(student)}</span>
           </span>
+
           {seatsKnown && !covered && (
             <span className="mt-1 inline-block rounded-lg bg-amber-500/10 px-2 py-1 text-xs text-amber-200">
               Вне мест тарифа
@@ -630,7 +690,10 @@ function StudentCard({
             ? {
                 struggling: diag.words.struggling.length,
                 weakTopics: diag.mistakes.length,
-                activeDays: diag.activeDays14,
+                // ⚠️ Ровно то же число, что в строке списка (activeDays7):
+                // две цифры про одно и то же на соседних экранах обесценивают
+                // друг друга. activeDays14 остаётся для промптов AI.
+                activeDays: diag.activeDays7,
               }
             : null
         }

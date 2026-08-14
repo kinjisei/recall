@@ -13,6 +13,7 @@
 // больше мы не имеем права (см. lib/homework.ts).
 // ============================================================================
 import { useEffect, useState } from 'react'
+import { REGULARITY_WINDOW } from '../../lib/activityDays'
 import { RowsSkeleton } from '../../components/Loading'
 import { IconCheck, IconFlame, IconSparkle } from '../../components/icons'
 import {
@@ -197,7 +198,13 @@ export function StatTiles({
   const tiles = [
     { value: val(diag?.struggling), label: 'буксуют слов' },
     { value: val(diag?.weakTopics), label: 'слабых тем' },
-    { value: val(diag?.activeDays, '/14'), label: 'дней с занятиями', icon: true },
+    // Окно то же, что в строке списка (REGULARITY_WINDOW): регулярность
+    // сравнивается с неделей — шагом между уроками.
+    {
+      value: val(diag?.activeDays, `/${REGULARITY_WINDOW}`),
+      label: 'дней с занятиями',
+      icon: true,
+    },
   ]
   return (
     <div className="grid grid-cols-3 gap-2">

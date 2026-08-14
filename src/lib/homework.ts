@@ -22,60 +22,10 @@
 import { supabase } from './supabase'
 import type { AppLang } from '../types'
 
-/** Чем закрывается пункт. 'free' — единственный, который сервер измерить не может. */
-export type HomeworkKind = 'words' | 'text' | 'quest' | 'writing' | 'speech' | 'free'
-
-export interface HomeworkItem {
-  id: string
-  kind: HomeworkKind
-  ref_id: string | null
-  title: string
-  target: number
-  /** Сколько уже сделано — считает сервер, клиент только показывает. */
-  progress: number
-  done_at: string | null
-  done_by: 'server' | 'student' | null
-  /** Пункты с одним номером — альтернативы: ученик делает ОДИН из них. */
-  pick_group: number | null
-  /** Когда ученик выбрал этот вариант (нажал сам или просто сделал). */
-  chosen_at: string | null
-}
-
-export interface Homework {
-  id: string
-  lang: AppLang
-  due_at: string
-  note: string | null
-  created_at: string
-  items: HomeworkItem[]
-}
-
-/** Что кладём в домашку при выдаче. */
-export interface NewHomeworkItem {
-  kind: HomeworkKind
-  title: string
-  target?: number
-  ref_id?: string | null
-  /** Одинаковый номер = альтернативы «на выбор». Группа из одного пункта
-   *  распускается сервером: выбор из одного варианта — не выбор. */
-  pickGroup?: number
-}
-
-export const KIND_LABEL: Record<HomeworkKind, string> = {
-  words: 'Слова',
-  text: 'Чтение',
-  quest: 'Квест',
-  writing: 'Письмо',
-  speech: 'Речь',
-  free: 'Своими словами',
-}
-
-/**
- * Пункты, выполнение которых видит сервер. Для остальных показываем ученику
- * галочку — и честно подписываем, что это его слово, а не измерение.
- */
-export const MEASURED_KINDS: HomeworkKind[] = ['words', 'text', 'quest', 'writing', 'speech']
-export const isMeasured = (kind: HomeworkKind): boolean => MEASURED_KINDS.includes(kind)
+// Типы, счёт и подписи — в homeworkView (без обращений к базе, чтобы их можно
+// было проверять тестом). Здесь только запросы.
+export * from './homeworkView'
+import type { Homework, NewHomeworkItem } from './homeworkView'
 
 /**
  * Домашка ученика. Без аргумента — своя (зовёт ученик), с id — конкретного
@@ -114,6 +64,24 @@ export async function createHomework(params: {
   return data as unknown as string
 }
 
+/**
+ * Домашки ВСЕХ своих учеников одним запросом — для списка у преподавателя.
+ *
+ * ⚠️ Возвращает те же объекты, что и getHomework: сервер строит их одним
+ * homework_json. Считать «3 из 5» для списка отдельно нельзя — счёт живёт в
+ * homeworkProgress, и только так строка списка и открытая карточка показывают
+ * одно и то же число. Разойдись они — преподаватель перестанет верить обоим.
+ */
+export async function getHomeworkMany(): Promise<Map<string, Homework | null>> {
+  const { data, error } = await supabase.rpc('get_homework_many')
+  if (error) throw error
+  const out = new Map<string, Homework | null>()
+  for (const [id, hw] of Object.entries((data ?? {}) as Record<string, Homework | null>)) {
+    out.set(id, hw)
+  }
+  return out
+}
+
 /** Галочка ученика. Сервер примет её только для своего пункта. */
 export async function completeItem(itemId: string): Promise<void> {
   const { error } = await supabase.rpc('complete_homework_item', { p_item: itemId })
@@ -126,76 +94,3 @@ export async function chooseItem(itemId: string): Promise<void> {
   if (error) throw error
 }
 
-/**
- * Пункты, сгруппированные для показа и счёта: обычный пункт идёт один, а
- * альтернативы — вместе, как ОДНА строка выбора.
- *
- * ⚠️ Группировка живёт здесь, а не на экранах. Их два (карточка преподавателя и
- * список ученика), и разойдись они — один показал бы «3 из 5», другой «3 из 6»
- * по одной и той же домашке.
- */
-export interface HomeworkRow {
-  /** Один пункт, либо альтернативы одной группы. */
-  items: HomeworkItem[]
-  pickGroup: number | null
-  /** Выбранный вариант (или единственный пункт). */
-  chosen: HomeworkItem | null
-  done: boolean
-}
-
-export function homeworkRows(hw: Homework | null): HomeworkRow[] {
-  if (!hw) return []
-  const rows: HomeworkRow[] = []
-  const byGroup = new Map<number, HomeworkRow>()
-  for (const item of hw.items) {
-    if (item.pick_group == null) {
-      rows.push({ items: [item], pickGroup: null, chosen: item, done: !!item.done_at })
-      continue
-    }
-    let row = byGroup.get(item.pick_group)
-    if (!row) {
-      row = { items: [], pickGroup: item.pick_group, chosen: null, done: false }
-      byGroup.set(item.pick_group, row)
-      rows.push(row)
-    }
-    row.items.push(item)
-    // ⚠️ Сделанное важнее заявленного, и порядок проверок здесь имеет значение.
-    // Если пункт группы уже закрыт, он и есть выбор — заявка на другой вариант
-    // его не перебивает. Сервер такую заявку и не примет (RECALL_CHOICE_DONE),
-    // но экран обязан быть верным и на данных, пришедших из прошлого состояния:
-    // иначе строка показывала бы «квест · выбрал ученик» с галочкой, хотя
-    // выполнена была речь.
-    if (item.done_at) {
-      row.done = true
-      row.chosen = item
-    } else if (item.chosen_at && !row.done) {
-      row.chosen = item
-    }
-  }
-  return rows
-}
-
-/** «3 из 5» — одна цифра на оба экрана. Группа «на выбор» считается за один. */
-export function homeworkProgress(hw: Homework | null): { done: number; total: number } {
-  const rows = homeworkRows(hw)
-  return { done: rows.filter((r) => r.done).length, total: rows.length }
-}
-
-/**
- * Срок человеческим языком. Просрочку называем прямо: «просрочена» честнее,
- * чем «осталось −2 дня», и заметнее, чем серая дата.
- */
-export function dueLabel(dueAt: string): string {
-  const days = Math.ceil((new Date(dueAt).getTime() - Date.now()) / 86_400_000)
-  if (days < 0) return days === -1 ? 'просрочена на день' : `просрочена на ${Math.abs(days)} дн.`
-  if (days === 0) return 'сегодня'
-  if (days === 1) return 'до завтра'
-  return `осталось ${days} дн.`
-}
-
-/** Просрочена ли — нужно и списку учеников, и карточке. Правило одно. */
-export function isOverdue(hw: Homework | null): boolean {
-  if (!hw) return false
-  const { done, total } = homeworkProgress(hw)
-  return done < total && new Date(hw.due_at).getTime() < Date.now()
-}

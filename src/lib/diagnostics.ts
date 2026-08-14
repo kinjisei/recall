@@ -11,6 +11,9 @@ import { getStudentWords } from './wordChecks'
 import { listStudentQuests } from './quests'
 import { finalScore, scoreSamples } from './assignmentScore'
 import { computeDynamics, type MonthDynamics } from './dynamics'
+// ⚠️ Дни занятий считаются ОДНОЙ функцией на весь продукт: карточка ученика и
+// строка в списке показывают одно и то же число, и разойтись они не могут.
+import { REGULARITY_WINDOW, activeDaysIn, localDay } from './activityDays'
 import type {
   AppLang,
   GrammarQuest,
@@ -64,22 +67,16 @@ export interface StudentDiagnostics {
   /** false, если таблица grammar_mistakes ещё не создана (SQL не выполнен). */
   mistakesAvailable: boolean
   quests: GrammarQuest[]
-  /** Дней с активностью за последние 14. */
+  /** Дней с активностью за последние 14 — для промптов AI (не для экрана). */
   activeDays14: number
+  /** Дней с занятиями за неделю — ровно то же число, что в строке списка. */
+  activeDays7: number
   /** Последний день занятий (YYYY-MM-DD) или null. */
   lastActiveDay: string | null
   /** «Сейчас vs 30 дней назад» — считается из тех же данных (lib/dynamics). */
   dynamics: MonthDynamics
 }
 
-/** YYYY-MM-DD в местном времени со сдвигом в днях. */
-function localDay(offsetDays = 0): string {
-  const d = new Date()
-  d.setDate(d.getDate() + offsetDays)
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const dd = String(d.getDate()).padStart(2, '0')
-  return `${d.getFullYear()}-${m}-${dd}`
-}
 
 export async function getStudentDiagnostics(studentId: string): Promise<StudentDiagnostics> {
   const [words, assignRes, mistakesRes, quests, activityRes] = await Promise.all([
@@ -210,6 +207,7 @@ export async function getStudentDiagnostics(studentId: string): Promise<StudentD
     mistakesAvailable,
     quests,
     activeDays14: days.filter((d) => d >= from14).length,
+    activeDays7: activeDaysIn(days, REGULARITY_WINDOW),
     lastActiveDay: days[days.length - 1] ?? null,
     dynamics,
   }

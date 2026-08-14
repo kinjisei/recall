@@ -9,6 +9,12 @@ import { dbError } from './dbError'
 import { SUPPORT_EMAIL } from './contacts'
 import { selectProfiles, invalidateProfile } from './profile'
 import { track } from './analytics'
+import {
+  REGULARITY_WINDOW,
+  activeDaysIn,
+  daysSinceActive,
+  localDay,
+} from './activityDays'
 import type { AppLang, Card, Deck, Profile } from '../types'
 
 /** Сводка по ученику для экрана преподавателя. */
@@ -24,32 +30,16 @@ export interface StudentInfo {
    */
   daysSinceActive: number | null
   assignedDeckIds: string[]
+  /** Дней с занятиями за последнюю неделю — регулярность, а не объём. */
+  activeDays7: number
   /** Занимает ли место тарифа (только оно даёт повышенные лимиты AI). */
   seat: boolean
 }
 
-/** YYYY-MM-DD в местном времени (offsetDays: 0 — сегодня, -1 — вчера…). */
-function localDay(offsetDays = 0): string {
-  const d = new Date()
-  d.setDate(d.getDate() + offsetDays)
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const dd = String(d.getDate()).padStart(2, '0')
-  return `${d.getFullYear()}-${m}-${dd}`
-}
-
-/**
- * Сколько дней назад человек занимался в последний раз. null — ни разу.
- *
- * Нужно преподавателю, чтобы заметить пропавшего: стрик обнуляется и молчит,
- * а «не заходил 9 дней» — это уже повод написать. Ищем в окне 60 дней (столько
- * и грузим); если за это время ничего нет, считаем, что не занимался вовсе.
- */
-function daysSince(days: Set<string>): number | null {
-  for (let i = 0; i <= 60; i++) {
-    if (days.has(localDay(-i))) return i
-  }
-  return null
-}
+// «Сколько дней назад занимался» и «сколько дней из недели» живут в
+// lib/activityDays — их же читает диагностическая карта. Копия здесь молча
+// разошлась бы с карточкой, а два несогласных числа на одном экране хуже, чем
+// одно неточное.
 
 /** Стрик по множеству дней с активностью (вчерашняя серия ещё жива). */
 function streakFromDays(days: Set<string>): number {
@@ -256,7 +246,8 @@ export async function getMyStudents(): Promise<StudentInfo[]> {
       streak: streakFromDays(days),
       doneToday: days.has(localDay(0)),
       weekItems,
-      daysSinceActive: daysSince(days),
+      daysSinceActive: daysSinceActive(days),
+      activeDays7: activeDaysIn(days, REGULARITY_WINDOW),
       assignedDeckIds: (assignRes.data ?? [])
         .filter((a) => a.student_id === profile.id)
         .map((a) => a.deck_id as string),

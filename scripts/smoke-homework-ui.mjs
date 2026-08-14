@@ -79,7 +79,13 @@ try {
   ).unref()
   for (let i = 0; i < 40 && !browser; i++) {
     try {
-      browser = await puppeteer.connect({ browserURL: `http://127.0.0.1:${port}` })
+      // ⚠️ protocolTimeout обязателен. Без него прогон в цепочке за другим
+      // смоуком падал с «Runtime.callFunctionOn timed out»: браузер ещё занят
+      // прошлой работой, а умолчание puppeteer ждать её не рассчитано.
+      browser = await puppeteer.connect({
+        browserURL: `http://127.0.0.1:${port}`,
+        protocolTimeout: 120000,
+      })
     } catch {
       await sleep(500)
     }
@@ -160,7 +166,18 @@ try {
     .from('cards')
     .insert(Array.from({ length: 20 }, (_, i) => ({ deck_id: deck.id, front: `w${i}`, back: `с${i}`, source: 'teacher' })))
     .select('id')
-  const now = new Date().toISOString()
+  // ⚠️ Время — ОТ СЕРВЕРА (created_at выданной домашки + минута), а не от своей
+  // машины: часы расходятся, в прогонах node отставал от базы на секунду с
+  // лишним, и «свежее» повторение оказывалось раньше выдачи домашки. Сервер
+  // честно его не засчитывал, а проверка краснела на исправном коде.
+  const { data: hw1 } = await admin
+    .from('homework')
+    .select('created_at')
+    .eq('student_id', sId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single()
+  const now = new Date(new Date(hw1.created_at).getTime() + 60_000).toISOString()
   await admin.from('review_states').insert(
     cards.map((c) => ({ user_id: sId, card_id: c.id, state: 'review', due: now, last_review: now, reps: 1, stability: 2, difficulty: 5 })),
   )
@@ -216,24 +233,20 @@ try {
     .update({ last_review: new Date(new Date(hw2row.created_at).getTime() + 1000).toISOString() })
     .eq('user_id', sId)
 
-  // Вход учеником: сессия Supabase лежит в localStorage и общая на весь
-  // профиль браузера, поэтому учительскую надо снять.
+  // Вход учеником — в ОТДЕЛЬНОМ контексте браузера.
   //
-  // ⚠️ Чистим ДО загрузки приложения, в новой вкладке. Первая версия делала
-  // localStorage.clear() в живой вкладке — и вкладка падала («Target closed»):
-  // приложение уже работало со снятой из-под него сессией. sessionStorage-флаг
-  // нужен, чтобы очистка сработала ровно один раз и не выкинула ученика сразу
-  // после входа.
-  await page.close().catch(() => {})
-  page = await browser.newPage()
+  // ⚠️ Сессия Supabase лежит в localStorage и общая на весь профиль, поэтому
+  // учительскую надо было как-то снять. Две попытки провалились: очистка в
+  // живой вкладке роняла её («Target closed» — приложение работало со снятой
+  // из-под него сессией), а пересоздание вкладки с очисткой до загрузки давало
+  // то же самое через раз. Отдельный контекст решает причину, а не следствие:
+  // у него своё хранилище, чистить и закрывать нечего.
+  const studentCtx = await browser.createBrowserContext()
+  page = await studentCtx.newPage()
   await page.setViewport({ width: 420, height: 900 })
   page.on('pageerror', (e) => jsErrors.push(e.message))
   await page.evaluateOnNewDocument(() => {
     try {
-      if (!sessionStorage.getItem('smoke-cleared')) {
-        localStorage.clear()
-        sessionStorage.setItem('smoke-cleared', '1')
-      }
       localStorage.setItem('recall.onboarded', '1')
     } catch {}
   })

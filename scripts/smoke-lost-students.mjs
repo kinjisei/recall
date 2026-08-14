@@ -59,8 +59,12 @@ const plan = [
   ['Айгерим', 'aigerim', 0],
   ['Данияр', 'daniyar', 9],
   ['Асель', 'asel', null],
+  // Ходит регулярно, но домашку не сделал и срок прошёл. Такого раньше не было
+  // видно вообще: сводка про пропавших о нём молчит, а строка не знала домашки.
+  ['Тимур', 'timur', 0],
 ]
 const made = []
+const byName = {}
 for (const [nm, key, back] of plan) {
   const em = `lost-${key}@recall.test`
   const id = await mk(em, { display_name: nm, level: 'B1' })
@@ -75,7 +79,58 @@ for (const [nm, key, back] of plan) {
       { onConflict: 'user_id,type,day' },
     )
   }
+  // Айгерим ходит регулярно: пять дней из последней недели. Регулярность —
+  // то, что показывает строка вместо суммы карточек.
+  if (key === 'aigerim') {
+    for (const b2 of [1, 2, 4, 6]) {
+      await admin.from('activity_log').upsert(
+        { user_id: id, type: 'flashcards', day: day(b2), items_done: 3 },
+        { onConflict: 'user_id,type,day' },
+      )
+    }
+  }
+  byName[nm] = id
 }
+
+// ---- домашки: у Тимура просрочена, у Айгерим свежая и наполовину сделана ----
+// ⚠️ Выдаём через RPC от лица преподавателя, а не вставкой в таблицу: прямая
+// запись в homework отозвана у всех, и смоук обязан ходить тем же путём, что
+// живой экран.
+const asTeacher = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY)
+await asTeacher.auth.signInWithPassword({ email: T.email, password: T.pass })
+
+const overdueHw = await asTeacher.rpc('create_homework', {
+  p_student_id: byName['Тимур'],
+  p_lang: 'en',
+  // ⚠️ Минус 12 часов, а не двое суток: create_homework не принимает срок
+  // старше суток (RECALL_BAD_DUE) — домашку не выдают задним числом. Полсуток
+  // назад уже просрочено и при этом проходит проверку сервера.
+  p_due: new Date(Date.now() - 12 * 3600_000).toISOString(),
+  p_items: [
+    { kind: 'free', title: 'Рассказать про выходные', target: 1, pick_group: null },
+    { kind: 'free', title: 'Выписать пять слов', target: 1, pick_group: null },
+  ],
+  p_note: null,
+})
+const freshHw = await asTeacher.rpc('create_homework', {
+  p_student_id: byName['Айгерим'],
+  p_lang: 'en',
+  p_due: new Date(Date.now() + 3 * 86400000).toISOString(),
+  p_items: [
+    { kind: 'free', title: 'Первое', target: 1, pick_group: null },
+    { kind: 'free', title: 'Второе', target: 1, pick_group: null },
+  ],
+  p_note: null,
+})
+if (overdueHw.error || freshHw.error) {
+  throw new Error(`домашка не выдана: ${overdueHw.error?.message ?? freshHw.error?.message}`)
+}
+
+// Один пункт из двух ученик отметил сам — строка должна показать «1 из 2».
+const asAigerim = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY)
+await asAigerim.auth.signInWithPassword({ email: 'lost-aigerim@recall.test', password: T.pass })
+const { data: myHw } = await asAigerim.rpc('get_homework', { p_student: undefined })
+await asAigerim.rpc('complete_homework_item', { p_item: myHw.items[0].id })
 
 const PORT = 9400 + Math.floor(Math.random() * 500)
 spawn(EDGE, ['--headless=new', `--remote-debugging-port=${PORT}`, '--no-first-run', '--disable-gpu',
@@ -108,11 +163,53 @@ const check = (n, ok, extra = '') => {
   results.push(ok)
   console.log(`${ok ? '✓' : '✗'} ${n}${extra ? ' — ' + extra : ''}`)
 }
-check('сводка о пропавших показана', /Пропали из занятий: 2/.test(txt), (txt.match(/Пропали из занятий: \d+/) || [''])[0])
+// ---- сводка: пропавшие И те, у кого домашка просрочена ---------------------
+check('сводка называет всех, кому нужно внимание', /Нужно внимание: 3/.test(txt), (txt.match(/Нужно внимание: \d+/) || [''])[0])
 check('назван пропавший 9 дней назад', /Данияр — не заходил 9 дней/.test(txt))
 check('назван не начинавший', /Асель — ещё не начинал/.test(txt))
-check('занимавшийся сегодня в сводку НЕ попал', !/Айгерим —/.test(txt.split('Неделя без занятий')[0] ?? ''))
-check('в строке ученика виден срок', /занимался сегодня/.test(txt))
+check('назван тот, у кого домашка просрочена', /Тимур — домашка просрочена/.test(txt))
+check(
+  'занимающийся и сделавший часть домашки в сводку НЕ попал',
+  !/Айгерим — /.test(txt.split('Неделя без занятий')[0] ?? txt),
+)
+
+// ---- строка ученика: домашка, срок, регулярность ----------------------------
+// ⚠️ Счёт ищем ВМЕСТЕ со сроком: «\d+ из \d+» само по себе ловит энергию
+// студии («40 из 40») и было бы зелёным без домашки вовсе.
+check(
+  'в строке виден счёт домашки',
+  /1 из 2 · до /.test(txt),
+  (txt.match(/\d+ из \d+ · [^\n]*/) || [''])[0],
+)
+check('и срок днём недели', /· до \S+/.test(txt), (txt.match(/· до [^\n]*/) || [''])[0])
+check('у просроченной так и написано', /· просрочена/.test(txt))
+check('у кого домашки нет — сказано прямо', /Домашка не выдана/.test(txt))
+check(
+  'регулярность вместо объёма: «занимался 5 из 7»',
+  /занимался 5 из 7/.test(txt),
+  (txt.match(/занимался \d+ из \d+/) || [''])[0],
+)
+check('сумма карточек в строке не показывается', !/карточ/i.test(txt))
+check('срок последнего занятия остался', /занимался сегодня|не заходил/.test(txt))
+
+// ---- порядок: сперва те, кому нужно внимание --------------------------------
+// ⚠️ Сверяем ПОРЯДОК ИМЁН на экране, а не факт их наличия: сортировка — это и
+// есть фича, а «все четверо на месте» было бы зелёным и без неё.
+// ⚠️ Ищем в части экрана ПОСЛЕ сводки: в самой сводке имена тоже перечислены,
+// и поиск по всему тексту мерил бы порядок в ней, а не в списке.
+const listPart = txt.split(/Неделя без занятий|Срок домашки прошёл/).pop() ?? txt
+const namesOrder = ['Тимур', 'Данияр', 'Асель', 'Айгерим']
+  .map((n) => [n, listPart.indexOf(n)])
+  .filter(([, i]) => i >= 0)
+const sorted = namesOrder.every(([, i], k) => k === 0 || i > namesOrder[k - 1][1])
+check(
+  'просрочка выше пропавших, пропавшие выше занимающегося',
+  namesOrder.length === 4 && sorted,
+  // ⚠️ Печатаем то, что РЕАЛЬНО на экране (по возрастанию позиции), а не свой
+  // ожидаемый список: первая версия выводила ожидание и при провале выглядела
+  // так, будто порядок верный.
+  [...namesOrder].sort((a, b) => a[1] - b[1]).map(([n]) => n).join(' → '),
+)
 
 await b.close()
 await admin.auth.admin.deleteUser(idT).catch(() => {})

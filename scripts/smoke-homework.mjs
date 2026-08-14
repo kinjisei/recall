@@ -181,7 +181,17 @@ try {
       { deck_id: deck.id, front: 'ancient', back: 'древний', source: 'teacher' },
     ])
     .select()
-  const now = new Date().toISOString()
+  // ⚠️ Время повторений берём ОТ СЕРВЕРА, а не от своей машины. Часы
+  // расходятся: в этом прогоне node отставал от базы на 1,2 с, и «свежее»
+  // повторение оказывалось РАНЬШЕ выдачи домашки — сервер честно его не
+  // засчитывал, а проверка краснела на исправном коде. Смещаем на минуту
+  // вперёд от created_at выданной домашки: хватает при любом расхождении.
+  const { data: hwRow } = await admin
+    .from('homework')
+    .select('created_at')
+    .eq('id', hwId)
+    .single()
+  const now = new Date(new Date(hwRow.created_at).getTime() + 60_000).toISOString()
   for (const c of cards) {
     await student.from('review_states').insert({
       user_id: ids.student,
