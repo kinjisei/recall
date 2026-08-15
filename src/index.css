@@ -58,6 +58,15 @@ body,
   height: 100%;
 }
 
+/* Гасим pull-to-refresh и «прокрутку за край» во всём приложении. У PWA свой
+   апдейт (reg.update() в main.tsx), а свайп вниз по шторке долетал до браузера
+   и перезагружал страницу вместо закрытия шторки. overscroll-behavior на
+   корневом скроллере убирает это в корне — для всех шторок разом. */
+html,
+body {
+  overscroll-behavior: none;
+}
+
 body {
   margin: 0;
   min-height: 100dvh;

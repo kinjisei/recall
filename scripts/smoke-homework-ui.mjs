@@ -129,6 +129,116 @@ try {
   await waitText(page, 'Собрать домашку')
   await tap(page, 'Собрать домашку')
   check('шторка сборки открылась', await waitText(page, 'Сдать до'))
+
+  // ---- красный пункт скриншота: свайп вниз по «ручке» ЗАКРЫВАЕТ шторку -------
+  // Раньше свайп долетал до браузера как pull-to-refresh и перезагружал PWA.
+  // Проверка умеет краснеть: если жест или порог сломаны, длинный свайп не
+  // закроет шторку и «свайп закрывает» упадёт.
+  const noPull = await page.evaluate(
+    () =>
+      getComputedStyle(document.documentElement).overscrollBehaviorY === 'none' ||
+      getComputedStyle(document.body).overscrollBehaviorY === 'none',
+  )
+  check('pull-to-refresh погашен глобально', noPull)
+
+  // «Ручка» — первый дочерний div панели role=dialog (touch-none, cursor-grab).
+  const grabBox = () =>
+    page.evaluate(() => {
+      const grab = document.querySelector('[role="dialog"] > div')
+      if (!grab) return null
+      const r = grab.getBoundingClientRect()
+      return { x: r.x + r.width / 2, y: r.y + 6 }
+    })
+  const dragDown = async (px) => {
+    const b = await grabBox()
+    if (!b) return
+    await page.mouse.move(b.x, b.y)
+    await page.mouse.down()
+    for (let i = 1; i <= 10; i++) await page.mouse.move(b.x, b.y + (i * px) / 10)
+    await page.mouse.up()
+    await sleep(400)
+  }
+
+  // Короткий свайп (< порога 100px) — шторка возвращается на место.
+  await dragDown(40)
+  check('короткий свайп не закрывает', await seen(page, 'Сдать до'))
+
+  // Длинный свайп — закрывает. Порог CLOSE_AT = 100.
+  await dragDown(240)
+  const swipedClosed = await page
+    .waitForFunction(() => !document.querySelector('[role="dialog"]'), {
+      timeout: 5000,
+      polling: 250,
+    })
+    .then(() => true)
+    .catch(() => false)
+  check('свайп вниз закрывает шторку', swipedClosed)
+
+  // Возвращаем шторку — остальной сценарий работает с открытой.
+  await waitText(page, 'Собрать домашку')
+  await tap(page, 'Собрать домашку')
+  check('шторка снова открылась после свайпа', await waitText(page, 'Сдать до'))
+
+  // ---- ⬜ серый нативный <select> заменён пикером-снизу ----------------------
+  // ⚠️ Клики по пикеру — программно через evaluate, как tap(): ElementHandle
+  // .click() вычисляет точку клика и виснет, когда композер в этот момент
+  // перерисовывается (ловушка стоила зависания на 120с protocolTimeout).
+  const noNativeSelect = await page.evaluate(
+    () => !document.querySelector('[role="dialog"] select'),
+  )
+  check('нативного <select> в композере не осталось', noNativeSelect)
+
+  const clickKind = () =>
+    page.evaluate(() => document.querySelector('button[aria-haspopup="listbox"]')?.click())
+  const hasTrigger = await page.evaluate(
+    () => !!document.querySelector('button[aria-haspopup="listbox"]'),
+  )
+  check('тип задания — свой пикер (aria-haspopup=listbox)', hasTrigger)
+
+  await clickKind()
+  await sleep(400)
+  // «Своими словами» — метка типа, видна только когда открыт список пикера.
+  check('пикер типов открылся списком', await seen(page, 'Своими словами'))
+
+  // Escape закрывает ТОЛЬКО пикер, композер остаётся — стек шторок.
+  await page.keyboard.press('Escape')
+  await sleep(400)
+  const onlyComposer = await page.evaluate(
+    () => document.querySelectorAll('[role="dialog"]').length === 1,
+  )
+  check('Escape закрыл пикер, но не композер', onlyComposer && (await seen(page, 'Сдать до')))
+
+  // Выбор в пикере применяется к строке.
+  await clickKind()
+  await sleep(400)
+  await page.evaluate(() => {
+    const opt = [...document.querySelectorAll('[role="option"]')].find((e) =>
+      (e.textContent || '').trim().startsWith('Чтение'),
+    )
+    opt?.click()
+  })
+  await sleep(400)
+  const label = await page.evaluate(() =>
+    (document.querySelector('button[aria-haspopup="listbox"]')?.textContent || '').trim(),
+  )
+  check('выбор типа в пикере применился к строке', /Чтение/.test(label), label)
+
+  // ⚠️ Возвращаем «Слова»: ниже сценарий закрывает СЛОВАРНЫЙ пункт по занятиям,
+  // и если первый пункт останется «Чтение», словарное занятие его не закроет.
+  await clickKind()
+  await sleep(400)
+  await page.evaluate(() => {
+    const opt = [...document.querySelectorAll('[role="option"]')].find(
+      (e) => (e.textContent || '').trim() === 'Слова',
+    )
+    opt?.click()
+  })
+  await sleep(400)
+  const restored = await page.evaluate(() =>
+    (document.querySelector('button[aria-haspopup="listbox"]')?.textContent || '').trim(),
+  )
+  check('тип возвращён к «Слова»', /Слова/.test(restored), restored)
+
   // ⚠️ Значения полей ввода в innerText НЕ попадают — заготовку надо читать из
   // самих input, иначе проверка ищет текст, которого на странице нет по природе.
   const drafted = await page.$$eval('input[aria-label="Что сделать"]', (els) =>

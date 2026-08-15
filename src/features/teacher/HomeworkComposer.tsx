@@ -16,8 +16,9 @@
 // пометки преподаватель ждал бы оба, а получил один и счёл это невыполнением.
 // ============================================================================
 import { useState } from 'react'
-import { createPortal } from 'react-dom'
 import { Button } from '../../components/Button'
+import { Picker } from '../../components/Picker'
+import { Sheet } from '../../components/Sheet'
 import { Thinking } from '../../components/Thinking'
 import { IconClose, IconPlus, IconSparkle, IconTrash } from '../../components/icons'
 import { KIND_LABEL, createHomework, type HomeworkKind } from '../../lib/homework'
@@ -136,17 +137,13 @@ export function HomeworkComposer({
     }
   }
 
-  return createPortal(
-    <div className="fixed inset-0 z-50 flex items-end bg-black/40" onClick={onClose}>
-      <div
-        className="animate-fade-up flex max-h-[88dvh] w-full flex-col rounded-t-3xl bg-[var(--night-surface)] pb-[env(safe-area-inset-bottom)]"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="mx-auto mb-1 mt-3 h-1.5 w-10 shrink-0 rounded-full bg-slate-600" />
-
-        <div className="flex items-start justify-between gap-2 px-5 pt-1">
+  return (
+    <Sheet onClose={onClose} maxH="88dvh" labelledBy="hw-title">
+      <div className="flex items-start justify-between gap-2 px-5 pt-1">
           <div className="min-w-0">
-            <h2 className="text-lg font-medium">Домашка для {studentName}</h2>
+            <h2 id="hw-title" className="text-lg font-medium">
+              Домашка для {studentName}
+            </h2>
             <p className="mt-0.5 text-sm text-[var(--night-text-40)]">
               Короткие задания чаще работают лучше одного длинного
             </p>
@@ -235,21 +232,13 @@ export function HomeworkComposer({
                     </p>
                   )}
                   <div className="flex items-center gap-2">
-                    <select
-                      aria-label="Тип задания"
+                    <Picker
                       value={it.kind}
-                      onChange={(e) => {
-                        const kind = e.target.value as HomeworkKind
-                        patch(i, { kind, target: DEFAULT_TARGET[kind] })
-                      }}
-                      className="h-11 flex-none rounded-lg border border-white/[0.10] bg-[var(--night-input)] px-2 text-sm"
-                    >
-                      {KINDS.map((k) => (
-                        <option key={k} value={k}>
-                          {KIND_LABEL[k]}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(kind) => patch(i, { kind, target: DEFAULT_TARGET[kind] })}
+                      label="Тип задания"
+                      options={KINDS.map((k) => ({ id: k, label: KIND_LABEL[k] }))}
+                      triggerClassName="flex h-11 w-36 flex-none items-center justify-between gap-1 rounded-lg border border-white/[0.10] bg-[var(--night-input)] px-2.5 text-sm outline-none focus:border-[var(--night-accent-45)]"
+                    />
                     <input
                       aria-label="Что сделать"
                       value={it.title}
@@ -336,8 +325,6 @@ export function HomeworkComposer({
             {items.length > 0 ? `Выдать домашку · ${countable}` : 'Выдать домашку'}
           </Button>
         </div>
-      </div>
-    </div>,
-    document.body,
+    </Sheet>
   )
 }
