@@ -97,7 +97,13 @@ export function mcqHint(optionsLeft: number): string {
   return `Не то. Осталось вариантов: ${optionsLeft}.`
 }
 
-/** Показывать ли ответ: попытки кончились или человек сам попросил. */
-export function shouldReveal(attempts: number, asked: boolean): boolean {
+/**
+ * Показывать ли ответ: попытки кончились или человек сам попросил.
+ *
+ * ⚠️ Зовут её ВСЕ упражнения — в этом и смысл. Пока экраны повторяли
+ * `n >= ATTEMPTS_BEFORE_ANSWER` каждый у себя (пять копий), тест проверял эту
+ * функцию, а продукт жил по своим копиям: разойдись они — тест бы не заметил.
+ */
+export function shouldReveal(attempts: number, asked = false): boolean {
   return asked || attempts >= ATTEMPTS_BEFORE_ANSWER
 }

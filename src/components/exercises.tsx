@@ -18,7 +18,7 @@ import { useMemo, useState } from 'react'
 import { Card } from './Card'
 import { Button } from './Button'
 import { answerMatches, normalizeAnswer } from '../lib/text'
-import { ATTEMPTS_BEFORE_ANSWER, mcqHint, mistakeHint, orderHint } from '../lib/selfCorrect'
+import { mcqHint, mistakeHint, orderHint, shouldReveal } from '../lib/selfCorrect'
 import type { GrammarExercise } from '../types'
 
 /** Подсказка о месте ошибки — одинаковая на всех типах упражнений. */
@@ -105,7 +105,7 @@ export function McqExercise({
     setWrong(next)
     // после второй ошибки прятать ответ уже незачем — иначе это не обучение,
     // а угадайка по кругу
-    if (next.length >= ATTEMPTS_BEFORE_ANSWER) setRevealed(true)
+    if (shouldReveal(next.length)) setRevealed(true)
   }
 
   // короткие варианты (слова) — сеткой 2×2, длинные фразы — столбиком
@@ -182,7 +182,7 @@ export function FillExercise({
       return
     }
     // Первая ошибка — говорим ГДЕ, ответ придержим. Вторая — показываем.
-    if (n >= ATTEMPTS_BEFORE_ANSWER) setRevealed(true)
+    if (shouldReveal(n)) setRevealed(true)
     else setHint(mistakeHint(value, exercise.answer))
   }
 
@@ -294,7 +294,7 @@ export function OrderExercise({
       setSolved(true)
       return
     }
-    if (n >= ATTEMPTS_BEFORE_ANSWER) setRevealed(true)
+    if (shouldReveal(n)) setRevealed(true)
     else setHint(orderHint(built.map((b) => b.w), exercise.answer))
   }
 

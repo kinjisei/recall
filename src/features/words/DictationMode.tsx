@@ -14,7 +14,7 @@ import type { ReviewItem } from '../../components/RoundReview'
 import { logActivity } from '../../lib/activity'
 import { speak } from '../../lib/speech'
 import { answerMatches } from '../../lib/text'
-import { ATTEMPTS_BEFORE_ANSWER, mistakeHint } from '../../lib/selfCorrect'
+import { mistakeHint, shouldReveal } from '../../lib/selfCorrect'
 import {
   loadGamePool,
   recordShown,
@@ -140,7 +140,7 @@ export function DictationMode({ lang, onBack }: { lang: AppLang; onBack: () => v
       setChecked(true)
       return
     }
-    if (n >= ATTEMPTS_BEFORE_ANSWER) setChecked(false)
+    if (shouldReveal(n)) setChecked(false)
     else setHint(mistakeHint(value, current.term))
   }
 

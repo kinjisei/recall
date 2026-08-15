@@ -5,7 +5,7 @@ import { IconSpeaker } from '../../components/icons'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { RoundResult, RoundProgress } from '../../components/RoundResult'
-import { ATTEMPTS_BEFORE_ANSWER, orderHint } from '../../lib/selfCorrect'
+import { orderHint, shouldReveal } from '../../lib/selfCorrect'
 import type { ReviewItem } from '../../components/RoundReview'
 import { logActivity } from '../../lib/activity'
 import { getUserLevel } from '../../lib/level'
@@ -165,7 +165,7 @@ function BuildTask({
       setSolved(true)
       return
     }
-    if (n >= ATTEMPTS_BEFORE_ANSWER) setRevealed(true)
+    if (shouldReveal(n)) setRevealed(true)
     else setHint(orderHint(built.map((b) => b.w), task.target.split(/\s+/)))
   }
 
