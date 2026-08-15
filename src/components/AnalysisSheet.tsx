@@ -3,7 +3,7 @@
 // Общий перевод + найденное (AnalyzedItemsView). Разбор — lib/analyze.
 // ============================================================================
 import { useEffect, useState } from 'react'
-import { createPortal } from 'react-dom'
+import { Sheet } from './Sheet'
 import { analyzeSelection, type Analysis } from '../lib/analyze'
 import { AnalyzedItemsView } from './AnalyzedItemsView'
 import type { AppLang } from '../types'
@@ -38,13 +38,8 @@ export function AnalysisSheet({
     }
   }, [text, sentence, lang])
 
-  return createPortal(
-    <div className="fixed inset-0 z-50 flex items-end bg-black/40" onClick={onClose}>
-      <div
-        className="flex max-h-[85dvh] w-full flex-col rounded-t-3xl bg-[var(--night-surface)]"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="mx-auto mb-1 mt-3 h-1.5 w-10 shrink-0 rounded-full bg-slate-600" />
+  return (
+    <Sheet onClose={onClose} maxH="85dvh" label="Разбор предложения">
         <div className="min-h-0 overflow-y-auto px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-2">
           <p className="text-[10px] uppercase tracking-wider text-[var(--night-text-40)]">Разбор</p>
           <p className="mt-0.5 text-[15px] font-medium leading-snug">«{text}»</p>
@@ -65,8 +60,6 @@ export function AnalysisSheet({
             </>
           )}
         </div>
-      </div>
-    </div>,
-    document.body,
+    </Sheet>
   )
 }

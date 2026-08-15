@@ -12,7 +12,7 @@
 // равно делает сервер.
 // ============================================================================
 import { useEffect, useMemo, useState } from 'react'
-import { createPortal } from 'react-dom'
+import { Sheet } from '../../components/Sheet'
 import { Button } from '../../components/Button'
 import { IconClose, IconSearch } from '../../components/icons'
 import { Loading, RowsSkeleton } from '../../components/Loading'
@@ -60,13 +60,8 @@ export function WordPicker({
   const [source, setSource] = useState<Source>('packs')
   const [chosen, setChosen] = useState<Chosen | null>(null)
 
-  return createPortal(
-    <div className="fixed inset-0 z-50 flex items-end bg-black/40" onClick={onClose}>
-      <div
-        className="animate-fade-up flex max-h-[88dvh] w-full flex-col rounded-t-3xl bg-[var(--night-surface)] pb-[env(safe-area-inset-bottom)]"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="mx-auto mb-1 mt-3 h-1.5 w-10 shrink-0 rounded-full bg-slate-600" />
+  return (
+    <Sheet onClose={onClose} maxH="88dvh" label="Выбор слов">
 
         <div className="flex items-start justify-between gap-2 px-5 pt-1">
           <div className="min-w-0">
@@ -108,9 +103,7 @@ export function WordPicker({
             onChoose={setChosen}
           />
         )}
-      </div>
-    </div>,
-    document.body,
+    </Sheet>
   )
 }
 

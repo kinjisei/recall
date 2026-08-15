@@ -10,7 +10,7 @@
 // именно», поэтому палец только открывает поле, а отправка — осознанная.
 // ============================================================================
 import { useState } from 'react'
-import { createPortal } from 'react-dom'
+import { Sheet } from './Sheet'
 import { Button } from './Button'
 import { IconCheck, IconClose, IconThumbsUp } from './icons'
 import { FEEDBACK_MAX, sendFeedback } from '../lib/feedback'
@@ -59,13 +59,8 @@ export function FeedbackSheet({ where, onClose }: { where: string; onClose: () =
     )
   }
 
-  return createPortal(
-    <div className="fixed inset-0 z-50 flex items-end bg-black/40" onClick={onClose}>
-      <div
-        className="animate-fade-up flex max-h-[85dvh] w-full flex-col rounded-t-3xl bg-[var(--night-surface)] pb-[env(safe-area-inset-bottom)]"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="mx-auto mb-1 mt-3 h-1.5 w-10 shrink-0 rounded-full bg-slate-600" />
+  return (
+    <Sheet onClose={onClose} maxH="85dvh" label="Обратная связь">
 
         {state === 'sent' ? (
           <div className="flex flex-col items-center gap-3 px-5 py-10 text-center">
@@ -139,8 +134,6 @@ export function FeedbackSheet({ where, onClose }: { where: string; onClose: () =
             </Button>
           </div>
         )}
-      </div>
-    </div>,
-    document.body,
+    </Sheet>
   )
 }

@@ -7,7 +7,7 @@
 // видны (safe-area учтён).
 // ============================================================================
 import { useEffect, useMemo, useState } from 'react'
-import { createPortal } from 'react-dom'
+import { Sheet } from './Sheet'
 import { IconSearch, IconSpeaker } from './icons'
 import { Button } from './Button'
 import { AnalysisSheet } from './AnalysisSheet'
@@ -246,14 +246,9 @@ export function WordSheet({
 
   // Портал в body: внутри <main> любой предок с transform/filter «приватизирует»
   // fixed-позиционирование, и шторка уезжает за навигацию на длинных текстах.
-  return createPortal(
+  return (
     <>
-    <div className="fixed inset-0 z-50 flex items-end bg-black/40" onClick={onClose}>
-      <div
-        className="flex max-h-[85dvh] w-full flex-col rounded-t-3xl bg-[var(--night-surface)]"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="mx-auto mb-1 mt-3 h-1.5 w-10 shrink-0 rounded-full bg-slate-600" />
+    <Sheet onClose={onClose} maxH="85dvh" label="Слово">
 
         {/* Прокручиваемое содержимое */}
         <div className="min-h-0 overflow-y-auto px-5 pt-2">
@@ -326,8 +321,7 @@ export function WordSheet({
             Закрыть
           </Button>
         </div>
-      </div>
-    </div>
+    </Sheet>
     {analyze && (
       <AnalysisSheet
         text={sentence}
@@ -336,7 +330,6 @@ export function WordSheet({
         onClose={() => setAnalyze(false)}
       />
     )}
-    </>,
-    document.body,
+    </>
   )
 }

@@ -5,7 +5,7 @@
 // словарь + транскрипция), для фразы — эта шторка.
 // ============================================================================
 import { useEffect, useState } from 'react'
-import { createPortal } from 'react-dom'
+import { Sheet } from './Sheet'
 import { Button } from './Button'
 import { IconSearch, IconSpeaker } from './icons'
 import { AnalysisSheet } from './AnalysisSheet'
@@ -70,14 +70,9 @@ export function PhraseSheet({
     }
   }
 
-  return createPortal(
+  return (
     <>
-      <div className="fixed inset-0 z-50 flex items-end bg-black/40" onClick={onClose}>
-        <div
-          className="flex max-h-[85dvh] w-full flex-col rounded-t-3xl bg-[var(--night-surface)]"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="mx-auto mb-1 mt-3 h-1.5 w-10 shrink-0 rounded-full bg-slate-600" />
+      <Sheet onClose={onClose} maxH="85dvh" label="Фраза">
           <div className="min-h-0 overflow-y-auto px-5 pt-2">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
@@ -125,12 +120,10 @@ export function PhraseSheet({
               Закрыть
             </Button>
           </div>
-        </div>
-      </div>
+      </Sheet>
       {analyze && (
         <AnalysisSheet text={text} sentence={sentence} lang={lang} onClose={() => setAnalyze(false)} />
       )}
-    </>,
-    document.body,
+    </>
   )
 }
