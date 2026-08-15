@@ -15,7 +15,7 @@
 // задание вообще сделают, но только если выбор виден обеим сторонам: без
 // пометки преподаватель ждал бы оба, а получил один и счёл это невыполнением.
 // ============================================================================
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Button } from '../../components/Button'
 import { Picker } from '../../components/Picker'
 import { Sheet } from '../../components/Sheet'
@@ -24,6 +24,7 @@ import { IconClose, IconPlus, IconSparkle, IconTrash } from '../../components/ic
 import { KIND_LABEL, createHomework, type HomeworkKind } from '../../lib/homework'
 import { countableItems, MAX_ITEMS } from '../../lib/homeworkRules'
 import { suggestHomework, type SuggestedItem } from '../../lib/homeworkSuggest'
+import { plural } from '../../lib/text'
 import type { AppLang } from '../../types'
 
 /** Через сколько дней срок по умолчанию: неделя — обычный шаг между уроками. */
@@ -40,6 +41,17 @@ const DEFAULT_TARGET: Record<HomeworkKind, number> = {
   speech: 5,
   quest: 1,
   free: 1,
+}
+
+/**
+ * Единица счётчика — ТОЛЬКО там, где число реальное: карточки повторения и
+ * слова вслух. У чтения/письма/квеста цель всегда 1, и ученик её счётчиком не
+ * видит (StudentHomework показывает полосу лишь при target > 1), поэтому поля
+ * там нет — «1 чего?» только сбивало с толку. Формы — общий plural.
+ */
+const UNIT: Partial<Record<HomeworkKind, [string, string, string]>> = {
+  words: ['карточка', 'карточки', 'карточек'],
+  speech: ['слово вслух', 'слова вслух', 'слов вслух'],
 }
 
 /**
@@ -88,6 +100,16 @@ export function HomeworkComposer({
   const [picking, setPicking] = useState(false)
   const [picked, setPicked] = useState<null | { fromAi: boolean; days: number }>(null)
   const [error, setError] = useState<string | null>(null)
+  const noteRef = useRef<HTMLTextAreaElement>(null)
+
+  // Заметка растёт под текст: однострочное поле не давало увидеть, что уже
+  // написано. Пересчитываем и при вводе, и когда подбор проставил заметку сам.
+  useEffect(() => {
+    const el = noteRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${el.scrollHeight}px`
+  }, [note])
 
   const patch = (i: number, next: Partial<SuggestedItem>) =>
     setItems((cur) => cur.map((it, idx) => (idx === i ? { ...it, ...next } : it)))
@@ -217,6 +239,7 @@ export function HomeworkComposer({
               const inGroup = it.pickGroup != null
               const firstInGroup =
                 inGroup && items.findIndex((x) => x.pickGroup === it.pickGroup) === i
+              const unit = UNIT[it.kind]
               return (
                 <li
                   key={i}
@@ -231,20 +254,16 @@ export function HomeworkComposer({
                       На выбор — ученик сделает одно из двух
                     </p>
                   )}
+                  {/* Тип и «удалить» на своей строке, заголовок — на своей во
+                      всю ширину. Раньше все трое стояли в одну линию, и длинное
+                      «Повторить слова, что буксуют» обрезалось до «Повторить с». */}
                   <div className="flex items-center gap-2">
                     <Picker
                       value={it.kind}
                       onChange={(kind) => patch(i, { kind, target: DEFAULT_TARGET[kind] })}
                       label="Тип задания"
                       options={KINDS.map((k) => ({ id: k, label: KIND_LABEL[k] }))}
-                      triggerClassName="flex h-11 w-36 flex-none items-center justify-between gap-1 rounded-lg border border-white/[0.10] bg-[var(--night-input)] px-2.5 text-sm outline-none focus:border-[var(--night-accent-45)]"
-                    />
-                    <input
-                      aria-label="Что сделать"
-                      value={it.title}
-                      placeholder="Что сделать"
-                      onChange={(e) => patch(i, { title: e.target.value })}
-                      className="h-11 min-w-0 flex-1 rounded-lg border border-white/[0.10] bg-[var(--night-input)] px-3 text-sm outline-none focus:border-[var(--night-accent-45)]"
+                      triggerClassName="flex h-11 min-w-0 flex-1 items-center justify-between gap-1 rounded-lg border border-white/[0.10] bg-[var(--night-input)] px-3 text-sm outline-none focus:border-[var(--night-accent-45)]"
                     />
                     <button
                       onClick={() => remove(i)}
@@ -255,23 +274,32 @@ export function HomeworkComposer({
                     </button>
                   </div>
 
-                  {/* «Своими словами» измерить нечем — цель там всегда одна, и
-                      поле только сбивало бы с толку. */}
-                  {it.kind !== 'free' && (
+                  <input
+                    aria-label="Что сделать"
+                    value={it.title}
+                    placeholder="Что сделать"
+                    onChange={(e) => patch(i, { title: e.target.value })}
+                    className="h-11 w-full rounded-lg border border-white/[0.10] bg-[var(--night-input)] px-3 text-sm outline-none focus:border-[var(--night-accent-45)]"
+                  />
+
+                  {/* Число — только где реальное. Единица прямо у поля: «20» без
+                      слова не говорило, чего именно двадцать. */}
+                  {unit && (
                     <label className="flex items-center gap-2 text-xs text-[var(--night-text-40)]">
-                      Сколько нужно
                       <input
                         type="number"
                         min={1}
                         max={500}
+                        aria-label="Сколько"
                         value={it.target ?? 1}
                         onChange={(e) =>
                           patch(i, {
                             target: Math.max(1, Math.min(500, Number(e.target.value) || 1)),
                           })
                         }
-                        className="h-9 w-20 rounded-lg border border-white/[0.10] bg-[var(--night-input)] px-2 text-sm text-[var(--night-text)]"
+                        className="h-9 w-16 rounded-lg border border-white/[0.10] bg-[var(--night-input)] px-2 text-sm text-[var(--night-text)]"
                       />
+                      {plural(it.target ?? 1, unit[0], unit[1], unit[2])}
                     </label>
                   )}
 
@@ -305,12 +333,14 @@ export function HomeworkComposer({
           <label htmlFor="hw-note" className="mt-4 block text-sm font-medium">
             Заметка ученику
           </label>
-          <input
+          <textarea
             id="hw-note"
+            ref={noteRef}
             value={note}
             placeholder="Например: сперва слова, потом текст"
             onChange={(e) => setNote(e.target.value)}
-            className="mt-1.5 h-11 w-full rounded-xl border border-white/[0.10] bg-[var(--night-input)] px-3.5 text-sm outline-none focus:border-[var(--night-accent-45)]"
+            rows={2}
+            className="mt-1.5 w-full resize-none overflow-hidden rounded-xl border border-white/[0.10] bg-[var(--night-input)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--night-accent-45)]"
           />
 
           {error && (

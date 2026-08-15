@@ -239,6 +239,19 @@ try {
   )
   check('тип возвращён к «Слова»', /Слова/.test(restored), restored)
 
+  // ---- 🟡 число только где реальное, 🟢 заметка видна многострочно -----------
+  // STARTER: слова(20) + чтение(1) + письмо(1). Число — только у слов; у чтения
+  // и письма цель всегда 1, поля нет. Красит, если вернуть число всем типам.
+  const numberFields = await page.evaluate(
+    () => document.querySelectorAll('[role="dialog"] input[type="number"]').length,
+  )
+  check('число показано только у счётных типов', numberFields === 1, `полей: ${numberFields}`)
+  check('у числа есть единица («карточек»)', await seen(page, 'карточек'))
+  const noteIsTextarea = await page.evaluate(
+    () => document.querySelector('#hw-note')?.tagName === 'TEXTAREA',
+  )
+  check('заметка — textarea, а не однострочное поле', noteIsTextarea)
+
   // ⚠️ Значения полей ввода в innerText НЕ попадают — заготовку надо читать из
   // самих input, иначе проверка ищет текст, которого на странице нет по природе.
   const drafted = await page.$$eval('input[aria-label="Что сделать"]', (els) =>
