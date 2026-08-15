@@ -356,6 +356,30 @@ try {
     .update({ last_review: new Date(new Date(hw2row.created_at).getTime() + 1000).toISOString() })
     .eq('user_id', sId)
 
+  // ---- ⬜ класс закрыт: серого нативного <select> нет и в других разделах ----
+  // Композер выше — одно из пяти мест. Здесь убеждаемся, что миграция дошла до
+  // Квестов и Программы: нативного <select> нет, выбор — пикер. Красит, если
+  // раздел откатить на <select>. (Делаем ДО входа учеником — тут ещё учитель.)
+  // ⚠️ Ждём МАРКЕР формы, а не фиксированную паузу: разделы грузят данные через
+  // useAsyncData, и на 800 мс Программа ещё показывала скелетон — пикера в нём
+  // нет, и проверка краснела на исправном коде.
+  for (const [sec, name, marker] of [
+    ['quests', 'Квесты', 'Тема грамматики'],
+    ['program', 'Программа', 'Уровень ученика'],
+  ]) {
+    await page.goto(`${BASE}/teacher?student=${sId}&sec=${sec}`, {
+      waitUntil: 'networkidle2',
+      timeout: 30000,
+    })
+    check(`«${name}»: форма выбора открылась`, await waitText(page, marker, 15000))
+    const nativeSelects = await page.evaluate(() => document.querySelectorAll('select').length)
+    check(`«${name}»: нативного <select> нет`, nativeSelects === 0, `select: ${nativeSelects}`)
+    const hasPicker = await page.evaluate(
+      () => !!document.querySelector('button[aria-haspopup="listbox"]'),
+    )
+    check(`«${name}»: выбор — пикер`, hasPicker)
+  }
+
   // Вход учеником — в ОТДЕЛЬНОМ контексте браузера.
   //
   // ⚠️ Сессия Supabase лежит в localStorage и общая на весь профиль, поэтому

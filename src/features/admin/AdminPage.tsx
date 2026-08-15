@@ -19,6 +19,7 @@ import {
   type FeedbackRow,
 } from '../../lib/admin'
 import { Button } from '../../components/Button'
+import { Picker } from '../../components/Picker'
 import { IconSearch, IconWarning, IconSpinner, IconHome } from '../../components/icons'
 import { AppLink } from '../../components/AppLink'
 import { RowsSkeleton } from '../../components/Loading'
@@ -233,32 +234,24 @@ function UserRow({
         )}
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <select
+        <Picker
           value={selPlan}
-          onChange={(e) => setSelPlan(e.target.value as PlanId)}
-          className="h-11 rounded-xl border border-white/[0.10] bg-[var(--night-input)] px-3 text-sm outline-none focus:border-[var(--night-accent-45)]"
-        >
-          {PLAN_OPTIONS.map((p) => (
-            <option key={p} value={p}>
-              {PLAN_LABELS[p]}
-            </option>
-          ))}
-        </select>
+          onChange={(id) => setSelPlan(id as PlanId)}
+          label="Тариф"
+          options={PLAN_OPTIONS.map((p) => ({ id: p, label: PLAN_LABELS[p] }))}
+          triggerClassName="flex h-11 items-center justify-between gap-2 rounded-xl border border-white/[0.10] bg-[var(--night-input)] px-3 text-sm outline-none focus:border-[var(--night-accent-45)]"
+        />
 
         {selPlan === 'free' ? (
           <span className="text-sm text-[var(--night-text-40)]">выключить</span>
         ) : (
-          <select
-            value={selMonths}
-            onChange={(e) => setSelMonths(Number(e.target.value))}
-            className="h-11 rounded-xl border border-white/[0.10] bg-[var(--night-input)] px-3 text-sm outline-none focus:border-[var(--night-accent-45)]"
-          >
-            {MONTH_OPTIONS.map((m) => (
-              <option key={m} value={m}>
-                {m} мес.
-              </option>
-            ))}
-          </select>
+          <Picker
+            value={String(selMonths)}
+            onChange={(id) => setSelMonths(Number(id))}
+            label="Срок"
+            options={MONTH_OPTIONS.map((m) => ({ id: String(m), label: `${m} мес.` }))}
+            triggerClassName="flex h-11 items-center justify-between gap-2 rounded-xl border border-white/[0.10] bg-[var(--night-input)] px-3 text-sm outline-none focus:border-[var(--night-accent-45)]"
+          />
         )}
 
         <Button onClick={apply} loading={busy} variant="secondary" className="px-4 py-2.5 text-sm">

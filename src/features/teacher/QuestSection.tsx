@@ -7,6 +7,8 @@
 import { useCallback, useState } from 'react'
 import { Button } from '../../components/Button'
 import { LoadError } from '../../components/LoadError'
+import { Picker } from '../../components/Picker'
+import { TabPicker } from '../../components/TabPicker'
 import { useAsyncData } from '../../lib/useAsyncData'
 import { assignQuest, deleteQuest, listStudentQuests } from '../../lib/quests'
 import type { AppLang, GrammarQuest } from '../../types'
@@ -179,21 +181,27 @@ export function QuestSection({ studentId }: { studentId: string }) {
       {/* форма назначения */}
       <div className="flex flex-col gap-2 border-t border-white/[0.08] pt-3">
         <div className="grid grid-cols-2 gap-2">
-          <label className="flex flex-col gap-1 text-xs text-[var(--night-text-40)]">
+          <div className="flex flex-col gap-1 text-xs text-[var(--night-text-40)]">
             Язык
-            <select value={lang} onChange={(e) => setLang(e.target.value as AppLang)} className={inputCls}>
-              <option value="en">Английский</option>
-              <option value="es">Испанский</option>
-            </select>
-          </label>
-          <label className="flex flex-col gap-1 text-xs text-[var(--night-text-40)]">
+            <TabPicker
+              value={lang}
+              onChange={setLang}
+              ariaLabel="Язык"
+              options={[
+                { id: 'en', label: 'Английский' },
+                { id: 'es', label: 'Испанский' },
+              ]}
+            />
+          </div>
+          <div className="flex flex-col gap-1 text-xs text-[var(--night-text-40)]">
             Уровень
-            <select value={level} onChange={(e) => setLevel(e.target.value)} className={inputCls}>
-              {LEVELS.map((l) => (
-                <option key={l}>{l}</option>
-              ))}
-            </select>
-          </label>
+            <Picker
+              value={level}
+              onChange={setLevel}
+              label="Уровень"
+              options={LEVELS.map((l) => ({ id: l, label: l }))}
+            />
+          </div>
         </div>
         <label className="flex flex-col gap-1 text-xs text-[var(--night-text-40)]">
           Тема грамматики
@@ -210,14 +218,15 @@ export function QuestSection({ studentId }: { studentId: string }) {
             ))}
           </datalist>
         </label>
-        <label className="flex flex-col gap-1 text-xs text-[var(--night-text-40)]">
+        <div className="flex flex-col gap-1 text-xs text-[var(--night-text-40)]">
           Сценарий
-          <select value={scenario} onChange={(e) => setScenario(e.target.value)} className={inputCls}>
-            {SCENARIOS.map((s) => (
-              <option key={s}>{s}</option>
-            ))}
-          </select>
-        </label>
+          <Picker
+            value={scenario}
+            onChange={setScenario}
+            label="Сценарий"
+            options={SCENARIOS.map((s) => ({ id: s, label: s }))}
+          />
+        </div>
         <label className="flex flex-col gap-1 text-xs text-[var(--night-text-40)]">
           Или свой сценарий (перекрывает выбор выше)
           <input

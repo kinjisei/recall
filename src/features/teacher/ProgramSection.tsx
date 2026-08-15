@@ -7,6 +7,7 @@
 import { useCallback, useState } from 'react'
 import { Button } from '../../components/Button'
 import { LoadError } from '../../components/LoadError'
+import { Picker } from '../../components/Picker'
 import { useAsyncData } from '../../lib/useAsyncData'
 import {
   archivePlan,
@@ -206,30 +207,24 @@ function PlanForm({
       {!preview ? (
         <>
           <div className="grid grid-cols-2 gap-2">
-            <label className="flex flex-col gap-1 text-xs text-[var(--night-text-40)]">
+            <div className="flex flex-col gap-1 text-xs text-[var(--night-text-40)]">
               Уровень ученика
-              <select value={level} onChange={(e) => setLevel(e.target.value)} className={inputCls}>
-                {LEVELS.map((l) => (
-                  <option key={l} value={l}>
-                    {l}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1 text-xs text-[var(--night-text-40)]">
+              <Picker
+                value={level}
+                onChange={setLevel}
+                label="Уровень ученика"
+                options={LEVELS.map((l) => ({ id: l, label: l }))}
+              />
+            </div>
+            <div className="flex flex-col gap-1 text-xs text-[var(--night-text-40)]">
               Недель
-              <select
-                value={weeks}
-                onChange={(e) => setWeeks(Number(e.target.value))}
-                className={inputCls}
-              >
-                {WEEK_OPTIONS.map((n) => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
-                ))}
-              </select>
-            </label>
+              <Picker
+                value={String(weeks)}
+                onChange={(id) => setWeeks(Number(id))}
+                label="Недель"
+                options={WEEK_OPTIONS.map((n) => ({ id: String(n), label: String(n) }))}
+              />
+            </div>
           </div>
           <label className="flex flex-col gap-1 text-xs text-[var(--night-text-40)]">
             Цель / пожелания (необязательно)

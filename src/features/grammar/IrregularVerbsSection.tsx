@@ -9,6 +9,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { IconSpeaker } from '../../components/icons'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
+import { Picker } from '../../components/Picker'
 import { TabPicker } from '../../components/TabPicker'
 import { RoundResult } from '../../components/RoundResult'
 import { speak } from '../../lib/speech'
@@ -249,22 +250,20 @@ function Trainer({ groups }: { groups: IrregularGroup[] }) {
 
   // выбор группы глаголов — выпадающим списком
   const scopeChips = (
-    <label className="flex items-center gap-2 text-sm">
+    <div className="flex items-center gap-2 text-sm">
       <span className="shrink-0 text-[var(--night-text-40)]">Группа:</span>
-      <select
+      <Picker
         value={scope}
-        onChange={(e) => pickScope(e.target.value)}
-        className="min-h-11 flex-1 rounded-xl border border-white/[0.10] bg-[var(--night-input)] px-3 text-sm text-[var(--night-text)] outline-none focus:border-[var(--night-accent-45)]"
-      >
-        <option value="all">Все группы</option>
-        {mistakeCount > 0 && <option value="mistakes">Мои ошибки ({mistakeCount})</option>}
-        {groups.map((g) => (
-          <option key={g.title} value={g.title}>
-            {g.title}
-          </option>
-        ))}
-      </select>
-    </label>
+        onChange={pickScope}
+        label="Группа глаголов"
+        triggerClassName="flex min-h-11 flex-1 items-center justify-between gap-2 rounded-xl border border-white/[0.10] bg-[var(--night-input)] px-3 text-sm text-[var(--night-text)] outline-none focus:border-[var(--night-accent-45)]"
+        options={[
+          { id: 'all', label: 'Все группы' },
+          ...(mistakeCount > 0 ? [{ id: 'mistakes', label: `Мои ошибки (${mistakeCount})` }] : []),
+          ...groups.map((g) => ({ id: g.title, label: g.title })),
+        ]}
+      />
+    </div>
   )
 
   // done === (index >= round.length) === (verb === undefined) — эквивалентны
