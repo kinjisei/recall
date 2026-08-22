@@ -60,6 +60,19 @@ export const AI_TASKS: Record<AiTask, TaskSpec> = {
     generation: true,
     teacherOnly: true,
   },
+
+  // Самоучка собирает материал СЕБЕ (режим самоучки, блок 3b). НЕ teacherOnly:
+  // доступен ученику. Списывается из ЕГО месячного лимита генераций (у соло-
+  // Premium он >0, у Free = 0 → RECALL_GEN_LIMIT ещё до модели), а не из
+  // учительского. Дешёвая standard-цепочка: одиночке хватит, а Pro-квоту и
+  // маржу бережём. Флип на 'max' — одна строка, если качество не устроит.
+  self_material: {
+    tier: 'standard',
+    quota: 'heavy',
+    energyCost: 0,
+    generation: true,
+    teacherOnly: false,
+  },
 }
 
 /** Спека задачи по присланному клиентом названию (undefined — название чужое). */

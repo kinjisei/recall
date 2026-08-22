@@ -495,6 +495,18 @@
   create policy "student updates own material assignments" on public.material_assignments
     for update using (auth.uid() = student_id) with check (auth.uid() = student_id);
 
+  -- Самоучка (режим самоучки, 3b) назначает СЕБЕ материал, который сам создал:
+  -- student_id = свой uid И материал принадлежит ему (material_owned_by). Так
+  -- одиночка собирает материал себе, не будучи ничьим учеником — политика
+  -- «teacher manages» тут не подходит (её is_student_of для «сам себе» ложно).
+  -- Чужому назначить нельзя (student_id обязан быть своим), на чужой материал
+  -- тоже (material_owned_by проверяет владение).
+  drop policy if exists "self-assign own material" on public.material_assignments;
+  create policy "self-assign own material" on public.material_assignments
+    for insert with check (
+      auth.uid() = student_id and public.material_owned_by(material_id, auth.uid())
+    );
+
   -- Материалы: переназначение с историей попыток (2026-07-19)
   alter table public.material_assignments add column if not exists attempts jsonb;
   alter table public.material_assignments add column if not exists note text;
@@ -2252,8 +2264,15 @@
     -- 3) свой premium → 30; триал → 30 первые 3 дня, дальше 15; 4) free → 5
     if public.has_premium_access(uid) then
       pool_owner := uid; in_studio := false;
-      -- две пробные генерации — только роли teacher и пока нет учеников
-      gen_limit := case when me.role = 'teacher' and not has_students then 2 else 0 end;
+      -- Месячный лимит генераций у соло-пользователя:
+      --   • самоучка-Premium (не teacher) → 12: собирает материалы СЕБЕ (3b);
+      --   • teacher без учеников → 2 пробные (как было);
+      --   • иначе 0.
+      -- Free сюда не доходит (ниже day_budget=5, gen_limit=0).
+      gen_limit := case
+        when me.role <> 'teacher' then 12
+        when not has_students then 2
+        else 0 end;
       if me.plan <> 'free' and me.plan_expires_at is not null and me.plan_expires_at > now() then
         day_budget := 30;
       elsif me.created_at > now() - interval '3 days' then

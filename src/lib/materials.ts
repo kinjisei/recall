@@ -39,7 +39,18 @@ export interface MaterialRequest {
    * же, что любой чат, и платить за него незачем.
    */
   studentId?: string | null
+  /**
+   * true — ученик собирает материал СЕБЕ (режим самоучки, 3b). Тогда задача
+   * уходит как self_material: не teacherOnly, тратит СВОЙ месячный лимит
+   * генераций, дешёвая standard-модель. studentId при этом = свой uid (материал
+   * подстроится под собственную диагностику).
+   */
+  self?: boolean
 }
+
+/** Какой задачей генерить: сам себе (self_material) или учитель (material). */
+const genTask = (req: MaterialRequest): 'self_material' | 'material' =>
+  req.self ? 'self_material' : 'material'
 
 export const MATERIAL_FORMATS = [
   'сказка',
@@ -150,7 +161,7 @@ export async function generateMaterialPlan(
   ].join('\n')
 
   // генерация материалов — сложная составная задача: Pro-уровень моделей
-  const raw = await chat([{ role: 'user', content: userMsg }], { system, task: 'material' })
+  const raw = await chat([{ role: 'user', content: userMsg }], { system, task: genTask(req) })
   const plan = parseJson<MaterialPlan>(raw)
   if (!Array.isArray(plan.exercise_plan) || !Array.isArray(plan.vocabulary)) {
     throw new Error('AI вернул неполный план. Попробуй ещё раз.')
@@ -217,7 +228,7 @@ export async function generateMaterialContent(
     feedback ? `\nПравки преподавателя: ${feedback}` : '',
   ].join('\n')
 
-  const raw = await chat([{ role: 'user', content: userMsg }], { system, task: 'material' })
+  const raw = await chat([{ role: 'user', content: userMsg }], { system, task: genTask(req) })
   const content = parseJson<MaterialContent>(raw)
 
   // Валидация: выбрасываем битые упражнения, требуем минимум приличный набор.
@@ -284,6 +295,7 @@ export async function generateExercisesForText(
     .filter(Boolean)
     .join('\n')
 
+  // «Свой текст» — путь преподавателя, задача material (в 3b не входит).
   const raw = await chat([{ role: 'user', content: userMsg }], { system, task: 'material' })
   const content = parseJson<{ title?: string; exercises?: MaterialExercise[] }>(raw)
   const valid = validExercises(content.exercises ?? [])

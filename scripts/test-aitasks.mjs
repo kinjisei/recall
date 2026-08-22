@@ -28,10 +28,19 @@ check(
 // состав считают данные, модель лишь переписывает заголовки). Проверяем то,
 // ради чего флаг заведён.
 const genTasks = entries.filter(([, s]) => s.generation)
+// ⚠️ teacherOnly у генераций защищает МЕСЯЧНЫЙ ЛИМИТ УЧИТЕЛЯ: без флага ученик
+// жёг бы учительский пул. Исключение — self_material: ученик генерит СЕБЕ и
+// тратит СВОЙ лимит (energy_source: pool_owner=сам), учительского не касается.
+// Поэтому правило: генерация teacherOnly, КРОМЕ self-serve-задач (self_*).
+const teacherGen = genTasks.filter(([t]) => !t.startsWith('self_'))
 check(
-  'любая генерация помечена teacherOnly — иначе ученик тратил бы месячный лимит учителя',
-  genTasks.length > 0 && genTasks.every(([, s]) => s.teacherOnly === true),
-  genTasks.map(([t]) => t).join(', '),
+  'учительская генерация помечена teacherOnly — иначе ученик тратил бы лимит учителя',
+  teacherGen.length > 0 && teacherGen.every(([, s]) => s.teacherOnly === true),
+  teacherGen.map(([t]) => t).join(', '),
+)
+check(
+  'self-serve генерация НЕ teacherOnly (ученик генерит себе из своего лимита)',
+  genTasks.filter(([t]) => t.startsWith('self_')).every(([, s]) => s.teacherOnly === false),
 )
 check(
   'генерация не стоит энергии — иначе списание пройдёт дважды',
