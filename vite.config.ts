@@ -2,7 +2,7 @@ import { defineConfig, loadEnv, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
-import { callGemini, GEMINI_TIER_CHAINS, type AiTier } from './api/_core'
+import { callGemini, streamGemini, GEMINI_TIER_CHAINS, type AiTier } from './api/_core'
 import { taskSpec } from './api/_tasks'
 import { transcribeWithGroq } from './api/_stt'
 import { groqChat, FAST_GROQ_MODEL } from './api/_groq'
@@ -33,12 +33,13 @@ function geminiDevEndpoint(apiKey: string | undefined, groqKey: string | undefin
           void (async () => {
             res.setHeader('Content-Type', 'application/json')
             try {
-              const { messages, system, provider, tier, task } = JSON.parse(raw || '{}') as {
+              const { messages, system, provider, tier, task, stream } = JSON.parse(raw || '{}') as {
                 messages?: ChatTurn[]
                 system?: string
                 provider?: string
                 tier?: string
                 task?: string
+                stream?: boolean
               }
               if (!Array.isArray(messages) || messages.length === 0) {
                 res.statusCode = 400
@@ -62,6 +63,35 @@ function geminiDevEndpoint(apiKey: string | undefined, groqKey: string | undefin
                 } catch {
                   /* мини-Groq лёг — уходим на Gemini-lite */
                 }
+              }
+              // Потоковый «Диалог» — как в проде (api/gemini.ts), чтобы стрим
+              // можно было проверить локально. Энергии/квот в dev нет.
+              if (stream === true && task === 'dialog' && apiKey) {
+                const chain = GEMINI_TIER_CHAINS[aiTier]
+                const gen = streamGemini(messages, system, apiKey, chain[0], chain, aiTier)
+                let first
+                try {
+                  first = await gen.next()
+                } catch (e) {
+                  const msg = e instanceof Error ? e.message : 'Ошибка AI'
+                  res.statusCode = msg.includes('лимит') ? 429 : 500
+                  res.end(JSON.stringify({ error: msg }))
+                  return
+                }
+                if (first.done) {
+                  res.statusCode = 502
+                  res.end(JSON.stringify({ error: 'AI сейчас не отвечает. Попробуй позже.' }))
+                  return
+                }
+                res.setHeader('Content-Type', 'text/plain; charset=utf-8')
+                res.write(first.value)
+                try {
+                  for await (const chunk of gen) res.write(chunk)
+                } catch {
+                  /* оборвалось — отдаём что успели (в dev энергии нет) */
+                }
+                res.end()
+                return
               }
               if (!apiKey) {
                 throw new Error(

@@ -7,7 +7,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import type { ChatTurn } from '../src/types/index.js'
 // расширение .js обязательно: "type": "module" — Vercel/Node в ESM-режиме
 // не находит модуль без расширения (FUNCTION_INVOCATION_FAILED при старте)
-import { callGemini, GEMINI_TIER_CHAINS, type AiTier } from './_core.js'
+import { callGemini, streamGemini, GEMINI_TIER_CHAINS, type AiTier } from './_core.js'
 import { groqChat, DEFAULT_GROQ_MODEL, FAST_GROQ_MODEL } from './_groq.js'
 import { authorize, applyCors, authDenied, isTeacher, refundAiCall } from './_auth.js'
 import { taskSpec } from './_tasks.js'
@@ -34,12 +34,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (applyCors(req, res)) return
   if (req.method !== 'POST') return res.status(405).json({ error: 'Только POST' })
 
-  const { messages, system, provider, tier, task } = (req.body ?? {}) as {
+  const { messages, system, provider, tier, task, stream } = (req.body ?? {}) as {
     messages?: ChatTurn[]
     system?: string
     provider?: string
     tier?: string
     task?: string
+    /** Клиент просит потоковый ответ (пока только «Диалог»). */
+    stream?: boolean
   }
 
   // Модель выбирает СЕРВЕР по типу задачи (карта — api/_tasks.ts). Клиент
@@ -143,6 +145,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!apiKey) return unavailable()
       const chain = GEMINI_TIER_CHAINS.lite
       return res.status(200).json({ text: await callGemini(messages, system, apiKey, chain[0], chain.slice(1), 'lite') })
+    }
+
+    // Потоковый «Диалог»: ответ льётся кусками по мере генерации — начинает
+    // появляться сразу, а не ждётся целиком. Только task='dialog' (остальные
+    // standard-задачи отдают JSON целиком) и только по явной просьбе клиента
+    // (stream:true) — старые кэшированные клиенты продолжают получать { text }.
+    // Энергия по правилу владельца: доставили полный ответ — берём; не
+    // завершился (ни слова / оборвался) — возвращаем.
+    if (stream === true && task === 'dialog' && apiKey) {
+      const chain = GEMINI_TIER_CHAINS[aiTier]
+      const gen = streamGemini(messages, system, apiKey, chain[0], chain, aiTier)
+      let first
+      try {
+        first = await gen.next() // до первого куска можно упасть — тогда возврат
+      } catch (e) {
+        return await fail(e, 'Ошибка AI') // ни слова не пришло — возврат + JSON-ошибка
+      }
+      if (first.done) return await unavailable() // пустой ответ — возврат
+      // Первый кусок есть — фиксируем 200 и льём поток.
+      res.status(200)
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8')
+      res.setHeader('Cache-Control', 'no-store')
+      res.write(first.value)
+      try {
+        for await (const chunk of gen) res.write(chunk)
+        res.end() // поток завершился STOP — ответ доставлен, плату оставляем
+      } catch {
+        // Оборвалось после первого куска — возвращаем энергию, отдаём что успели.
+        res.end()
+        await refund()
+      }
+      return
     }
 
     // standard/max: Gemini-цепочка уровня, терминальный фолбэк — Groq-70b.

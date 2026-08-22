@@ -14,7 +14,8 @@ import { Button } from '../../components/Button'
 import { TabPicker } from '../../components/TabPicker'
 import { supabase } from '../../lib/supabase'
 import { getProfile } from '../../lib/profile'
-import { chat } from '../../lib/gemini'
+import { chat, chatStream, isNetworkError } from '../../lib/gemini'
+import { aiOverloaded, clearAiFailures, recordAiServerFailure } from '../../lib/aiHealth'
 import { logActivity } from '../../lib/activity'
 import { useAuth } from '../../context/AuthContext'
 import { loadLastChat, startNewChat } from '../../lib/chatHistory'
@@ -210,7 +211,13 @@ function ChatSection({
   const [msgs, setMsgs] = useState<ChatTurn[]>([])
   const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
+  // Пошёл поток ответа: «печатает» сменяется растущей репликой. busy при этом
+  // остаётся true — второе сообщение отправить нельзя, пока ответ не дописан.
+  const [streaming, setStreaming] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Серия серверных сбоёв AI (3 за час): показываем честное «это на нашей
+  // стороне», а не даём молча биться дальше. Сетевые сбои сюда не идут.
+  const [overloaded, setOverloaded] = useState(aiOverloaded())
   // пока история поднимается — не показываем «пустой чат», иначе на секунду
   // мигает приглашение начать разговор, который на самом деле уже идёт
   const [loadingHistory, setLoadingHistory] = useState(true)
@@ -278,13 +285,28 @@ function ChatSection({
     const history: ChatTurn[] = [...msgs, { role: 'user', content: text }]
     setMsgs(history)
     setBusy(true)
+    setStreaming(false)
     try {
-      // отправляем только последние 20 реплик — экономим бесплатные токены
-      const reply = await chat(history.slice(-20), {
-        system: chatSystemPrompt(level, lang, goal),
-        task: 'dialog',
-      })
+      // отправляем только последние 20 реплик — экономим бесплатные токены.
+      // Ответ приходит ПОТОКОМ: реплика ассистента растёт на глазах.
+      let acc = ''
+      let started = false
+      const reply = await chatStream(
+        history.slice(-20),
+        { system: chatSystemPrompt(level, lang, goal), task: 'dialog' },
+        (delta) => {
+          acc += delta
+          if (!started) {
+            started = true
+            setStreaming(true) // первый кусок — прячем «печатает»
+          }
+          setMsgs([...history, { role: 'assistant', content: acc }])
+        },
+      )
+      // на случай, если поток был пустой по кускам, но текст вернулся
       setMsgs([...history, { role: 'assistant', content: reply }])
+      clearAiFailures() // ответ пришёл — серия сбоёв прервана
+      setOverloaded(false)
       void logActivity('conversation')
       void persist([
         { role: 'user', content: text, at: askedAt },
@@ -295,8 +317,15 @@ function ChatSection({
       setError(err instanceof Error ? err.message : 'Ошибка AI')
       setMsgs(msgs)
       setInput(text)
+      // Серверный сбой считаем; сетевой (нет интернета) — нет, у него своё
+      // сообщение и это не повод винить сервер.
+      if (!isNetworkError(err)) {
+        recordAiServerFailure()
+        if (aiOverloaded()) setOverloaded(true)
+      }
     } finally {
       setBusy(false)
+      setStreaming(false)
     }
   }
 
@@ -353,14 +382,24 @@ function ChatSection({
             {m.role === 'assistant' ? <AssistantText content={m.content} /> : m.content}
           </div>
         ))}
-        {busy && (
+        {busy && !streaming && (
           <div className="self-start rounded-2xl rounded-bl-md border border-white/[0.08] bg-[var(--night-surface)] px-4 py-2.5 text-[var(--night-text-40)]">
             <Thinking label="печатает" />
           </div>
         )}
       </div>
 
-      {error && <p className="flex-none text-sm text-red-500">{error}</p>}
+      {overloaded ? (
+        // Серия серверных сбоёв: честно говорим, что это на нашей стороне, и не
+        // винимо человека. Кнопка отправки остаётся — это осознанная новая
+        // попытка, а не молчаливое долбление; удачный ответ снимет баннер.
+        <p className="flex-none text-sm text-amber-300">
+          Похоже, у AI сейчас неполадки на нашей стороне — это не из-за тебя. Попробуй позже.
+          Слова, чтение, грамматика и произношение работают как обычно.
+        </p>
+      ) : (
+        error && <p className="flex-none text-sm text-red-500">{error}</p>
+      )}
       </div>
 
       {/* Панель ввода прижата к низу. Когда открыта клавиатура (visualViewport

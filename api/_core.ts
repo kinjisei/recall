@@ -100,7 +100,69 @@ function gemmaPreamble(systemText: string): { role: string; parts: { text: strin
 }
 
 interface GeminiResponse {
-  candidates?: { content?: { parts?: { text?: string }[] } }[]
+  candidates?: { content?: { parts?: { text?: string }[] }; finishReason?: string }[]
+}
+
+/** Роль-контент для API: system-реплики отдельно, остальное — в contents. */
+function splitMessages(
+  messages: ChatTurn[],
+  system: string | undefined,
+): { systemText: string; contents: { role: string; parts: { text: string }[] }[] } {
+  const systemText = [
+    system ?? '',
+    ...messages.filter((m) => m.role === 'system').map((m) => m.content),
+  ]
+    .filter(Boolean)
+    .join('\n\n')
+  const contents = messages
+    .filter((m) => m.role !== 'system')
+    .map((m) => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content }],
+    }))
+  return { systemText, contents }
+}
+
+/**
+ * Тело запроса под конкретную модель. Общее для обычного и потокового вызова —
+ * иначе настройки генерации (температура, потолок, «размышления») разошлись бы.
+ * У Gemma нет systemInstruction: инструкцию подаём отдельной парой реплик.
+ *
+ * Настройки зависят от уровня задачи (наблюдение владельца 24.07: упираемся в
+ * ЧИСЛО запросов, не в токены, поэтому токены не жалеем ради качества):
+ *   lite     — перевод слова: низкая температура, короткий ответ, без
+ *              «размышлений» — быстро;
+ *   standard — Диалог/письмо/разбор: «размышления» включены, ответ длиннее;
+ *   max      — материалы/программа: самый большой потолок ответа.
+ */
+function geminiBody(
+  model: string,
+  systemText: string,
+  contents: { role: string; parts: { text: string }[] }[],
+  tier: AiTier,
+): string {
+  const isGemma = model.startsWith('gemma')
+  const isThinkingModel = model.startsWith('gemini-2.5')
+  const gen: Record<string, unknown> =
+    tier === 'lite'
+      ? {
+          temperature: 0.2,
+          maxOutputTokens: 1024,
+          ...(isThinkingModel ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
+        }
+      : {
+          temperature: 0.7,
+          maxOutputTokens: tier === 'max' ? 8192 : 4096,
+        }
+  const body: Record<string, unknown> = {
+    contents:
+      isGemma && systemText && contents.length > 0
+        ? [...gemmaPreamble(systemText), ...contents]
+        : contents,
+    generationConfig: gen,
+  }
+  if (systemText && !isGemma) body.systemInstruction = { parts: [{ text: systemText }] }
+  return JSON.stringify(body)
 }
 
 /** Коды, при которых имеет смысл повторить: модель перегружена или сбой у Google. */
@@ -123,61 +185,10 @@ export async function callGemini(
   model = DEFAULT_GEMINI_MODEL,
   /** Явная цепочка фолбэков (по умолчанию — standard-цепочка). */
   fallbacks: string[] = FALLBACK_MODELS,
-  /** Уровень задачи — от него зависит «щедрость» генерации (см. bodyFor). */
+  /** Уровень задачи — от него зависит «щедрость» генерации (см. geminiBody). */
   tier: AiTier = 'standard',
 ): Promise<string> {
-  // system-реплики склеиваем в системную инструкцию, остальные — в contents
-  const systemText = [
-    system ?? '',
-    ...messages.filter((m) => m.role === 'system').map((m) => m.content),
-  ]
-    .filter(Boolean)
-    .join('\n\n')
-
-  const contents = messages
-    .filter((m) => m.role !== 'system')
-    .map((m) => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content }],
-    }))
-
-  /**
-   * Тело запроса под конкретную модель (у Gemma нет systemInstruction).
-   *
-   * Настройки генерации зависят от уровня задачи. Наблюдение владельца
-   * (24.07): упираемся мы в ЧИСЛО запросов (RPD), а токенов расходуем
-   * единицы процентов от лимита (TPM ~1.9 тыс. из 250 тыс.). Значит, экономить
-   * токены незачем — выгоднее сделать каждый запрос качественнее:
-   *   lite     — перевод слова: низкая температура (нужна точность, не
-   *              фантазия), короткий ответ, без «размышлений» — быстро;
-   *   standard — Диалог/письмо/разбор: «размышления» включены (у 2.5-моделей
-   *              их раньше глушили ради экономии), ответ длиннее;
-   *   max      — материалы и программа: самый большой потолок ответа.
-   */
-  const bodyFor = (m: string): string => {
-    const isGemma = m.startsWith('gemma')
-    const isThinkingModel = m.startsWith('gemini-2.5')
-    const gen: Record<string, unknown> =
-      tier === 'lite'
-        ? {
-            temperature: 0.2,
-            maxOutputTokens: 1024,
-            ...(isThinkingModel ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
-          }
-        : {
-            temperature: 0.7,
-            maxOutputTokens: tier === 'max' ? 8192 : 4096,
-          }
-    const body: Record<string, unknown> = {
-      contents:
-        isGemma && systemText && contents.length > 0
-          ? [...gemmaPreamble(systemText), ...contents]
-          : contents,
-      generationConfig: gen,
-    }
-    if (systemText && !isGemma) body.systemInstruction = { parts: [{ text: systemText }] }
-    return JSON.stringify(body)
-  }
+  const { systemText, contents } = splitMessages(messages, system)
 
   // Цепочка моделей: выбранная + фолбэки. 429 (квота) и 404 (модель пропала) —
   // сразу пробуем следующую модель; 5xx — повторяем эту же с паузой.
@@ -192,7 +203,7 @@ export async function callGemini(
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-          body: bodyFor(m),
+          body: geminiBody(m, systemText, contents, tier),
         },
       )
       if (res.ok) break outer
@@ -249,4 +260,111 @@ export async function callGemini(
     .trim()
   if (!text) throw new Error('Gemini вернул пустой ответ. Попробуй переформулировать.')
   return text
+}
+
+/**
+ * Потоковый вызов Gemini для «Диалога»: отдаёт куски текста по мере генерации,
+ * чтобы ответ начинал появляться сразу, а не ждался целиком. Та же цепочка
+ * фолбэков, что у callGemini, но переключиться между моделями можно только ДО
+ * первого куска — после него поздно.
+ *
+ * Контракт с вызывающим (api/gemini.ts), важен для ЭНЕРГИИ:
+ *   • бросает на ПЕРВОМ next(), если ни одна модель не отдала ни слова, —
+ *     ответа нет, вызывающий возвращает энергию;
+ *   • yield-ит куски, пока идёт ответ;
+ *   • ЗАВЕРШАЕТСЯ НОРМАЛЬНО только при finishReason STOP (ответ дописан) — это
+ *     сигнал «доставили, плату берём»;
+ *   • бросает ПОСЛЕ выдачи кусков, если поток оборвался без STOP, — сигнал
+ *     «оборвалось, вернуть энергию» (правило владельца: не завершился — не берём).
+ */
+export async function* streamGemini(
+  messages: ChatTurn[],
+  system: string | undefined,
+  apiKey: string,
+  model = DEFAULT_GEMINI_MODEL,
+  fallbacks: string[] = FALLBACK_MODELS,
+  tier: AiTier = 'standard',
+): AsyncGenerator<string, void, unknown> {
+  const { systemText, contents } = splitMessages(messages, system)
+  const chain = [model, ...fallbacks.filter((m) => m !== model)]
+  let lastStatus = 0
+  let produced = false
+
+  for (const m of chain) {
+    let res: Response
+    try {
+      res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${m}:streamGenerateContent?alt=sse`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+          body: geminiBody(m, systemText, contents, tier),
+        },
+      )
+    } catch {
+      continue // сетевой сбой к этой модели — следующая
+    }
+    if (!res.ok || !res.body) {
+      lastStatus = res.status
+      console.warn(`Gemini stream ${m}: ${res.status} — следующая модель`)
+      continue
+    }
+
+    const reader = res.body.getReader()
+    const decoder = new TextDecoder()
+    let buf = ''
+    let gotText = false
+    let finished = false
+    try {
+      for (;;) {
+        const { value, done } = await reader.read()
+        if (done) break
+        buf += decoder.decode(value, { stream: true })
+        // SSE: события разделены пустой строкой, полезное — строки «data: {…}».
+        let nl: number
+        while ((nl = buf.indexOf('\n')) >= 0) {
+          const line = buf.slice(0, nl).trim()
+          buf = buf.slice(nl + 1)
+          if (!line.startsWith('data:')) continue
+          const json = line.slice(5).trim()
+          if (!json || json === '[DONE]') continue
+          let obj: GeminiResponse
+          try {
+            obj = JSON.parse(json) as GeminiResponse
+          } catch {
+            continue // неполный/битый кусок — пропускаем
+          }
+          const delta = (obj.candidates?.[0]?.content?.parts ?? [])
+            .map((p) => p.text ?? '')
+            .join('')
+          if (obj.candidates?.[0]?.finishReason) finished = true
+          if (delta) {
+            gotText = true
+            produced = true
+            yield delta
+          }
+        }
+      }
+    } catch {
+      // Обрыв соединения. До первого куска — следующая модель; после — отдавать
+      // нечего, сигналим «не завершилось» (энергия вернётся).
+      if (gotText) throw new Error('Поток оборвался — ответ пришёл не полностью.')
+      continue
+    }
+    if (gotText) {
+      if (finished) return // ответ дописан целиком — успех
+      throw new Error('Поток оборвался — ответ пришёл не полностью.')
+    }
+    // модель ответила пусто — следующая
+  }
+
+  // Ни одна модель не отдала ни слова.
+  if (lastStatus === 429) {
+    throw new Error(
+      'AI сегодня недоступен: у наших моделей закончился общий дневной запас. ' +
+        'Это не твой лимит, энергия не потрачена. Слова, чтение, грамматика и ' +
+        'произношение работают как обычно.',
+    )
+  }
+  throw new Error('AI сейчас не отвечает. Энергия не потрачена — попробуй позже.')
 }

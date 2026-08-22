@@ -47,7 +47,8 @@ jobs:
             test-cefr test-textchunks test-sentence-around test-dynamics \
             test-assignment-score test-aitasks test-fsrs-graduation \
             test-material-exercises test-backup-precheck test-backup-explain \
-            test-word-packs test-homework-suggest test-student-signals
+            test-word-packs test-homework-suggest test-student-signals \
+            test-ai-health
           do
             if [ -f "scripts/$f.mjs" ]; then
               echo "── $f"
