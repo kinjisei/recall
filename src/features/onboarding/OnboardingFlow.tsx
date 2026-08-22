@@ -18,6 +18,7 @@ import {
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { supabase } from '../../lib/supabase'
+import { joinTeacher } from '../../lib/teacher'
 import { invalidateProfile } from '../../lib/profile'
 import { setEsLevel } from '../../lib/esLevel'
 import { markOnboarded } from '../../lib/onboarding'
@@ -302,6 +303,27 @@ function StepReady({
   onTeacher: () => void
 }) {
   const [heard, setHeard] = useState<string | null>(null)
+  // Развилка «сам / с преподавателем». Самоучка идёт сразу учиться (свои
+  // инструменты уже открыты), у кого есть преподаватель — вводит код и
+  // привязывается тут же, чтобы не искать, куда его вводить потом.
+  const [showCode, setShowCode] = useState(false)
+  const [code, setCode] = useState('')
+  const [joining, setJoining] = useState(false)
+  const [joinError, setJoinError] = useState<string | null>(null)
+
+  const joinAndFinish = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!code.trim() || joining) return
+    setJoining(true)
+    setJoinError(null)
+    try {
+      await joinTeacher(code.trim())
+      onFinish() // привязались — дальше как обычно; задания даст преподаватель
+    } catch (err) {
+      setJoinError(err instanceof Error ? err.message : 'Не удалось привязаться')
+      setJoining(false)
+    }
+  }
   return (
     <div className="flex flex-1 flex-col gap-7">
       <div className="flex flex-col items-center gap-4 pt-6 text-center">
@@ -364,14 +386,51 @@ function StepReady({
       </div>
 
       <div className="mt-auto flex flex-col gap-3">
-        <button
-          onClick={onFinish}
-          className="rounded-2xl bg-[var(--night-text)] py-4 font-medium text-[var(--night-bg)] transition-[filter,transform] active:scale-[0.98]"
-        >
-          Начать первое занятие
-        </button>
-        {/* вход для репетитора: раньше роль выдавалась только вручную в базе,
-            и человек, пришедший вести учеников, не находил студию вообще */}
+        {!showCode ? (
+          <>
+            <button
+              onClick={onFinish}
+              className="rounded-2xl bg-[var(--night-text)] py-4 font-medium text-[var(--night-bg)] transition-[filter,transform] active:scale-[0.98]"
+            >
+              Занимаюсь сам — начать
+            </button>
+            <button
+              onClick={() => setShowCode(true)}
+              className="rounded-2xl border border-white/[0.12] py-3.5 font-medium text-[var(--night-text-70)] transition-[filter,transform] active:scale-[0.98]"
+            >
+              У меня есть преподаватель
+            </button>
+          </>
+        ) : (
+          <form onSubmit={joinAndFinish} className="flex flex-col gap-2">
+            <input
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="Код от преподавателя"
+              autoFocus
+              className="h-12 rounded-2xl border border-white/[0.12] bg-[var(--night-input)] px-4 text-center text-lg tracking-widest outline-none focus:border-[var(--night-accent-45)]"
+            />
+            {joinError && <p className="text-sm text-red-400">{joinError}</p>}
+            <button
+              type="submit"
+              disabled={!code.trim() || joining}
+              className="rounded-2xl bg-[var(--night-text)] py-4 font-medium text-[var(--night-bg)] transition-[filter,transform] active:scale-[0.98] disabled:opacity-40"
+            >
+              {joining ? 'Привязываю…' : 'Привязаться и начать'}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setShowCode(false)
+                setJoinError(null)
+              }}
+              className="min-h-[44px] py-1 text-sm text-[var(--night-text-40)]"
+            >
+              Назад
+            </button>
+          </form>
+        )}
+        {/* вход для репетитора: роль включается изнутри приложения */}
         <button
           onClick={onTeacher}
           className="min-h-[44px] py-1 text-sm text-[var(--night-text-40)] underline underline-offset-4"
