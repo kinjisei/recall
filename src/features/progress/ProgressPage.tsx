@@ -15,6 +15,7 @@ import {
   IconSignOut,
   type IconProps,
 } from '../../components/icons'
+import { AppLink } from '../../components/AppLink'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { supabase, currentUserId } from '../../lib/supabase'
@@ -22,6 +23,30 @@ import { getBestStreak, getStreak, getWeek, type WeekDay } from '../../lib/activ
 import { getDeckIds } from '../../lib/cards'
 import { countDueCards } from '../../lib/fsrs'
 import { statusOf, type StatusInput } from '../../lib/wordChecks'
+import { getStudentDiagnostics } from '../../lib/diagnostics'
+import { grammarCatalog } from '../../lib/diagnosticsBrief'
+
+/**
+ * «Над чем поработать» — своя диагностика ученика (блок «Режим самоучки»).
+ * Те же данные, что видит преподаватель в карте ученика (lib/diagnostics), но
+ * ПРО СЕБЯ и с ученическим языком. Никакого teacherOnly-пути: читается свой uid
+ * под RLS (эти же данные ученик уже видит в прогрессе и «Моих ошибках»). 0 ⚡.
+ */
+interface WeakSpots {
+  struggling: { front: string; back: string | null; lapses: number }[]
+  weakTopics: { title: string; count: number }[]
+}
+
+async function loadWeakSpots(lang: 'en' | 'es'): Promise<WeakSpots | null> {
+  const userId = await currentUserId()
+  if (!userId) return null
+  const [diag, cat] = await Promise.all([getStudentDiagnostics(userId), grammarCatalog(lang)])
+  const titles = new Map(cat.topics.map((t) => [t.id, t.title]))
+  const weakTopics = diag.mistakes
+    .filter((m) => m.lang === lang)
+    .map((m) => ({ title: titles.get(m.topicId) ?? `тема №${m.topicId}`, count: m.count }))
+  return { struggling: diag.words.struggling, weakTopics }
+}
 
 interface Metrics {
   learned: number
@@ -80,11 +105,23 @@ export function ProgressPage() {
   const [week, setWeek] = useState<WeekDay[]>([])
   const [streak, setStreak] = useState(0)
   const [metrics, setMetrics] = useState<Metrics | null>(null)
+  const [weak, setWeak] = useState<WeakSpots | null>(null)
 
   useEffect(() => {
     getWeek().then(setWeek).catch(() => {})
     getStreak().then(setStreak).catch(() => {})
   }, [])
+
+  useEffect(() => {
+    let alive = true
+    setWeak(null)
+    loadWeakSpots(lang)
+      .then((w) => alive && setWeak(w))
+      .catch(() => alive && setWeak(null))
+    return () => {
+      alive = false
+    }
+  }, [lang])
 
   useEffect(() => {
     let alive = true
@@ -187,6 +224,65 @@ export function ProgressPage() {
           delay=".3s"
         />
       </section>
+
+      {/* Над чем поработать — своя диагностика (Режим самоучки). Показываем
+          только когда есть что показать; пусто → короткая похвала, а не пустой
+          блок. */}
+      {weak && (weak.struggling.length > 0 || weak.weakTopics.length > 0) && (
+        <section
+          className="animate-fade-up flex flex-col gap-4 rounded-3xl border border-white/[0.08] bg-[var(--night-surface)] p-5"
+          style={{ animationDelay: '.34s' }}
+        >
+          <h2 className="text-lg font-medium tracking-tight">Над чем поработать</h2>
+
+          {weak.struggling.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <p className="text-sm text-[var(--night-text-70)]">Слова, что буксуют</p>
+              <ul className="flex flex-col gap-1.5">
+                {weak.struggling.map((w) => (
+                  <li key={w.front} className="flex items-baseline justify-between gap-3 text-sm">
+                    <span className="min-w-0">
+                      <span className="font-medium">{w.front}</span>
+                      {w.back && <span className="text-[var(--night-text-40)]"> — {w.back}</span>}
+                    </span>
+                    <span className="flex-none text-xs text-[var(--night-text-40)]">
+                      срывов {w.lapses}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <AppLink
+                to="/practice?m=review"
+                className="text-sm text-[var(--night-accent-text)] hover:underline"
+              >
+                Повторить эти слова →
+              </AppLink>
+            </div>
+          )}
+
+          {weak.weakTopics.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <p className="text-sm text-[var(--night-text-70)]">Слабые темы грамматики</p>
+              <ul className="flex flex-col gap-1.5">
+                {weak.weakTopics.map((t) => (
+                  <li key={t.title} className="flex items-baseline justify-between gap-3 text-sm">
+                    <span className="min-w-0">{t.title}</span>
+                    <span className="flex-none text-xs text-[var(--night-text-40)]">
+                      ошибок {t.count}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <AppLink
+                to="/grammar?mistakes=1"
+                className="text-sm text-[var(--night-accent-text)] hover:underline"
+              >
+                Разобрать мои ошибки →
+              </AppLink>
+            </div>
+          )}
+        </section>
+      )}
 
       <button
         onClick={signOut}
