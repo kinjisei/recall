@@ -16,6 +16,7 @@ import {
   type IconProps,
 } from '../../components/icons'
 import { AppLink } from '../../components/AppLink'
+import { HowItWorks } from '../../components/HowItWorks'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { supabase, currentUserId } from '../../lib/supabase'
@@ -234,6 +235,14 @@ export function ProgressPage() {
           style={{ animationDelay: '.34s' }}
         >
           <h2 className="text-lg font-medium tracking-tight">Над чем поработать</h2>
+
+          <HowItWorks>
+            Это твоя личная карта слабых мест — её видишь только ты. Слова,
+            «которые буксуют», — те, что ты чаще всего забываешь на повторении;
+            слабые темы грамматики считаются по твоим ошибкам в уроках. Отсюда же
+            можно сразу повторить эти слова. Ничего не стоит и обновляется по
+            ходу занятий.
+          </HowItWorks>
 
           {weak.struggling.length > 0 && (
             <div className="flex flex-col gap-2">

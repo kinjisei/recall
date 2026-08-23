@@ -2,19 +2,15 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useKeyboardInset } from '../../lib/useKeyboardInset'
 import { useChatList } from '../../lib/useChatList'
 import {
-  IconDialog,
   IconSend,
   IconPencil,
   IconCheck,
   IconMaterials,
-  type IconProps,
 } from '../../components/icons'
 import { Card } from '../../components/Card'
-import { Button } from '../../components/Button'
-import { TabPicker } from '../../components/TabPicker'
 import { supabase } from '../../lib/supabase'
 import { getProfile } from '../../lib/profile'
-import { chat, chatStream, isNetworkError } from '../../lib/gemini'
+import { chatStream, isNetworkError } from '../../lib/gemini'
 import { aiOverloaded, clearAiFailures, recordAiServerFailure } from '../../lib/aiHealth'
 import { logActivity } from '../../lib/activity'
 import { useAuth } from '../../context/AuthContext'
@@ -24,18 +20,11 @@ import { useLanguage } from '../../context/LanguageContext'
 import { getEsLevel } from '../../lib/esLevel'
 import type { AppLang, CEFRLevel, ChatTurn, LearningGoal } from '../../types'
 import { Thinking } from '../../components/Thinking'
-
-type Mode = 'chat' | 'writing'
-
-const modes: { id: Mode; label: string; Icon: (p: IconProps) => React.JSX.Element }[] = [
-  { id: 'chat', label: 'Чат', Icon: IconDialog },
-  { id: 'writing', label: 'Письмо', Icon: IconPencil },
-]
+import { HowItWorks } from '../../components/HowItWorks'
 
 export function ConversationPage() {
   const { user } = useAuth()
   const { lang } = useLanguage()
-  const [mode, setMode] = useState<Mode>('chat')
   const [profileLevel, setProfileLevel] = useState<CEFRLevel>('B1')
   // цель обучения из профиля — уходит в промпт (см. goalHint)
   const [goal, setGoal] = useState<LearningGoal | null>(null)
@@ -61,30 +50,34 @@ export function ConversationPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* как в макете: заголовок + сегмент-переключатель капсулой справа */}
-      <header className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-medium tracking-tight">Диалог</h1>
-          <p className="text-xs text-[var(--night-text-40)]">
-            {/* Уровень показываем, только если он ИЗВЕСТЕН: у нового аккаунта
-                его нет, а B1 здесь — рабочее умолчание для промпта, не факт
-                о человеке. Раньше экран уверенно писал «уровень B1». */}
-            {lang === 'es'
-              ? `испанский · ${level}`
-              : knownLevel
-                ? `уровень ${level}`
-                : 'уровень определим по ходу'}
-          </p>
-        </div>
-        <TabPicker variant="segment" options={modes} value={mode} onChange={setMode} ariaLabel="Режим" />
+      {/* «Диалог» — только разговор с AI (вариант A навигации,
+          docs/nav-structure-options.md): проверка письма переехала в «Учёбу →
+          Письмо», чтобы всё письмо жило в одном месте, а вкладка отвечала за
+          одну вещь. */}
+      <header className="min-w-0">
+        <h1 className="text-2xl font-medium tracking-tight">Диалог</h1>
+        <p className="text-xs text-[var(--night-text-40)]">
+          {/* Уровень показываем, только если он ИЗВЕСТЕН: у нового аккаунта
+              его нет, а B1 здесь — рабочее умолчание для промпта, не факт
+              о человеке. Раньше экран уверенно писал «уровень B1». */}
+          {lang === 'es'
+            ? `испанский · ${level}`
+            : knownLevel
+              ? `уровень ${level}`
+              : 'уровень определим по ходу'}
+        </p>
       </header>
 
-      {/* key={lang}: при смене языка начинаем чат/проверку заново */}
-      {mode === 'chat' ? (
-        <ChatSection key={lang} level={level} lang={lang} goal={goal} />
-      ) : (
-        <WritingSection key={lang} level={level} lang={lang} />
-      )}
+      <HowItWorks>
+        Просто переписывайся с AI на изучаемом языке — он поддержит разговор и
+        мягко поправит ошибки, а переписка сохранится, чтобы продолжить позже.
+        Каждая реплика тратит немного энергии — остаток виден в шапке. Хочешь,
+        чтобы разобрали готовый текст по критериям экзамена, — это в «Учёбе →
+        Письмо».
+      </HowItWorks>
+
+      {/* key={lang}: при смене языка начинаем чат заново */}
+      <ChatSection key={lang} level={level} lang={lang} goal={goal} />
     </div>
   )
 }
@@ -438,129 +431,6 @@ function ChatSection({
           </button>
         )}
       </div>
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Режим «Письмо» — проверка текста. Результат сохраняется в writing_submissions.
-// ---------------------------------------------------------------------------
-
-function writingSystemPrompt(level: CEFRLevel, lang: AppLang): string {
-  const subject = lang === 'es' ? 'испанского' : 'английского'
-  const textLang = lang === 'es' ? 'испанском' : 'английском'
-  // Реальный уровень (для ES — из placement-теста), как в промпте чата:
-  // раньше испанский всегда считался A1–A2, и B1/B2-ученику разбор был занижен.
-  const beginner = level === 'A1' || level === 'A2' ? ' (начинающий)' : ''
-  const levelNote = `Ученик — носитель русского, уровень ${level}${beginner}. Он пришлёт текст на ${textLang}.`
-  return [
-    `Ты — доброжелательный преподаватель ${subject}.`,
-    levelNote,
-    'Ответь по-русски, без markdown-разметки, строго по разделам:',
-    '',
-    'Объясняй просто и коротко, под уровень ученика — без научных терминов.',
-    '',
-    'ОШИБКИ',
-    'нумерованный список: «цитата» → исправление — короткое объяснение.',
-    'Если ошибок нет — напиши «Ошибок не нашёл».',
-    // То же правило, что в промпте чата: не сдвигать время и не выдумывать ошибки.
-    'Не выдумывай ошибки: то, что написано верно, не трогай. Исправляй ошибку ВНУТРИ фразы ученика, не меняя её смысл и время (настоящее остаётся настоящим). Если неверно выбрано САМО время — это ошибка, назови её отдельным пунктом с объяснением.',
-    '',
-    'УЛУЧШЕННАЯ ВЕРСИЯ',
-    `тот же текст на естественном ${textLang} (чуть выше уровня ученика).`,
-    // Ревью 2Б: в «улучшенной версии» молча правились ошибки, которых не было в
-    // списке (как раз согласование времён — то, что и надо объяснять).
-    'Сначала полностью составь список ОШИБКИ, потом пиши улучшенную версию и меняй в ней ТОЛЬКО то, что уже названо в списке. Ничего не исправляй молча: заметил по ходу ещё одну ошибку — вернись и допиши её в список. Правку, которая не ошибка, а стиль, тоже вынеси в список строкой «стиль: было → стало».',
-    '',
-    'СОВЕТ',
-    '1-2 предложения: что подтянуть в первую очередь.',
-    '',
-    'ОЦЕНКА',
-    `одной строкой, например: «уверенный ${level}».`,
-  ].join('\n')
-}
-
-function WritingSection({ level, lang }: { level: CEFRLevel; lang: AppLang }) {
-  const { user } = useAuth()
-  const [text, setText] = useState('')
-  const [feedback, setFeedback] = useState<string | null>(null)
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const check = async () => {
-    const body = text.trim()
-    if (!body || busy) return
-    setBusy(true)
-    setError(null)
-    setFeedback(null)
-    try {
-      const fb = await chat([{ role: 'user', content: body }], {
-        system: writingSystemPrompt(level, lang),
-        task: 'writing',
-      })
-      setFeedback(fb)
-      void logActivity('writing')
-      if (user) {
-        // сохраняем в фоне: кнопка не должна ждать записи в базу
-        void supabase
-          .from('writing_submissions')
-          .insert({ user_id: user.id, text: body, feedback: { text: fb, level, lang } })
-          .then(({ error: wErr }) => {
-            if (wErr) console.warn('Не удалось сохранить проверку:', wErr)
-          })
-      }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Ошибка AI')
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  return (
-    <div className="flex flex-col gap-3">
-      <Card>
-        <p className="text-[var(--night-text-70)]">
-          {lang === 'es'
-            ? 'Напиши несколько предложений по-испански — AI разберёт ошибки, предложит улучшенную версию и даст совет.'
-            : 'Напиши несколько предложений по-английски — AI разберёт ошибки, предложит улучшенную версию и даст совет.'}
-        </p>
-      </Card>
-
-      <textarea
-        className="min-h-[140px] w-full rounded-xl border border-white/[0.10] bg-[var(--night-input)] px-4 py-3 text-base leading-relaxed outline-none focus:border-[var(--night-accent-45)]"
-        placeholder={
-          lang === 'es'
-            ? 'Hola. Me gusta mucho la música española…'
-            : 'Yesterday I go to the shop and buyed some apples…'
-        }
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        disabled={busy}
-      />
-
-      <Button onClick={check} disabled={busy || !text.trim()}>
-        {busy ? 'Проверяю…' : 'Проверить'}
-      </Button>
-
-      {error && <p className="text-sm text-red-500">{error}</p>}
-
-      {feedback && (
-        <Card>
-          <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-[var(--night-text)]">
-            {feedback}
-          </p>
-          <Button
-            variant="ghost"
-            className="mt-3 px-3 py-1 text-sm"
-            onClick={() => {
-              setFeedback(null)
-              setText('')
-            }}
-          >
-            Новая проверка
-          </Button>
-        </Card>
-      )}
     </div>
   )
 }

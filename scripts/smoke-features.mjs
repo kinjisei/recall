@@ -6,7 +6,7 @@
  *  4. /placement EN: интро «До 50 вопросов», прокликиваем первые ответы, тест
  *     завершается (ранний стоп или полный) экраном «Твой уровень».
  *  5. /grammar → урок → упражнение с ошибкой → возврат: строка «Мои ошибки».
- *  6. /conversation: вкладки Чат/Письмо без эмодзи, есть иконки.
+ *  6. /conversation: только чат (сегмент Чат/Письмо убран), без эмодзи.
  * Использует тот же подход, что scripts/ux-audit.mjs (Edge + connect).
  */
 import { createClient } from '@supabase/supabase-js'
@@ -200,7 +200,7 @@ async function main() {
       )
       return {
         rows: rows.map((r) => r.slice(0, 20)),
-        hasReader: rows.some((r) => r.includes('Тексты и диалоги')),
+        hasReader: rows.some((r) => r.includes('Чтение')),
         hasWords: rows.some((r) => r.startsWith('Мой словарь')),
         hasGrammar: rows.some((r) => r.includes('Грамматика')),
         noPractice: !rows.some((r) => r.includes('мини-игры')),
@@ -212,7 +212,7 @@ async function main() {
       studyState.hasReader && studyState.hasWords && studyState.hasGrammar && studyState.noPractice && studyState.noTextList,
       JSON.stringify(studyState),
     )
-    await clickByText(page, 'button', 'Тексты и диалоги')
+    await clickByText(page, 'button', 'Чтение')
     await waitText(page, 'Выбери текст')
     const readerOpened = await page.evaluate(() => ({
       list: (document.body.textContent || '').includes('Выбери текст'),
@@ -431,20 +431,21 @@ async function main() {
     const mistakesRow = await waitText(page, 'Мои ошибки', 8000)
     check('Грамматика: строка «Мои ошибки» появляется после ошибки', mistakesRow, mistakesRow ? '' : '(возможно, первый клик был верным ответом — не критично)')
 
-    // ---- 6. Диалог: вкладки без эмодзи ----
+    // ---- 6. Диалог: только чат, без эмодзи ----
+    // Вариант A навигации: сегмент Чат/Письмо убран, письмо переехало в
+    // «Учёбу → Письмо». Проверяем, что «Диалог» стал одной вещью — чатом:
+    // сегмента «Режим» больше НЕТ, а поле ввода и кнопка отправки на месте.
     await page.goto(BASE + '/conversation', { waitUntil: 'networkidle2' })
     await sleep(800)
     const convState = await page.evaluate(() => {
       const body = document.body.textContent || ''
       return {
         noEmoji: !body.includes('💬') && !body.includes('✍️'),
-        // TabPicker отдаёт role="tablist" (правильная роль для вкладок);
-        // проверка искала устаревший role="group" и падала на исправной вёрстке
-        segment: !!document.querySelector('[role="tablist"][aria-label="Режим"]'),
+        segmentGone: !document.querySelector('[role="tablist"][aria-label="Режим"]'),
         send: !!document.querySelector('button[aria-label="Отправить"].h-12'),
       }
     })
-    check('Диалог по макету: сегмент Чат/Письмо + кнопка отправки 48×48', convState.noEmoji && convState.segment && convState.send, JSON.stringify(convState))
+    check('Диалог — только чат (сегмент убран) + кнопка отправки 48×48', convState.noEmoji && convState.segmentGone && convState.send, JSON.stringify(convState))
 
     if (errors.length) {
       console.log('\nJS-ошибки на страницах:')

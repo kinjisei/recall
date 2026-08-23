@@ -294,7 +294,7 @@ async function main() {
   await page.goto(`${BASE}/study`, { waitUntil: 'networkidle2' })
   await sleep(2500)
   await page.evaluate(() => (window.__vt = 0))
-  const entered = await tap(page, 'Тексты и диалоги')
+  const entered = await tap(page, 'Чтение')
   await waitFrame(page)
   const inState = await page.evaluate(() => ({ vt: window.__vt, frames: window.__vtFrames }))
   check('заход внутрь запускает переход', entered && inState.vt >= 1, `вызовов: ${inState.vt}`)
@@ -579,7 +579,7 @@ async function main() {
   await page.goto(`${BASE}/study`, { waitUntil: 'networkidle2' })
   await sleep(2500)
   await page.evaluate(() => (window.__vt = 0))
-  const enteredAgain = await tap(page, 'Тексты и диалоги')
+  const enteredAgain = await tap(page, 'Чтение')
   const vtReduced = await page.evaluate(() => window.__vt)
   const screenChanged = await page.evaluate(() =>
     (document.body.innerText || '').includes('Мои тексты') ||

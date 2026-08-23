@@ -178,11 +178,11 @@ async function main() {
       backMarker: 'Повторение',
     },
     {
-      name: 'Учёба → Тексты и диалоги → открытый текст',
+      name: 'Учёба → Чтение → открытый текст',
       reach: async () => {
         await page.goto(`${BASE}/study`, { waitUntil: 'networkidle2' })
         await sleep(1800)
-        await tap(page, 'Тексты')
+        await tap(page, 'Чтение')
         await sleep(1200)
         // первый текст в списке — берём первую карточку-строку
         return page.evaluate(() => {
@@ -198,7 +198,9 @@ async function main() {
         })
       },
       marker: null, // текст произвольный — проверяем только, что ушли со списка
-      backMarker: 'Тексты',
+      // маркер списка читалки — «Выбери текст» (в шапке теперь «Чтение», слова
+      // «Тексты» там больше нет после переименования строки хаба)
+      backMarker: 'Выбери текст',
     },
     {
       name: 'Учёба → Грамматика → урок',
@@ -260,7 +262,7 @@ async function main() {
         return tap(page, 'Мой проверочный текст')
       },
       marker: null,
-      backMarker: 'Тексты',
+      backMarker: 'Выбери текст',
     },
     {
       // испанская читалка — отдельный компонент со своим параметром (?es=)

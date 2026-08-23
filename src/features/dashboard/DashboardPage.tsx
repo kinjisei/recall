@@ -45,6 +45,7 @@ import { EnergyBar } from '../../components/EnergyBar'
 import { startGuidedRoute } from '../../lib/guided'
 import { speak } from '../../lib/speech'
 import { RowCard } from '../../components/RowCard'
+import { HowItWorks } from '../../components/HowItWorks'
 import {
   AssignmentsNotice,
   TeacherBlock,
@@ -258,6 +259,15 @@ export function DashboardPage() {
           {level ? ` · ${level}` : ''} ·{' '}
           {didToday ? 'сегодня уже занимался' : 'готов к практике?'}
         </p>
+        <div className="mt-2">
+          <HowItWorks>
+            Это твоя стартовая. Серия наверху считает дни подряд с занятиями —
+            важна регулярность, а не объём за раз. Ниже — запас энергии на
+            разговоры с AI, план на сегодня и слово дня. «Начать занятие»
+            проведёт по короткому кругу: слова → чтение → практика. А учиться и
+            тренироваться подробно — во вкладках снизу.
+          </HowItWorks>
+        </div>
       </header>
 
       {/* 2. Стрик-герой (скелетон, пока не пришёл activity_log — чтобы не мигать «0») */}

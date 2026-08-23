@@ -35,7 +35,7 @@ const kinds: { id: Kind; label: string; Icon: (p: IconProps) => React.JSX.Elemen
 ]
 
 export function SpanishReaderPage({
-  title = 'Тексты и диалоги',
+  title = 'Чтение',
   header,
   onBack,
 }: {

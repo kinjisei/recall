@@ -2,7 +2,7 @@
 // «Учёба» (роут /study) — хаб изучения, как в макете «Nocturne»: строки-входы,
 // контент за тапом (никаких списков сразу и никаких прыжков в другие вкладки):
 //   Задания от преподавателя (если есть)
-//   Тексты и диалоги  → читалка (ReaderPage, внутренний экран)
+//   Чтение (тексты и диалоги) → читалка (ReaderPage, внутренний экран)
 //   Грамматика        → /grammar (уроки + глаголы)
 //   Слова             → внутренний экран: паки, +слово, мои слова, колода
 //   Твой уровень      → /placement (доступен всегда)
@@ -23,6 +23,7 @@ import {
   IconPackage,
 } from '../../components/icons'
 import { RowCard } from '../../components/RowCard'
+import { HowItWorks } from '../../components/HowItWorks'
 import { LoadError } from '../../components/LoadError'
 import { BackHeader } from '../../components/BackButton'
 import { Button } from '../../components/Button'
@@ -175,7 +176,7 @@ export function StudyPage() {
   }, [loadHub])
 
   if (view === 'reader') {
-    return <ReaderPage title="Тексты и диалоги" onBack={() => setView('hub')} />
+    return <ReaderPage title="Чтение" onBack={() => setView('hub')} />
   }
   if (view === 'words') {
     return <WordsStudy onBack={() => setView('hub')} />
@@ -199,6 +200,14 @@ export function StudyPage() {
       <p className="-mt-2 text-sm text-[var(--night-text-40)]">
         Тексты, грамматика и словарь — всё для изучения нового.
       </p>
+      <HowItWorks>
+        Сюда приходишь за новым. Читаешь тексты — по тапу на слове видишь перевод
+        и разбор; проходишь уроки грамматики; собираешь свой словарь из готовых
+        паков или добавляешь слова руками. Занимаешься сам — тут же попросишь AI
+        собрать материал под свою тему и проверить письменную работу по
+        критериям экзамена. Есть преподаватель — его домашка и задания появятся
+        сверху. А тренируешь и повторяешь всё это уже во вкладке «Практика».
+      </HowItWorks>
 
       {hub === null ? (
         // скелетоны высоты RowCard — без прыжков вёрстки, пока грузятся строки
@@ -221,183 +230,223 @@ export function StudyPage() {
               onRetry={() => void loadHub()}
             />
           )}
-          {/* ⚠️ Есть домашка — строка ОДНА и она про домашку. Раньше «что мне
-              задали» было размазано по трём строкам (задания, письмо, квесты),
-              и общего ответа не давала ни одна. Задания-материалы никуда не
-              делись: они внутри того же экрана, ниже домашки. */}
-          {homework ? (
-            (() => {
-              const p = homeworkProgress(homework)
-              const left = p.total - p.done
-              return (
+          {/* Разгрузка «Учёбы» (nav-structure-options.md, вариант A): строки
+              делятся на «От преподавателя» и «Сам». У самоучки преподавательского
+              блока нет вовсе — тогда заголовки НЕ показываем, чтобы не городить
+              рубрику над единственной группой (у большинства пришедших с улицы
+              преподавателя нет). Порядок внутри — теперь по группам, а не
+              вперемешку: раньше письмо и материал стояли между домашкой и
+              квестами, и «что мне задали» опять расползалось. */}
+          {(() => {
+            const hasTeacher =
+              !!homework ||
+              !!(assignments && assignments.total > 0) ||
+              !!(quests && quests.total > 0) ||
+              !!(plans && plans.length > 0) ||
+              !!hub?.placement
+            const SectionLabel = ({ text }: { text: string }) => (
+              <p
+                className="animate-fade-up pt-1 text-[11px] font-medium uppercase tracking-wider text-[var(--night-text-40)]"
+                style={stagger()}
+              >
+                {text}
+              </p>
+            )
+            return (
+              <>
+                {/* ---- От преподавателя ---- */}
+                {hasTeacher && <SectionLabel text="От преподавателя" />}
+                {/* ⚠️ Есть домашка — строка ОДНА и она про домашку. Раньше «что
+                    мне задали» было размазано по трём строкам, и общего ответа
+                    не давала ни одна. Задания-материалы внутри того же экрана. */}
+                {homework ? (
+                  (() => {
+                    const p = homeworkProgress(homework)
+                    const left = p.total - p.done
+                    return (
+                      <RowCard
+                        Icon={IconMaterials}
+                        title="Домашка на неделю"
+                        desc={
+                          left > 0
+                            ? `${p.done} из ${p.total} · ${dueLabel(homework.due_at)}`
+                            : 'Всё сделано ✓'
+                        }
+                        to="/assignments"
+                        active={left > 0}
+                        trailing={
+                          left > 0 ? (
+                            <span className="flex-none rounded-full bg-[var(--night-accent)] px-2 py-0.5 text-xs font-medium text-white">
+                              {left}
+                            </span>
+                          ) : undefined
+                        }
+                        className="animate-fade-up"
+                        style={stagger()}
+                      />
+                    )
+                  })()
+                ) : assignments && assignments.total > 0 ? (
+                  <RowCard
+                    Icon={IconMaterials}
+                    title="Задания от преподавателя"
+                    desc={
+                      assignments.pending > 0
+                        ? `Новых: ${assignments.pending} · всего ${assignments.total}`
+                        : `Все выполнены · можно потренироваться ещё раз`
+                    }
+                    to="/assignments"
+                    active={assignments.pending > 0}
+                    trailing={
+                      assignments.pending > 0 ? (
+                        <span className="flex-none rounded-full bg-[var(--night-accent)] px-2 py-0.5 text-xs font-medium text-white">
+                          {assignments.pending}
+                        </span>
+                      ) : undefined
+                    }
+                    className="animate-fade-up"
+                    style={stagger()}
+                  />
+                ) : null}
+                {quests && quests.total > 0 && (
+                  <RowCard
+                    Icon={IconPuzzle}
+                    title="AI-квесты"
+                    desc={
+                      quests.active > 0
+                        ? `Активных: ${quests.active} — AI ждёт твоего хода`
+                        : 'Все квесты пройдены ✓'
+                    }
+                    to="/quests"
+                    active={quests.active > 0}
+                    trailing={
+                      quests.active > 0 ? (
+                        <span className="flex-none rounded-full bg-[var(--night-accent)] px-2 py-0.5 text-xs font-medium text-white">
+                          {quests.active}
+                        </span>
+                      ) : undefined
+                    }
+                    className="animate-fade-up"
+                    style={stagger()}
+                  />
+                )}
+                {plans && plans.length > 0 && (
+                  <RowCard
+                    Icon={IconRows}
+                    title="Моя программа"
+                    desc={(() => {
+                      const p = plans.find((x) => x.lang === lang) ?? plans[0]
+                      if (!p) return ''
+                      return `Неделя ${currentWeekIndex(p)} из ${p.weeks.length} — план от преподавателя`
+                    })()}
+                    to="/program"
+                    active
+                    className="animate-fade-up"
+                    style={stagger()}
+                  />
+                )}
+                {/* просьба преподавателя пройти тест — тоже «от него» */}
+                {hub?.placement && (
+                  <RowCard
+                    Icon={IconSparkle}
+                    title="Преподаватель просит пройти тест уровня"
+                    desc="Результат увидит преподаватель — по нему подберёт материалы"
+                    to="/placement"
+                    dashed
+                    className="animate-fade-up"
+                    style={stagger()}
+                  />
+                )}
+
+                {/* ---- Сам ---- */}
+                {hasTeacher && <SectionLabel text="Сам" />}
                 <RowCard
-                  Icon={IconMaterials}
-                  title="Домашка на неделю"
-                  desc={
-                    left > 0
-                      ? `${p.done} из ${p.total} · ${dueLabel(homework.due_at)}`
-                      : 'Всё сделано ✓'
-                  }
-                  to="/assignments"
-                  active={left > 0}
-                  trailing={
-                    left > 0 ? (
-                      <span className="flex-none rounded-full bg-[var(--night-accent)] px-2 py-0.5 text-xs font-medium text-white">
-                        {left}
-                      </span>
-                    ) : undefined
-                  }
+                  Icon={IconGap}
+                  title="Чтение"
+                  desc={lang === 'es' ? 'Тексты и диалоги с разбором слов · A1–B2' : 'Тексты и диалоги с разбором слов · B1–C1'}
+                  onClick={() => setView('reader')}
                   className="animate-fade-up"
                   style={stagger()}
                 />
-              )
-            })()
-          ) : assignments && assignments.total > 0 ? (
-            <RowCard
-              Icon={IconMaterials}
-              title="Задания от преподавателя"
-              desc={
-                assignments.pending > 0
-                  ? `Новых: ${assignments.pending} · всего ${assignments.total}`
-                  : `Все выполнены · можно потренироваться ещё раз`
-              }
-              to="/assignments"
-              active={assignments.pending > 0}
-              trailing={
-                assignments.pending > 0 ? (
-                  <span className="flex-none rounded-full bg-[var(--night-accent)] px-2 py-0.5 text-xs font-medium text-white">
-                    {assignments.pending}
-                  </span>
-                ) : undefined
-              }
-              className="animate-fade-up"
-              style={stagger()}
-            />
-          ) : null}
-          {/* Строка показывается ВСЕГДА, а не только при заданиях от
-              преподавателя: проверка письма по критериям экзамена — самое
-              сильное, что есть в продукте, и раньше она была закрыта от тех,
-              кто занимается сам. Теперь тему можно взять самому. */}
-          {writing !== null && (
-            <RowCard
-              Icon={IconPencil}
-              title="Письмо"
-              desc={
-                writing.pending > 0
-                  ? `Новых: ${writing.pending} · всего ${writing.total}`
-                  : writing.total > 0
-                    ? 'Все сданы · можно написать ещё'
-                    : 'Напиши текст — AI разберёт по критериям экзамена'
-              }
-              to="/writing"
-              active={writing.pending > 0}
-              trailing={
-                writing.pending > 0 ? (
-                  <span className="flex-none rounded-full bg-[var(--night-accent)] px-2 py-0.5 text-xs font-medium text-white">
-                    {writing.pending}
-                  </span>
-                ) : undefined
-              }
-              className="animate-fade-up"
-              style={stagger()}
-            />
-          )}
-          {quests && quests.total > 0 && (
-            <RowCard
-              Icon={IconPuzzle}
-              title="AI-квесты"
-              desc={
-                quests.active > 0
-                  ? `Активных: ${quests.active} — AI ждёт твоего хода`
-                  : 'Все квесты пройдены ✓'
-              }
-              to="/quests"
-              active={quests.active > 0}
-              trailing={
-                quests.active > 0 ? (
-                  <span className="flex-none rounded-full bg-[var(--night-accent)] px-2 py-0.5 text-xs font-medium text-white">
-                    {quests.active}
-                  </span>
-                ) : undefined
-              }
-              className="animate-fade-up"
-              style={stagger()}
-            />
-          )}
-          {plans && plans.length > 0 && (
-            <RowCard
-              Icon={IconRows}
-              title="Моя программа"
-              desc={(() => {
-                const p = plans.find((x) => x.lang === lang) ?? plans[0]
-                // plans.length > 0 уже проверено условием рендера строки выше —
-                // p гарантирован; guard явный для noUncheckedIndexedAccess.
-                if (!p) return ''
-                return `Неделя ${currentWeekIndex(p)} из ${p.weeks.length} — план от преподавателя`
-              })()}
-              to="/program"
-              active
-              className="animate-fade-up"
-              style={stagger()}
-            />
-          )}
-          <RowCard
-            Icon={IconGap}
-            title="Тексты и диалоги"
-            desc={lang === 'es' ? 'Чтение с разбором слов · A1–B2' : 'Чтение с разбором слов · B1–C1'}
-            onClick={() => setView('reader')}
-            className="animate-fade-up"
-            style={stagger()}
-          />
-          <RowCard
-            Icon={IconGraduation}
-            title="Грамматика"
-            desc={
-              lang === 'es'
-                ? 'Уроки A1–B2 и спряжения глаголов'
-                : 'Уроки A1–C1 и неправильные глаголы'
-            }
-            to="/grammar"
-            className="animate-fade-up"
-            style={stagger()}
-          />
-          {/* «Мой словарь», а не «Слова»: во вкладке «Практика» есть своя секция
-              «Слова» — с играми. Одно и то же название для управления словами и
-              для тренировок заставляло гадать, куда идти (находка ревью 1Б).
-              Здесь — мои слова и наборы, там — тренировки на них. */}
-          <RowCard
-            Icon={IconCards}
-            title="Мой словарь"
-            desc="Наборы по уровням, свои слова, список выученного"
-            onClick={() => setView('words')}
-            className="animate-fade-up"
-            style={stagger()}
-          />
-          {!levelLoading && (
-            <RowCard
-              Icon={IconSparkle}
-              // просьба преподавателя важнее собственного любопытства — она и
-              // в заголовке, и строка становится пунктирной (как «есть дело»)
-              title={
-                hub?.placement
-                  ? 'Преподаватель просит пройти тест уровня'
-                  : level
-                    ? `Твой уровень: ${level}`
-                    : 'Определи свой уровень'
-              }
-              desc={
-                hub?.placement
-                  ? 'Результат увидит преподаватель — по нему подберёт материалы'
-                  : level
-                    ? 'Пройти тест заново — вдруг уже вырос?'
-                    : `До ${lang === 'es' ? 40 : 50} вопросов — подстроим диалог и подсказки`
-              }
-              to="/placement"
-              dashed={!level || !!hub?.placement}
-              className="animate-fade-up"
-              style={stagger()}
-            />
-          )}
+                <RowCard
+                  Icon={IconGraduation}
+                  title="Грамматика"
+                  desc={
+                    lang === 'es'
+                      ? 'Уроки A1–B2 и спряжения глаголов'
+                      : 'Уроки A1–C1 и неправильные глаголы'
+                  }
+                  to="/grammar"
+                  className="animate-fade-up"
+                  style={stagger()}
+                />
+                {/* «Мой словарь», а не «Слова»: во вкладке «Практика» есть своя
+                    секция «Слова» — с играми (находка ревью 1Б). Здесь собирают
+                    слова, там на них тренируются. */}
+                <RowCard
+                  Icon={IconCards}
+                  title="Мой словарь"
+                  desc="Наборы по уровням, свои слова, список выученного"
+                  onClick={() => setView('words')}
+                  className="animate-fade-up"
+                  style={stagger()}
+                />
+                {/* Письмо — единственный дом письма (вариант A): быстрая проверка
+                    текста + задания от преподавателя + разбор по критериям
+                    экзамена. Строка видна всем, включая самоучек. */}
+                {writing !== null && (
+                  <RowCard
+                    Icon={IconPencil}
+                    title="Письмо"
+                    desc={
+                      writing.pending > 0
+                        ? `Новых: ${writing.pending} · всего ${writing.total}`
+                        : writing.total > 0
+                          ? 'Все сданы · можно написать ещё'
+                          : 'Напиши текст — AI разберёт по критериям экзамена'
+                    }
+                    to="/writing"
+                    active={writing.pending > 0}
+                    trailing={
+                      writing.pending > 0 ? (
+                        <span className="flex-none rounded-full bg-[var(--night-accent)] px-2 py-0.5 text-xs font-medium text-white">
+                          {writing.pending}
+                        </span>
+                      ) : undefined
+                    }
+                    className="animate-fade-up"
+                    style={stagger()}
+                  />
+                )}
+                {/* Режим самоучки (3b): собрать себе материал под тему и слабые
+                    места. Гейтит не экран, а лимит генераций на сервере (Free →
+                    честное «нужен Premium»), поэтому строка видна всем. */}
+                <RowCard
+                  Icon={IconSparkle}
+                  title="Материал под себя"
+                  desc="AI соберёт текст с упражнениями под твою тему и слабые места"
+                  to="/self-material"
+                  className="animate-fade-up"
+                  style={stagger()}
+                />
+                {!levelLoading && !hub?.placement && (
+                  <RowCard
+                    Icon={IconSparkle}
+                    title={level ? `Твой уровень: ${level}` : 'Определи свой уровень'}
+                    desc={
+                      level
+                        ? 'Пройти тест заново — вдруг уже вырос?'
+                        : `До ${lang === 'es' ? 40 : 50} вопросов — подстроим диалог и подсказки`
+                    }
+                    to="/placement"
+                    dashed={!level}
+                    className="animate-fade-up"
+                    style={stagger()}
+                  />
+                )}
+              </>
+            )
+          })()}
         </div>
       )}
     </div>

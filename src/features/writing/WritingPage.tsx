@@ -9,7 +9,9 @@ import { useNavigate } from 'react-router-dom'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { BackButton, BackHeader } from '../../components/BackButton'
+import { IconPencil } from '../../components/icons'
 import { LoadError } from '../../components/LoadError'
+import { HowItWorks } from '../../components/HowItWorks'
 import { useScrollTop } from '../../lib/useScrollTop'
 import { getMyWritingAssignments, startOwnWriting, submitWriting } from '../../lib/writing'
 import { useLanguage } from '../../context/LanguageContext'
@@ -19,6 +21,7 @@ import { gradeWriting, bandLabel } from '../../lib/writingGrade'
 import type { AppLang, CEFRLevel, WritingGrade, WritingTask, WritingTaskAssignment } from '../../types'
 import { WritingGradeView } from './WritingGradeView'
 import { WritingHistory } from './WritingHistory'
+import { QuickWriteCheck } from './QuickWriteCheck'
 import { ChartView } from '../../components/ChartView'
 import { RowsSkeleton } from '../../components/Loading'
 
@@ -31,6 +34,8 @@ export function WritingPage() {
   // выбор темы для самостоятельной работы
   const [picking, setPicking] = useState(false)
   const [starting, setStarting] = useState<string | null>(null)
+  // быстрая проверка свободного текста (переехала из вкладки «Диалог»)
+  const [quick, setQuick] = useState(false)
   const [level, setLevel] = useState<CEFRLevel | null>(null)
   const { lang } = useLanguage()
 
@@ -38,7 +43,7 @@ export function WritingPage() {
     void getUserLevel(lang).then((l) => setLevel((l as CEFRLevel | null) ?? null))
   }, [lang])
   const navigate = useNavigate()
-  useScrollTop(activeId ?? 'list')
+  useScrollTop(activeId ?? (quick ? 'quick' : 'list'))
 
   const load = () => {
     setError(null)
@@ -60,12 +65,46 @@ export function WritingPage() {
     )
   }
 
+  if (quick) {
+    // level может быть неизвестен (новый аккаунт) — B1 здесь рабочий запасной
+    // для промпта, а не утверждение об уровне человека.
+    return <QuickWriteCheck level={level ?? 'B1'} lang={lang} onBack={() => setQuick(false)} />
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-3 px-4 py-4">
       <div className="flex items-center gap-3">
         <BackButton onClick={() => navigate('/study')} />
         <h1 className="text-xl font-bold">Письменные задания</h1>
       </div>
+
+      <HowItWorks>
+        Выбираешь тему (или берёшь задание от преподавателя), пишешь текст — и AI
+        разбирает его по критериям экзамена: грамматика, словарь, связность,
+        соответствие заданию. Показывает 2–3 главные ошибки, а не заливает всё
+        красным, и подсказывает, что переписать. Разбор стоит энергию; можно
+        переписать работу и отправить снова.
+      </HowItWorks>
+
+      {/* Быстрая проверка свободного текста — переехала сюда из вкладки «Диалог»
+          (вариант A навигации): теперь всё письмо в одном месте. Показываем в
+          состояниях списка, а не во время выбора темы. */}
+      {!picking && rows !== null && !error && (
+        <button
+          onClick={() => setQuick(true)}
+          className="flex items-center justify-between gap-2 rounded-xl border border-dashed border-white/[0.14] px-3 py-3 text-left transition-transform active:scale-[0.99]"
+        >
+          <div className="min-w-0">
+            <p className="text-sm font-medium">Быстрая проверка текста</p>
+            <p className="text-xs text-[var(--night-text-40)]">
+              Напиши что угодно — AI разберёт сразу, без темы
+            </p>
+          </div>
+          <span className="flex-none text-[var(--night-text-40)]">
+            <IconPencil size={18} />
+          </span>
+        </button>
+      )}
 
       {error ? (
         <LoadError message={error} onRetry={load} />

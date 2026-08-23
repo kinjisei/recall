@@ -28,6 +28,7 @@ import { speak, scorePronunciation, type PronunciationScore } from '../../lib/sp
 import { startRecording, transcribe, isMicSupported, type Recorder } from '../../lib/transcribe'
 import type { AppLang } from '../../types'
 import { Loading } from '../../components/Loading'
+import { HowItWorks } from '../../components/HowItWorks'
 
 /** Фраза для тренировки; hint — русский перевод, level — уровень CEFR. */
 interface Phrase {
@@ -339,6 +340,13 @@ export function PronunciationPage() {
           фраза {index + 1} / {round.length}
         </span>
       </div>
+
+      <HowItWorks>
+        Слушаешь фразу, проговариваешь её вслух — система оценивает, насколько
+        чётко вышло. Первыми идут слова из твоей колоды, чтобы проговаривать
+        именно то, что учишь. Распознавание речи ничего не стоит — тренируйся
+        сколько угодно.
+      </HowItWorks>
 
       {/* Карточка фразы: чипы озвучки внутри, слова — тапабельные */}
       <Card className="flex flex-col gap-4">

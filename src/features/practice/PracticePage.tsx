@@ -31,6 +31,7 @@ import {
   IconCards,
 } from '../../components/icons'
 import { Card } from '../../components/Card'
+import { HowItWorks } from '../../components/HowItWorks'
 import { Button } from '../../components/Button'
 import { useLanguage } from '../../context/LanguageContext'
 import { countDueCards } from '../../lib/fsrs'
@@ -358,7 +359,15 @@ export function PracticePage() {
           13 плиток не была видна без прокрутки, а первым, что читал новичок,
           было предложение уйти в другой раздел). Подсказка осталась только там,
           где она нужна — когда слов действительно нет, и тогда это не совет,
-          а кнопка. */}
+          а кнопка. Пояснитель ниже свёрнут — это одна строка, а не абзац,
+          поэтому сгиб он не воссоздаёт. */}
+      <HowItWorks>
+        Здесь ты тренируешь то, что уже собрал. Повторение возвращает карточки
+        ровно тогда, когда слово начинает забываться, — поэтому важнее заходить
+        часто, чем помногу. Ещё есть игры на перевод и значения, тренажёр
+        грамматики и речь. Новое тут не учат — за этим во «Учёбу»; а если для игр
+        не хватает слов, там же возьмёшь готовый набор.
+      </HowItWorks>
       {words === 0 && (
         <Card className="flex flex-col gap-2">
           <p className="text-sm text-[var(--night-text-70)]">

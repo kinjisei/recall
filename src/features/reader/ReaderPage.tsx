@@ -26,7 +26,7 @@ const levels: CEFRLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1']
 /** Читалка: английский — тексты + словарь; испанский — свой раздел.
  *  «Мои тексты» (вставка/PDF/DOCX/TXT) — общие для обоих языков. */
 export function ReaderPage({
-  title = 'Тексты и диалоги',
+  title = 'Чтение',
   header,
   onBack,
 }: {
