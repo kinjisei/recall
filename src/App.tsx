@@ -32,6 +32,7 @@ const OnboardingFlow = routeScreens['/onboarding']
 const TeacherPage = routeScreens['/teacher']
 const AssignmentsPage = routeScreens['/assignments']
 const WritingPage = routeScreens['/writing']
+const SelfMaterialPage = routeScreens['/self-material']
 const QuestsPage = routeScreens['/quests']
 const ProgramPage = routeScreens['/program']
 const ForgotPasswordPage = routeScreens['/forgot']
@@ -222,6 +223,14 @@ export default function App() {
                 element={
                   <Suspense fallback={<PageFallback />}>
                     <WritingPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/self-material"
+                element={
+                  <Suspense fallback={<PageFallback />}>
+                    <SelfMaterialPage />
                   </Suspense>
                 }
               />

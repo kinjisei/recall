@@ -495,17 +495,17 @@
   create policy "student updates own material assignments" on public.material_assignments
     for update using (auth.uid() = student_id) with check (auth.uid() = student_id);
 
-  -- Самоучка (режим самоучки, 3b) назначает СЕБЕ материал, который сам создал:
-  -- student_id = свой uid И материал принадлежит ему (material_owned_by). Так
-  -- одиночка собирает материал себе, не будучи ничьим учеником — политика
-  -- «teacher manages» тут не подходит (её is_student_of для «сам себе» ложно).
-  -- Чужому назначить нельзя (student_id обязан быть своим), на чужой материал
-  -- тоже (material_owned_by проверяет владение).
+  -- Самоучка (режим самоучки, 3b) назначает СЕБЕ материал, который сам создал.
+  -- ⚠️ НЕ через прямую RLS-политику: выше по файлу стоит
+  --   revoke insert, update, delete on material_assignments from authenticated
+  -- (инвариант «запись в эту таблицу — только через функции», см. CLAUDE.md).
+  -- Политика на insert была бы недостижима под этим revoke — мёртвая и вводящая
+  -- в заблуждение. Само-назначение идёт через security-definer RPC
+  -- self_assign_material (объявлена рядом с assign_material ниже): она проверяет
+  -- владение материалом и вставляет student_id = свой uid. Чужому назначить
+  -- нельзя (student_id жёстко = auth.uid()), на чужой материал — тоже
+  -- (material_owned_by проверяет владение).
   drop policy if exists "self-assign own material" on public.material_assignments;
-  create policy "self-assign own material" on public.material_assignments
-    for insert with check (
-      auth.uid() = student_id and public.material_owned_by(material_id, auth.uid())
-    );
 
   -- Материалы: переназначение с историей попыток (2026-07-19)
   alter table public.material_assignments add column if not exists attempts jsonb;
@@ -687,6 +687,24 @@
     end if;
     insert into material_assignments (material_id, student_id)
     values (p_material_id, p_student_id)
+    on conflict (material_id, student_id) do nothing;
+  end $fn$;
+
+  -- Само-назначение (режим самоучки, 3b): ученик назначает СЕБЕ материал,
+  -- который сам сгенерировал. student_id жёстко = auth.uid() (чужому назначить
+  -- нельзя), материал обязан принадлежать вызывающему (на чужой — нельзя).
+  -- security definer: прямая запись в material_assignments отозвана у клиента
+  -- (инвариант «запись только через функции»), поэтому идём тем же путём, что и
+  -- assign_material для учителя.
+  create or replace function public.self_assign_material(p_material_id uuid)
+  returns void language plpgsql security definer set search_path = public as $fn$
+  begin
+    if auth.uid() is null then raise exception 'RECALL_NO_AUTH'; end if;
+    if not public.material_owned_by(p_material_id, auth.uid()) then
+      raise exception 'Нет прав: этот материал не твой.';
+    end if;
+    insert into material_assignments (material_id, student_id)
+    values (p_material_id, auth.uid())
     on conflict (material_id, student_id) do nothing;
   end $fn$;
 
@@ -1977,17 +1995,18 @@
 
   grant execute on function public.log_activity(text, date, int, int) to authenticated;
 
-  -- ---- 2. materials: только преподаватель + лимит размера ----
-  -- Политика проверяла лишь teacher_id=auth.uid(), без роли и без предела
-  -- размера — любая ученица (learner) могла вставить себе мегабайтные строки.
+  -- ---- 2. materials: владелец распоряжается своими + лимит размера ----
+  -- Раньше политика проверяла лишь teacher_id=auth.uid() — ученик мог вставить
+  -- себе мегабайтные строки. Защита от этого — ЛИМИТ РАЗМЕРА (ниже), а не роль:
+  -- в режиме самоучки (3b) ученик СОЗДАЁТ материалы СЕБЕ (teacher_id = свой uid),
+  -- поэтому требование role='teacher' снято, а кап размера оставлен — он и ловил
+  -- абьюз. Кто сколько может генерить — держит месячный лимит генераций
+  -- (energy_source.gen_limit: у Free 0), а не эта политика.
   drop policy if exists "own materials" on public.materials;
   create policy "own materials" on public.materials
-    for all using (
+    for all using (auth.uid() = teacher_id)
+    with check (
       auth.uid() = teacher_id
-      and exists (select 1 from profiles where id = auth.uid() and role = 'teacher')
-    ) with check (
-      auth.uid() = teacher_id
-      and exists (select 1 from profiles where id = auth.uid() and role = 'teacher')
       and pg_column_size(body) < 100 * 1024
       and pg_column_size(exercises) < 100 * 1024
       and pg_column_size(coalesce(plan, '{}'::jsonb)) < 100 * 1024

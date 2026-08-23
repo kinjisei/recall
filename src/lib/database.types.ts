@@ -1138,6 +1138,10 @@ export type Database = {
         Args: { p_id: string; p_messages: Json }
         Returns: undefined
       }
+      self_assign_material: {
+        Args: { p_material_id: string }
+        Returns: undefined
+      }
       set_daily_plan: {
         Args: { p_plan: Json; p_student_id: string }
         Returns: undefined

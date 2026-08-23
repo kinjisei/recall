@@ -376,6 +376,36 @@ export async function deleteMaterial(id: string): Promise<void> {
   if (error) throw error
 }
 
+/**
+ * Самоучка назначает материал СЕБЕ (режим самоучки, 3b). Через security-definer
+ * RPC self_assign_material, а не прямой вставкой: запись в material_assignments
+ * у клиента отозвана (инвариант «только через функции», см. CLAUDE.md). RPC
+ * вставляет student_id = свой uid и требует владения материалом.
+ */
+export async function selfAssignMaterial(materialId: string): Promise<void> {
+  const { error } = await supabase.rpc('self_assign_material', {
+    p_material_id: materialId,
+  })
+  if (error) throw dbError(error, 'добавить материал себе')
+}
+
+/**
+ * Полный путь «собрать материал себе»: план → контент → сохранить → назначить
+ * себе. Задача уходит как self_material (см. genTask/req.self): не teacherOnly,
+ * из своего месячного лимита генераций, дешёвая модель. studentId=свой uid, так
+ * материал подстроится под собственную диагностику.
+ */
+export async function createSelfMaterial(
+  req: Omit<MaterialRequest, 'self' | 'studentId'> & { studentId: string },
+): Promise<Material> {
+  const full: MaterialRequest = { ...req, self: true }
+  const plan = await generateMaterialPlan(full)
+  const content = await generateMaterialContent(full, plan)
+  const material = await saveMaterial(full, plan, content)
+  await selfAssignMaterial(material.id)
+  return material
+}
+
 export async function assignMaterial(materialId: string, studentId: string): Promise<void> {
   const { error } = await supabase.rpc('assign_material', {
     p_material_id: materialId,
