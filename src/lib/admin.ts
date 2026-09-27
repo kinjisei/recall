@@ -77,17 +77,9 @@ export interface ClientErrorRow {
 /**
  * Ошибки с прода за последние дни (RPC admin_recent_errors, только владельцу).
  *
- * ⚠️ Приведение типа — потому что database.types.ts сгенерированы до появления
- * этой функции. После заливки схемы типы стоит перегенерировать (ARCHITECTURE
- * §5), и приведение уйдёт. Держим его ЗДЕСЬ, чтобы не размазывать по экрану.
  */
 export async function listRecentErrors(days = 7, limit = 50): Promise<ClientErrorRow[]> {
-  const { data, error } = await (
-    supabase.rpc as unknown as (
-      fn: string,
-      args: Record<string, unknown>,
-    ) => Promise<{ data: unknown; error: { message: string } | null }>
-  )('admin_recent_errors', { p_days: days, p_limit: limit })
+  const { data, error } = await supabase.rpc('admin_recent_errors', { p_days: days, p_limit: limit })
   // последнее место в src/lib, где сырой текст postgrest уходил на экран
   if (error) throw dbError(error, 'загрузить журнал ошибок')
   return (data as ClientErrorRow[] | null) ?? []
@@ -109,17 +101,9 @@ export interface FeedbackRow {
  * Отдельной таблицы у отзывов нет — они лежат событиями в events, поэтому
  * СБОР работает и до заливки схемы, а вот чтение здесь без RPC невозможно
  * (таблица закрыта грантами). Пока функции нет, экран честно скажет об этом.
- *
- * ⚠️ Приведение типа — по той же причине, что у listRecentErrors:
- * database.types.ts сгенерированы раньше этой функции.
  */
 export async function listFeedback(days = 90, limit = 100): Promise<FeedbackRow[]> {
-  const { data, error } = await (
-    supabase.rpc as unknown as (
-      fn: string,
-      args: Record<string, unknown>,
-    ) => Promise<{ data: unknown; error: { message: string } | null }>
-  )('admin_feedback', { p_days: days, p_limit: limit })
+  const { data, error } = await supabase.rpc('admin_feedback', { p_days: days, p_limit: limit })
   if (error) throw dbError(error, 'загрузить отзывы')
   return (data as FeedbackRow[] | null) ?? []
 }

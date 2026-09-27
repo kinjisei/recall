@@ -55,12 +55,7 @@ export async function createWritingTask(input: WritingTaskInput): Promise<Writin
  * Возвращает id назначения — с ним экран сразу открывает работу.
  */
 export async function startOwnWriting(input: WritingTaskInput): Promise<string> {
-  const { data, error } = await (
-    supabase.rpc as unknown as (
-      fn: string,
-      args: Record<string, unknown>,
-    ) => Promise<{ data: unknown; error: { message: string } | null }>
-  )('start_own_writing', {
+  const { data, error } = await supabase.rpc('start_own_writing', {
     p_lang: input.lang,
     p_mode: input.mode,
     p_level: input.level,

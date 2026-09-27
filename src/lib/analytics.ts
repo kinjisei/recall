@@ -84,8 +84,9 @@ export async function track(name: string, props: Record<string, unknown> = {}): 
       p_name: name,
       // props типизированы как Json в схеме; наши значения всегда сериализуемы
       p_props: props as never,
-      p_anon: anonId(),
-      p_source: storedSource(),
+      // нет значения — параметр опускаем: умолчание в базе и есть null
+      p_anon: anonId() ?? undefined,
+      p_source: storedSource() ?? undefined,
     })
   } catch {
     /* аналитика молчит: потерять событие не страшно, сломать экран — страшно */

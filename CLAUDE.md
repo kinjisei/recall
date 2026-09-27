@@ -699,6 +699,7 @@ node scripts/smoke-navigation.mjs  # адресуемость экранов
 node scripts/smoke-motion.mjs      # переходы, вкладки, живые ожидания и ответы
 node scripts/check-schema.mjs      # перед заливкой схемы
 node scripts/check-anon-access.mjs # что может вызвать невошедший (живая база)
+node scripts/check-types-drift.mjs # типы = схема тестовой базы (--write — перегенерировать)
 node scripts/validate-schema-dryrun.mjs   # прогон schema.sql с откатом
 node scripts/check-schema-equal.mjs       # правка схемы не изменила базу
 node scripts/check-api-vercel.mjs  # api/ так, как их собирает Vercel

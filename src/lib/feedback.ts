@@ -43,8 +43,7 @@ export async function sendFeedback(input: FeedbackInput): Promise<void> {
       // версия интерфейса помогает понять, о какой сборке речь
       at: new Date().toISOString(),
     } as never,
-    p_anon: null,
-    p_source: null,
+    // p_anon и p_source не передаём: умолчание в базе — null
   })
   if (error) throw error
 }

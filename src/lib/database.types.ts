@@ -55,20 +55,32 @@ export type Database = {
       ai_calls: {
         Row: {
           called_at: string
+          cost_energy: number
           id: number
+          is_generation: boolean
           kind: string
+          pool_owner: string | null
+          refund_token: string | null
           user_id: string
         }
         Insert: {
           called_at?: string
+          cost_energy?: number
           id?: number
+          is_generation?: boolean
           kind?: string
+          pool_owner?: string | null
+          refund_token?: string | null
           user_id: string
         }
         Update: {
           called_at?: string
+          cost_energy?: number
           id?: number
+          is_generation?: boolean
           kind?: string
+          pool_owner?: string | null
+          refund_token?: string | null
           user_id?: string
         }
         Relationships: [
@@ -96,6 +108,24 @@ export type Database = {
           added_at?: string
           email?: string
           note?: string | null
+        }
+        Relationships: []
+      }
+      app_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: Json
         }
         Relationships: []
       }
@@ -179,16 +209,19 @@ export type Database = {
       conversations: {
         Row: {
           id: string
+          lang: string | null
           started_at: string | null
           user_id: string | null
         }
         Insert: {
           id?: string
+          lang?: string | null
           started_at?: string | null
           user_id?: string | null
         }
         Update: {
           id?: string
+          lang?: string | null
           started_at?: string | null
           user_id?: string | null
         }
@@ -270,6 +303,44 @@ export type Database = {
           {
             foreignKeyName: "decks_owner_id_fkey"
             columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          anon_id: string | null
+          created_at: string
+          id: number
+          name: string
+          props: Json
+          source: string | null
+          user_id: string | null
+        }
+        Insert: {
+          anon_id?: string | null
+          created_at?: string
+          id?: number
+          name: string
+          props?: Json
+          source?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          anon_id?: string | null
+          created_at?: string
+          id?: number
+          name?: string
+          props?: Json
+          source?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -370,6 +441,104 @@ export type Database = {
             columns: ["teacher_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      homework: {
+        Row: {
+          created_at: string
+          due_at: string
+          id: string
+          lang: string
+          note: string | null
+          student_id: string
+          teacher_id: string
+        }
+        Insert: {
+          created_at?: string
+          due_at: string
+          id?: string
+          lang?: string
+          note?: string | null
+          student_id: string
+          teacher_id: string
+        }
+        Update: {
+          created_at?: string
+          due_at?: string
+          id?: string
+          lang?: string
+          note?: string | null
+          student_id?: string
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "homework_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "homework_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      homework_items: {
+        Row: {
+          base_count: number
+          chosen_at: string | null
+          done_at: string | null
+          done_by: string | null
+          homework_id: string
+          id: string
+          kind: string
+          pick_group: number | null
+          pos: number
+          ref_id: string | null
+          target: number
+          title: string
+        }
+        Insert: {
+          base_count?: number
+          chosen_at?: string | null
+          done_at?: string | null
+          done_by?: string | null
+          homework_id: string
+          id?: string
+          kind: string
+          pick_group?: number | null
+          pos?: number
+          ref_id?: string | null
+          target?: number
+          title: string
+        }
+        Update: {
+          base_count?: number
+          chosen_at?: string | null
+          done_at?: string | null
+          done_by?: string | null
+          homework_id?: string
+          id?: string
+          kind?: string
+          pick_group?: number | null
+          pos?: number
+          ref_id?: string | null
+          target?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "homework_items_homework_id_fkey"
+            columns: ["homework_id"]
+            isOneToOne: false
+            referencedRelation: "homework"
             referencedColumns: ["id"]
           },
         ]
@@ -578,12 +747,12 @@ export type Database = {
           blocked: boolean
           created_at: string | null
           display_name: string | null
+          goal: string | null
           id: string
           invite_code: string | null
           is_admin: boolean
           level: string | null
           native_lang: string | null
-          goal: string | null
           plan: string
           plan_expires_at: string | null
           role: string | null
@@ -593,12 +762,12 @@ export type Database = {
           blocked?: boolean
           created_at?: string | null
           display_name?: string | null
+          goal?: string | null
           id: string
           invite_code?: string | null
           is_admin?: boolean
           level?: string | null
           native_lang?: string | null
-          goal?: string | null
           plan?: string
           plan_expires_at?: string | null
           role?: string | null
@@ -608,12 +777,12 @@ export type Database = {
           blocked?: boolean
           created_at?: string | null
           display_name?: string | null
+          goal?: string | null
           id?: string
           invite_code?: string | null
           is_admin?: boolean
           level?: string | null
           native_lang?: string | null
-          goal?: string | null
           plan?: string
           plan_expires_at?: string | null
           role?: string | null
@@ -735,6 +904,29 @@ export type Database = {
             foreignKeyName: "study_plans_teacher_id_fkey"
             columns: ["teacher_id"]
             isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teacher_signups: {
+        Row: {
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_signups_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -910,17 +1102,17 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "writing_task_assignments_task_id_fkey"
-            columns: ["task_id"]
-            isOneToOne: false
-            referencedRelation: "writing_tasks"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "writing_task_assignments_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "writing_task_assignments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "writing_tasks"
             referencedColumns: ["id"]
           },
         ]
@@ -993,9 +1185,33 @@ export type Database = {
         }
         Relationships: []
       }
+      teacher_signups_overview: {
+        Row: {
+          created_at: string | null
+          display_name: string | null
+          email: string | null
+          plan: string | null
+          students: number | null
+          trial_until: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      activity_total: {
+        Args: { p_types: string[]; p_user: string }
+        Returns: number
+      }
+      admin_feedback: {
+        Args: { p_days?: number; p_limit?: number }
+        Returns: Json
+      }
       admin_find_user: { Args: { q: string }; Returns: Json }
+      admin_funnel: { Args: { p_days?: number }; Returns: Json }
+      admin_recent_errors: {
+        Args: { p_days?: number; p_limit?: number }
+        Returns: Json
+      }
       admin_set_plan: {
         Args: { months: number; new_plan: string; target: string }
         Returns: Json
@@ -1015,26 +1231,6 @@ export type Database = {
         Args: { p_material_id: string; p_student_id: string }
         Returns: undefined
       }
-      assign_writing_task: {
-        Args: { p_task_id: string; p_student_id: string }
-        Returns: undefined
-      }
-      unassign_writing_task: {
-        Args: { p_task_id: string; p_student_id: string }
-        Returns: undefined
-      }
-      submit_writing: {
-        Args: { p_id: string; p_essay: string; p_grade: Json; p_band: string }
-        Returns: undefined
-      }
-      finish_writing_review: {
-        Args: { p_id: string; p_review: Json; p_band: string }
-        Returns: undefined
-      }
-      reassign_writing: {
-        Args: { p_id: string; p_note: string }
-        Returns: undefined
-      }
       assign_placement: {
         Args: { p_lang: string; p_student_id: string }
         Returns: string
@@ -1052,22 +1248,33 @@ export type Database = {
         Args: { p_card_ids: Json; p_student_id: string }
         Returns: undefined
       }
+      assign_words_to_student: {
+        Args: { p_lang: string; p_student_id: string; p_words: Json }
+        Returns: number
+      }
+      assign_writing_task: {
+        Args: { p_student_id: string; p_task_id: string }
+        Returns: undefined
+      }
+      become_teacher: { Args: never; Returns: undefined }
       cancel_placement: { Args: { p_id: string }; Returns: undefined }
       choose_homework_item: { Args: { p_item: string }; Returns: undefined }
-      get_homework_many: { Args: Record<string, never>; Returns: Json }
       complete_homework_item: { Args: { p_item: string }; Returns: undefined }
       consume_ai_quota: { Args: { p_kind?: string }; Returns: undefined }
+      covering_teacher: {
+        Args: { p_paid_only?: boolean; p_student: string }
+        Returns: string
+      }
       create_homework: {
         Args: {
           p_due: string
           p_items: Json
           p_lang: string
-          p_note?: string | null
+          p_note?: string
           p_student_id: string
         }
         Returns: string
       }
-      get_homework: { Args: { p_student?: string }; Returns: Json }
       deck_assigned_to: {
         Args: { d_id: string; s_id: string }
         Returns: boolean
@@ -1078,21 +1285,27 @@ export type Database = {
         Returns: boolean
       }
       delete_grammar_quest: { Args: { p_id: string }; Returns: undefined }
-      admin_funnel: { Args: { p_days?: number }; Returns: Json }
-      become_teacher: { Args: never; Returns: undefined }
-      track_event: {
-        Args: { p_name: string; p_props?: Json; p_anon?: string | null; p_source?: string | null }
-        Returns: undefined
-      }
-      set_student_seat: { Args: { p_student: string; p_on: boolean }; Returns: undefined }
+      energy_source: { Args: { uid: string }; Returns: Record<string, unknown> }
       ensure_invite_code: { Args: never; Returns: string }
       finish_material_review: {
         Args: { p_id: string; p_review: Json }
         Returns: undefined
       }
+      finish_writing_review: {
+        Args: { p_band: string; p_id: string; p_review: Json }
+        Returns: undefined
+      }
+      free_teacher_seats: { Args: never; Returns: number }
+      get_homework: { Args: { p_student?: string }; Returns: Json }
+      get_homework_many: { Args: never; Returns: Json }
       get_my_plan: { Args: never; Returns: Json }
       has_paid_access: { Args: { uid: string }; Returns: boolean }
       has_premium_access: { Args: { uid: string }; Returns: boolean }
+      homework_item_progress: { Args: { p_item: string }; Returns: number }
+      homework_json: {
+        Args: { p_student: string; p_teacher?: string }
+        Returns: Json
+      }
       is_student_of: { Args: { s_id: string; t_id: string }; Returns: boolean }
       join_teacher: { Args: { code: string }; Returns: string }
       log_activity: {
@@ -1104,6 +1317,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      mark_homework_choice: { Args: { p_item: string }; Returns: undefined }
       material_assigned_to: {
         Args: { m_id: string; s_id: string }
         Returns: boolean
@@ -1113,12 +1327,22 @@ export type Database = {
         Returns: boolean
       }
       norm_answer: { Args: { s: string }; Returns: string }
+      norm_typed: { Args: { s: string }; Returns: string }
       quest_correct_answer: { Args: { p_id: string }; Returns: number }
       reassign_material: {
         Args: { p_id: string; p_note: string }
         Returns: undefined
       }
+      reassign_writing: {
+        Args: { p_id: string; p_note: string }
+        Returns: undefined
+      }
+      recall_day_start: { Args: never; Returns: string }
+      recall_month_start: { Args: never; Returns: string }
+      refresh_homework_for: { Args: { p_student: string }; Returns: undefined }
+      refund_ai_call: { Args: { p_nonce: string }; Returns: boolean }
       regenerate_invite_code: { Args: never; Returns: string }
+      registration_open: { Args: never; Returns: boolean }
       replace_study_plan: {
         Args: {
           p_goal: string
@@ -1146,6 +1370,30 @@ export type Database = {
         Args: { p_plan: Json; p_student_id: string }
         Returns: undefined
       }
+      set_student_seat: {
+        Args: { p_on: boolean; p_student: string }
+        Returns: undefined
+      }
+      spend_energy: {
+        Args: {
+          p_cost?: number
+          p_generation?: boolean
+          p_kind?: string
+          p_nonce?: string
+        }
+        Returns: undefined
+      }
+      start_own_writing: {
+        Args: {
+          p_lang: string
+          p_level: string
+          p_mode: string
+          p_prompt: string
+          p_settings?: Json
+        }
+        Returns: string
+      }
+      stop_teaching: { Args: never; Returns: undefined }
       submit_material: {
         Args: {
           p_answers: Json
@@ -1161,12 +1409,44 @@ export type Database = {
       }
       submit_word_check: {
         Args: { p_id: string; p_results: Json }
-        Returns: boolean
+        Returns: Json
       }
+      submit_writing: {
+        Args: { p_band: string; p_essay: string; p_grade: Json; p_id: string }
+        Returns: undefined
+      }
+      teacher_delete_student_cards: {
+        Args: { p_card_ids: Json; p_student_id: string }
+        Returns: number
+      }
+      teacher_energy_pool: { Args: { p_plan: string }; Returns: number }
+      teacher_gen_limit: { Args: { p_plan: string }; Returns: number }
       teacher_seat_limit: { Args: { p_plan: string }; Returns: number }
+      teacher_seats_effective: { Args: { p_uid: string }; Returns: number }
+      track_event: {
+        Args: {
+          p_anon?: string
+          p_name: string
+          p_props?: Json
+          p_source?: string
+        }
+        Returns: undefined
+      }
       unassign_material: {
         Args: { p_material_id: string; p_student_id: string }
         Returns: undefined
+      }
+      unassign_writing_task: {
+        Args: { p_student_id: string; p_task_id: string }
+        Returns: undefined
+      }
+      writing_assigned_to: {
+        Args: { s_id: string; w_id: string }
+        Returns: boolean
+      }
+      writing_task_owned_by: {
+        Args: { u_id: string; w_id: string }
+        Returns: boolean
       }
     }
     Enums: {
@@ -1186,12 +1466,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1215,11 +1495,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1240,11 +1520,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1265,11 +1545,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1282,11 +1562,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }

@@ -58,7 +58,7 @@ export async function createHomework(params: {
       ref_id: i.ref_id ?? null,
       pick_group: i.pickGroup ?? null,
     })),
-    p_note: params.note ?? null,
+    p_note: params.note ?? undefined, // нет заметки — умолчание в базе, null
   })
   if (error) throw error
   return data as unknown as string

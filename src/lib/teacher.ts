@@ -107,13 +107,9 @@ export async function becomeTeacher(): Promise<void> {
  * пункт меню, чужой сценарий). Учеников RPC молча не отвязывает: если они
  * есть, приходит понятный отказ с их числом.
  *
- * ⚠️ Приведение типа — RPC новее, чем сгенерированные database.types.ts.
- * После заливки схемы типы стоит перегенерировать (ARCHITECTURE §5).
  */
 export async function stopTeaching(): Promise<void> {
-  const { error } = await (
-    supabase.rpc as unknown as (fn: string) => Promise<{ error: { message: string } | null }>
-  )('stop_teaching')
+  const { error } = await supabase.rpc('stop_teaching')
   if (error) throw dbError(error, 'выключить режим преподавателя')
   invalidateProfile()
 }
@@ -287,12 +283,7 @@ export async function assignWordsToStudent(
   words: { front: string; back?: string | null; example?: string | null }[],
 ): Promise<number> {
   if (words.length === 0) return 0
-  const { data, error } = await (
-    supabase.rpc as unknown as (
-      fn: string,
-      args: Record<string, unknown>,
-    ) => Promise<{ data: unknown; error: { message: string } | null }>
-  )('assign_words_to_student', {
+  const { data, error } = await supabase.rpc('assign_words_to_student', {
     p_student_id: studentId,
     p_lang: lang,
     p_words: words.map((w) => ({
@@ -320,12 +311,7 @@ export async function deleteStudentCards(
   cardIds: string[],
 ): Promise<number> {
   if (cardIds.length === 0) return 0
-  const { data, error } = await (
-    supabase.rpc as unknown as (
-      fn: string,
-      args: Record<string, unknown>,
-    ) => Promise<{ data: unknown; error: { message: string } | null }>
-  )('teacher_delete_student_cards', {
+  const { data, error } = await supabase.rpc('teacher_delete_student_cards', {
     p_student_id: studentId,
     p_card_ids: cardIds,
   })
