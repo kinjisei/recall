@@ -112,13 +112,21 @@ if (isProd) {
   if (yes !== 'да') fail('отменено — ничего не записано')
   console.log('\n⌨️  ЖДУ ПАРОЛЬ ↓ (набранное не отображается — так задумано; вставка — правой кнопкой мыши)')
 }
-const password =
-  isProd || argv.includes('--ask-password')
-    ? await ask(`Пароль базы (${target.label}; ввод не отображается): `, true)
-    : readEnv().TEST_SUPABASE_DB_PASSWORD
+const typed = isProd || argv.includes('--ask-password')
+const raw = typed
+  ? await ask(`Пароль базы (${target.label}; ввод не отображается): `, true)
+  : readEnv().TEST_SUPABASE_DB_PASSWORD
+// Пробелы по краям при вставке — частая причина «неверного пароля», а у
+// сгенерированных Supabase паролей их не бывает. Длину показываем (сам пароль —
+// нет), чтобы человек мог сверить: команда получила ровно то, что он вставил.
+const password = (raw ?? '').trim()
 if (!password) fail('нет пароля базы')
+if (typed && password !== raw) console.log('  (убраны пробелы по краям — при вставке прихватилось лишнее)')
 target.dbPassword = password // чтобы supabaseCli спрятал его в выводе
-console.log('✓ пароль принят. Дальше до пары минут без новых строк — CLI подключается и применяет, это нормально…')
+console.log(
+  `✓ пароль принят (${[...password].length} символов). Дальше до пары минут без новых строк — ` +
+    'CLI подключается и применяет, это нормально…',
+)
 const url = await dbUrl(target, password)
 
 const run = (args) => {
@@ -131,7 +139,11 @@ const run = (args) => {
 }
 
 if (firstTime && run(['migration', 'repair', '--status', 'applied', '0000', '--db-url', url]) !== 0) {
-  fail('не удалось отметить baseline — проверь пароль. Ничего не выполнено.')
+  fail(
+    'не удалось отметить baseline. Ничего не выполнено.\n' +
+      '  «password authentication failed» — пароль не тот: нужен пароль БАЗЫ основного\n' +
+      '  проекта (не вход на supabase.com). Число символов выше совпадает с твоим паролем?',
+  )
 }
 
 // --- 5. применение ---------------------------------------------------------------------
