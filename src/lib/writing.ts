@@ -1,6 +1,6 @@
 // ============================================================================
 // «Письмо»: письменные задания преподавателя (IELTS / обычное эссе). Механика —
-// как материалы: writing_tasks / writing_task_assignments, RLS + RPC (schema.sql).
+// как материалы: writing_tasks / writing_task_assignments, RLS + RPC (supabase/migrations).
 // 5a — создание/назначение; оценка и проверка — в 5b/5c.
 // ============================================================================
 import { supabase, requireUserId, toJson } from './supabase'

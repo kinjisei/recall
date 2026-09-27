@@ -1,7 +1,7 @@
 // ============================================================================
 // Материалы преподавателя: генерация текста с упражнениями через Gemini
 // (двухшаговая: план → материал) + хранение и назначение (Supabase).
-// Таблицы materials / material_assignments, RLS — docs/schema.sql.
+// Таблицы materials / material_assignments, RLS — supabase/migrations.
 // ============================================================================
 import { supabase, requireUserId, toJson } from './supabase'
 import { dbError } from './dbError'

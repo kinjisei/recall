@@ -51,8 +51,8 @@ PWA для изучения **двух языков: английского и �
 ## 4. Структура папок (строго соблюдать)
 ```
 recall-app/
-  docs/            ARCHITECTURE.md (этот файл), schema.sql (вся БД — источник
-                   правды по таблицам), work-plan.md (план заходов),
+  docs/            ARCHITECTURE.md (этот файл), archive/ (schema.sql до
+                   27.09.2026 — не правится), work-plan.md (план заходов),
                    findings.md (журнал находок аудитов), costs.md, textbook/
   api/             gemini.ts, transcribe.ts, _core.ts (вызов моделей + фолбэки),
                    _geminiBody.ts (тело запроса под модель), _tasks.ts (карта
@@ -117,9 +117,9 @@ recall-app/
     lib/           (по файлу на подсистему; контракты — §7)
   vercel.json      SPA-rewrite (не перекрывает /api/*)
   .env.local       VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, GEMINI_API_KEY,
-                   GROQ_API_KEY, SUPABASE_SERVICE_KEY (только для смоуков)
-  scripts/         смоуки/аудиты (ux-audit.mjs, smoke-*.mjs, validate-exercises,
-                   check-schema.mjs) — создают тестовые аккаунты через service_role
+                   GROQ_API_KEY, SUPABASE_SERVICE_KEY; TEST_SUPABASE_* — тестовая база
+  scripts/         смоуки/аудиты (ux-audit.mjs, smoke-*.mjs, validate-exercises) —
+                   по умолчанию на ТЕСТОВОЙ базе (scripts/_env.mjs), живая — --prod
 ```
 
 Правило изоляции: каждая фича — в своей папке `features/*` + свой файл `lib/*`.
@@ -129,7 +129,7 @@ recall-app/
 ## 5. Модель данных (Supabase / Postgres)
 **Источник правды — `supabase/migrations/`** (с 27.09.2026, PLAN.md Ф1.2):
 `0000_baseline.sql` сверен с живой базой, дальше только новые миграции;
-`docs/schema.sql` не правится. RLS включён на всех таблицах. Здесь — карта
+`docs/schema.sql` в архиве (`docs/archive/`). RLS включён на всех таблицах. Здесь — карта
 таблиц и ключевые инварианты.
 
 ⚠️ **Типы базы для клиента** — `src/lib/database.types.ts` генерируются

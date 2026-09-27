@@ -102,7 +102,7 @@ try {
   // потому, что её и не списывали. Лучше честно остановиться с объяснением.
   if (e1) {
     throw new Error(
-      'spend_energy не принимает p_nonce — блок «ЭТАП 2 РЕМОНТА» из docs/schema.sql ещё не залит в Supabase',
+      'spend_energy не принимает p_nonce — блок «ЭТАП 2 РЕМОНТА» в базе ещё нет — примени миграции: npm run db:migrate',
     )
   }
   check('энергия списана', (await spent(idA)) === 1, `потрачено: ${await spent(idA)}`)

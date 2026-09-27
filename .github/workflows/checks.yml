@@ -68,11 +68,8 @@ jobs:
         if: ${{ !cancelled() }}
         run: npm test
 
-      - name: Валидаторы данных и схемы
+      # Правила бывшего check-schema.mjs (кириллица в SQL, парные $…$) живут в
+      # scripts/test-migrations.mjs и идут выше, в «Чистых тестах».
+      - name: Валидаторы данных
         if: ${{ !cancelled() }}
-        run: |
-          set +e
-          fail=0
-          node scripts/validate-exercises.mjs || { echo "::error::упражнения"; fail=1; }
-          node scripts/check-schema.mjs      || { echo "::error::схема"; fail=1; }
-          exit $fail
+        run: node scripts/validate-exercises.mjs

@@ -281,7 +281,7 @@ export function DiagnosticsSection({
       <SectionTitle>Грамматика — слабые темы</SectionTitle>
       {!diag.mistakesAvailable ? (
         <p className="text-xs text-amber-300">
-          Таблица ошибок ещё не создана — выполни блок «ДИАГНОСТИКА» из docs/schema.sql.
+          Таблица ошибок ещё не создана — выполни блок «ДИАГНОСТИКА» из supabase/migrations.
         </p>
       ) : diag.mistakes.length === 0 ? (
         <p className="text-xs text-[var(--night-text-40)]">

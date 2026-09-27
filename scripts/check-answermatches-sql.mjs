@@ -2,22 +2,28 @@
  * Согласие клиента и сервера в сверке печатного ответа.
  *
  * Зачем. Правило нормализации живёт В ДВУХ местах: lib/text.ts на клиенте и
- * norm_typed в docs/schema.sql. Разойтись им нельзя — тогда ученик видит
- * «верно», а серверный пересчёт балла не засчитывает (такое уже случалось).
- * Скрипт берёт ТУ ЖЕ таблицу случаев, что и test-answermatches.mjs, и
- * прогоняет её через настоящий SQL.
+ * norm_typed в базе (supabase/migrations). Разойтись им нельзя — тогда ученик
+ * видит «верно», а серверный пересчёт балла не засчитывает (такое уже
+ * случалось). Скрипт берёт ТУ ЖЕ таблицу случаев, что и test-answermatches.mjs,
+ * и прогоняет её через настоящую norm_typed в базе.
  *
- * Схема выполняется в транзакции и откатывается, поэтому проверять можно ДО
- * заливки — то есть ровно тогда, когда это нужно.
+ * Когда: после миграции, меняющей norm_typed, на ТЕСТОВОЙ базе — то есть до
+ * выкатки на прод (порядок деплоя: тестовая → проверки → прод).
  *
- * Запуск: node scripts/check-answermatches-sql.mjs
- * Имя check-*, а не test-*: ходит в живую базу, поэтому в CI не входит
+ * Запуск: node scripts/check-answermatches-sql.mjs   (только тестовая база:
+ *   на живой norm_typed закрыта даже для роли «только чтение» — так задумано,
+ *   а после миграции на тестовой стоит ровно та же функция)
+ * Имя check-*, а не test-*: ходит в базу, поэтому в CI не входит
  * (там запускаются все test-*.mjs по шаблону — только чистые тесты).
- * Нужен SUPABASE_ACCESS_TOKEN в .env.local (Management API).
  */
-import { readFileSync } from 'node:fs'
 import { CASES } from './test-answermatches.mjs'
 import { scriptEnv } from './_env.mjs'
+
+if (process.argv.includes('--prod')) {
+  console.error('На живой базе norm_typed закрыта даже для чтения (так задумано) —')
+  console.error('проверка идёт на тестовой, где после миграции та же функция.')
+  process.exit(2)
+}
 
 const env = scriptEnv()
 if (!env.SUPABASE_ACCESS_TOKEN) {
@@ -27,7 +33,6 @@ if (!env.SUPABASE_ACCESS_TOKEN) {
 }
 
 const ref = env.VITE_SUPABASE_URL.replace('https://', '').split('.')[0]
-const schema = readFileSync(new URL('../docs/schema.sql', import.meta.url), 'utf8')
 
 const q = (s) => "'" + String(s).replace(/'/g, "''") + "'"
 // Варианты через «/» сервер разбирает так же, как клиент: подходит любой.
@@ -44,7 +49,7 @@ const res = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/qu
     'Content-Type': 'application/json',
   },
   body: JSON.stringify({
-    query: `begin;\n${schema}\nselect * from (\n${rows}\n) t order by i;\nrollback;`,
+    query: `select * from (\n${rows}\n) t order by i;`,
   }),
 })
 const body = await res.json()

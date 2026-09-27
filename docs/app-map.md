@@ -2,7 +2,7 @@
 
 > **Зачем этот файл.** Быстрый ответ на вопросы «подключено ли X», «есть ли
 > фича Y», «где это лежит», «что ещё не дожато». Не заменяет `ARCHITECTURE.md`
-> (контракты/типы), `ACCESS-CONTROL.md` (доступ), `schema.sql` (база) — а
+> (контракты/типы), `ACCESS-CONTROL.md` (доступ), `supabase/migrations` (база) — а
 > указывает, где смотреть, и держит инвентарь того, чего в тех файлах нет.
 >
 > ⚠️ **Меняешь поведение — правь и здесь**, в том же коммите. Устаревшая карта
@@ -116,7 +116,7 @@ placement. Пути: `src/data/spanish/*`.
 
 ---
 
-## 5. Таблицы БД (источник — `docs/schema.sql`)
+## 5. Таблицы БД (источник — `supabase/migrations`)
 
 `profiles` (профиль, роль, колоночные гранты) · `decks` · `cards` ·
 `review_states` (FSRS, пишет клиент) · `activity_log` (1 строка/день/тип) ·
@@ -142,7 +142,7 @@ placement. Пути: `src/data/spanish/*`.
   `RowCard`, `BottomNav`, `icons`).
 - `scripts/` — смоуки, чистые тесты, аудиты, валидаторы (часть в CI —
   `.github/workflows/checks.yml`).
-- `docs/` — `ARCHITECTURE.md`, `ACCESS-CONTROL.md`, `schema.sql`, `energy-design.md`,
+- `docs/` — `ARCHITECTURE.md`, `ACCESS-CONTROL.md`, `archive/schema-2026-09-27.sql`, `energy-design.md`,
   `costs.md`, `mkt/` (маркетинг-ресёрч), `supabase-auth-setup.md`, `work-plan.md`.
 
 ---

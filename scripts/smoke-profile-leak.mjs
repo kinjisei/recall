@@ -7,7 +7,7 @@
  *     get_my_plan() / ensure_invite_code().
  *  D. regenerate_invite_code: доступен только преподавателю, выдаёт НОВЫЙ код,
  *     старый сразу перестаёт работать, а уже привязанная ученица не отваливается.
- * Запуск: node scripts/smoke-profile-leak.mjs (ПОСЛЕ заливки schema.sql)
+ * Запуск: node scripts/smoke-profile-leak.mjs (после npm run db:migrate)
  */
 import { createClient } from '@supabase/supabase-js'
 import { scriptEnv } from './_env.mjs'

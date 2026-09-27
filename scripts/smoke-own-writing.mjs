@@ -106,7 +106,7 @@ const rpc = await admin.rpc('start_own_writing', {
   p_lang: 'en', p_mode: 'ielts', p_level: 'B1', p_prompt: 'проба',
 })
 if (/Could not find the function|PGRST202/i.test(rpc.error?.message ?? '')) {
-  console.log('\n⏭ Остановлено: блок «ПИСЬМО БЕЗ ПРЕПОДАВАТЕЛЯ» из docs/schema.sql ещё не залит в Supabase.')
+  console.log('\n⏭ Остановлено: блок «ПИСЬМО БЕЗ ПРЕПОДАВАТЕЛЯ» в базе ещё нет — примени миграции: npm run db:migrate.')
   await b.close()
   await admin.auth.admin.deleteUser(id).catch(() => {})
   await admin.from('allowed_emails').delete().eq('email', EMAIL)

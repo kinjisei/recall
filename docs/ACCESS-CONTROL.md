@@ -2,7 +2,7 @@
 
 Как ограничить круг людей, которые могут пользоваться Recall, и как закрыть доступ конкретному человеку.
 
-**Установка:** открой Supabase → SQL Editor → New query → вставь весь `docs/schema.sql` → Run. Файл идемпотентный, повторный запуск безопасен.
+**Установка:** уже в базе — схема живёт в `supabase/migrations` (с 27.09.2026, PLAN.md Ф1.2). Менять — только новой миграцией: `npm run db:migrate` на тестовой, затем владелец — `npm run db:migrate:prod`.
 
 ---
 
@@ -140,7 +140,7 @@ Authentication → Users → … → Delete user. Каскад удалит пр
 
 | Файл | Что делает |
 |---|---|
-| `docs/schema.sql`, блок «КОНТРОЛЬ ДОСТУПА» | Таблица, триггер-гейт, колонка `blocked`, view `access_overview` |
+| `supabase/migrations` (блок «КОНТРОЛЬ ДОСТУПА» — в `0000_baseline.sql`) | Таблица, триггер-гейт, колонка `blocked`, view `access_overview` |
 | `src/lib/access.ts` | Чтение флага, человеческие тексты ошибок |
 | `src/components/BlockedScreen.tsx` | Экран «Доступ приостановлен» |
 | `src/components/ProtectedRoute.tsx` | Проверка флага перед входом в приложение |
@@ -159,7 +159,7 @@ Authentication → Users → … → Delete user. Каскад удалит пр
 
 Счётчик — таблица `ai_calls`, закрытая от клиента полностью; пишется только через `consume_ai_quota()`. Подделать его из приложения нельзя.
 
-Поменять лимиты — константы `max_per_hour` и `max_per_day` в начале функции `consume_ai_quota()` в `docs/schema.sql`, затем перезапустить файл.
+Поменять лимиты — константы `max_per_hour` и `max_per_day` в начале функции `consume_ai_quota()` — новой миграцией с `create or replace function` (текущий текст — в `supabase/migrations`).
 
 Посмотреть расход:
 

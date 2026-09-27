@@ -7,7 +7,7 @@
  *  5. Ученица проходит тест → результат виден учителю.
  *  6. Повторное назначение не плодит дубли (уникальный индекс).
  *  7. Отвязка отбирает у экс-учителя доступ.
- * Запуск: node scripts/smoke-placement.mjs (ПОСЛЕ заливки schema.sql)
+ * Запуск: node scripts/smoke-placement.mjs (после npm run db:migrate)
  */
 import { createClient } from '@supabase/supabase-js'
 import { scriptEnv } from './_env.mjs'

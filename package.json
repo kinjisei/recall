@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "dev:test": "node scripts/dev-test.mjs",
+    "db:migrate": "node scripts/db-migrate.mjs",
+    "db:migrate:prod": "node scripts/db-migrate.mjs --prod",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "prepare": "node scripts/checks/install-hooks.mjs",

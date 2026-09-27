@@ -139,6 +139,22 @@ export async function runSql(target, query) {
   return JSON.parse(body)
 }
 
+/**
+ * Адрес подключения к базе для Supabase CLI (db push, migration repair).
+ * Хост пулера берём у Management API: у проектов он разный (тестовая —
+ * aws-0-…, живая — aws-1-…), зашитый в код однажды молча промахнулся бы.
+ * Порт 5432 — сессионный режим: миграции идут транзакцией на файл.
+ */
+export async function dbUrl(target, password) {
+  const res = await fetch(`https://api.supabase.com/v1/projects/${target.ref}/config/database/pooler`, {
+    headers: { Authorization: `Bearer ${target.accessToken}` },
+  })
+  if (!res.ok) throw new Error(`${target.label}: не узнать адрес пулера (${res.status})`)
+  const [pooler] = await res.json()
+  if (!pooler?.db_host || !pooler?.db_user) throw new Error(`${target.label}: пулер без адреса`)
+  return `postgresql://${pooler.db_user}:${encodeURIComponent(password)}@${pooler.db_host}:5432/${pooler.db_name ?? 'postgres'}`
+}
+
 /** npx без оболочки: аргументы (в том числе адрес с паролем) не склеиваются в строку. */
 function npxCli() {
   const candidates = [

@@ -40,7 +40,7 @@ function readCode(error: unknown): string {
   return typeof c === 'string' ? c : ''
 }
 
-/** Наши собственные коды из RPC (docs/schema.sql) → текст для человека. */
+/** Наши собственные коды из RPC (supabase/migrations) → текст для человека. */
 const RECALL_TEXTS: Record<string, (action: string) => string> = {
   RECALL_NO_AUTH: (action) =>
     `Похоже, ты вышел из аккаунта — не получилось ${action}. Зайди заново и повтори.`,

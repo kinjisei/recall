@@ -67,7 +67,7 @@ export function ProgramSection({ studentId }: { studentId: string }) {
         // до выполнения SQL таблицы нет — подсказываем, не падаем
         error.includes('study_plans') ? (
           <p className="text-xs text-amber-300">
-            Таблица программ ещё не создана — выполни блок «ПРОГРАММА ОБУЧЕНИЯ» из docs/schema.sql.
+            Таблица программ ещё не создана — выполни блок «ПРОГРАММА ОБУЧЕНИЯ» из supabase/migrations.
           </p>
         ) : (
           <LoadError message={error} onRetry={reload} />

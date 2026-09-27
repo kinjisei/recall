@@ -116,7 +116,7 @@ try {
   // разумеется, проходит, потому что вердикт всё ещё ставит клиент.
   if (typeof v1 === 'boolean') {
     throw new Error(
-      'submit_word_check отвечает boolean — блок «ЭТАП 3 РЕМОНТА» из docs/schema.sql ещё не залит в Supabase',
+      'submit_word_check отвечает boolean — блок «ЭТАП 3 РЕМОНТА» в базе ещё нет — примени миграции: npm run db:migrate',
     )
   }
   check('честная сдача засчитана', v1?.counted === true, JSON.stringify(v1?.counted))

@@ -61,7 +61,26 @@ for (const f of files) {
     at < 0 ? 'блока нет' : 'после блока что-то есть или блок изменён')
 }
 
-// --- 3. baseline не правится ----------------------------------------------------------
+// --- 3. файл целиком выполнимый (правила бывшего check-schema.mjs) --------------------
+// Кириллица в SQL-коде: файл часто открыт в редакторе, достаточно задеть
+// клавиатуру — «not nulзаl» уронил заливку 24.07. Комментарии и строковые
+// литералы не считаются. Непарный $…$ — тело функции не закрыто.
+const CYR = /[а-яА-ЯёЁ]/
+for (const f of files) {
+  const text = read(f)
+  const cyr = []
+  text.split('\n').forEach((line, i) => {
+    const code = line.split('--')[0].replace(/'[^']*'/g, "''")
+    if (CYR.test(code)) cyr.push(`${i + 1}: ${line.trim().slice(0, 60)}`)
+  })
+  check(`${f}: нет русских букв в SQL-коде (вне комментариев и строк)`, cyr.length === 0, cyr.slice(0, 3).join(' | '))
+  const counts = new Map()
+  for (const t of text.match(/\$[a-z_]*\$/gi) ?? []) counts.set(t, (counts.get(t) ?? 0) + 1)
+  const odd = [...counts].filter(([, n]) => n % 2 !== 0).map(([t, n]) => `${t}×${n}`)
+  check(`${f}: разделители тел функций ($…$) парные`, odd.length === 0, odd.join(', '))
+}
+
+// --- 4. baseline не правится ----------------------------------------------------------
 const sha = createHash('sha256').update(baseline).digest('hex')
 check(
   '0000_baseline.sql не изменён (сверен с живой базой) — новое пишется следующей миграцией',

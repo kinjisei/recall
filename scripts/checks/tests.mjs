@@ -4,7 +4,7 @@
 //
 // Правило имени: test-* — только чистые тесты, без сети, базы и секретов (в CI
 // их нет). Проверка, которой нужна живая база, называется check-*
-// (check-schema-equal, check-answermatches-sql…).
+// (check-db-equal, check-answermatches-sql…).
 // Прогоняем ВСЕ, а не до первого падения: полезнее увидеть сразу все
 // сломанные места. Запуск: npm test
 import { spawnSync } from 'node:child_process'

@@ -1,7 +1,7 @@
 // ============================================================================
 // Смоук «Энергия» (E1): spend_energy + get_my_plan v2. Проверяет дневной бюджет,
 // пул студии, под-кап на аккаунт, месячный лимит генераций, 0-энергии для light.
-// Запуск: node scripts/smoke-energy.mjs  (ПОСЛЕ заливки schema.sql)
+// Запуск: node scripts/smoke-energy.mjs  (после npm run db:migrate)
 // ============================================================================
 import { createClient } from '@supabase/supabase-js'
 import { scriptEnv } from './_env.mjs'

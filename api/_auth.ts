@@ -2,7 +2,7 @@
 // Общая авторизация и CORS для серверных функций (api/gemini, api/transcribe).
 // Файл с «_» — Vercel НЕ делает из него отдельную функцию.
 //
-// Одна RPC consume_ai_quota(kind) (docs/schema.sql, блоки «ЛИМИТЫ НА AI» и
+// Одна RPC consume_ai_quota(kind) (supabase/migrations, блоки «ЛИМИТЫ НА AI» и
 // «КЛАССЫ КВОТ»), вызванная с JWT пользователя, за один запрос покрывает:
 // валидность токена, бан, флаг blocked и суточный лимит СВОЕГО класса
 // (heavy / light / speech). Счётчик живёт в БД и клиенту недоступен.
@@ -48,7 +48,7 @@ export function authDenied(result: AuthResult): result is AuthDenied {
  *            модели с огромной бесплатной квотой);
  *   speech — распознавание речи в тренажёре произношения.
  * Раньше всё считалось одним счётчиком, и десяток тапов по словам съедал
- * дневной лимит целиком (см. блок «КЛАССЫ КВОТ» в docs/schema.sql).
+ * дневной лимит целиком (см. блок «КЛАССЫ КВОТ» в supabase/migrations).
  */
 export type QuotaKind = 'heavy' | 'light' | 'speech'
 

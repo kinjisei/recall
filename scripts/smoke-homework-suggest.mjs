@@ -292,7 +292,7 @@ try {
   // «Cannot read properties of null». Причина должна называться сама.
   if (itemsErr) {
     check('колонки выбора есть в базе (залита ли схема?)', false, itemsErr.message)
-    throw new Error('docs/schema.sql не залит — дальше проверять нечего')
+    throw new Error('схема не применена (npm run db:migrate) — дальше проверять нечего')
   }
   const group = dbItems.filter((i) => i.pick_group != null)
   check('в базе ровно два пункта «на выбор» и с одним номером', group.length === 2 && group[0].pick_group === group[1].pick_group, `${group.length}`)

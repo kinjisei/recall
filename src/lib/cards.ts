@@ -6,7 +6,7 @@ import { statusOf, type WordStatus } from './wordChecks'
 
 /**
  * Возвращает «колоду по умолчанию» текущего пользователя для языка
- * (en и es создаются автоматически при регистрации — см. docs/schema.sql).
+ * (en и es создаются автоматически при регистрации — см. supabase/migrations).
  */
 export async function getDefaultDeck(lang: AppLang = 'en'): Promise<Deck> {
   const user = { id: await requireUserId() }
@@ -137,7 +137,7 @@ export async function addCardsBulk(
 // «Мои слова»: просмотр, правка и удаление собственных карточек.
 // RLS-политика «cards via own deck» разрешает владельцу колоды всё, поэтому
 // отдельных RPC не нужно. Расписание повторений (review_states) удаляется
-// каскадом вместе с карточкой — см. docs/schema.sql.
+// каскадом вместе с карточкой — см. supabase/migrations.
 // ---------------------------------------------------------------------------
 
 /** Карточка вместе с её расписанием и статусом изученности. */

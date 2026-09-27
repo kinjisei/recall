@@ -17,7 +17,7 @@ import type { QuotaKind } from './_auth.js'
 export interface TaskSpec {
   /** Уровень модели (цепочка фолбэков — GEMINI_TIER_CHAINS в _core). */
   tier: AiTier
-  /** Из какого суточного кармана списывать (см. «КЛАССЫ КВОТ» в schema.sql). */
+  /** Из какого суточного кармана списывать (см. «КЛАССЫ КВОТ» в supabase/migrations). */
   quota: QuotaKind
   /**
    * Цена действия в ЭНЕРГИИ (docs/energy-design.md): 1 ⚡ = реплика Диалога.
