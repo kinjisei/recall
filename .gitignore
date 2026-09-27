@@ -24,8 +24,10 @@ Recall Приложение (standalone).html
 twa/*
 !twa/twa-manifest.json
 
-# временная папка supabase CLI (gen types) — не коммитим
-supabase/
+# служебная папка supabase CLI — не коммитим. Саму supabase/ — коммитим:
+# там миграции (PLAN.md Ф1.2). Раньше здесь стояло «supabase/» целиком, и
+# миграции тихо не попадали бы в репозиторий.
+supabase/.temp/
 
 # Сгенерированная карта кода (пересобирается: node scripts/arch-map.mjs)
 docs/architecture/code-map.json

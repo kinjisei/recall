@@ -21,6 +21,13 @@
  * ⚠️ Колоночные права (attacl) обязательны: секреты profiles закрыты именно
  * ими (CLAUDE.md, «RLS не прячет колонки»). Прежний слепок check-schema-equal
  * их не снимал — потерянный грант на колонку прошёл бы сверку.
+ *
+ * ⚠️ Исходник функции сравниваем БЕЗ \r. Postgres хранит его как прислали:
+ * на проде 75 из 82 функций вставлены из Windows (CRLF), а та же миграция,
+ * записанная с LF, дала бы «другой» исходник — 75 ложных расхождений.
+ * Безопасно это потому, что \r нет ни в одной строковой константе: проверено
+ * лексером по всем 82 функциям прода 27.09.2026 (вне констант \r — пробел).
+ * Появится многострочная константа — это правило придётся пересмотреть.
  */
 
 const who = (oid) => `case when ${oid} = 0 then 'PUBLIC' else pg_get_userbyid(${oid}) end`
@@ -41,7 +48,7 @@ select line from (
   select format('FUNC | %s(%s) | returns=%s | lang=%s | definer=%s | vol=%s | cfg=%s | owner=%s | src=%s',
                 f.proname, f.args, pg_get_function_result(f.oid), l.lanname, p.prosecdef,
                 p.provolatile, coalesce(array_to_string(p.proconfig, ','), '-'),
-                pg_get_userbyid(f.proowner), md5(p.prosrc)) as line
+                pg_get_userbyid(f.proowner), md5(replace(p.prosrc, E'\\r', ''))) as line
     from fn f join pg_proc p on p.oid = f.oid join pg_language l on l.oid = p.prolang
   union all
   select format('FUNC-ACL | %s(%s) | %s | %s', f.proname, f.args, ${who('a.grantee')}, a.privilege_type)
@@ -112,7 +119,7 @@ select line from (
   -- права по умолчанию только НАШЕЙ роли: служебные (supabase_admin…) платформа
   -- настраивает сама, и у проектов разного возраста они разные
   select format('DEFACL | %s | %s | %s | %s', pg_get_userbyid(d.defaclrole),
-                coalesce(d.defaclnamespace::regnamespace::text, '(global)'),
+                case when d.defaclnamespace = 0 then '(global)' else d.defaclnamespace::regnamespace::text end,
                 d.defaclobjtype, d.defaclacl::text)
     from pg_default_acl d where d.defaclrole = 'postgres'::regrole
 ) s order by line

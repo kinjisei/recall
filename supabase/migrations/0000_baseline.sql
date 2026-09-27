@@ -1,0 +1,4104 @@
+-- ============================================================================
+-- 0000_baseline — схема базы на 27.09.2026 (PLAN.md Ф1.2)
+-- ============================================================================
+-- Снимок docs/schema.sql, сверенный с живой базой по каталогу: 0 расхождений
+-- (scripts/_catalog.mjs). Этот файл НЕ правится никогда: всё новое — следующей
+-- миграцией. Отличия от docs/schema.sql ровно три:
+--   1. set check_function_bodies = off — как у pg_dump. schema.sql ложился
+--      только на уже заполненную базу: функция ссылалась на объявленную ниже
+--      (covering_teacher), и на пустой базе заливка падала;
+--   2. права на profiles — одним блоком вместо пяти мест;
+--   3. ensure_rls — страховка платформы, которая на проде была, а в файле нет.
+-- Комментарии внутри — исторические, из schema.sql: «заливать целиком в SQL
+-- Editor» больше не действует, базу меняют только миграции.
+-- ============================================================================
+set check_function_bodies = off;
+
+  -- ============================================================================
+  -- Recall — схема базы данных + защита (RLS) + триггеры.
+  -- КАК ЗАПУСТИТЬ: Supabase → проект → SQL Editor → New query →
+  --   вставить ВЕСЬ этот файл → Run. Можно запускать повторно (idempotent):
+  --   функции переопределяются (create or replace), таблицы/колонки — только
+  --   если их нет, данные не теряются. Заливать файл ЦЕЛИКОМ — безопасно и
+  --   это самый надёжный способ синхронизировать базу с кодом.
+  -- ⚠️ ЕДИНСТВЕННОЕ, чего здесь НЕТ намеренно: открытие публичной регистрации
+  --   (docs/open-registration.sql) — выполняется отдельно в день запуска.
+  -- ============================================================================
+
+  -- ---------- ТАБЛИЦЫ ----------
+
+  create table if not exists public.profiles (
+    id uuid primary key references auth.users on delete cascade,
+    display_name text,
+    level text check (level in ('A2','B1','B2','C1','C2')) default 'B1',
+    native_lang text default 'ru',
+    role text check (role in ('learner','teacher')) default 'learner',
+    created_at timestamptz default now()
+  );
+
+  create table if not exists public.decks (
+    id uuid primary key default gen_random_uuid(),
+    owner_id uuid references public.profiles(id) on delete cascade,
+    title text not null,
+    description text,
+    is_shared boolean default false,
+    lang text not null default 'en',
+    created_at timestamptz default now()
+  );
+
+  -- Мультиязычность (объединение с испанским приложением, 2026-07-07):
+  -- у колоды появился язык. Для баз, созданных до этого, добавляем колонку.
+  alter table public.decks add column if not exists lang text not null default 'en';
+  alter table public.decks drop constraint if exists decks_lang_check;
+  alter table public.decks add constraint decks_lang_check check (lang in ('en','es'));
+
+  create table if not exists public.cards (
+    id uuid primary key default gen_random_uuid(),
+    deck_id uuid references public.decks(id) on delete cascade,
+    front text not null,
+    back text,
+    example text,
+    ipa text,
+    audio_url text,
+    source text check (source in ('manual','reader','ai')) default 'manual',
+    created_at timestamptz default now()
+  );
+
+  create table if not exists public.review_states (
+    id uuid primary key default gen_random_uuid(),
+    card_id uuid references public.cards(id) on delete cascade,
+    user_id uuid references public.profiles(id) on delete cascade,
+    stability double precision,
+    difficulty double precision,
+    due timestamptz default now(),
+    last_review timestamptz,
+    reps int default 0,
+    lapses int default 0,
+    state text check (state in ('new','learning','review','relearning')) default 'new',
+    unique (card_id, user_id)
+  );
+
+  -- ⚠️ УСТАРЕЛО (не используется приложением). Задумывалась как хранилище
+  -- текстов для «Ввода», но контент переехал в статические JSON
+  -- (src/data/*/sampleTexts.ts и т.п.), а материалы преподавателя — в
+  -- таблицу materials. Ни один запрос клиента к content_items не идёт.
+  -- Оставлена только чтобы не ломать существующую БД; в новой можно не создавать.
+  create table if not exists public.content_items (
+    id uuid primary key default gen_random_uuid(),
+    level text,
+    title text,
+    body text,
+    type text check (type in ('reading','listening')) default 'reading',
+    audio_url text,
+    source text default 'ai',
+    created_at timestamptz default now()
+  );
+
+  create table if not exists public.activity_log (
+    id uuid primary key default gen_random_uuid(),
+    user_id uuid references public.profiles(id) on delete cascade,
+    day date default current_date,
+    type text,
+    items_done int default 0,
+    duration_sec int default 0,
+    created_at timestamptz default now()
+  );
+
+  -- Для стрика (Фаза 3): одна строка на пользователя+день+тип занятия,
+  -- чтобы можно было делать upsert с инкрементом счётчиков.
+  create unique index if not exists activity_log_user_day_type_uidx
+    on public.activity_log (user_id, day, type);
+
+  create table if not exists public.conversations (
+    id uuid primary key default gen_random_uuid(),
+    user_id uuid references public.profiles(id) on delete cascade,
+    started_at timestamptz default now()
+  );
+
+  create table if not exists public.messages (
+    id uuid primary key default gen_random_uuid(),
+    conversation_id uuid references public.conversations(id) on delete cascade,
+    role text check (role in ('user','assistant','system')),
+    content text,
+    created_at timestamptz default now()
+  );
+
+  create table if not exists public.writing_submissions (
+    id uuid primary key default gen_random_uuid(),
+    user_id uuid references public.profiles(id) on delete cascade,
+    prompt text,
+    text text not null,
+    feedback jsonb,
+    created_at timestamptz default now()
+  );
+
+  -- ---------- ВКЛЮЧАЕМ RLS (Row Level Security) ----------
+  alter table public.profiles            enable row level security;
+  alter table public.decks               enable row level security;
+  alter table public.cards               enable row level security;
+  alter table public.review_states       enable row level security;
+  alter table public.content_items       enable row level security;
+  alter table public.activity_log        enable row level security;
+  alter table public.conversations       enable row level security;
+  alter table public.messages            enable row level security;
+  alter table public.writing_submissions enable row level security;
+
+  -- ---------- ПОЛИТИКИ ДОСТУПА ----------
+  -- Каждый пользователь видит/меняет только свои данные.
+  -- (drop policy if exists — чтобы скрипт можно было запускать повторно)
+
+  -- profiles
+  drop policy if exists "own profile" on public.profiles;
+  create policy "own profile" on public.profiles
+    for all using (auth.uid() = id) with check (auth.uid() = id);
+
+  -- decks
+  drop policy if exists "own decks" on public.decks;
+  create policy "own decks" on public.decks
+    for all using (auth.uid() = owner_id) with check (auth.uid() = owner_id);
+
+  -- cards (карточка принадлежит колоде, которой владеет пользователь)
+  drop policy if exists "cards via own deck" on public.cards;
+  create policy "cards via own deck" on public.cards
+    for all using (
+      exists (select 1 from public.decks d where d.id = cards.deck_id and d.owner_id = auth.uid())
+    ) with check (
+      exists (select 1 from public.decks d where d.id = cards.deck_id and d.owner_id = auth.uid())
+    );
+
+  -- review_states
+  drop policy if exists "own review states" on public.review_states;
+  create policy "own review states" on public.review_states
+    for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+  -- content_items (общий контент: читать может любой вошедший, добавлять — тоже)
+  drop policy if exists "read content" on public.content_items;
+  create policy "read content" on public.content_items
+    for select using (auth.role() = 'authenticated');
+  drop policy if exists "write content" on public.content_items;
+  create policy "write content" on public.content_items
+    for insert with check (auth.role() = 'authenticated');
+
+  -- activity_log
+  drop policy if exists "own activity" on public.activity_log;
+  create policy "own activity" on public.activity_log
+    for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+  -- conversations
+  drop policy if exists "own conversations" on public.conversations;
+  create policy "own conversations" on public.conversations
+    for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+  -- messages (через владение беседой)
+  drop policy if exists "messages via own conversation" on public.messages;
+  create policy "messages via own conversation" on public.messages
+    for all using (
+      exists (select 1 from public.conversations c where c.id = messages.conversation_id and c.user_id = auth.uid())
+    ) with check (
+      exists (select 1 from public.conversations c where c.id = messages.conversation_id and c.user_id = auth.uid())
+    );
+
+  -- writing_submissions
+  drop policy if exists "own writing" on public.writing_submissions;
+  create policy "own writing" on public.writing_submissions
+    for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+  -- ---------- ТРИГГЕР: при регистрации создаём профиль + колоды по умолчанию ----------
+  -- Две колоды: английская и испанская (по одной на язык).
+  -- ── из перекрытых версий (история причин) ──────────────────
+  -- ---------- ТРИГГЕР: при регистрации создаём профиль + колоды по умолчанию ----------
+  -- Две колоды: английская и испанская (по одной на язык).
+  -- ───────────────────────────────────────────────────────────
+  create or replace function public.handle_new_user()
+  returns trigger
+  language plpgsql
+  security definer
+  set search_path = public
+  as $$
+  begin
+    -- Белый список действует, ТОЛЬКО пока регистрация закрыта. Открывается
+    -- одной строкой: update app_settings set value='true' where key='registration_open';
+    -- (готовая команда с проверками — docs/open-registration.sql)
+    --
+    -- Пропускаем, если в списке есть либо точный адрес, либо доменная запись
+    -- вида '@example.com' (тогда проходит любой адрес на этом домене).
+    -- ⚠️ НЕ вписывать публичные домены (@gmail.com и т.п.) — это открыло бы
+    -- регистрацию всему миру. Доменная запись — для своей команды/тестов.
+    if not public.registration_open() and not exists (
+      select 1 from public.allowed_emails a
+      where a.email = lower(trim(new.email))
+         or a.email = '@' || split_part(lower(trim(new.email)), '@', 2)
+    ) then
+      -- Текст ловится клиентом (src/lib/access.ts) и заменяется на понятный.
+      raise exception 'RECALL_NOT_INVITED'
+        using errcode = 'check_violation';
+    end if;
+
+    insert into public.profiles (id, display_name)
+    values (
+      new.id,
+      coalesce(new.raw_user_meta_data->>'display_name', split_part(new.email, '@', 1))
+    )
+    on conflict (id) do nothing;
+
+    insert into public.decks (owner_id, title, description, lang)
+    values
+      (new.id, 'Мои слова',    'Английские слова из чтения и добавленные вручную', 'en'),
+      (new.id, 'Mis palabras', 'Испанские слова из паков, чтения и добавленные вручную', 'es');
+
+    return new;
+  end;
+  $$;
+
+  drop trigger if exists on_auth_user_created on auth.users;
+  create trigger on_auth_user_created
+    after insert on auth.users
+    for each row execute function public.handle_new_user();
+
+  -- ---------- ДОЗАПОЛНЕНИЕ: испанская колода для уже существующих пользователей ----------
+  -- (idempotent: пропускает тех, у кого испанская колода уже есть)
+  insert into public.decks (owner_id, title, description, lang)
+  select p.id, 'Mis palabras', 'Испанские слова из паков, чтения и добавленные вручную', 'es'
+  from public.profiles p
+  where not exists (
+    select 1 from public.decks d where d.owner_id = p.id and d.lang = 'es'
+  );
+
+  -- Готово. Таблицы созданы, защита включена, новые пользователи получают
+  -- профиль и две колоды (en + es); существующим добавлена испанская колода.
+
+  -- ============================================================================
+  -- ФАЗА 4: режим «Преподаватель». Блок idempotent — можно запускать повторно.
+  -- ============================================================================
+
+  -- Код-приглашение преподавателя (ученица вводит его на Главной)
+  alter table public.profiles add column if not exists invite_code text unique;
+
+  -- Связь преподаватель — ученица
+  create table if not exists public.teacher_students (
+    id uuid primary key default gen_random_uuid(),
+    teacher_id uuid not null references public.profiles(id) on delete cascade,
+    student_id uuid not null references public.profiles(id) on delete cascade,
+    created_at timestamptz default now(),
+    unique (teacher_id, student_id),
+    check (teacher_id <> student_id)
+  );
+
+  -- Назначение колоды ученице (ученица видит карточки, расписание у неё своё)
+  create table if not exists public.deck_assignments (
+    id uuid primary key default gen_random_uuid(),
+    deck_id uuid not null references public.decks(id) on delete cascade,
+    student_id uuid not null references public.profiles(id) on delete cascade,
+    created_at timestamptz default now(),
+    unique (deck_id, student_id)
+  );
+
+  alter table public.teacher_students enable row level security;
+  alter table public.deck_assignments enable row level security;
+
+  -- Хелперы security definer: политики decks<->deck_assignments ссылаются друг
+  -- на друга; без обхода RLS внутри подзапроса Postgres падает с
+  -- «infinite recursion detected in policy».
+  create or replace function public.deck_assigned_to(d_id uuid, s_id uuid)
+  returns boolean language sql security definer set search_path = public as
+  $$ select exists (select 1 from deck_assignments
+                    where deck_id = d_id and student_id = s_id) $$;
+
+  create or replace function public.deck_owned_by(d_id uuid, u_id uuid)
+  returns boolean language sql security definer set search_path = public as
+  $$ select exists (select 1 from decks where id = d_id and owner_id = u_id) $$;
+
+  create or replace function public.is_student_of(t_id uuid, s_id uuid)
+  returns boolean language sql security definer set search_path = public as
+  $$ select exists (select 1 from teacher_students
+                    where teacher_id = t_id and student_id = s_id) $$;
+
+  -- Связи: видят и разрывают обе стороны; создаёт только функция join_teacher
+  drop policy if exists "see own links" on public.teacher_students;
+  create policy "see own links" on public.teacher_students
+    for select using (auth.uid() in (teacher_id, student_id));
+  drop policy if exists "unlink" on public.teacher_students;
+  create policy "unlink" on public.teacher_students
+    for delete using (auth.uid() in (teacher_id, student_id));
+
+  -- Назначения: преподаватель управляет назначениями СВОИХ колод СВОИМ ученицам
+  drop policy if exists "teacher manages assignments" on public.deck_assignments;
+  create policy "teacher manages assignments" on public.deck_assignments
+    for all using (public.deck_owned_by(deck_id, auth.uid()))
+    with check (
+      public.deck_owned_by(deck_id, auth.uid())
+      and public.is_student_of(auth.uid(), student_id)
+    );
+  drop policy if exists "student sees assignments" on public.deck_assignments;
+  create policy "student sees assignments" on public.deck_assignments
+    for select using (auth.uid() = student_id);
+
+  -- Ученице видны назначенные колоды и их карточки (только чтение)
+  drop policy if exists "assigned decks readable" on public.decks;
+  create policy "assigned decks readable" on public.decks
+    for select using (public.deck_assigned_to(id, auth.uid()));
+  drop policy if exists "assigned cards readable" on public.cards;
+  create policy "assigned cards readable" on public.cards
+    for select using (public.deck_assigned_to(deck_id, auth.uid()));
+
+  -- Преподавателю видны профили и активность привязанных учениц;
+  -- ученице — профиль её преподавателя (для имени)
+  drop policy if exists "linked profiles visible" on public.profiles;
+  create policy "linked profiles visible" on public.profiles
+    for select using (
+      exists (select 1 from public.teacher_students ts
+              where (ts.teacher_id = auth.uid() and ts.student_id = profiles.id)
+                or (ts.student_id = auth.uid() and ts.teacher_id = profiles.id))
+    );
+  drop policy if exists "teacher reads student activity" on public.activity_log;
+  create policy "teacher reads student activity" on public.activity_log
+    for select using (
+      exists (select 1 from public.teacher_students ts
+              where ts.student_id = activity_log.user_id
+                and ts.teacher_id = auth.uid())
+    );
+
+  -- Привязка по коду: security definer — ищет преподавателя по коду в обход RLS
+  -- ── из перекрытых версий (история причин) ──────────────────
+  -- Привязка по коду: security definer — ищет преподавателя по коду в обход RLS
+  -- ---- 6. Закрыть вызов серверных функций анонимом ----
+  -- (находка У4 #11) В Postgres EXECUTE по умолчанию у PUBLIC (⊇ anon,
+  -- authenticated). Явный «grant … to authenticated» его НЕ снимает — только
+  -- revoke. Из-за этого любую RPC (в т.ч. join_teacher) можно было вызвать БЕЗ
+  -- входа; join_teacher к тому же по-разному отвечал на верный/неверный код —
+  -- перебором находились коды-приглашения.
+  --
+  -- Сначала пересоздаём join_teacher (та же логика: лимит мест + advisory-лок)
+  -- с явной проверкой входа первой строкой — оракул закрыт и на уровне самой
+  -- функции. ЗАТЕМ отзываем execute у PUBLIC по ВСЕМ функциям и ре-грантим
+  -- вошедшему (grant … to authenticated не может «недодать» — каждая функция
+  -- проверяет права внутри). Именно этот revoke/grant идёт ПОСЛЕДНИМ, чтобы
+  -- накрыть и заново созданный join_teacher (иначе он получил бы PUBLIC-грант
+  -- обратно). Единственный анонимный вызов в приложении — get_my_plan на
+  -- публичной /pricing (getMyPlan() глотает ошибку в null) — страница работает.
+  -- ───────────────────────────────────────────────────────────
+  create or replace function public.join_teacher(code text)
+  returns text
+  language plpgsql
+  security definer
+  set search_path = public
+  as $$
+  declare
+    t record;
+    seats int;
+    taken int;
+  begin
+    select id, coalesce(display_name, 'Преподаватель') as nm
+      into t
+      from profiles
+     where invite_code = upper(trim(code)) and role = 'teacher';
+    if t.id is null then
+      raise exception 'Код не найден. Проверь код у преподавателя.';
+    end if;
+    if t.id = auth.uid() then
+      raise exception 'Это твой собственный код — привязаться к себе нельзя.';
+    end if;
+
+    perform pg_advisory_xact_lock(hashtext('join_teacher:' || t.id::text));
+
+    if exists (
+      select 1 from teacher_students
+      where teacher_id = t.id and student_id = auth.uid()
+    ) then
+      return t.nm;
+    end if;
+
+    -- null = без ограничения (преподаватель без тарифа и без триала: его
+    -- ученики не наследуют повышенных лимитов, считать нечего)
+    seats := public.teacher_seats_effective(t.id);
+    if seats is not null then
+      select count(*) into taken from teacher_students where teacher_id = t.id;
+      if taken >= seats then
+        -- один код на все случаи: ученику НЕ показываем, какой у преподавателя
+        -- тариф — это его дело (тот же принцип, что закрытые гранты на profiles)
+        raise exception 'RECALL_SEATS_FULL';
+      end if;
+    end if;
+
+    insert into teacher_students (teacher_id, student_id)
+    values (t.id, auth.uid())
+    on conflict (teacher_id, student_id) do nothing;
+
+    -- Если преподаватель уже распределял места руками и свободное осталось —
+    -- занимаем его сразу: иначе новый ученик молча оказался бы «вне тарифа»
+    -- при оплаченном свободном месте. (Мы внутри лока на преподавателя.)
+    if exists (select 1 from teacher_students where teacher_id = t.id and seat) then
+      select count(*) into taken from teacher_students where teacher_id = t.id and seat;
+      if taken < coalesce(public.teacher_seats_effective(t.id), 0) then
+        update teacher_students set seat = true
+         where teacher_id = t.id and student_id = auth.uid();
+      end if;
+    end if;
+    return t.nm;
+  end;
+  $$;
+
+  -- ============================================================================
+  -- МАТЕРИАЛЫ ПРЕПОДАВАТЕЛЯ: сгенерированные тексты с упражнениями.
+  -- Блок idempotent — можно запускать повторно.
+  -- ============================================================================
+
+  create table if not exists public.materials (
+    id uuid primary key default gen_random_uuid(),
+    teacher_id uuid not null references public.profiles(id) on delete cascade,
+    lang text not null check (lang in ('en','es')) default 'en',
+    level text not null check (level in ('A1','A2','B1','B2','C1','C2')),
+    topic text not null,
+    format text not null,
+    length_range text not null,
+    title text,
+    body text not null,
+    exercises jsonb not null,
+    plan jsonb,
+    created_at timestamptz default now()
+  );
+
+  create table if not exists public.material_assignments (
+    id uuid primary key default gen_random_uuid(),
+    material_id uuid not null references public.materials(id) on delete cascade,
+    student_id uuid not null references public.profiles(id) on delete cascade,
+    status text not null check (status in ('assigned','submitted','reviewed')) default 'assigned',
+    answers jsonb,
+    auto_score int,
+    auto_total int,
+    ai_review jsonb,
+    teacher_review jsonb,
+    submitted_at timestamptz,
+    reviewed_at timestamptz,
+    created_at timestamptz default now(),
+    unique (material_id, student_id)
+  );
+
+  alter table public.materials enable row level security;
+  alter table public.material_assignments enable row level security;
+
+  -- Хелперы security definer (обход взаимных ссылок политик, как у колод)
+  create or replace function public.material_owned_by(m_id uuid, u_id uuid)
+  returns boolean language sql security definer set search_path = public as
+  $$ select exists (select 1 from materials where id = m_id and teacher_id = u_id) $$;
+
+  create or replace function public.material_assigned_to(m_id uuid, s_id uuid)
+  returns boolean language sql security definer set search_path = public as
+  $$ select exists (select 1 from material_assignments
+                    where material_id = m_id and student_id = s_id) $$;
+
+  -- materials: преподаватель распоряжается своими; ученице назначенные — на чтение
+  drop policy if exists "own materials" on public.materials;
+  create policy "own materials" on public.materials
+    for all using (auth.uid() = teacher_id) with check (auth.uid() = teacher_id);
+  drop policy if exists "assigned materials readable" on public.materials;
+  create policy "assigned materials readable" on public.materials
+    for select using (public.material_assigned_to(id, auth.uid()));
+
+  -- material_assignments: преподаватель управляет назначениями своих материалов
+  -- (и назначает только СВОИМ ученицам); ученица видит и обновляет свои
+  drop policy if exists "teacher manages material assignments" on public.material_assignments;
+  create policy "teacher manages material assignments" on public.material_assignments
+    for all using (public.material_owned_by(material_id, auth.uid()))
+    with check (
+      public.material_owned_by(material_id, auth.uid())
+      and public.is_student_of(auth.uid(), student_id)
+    );
+  drop policy if exists "student sees own material assignments" on public.material_assignments;
+  create policy "student sees own material assignments" on public.material_assignments
+    for select using (auth.uid() = student_id);
+  drop policy if exists "student updates own material assignments" on public.material_assignments;
+  create policy "student updates own material assignments" on public.material_assignments
+    for update using (auth.uid() = student_id) with check (auth.uid() = student_id);
+
+  -- Самоучка (режим самоучки, 3b) назначает СЕБЕ материал, который сам создал.
+  -- ⚠️ НЕ через прямую RLS-политику: выше по файлу стоит
+  --   revoke insert, update, delete on material_assignments from authenticated
+  -- (инвариант «запись в эту таблицу — только через функции», см. CLAUDE.md).
+  -- Политика на insert была бы недостижима под этим revoke — мёртвая и вводящая
+  -- в заблуждение. Само-назначение идёт через security-definer RPC
+  -- self_assign_material (объявлена рядом с assign_material ниже): она проверяет
+  -- владение материалом и вставляет student_id = свой uid. Чужому назначить
+  -- нельзя (student_id жёстко = auth.uid()), на чужой материал — тоже
+  -- (material_owned_by проверяет владение).
+  drop policy if exists "self-assign own material" on public.material_assignments;
+
+  -- Материалы: переназначение с историей попыток (2026-07-19)
+  alter table public.material_assignments add column if not exists attempts jsonb;
+  alter table public.material_assignments add column if not exists note text;
+
+  -- ============================================================================
+  -- ПЕРЕПРОВЕРКА СЛОВ (учитель → ученица) + доступ учителя к словам учениц.
+  -- Блок idempotent — можно запускать повторно.
+  -- ============================================================================
+
+  create table if not exists public.word_checks (
+    id uuid primary key default gen_random_uuid(),
+    teacher_id uuid not null references public.profiles(id) on delete cascade,
+    student_id uuid not null references public.profiles(id) on delete cascade,
+    card_ids jsonb not null,
+    results jsonb,
+    created_at timestamptz default now(),
+    completed_at timestamptz
+  );
+
+  alter table public.word_checks enable row level security;
+
+  drop policy if exists "teacher manages word checks" on public.word_checks;
+  create policy "teacher manages word checks" on public.word_checks
+    for all using (auth.uid() = teacher_id)
+    with check (auth.uid() = teacher_id and public.is_student_of(auth.uid(), student_id));
+  drop policy if exists "student sees word checks" on public.word_checks;
+  create policy "student sees word checks" on public.word_checks
+    for select using (auth.uid() = student_id);
+  drop policy if exists "student updates word checks" on public.word_checks;
+  create policy "student updates word checks" on public.word_checks
+    for update using (auth.uid() = student_id) with check (auth.uid() = student_id);
+
+  -- Учителю видны (только чтение) колоды, карточки и расписания привязанных учениц
+  create or replace function public.deck_owned_by_student_of(d_id uuid, t_id uuid)
+  returns boolean language sql security definer set search_path = public as
+  $$ select exists (select 1 from decks d
+                    join teacher_students ts on ts.student_id = d.owner_id
+                    where d.id = d_id and ts.teacher_id = t_id) $$;
+
+  drop policy if exists "teacher reads student decks" on public.decks;
+  create policy "teacher reads student decks" on public.decks
+    for select using (public.is_student_of(auth.uid(), owner_id));
+  drop policy if exists "teacher reads student cards" on public.cards;
+  create policy "teacher reads student cards" on public.cards
+    for select using (public.deck_owned_by_student_of(deck_id, auth.uid()));
+  drop policy if exists "teacher reads student review states" on public.review_states;
+  create policy "teacher reads student review states" on public.review_states
+    for select using (public.is_student_of(auth.uid(), user_id));
+
+  -- ============================================================================
+  -- ЗАЩИТА ОТ ПОДДЕЛКИ (2026-07-20, по итогам ревью безопасности).
+  -- Прямая запись оценок/вердиктов/роли из клиента запрещена; всё — через
+  -- security-definer функции, которые проверяют права. RLS-строки защищают ОТ
+  -- чтения чужого, но НЕ от записи в свою строку любых колонок — поэтому оценки
+  -- (teacher_review, status, results) и роль пишутся только этими функциями.
+  -- Блок idempotent.
+  -- ============================================================================
+
+  -- ---- profiles: запрет менять role и invite_code напрямую ----
+  -- (роль выдаётся администратором через SQL Editor = роль postgres, обходит grant;
+  --  invite_code — через функцию ensure_invite_code)
+  -- revoke update + grant update на колонки (перенесено в блок «ПРАВА НА profiles» ниже — PLAN.md Ф1.2)
+
+  -- Код-приглашение: генерирует и возвращает (только для преподавателя)
+  create or replace function public.ensure_invite_code()
+  returns text language plpgsql security definer set search_path = public as $fn$
+  declare
+    existing text;
+    new_code text;
+    alphabet text := 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+    i int;
+    attempt int;
+  begin
+    select invite_code into existing from profiles where id = auth.uid() and role = 'teacher';
+    if existing is not null then return existing; end if;
+    if not exists (select 1 from profiles where id = auth.uid() and role = 'teacher') then
+      raise exception 'Код-приглашение доступен только преподавателю.';
+    end if;
+    for attempt in 1..6 loop
+      new_code := '';
+      for i in 1..6 loop
+        new_code := new_code || substr(alphabet, 1 + floor(random() * length(alphabet))::int, 1);
+      end loop;
+      begin
+        update profiles set invite_code = new_code where id = auth.uid();
+        return new_code;
+      exception when unique_violation then
+        -- код занят, пробуем ещё
+      end;
+    end loop;
+    raise exception 'Не удалось создать код. Попробуй ещё раз.';
+  end $fn$;
+
+  -- ---- material_assignments: запись только через функции ----
+  revoke insert, update, delete on public.material_assignments from authenticated;
+
+  -- Ученица сдаёт работу (только свою, только из статуса assigned)
+  -- ── из перекрытых версий (история причин) ──────────────────
+  -- Ученица сдаёт работу (только свою, только из статуса assigned)
+  -- 2026-07-21: правила сверки согласованы с клиентом (lib/text.ts answerMatches):
+  --   fill — ответ с вариантами через «/» («was/were») принимает любой вариант;
+  --   order — given (собранное предложение) сверяется с join(answer, ' ')
+  --           (раньше order вообще не приносил балл — correct_text был null).
+  -- ───────────────────────────────────────────────────────────
+  create or replace function public.submit_material(
+    p_id uuid, p_answers jsonb, p_auto_score int, p_auto_total int
+  ) returns void language plpgsql security definer set search_path = public as $fn$
+  declare
+    m_exercises jsonb;
+    ex jsonb;
+    ans jsonb;
+    idx int := 0;
+    score int := 0;
+    total int := 0;
+    given_text text;
+    correct_text text;
+    ex_type text;
+    is_correct boolean;
+  begin
+    -- упражнения берём из материала; клиентские p_auto_score/p_auto_total игнорируем
+    select mat.exercises into m_exercises
+      from material_assignments ma
+      join materials mat on mat.id = ma.material_id
+    where ma.id = p_id and ma.student_id = auth.uid() and ma.status = 'assigned';
+    if m_exercises is null then
+      raise exception 'Работа не найдена или уже сдана.';
+    end if;
+
+    for ex in select value from jsonb_array_elements(m_exercises) loop
+      total := total + 1;
+      ex_type := ex->>'type';
+      select value into ans
+        from jsonb_array_elements(coalesce(p_answers, '[]'::jsonb))
+      where (value->>'index')::int = idx
+      limit 1;
+      given_text := ans->>'given';
+      is_correct := false;
+      if given_text is not null then
+        if ex_type = 'mcq' then
+          -- выбор из готовых вариантов: строгая нормализация (см. шапку блока)
+          correct_text := ex->'options'->>((ex->>'answer')::int);
+          is_correct := correct_text is not null
+            and public.norm_answer(given_text) = public.norm_answer(correct_text);
+        elsif ex_type = 'fill' then
+          -- варианты через «/»: верен любой из них
+          select bool_or(public.norm_typed(v) = public.norm_typed(given_text))
+            into is_correct
+            from unnest(string_to_array(ex->>'answer', '/')) as v;
+          is_correct := coalesce(is_correct, false);
+        elsif ex_type = 'order' then
+          select string_agg(value#>>'{}', ' ' order by ordinality) into correct_text
+            from jsonb_array_elements(ex->'answer') with ordinality;
+          is_correct := correct_text is not null
+            and public.norm_typed(given_text) = public.norm_typed(correct_text);
+        end if;
+      end if;
+      if is_correct then
+        score := score + 1;
+      end if;
+      idx := idx + 1;
+    end loop;
+
+    update material_assignments
+      set answers = p_answers, auto_score = score, auto_total = total,
+          status = 'submitted', submitted_at = now()
+    where id = p_id and student_id = auth.uid() and status = 'assigned';
+    if not found then raise exception 'Работа не найдена или уже сдана.'; end if;
+  end $fn$;
+
+  -- Преподаватель назначает материал своей ученице
+  create or replace function public.assign_material(p_material_id uuid, p_student_id uuid)
+  returns void language plpgsql security definer set search_path = public as $fn$
+  begin
+    if not public.material_owned_by(p_material_id, auth.uid())
+      or not public.is_student_of(auth.uid(), p_student_id) then
+      raise exception 'Нет прав назначить этот материал этому ученику.';
+    end if;
+    insert into material_assignments (material_id, student_id)
+    values (p_material_id, p_student_id)
+    on conflict (material_id, student_id) do nothing;
+  end $fn$;
+
+  -- Само-назначение (режим самоучки, 3b): ученик назначает СЕБЕ материал,
+  -- который сам сгенерировал. student_id жёстко = auth.uid() (чужому назначить
+  -- нельзя), материал обязан принадлежать вызывающему (на чужой — нельзя).
+  -- security definer: прямая запись в material_assignments отозвана у клиента
+  -- (инвариант «запись только через функции»), поэтому идём тем же путём, что и
+  -- assign_material для учителя.
+  create or replace function public.self_assign_material(p_material_id uuid)
+  returns void language plpgsql security definer set search_path = public as $fn$
+  begin
+    if auth.uid() is null then raise exception 'RECALL_NO_AUTH'; end if;
+    if not public.material_owned_by(p_material_id, auth.uid()) then
+      raise exception 'Нет прав: этот материал не твой.';
+    end if;
+    insert into material_assignments (material_id, student_id)
+    values (p_material_id, auth.uid())
+    on conflict (material_id, student_id) do nothing;
+  end $fn$;
+
+  create or replace function public.unassign_material(p_material_id uuid, p_student_id uuid)
+  returns void language plpgsql security definer set search_path = public as $fn$
+  begin
+    if not public.material_owned_by(p_material_id, auth.uid()) then
+      raise exception 'Нет прав: этот материал не твой.';
+    end if;
+    delete from material_assignments where material_id = p_material_id and student_id = p_student_id;
+  end $fn$;
+
+  -- Преподаватель сохраняет черновик AI-разбора
+  create or replace function public.save_material_ai_review(p_id uuid, p_review jsonb)
+  returns void language plpgsql security definer set search_path = public as $fn$
+  begin
+    if not exists (
+      select 1 from material_assignments ma
+      where ma.id = p_id and public.material_owned_by(ma.material_id, auth.uid())
+    ) then raise exception 'Нет прав: этот материал не твой.'; end if;
+    update material_assignments set ai_review = p_review where id = p_id;
+  end $fn$;
+
+  -- Преподаватель завершает проверку
+  create or replace function public.finish_material_review(p_id uuid, p_review jsonb)
+  returns void language plpgsql security definer set search_path = public as $fn$
+  begin
+    if not exists (
+      select 1 from material_assignments ma
+      where ma.id = p_id and public.material_owned_by(ma.material_id, auth.uid())
+        and public.is_student_of(auth.uid(), ma.student_id)
+    ) then raise exception 'Нет прав проверять эту работу.'; end if;
+    update material_assignments
+      set teacher_review = p_review, status = 'reviewed', reviewed_at = now()
+    where id = p_id;
+  end $fn$;
+
+  -- Преподаватель переназначает материал (текущая работа → в историю)
+  create or replace function public.reassign_material(p_id uuid, p_note text)
+  returns void language plpgsql security definer set search_path = public as $fn$
+  declare snap jsonb;
+  begin
+    if not exists (
+      select 1 from material_assignments ma
+      where ma.id = p_id and public.material_owned_by(ma.material_id, auth.uid())
+        and public.is_student_of(auth.uid(), ma.student_id)
+    ) then raise exception 'Нет прав: этот материал не твой.'; end if;
+    select jsonb_build_object(
+      'answers', answers, 'auto_score', auto_score, 'auto_total', auto_total,
+      'teacher_review', teacher_review, 'submitted_at', submitted_at,
+      'reviewed_at', reviewed_at, 'note', note
+    ) into snap from material_assignments where id = p_id;
+    update material_assignments
+      set attempts = coalesce(attempts, '[]'::jsonb) || jsonb_build_array(snap),
+          status = 'assigned', answers = null, auto_score = null, auto_total = null,
+          ai_review = null, teacher_review = null, submitted_at = null,
+          reviewed_at = null, note = nullif(trim(p_note), '')
+    where id = p_id;
+  end $fn$;
+
+  -- ---- word_checks: запись только через функции ----
+  revoke insert, update, delete on public.word_checks from authenticated;
+
+  create or replace function public.assign_word_check(p_student_id uuid, p_card_ids jsonb)
+  returns void language plpgsql security definer set search_path = public as $fn$
+  begin
+    if not public.is_student_of(auth.uid(), p_student_id) then
+      raise exception 'Это не твой ученик.';
+    end if;
+    if exists (
+      select 1 from jsonb_array_elements_text(p_card_ids) cid
+      where not exists (
+        select 1 from cards c join decks d on d.id = c.deck_id
+        where c.id = cid::uuid and d.owner_id = p_student_id
+      )
+    ) then
+      raise exception 'Среди слов есть карточки, которые не принадлежат этому ученику.';
+    end if;
+    insert into word_checks (teacher_id, student_id, card_ids)
+    values (auth.uid(), p_student_id, p_card_ids);
+  end $fn$;
+
+  -- Ученик сдаёт перепроверку (идемпотентно: только если ещё не завершена).
+  --
+  -- ⚠️ Ниже по файлу (блок «ЭТАП 3 РЕМОНТА») эта функция ПЕРЕОПРЕДЕЛЯЕТСЯ и
+  -- возвращает jsonb: вердикт считает сервер. Здесь исторический вариант с
+  -- boolean, и без этого drop повторная заливка файла в уже обновлённую базу
+  -- падала бы («cannot change return type of existing function»).
+  drop function if exists public.submit_word_check(uuid, jsonb);
+  create or replace function public.submit_word_check(p_id uuid, p_results jsonb)
+  returns jsonb language plpgsql security definer set search_path = public as $fn$
+  declare
+    v_cards jsonb;
+    v_out jsonb := '[]'::jsonb;
+    v_wrong jsonb := '[]'::jsonb;
+    r jsonb;
+    v_card_id uuid;
+    v_given text;
+    v_front text;
+    v_back text;
+    v_ok boolean;
+    n int;
+  begin
+    select card_ids into v_cards from word_checks
+      where id = p_id and student_id = auth.uid() and completed_at is null;
+    if v_cards is null then
+      return jsonb_build_object('counted', false, 'wrong', '[]'::jsonb);
+    end if;
+
+    for r in select value from jsonb_array_elements(coalesce(p_results, '[]'::jsonb)) loop
+      begin v_card_id := (r->>'card_id')::uuid; exception when others then continue; end;
+      -- слово должно быть из ЭТОЙ перепроверки
+      if not (v_cards @> to_jsonb(v_card_id::text)) then continue; end if;
+
+      v_given := coalesce(r->>'given', '');
+      select c.front, c.back into v_front, v_back from cards c where c.id = v_card_id;
+
+      if v_front is null then
+        -- карточку удалили между назначением и сдачей: проверить нечем
+        v_front := coalesce(r->>'front', '');
+        v_back := r->>'back';
+        v_ok := false;
+      else
+        -- те же правила, что на клиенте: варианты через «/», нормализация
+        select coalesce(bool_or(public.norm_typed(v) = public.norm_typed(v_given)), false)
+          into v_ok
+          from unnest(string_to_array(v_front, '/')) as v;
+      end if;
+
+      v_out := v_out || jsonb_build_array(jsonb_build_object(
+        'card_id', v_card_id, 'front', v_front, 'back', v_back,
+        'given', v_given, 'ok', v_ok));
+      if not v_ok then
+        v_wrong := v_wrong || jsonb_build_array(v_card_id::text);
+      end if;
+    end loop;
+
+    update word_checks set results = v_out, completed_at = now()
+    where id = p_id and student_id = auth.uid() and completed_at is null;
+    get diagnostics n = row_count;  -- row_count это int, не boolean
+
+    if n = 0 then
+      -- кто-то успел завершить между select и update (двойная отправка)
+      return jsonb_build_object('counted', false, 'wrong', '[]'::jsonb);
+    end if;
+    return jsonb_build_object('counted', true, 'wrong', v_wrong);
+  end $fn$;
+
+  -- ---- USING-фиксы: экс-преподаватель после отвязки теряет доступ ----
+  drop policy if exists "teacher manages assignments" on public.deck_assignments;
+  create policy "teacher manages assignments" on public.deck_assignments
+    for all using (
+      public.deck_owned_by(deck_id, auth.uid())
+      and public.is_student_of(auth.uid(), student_id)
+    ) with check (
+      public.deck_owned_by(deck_id, auth.uid())
+      and public.is_student_of(auth.uid(), student_id)
+    );
+
+  drop policy if exists "teacher manages material assignments" on public.material_assignments;
+  drop policy if exists "teacher reads material assignments" on public.material_assignments;
+  create policy "teacher reads material assignments" on public.material_assignments
+    for select using (
+      public.material_owned_by(material_id, auth.uid())
+      and public.is_student_of(auth.uid(), student_id)
+    );
+
+  drop policy if exists "teacher manages word checks" on public.word_checks;
+  drop policy if exists "teacher reads word checks" on public.word_checks;
+  create policy "teacher reads word checks" on public.word_checks
+    for select using (
+      auth.uid() = teacher_id and public.is_student_of(auth.uid(), student_id)
+    );
+
+  -- ============================================================================
+  -- ЗАЩИТА ОТ ПОДДЕЛКИ, второй проход (2026-07-20, по итогам второго ревью).
+  -- Блок idempotent — можно запускать повторно.
+  -- ============================================================================
+
+  -- ---- profiles: закрыть эскалацию роли через пересоздание строки ----
+  -- RLS-политика "own profile" (for all) разрешала INSERT/DELETE своей строки, а
+  -- стандартные гранты Supabase давали authenticated эти права. В связке это
+  -- позволяло: DELETE своего профиля → INSERT новой строки с role='teacher' и
+  -- любым invite_code. Профиль и так создаётся триггером handle_new_user
+  -- (security definer) и удаляется каскадом от auth.users — клиенту INSERT/DELETE
+  -- на profiles не нужны.
+  -- revoke insert, delete (перенесено в блок «ПРАВА НА profiles» ниже — PLAN.md Ф1.2)
+
+  -- ---- content_items: убрать глобальную запись ----
+  -- Политика "write content" позволяла любому вошедшему вставлять строки в общую
+  -- таблицу, которую читают все (потенциальный спам/вредоносный контент). Таблица
+  -- в приложении пока не используется — снимаем право записи до появления фичи.
+  revoke insert on public.content_items from authenticated;
+
+
+  -- ---- submit_material: пересчитывать авто-балл на сервере ----
+  -- Клиент присылал auto_score/auto_total — их можно было подделать. Теперь балл
+  -- считается на сервере из ответов ученицы и правильных ответов материала.
+  -- (Это НЕ мешает «подглядыванию»: правильные ответы всё ещё уходят на клиент
+  --  в exercises. Полностью закрыть — только не отдавать ответы и проверять на
+  --  сервере; это отдельная бо́льшая переделка. Пока — защита от прямой подделки.)
+
+  -- Нормализация ответа под клиентскую (lower + trim + снятие диакритики en/es +
+  -- схлопывание пробелов). Без расширения unaccent — явным translate по буквам.
+  create or replace function public.norm_answer(s text)
+  returns text language sql stable as $fn$
+    select regexp_replace(
+      lower(translate(trim(coalesce(s, '')),
+        'áàäâãéèëêíìïîóòöôõúùüûñçÁÀÄÂÃÉÈËÊÍÌÏÎÓÒÖÔÕÚÙÜÛÑÇ',
+        'aaaaaeeeeiiiiooooouuuuncAAAAAEEEEIIIIOOOOOUUUUNC')),
+      '\s+', ' ', 'g')
+  $fn$;
+
+
+  -- ---- review_states: расписание только для ДОСТУПНОЙ карточки ----
+  -- Раньше with check проверял только user_id — можно было создать review_state
+  -- для любого чужого card_id (мусор/ломка инварианта). Теперь карточка обязана
+  -- быть из своей колоды или назначенной преподавателем.
+  drop policy if exists "own review states" on public.review_states;
+  create policy "own review states" on public.review_states
+    for all using (auth.uid() = user_id)
+    with check (
+      auth.uid() = user_id and exists (
+        select 1 from public.cards c join public.decks d on d.id = c.deck_id
+        where c.id = review_states.card_id
+          and (d.owner_id = auth.uid() or public.deck_assigned_to(d.id, auth.uid()))
+      )
+    );
+
+  -- ============================================================================
+  -- КОНТРОЛЬ ДОСТУПА (2026-07-20): белый список email + флаг блокировки.
+  -- Блок idempotent — можно запускать повторно.
+  -- Подробное описание и готовые команды: docs/ACCESS-CONTROL.md
+  -- ============================================================================
+
+  -- ---- 1. Белый список приглашённых ----
+  -- Регистрация в приложении остаётся открытой, но триггер handle_new_user
+  -- пропускает только тех, чей email заранее внесён сюда. Гейт стоит в БД,
+  -- поэтому обойти его с клиента (DevTools, прямой REST, подмена запроса)
+  -- невозможно: проверка выполняется внутри транзакции создания пользователя.
+  create table if not exists public.allowed_emails (
+    email    text primary key,
+    note     text,
+    added_at timestamptz not null default now()
+  );
+
+  alter table public.allowed_emails enable row level security;
+
+  -- Политик намеренно НЕ создаём: RLS без политик = отказ во всём. Плюс явный
+  -- revoke, чтобы право не пришло из дефолтных грантов Supabase. В итоге список
+  -- невидим для приложения — ни прочитать, ни узнать, есть ли в нём адрес.
+  -- Управление только из SQL Editor (роль postgres) или ключом service_role.
+  revoke all on public.allowed_emails from anon, authenticated;
+
+  -- Нормализация: храним email в нижнем регистре и без пробелов по краям,
+  -- чтобы 'Ivan@Mail.ru ' и 'ivan@mail.ru' были одной и той же записью.
+  create or replace function public.normalize_allowed_email()
+  returns trigger language plpgsql as $fn$
+  begin
+    new.email := lower(trim(new.email));
+    return new;
+  end $fn$;
+
+  drop trigger if exists allowed_emails_normalize on public.allowed_emails;
+  create trigger allowed_emails_normalize
+    before insert or update on public.allowed_emails
+    for each row execute function public.normalize_allowed_email();
+
+  -- ---- 2. Флаг блокировки ----
+  -- Снять блокировку с себя пользователь не может: выше по файлу выполнены
+  -- `revoke update on public.profiles from authenticated` и
+  -- `grant update (display_name, level, native_lang)`, то есть UPDATE разрешён
+  -- ровно на три колонки, и blocked в их число не входит.
+  --
+  -- ВАЖНО про модель угроз: этот флаг управляет тем, что показывает приложение,
+  -- и закрывает доступ к платному AI-прокси (api/gemini.ts). Он НЕ отзывает уже
+  -- выданный JWT — чтение своих данных через прямой REST у заблокированного
+  -- останется до истечения токена. Жёсткая блокировка — «Ban user» в
+  -- Supabase (Authentication → Users), она мгновенно убивает все токены.
+  alter table public.profiles add column if not exists blocked boolean not null default false;
+
+  -- ---- 2б. Настройки приложения ----
+  -- Состояние, которое НЕ должно жить в коде. Первым сюда переехала открытость
+  -- регистрации (2026-08-06): раньше закрытая версия handle_new_user лежала в
+  -- schema.sql, а открытая — в отдельном файле, и любая повторная заливка схемы
+  -- МОЛЧА закрывала регистрацию обратно. Ловушка тем неприятнее, что человек
+  -- правит что-то своё, а ломается вход для новых людей.
+  -- Теперь открыть/закрыть — одна строка UPDATE, без правки кода и деплоя.
+  create table if not exists public.app_settings (
+    key        text primary key,
+    value      jsonb not null,
+    updated_at timestamptz not null default now()
+  );
+  alter table public.app_settings enable row level security;
+  revoke all on public.app_settings from anon, authenticated;
+
+  -- ⚠️ on conflict do nothing — ОБЯЗАТЕЛЬНО: иначе каждая заливка схемы
+  -- сбрасывала бы уже открытую регистрацию обратно в закрытую, то есть ровно
+  -- та проблема, ради которой всё это и делается.
+  insert into public.app_settings (key, value)
+  values ('registration_open', 'false'::jsonb)
+  on conflict (key) do nothing;
+
+  create or replace function public.registration_open()
+  returns boolean
+  language sql
+  stable
+  security definer
+  set search_path = public
+  as $fn$
+    select coalesce((select (value #>> '{}')::boolean from app_settings where key = 'registration_open'), false)
+  $fn$;
+
+
+  -- ---- 4. Обзор доступа (для владельца проекта) ----
+  -- Показывает разом: кто приглашён, кто уже зарегистрировался, кто заблокирован.
+  -- Смотреть из SQL Editor: select * from public.access_overview;
+  -- Клиенту недоступно — гранты не выдаются.
+  create or replace view public.access_overview as
+    select
+      a.email,
+      a.note,
+      a.added_at,
+      u.id                       as user_id,
+      u.created_at               as registered_at,
+      u.last_sign_in_at,
+      u.banned_until,
+      coalesce(p.blocked, false) as blocked,
+      p.display_name,
+      p.role
+    from public.allowed_emails a
+    left join auth.users u on lower(u.email) = a.email
+    left join public.profiles p on p.id = u.id
+    order by a.added_at;
+
+  revoke all on public.access_overview from anon, authenticated;
+
+  -- ============================================================================
+  -- ЛИМИТЫ НА AI (2026-07-20): защита квоты Gemini от сжигания одним аккаунтом.
+  -- Блок idempotent — можно запускать повторно.
+  -- ============================================================================
+
+  -- Журнал обращений к /api/gemini. Пишется только через RPC ниже (клиенту
+  -- таблица недоступна), поэтому подделать счётчик нельзя.
+  create table if not exists public.ai_calls (
+    id        bigserial primary key,
+    user_id   uuid not null references public.profiles(id) on delete cascade,
+    called_at timestamptz not null default now()
+  );
+
+  create index if not exists ai_calls_user_time
+    on public.ai_calls (user_id, called_at desc);
+
+  alter table public.ai_calls enable row level security;
+  revoke all on public.ai_calls from anon, authenticated;
+  revoke all on sequence public.ai_calls_id_seq from anon, authenticated;
+
+
+
+  -- Сколько уже потрачено — для владельца проекта (из SQL Editor).
+  create or replace view public.ai_usage_overview as
+    select
+      p.display_name,
+      u.email,
+      count(*) filter (where c.called_at > now() - interval '1 hour')   as last_hour,
+      count(*) filter (where c.called_at > now() - interval '24 hours') as last_day,
+      max(c.called_at)                                                  as last_call
+    from public.ai_calls c
+    join public.profiles p on p.id = c.user_id
+    join auth.users u on u.id = c.user_id
+    group by p.display_name, u.email
+    order by last_day desc;
+
+  revoke all on public.ai_usage_overview from anon, authenticated;
+
+  -- ============================================================================
+  -- PLACEMENT 2.0 (2026-07-21): profiles.level разрешает A1.
+  -- EN-тест уровня может дать результат A1 — прежний check ('A2'…'C2') молча
+  -- не давал его сохранить. Блок idempotent — можно запускать повторно.
+  -- ============================================================================
+  alter table public.profiles drop constraint if exists profiles_level_check;
+  alter table public.profiles add constraint profiles_level_check
+    check (level in ('A1','A2','B1','B2','C1','C2'));
+
+  -- ============================================================================
+  -- AI-КВЕСТЫ ПО ГРАММАТИКЕ (2026-07-21): текстовые игры с целевой грамматикой
+  -- в стиле Talkpal. Учитель назначает ученице сценарий («побег из комнаты»,
+  -- «собеседование»…) + грамматическую тему + порог верных ответов; AI ведёт
+  -- историю и пропускает дальше только при правильной грамматике.
+  -- Блок idempotent — можно запускать повторно.
+  -- ============================================================================
+
+  create table if not exists public.grammar_quests (
+    id uuid primary key default gen_random_uuid(),
+    teacher_id uuid not null references public.profiles(id) on delete cascade,
+    student_id uuid not null references public.profiles(id) on delete cascade,
+    lang text not null check (lang in ('en','es')) default 'en',
+    level text not null check (level in ('A1','A2','B1','B2','C1','C2')) default 'B1',
+    topic text not null,        -- грамматическая тема («Past Simple», «Conditionals»)
+    scenario text not null,     -- сценарий квеста
+    target int not null default 10 check (target between 3 and 50),
+    progress int not null default 0,
+    status text not null check (status in ('assigned','completed')) default 'assigned',
+    messages jsonb,             -- переписка: возобновление + проверка учителем
+    created_at timestamptz not null default now(),
+    completed_at timestamptz
+  );
+
+  alter table public.grammar_quests enable row level security;
+
+  -- Чтение: ученица — свои; учитель — своих привязанных учениц (отвязка
+  -- отбирает доступ). Запись — ТОЛЬКО через RPC ниже.
+  drop policy if exists "teacher reads quests" on public.grammar_quests;
+  create policy "teacher reads quests" on public.grammar_quests
+    for select using (
+      auth.uid() = teacher_id and public.is_student_of(auth.uid(), student_id)
+    );
+  drop policy if exists "student reads quests" on public.grammar_quests;
+  create policy "student reads quests" on public.grammar_quests
+    for select using (auth.uid() = student_id);
+  revoke insert, update, delete on public.grammar_quests from authenticated;
+
+  -- Учитель назначает квест своей ученице
+  create or replace function public.assign_grammar_quest(
+    p_student_id uuid, p_lang text, p_level text,
+    p_topic text, p_scenario text, p_target int
+  ) returns uuid language plpgsql security definer set search_path = public as $fn$
+  declare qid uuid;
+  begin
+    if not public.is_student_of(auth.uid(), p_student_id) then
+      raise exception 'Это не твой ученик.';
+    end if;
+    if trim(coalesce(p_topic, '')) = '' or trim(coalesce(p_scenario, '')) = '' then
+      raise exception 'Укажи тему и сценарий.';
+    end if;
+    insert into grammar_quests (teacher_id, student_id, lang, level, topic, scenario, target)
+    values (auth.uid(), p_student_id, p_lang, p_level,
+            trim(p_topic), trim(p_scenario), p_target)
+    returning id into qid;
+    return qid;
+  end $fn$;
+
+  -- Учитель снимает квест. is_student_of — чтобы отвязанный экс-учитель не
+  -- удалял старые квесты (инвариант «отвязка отбирает доступ», как в assign).
+  create or replace function public.delete_grammar_quest(p_id uuid)
+  returns void language plpgsql security definer set search_path = public as $fn$
+  begin
+    delete from grammar_quests gq
+     where gq.id = p_id and gq.teacher_id = auth.uid()
+       and public.is_student_of(auth.uid(), gq.student_id);
+    if not found then raise exception 'Квест не найден.'; end if;
+  end $fn$;
+
+  -- Ученица засчитывает ОДИН верный ответ; возвращает новый progress.
+  -- Достигнут порог → квест completed.
+  -- ⚠️ Осознанный компромисс: вердикт «верно» ставит AI на клиенте, поэтому
+  -- технически прогресс можно накрутить прямым вызовом RPC. Вся переписка
+  -- сохраняется (messages) — учитель видит реальные ответы при проверке.
+  create or replace function public.quest_correct_answer(p_id uuid)
+  returns int language plpgsql security definer set search_path = public as $fn$
+  declare cur int; tgt int;
+  begin
+    select progress, target into cur, tgt from grammar_quests
+      where id = p_id and student_id = auth.uid() and status = 'assigned'
+      for update;
+    if not found then raise exception 'Квест не найден или уже завершён.'; end if;
+    update grammar_quests
+      set progress = least(cur + 1, tgt),
+          status = case when cur + 1 >= tgt then 'completed' else 'assigned' end,
+          completed_at = case when cur + 1 >= tgt then now() else null end
+    where id = p_id;
+    return least(cur + 1, tgt);
+  end $fn$;
+
+  -- Ученица сохраняет переписку (возобновление на другом устройстве,
+  -- проверка учителем). Ограничиваем размер, чтобы не раздувать строку.
+  create or replace function public.save_quest_messages(p_id uuid, p_messages jsonb)
+  returns void language plpgsql security definer set search_path = public as $fn$
+  begin
+    if pg_column_size(p_messages) > 200000 then
+      raise exception 'Переписка слишком большая.';
+    end if;
+    update grammar_quests set messages = p_messages
+    where id = p_id and student_id = auth.uid();
+    if not found then raise exception 'Квест не найден.'; end if;
+  end $fn$;
+
+  -- ============================================================================
+  -- ТАРИФЫ И FREE-ЛИМИТЫ (2026-07-22): планы, триал, платный доступ к AI.
+  -- Планы: free (по умолчанию) · premium · teacher_mini · teacher_start ·
+  -- teacher_pro. Каждому НОВОМУ аккаунту 14 дней полного доступа (trial_until),
+  -- без карты. Free навсегда: статика без лимитов, AI — 5 действий/сутки
+  -- (вместо 40/час + 200/сутки у платных/триала). Ученица активного платящего
+  -- (или триального) учителя получает premium-доступ к AI бесплатно.
+  -- Оплата вручную (Kaspi → админ включает план на N месяцев).
+  -- Блок idempotent — можно запускать повторно.
+  -- ============================================================================
+
+  -- ---- 1. Колонки тарифа в profiles ----
+  -- Добавляются с дефолтами; для УЖЕ существующих строк trial_until заполнится
+  -- значением, вычисленным в момент ALTER (все текущие пользователи получают
+  -- триал на 14 дней от даты миграции — это осознанно, «подарок» на запуск).
+  alter table public.profiles add column if not exists plan text not null default 'free';
+  alter table public.profiles drop constraint if exists profiles_plan_check;
+  alter table public.profiles add constraint profiles_plan_check
+    check (plan in ('free','premium','teacher_mini','teacher_start','teacher_pro'));
+  alter table public.profiles add column if not exists plan_expires_at timestamptz;
+  alter table public.profiles add column if not exists trial_until timestamptz
+    not null default (now() + interval '14 days');
+  alter table public.profiles add column if not exists is_admin boolean not null default false;
+
+  -- ЗАЩИТА ОТ САМОИЗМЕНЕНИЯ: тем же приёмом, что и role/blocked. Выше по файлу
+  -- (блок «ЗАЩИТА ОТ ПОДДЕЛКИ») выполнено
+  --   revoke update on public.profiles from authenticated;
+  --   grant  update (display_name, level, native_lang) on public.profiles to authenticated;
+  -- То есть UPDATE у authenticated разрешён ровно на три колонки. Новые
+  -- plan/plan_expires_at/trial_until/is_admin в этот список НЕ входят, поэтому
+  -- пользователь не может ни включить себе платный план, ни продлить триал, ни
+  -- выдать себе is_admin через прямой REST/DevTools. Пере-заявляем грант здесь
+  -- же на случай запуска блока в отрыве от остального файла (idempotent).
+  -- (перенесено в блок «ПРАВА НА profiles» ниже — PLAN.md Ф1.2)
+  -- Флаг администратора выдаётся ТОЛЬКО из SQL Editor (роль postgres обходит
+  -- гранты): update public.profiles set is_admin = true where id = '…';
+
+  -- ---- 2. Есть ли у пользователя премиум-доступ к AI ----
+  -- true, если: активный триал; ЛИБО платный план не истёк; ЛИБО пользователь —
+  -- ученица учителя с активным (оплаченным или триальным) teacher_*-планом.
+  -- security definer: обходит RLS, чтобы увидеть teacher_students и профиль
+  -- учителя целиком.
+  -- ── из перекрытых версий (история причин) ──────────────────
+  -- ---- 2. Есть ли у пользователя премиум-доступ к AI ----
+  -- true, если: активный триал; ЛИБО платный план не истёк; ЛИБО пользователь —
+  -- ученица учителя с активным (оплаченным или триальным) teacher_*-планом.
+  -- security definer: обходит RLS, чтобы увидеть teacher_students и профиль
+  -- учителя целиком.
+  -- ───────────────────────────────────────────────────────────
+  create or replace function public.has_premium_access(uid uuid)
+  returns boolean
+  language sql
+  security definer
+  stable
+  set search_path = public
+  as $fn$
+    select
+      exists (
+        select 1 from profiles p where p.id = uid and (
+          p.trial_until > now()
+          or (p.plan <> 'free' and p.plan_expires_at is not null
+              and p.plan_expires_at > now())
+        )
+      )
+      or public.covering_teacher(uid) is not null
+  $fn$;
+
+
+
+  -- ---- 4. get_my_plan: сводка тарифа для клиента ----
+  -- Счётчик ai_used_today и ai_day_limit берутся из тех же данных, что и
+  -- consume_ai_quota (окно 24 часа; лимит 200 для премиума, 5 для free).
+  -- ── из перекрытых версий (история причин) ──────────────────
+  -- ---- 4. get_my_plan: сводка тарифа для клиента ----
+  -- Счётчик ai_used_today и ai_day_limit берутся из тех же данных, что и
+  -- consume_ai_quota (окно 24 часа; лимит 200 для премиума, 5 для free).
+  -- get_my_plan: честный дневной лимит по уровню доступа
+  -- get_my_plan: «AI-действия» считаем ТОЛЬКО класса heavy — именно они
+  -- ограничены в тарифах; переводы и произношение пользователя не тревожат.
+  -- get_my_plan v2: старые поля СОХРАНЕНЫ (текущий клиент их читает) + энергия.
+  -- ───────────────────────────────────────────────────────────
+  create or replace function public.get_my_plan()
+  returns json language plpgsql security definer set search_path = public as $fn$
+  declare
+    uid uuid := auth.uid();
+    p record; prem boolean; used int;
+    day0 timestamptz := public.recall_day_start();
+    src record; e_spent int; e_self int; g_used int;
+    v_seats int; v_seats_used int;
+  begin
+    if uid is null then raise exception 'RECALL_NO_AUTH'; end if;
+    select plan, plan_expires_at, trial_until, is_admin, role into p from profiles where id = uid;
+    prem := public.has_premium_access(uid);
+    select count(*) into used from ai_calls
+      where user_id = uid and ai_calls.kind = 'heavy' and called_at > now() - interval '24 hours';
+    select * into src from public.energy_source(uid);
+    select coalesce(sum(cost_energy),0) into e_spent from ai_calls
+      where pool_owner = src.pool_owner and called_at >= day0;
+    select coalesce(sum(cost_energy),0) into e_self from ai_calls
+      where user_id = uid and called_at >= day0;
+    select count(*) into g_used from ai_calls
+      where pool_owner = src.pool_owner and is_generation and called_at >= public.recall_month_start();
+    -- seats: null = без ограничения (клиент так и покажет)
+    v_seats := public.teacher_seats_effective(uid);
+    select count(*) into v_seats_used from teacher_students where teacher_id = uid;
+    return json_build_object(
+      'plan', p.plan, 'plan_expires_at', p.plan_expires_at, 'trial_until', p.trial_until,
+      'is_admin', p.is_admin, 'premium', prem,
+      'ai_used_today', used, 'ai_day_limit', case when p.is_admin then 999999 when prem then 200 else 5 end,
+      'energy_max', case when p.is_admin then 999999 else src.day_budget end,
+      'energy_spent', e_spent, 'energy_self', e_self,
+      'energy_subcap', case when src.in_studio and src.pool_owner <> uid then src.day_budget / 2 else null end,
+      'in_studio', src.in_studio,
+      'gen_limit', src.gen_limit, 'gen_used', g_used,
+      -- места (A1): сколько всего и сколько занято; для не-преподавателя seats = 0
+      'seats', v_seats, 'seats_used', v_seats_used,
+      'free_seats', public.free_teacher_seats()
+    );
+  end $fn$;
+
+  grant execute on function public.get_my_plan() to authenticated;
+
+  -- ---- 5. Админ-RPC (только is_admin) ----
+  -- Владелец (is_admin=true) находит пользователя по email и включает ему план
+  -- на N месяцев после ручной оплаты (Kaspi). Любой не-админ → RECALL_NOT_ADMIN.
+
+  -- Поиск по email (ilike, до 10 результатов). Возвращает JSON-массив.
+  -- ── из перекрытых версий (история причин) ──────────────────
+  -- Поиск по email (ilike, до 10 результатов). Возвращает JSON-массив.
+  -- ───────────────────────────────────────────────────────────
+  create or replace function public.admin_find_user(q text)
+  returns json
+  language plpgsql
+  security definer
+  set search_path = public
+  as $fn$
+  begin
+    if not exists (select 1 from profiles where id = auth.uid() and is_admin) then
+      raise exception 'RECALL_NOT_ADMIN';
+    end if;
+    return coalesce((
+      select json_agg(row_to_json(t)) from (
+        select u.id, u.email, p.display_name, p.plan,
+               p.plan_expires_at, p.trial_until, p.role,
+               (select count(*) from teacher_students ts where ts.teacher_id = u.id) as students,
+               public.teacher_seats_effective(u.id) as seats
+        from auth.users u
+        join public.profiles p on p.id = u.id
+        where u.email ilike '%' || trim(coalesce(q, '')) || '%'
+        order by u.created_at desc
+        limit 10
+      ) t
+    ), '[]'::json);
+  end $fn$;
+
+  grant execute on function public.admin_find_user(text) to authenticated;
+
+  -- Включить/продлить/снять план. months кламп 0..12; 0 (или план 'free') —
+  -- выключить (plan='free', plan_expires_at=null). Продление наращивает срок от
+  -- максимума (текущий конец плана, если он в будущем) или от now().
+  create or replace function public.admin_set_plan(target uuid, new_plan text, months int)
+  returns json
+  language plpgsql
+  security definer
+  set search_path = public
+  as $fn$
+  declare
+    m int;
+    new_expiry timestamptz;
+  begin
+    if not exists (select 1 from profiles where id = auth.uid() and is_admin) then
+      raise exception 'RECALL_NOT_ADMIN';
+    end if;
+    if new_plan not in ('free','premium','teacher_mini','teacher_start','teacher_pro') then
+      raise exception 'RECALL_BAD_PLAN';
+    end if;
+    if not exists (select 1 from profiles where id = target) then
+      raise exception 'Пользователь не найден.';
+    end if;
+
+    m := greatest(0, least(12, coalesce(months, 0)));
+
+    if m = 0 or new_plan = 'free' then
+      update profiles set plan = 'free', plan_expires_at = null where id = target;
+    else
+      select greatest(coalesce(plan_expires_at, now()), now()) + make_interval(months => m)
+        into new_expiry from profiles where id = target;
+      update profiles set plan = new_plan, plan_expires_at = new_expiry where id = target;
+    end if;
+
+    return json_build_object(
+      'id',              target,
+      'plan',            (select plan from profiles where id = target),
+      'plan_expires_at', (select plan_expires_at from profiles where id = target)
+    );
+  end $fn$;
+
+  grant execute on function public.admin_set_plan(uuid, text, int) to authenticated;
+
+  grant execute on function public.has_premium_access(uuid) to authenticated;
+
+  -- ============================================================================
+  -- ДИАГНОСТИКА (2026-07-22): грамматические ошибки учеников — в БД.
+  -- Раньше банк «Мои ошибки» жил только в localStorage ученицы — преподаватель
+  -- не видел, какие темы буксуют. Теперь клиент пишет ошибки и сюда (синк),
+  -- а диагностическая карта ученицы показывает их преподавателю.
+  -- Блок idempotent — можно запускать повторно.
+  -- ============================================================================
+
+  create table if not exists public.grammar_mistakes (
+    id uuid primary key default gen_random_uuid(),
+    user_id uuid not null references public.profiles(id) on delete cascade,
+    lang text not null check (lang in ('en','es')),
+    topic_id int not null,
+    ex int not null,
+    created_at timestamptz not null default now(),
+    unique (user_id, lang, topic_id, ex)
+  );
+
+  alter table public.grammar_mistakes enable row level security;
+
+  -- Ученик управляет своими ошибками (insert при неверном ответе, delete при
+  -- верном); преподаватель ЧИТАЕТ ошибки привязанных учениц (отвязка отбирает).
+  drop policy if exists "own grammar mistakes" on public.grammar_mistakes;
+  create policy "own grammar mistakes" on public.grammar_mistakes
+    for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+  drop policy if exists "teacher reads student mistakes" on public.grammar_mistakes;
+  create policy "teacher reads student mistakes" on public.grammar_mistakes
+    for select using (public.is_student_of(auth.uid(), user_id));
+
+  -- ============================================================================
+  -- ПРОГРАММА ОБУЧЕНИЯ (2026-07-22): недельный план для ученицы.
+  -- Преподаватель генерирует программу через AI (уровень + слабые места из
+  -- диагностической карты), правит и сохраняет; ученица видит свою неделю.
+  -- Одна АКТИВНАЯ программа на пару (преподаватель, ученица, язык).
+  -- Блок idempotent — можно запускать повторно.
+  -- ============================================================================
+
+  create table if not exists public.study_plans (
+    id uuid primary key default gen_random_uuid(),
+    teacher_id uuid not null references public.profiles(id) on delete cascade,
+    student_id uuid not null references public.profiles(id) on delete cascade,
+    lang text not null check (lang in ('en','es')),
+    level text not null,
+    goal text not null default '',
+    summary text not null default '',
+    start_day date not null default current_date,
+    weeks jsonb not null check (jsonb_typeof(weeks) = 'array'),
+    status text not null default 'active' check (status in ('active','archived')),
+    created_at timestamptz not null default now(),
+    -- страховка от раздувания (план — это план, а не файлохранилище)
+    constraint study_plans_weeks_size check (pg_column_size(weeks) < 200 * 1024)
+  );
+
+  -- одна активная программа на пару учитель+ученица+язык
+  create unique index if not exists study_plans_one_active
+    on public.study_plans (teacher_id, student_id, lang)
+    where status = 'active';
+
+  alter table public.study_plans enable row level security;
+
+  -- Преподаватель управляет программами СВОИХ учениц (отвязка отбирает всё);
+  -- ученица только читает свои.
+  drop policy if exists "teacher manages own student plans" on public.study_plans;
+  create policy "teacher manages own student plans" on public.study_plans
+    for all
+    using (auth.uid() = teacher_id and public.is_student_of(teacher_id, student_id))
+    with check (auth.uid() = teacher_id and public.is_student_of(teacher_id, student_id));
+  drop policy if exists "student reads own plans" on public.study_plans;
+  create policy "student reads own plans" on public.study_plans
+    for select using (auth.uid() = student_id);
+
+  -- ============================================================================
+  -- ОТКРЫТАЯ РЕГИСТРАЦИЯ — вынесена в отдельный файл docs/open-registration.sql,
+  -- чтобы schema.sql можно было заливать в Supabase ЦЕЛИКОМ, не открывая
+  -- регистрацию случайно. Пока тот файл не выполнен, действует белый список
+  -- allowed_emails (закрытый тест) — это текущее решение владельца.
+  -- ============================================================================
+  -- ============================================================================
+  -- ПЛАН ДНЯ (2026-07-23): учитель настраивает ежедневные пункты ученицы.
+  -- Хранится jsonb-настройкой на паре учитель-ученица: {"kinds":["reader",...],
+  -- "auto":true} (auto — задания/квесты сами попадают в план). NULL — умный
+  -- дефолт приложения. «Идеальный день» (все пункты плана выполнены) пишется
+  -- клиентом в activity_log строкой type='perfect' (items_done=0) — стрик и
+  -- счётчики недель не искажает. Блок idempotent.
+  -- ============================================================================
+
+  alter table public.teacher_students add column if not exists daily_plan jsonb;
+
+  -- запись только через RPC: учитель — только своей привязанной ученице
+  create or replace function public.set_daily_plan(p_student_id uuid, p_plan jsonb)
+  returns void
+  language plpgsql
+  security definer
+  set search_path = public
+  as $fn$
+  begin
+    if not exists (
+      select 1 from teacher_students
+      where teacher_id = auth.uid() and student_id = p_student_id
+    ) then
+      raise exception 'RECALL_NOT_YOUR_STUDENT';
+    end if;
+    if p_plan is not null and (
+      jsonb_typeof(p_plan) <> 'object' or pg_column_size(p_plan) > 4096
+    ) then
+      raise exception 'RECALL_BAD_PLAN';
+    end if;
+    update teacher_students
+      set daily_plan = p_plan
+      where teacher_id = auth.uid() and student_id = p_student_id;
+  end $fn$;
+
+  grant execute on function public.set_daily_plan(uuid, jsonb) to authenticated;
+
+  -- ============================================================================
+  -- АТОМАРНОСТЬ (2026-07-24, по находкам ревью): две многошаговые операции
+  -- клиента переведены в транзакционные RPC — раньше сбой на середине оставлял
+  -- ученицу без активной программы или плодил колоды-сироты при ретраях.
+  -- Блок idempotent.
+  -- ============================================================================
+
+  -- Замена программы обучения: архив прежней активной + вставка новой ОДНОЙ
+  -- транзакцией (функция plpgsql атомарна: сбой отката́тывает оба шага).
+  create or replace function public.replace_study_plan(
+    p_student_id uuid, p_lang text, p_level text,
+    p_goal text, p_summary text, p_weeks jsonb
+  )
+  returns uuid
+  language plpgsql
+  security definer
+  set search_path = public
+  as $fn$
+  declare
+    new_id uuid;
+  begin
+    if not exists (
+      select 1 from teacher_students
+      where teacher_id = auth.uid() and student_id = p_student_id
+    ) then
+      raise exception 'RECALL_NOT_YOUR_STUDENT';
+    end if;
+    update study_plans set status = 'archived'
+      where teacher_id = auth.uid() and student_id = p_student_id
+        and lang = p_lang and status = 'active';
+    insert into study_plans (teacher_id, student_id, lang, level, goal, summary, weeks)
+      values (auth.uid(), p_student_id, p_lang, p_level, p_goal, p_summary, p_weeks)
+      returning id into new_id;
+    return new_id;
+  end $fn$;
+
+  grant execute on function public.replace_study_plan(uuid, text, text, text, text, jsonb)
+    to authenticated;
+
+  -- Выборка слов ученице: колода + карточки + назначение одной транзакцией.
+  -- p_cards: [{"front":"…","back":"…","example":"…"}, …]. Возвращает число
+  -- вставленных карточек.
+  create or replace function public.assign_selected_words(
+    p_student_id uuid, p_title text, p_lang text, p_cards jsonb
+  )
+  returns int
+  language plpgsql
+  security definer
+  set search_path = public
+  as $fn$
+  declare
+    new_deck uuid;
+    added int;
+  begin
+    if not exists (
+      select 1 from teacher_students
+      where teacher_id = auth.uid() and student_id = p_student_id
+    ) then
+      raise exception 'RECALL_NOT_YOUR_STUDENT';
+    end if;
+    if p_cards is null or jsonb_typeof(p_cards) <> 'array'
+       or jsonb_array_length(p_cards) = 0 or jsonb_array_length(p_cards) > 500
+       or pg_column_size(p_cards) > 200 * 1024 then
+      raise exception 'RECALL_BAD_CARDS';
+    end if;
+    insert into decks (owner_id, title, lang)
+      values (auth.uid(), left(p_title, 120), p_lang)
+      returning id into new_deck;
+    insert into cards (deck_id, front, back, example, source)
+      select new_deck,
+             left(c->>'front', 200),
+             nullif(left(c->>'back', 400), ''),
+             nullif(left(c->>'example', 600), ''),
+             'manual'
+        from jsonb_array_elements(p_cards) c
+        where coalesce(trim(c->>'front'), '') <> '';
+    get diagnostics added = row_count;
+    insert into deck_assignments (deck_id, student_id)
+      values (new_deck, p_student_id);
+    return added;
+  end $fn$;
+
+  grant execute on function public.assign_selected_words(uuid, text, text, jsonb)
+    to authenticated;
+
+  -- ============================================================================
+  -- КВОТА ТРИАЛА (2026-07-24, по находке ревью + решение владельца):
+  -- триал больше НЕ даёт полную premium-квоту. Уровни доступа AI:
+  --   • платный план (свой) / ученица учителя с ПЛАТНЫМ планом / is_admin
+  --     → 40/час и 200/сутки (как было у премиума);
+  --   • триал (свой) или ученица ТРИАЛЬНОГО учителя → 12/сутки
+  --     (хватает распробовать всё, фармить аккаунты бессмысленно);
+  --   • free → 5/сутки.
+  -- Функции has_premium_access (для UI/фич) не меняем — меняем только квоты.
+  -- Блок idempotent. После него ОБЯЗАТЕЛЬНО включить подтверждение email:
+  -- Supabase Dashboard → Authentication → Providers → Email → Confirm email.
+  -- ============================================================================
+
+  -- Полный (оплаченный) доступ: свой платный план, ученица платного учителя,
+  -- или админ.
+  -- ── из перекрытых версий (история причин) ──────────────────
+  -- Полный (оплаченный) доступ: свой платный план, ученица платного учителя,
+  -- или админ.
+  -- ───────────────────────────────────────────────────────────
+  create or replace function public.has_paid_access(uid uuid)
+  returns boolean
+  language sql
+  security definer
+  stable
+  set search_path = public
+  as $fn$
+    select
+      exists (
+        select 1 from profiles p where p.id = uid and (
+          p.is_admin
+          or (p.plan <> 'free' and p.plan_expires_at is not null
+              and p.plan_expires_at > now())
+        )
+      )
+      or public.covering_teacher(uid, true) is not null
+  $fn$;
+
+
+
+  -- ============================================================================
+  -- КЛАССЫ КВОТ (2026-07-24) — исправление: раньше КАЖДЫЙ запрос к AI списывал
+  -- одну «единицу», поэтому перевод слова по тапу и попытка произношения стоили
+  -- столько же, сколько реплика в Диалоге. При лимите 12/день ученица выжигала
+  -- его десятком тапов по словам, не начав заниматься. Теперь три класса:
+  --   heavy  — Диалог, письмо, квесты, разбор работ, материалы, программа.
+  --            Это и есть «AI-действие» в тарифах (дорогие умные модели).
+  --   light  — перевод слова/фразы, определения, пакетное добавление слов.
+  --            Идут на дешёвые модели (Groq 8b / flash-lite) с огромными
+  --            бесплатными квотами — лимит только против скриптов.
+  --   speech — распознавание речи (Groq Whisper) в тренажёре произношения.
+  -- Блок idempotent.
+  -- ============================================================================
+
+  alter table public.ai_calls add column if not exists kind text not null default 'heavy';
+
+  create index if not exists ai_calls_user_kind_time
+    on public.ai_calls (user_id, kind, called_at desc);
+
+  create or replace function public.consume_ai_quota(p_kind text default 'heavy')
+  returns void
+  language plpgsql
+  security definer
+  set search_path = public
+  as $fn$
+  declare
+    v_kind text := case when p_kind in ('light', 'speech') then p_kind else 'heavy' end;
+    uid uuid := auth.uid();
+    paid boolean;
+    prem boolean;
+    lim_day int;
+    n int;
+  begin
+    if uid is null then
+      raise exception 'RECALL_NO_AUTH';
+    end if;
+
+    -- ЛОК: параллельные запросы ОДНОГО пользователя идут по очереди, иначе
+    -- Promise.all из 50 запросов проскакивал мимо лимита (все видели n=0).
+    perform pg_advisory_xact_lock(hashtext('ai_quota:' || uid::text));
+
+    if exists (
+      select 1 from auth.users
+      where id = uid and banned_until is not null and banned_until > now()
+    ) then
+      raise exception 'RECALL_BLOCKED';
+    end if;
+
+    if exists (select 1 from profiles where id = uid and blocked) then
+      raise exception 'RECALL_BLOCKED';
+    end if;
+
+    delete from ai_calls where called_at < now() - interval '3 days';
+
+    paid := public.has_paid_access(uid);
+    prem := public.has_premium_access(uid);
+
+    select count(*) into n from ai_calls
+    where user_id = uid and called_at > now() - interval '1 hour';
+    if n >= (case when paid then 200 when prem then 90 else 40 end) then
+      raise exception 'RECALL_RATE_HOUR';
+    end if;
+
+    lim_day := case v_kind
+      when 'heavy'  then case when paid then 200 when prem then  12 else   5 end
+      when 'light'  then case when paid then 900 when prem then 150 else 100 end
+      else               case when paid then 400 when prem then 150 else  50 end
+    end;
+
+    select count(*) into n from ai_calls
+    where user_id = uid and ai_calls.kind = v_kind
+      and called_at > now() - interval '24 hours';
+
+    if n >= lim_day then
+      if v_kind = 'light' then
+        raise exception 'RECALL_LIGHT_LIMIT';
+      elsif v_kind = 'speech' then
+        raise exception 'RECALL_SPEECH_LIMIT';
+      elsif paid then
+        raise exception 'RECALL_RATE_DAY';
+      elsif prem then
+        raise exception 'RECALL_TRIAL_LIMIT';
+      else
+        raise exception 'RECALL_FREE_LIMIT';
+      end if;
+    end if;
+
+    insert into ai_calls (user_id, kind) values (uid, v_kind);
+  end $fn$;
+
+  grant execute on function public.consume_ai_quota(text) to authenticated;
+
+
+  -- ============================================================================
+  -- ЛИМИТ УЧЕНИЦ + ГОНКА КВОТЫ (2026-07-24, по находкам аудита 22.07).
+  -- 1) КРИТИЧНО: join_teacher не проверял лимит мест тарифа. Владелец
+  --    teacher_mini (3000₸, «до 5 учениц») мог раздать код-приглашение хоть
+  --    в чат на 200 человек — все привязывались и получали ПЛАТНУЮ квоту AI
+  --    (бенефит «ученица платного учителя»). Бизнес-модель обходилась одним
+  --    сообщением. Теперь место проверяется в БД при привязке.
+  -- 2) Гонка «посчитал → вставил» в consume_ai_quota: 50 параллельных запросов
+  --    видели n=0 и проходили все. Лечится advisory-локом на пользователя:
+  --    запросы одного аккаунта сериализуются, чужие друг друга не ждут.
+  -- Блок idempotent.
+  -- ============================================================================
+
+  -- Сколько учениц разрешено тарифу (0 — тариф не преподавательский).
+  create or replace function public.teacher_seat_limit(p_plan text)
+  returns int
+  language sql
+  immutable
+  as $fn$
+    select case p_plan
+      when 'teacher_mini'  then 5
+      when 'teacher_start' then 10
+      when 'teacher_pro'   then 30
+      else 0
+    end
+  $fn$;
+
+
+
+  -- ============================================================================
+  -- УТЕЧКА ПРОФИЛЯ (заход 20). Блок idempotent — можно запускать повторно.
+  --
+  -- Находка ревью 22.07: политика «linked profiles visible» открывает связанным
+  -- сторонам ВСЮ строку профиля. Ученица через DevTools делала
+  --   supabase.from('profiles').select('*').eq('id', <teacher_id>)
+  -- и получала invite_code преподавателя (а заодно plan, plan_expires_at,
+  -- trial_until, is_admin). Код приглашения можно опубликовать где угодно —
+  -- чужие люди займут места её же преподавателя.
+  --
+  -- ПОЧЕМУ НЕ ЧИНИМ ПОЛИТИКУ: RLS в Postgres работает ПОСТРОЧНО и колонки
+  -- прятать не умеет. Любая политика, дающая право читать строку, отдаёт её
+  -- целиком. Колонки закрываются только грантами — тем же приёмом, каким выше
+  -- по файлу закрыт UPDATE (revoke update + grant update на три колонки).
+  -- Поэтому: SELECT у authenticated разрешён на список безобидных колонок, а
+  -- секреты профиля не читаются через REST ВООБЩЕ — ни у чужого, ни у себя.
+  -- Своё отдают security-definer RPC: план и is_admin — get_my_plan(),
+  -- код приглашения — ensure_invite_code()/regenerate_invite_code().
+  -- Побочный эффект: select('*') на profiles теперь падает с ошибкой прав —
+  -- клиенты обязаны перечислять колонки явно (так и сделано, см. lib/profile.ts,
+  -- lib/teacher.ts, SettingsPage).
+  -- ============================================================================
+
+  -- revoke select + grant select на колонки (перенесено в блок «ПРАВА НА profiles» ниже — PLAN.md Ф1.2)
+
+  -- ---- Перевыпуск кода-приглашения ----
+  -- ensure_invite_code() всегда возвращает существующий код, то есть утёкший
+  -- код было нечем отозвать. Эта функция выдаёт НОВЫЙ (старый перестаёт
+  -- работать сразу: join_teacher ищет по текущему значению колонки).
+  -- Уже привязанные ученицы не страдают — связь живёт в teacher_students и от
+  -- кода не зависит.
+  create or replace function public.regenerate_invite_code()
+  returns text language plpgsql security definer set search_path = public as $fn$
+  declare
+    new_code text;
+    alphabet text := 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+    i int;
+    attempt int;
+  begin
+    if not exists (select 1 from profiles where id = auth.uid() and role = 'teacher') then
+      raise exception 'Код-приглашение доступен только преподавателю.';
+    end if;
+    for attempt in 1..6 loop
+      new_code := '';
+      for i in 1..6 loop
+        new_code := new_code || substr(alphabet, 1 + floor(random() * length(alphabet))::int, 1);
+      end loop;
+      begin
+        update profiles set invite_code = new_code where id = auth.uid();
+        return new_code;
+      exception when unique_violation then
+        -- код занят, пробуем ещё
+      end;
+    end loop;
+    raise exception 'Не удалось создать код. Попробуй ещё раз.';
+  end $fn$;
+
+  grant execute on function public.regenerate_invite_code() to authenticated;
+
+  -- ============================================================================
+  -- ТЕСТ УРОВНЯ ОТ ПРЕПОДАВАТЕЛЯ (2026-07-24). Блок idempotent.
+  --
+  -- Просьба преподавателя: «если ученик новенький и я не знаю его уровень, я бы
+  -- могла назначить ему тест, узнать примерный уровень и дальше подбирать план».
+  -- Раньше тест можно было только попросить пройти на словах, а результат по
+  -- испанскому вообще оставался в localStorage ученицы — учитель его не видел.
+  -- Теперь просьба живёт в БД, и результат возвращается преподавателю.
+  -- ============================================================================
+
+  create table if not exists public.placement_requests (
+    id uuid primary key default gen_random_uuid(),
+    teacher_id uuid not null references public.profiles(id) on delete cascade,
+    student_id uuid not null references public.profiles(id) on delete cascade,
+    lang text not null check (lang in ('en','es')),
+    status text not null default 'assigned' check (status in ('assigned','done')),
+    result_level text check (result_level in ('A1','A2','B1','B2','C1','C2')),
+    created_at timestamptz not null default now(),
+    completed_at timestamptz
+  );
+
+  -- одна НЕЗАКРЫТАЯ просьба на пару учитель+ученица+язык
+  create unique index if not exists placement_requests_one_open
+    on public.placement_requests (teacher_id, student_id, lang)
+    where status = 'assigned';
+
+  alter table public.placement_requests enable row level security;
+
+  -- Читают обе стороны; отвязка отбирает доступ у преподавателя. Запись —
+  -- только через RPC ниже (иначе ученица могла бы вписать себе любой уровень
+  -- «от учителя»).
+  drop policy if exists "teacher reads placement" on public.placement_requests;
+  create policy "teacher reads placement" on public.placement_requests
+    for select using (
+      auth.uid() = teacher_id and public.is_student_of(auth.uid(), student_id)
+    );
+  drop policy if exists "student reads placement" on public.placement_requests;
+  create policy "student reads placement" on public.placement_requests
+    for select using (auth.uid() = student_id);
+  revoke insert, update, delete on public.placement_requests from authenticated;
+
+  -- Учитель назначает тест своей ученице (повторное назначение заменяет
+  -- незакрытую просьбу — чтобы не упираться в уникальный индекс)
+  create or replace function public.assign_placement(p_student_id uuid, p_lang text)
+  returns uuid language plpgsql security definer set search_path = public as $fn$
+  declare new_id uuid;
+  begin
+    if not public.is_student_of(auth.uid(), p_student_id) then
+      raise exception 'Это не твой ученик.';
+    end if;
+    if p_lang not in ('en', 'es') then
+      raise exception 'Неизвестный язык.';
+    end if;
+    delete from placement_requests
+     where teacher_id = auth.uid() and student_id = p_student_id
+       and lang = p_lang and status = 'assigned';
+    insert into placement_requests (teacher_id, student_id, lang)
+      values (auth.uid(), p_student_id, p_lang)
+      returning id into new_id;
+    return new_id;
+  end $fn$;
+
+  -- Учитель снимает просьбу или убирает старый результат из списка.
+  -- is_student_of — чтобы отвязанный экс-учитель не удалял старые записи
+  -- (инвариант «отвязка отбирает доступ», как в assign_placement).
+  create or replace function public.cancel_placement(p_id uuid)
+  returns void language plpgsql security definer set search_path = public as $fn$
+  begin
+    delete from placement_requests pr
+     where pr.id = p_id and pr.teacher_id = auth.uid()
+       and public.is_student_of(auth.uid(), pr.student_id);
+    if not found then raise exception 'Тест не найден.'; end if;
+  end $fn$;
+
+  -- Ученица закончила тест: закрываем ВСЕ открытые просьбы по этому языку.
+  -- Клиенту не нужно знать id — он просто сообщает язык и результат.
+  -- Возвращает, сколько просьб закрыто (0 — теста никто не назначал).
+  create or replace function public.submit_placement(p_lang text, p_level text)
+  returns int language plpgsql security definer set search_path = public as $fn$
+  declare n int;
+  begin
+    if p_level not in ('A1','A2','B1','B2','C1','C2') then
+      raise exception 'Неизвестный уровень.';
+    end if;
+    update placement_requests
+       set status = 'done', result_level = p_level, completed_at = now()
+     where student_id = auth.uid() and lang = p_lang and status = 'assigned';
+    get diagnostics n = row_count;
+    return n;
+  end $fn$;
+
+  grant execute on function public.assign_placement(uuid, text) to authenticated;
+  grant execute on function public.cancel_placement(uuid) to authenticated;
+  grant execute on function public.submit_placement(text, text) to authenticated;
+
+  -- ============================================================================
+  -- ЗАКРЫТИЕ БИЛЛИНГ-ХЕЛПЕРОВ + чистка перегрузки (заход 3 аудита, 2026-07-25).
+  -- Блок idempotent.
+  --
+  -- 1) has_premium_access(uid)/has_paid_access(uid) были доступны снаружи —
+  --    проверено вживую: аноним вызывал их с ЛЮБЫМ uid и узнавал, платит ли
+  --    этот человек. Клиент эти функции не зовёт (только внутри
+  --    consume_ai_quota/get_my_plan, security definer от владельца — им грант не
+  --    нужен), поэтому отбираем EXECUTE.
+  --    ⚠️ Supabase выдаёт EXECUTE ЯВНО ролям anon и authenticated (ALTER DEFAULT
+  --    PRIVILEGES), а не только через PUBLIC — поэтому `revoke ... from public`
+  --    анонима НЕ закрывает (первый заход смоука поймал: аноним всё ещё читал
+  --    статус). Отбираем у anon и authenticated поимённо. Внутренние вызовы из
+  --    SD-функций владельца не страдают.
+  --    (Хелперы отношений is_student_of/deck_owned_by и т.п. ОСТАВЛЕНЫ: они
+  --    нужны authenticated внутри RLS-политик, а их утечка — булев признак
+  --    связи двух конкретных id, низкая чувствительность.)
+  revoke execute on function public.has_premium_access(uuid) from public, anon, authenticated;
+  revoke execute on function public.has_paid_access(uuid) from public, anon, authenticated;
+
+  -- 2) Мёртвая перегрузка consume_ai_quota() (0 аргументов, старая логика без
+  --    классов и без advisory-лока) оставалась в базе рядом с рабочей
+  --    consume_ai_quota(p_kind). Приложение всегда шлёт p_kind, но прямой REST
+  --    с пустым телом мог попасть в устаревшую версию. Удаляем — остаётся
+  --    только версия с параметром.
+  drop function if exists public.consume_ai_quota();
+
+  -- ============================================================================
+  -- ЗАХОД 21: ЗАКРЫТИЕ НАХОДОК АУДИТА (У3/У4, 2026-07-26). Блок idempotent.
+  -- По журналу docs/findings.md. Закрывает: анонимный оракул кодов-приглашений,
+  -- подделку стрика произвольным днём, отсутствие лимитов у materials/
+  -- study_plans/текстовых полей, безлимитную запись grammar_mistakes.
+  -- ⚠️ Блок ДОЛЖЕН идти ПОСЛЕДНИМ в файле: revoke на функции (п.6) действует на
+  -- все функции, СОЗДАННЫЕ ВЫШЕ. Если добавляешь новые функции — либо выше этого
+  -- блока, либо перезалей файл целиком (он idempotent).
+  -- ============================================================================
+
+  -- ---- 1. activity_log: запись только через RPC, день валидируется сервером --
+  -- Было: клиент слал day (из new Date() браузера) и type напрямую — можно было
+  -- задним числом «дорисовать» стрик и «Динамику за месяц» в отчёте родителям, а
+  -- также вписать мусорный type, ломавший выборки диагностики.
+  alter table public.activity_log drop constraint if exists activity_log_type_check;
+  alter table public.activity_log add constraint activity_log_type_check
+    check (type in ('flashcards','reader','pronunciation','conversation','writing',
+                    'grammar','quest','practice','assignment','perfect')) not valid;
+
+  revoke insert, update, delete on public.activity_log from authenticated;
+
+  create or replace function public.log_activity(
+    p_type text, p_day date, p_items int default 1, p_sec int default 0
+  ) returns void language plpgsql security definer set search_path = public as $fn$
+  declare
+    uid uuid := auth.uid();
+    v_items int := least(greatest(coalesce(p_items, 0), 0), 100000);
+    v_sec   int := least(greatest(coalesce(p_sec, 0), 0), 86400);
+  begin
+    if uid is null then raise exception 'RECALL_NO_AUTH'; end if;
+    if p_type not in ('flashcards','reader','pronunciation','conversation','writing',
+                      'grammar','quest','practice','assignment','perfect') then
+      raise exception 'RECALL_BAD_TYPE';
+    end if;
+    -- День задаёт клиент (местная дата пользователя), но сервер не даёт уйти
+    -- дальше ±1 суток от своей даты: любой часовой пояс (UTC−12…+14) сдвигает
+    -- дату максимум на сутки, а подделка истории стрика произвольными датами
+    -- закрыта.
+    if p_day is null or p_day < current_date - 1 or p_day > current_date + 1 then
+      raise exception 'RECALL_BAD_DAY';
+    end if;
+    insert into activity_log (user_id, day, type, items_done, duration_sec)
+    values (uid, p_day, p_type, v_items, v_sec)
+    on conflict (user_id, day, type) do update
+      set items_done   = activity_log.items_done + v_items,
+          duration_sec = activity_log.duration_sec + v_sec;
+
+    -- Ученик что-то сделал — проверяем, не закрылся ли пункт домашки. Эта
+    -- функция — ЕДИНСТВЕННАЯ точка, через которую проходит любое действие
+    -- ученика (карточки, чтение, речь, письмо, квесты, задания), поэтому
+    -- автозачёт по счётчикам занятий висит здесь, а не в пяти местах клиента.
+    -- Завершения, которые не логируются как занятие (сданная работа, материал,
+    -- квест), закрываются триггерами на своих таблицах — см. блок «Домашка».
+    perform public.refresh_homework_for(uid);
+  end $fn$;
+
+  grant execute on function public.log_activity(text, date, int, int) to authenticated;
+
+  -- ---- 2. materials: владелец распоряжается своими + лимит размера ----
+  -- Раньше политика проверяла лишь teacher_id=auth.uid() — ученик мог вставить
+  -- себе мегабайтные строки. Защита от этого — ЛИМИТ РАЗМЕРА (ниже), а не роль:
+  -- в режиме самоучки (3b) ученик СОЗДАЁТ материалы СЕБЕ (teacher_id = свой uid),
+  -- поэтому требование role='teacher' снято, а кап размера оставлен — он и ловил
+  -- абьюз. Кто сколько может генерить — держит месячный лимит генераций
+  -- (energy_source.gen_limit: у Free 0), а не эта политика.
+  drop policy if exists "own materials" on public.materials;
+  create policy "own materials" on public.materials
+    for all using (auth.uid() = teacher_id)
+    with check (
+      auth.uid() = teacher_id
+      and pg_column_size(body) < 100 * 1024
+      and pg_column_size(exercises) < 100 * 1024
+      and pg_column_size(coalesce(plan, '{}'::jsonb)) < 100 * 1024
+    );
+
+  -- ---- 3. study_plans: вставку/удаление — только через RPC ----
+  -- Гонку давала неатомарная «замена» = архивировать активную + вставить новую
+  -- двумя запросами. Закрываем её, запрещая прямой INSERT: создать программу
+  -- теперь можно ТОЛЬКО через replace_study_plan (архив+вставка одной
+  -- транзакцией). UPDATE оставляем — им пользуется archivePlan() (снять
+  -- программу одним шагом, гонки нет), а частичный уникальный индекс не даёт
+  -- сделать две активные. DELETE тоже запрещаем (снятие — это архив, не delete).
+  revoke insert, delete on public.study_plans from authenticated;
+
+  -- ---- 4. Лимиты длины текстовых полей (защита общей базы от раздувания) ----
+  -- Лимиты входа в api/gemini.ts защищают вызов ИИ, но не саму запись: прямой
+  -- POST в PostgREST мог положить мегабайтные строки. CHECK ... NOT VALID
+  -- проверяет только НОВЫЕ записи (существующие данные не трогаем, миграция не
+  -- падает на длинном старом ряду).
+  alter table public.cards drop constraint if exists cards_len_check;
+  alter table public.cards add constraint cards_len_check check (
+    char_length(front) <= 400
+    and char_length(coalesce(back, '')) <= 2000
+    and char_length(coalesce(example, '')) <= 2000
+  ) not valid;
+  alter table public.messages drop constraint if exists messages_len_check;
+  alter table public.messages add constraint messages_len_check
+    check (char_length(coalesce(content, '')) <= 16000) not valid;
+  alter table public.writing_submissions drop constraint if exists writing_len_check;
+  alter table public.writing_submissions add constraint writing_len_check check (
+    char_length(coalesce(text, '')) <= 20000
+    and char_length(coalesce(prompt, '')) <= 2000
+  ) not valid;
+
+  -- ---- 5. grammar_mistakes: потолок числа строк на пользователя ----
+  -- topic_id/ex — произвольные int без FK, поэтому уникальность (user, lang,
+  -- topic, ex) не мешает наплодить сколько угодно «ошибок». Реально их max ~1080
+  -- (60 уроков × ~9 упр. × 2 языка). Потолок 5000 отсекает абьюз, легальных не
+  -- задевает. Сверх лимита строка тихо игнорируется (return null в BEFORE INSERT).
+  create or replace function public.cap_grammar_mistakes()
+  returns trigger language plpgsql security definer set search_path = public as $fn$
+  begin
+    if (select count(*) from grammar_mistakes where user_id = new.user_id) >= 5000 then
+      return null;
+    end if;
+    return new;
+  end $fn$;
+  drop trigger if exists grammar_mistakes_cap on public.grammar_mistakes;
+  create trigger grammar_mistakes_cap
+    before insert on public.grammar_mistakes
+    for each row execute function public.cap_grammar_mistakes();
+
+
+  -- ============================================================================
+  -- «ПИСЬМО» (Заход 5a): письменные задания (IELTS / обычное эссе). По образцу
+  -- material_assignments. Блок idempotent — можно запускать повторно.
+  -- ============================================================================
+
+  create table if not exists public.writing_tasks (
+    id uuid primary key default gen_random_uuid(),
+    teacher_id uuid not null references public.profiles(id) on delete cascade,
+    lang text not null check (lang in ('en','es')) default 'en',
+    mode text not null check (mode in ('ielts','regular')),
+    level text not null check (level in ('A1','A2','B1','B2','C1','C2')),
+    prompt text not null,
+    settings jsonb,
+    created_at timestamptz default now()
+  );
+
+  create table if not exists public.writing_task_assignments (
+    id uuid primary key default gen_random_uuid(),
+    task_id uuid not null references public.writing_tasks(id) on delete cascade,
+    student_id uuid not null references public.profiles(id) on delete cascade,
+    status text not null check (status in ('assigned','submitted','reviewed')) default 'assigned',
+    essay text,
+    ai_review jsonb,
+    teacher_review jsonb,
+    band text,
+    attempts jsonb,
+    note text,
+    submitted_at timestamptz,
+    reviewed_at timestamptz,
+    created_at timestamptz default now(),
+    unique (task_id, student_id)
+  );
+
+  alter table public.writing_tasks enable row level security;
+  alter table public.writing_task_assignments enable row level security;
+
+  create or replace function public.writing_task_owned_by(w_id uuid, u_id uuid)
+  returns boolean language sql security definer set search_path = public as
+  $$ select exists (select 1 from writing_tasks where id = w_id and teacher_id = u_id) $$;
+
+  create or replace function public.writing_assigned_to(w_id uuid, s_id uuid)
+  returns boolean language sql security definer set search_path = public as
+  $$ select exists (select 1 from writing_task_assignments
+                    where task_id = w_id and student_id = s_id) $$;
+
+  -- writing_tasks: учитель распоряжается своими; ученице назначенные — на чтение
+  drop policy if exists "own writing tasks" on public.writing_tasks;
+  create policy "own writing tasks" on public.writing_tasks
+    for all using (auth.uid() = teacher_id) with check (auth.uid() = teacher_id);
+  drop policy if exists "assigned writing tasks readable" on public.writing_tasks;
+  create policy "assigned writing tasks readable" on public.writing_tasks
+    for select using (public.writing_assigned_to(id, auth.uid()));
+
+  -- writing_task_assignments: учитель читает назначения СВОИХ заданий и только
+  -- СВОИМ ученицам (отвязка отбирает доступ); ученица видит свои. Запись — RPC.
+  drop policy if exists "teacher reads writing assignments" on public.writing_task_assignments;
+  create policy "teacher reads writing assignments" on public.writing_task_assignments
+    for select using (
+      public.writing_task_owned_by(task_id, auth.uid())
+      and public.is_student_of(auth.uid(), student_id)
+    );
+  drop policy if exists "student sees own writing assignments" on public.writing_task_assignments;
+  create policy "student sees own writing assignments" on public.writing_task_assignments
+    for select using (auth.uid() = student_id);
+
+  -- запись в назначения — только через security-definer функции
+  revoke insert, update, delete on public.writing_task_assignments from authenticated;
+
+  -- Учитель назначает письмо своей ученице
+  create or replace function public.assign_writing_task(p_task_id uuid, p_student_id uuid)
+  returns void language plpgsql security definer set search_path = public as $fn$
+  begin
+    if not public.writing_task_owned_by(p_task_id, auth.uid())
+      or not public.is_student_of(auth.uid(), p_student_id) then
+      raise exception 'Нет прав назначить это задание этому ученику.';
+    end if;
+    insert into writing_task_assignments (task_id, student_id)
+    values (p_task_id, p_student_id)
+    on conflict (task_id, student_id) do nothing;
+  end $fn$;
+
+  create or replace function public.unassign_writing_task(p_task_id uuid, p_student_id uuid)
+  returns void language plpgsql security definer set search_path = public as $fn$
+  begin
+    if not public.writing_task_owned_by(p_task_id, auth.uid()) then
+      raise exception 'Нет прав: этот материал не твой.';
+    end if;
+    delete from writing_task_assignments where task_id = p_task_id and student_id = p_student_id;
+  end $fn$;
+
+  -- Ученица сдаёт письмо (Заход 5b) и может пересдавать, пока НЕ проверено:
+  -- каждая сдача дописывается в attempts (история). Оценка ai_review считается
+  -- на клиенте heavy-моделью — сервер лишь фиксирует (как с материалами).
+  create or replace function public.submit_writing(
+    p_id uuid, p_essay text, p_grade jsonb, p_band text
+  ) returns void language plpgsql security definer set search_path = public as $fn$
+  begin
+    update writing_task_assignments
+      set essay = p_essay, ai_review = p_grade, band = p_band,
+          status = 'submitted', submitted_at = now(),
+          attempts = coalesce(attempts, '[]'::jsonb) || jsonb_build_array(
+            jsonb_build_object('essay', p_essay, 'ai_review', p_grade, 'band', p_band, 'at', now())
+          )
+    where id = p_id and student_id = auth.uid() and status in ('assigned', 'submitted');
+    if not found then raise exception 'Работа не найдена или уже проверена.'; end if;
+  end $fn$;
+
+  -- Преподаватель завершает проверку письма (Заход 5c): свой вердикт + итоговый
+  -- band, статус reviewed. Можно перепроверить (правка вердикта) из reviewed.
+  create or replace function public.finish_writing_review(p_id uuid, p_review jsonb, p_band text)
+  returns void language plpgsql security definer set search_path = public as $fn$
+  begin
+    if not exists (
+      select 1 from writing_task_assignments wa
+      where wa.id = p_id and public.writing_task_owned_by(wa.task_id, auth.uid())
+        and public.is_student_of(auth.uid(), wa.student_id)
+    ) then raise exception 'Нет прав проверять эту работу.'; end if;
+    update writing_task_assignments
+      set teacher_review = p_review, band = coalesce(nullif(p_band, ''), band),
+          status = 'reviewed', reviewed_at = now()
+    where id = p_id and status in ('submitted', 'reviewed');
+    if not found then raise exception 'Работа не на проверке.'; end if;
+  end $fn$;
+
+  -- Преподаватель переназначает письмо той же ученице: текущий цикл (последняя
+  -- попытка) получает вердикт учителя и band в историю attempts, затем рабочие
+  -- поля сбрасываются в assigned; note — «на что обратить внимание в этот раз».
+  create or replace function public.reassign_writing(p_id uuid, p_note text)
+  returns void language plpgsql security definer set search_path = public as $fn$
+  declare n int;
+  begin
+    if not exists (
+      select 1 from writing_task_assignments wa
+      where wa.id = p_id and public.writing_task_owned_by(wa.task_id, auth.uid())
+        and public.is_student_of(auth.uid(), wa.student_id)
+    ) then raise exception 'Нет прав: этот материал не твой.'; end if;
+    select jsonb_array_length(coalesce(attempts, '[]'::jsonb)) into n
+      from writing_task_assignments where id = p_id;
+    update writing_task_assignments
+      set attempts = case when n > 0 then jsonb_set(attempts, array[(n - 1)::text],
+            (attempts -> (n - 1)) || jsonb_build_object('teacher_review', teacher_review, 'band', band))
+          else attempts end,
+          status = 'assigned', essay = null, ai_review = null, teacher_review = null,
+          band = null, submitted_at = null, reviewed_at = null, note = nullif(trim(p_note), '')
+    where id = p_id;
+  end $fn$;
+
+  -- ============================================================================
+  -- ЭНЕРГИЯ (единая валюта AI, E1) — см. docs/energy-design.md. Блок idempotent.
+  -- Заменяет учёт «3 кармана heavy/light/speech» на дневной бюджет ЭНЕРГИИ:
+  --   • heavy-действия стоят энергию (dialog=1, письмо=2… — цену считает сервер);
+  --   • переводы/произношение (light/speech) — 0 энергии, только анти-абьюз-кэп;
+  --   • генерации учителя (материал/программа) — отдельный МЕСЯЧНЫЙ лимит.
+  -- Источник энергии: пул студии (учитель + её ученицы) → свой premium → free.
+  -- День и месяц считаем по фикс. поясу Asia/Almaty (продукт для Казахстана).
+  -- consume_ai_quota НЕ трогаем (сервер уходит на spend_energy отдельным заходом).
+  -- ============================================================================
+
+  alter table public.ai_calls add column if not exists cost_energy int not null default 0;
+  alter table public.ai_calls add column if not exists pool_owner uuid;      -- чей дневной пул тратим
+  alter table public.ai_calls add column if not exists is_generation boolean not null default false;
+
+  create or replace function public.recall_day_start()
+  returns timestamptz language sql stable set search_path = public as
+  $$ select date_trunc('day', now() at time zone 'Asia/Almaty') at time zone 'Asia/Almaty' $$;
+  create or replace function public.recall_month_start()
+  returns timestamptz language sql stable set search_path = public as
+  $$ select date_trunc('month', now() at time zone 'Asia/Almaty') at time zone 'Asia/Almaty' $$;
+
+  create or replace function public.teacher_energy_pool(p_plan text)
+  returns int language sql immutable as $$ select case p_plan
+    when 'teacher_mini' then 70 when 'teacher_start' then 110 when 'teacher_pro' then 260 else 0 end $$;
+  create or replace function public.teacher_gen_limit(p_plan text)
+  returns int language sql immutable as $$ select case p_plan
+    when 'teacher_mini' then 25 when 'teacher_start' then 45 when 'teacher_pro' then 90 else 0 end $$;
+
+  -- Дневной источник энергии пользователя. in_studio=true → пул общий (учитель+ученицы),
+  -- тогда действует под-кап на аккаунт. gen_limit — месячный лимит генераций пула.
+  -- Триал-учитель (plan='free', но trial_until>now, role='teacher') получает пул 40 / 10 генераций.
+  -- ── из перекрытых версий (история причин) ──────────────────
+  -- Дневной источник энергии пользователя. in_studio=true → пул общий (учитель+ученицы),
+  -- тогда действует под-кап на аккаунт. gen_limit — месячный лимит генераций пула.
+  -- Триал-учитель (plan='free', но trial_until>now, role='teacher') получает пул 40 / 10 генераций.
+  -- ───────────────────────────────────────────────────────────
+  create or replace function public.energy_source(
+    uid uuid, out pool_owner uuid, out day_budget int, out in_studio boolean, out gen_limit int
+  ) language plpgsql stable security definer set search_path = public as $fn$
+  declare me record; t record; v_teacher uuid; paid_teacher boolean; has_students boolean;
+  begin
+    select role, plan, plan_expires_at, trial_until, created_at into me from profiles where id = uid;
+    has_students := false;
+    -- 1) сам аккаунт-учитель → свой пул студии. Роль сама по себе пул НЕ даёт:
+    --    на триале он включается только с появлением первого ученика.
+    if me.role = 'teacher' then
+      paid_teacher := me.plan like 'teacher_%' and me.plan_expires_at > now();
+      select exists (select 1 from teacher_students where teacher_id = uid) into has_students;
+      day_budget := case
+        when paid_teacher then public.teacher_energy_pool(me.plan)
+        when me.trial_until > now() and has_students then 40
+        else 0 end;
+      if day_budget > 0 then
+        pool_owner := uid; in_studio := true;
+        gen_limit := case
+          when paid_teacher then public.teacher_gen_limit(me.plan)
+          else 3 end;
+        return;
+      end if;
+    end if;
+    -- 2) ученик, ПОКРЫТЫЙ тарифом преподавателя → пул этого преподавателя
+    v_teacher := public.covering_teacher(uid);
+    if v_teacher is not null then
+      select case
+        when tp.plan like 'teacher_%' and tp.plan_expires_at > now() then public.teacher_energy_pool(tp.plan)
+        when tp.trial_until > now() then 40 else 0 end as pool
+        into t
+        from profiles tp where tp.id = v_teacher;
+      if t.pool > 0 then
+        pool_owner := v_teacher; day_budget := t.pool; in_studio := true; gen_limit := 0; return;
+      end if;
+    end if;
+    -- 3) свой premium → 30; триал → 30 первые 3 дня, дальше 15; 4) free → 5
+    if public.has_premium_access(uid) then
+      pool_owner := uid; in_studio := false;
+      -- Месячный лимит генераций у соло-пользователя:
+      --   • самоучка-Premium (не teacher) → 12: собирает материалы СЕБЕ (3b);
+      --   • teacher без учеников → 2 пробные (как было);
+      --   • иначе 0.
+      -- Free сюда не доходит (ниже day_budget=5, gen_limit=0).
+      gen_limit := case
+        when me.role <> 'teacher' then 12
+        when not has_students then 2
+        else 0 end;
+      if me.plan <> 'free' and me.plan_expires_at is not null and me.plan_expires_at > now() then
+        day_budget := 30;
+      elsif me.created_at > now() - interval '3 days' then
+        day_budget := 30;
+      else
+        day_budget := 15;
+      end if;
+      return;
+    end if;
+    pool_owner := uid; day_budget := 5; in_studio := false; gen_limit := 0;
+  end $fn$;
+
+
+
+  -- ============================================================================
+  -- САМОСТОЯТЕЛЬНАЯ РОЛЬ ПРЕПОДАВАТЕЛЯ (2026-08-06, заход A1 из docs/mkt/19-fix-plan)
+  -- Проблема: роль teacher выдавалась ТОЛЬКО вручную через SQL Editor. У аккаунта
+  -- learner не было ни одного пути к студии — экран прямо отправлял «попроси
+  -- владельца». Любой репетитор, пришедший из рассылки или с конференции, упирался
+  -- в стену на первой минуте, то есть всё привлечение преподавателей было
+  -- заблокировано.
+  -- Решение владельца: роль выдаётся сразу по кнопке, но бесплатно можно вести
+  -- не больше 3 учеников; больше — только с оплаченным тарифом. Триал (14 дней)
+  -- не меняется.
+  -- Блок idempotent.
+  -- ============================================================================
+
+  -- Мест на ТРИАЛЕ. Ограничение здесь нужно не ради денег за места, а потому
+  -- что ученики триального преподавателя НАСЛЕДУЮТ его уровень доступа
+  -- (has_premium_access): каждый получает личные 300 переводов и 150
+  -- распознаваний в сутки МИМО пула энергии. Без лимита один триальный аккаунт
+  -- раздавал бы премиум-лимиты сотне человек на 14 дней бесплатно.
+  create or replace function public.free_teacher_seats()
+  returns int language sql immutable as $fn$ select 3 $fn$;
+
+  -- Сколько мест доступно преподавателю СЕЙЧАС. null = без ограничения.
+  --
+  -- Логика (решение владельца 06.08.2026): ограничиваем только там, где место
+  -- реально чего-то стоит.
+  --   • оплаченный тариф активен → места тарифа (ученики наследуют платные
+  --     лимиты 900/400 в сутки каждый — вот это и надо считать);
+  --   • триал активен → free_teacher_seats() (наследуют премиум-лимиты);
+  --   • всё остальное (free без триала, истёкший тариф) → БЕЗ ОГРАНИЧЕНИЯ:
+  --     ученики такого преподавателя не получают ничего сверх обычного
+  --     бесплатного аккаунта, у каждого свои 5 ⚡ и свои 100 переводов. Тридцать
+  --     его учеников стоят нам ровно столько же, сколько тридцать случайных
+  --     бесплатных пользователей, — ограничивать тут нечего.
+  -- Давление на покупку остаётся другое и более честное: без тарифа нет пула
+  -- энергии для учеников и нельзя генерировать материалы и программы.
+  --
+  -- ⚠️ Принимает чужой uid → тот же класс утечки, что был у energy_source:
+  -- по нему можно было бы узнать тариф чужого. EXECUTE отзывается у
+  -- authenticated в финальном блоке файла; зовут только security-definer функции.
+  create or replace function public.teacher_seats_effective(p_uid uuid)
+  returns int
+  language sql
+  stable
+  security definer
+  set search_path = public
+  as $fn$
+    select case
+      when p.role <> 'teacher' then 0
+      when public.teacher_seat_limit(p.plan) > 0
+           and p.plan_expires_at is not null
+           and p.plan_expires_at > now()
+        then public.teacher_seat_limit(p.plan)
+      when p.trial_until > now() then public.free_teacher_seats()
+      else null  -- без ограничения: ученики ничего не наследуют
+    end
+    from profiles p
+    where p.id = p_uid
+  $fn$;
+
+  -- Журнал самостоятельных включений роли: владелец смотрит из SQL Editor,
+  -- кто и когда стал преподавателем (почта — джойном к auth.users).
+  -- RLS включён БЕЗ политик: через REST таблица не видна никому (тот же приём,
+  -- что у allowed_emails).
+  create table if not exists public.teacher_signups (
+    user_id uuid primary key references public.profiles(id) on delete cascade,
+    created_at timestamptz not null default now()
+  );
+  alter table public.teacher_signups enable row level security;
+  revoke all on public.teacher_signups from anon, authenticated;
+
+  create or replace view public.teacher_signups_overview as
+    select ts.created_at, p.display_name, u.email, p.plan, p.trial_until,
+           (select count(*) from teacher_students s where s.teacher_id = ts.user_id) as students
+      from teacher_signups ts
+      join profiles p on p.id = ts.user_id
+      left join auth.users u on u.id = ts.user_id
+     order by ts.created_at desc;
+  revoke all on public.teacher_signups_overview from anon, authenticated;
+
+  -- Самостоятельное включение роли. Идемпотентно: повторный вызов ничего не портит.
+  -- Прямой update на profiles.role по-прежнему запрещён грантами — это
+  -- единственный путь.
+  create or replace function public.become_teacher()
+  returns void
+  language plpgsql
+  security definer
+  set search_path = public
+  as $fn$
+  declare
+    uid uuid := auth.uid();
+    cur text;
+    is_blocked boolean;
+  begin
+    if uid is null then raise exception 'RECALL_NO_AUTH'; end if;
+    select role, coalesce(blocked, false) into cur, is_blocked from profiles where id = uid;
+    if is_blocked then raise exception 'RECALL_BLOCKED'; end if;
+    if cur = 'teacher' then return; end if;
+
+    update profiles set role = 'teacher' where id = uid;
+    insert into teacher_signups (user_id) values (uid)
+      on conflict (user_id) do nothing;
+  end $fn$;
+
+
+
+  -- ============================================================================
+  -- ПОКРЫТИЕ УЧЕНИКА ТАРИФОМ (2026-08-06, решение владельца)
+  -- Дыра, которую закрываем: у преподавателя без тарифа мест не ограничено
+  -- (это правильно — его ученики ничего не наследуют). Но он мог набрать сто
+  -- человек, потом купить самый младший тариф — и все сто разом получали
+  -- платные лимиты, потому что места проверялись ТОЛЬКО при привязке и при
+  -- покупке тарифа не пересчитывались.
+  --
+  -- Решение: тариф покрывает не «всех привязанных», а первых N по дате
+  -- привязки, где N — места тарифа. Остальные остаются обычными бесплатными
+  -- аккаунтами, пока преподаватель не расширит тариф.
+  --
+  -- ⚠️ Наследование раньше жило в ТРЁХ местах с тремя копиями условия
+  -- (has_premium_access, has_paid_access, energy_source) — заплатка в одном
+  -- оставила бы дыру в двух других. Поэтому здесь один привратник, а те трое
+  -- начинают спрашивать его.
+  -- Блок idempotent.
+  -- ============================================================================
+
+  -- Колонка мест — ПЕРЕД covering_teacher: функции на language sql проверяются
+  -- при создании, и ссылка на ещё не существующую колонку валит всю заливку
+  -- (ERROR 42703: column x.seat does not exist).
+  alter table public.teacher_students add column if not exists seat boolean not null default false;
+
+  -- Позиция ученика в очереди считается по (created_at, id) — нужен индекс,
+  -- функция дёргается на КАЖДОМ запросе к AI.
+  create index if not exists teacher_students_teacher_created_idx
+    on public.teacher_students (teacher_id, created_at, id);
+
+  -- Кто из преподавателей реально покрывает этого ученика своим тарифом.
+  -- null — никто (ученик живёт на своих бесплатных лимитах).
+  -- p_paid_only = true → триал не считается (для has_paid_access).
+  create or replace function public.covering_teacher(
+    p_student uuid, p_paid_only boolean default false
+  )
+  returns uuid
+  language sql
+  stable
+  security definer
+  set search_path = public
+  as $fn$
+    select ts.teacher_id
+    from teacher_students ts
+    join profiles tp on tp.id = ts.teacher_id
+    where ts.student_id = p_student
+      and not coalesce(tp.blocked, false) -- блокировка учителя снимает бенефит
+      and (
+        -- оплаченный преподавательский тариф
+        (tp.plan like 'teacher_%'
+         and tp.plan_expires_at is not null and tp.plan_expires_at > now())
+        -- ЛИБО триал: у триального преподавателя plan='free', поэтому проверять
+        -- plan like 'teacher_%' здесь нельзя — иначе его ученики теряют студию.
+        -- (Раньше тут была нестыковка: energy_source давал им пул 40, а
+        -- has_premium_access повышенных лимитов не давал. Теперь одинаково.)
+        or (not p_paid_only and tp.role = 'teacher' and tp.trial_until > now())
+      )
+      -- ученик занимает место тарифа. Если преподаватель выбор ещё не трогал
+      -- (ни одного seat) — действует умолчание «первые N по дате привязки».
+      -- Ранг среди занятых считается ВСЕГДА: после понижения тарифа мест
+      -- отмечено больше, чем оплачено, и лишние не должны покрываться.
+      and case
+        when exists (
+          select 1 from teacher_students x where x.teacher_id = ts.teacher_id and x.seat
+        ) then
+          ts.seat and (
+            select count(*) from teacher_students t2
+            where t2.teacher_id = ts.teacher_id and t2.seat
+              and (coalesce(t2.created_at, 'epoch'::timestamptz), t2.id)
+                  <= (coalesce(ts.created_at, 'epoch'::timestamptz), ts.id)
+          ) <= coalesce(public.teacher_seats_effective(ts.teacher_id), 0)
+        else (
+          select count(*) from teacher_students t2
+          where t2.teacher_id = ts.teacher_id
+            and (coalesce(t2.created_at, 'epoch'::timestamptz), t2.id)
+                <= (coalesce(ts.created_at, 'epoch'::timestamptz), ts.id)
+        ) <= coalesce(public.teacher_seats_effective(ts.teacher_id), 0)
+      end
+    -- если преподавателей несколько, оплаченный тариф важнее триального
+    order by (tp.plan_expires_at is not null and tp.plan_expires_at > now()) desc
+    limit 1
+  $fn$;
+
+  -- Преподаватель сам выбирает, кто занимает места тарифа (колонка seat заведена
+  -- выше, до covering_teacher). Пока он ничего не выбрал, действует умолчание
+  -- «первые N по дате привязки» — чтобы всё работало из коробки и после покупки
+  -- тарифа никто не остался без покрытия. Тронул выбор — решает выбор.
+  --
+  -- set_student_seat: занять/освободить место. Прямой update на связи запрещён
+  -- (политики update у teacher_students нет) — это единственный путь.
+  create or replace function public.set_student_seat(p_student uuid, p_on boolean)
+  returns void
+  language plpgsql
+  security definer
+  set search_path = public
+  as $fn$
+  declare
+    uid uuid := auth.uid();
+    seats int;
+    taken int;
+  begin
+    if uid is null then raise exception 'RECALL_NO_AUTH'; end if;
+    if not exists (
+      select 1 from teacher_students where teacher_id = uid and student_id = p_student
+    ) then
+      raise exception 'RECALL_NOT_YOUR_STUDENT';
+    end if;
+
+    -- лок на преподавателя: параллельные включения не должны пробить лимит мест
+    perform pg_advisory_xact_lock(hashtext('seats:' || uid::text));
+
+    -- первое явное действие: материализуем текущее умолчание (первые N по дате),
+    -- иначе включение одного ученика молча снимет покрытие со всех остальных
+    if not exists (select 1 from teacher_students where teacher_id = uid and seat) then
+      seats := coalesce(public.teacher_seats_effective(uid), 0);
+      if seats > 0 then
+        update teacher_students ts set seat = true
+         where ts.teacher_id = uid
+           and ts.id in (
+             select id from teacher_students
+              where teacher_id = uid
+              order by created_at nulls first, id
+              limit seats
+           );
+      end if;
+    end if;
+
+    if p_on then
+      seats := public.teacher_seats_effective(uid);
+      if seats is not null then
+        select count(*) into taken from teacher_students
+         where teacher_id = uid and seat and student_id <> p_student;
+        if taken >= seats then
+          raise exception 'RECALL_SEATS_FULL';
+        end if;
+      end if;
+    end if;
+
+    update teacher_students set seat = p_on
+     where teacher_id = uid and student_id = p_student;
+  end $fn$;
+
+  -- Разовая простановка мест для связей, созданных до появления колонки.
+  -- Guard: выполняется, только если во ВСЕЙ таблице ещё нет ни одного места —
+  -- то есть ровно один раз, при первой заливке этого блока.
+  do $mig$
+  begin
+    if not exists (select 1 from public.teacher_students where seat) then
+      update public.teacher_students ts set seat = true
+       where ts.id in (
+         select x.id from (
+           select id, teacher_id,
+                  row_number() over (partition by teacher_id
+                                     order by created_at nulls first, id) as rn
+             from public.teacher_students
+         ) x
+         where x.rn <= coalesce(public.teacher_seats_effective(x.teacher_id), 0)
+       );
+    end if;
+  end $mig$;
+
+
+
+
+
+  -- ============================================================================
+  -- АНАЛИТИКА (2026-08-06, блокер A3 из docs/mkt/19-fix-plan.md)
+  -- До этого блока считались только просмотры страниц (Vercel Analytics), то
+  -- есть ответить «какой канал привёл платящих» было нечем.
+  --
+  -- Почему события пишем ДО входа (anon_id), а не только после: главный отвал
+  -- происходит между «увидел ссылку» и «зарегистрировался». Без визитов сравнение
+  -- каналов врёт: 5 регистраций из 500 визитов и 5 из 50 выглядят одинаково,
+  -- хотя второй канал в десять раз лучше.
+  --
+  -- Своя таблица, а не внешний сервис: данные и так наши, RLS уже настроен,
+  -- никаких дополнительных согласий и зависимостей.
+  -- Блок idempotent.
+  -- ============================================================================
+
+  create table if not exists public.events (
+    id         bigserial primary key,
+    anon_id    uuid,                       -- посетитель до входа
+    user_id    uuid references public.profiles(id) on delete set null,
+    name       text not null,
+    props      jsonb not null default '{}'::jsonb,
+    source     text,                       -- utm_source / referrer / «как узнал»
+    created_at timestamptz not null default now()
+  );
+  create index if not exists events_name_created_idx on public.events (name, created_at desc);
+  create index if not exists events_anon_idx         on public.events (anon_id, created_at desc);
+  create index if not exists events_user_idx         on public.events (user_id, created_at desc);
+
+  alter table public.events enable row level security;
+  -- Прямой доступ закрыт полностью: пишем только через RPC (валидация + склейка),
+  -- читаем только сводками для владельца.
+  revoke all on public.events from anon, authenticated;
+  revoke all on sequence public.events_id_seq from anon, authenticated;
+
+  -- Приём события. Доступен и анониму: без этого нет знаменателя воронки.
+  -- Защита от мусора: имя по строгому шаблону, размер props ограничен,
+  -- поток с одного посетителя ограничен (тихо игнорируем, а не ругаемся —
+  -- аналитика никогда не должна ломать экран пользователю).
+  create or replace function public.track_event(
+    p_name text, p_props jsonb default '{}'::jsonb,
+    p_anon uuid default null, p_source text default null
+  )
+  returns void
+  language plpgsql
+  security definer
+  set search_path = public
+  as $fn$
+  declare uid uuid := auth.uid(); n int;
+  begin
+    if p_name is null or p_name !~ '^[a-z][a-z0-9_]{2,39}$' then return; end if;
+    if p_props is not null and length(p_props::text) > 2000 then return; end if;
+
+    if p_anon is not null then
+      select count(*) into n from events
+       where anon_id = p_anon and created_at > now() - interval '1 hour';
+      if n > 500 then return; end if;  -- защита от скрипта, без ошибки наружу
+    end if;
+
+    insert into events (anon_id, user_id, name, props, source)
+    values (p_anon, uid, p_name, coalesce(p_props, '{}'::jsonb), left(p_source, 120));
+
+    -- СКЛЕЙКА: как только человек вошёл, привязываем к нему всё, что он делал
+    -- анонимно с этого же устройства. Без этого визит и регистрация остаются
+    -- разными людьми, и воронка не сходится.
+    if uid is not null and p_anon is not null then
+      update events set user_id = uid
+       where anon_id = p_anon and user_id is null;
+    end if;
+  end $fn$;
+
+  grant execute on function public.track_event(text, jsonb, uuid, text) to anon, authenticated;
+
+  -- Воронка за N дней одним запросом — для блока в /admin.
+  -- Считаем ЛЮДЕЙ (distinct), а не события: иначе один активный пользователь
+  -- выглядит как двадцать.
+  create or replace function public.admin_funnel(p_days int default 30)
+  returns json
+  language plpgsql
+  security definer
+  set search_path = public
+  as $fn$
+  declare d timestamptz := now() - make_interval(days => greatest(1, least(coalesce(p_days, 30), 365)));
+  begin
+    if not exists (select 1 from profiles where id = auth.uid() and is_admin) then
+      raise exception 'RECALL_NOT_ADMIN';
+    end if;
+    return json_build_object(
+      'days', p_days,
+      'steps', (
+        select coalesce(json_agg(row_to_json(s) order by s.ord), '[]'::json) from (
+          select 1 as ord, 'Визиты'            as step, count(distinct coalesce(anon_id::text, user_id::text)) as people from events where name = 'page_view'      and created_at >= d
+          union all select 2, 'Регистрации',      count(distinct user_id) from events where name = 'signup'          and created_at >= d
+          union all select 3, 'Онбординг пройден',count(distinct user_id) from events where name = 'onboarding_done' and created_at >= d
+          union all select 4, 'Первая польза',    count(distinct user_id) from events where name = 'first_value'     and created_at >= d
+          union all select 5, 'Первое AI-действие',count(distinct user_id) from events where name = 'ai_first'       and created_at >= d
+          union all select 6, 'Включили студию',  count(distinct user_id) from events where name = 'teacher_enabled' and created_at >= d
+          union all select 7, 'Привязан ученик',  count(distinct user_id) from events where name = 'student_linked'  and created_at >= d
+          union all select 8, 'Сгенерён материал',count(distinct user_id) from events where name = 'material_generated' and created_at >= d
+          union all select 9, 'Оплата включена',  count(distinct user_id) from events where name = 'payment_activated'  and created_at >= d
+        ) s
+      ),
+      -- по источникам: визиты → регистрации → оплаты. Источник берём ПЕРВЫЙ
+      -- по времени у этого посетителя (first touch): человек мог прийти из
+      -- телеграма, а зарегистрироваться позже с прямой ссылки.
+      'sources', (
+        select coalesce(json_agg(row_to_json(x) order by x.visits desc), '[]'::json) from (
+          select
+            coalesce(nullif(f.source, ''), 'неизвестно') as source,
+            count(distinct f.who)                         as visits,
+            count(distinct f.who) filter (where f.signed) as signups,
+            count(distinct f.who) filter (where f.paid)   as payments
+          from (
+            select
+              coalesce(e.anon_id::text, e.user_id::text) as who,
+              first_value(e.source) over (
+                partition by coalesce(e.anon_id::text, e.user_id::text)
+                order by e.created_at
+              ) as source,
+              bool_or(e.name = 'signup')            over (partition by coalesce(e.anon_id::text, e.user_id::text)) as signed,
+              bool_or(e.name = 'payment_activated') over (partition by coalesce(e.anon_id::text, e.user_id::text)) as paid
+            from events e
+            where e.created_at >= d
+          ) f
+          group by 1
+        ) x
+      )
+    );
+  end $fn$;
+
+  -- Финальный revoke/grant — ПОСЛЕДНИЙ в файле, накрывает все функции выше,
+  -- включая только что пересозданный join_teacher.
+  -- ⚠️ ВАЖНО (урок захода 3, строки ~2147): Supabase выдаёт EXECUTE ЯВНО роли
+  -- anon (ALTER DEFAULT PRIVILEGES), а не только через PUBLIC. Поэтому revoke
+  -- from public анонима НЕ закрывает — нужно отзывать и от anon поимённо.
+  revoke execute on all functions in schema public from public, anon;
+  grant execute on all functions in schema public to authenticated;
+  revoke execute on function public.has_premium_access(uuid) from public, anon, authenticated;
+  revoke execute on function public.has_paid_access(uuid) from public, anon, authenticated;
+  -- energy_source(uid) принимает ЧУЖОЙ uid → мог бы выдать размер пула/тариф
+  -- чужого (тот же класс утечки, что закрыт выше у has_premium_access). Клиент
+  -- его не зовёт — только spend_energy/get_my_plan внутри (security definer).
+  revoke execute on function public.energy_source(uuid) from public, anon, authenticated;
+  -- teacher_seats_effective(uid) — та же причина: по чужому uid раскрывал бы,
+  -- оплачен ли у человека тариф. Зовут только join_teacher и get_my_plan.
+  revoke execute on function public.teacher_seats_effective(uuid) from public, anon, authenticated;
+  -- covering_teacher(uid) — по чужому uid показал бы, платит ли за него учитель.
+  -- Зовут только has_*_access и energy_source (все security definer).
+  revoke execute on function public.covering_teacher(uuid, boolean) from public, anon, authenticated;
+
+  -- ⚠️ ПОСЛЕ общего revoke: track_event обязан быть доступен АНОНИМУ, иначе
+  -- визиты до регистрации не считаются и воронка теряет знаменатель.
+  -- Грант выше по файлу не работает — строка `revoke ... from anon` его снимает.
+  grant execute on function public.track_event(text, jsonb, uuid, text) to anon, authenticated;
+
+-- ============================================================================
+-- ЭТАП 2 РЕМОНТА: ВОЗВРАТ ЭНЕРГИИ И ПРОБНЫЕ ГЕНЕРАЦИИ (2026-08-08)
+-- Выполнять ЦЕЛИКОМ вместе с файлом (идемпотентно).
+-- ============================================================================
+do $$ begin
+
+  -- --------------------------------------------------------------------------
+  -- 1. ВОЗВРАТ ЭНЕРГИИ, КОГДА AI НЕ ОТВЕТИЛ
+  --
+  -- Проблема. api/gemini.ts списывает энергию ДО обращения к модели. Если вся
+  -- цепочка моделей выгорела по суточным квотам Google (429 у каждой), человек
+  -- теряет ⚡ и не получает ничего. Бьёт по платящим и читается как поломка,
+  -- хотя ограничение внешнее.
+  --
+  -- Почему НЕ «вернуть последнее списание». Сервер ходит в базу под токеном
+  -- пользователя (своего ключа у него нет) — значит любая RPC возврата доступна
+  -- и самому пользователю из браузера. RPC «верни последнее» = безлимитный AI
+  -- в один вызов. Поэтому списание помечается НЕУГАДЫВАЕМЫМ токеном, который
+  -- сервер генерирует у себя и клиенту не отдаёт, а вернуть можно строго по
+  -- нему, только своё и только в ближайшие минуты.
+  -- --------------------------------------------------------------------------
+  alter table public.ai_calls add column if not exists refund_token uuid;
+  create index if not exists ai_calls_refund_token
+    on public.ai_calls (refund_token) where refund_token is not null;
+
+  -- Добавляем параметр p_nonce. Старую 3-аргументную версию ОБЯЗАТЕЛЬНО
+  -- удаляем: иначе появится перегрузка, и вызов с тремя параметрами станет
+  -- неоднозначным для PostgREST.
+  drop function if exists public.spend_energy(text, int, boolean);
+
+  create or replace function public.spend_energy(
+    p_kind text default 'heavy', p_cost int default 1, p_generation boolean default false,
+    p_nonce text default null
+  ) returns void language plpgsql security definer set search_path = public as $fn$
+  declare
+    v_kind text := case when p_kind in ('light','speech') then p_kind else 'heavy' end;
+    -- пустую строку (старый клиент/сервер) трактуем как «токена нет»
+    v_tok uuid;
+    uid uuid := auth.uid();
+    day0 timestamptz := public.recall_day_start();
+    src record;
+    n int; pool_spent int; self_spent int; gen_used int;
+  begin
+    if uid is null then raise exception 'RECALL_NO_AUTH'; end if;
+    begin v_tok := nullif(p_nonce, '')::uuid; exception when others then v_tok := null; end;
+    perform pg_advisory_xact_lock(hashtext('ai_quota:' || uid::text));
+
+    if exists (select 1 from auth.users where id=uid and banned_until is not null and banned_until>now())
+      then raise exception 'RECALL_BLOCKED'; end if;
+    if exists (select 1 from profiles where id=uid and blocked) then raise exception 'RECALL_BLOCKED'; end if;
+    delete from ai_calls where called_at < now() - interval '40 days';  -- держим месяц генераций
+
+    -- админ (владелец) — без лимитов, но пишем строку для статистики
+    if exists (select 1 from profiles where id=uid and is_admin) then
+      insert into ai_calls (user_id, kind, cost_energy, is_generation, refund_token)
+        values (uid, v_kind, 0, p_generation, v_tok);
+      return;
+    end if;
+
+    -- часовой предохранитель от скриптов (по классу доступа)
+    select count(*) into n from ai_calls where user_id=uid and called_at > now() - interval '1 hour';
+    if n >= (case when public.has_paid_access(uid) then 200 when public.has_premium_access(uid) then 90 else 40 end)
+      then raise exception 'RECALL_RATE_HOUR'; end if;
+
+    -- ГЕНЕРАЦИЯ: месячный лимит по пулу учителя
+    if p_generation then
+      select * into src from public.energy_source(uid);
+      select count(*) into gen_used from ai_calls
+        where pool_owner = src.pool_owner and is_generation and called_at >= public.recall_month_start();
+      if gen_used >= src.gen_limit then raise exception 'RECALL_GEN_LIMIT'; end if;
+      insert into ai_calls (user_id, kind, cost_energy, pool_owner, is_generation, refund_token)
+        values (uid, 'heavy', 0, src.pool_owner, true, v_tok);
+      return;
+    end if;
+
+    -- LIGHT/SPEECH (0 энергии): только суточный анти-абьюз-кэп по классу
+    if v_kind in ('light','speech') then
+      select count(*) into n from ai_calls
+        where user_id=uid and ai_calls.kind=v_kind and called_at >= day0;
+      if n >= (case v_kind
+          when 'light' then case when public.has_paid_access(uid) then 900 when public.has_premium_access(uid) then 150 else 100 end
+          else case when public.has_paid_access(uid) then 400 when public.has_premium_access(uid) then 150 else 50 end end) then
+        if v_kind='light' then raise exception 'RECALL_LIGHT_LIMIT'; else raise exception 'RECALL_SPEECH_LIMIT'; end if;
+      end if;
+      insert into ai_calls (user_id, kind, cost_energy, refund_token)
+        values (uid, v_kind, 0, v_tok);
+      return;
+    end if;
+
+    -- ЭНЕРГИЯ (heavy): дневной пул + под-кап на аккаунт в студии
+    select * into src from public.energy_source(uid);
+    select coalesce(sum(cost_energy),0) into pool_spent from ai_calls
+      where pool_owner = src.pool_owner and called_at >= day0;
+    if pool_spent + p_cost > src.day_budget then
+      if src.in_studio then raise exception 'RECALL_ENERGY_POOL';
+      elsif public.has_premium_access(uid) then raise exception 'RECALL_ENERGY_DAY';
+      else raise exception 'RECALL_FREE_LIMIT'; end if;
+    end if;
+    if src.in_studio and src.pool_owner <> uid then
+      select coalesce(sum(cost_energy),0) into self_spent from ai_calls
+        where user_id = uid and called_at >= day0;
+      if self_spent + p_cost > (src.day_budget / 2) then raise exception 'RECALL_ENERGY_SUBCAP'; end if;
+    end if;
+    insert into ai_calls (user_id, kind, cost_energy, pool_owner, refund_token)
+      values (uid, 'heavy', p_cost, src.pool_owner, v_tok);
+  end $fn$;
+
+  -- Возврат ровно одного списания по серверному токену.
+  -- Окно 10 минут: дольше живой запрос не идёт, а старый токен не должен
+  -- оставаться отмычкой. Чужие строки недоступны (user_id = auth.uid()).
+  create or replace function public.refund_ai_call(p_nonce text)
+  returns boolean language plpgsql security definer set search_path = public as $fn$
+  declare uid uuid := auth.uid(); v_tok uuid; v_id bigint;
+  begin
+    if uid is null then raise exception 'RECALL_NO_AUTH'; end if;
+    begin v_tok := nullif(p_nonce, '')::uuid; exception when others then return false; end;
+    if v_tok is null then return false; end if;
+    perform pg_advisory_xact_lock(hashtext('ai_quota:' || uid::text));
+    select id into v_id from ai_calls
+      where refund_token = v_tok and user_id = uid
+        and called_at > now() - interval '10 minutes'
+      limit 1;
+    if v_id is null then return false; end if;
+    delete from ai_calls where id = v_id;
+    return true;
+  end $fn$;
+
+
+end $$;
+
+-- ПОСЛЕ общего revoke в конце файла новым функциям нужны гранты поимённо,
+-- иначе сервер получит «permission denied» на первом же вызове.
+revoke execute on function public.energy_source(uuid) from public, anon, authenticated;
+grant execute on function public.spend_energy(text, int, boolean, text) to authenticated;
+grant execute on function public.refund_ai_call(text) to authenticated;
+
+-- ============================================================================
+-- ЭТАП 3 РЕМОНТА: ПЕРЕПРОВЕРКА СЛОВ СЧИТАЕТСЯ НА СЕРВЕРЕ (2026-08-08)
+-- Выполнять ЦЕЛИКОМ вместе с файлом (идемпотентно).
+-- ============================================================================
+do $$ begin
+
+  -- --------------------------------------------------------------------------
+  -- Проблема. submit_word_check принимала ГОТОВЫЙ вердикт от клиента: массив
+  -- results, где у каждого слова уже проставлен ok. Прямым вызовом RPC ученик
+  -- мог отправить «всё верно» — и получить сразу две выгоды:
+  --   • в отчёте преподавателю нарисовалась бы ложная картина знаний;
+  --   • ни одно слово не получило бы «again», то есть штраф FSRS не наступил.
+  -- Оттуда же брались front/back для отчёта — то есть в отчёт можно было
+  -- подставить любые слова, даже не те, что назначали.
+  --
+  -- Это ровно тот класс дыры, который закрывали ревью безопасности 20.07
+  -- (submit_material пересчитывает балл сам) — одно место тогда пропустили.
+  --
+  -- Стало. Клиент присылает только ОТВЕТЫ (card_id + given). Сервер сам берёт
+  -- слово из карточки, сам сверяет по тем же правилам, что и клиент
+  -- (norm_answer + варианты через «/» — см. lib/text.ts answerMatches), и сам
+  -- складывает results. Возвращает список НЕВЕРНЫХ карточек, чтобы клиент
+  -- применил «again» именно к ним, а не к тем, что сам себе назначил.
+  --
+  -- Карточки берём ТОЛЬКО из card_ids этой перепроверки: подсунуть чужой
+  -- card_id и подменить отчёт нельзя.
+  -- --------------------------------------------------------------------------
+
+  -- Возвращаемый тип меняется (boolean → jsonb), поэтому старую версию
+  -- обязательно удаляем: create or replace такое не умеет.
+
+end $$;
+
+-- после общего revoke в конце файла — грант поимённо
+-- ⚠️ Явный revoke, а не «оно и так закрыто». Пока эта функция объявлялась НИЖЕ
+-- общего revoke execute on all functions … from public, anon, она получала
+-- права по умолчанию — и anon мог её вызывать. Данных это не давало (внутри
+-- student_id = auth.uid(), у анонима он null), но правило проекта «вызов RPC
+-- анонимом закрыт системно» нарушалось молча. Нашлось при сжатии схемы.
+revoke execute on function public.submit_word_check(uuid, jsonb) from public, anon;
+grant execute on function public.submit_word_check(uuid, jsonb) to authenticated;
+
+-- ============================================================================
+-- ЭТАП 3, НАБЛЮДАЕМОСТЬ: ОШИБКИ С ПРОДА ВИДНЫ ВЛАДЕЛЬЦУ (2026-08-08)
+-- ============================================================================
+do $$ begin
+
+  -- Раньше об ошибке у пользователя мы узнавали, только если он напишет — а он
+  -- обычно не пишет, а уходит. Клиент теперь пишет их событием client_error
+  -- (src/lib/errorLog.ts) в уже существующую таблицу events: отдельного сервиса
+  -- заводить не пришлось, данные учеников никуда не уезжают, а смотреть их
+  -- владелец будет там же, где воронку, — в /admin.
+  --
+  -- Таблица events закрыта для чтения всем (revoke all), поэтому нужна
+  -- security-definer функция с проверкой is_admin — как у admin_funnel.
+  create or replace function public.admin_recent_errors(
+    p_days int default 7, p_limit int default 50
+  )
+  returns json language plpgsql security definer set search_path = public as $fn$
+  declare
+    d timestamptz := now() - make_interval(days => greatest(1, least(coalesce(p_days, 7), 90)));
+    lim int := greatest(1, least(coalesce(p_limit, 50), 200));
+  begin
+    if not exists (select 1 from profiles where id = auth.uid() and is_admin) then
+      raise exception 'RECALL_NOT_ADMIN';
+    end if;
+    -- Группируем по «где + текст»: одна и та же поломка у десяти человек должна
+    -- быть одной строкой с числом, а не десятью одинаковыми записями.
+    return coalesce((
+      select json_agg(row_to_json(t))
+      from (
+        select
+          props->>'where'   as where_,
+          props->>'message' as message,
+          count(*)                          as times,
+          count(distinct coalesce(user_id::text, anon_id::text)) as people,
+          max(created_at)                   as last_at,
+          (array_agg(props->>'path' order by created_at desc))[1] as last_path,
+          (array_agg(props->>'stack' order by created_at desc))[1] as last_stack,
+          bool_or(coalesce((props->>'online')::boolean, true)) as any_online
+        from events
+        where name = 'client_error' and created_at >= d
+        group by 1, 2
+        order by max(created_at) desc
+        limit lim
+      ) t
+    ), '[]'::json);
+  end $fn$;
+
+end $$;
+
+grant execute on function public.admin_recent_errors(int, int) to authenticated;
+
+-- ============================================================================
+-- ЦЕЛЬ ОБУЧЕНИЯ (2026-08-08)
+--
+-- Зачем. Мы спрашивали язык и уровень, но не спрашивали главного — ЗАЧЕМ
+-- человек пришёл. А у школьника, у готовящегося к IELTS и у того, кто учит
+-- «для себя», это разные занятия. Преподаватель хотел бы видеть цель первой
+-- строкой в карточке ученика (находка ревью 1А).
+--
+-- Хранение — в profiles: цель меняется редко и нужна и клиенту, и учителю,
+-- отдельная таблица тут была бы лишней сущностью.
+-- ============================================================================
+do $$ begin
+
+  alter table public.profiles add column if not exists goal text;
+
+  -- Ограничиваем набор значений: цель попадает в промпты AI и в карточку
+  -- ученика, произвольный текст оттуда пришлось бы чистить.
+  alter table public.profiles drop constraint if exists profiles_goal_check;
+  alter table public.profiles add constraint profiles_goal_check
+    check (goal is null or goal in ('exam', 'school', 'work', 'travel', 'self'));
+
+end $$;
+
+-- ============================================================================
+-- ПРАВА НА profiles — ВСЕ В ОДНОМ МЕСТЕ (PLAN.md Ф1.2)
+-- ============================================================================
+-- До baseline они собирались из пяти мест файла. GRANT на колонки
+-- аддитивен, поэтому итог был ОБЪЕДИНЕНИЕМ всех строк по ходу файла — и
+-- повторить легко было лишь последнюю, потеряв колонку из ранней.
+--
+-- RLS не прячет колонки: строку политика отдаёт целиком, поэтому чтение и
+-- запись разрешены поимённо. Секреты (plan, plan_expires_at, trial_until,
+-- invite_code, is_admin…) через REST не читаются вообще — только через
+-- security-definer RPC (get_my_plan, ensure_invite_code). INSERT и DELETE
+-- клиенту не нужны: профиль создаёт триггер handle_new_user, удаляет каскад
+-- от auth.users (в связке они давали «удалить профиль → вставить с
+-- role='teacher'»). Новая колонка без явного гранта невидима клиенту и не
+-- сохраняется — молча, без ошибки в интерфейсе.
+--
+-- ⚠️ Порядок: сначала revoke на таблицу, потом grant на колонки. REVOKE на
+-- таблицу снимает и колоночные права — наоборот всё обнулится.
+revoke select, insert, update, delete on public.profiles from authenticated;
+grant select (id, display_name, level, native_lang, role, blocked, created_at, goal)
+  on public.profiles to authenticated;
+grant update (display_name, level, native_lang, goal) on public.profiles to authenticated;
+
+-- ============================================================================
+-- УРОВЕНЬ ПО УМОЛЧАНИЮ БОЛЬШЕ НЕ ВЫДАЁТСЯ ЗА ИЗМЕРЕННЫЙ (2026-08-09)
+--
+-- Было: profiles.level default 'B1'. Новый ученик, не проходивший теста,
+-- везде показывался как B1 — и в карточке у преподавателя (строкой ниже при
+-- этом честно писалось «тестов пока не было»), и в «Учёбе», и в подборе
+-- текстов, и в промптах AI. То есть приложение уверенно сообщало то, чего
+-- не знало (находка ревью 1В).
+--
+-- Стало: у нового аккаунта уровень NULL — «пока не знаем». Это состояние
+-- существовало и раньше (колонка nullable), просто умолчание не давало ему
+-- появиться. Клиент теперь его различает: где нужен уровень для работы
+-- (промпты, подбор текстов) — берёт разумный запасной, но НЕ утверждает,
+-- что это уровень человека.
+--
+-- ⚠️ Уже заведённым аккаунтам это не поможет: отличить «B1 измеренный» от
+-- «B1 по умолчанию» задним числом нечем. Трогать их не будем — часть из них
+-- проходила тест по-настоящему.
+-- ============================================================================
+do $$ begin
+  alter table public.profiles alter column level drop default;
+end $$;
+
+-- ============================================================================
+-- ВЫКЛЮЧЕНИЕ РЕЖИМА ПРЕПОДАВАТЕЛЯ (2026-08-09)
+--
+-- Было: включить режим можно одним нажатием, выключить — никак. Человек,
+-- нажавший из любопытства, оставался с чужой ролью навсегда: лишняя вкладка,
+-- лишний пункт в меню, чужой сценарий (находка «найдено попутно», ревью 1В).
+-- Прямая запись роли клиенту закрыта грантами, поэтому нужна пара к
+-- become_teacher.
+--
+-- Отвязывать учеников молча НЕ станем: это чужие занятия, назначенные
+-- материалы и программы. Если ученики есть — отказываем и объясняем, что
+-- сначала нужно отвязать их вручную.
+-- ============================================================================
+do $$ begin
+
+  create or replace function public.stop_teaching()
+  returns void language plpgsql security definer set search_path = public as $fn$
+  declare uid uuid := auth.uid(); n int;
+  begin
+    if uid is null then raise exception 'RECALL_NO_AUTH'; end if;
+    select count(*) into n from teacher_students where teacher_id = uid;
+    if n > 0 then
+      raise exception 'Сначала отвяжи учеников — их у тебя %. Их слова и работы останутся при них.', n;
+    end if;
+    update profiles set role = 'learner' where id = uid and role = 'teacher';
+  end $fn$;
+
+end $$;
+
+grant execute on function public.stop_teaching() to authenticated;
+
+-- ============================================================================
+-- НОРМАЛИЗАЦИЯ ПЕЧАТНОГО ОТВЕТА: ДЕФИС, АПОСТРОФ, ФИНАЛЬНАЯ ТОЧКА (2026-08-09)
+--
+-- Проблема (находка ревью 2А №7). Сверка ответов дублируется: на клиенте
+-- lib/text.ts answerMatches, на сервере norm_answer + submit_material. Обе
+-- стороны снимали регистр, диакритику и лишние пробелы — и на этом всё.
+-- Значит «well known» против «well-known», «dont» против «don't» и «Yes.»
+-- против «Yes» считались РАЗНЫМИ ответами.
+--
+-- В статике это пока не бьёт (проверено: 0 из 385 fill-упражнений содержат
+-- дефис или финальную пунктуацию в ответе), но материалы преподавателя пишет
+-- AI свободным текстом — «twenty-one» и кавычка ’ вместо ' там вопрос времени.
+--
+-- Почему НЕ правим сам norm_answer. Его же использует ветка mcq: там сервер
+-- сравнивает ТЕКСТ выбранного варианта с текстом правильного. Если сделать
+-- norm_answer слепым к апострофам, пара вариантов «It's» / «Its» — классика
+-- грамматического теста — схлопнется в один, и неверный выбор получил бы балл.
+-- Поэтому мягкие правила живут в отдельной функции norm_typed и применяются
+-- только к НАПЕЧАТАННЫМ ответам (fill, order, перепроверка слов).
+--
+-- Проверено на всех статических упражнениях: новых коллизий среди вариантов
+-- mcq нормализация не создаёт (0). Клиентский юнит-тест —
+-- scripts/test-answermatches.mjs.
+--
+-- ⚠️ Правило обязано совпадать с lib/text.ts normalizeAnswer. Меняешь там —
+-- меняй здесь, иначе клиент покажет «верно», а балл не начислится.
+-- ============================================================================
+do $$ begin
+
+  -- norm_answer (регистр + диакритика + пробелы) остаётся как есть — на нём
+  -- строимся. Сверху: апострофы удаляем, дефисы и тире считаем пробелом,
+  -- финальную пунктуацию срезаем. Ещё ё→е и й→и: клиентский NFD снимает
+  -- диакритику и с кириллицы, без этого JS и SQL расходились бы на русских
+  -- ответах (сейчас их нет, но расхождение было бы молчаливым).
+  create or replace function public.norm_typed(s text)
+  returns text language plpgsql stable as $fn$
+  declare raw text; b text; t text;
+  begin
+    raw := btrim(lower(coalesce(s, '')));
+    if raw = '' then return ''; end if;
+    b := public.norm_answer(s);
+    -- ⚠️ Приводим НАЧЕРТАНИЕ символа, но сам символ НЕ удаляем (правило
+    -- согласовано с клиентским lib/text.ts normalizeAnswer).
+    -- Разница начертаний — вина клавиатуры: телефон подставляет типографский
+    -- «’» вместо прямого «'». А пропущенный апостроф или дефис — ошибка
+    -- ученика: «dont» и «don't», «its» и «it's» — разные вещи, и засчитывать
+    -- их как одно значит учить неряшливости.
+    -- ⚠️ Длина замены ДОЛЖНА совпадать с длиной списка: translate молча
+    -- УДАЛЯЕТ символы, для которых пары не нашлось. Пять начертаний →
+    -- пять прямых кавычек (в SQL каждая удваивается).
+    b := translate(b, '‘’ʼ´`', '''''''''''');  -- апострофы всех начертаний → прямой
+    b := translate(b, '‐‑‒–—', '-----');     -- тире всех начертаний → дефис
+    b := translate(b, 'ёЁйЙ', 'еЕиИ');
+    b := btrim(regexp_replace(b, '\s+', ' ', 'g'));
+    t := btrim(regexp_replace(b, '[.!?,;:…]+$', ''));
+    -- непустой ответ не должен схлопнуться в пустую строку: иначе ответ «-» или
+    -- «’» сравнялся бы с пустым полем. Откатываемся к предыдущей форме.
+    if t <> '' then return t; end if;
+    if b <> '' then return b; end if;
+    return raw;
+  end $fn$;
+
+
+
+end $$;
+
+-- Блок идёт ПОСЛЕ общего `revoke execute on all functions` — правами для новой
+-- функции распоряжаемся явно. norm_typed вызывают только security definer
+-- функции (они выполняются от владельца), клиенту она не нужна.
+revoke execute on function public.norm_typed(text) from public, anon, authenticated;
+grant execute on function public.submit_material(uuid, jsonb, int, int) to authenticated;
+grant execute on function public.submit_word_check(uuid, jsonb) to authenticated;
+
+-- ============================================================================
+-- «ПИСЬМО» БЕЗ ПРЕПОДАВАТЕЛЯ (2026-08-09)
+--
+-- Проблема. Проверка письменной работы по критериям IELTS — самое сильное, что
+-- есть в продукте, и она была доступна ТОЛЬКО ученику преподавателя. Человек,
+-- который занимается сам (а таких большинство среди пришедших с улицы), не мог
+-- ею воспользоваться вообще: задание создать он технически может (RLS разрешает
+-- writing_tasks с teacher_id = собой), но назначить его себе — нет, потому что
+-- assign_writing_task требует is_student_of, а самому себе учеником не будешь.
+--
+-- Решение: одна RPC, которая создаёт задание И назначение себе за одну
+-- транзакцию. Не двумя вызовами с клиента: сбой на втором шаге оставил бы
+-- задание-сироту (тот же урок, что и с программой обучения в блоке
+-- «АТОМАРНОСТЬ»).
+--
+-- Проверка работы дальше идёт ровно тем же путём, что у ученика преподавателя:
+-- submit_writing, те же лимиты энергии, тот же разбор. Никаких послаблений.
+-- ============================================================================
+do $$ begin
+
+  create or replace function public.start_own_writing(
+    p_lang text, p_mode text, p_level text, p_prompt text, p_settings jsonb default '{}'::jsonb
+  )
+  returns uuid language plpgsql security definer set search_path = public as $fn$
+  declare uid uuid := auth.uid(); v_task uuid; v_assign uuid; n int;
+  begin
+    if uid is null then raise exception 'RECALL_NO_AUTH'; end if;
+    if p_lang not in ('en','es') then raise exception 'Неизвестный язык.'; end if;
+    if p_mode not in ('ielts','regular') then raise exception 'Неизвестный тип работы.'; end if;
+    if p_level not in ('A1','A2','B1','B2','C1','C2') then raise exception 'Неизвестный уровень.'; end if;
+    if coalesce(btrim(p_prompt), '') = '' then raise exception 'Нужно задание.'; end if;
+    if char_length(p_prompt) > 4000 then raise exception 'Задание слишком длинное.'; end if;
+
+    -- Потолок на незавершённые работы: без него скриптом можно наплодить
+    -- сколько угодно строк. Пять начатых одновременно — с запасом для живого
+    -- человека, а завершённые не мешают начать новую.
+    select count(*) into n
+      from writing_task_assignments wa
+      join writing_tasks wt on wt.id = wa.task_id
+     where wa.student_id = uid and wt.teacher_id = uid and wa.status = 'assigned';
+    if n >= 5 then
+      raise exception 'Сначала закончи начатые работы — их уже %.', n;
+    end if;
+
+    insert into writing_tasks (teacher_id, lang, mode, level, prompt, settings)
+      values (uid, p_lang, p_mode, p_level, btrim(p_prompt), coalesce(p_settings, '{}'::jsonb))
+      returning id into v_task;
+    insert into writing_task_assignments (task_id, student_id)
+      values (v_task, uid)
+      returning id into v_assign;
+    return v_assign;
+  end $fn$;
+
+end $$;
+
+grant execute on function public.start_own_writing(text, text, text, text, jsonb) to authenticated;
+
+-- ============================================================================
+-- ОТЗЫВЫ (2026-08-09)
+--
+-- Сообщить нам что-либо человек не мог вообще: ни ученик, ни репетитор.
+-- Единственным каналом было «напишет на почту сам», а обычно человек не
+-- пишет, а уходит.
+--
+-- Отдельную таблицу НЕ заводим: отзыв — это событие, и events для него уже
+-- есть вместе с RPC track_event (доступной в том числе анониму, значит отзыв
+-- можно оставить и с публичного лендинга). Плюс сбор начинает работать сразу
+-- после деплоя, не дожидаясь заливки схемы, — а это ровно тот случай, когда
+-- ждать нельзя: обратная связь нужна с первого дня.
+--
+-- Здесь — только чтение для владельца: таблица events закрыта грантами
+-- (revoke all), поэтому нужна security-definer функция с проверкой is_admin,
+-- как у admin_funnel и admin_recent_errors.
+-- ============================================================================
+create or replace function public.admin_feedback(
+  p_days int default 90, p_limit int default 100
+)
+returns json language plpgsql security definer set search_path = public as $fn$
+declare
+  d timestamptz := now() - make_interval(days => greatest(1, least(coalesce(p_days, 90), 365)));
+  lim int := greatest(1, least(coalesce(p_limit, 100), 500));
+begin
+  if not exists (select 1 from profiles where id = auth.uid() and is_admin) then
+    raise exception 'RECALL_NOT_ADMIN';
+  end if;
+  return coalesce((
+    select json_agg(row_to_json(t) order by t.created_at desc)
+    from (
+      select
+        e.created_at,
+        e.props->>'rating'  as rating,
+        e.props->>'text'    as text,
+        e.props->>'contact' as contact,
+        e.props->>'where'   as where_,
+        -- имя показываем, чтобы понимать, ученик это или преподаватель;
+        -- почта не нужна — если человек хочет ответа, он оставил контакт сам
+        p.display_name,
+        p.role
+      from events e
+      left join profiles p on p.id = e.user_id
+      where e.name = 'feedback' and e.created_at >= d
+      order by e.created_at desc
+      limit lim
+    ) t
+  ), '[]'::json);
+end $fn$;
+
+grant execute on function public.admin_feedback(int, int) to authenticated;
+
+-- ============================================================================
+-- ПАМЯТЬ ДИАЛОГА (2026-08-09)
+--
+-- Половина фичи существовала с самого начала: реплики ИСПРАВНО писались в
+-- conversations/messages — и никогда не читались обратно. Стоило уйти со
+-- экрана посмотреть слово или урок, и чат начинался с нуля. Для тренировки
+-- разговора это обессмысливает сам разговор.
+--
+-- Нужна одна колонка: у английского и испанского чата истории разные, а
+-- отличить их было нечем.
+-- ============================================================================
+alter table public.conversations add column if not exists lang text;
+alter table public.conversations drop constraint if exists conversations_lang_check;
+alter table public.conversations add constraint conversations_lang_check
+  check (lang is null or lang in ('en', 'es'));
+
+-- ⚠️ У переписок, созданных ДО этой миграции, lang пустой — и это не чинится
+-- задним числом: понять, на каком языке был разговор, нечем. Поэтому клиент
+-- ищет «язык совпал ИЛИ язык не указан» (lib/chatHistory.ts). Иначе после
+-- заливки вся прошлая переписка стала бы невидимой: человек открыл бы «Диалог»
+-- и увидел пустой экран вместо своего разговора. Смоук это ловит —
+-- scripts/smoke-chat-history.mjs сеет запись без языка НАМЕРЕННО.
+-- Новые записи язык проставляют всегда, так что со временем пустые исчезнут.
+
+-- Загружаем последнюю переписку по паре (пользователь, язык) — нужен индекс,
+-- запрос идёт при каждом открытии «Диалога».
+create index if not exists conversations_user_lang_time
+  on public.conversations (user_id, lang, started_at desc);
+create index if not exists messages_conversation_time
+  on public.messages (conversation_id, created_at);
+
+-- ============================================================================
+-- СЛОВА УЧЕНИКА: ВЫДАЧА ИЗ ГОТОВЫХ ПАКОВ И УДАЛЕНИЕ (2026-08-10)
+--
+-- Учитель мог назначить ученику ТОЛЬКО свои слова: список источников в студии
+-- ограничивался его собственными колодами. Готовые паки приложения (4844 слова
+-- в английском, 4668 в испанском) были доступны только самому ученику.
+--
+-- Попутно закрывается дыра, которую нашли при разборе. Выданные слова жили в
+-- колоде-КОПИИ, принадлежащей учителю, а lib/wordChecks.getStudentWords читает
+-- только колоды с owner_id = ученик. То есть учитель выдавал слова и дальше не
+-- видел по ним ни прогресса, ни возможности назначить перепроверку.
+--
+-- Решение владельца: слова кладём СРАЗУ в личную колоду ученика. Тогда они
+-- ничем не отличаются от взятых им самим — идут в FSRS, видны в «Словах» со
+-- статусом, попадают в перепроверку. Цена: отозвать нельзя, поэтому учителю
+-- даётся удаление (с предупреждением, что стирается и прогресс).
+-- ============================================================================
+
+-- Происхождение карточки. Нужно обеим сторонам: ученик видит «от
+-- преподавателя» в «Моём словаре», учитель — «выдал я» / «добавил ученик»
+-- перед удалением. Без этого учитель стирал бы месяц чужой работы вслепую.
+alter table public.cards drop constraint if exists cards_source_check;
+alter table public.cards add constraint cards_source_check
+  check (source in ('manual', 'reader', 'ai', 'teacher'));
+
+-- ---- Выдача слов ученику ----------------------------------------------------
+-- Пишем в ЧУЖУЮ колоду, поэтому только security definer: прямой insert в чужие
+-- карточки закрыт политикой «cards via own deck» и открывать её нельзя.
+create or replace function public.assign_words_to_student(
+  p_student_id uuid, p_lang text, p_words jsonb
+)
+returns int
+language plpgsql
+security definer
+set search_path = public
+as $fn$
+declare
+  v_deck uuid;
+  added int;
+begin
+  if auth.uid() is null then raise exception 'RECALL_NO_AUTH'; end if;
+  if not public.is_student_of(auth.uid(), p_student_id) then
+    raise exception 'RECALL_NOT_YOUR_STUDENT';
+  end if;
+  if p_lang not in ('en', 'es') then raise exception 'Неизвестный язык.'; end if;
+  if p_words is null or jsonb_typeof(p_words) <> 'array'
+     or jsonb_array_length(p_words) = 0 or jsonb_array_length(p_words) > 500
+     or pg_column_size(p_words) > 200 * 1024 then
+    raise exception 'RECALL_BAD_CARDS';
+  end if;
+
+  -- Колода ученика этого языка. Обе колоды создаёт триггер регистрации, но
+  -- аккаунты бывают старше триггера — тогда заводим.
+  select id into v_deck from decks
+   where owner_id = p_student_id and lang = p_lang
+   order by created_at nulls first, id limit 1;
+  if v_deck is null then
+    insert into decks (owner_id, title, lang)
+      values (p_student_id, case when p_lang = 'es' then 'Mis palabras' else 'Мои слова' end, p_lang)
+      returning id into v_deck;
+  end if;
+
+  -- ⚠️ Отсев дублей ЗДЕСЬ, а не на клиенте. Клиент их тоже показывает снятыми,
+  -- но это подсказка; если два учителя выдадут один пак одновременно, в колоде
+  -- окажется два одинаковых слова с разным прогрессом — и повторение сломается
+  -- тихо. Сверяем по front без регистра и краевых пробелов.
+  -- ⚠️ distinct on, а не «сравнить с первым таким же»: первая версия сверяла
+  -- значение с самим собой и пропускала ОБЕ строки — в колоде оказывались два
+  -- одинаковых слова с разным расписанием. Поймано смоуком.
+  insert into cards (deck_id, front, back, example, source)
+    select distinct on (lower(btrim(w->>'front')))
+           v_deck,
+           left(btrim(w->>'front'), 200),
+           nullif(left(w->>'back', 400), ''),
+           nullif(left(w->>'example', 600), ''),
+           'teacher'
+      from jsonb_array_elements(p_words) w
+     where coalesce(btrim(w->>'front'), '') <> ''
+       and not exists (
+         select 1 from cards c join decks d on d.id = c.deck_id
+          where d.owner_id = p_student_id and d.lang = p_lang
+            and lower(btrim(c.front)) = lower(btrim(w->>'front'))
+       )
+     order by lower(btrim(w->>'front'));
+  get diagnostics added = row_count;
+  return added;
+end $fn$;
+
+-- ---- Удаление слов ученика --------------------------------------------------
+-- Решение владельца: учитель может удалить ЛЮБОЕ слово ученика, а не только
+-- выданное им. Интерфейс показывает происхождение и предупреждает, что вместе
+-- со словом уходит его прогресс; запрет на чужое здесь — только по ученику.
+create or replace function public.teacher_delete_student_cards(
+  p_student_id uuid, p_card_ids jsonb
+)
+returns int
+language plpgsql
+security definer
+set search_path = public
+as $fn$
+declare removed int;
+begin
+  if auth.uid() is null then raise exception 'RECALL_NO_AUTH'; end if;
+  if not public.is_student_of(auth.uid(), p_student_id) then
+    raise exception 'RECALL_NOT_YOUR_STUDENT';
+  end if;
+  if p_card_ids is null or jsonb_typeof(p_card_ids) <> 'array'
+     or jsonb_array_length(p_card_ids) > 500 then
+    raise exception 'RECALL_BAD_CARDS';
+  end if;
+
+  -- Удаляем ТОЛЬКО карточки из колод ЭТОГО ученика: иначе, подсунув чужой
+  -- card_id, учитель стёр бы слово у человека, к которому не имеет отношения.
+  -- review_states уходят каскадом (FK on delete cascade).
+  delete from cards c
+   using decks d
+   where d.id = c.deck_id
+     and d.owner_id = p_student_id
+     and c.id in (
+       select (value #>> '{}')::uuid from jsonb_array_elements(p_card_ids)
+     );
+  get diagnostics removed = row_count;
+  return removed;
+end $fn$;
+
+-- ---- Перенос уже назначенных колод в колоды учеников ------------------------
+-- Назначение колоды ЦЕЛИКОМ убирается: слова всегда попадают к ученику и всегда
+-- видны в прогрессе. Уже назначенное переносим, иначе у людей просто пропали бы
+-- слова из повторения.
+--
+-- ⚠️ Переносим НЕ ТОЛЬКО карточки, но и review_states. Копия карточки — это
+-- новая строка с новым id, и без переноса расписания ученик получил бы свои же
+-- слова «новыми»: месяц повторений обнулился бы молча, а FSRS начал бы с нуля.
+--
+-- Guard встроен: в конце deck_assignments очищается, поэтому повторный запуск
+-- файла проходит вхолостую.
+do $mig$
+declare
+  a record;
+  c record;
+  v_deck uuid;
+  v_new uuid;
+begin
+  for a in
+    select da.student_id, d.id as src_deck, coalesce(d.lang, 'en') as lang
+      from deck_assignments da
+      join decks d on d.id = da.deck_id
+  loop
+    select id into v_deck from decks
+     where owner_id = a.student_id and lang = a.lang
+     order by created_at nulls first, id limit 1;
+    if v_deck is null then
+      insert into decks (owner_id, title, lang)
+        values (a.student_id,
+                case when a.lang = 'es' then 'Mis palabras' else 'Мои слова' end,
+                a.lang)
+        returning id into v_deck;
+    end if;
+
+    for c in select * from cards where deck_id = a.src_deck loop
+      -- слово уже есть у ученика — пропускаем: у его карточки своё расписание,
+      -- и затирать его копией было бы хуже, чем не переносить
+      if exists (
+        select 1 from cards c2 join decks d2 on d2.id = c2.deck_id
+         where d2.owner_id = a.student_id and d2.lang = a.lang
+           and lower(btrim(c2.front)) = lower(btrim(c.front))
+      ) then
+        continue;
+      end if;
+
+      insert into cards (deck_id, front, back, example, ipa, audio_url, source)
+        values (v_deck, c.front, c.back, c.example, c.ipa, c.audio_url, 'teacher')
+        returning id into v_new;
+
+      -- расписание переносим на новую карточку (у ученика оно одно на карточку)
+      update review_states set card_id = v_new
+       where card_id = c.id and user_id = a.student_id;
+    end loop;
+  end loop;
+
+  delete from deck_assignments;
+end $mig$;
+
+-- Гранты — ПОСЛЕ финального `revoke execute on all functions` в конце файла,
+-- иначе первый же вызов упрётся в permission denied.
+grant execute on function public.assign_words_to_student(uuid, text, jsonb) to authenticated;
+grant execute on function public.teacher_delete_student_cards(uuid, jsonb) to authenticated;
+
+-- ============================================================================
+-- ДОМАШКА НА НЕДЕЛЮ (2026-08-13)
+--
+-- Зачем. Преподаватель назначал слова, материалы, квесты и письменные работы в
+-- четырёх разных местах, и ответить на главный вопрос — «сделал ли ученик
+-- домашнее» — было нельзя ниоткуда. Каждый источник знал только про себя.
+--
+-- Домашка — ОДИН объект со сроком, внутри пункты разных типов. Учитель собирает
+-- в одном месте, ученик видит один список, обе стороны видят одну цифру «3 из 5».
+--
+-- ⚠️ ГЛАВНОЕ РЕШЕНИЕ: пункт закрывает СЕРВЕР там, где действие измеримо, и
+-- только там, где измерить нечем, — галочка ученика. В карточке видно, кто
+-- засчитал. Иначе цифра ничего не значит: ученик закроет всё за десять секунд
+-- перед уроком, и учитель будет планировать занятие по выдумке.
+--
+-- ⚠️ Автозачёт живёт в ОДНОМ месте — в log_activity. Через неё проходит любое
+-- действие ученика: карточки, чтение, речь, письмо, квесты, задания. Развесить
+-- проверку по пяти клиентским путям означало бы пять разных правил, которые
+-- разойдутся при первой же правке, причём молча.
+--
+-- ⚠️ ЧЕСТНАЯ ГРАНИЦА. «Засчитал сервер» здесь значит «сервер посчитал по данным
+-- занятий», а не «подделать невозможно». Расписание FSRS (review_states) и
+-- счётчики activity_log пишет сам ученик — это известный остаток архитектуры
+-- (см. docs/ARCHITECTURE.md, раздел про безопасность). То есть упорный ученик
+-- может надуть себе цифру и здесь.
+-- Разница с галочкой всё равно принципиальная: галочка — это один тап, а
+-- подделка требует лезть в запросы приложения. Обещать преподавателю больше
+-- этого нельзя, поэтому и в интерфейсе пишем «засчитано по занятиям», а не
+-- «проверено».
+-- ============================================================================
+do $$ begin
+
+  create table if not exists public.homework (
+    id         uuid primary key default gen_random_uuid(),
+    teacher_id uuid not null references public.profiles(id) on delete cascade,
+    student_id uuid not null references public.profiles(id) on delete cascade,
+    lang       text not null check (lang in ('en','es')) default 'en',
+    due_at     timestamptz not null,
+    note       text,
+    created_at timestamptz not null default now()
+  );
+  create index if not exists homework_student_idx on public.homework (student_id, created_at desc);
+  create index if not exists homework_teacher_idx on public.homework (teacher_id, created_at desc);
+
+  create table if not exists public.homework_items (
+    id          uuid primary key default gen_random_uuid(),
+    homework_id uuid not null references public.homework(id) on delete cascade,
+    -- kind определяет, ЧЕМ пункт закрывается:
+    --   words   — повторёнными карточками      (сервер)
+    --   text    — прочитанным текстом/материалом (сервер)
+    --   quest   — завершённым AI-квестом       (сервер)
+    --   writing — сданной письменной работой   (сервер)
+    --   speech  — заходами в тренажёр речи     (сервер)
+    --   free    — своими словами, вне приложения (только галочка ученика)
+    kind    text not null check (kind in ('words','text','quest','writing','speech','free')),
+    ref_id  uuid,
+    title   text not null,
+    target  int  not null default 1 check (target between 1 and 500),
+    done_at timestamptz,
+    done_by text check (done_by in ('server','student')),
+    pos     int  not null default 0
+  );
+  create index if not exists homework_items_hw_idx on public.homework_items (homework_id, pos);
+
+  -- Пункты НА ВЫБОР: одинаковый pick_group = альтернативы, ученик делает ОДИН
+  -- из них. Возможность выбрать заметно повышает шанс, что задание вообще
+  -- сделают, — но выбор имеет смысл, только если преподаватель видит, ЧТО
+  -- ученик выбрал: иначе он готовит урок под задание, которого не было.
+  --
+  -- Выбор фиксируется двумя путями и оба ведут сюда: явным нажатием ученика
+  -- (choose_homework_item) и первым же закрытым пунктом группы — сделал, значит
+  -- выбрал. Второй путь важнее: без него выбор существовал бы только там, где
+  -- ученик не поленился нажать кнопку.
+  alter table public.homework_items add column if not exists pick_group int;
+  alter table public.homework_items add column if not exists chosen_at timestamptz;
+
+  -- Отметка счётчика на момент выдачи — для пунктов, которые меряются по
+  -- activity_log (чтение и речь).
+  --
+  -- ⚠️ Зачем понадобилась. В activity_log ОДНА строка на (пользователь, день,
+  -- тип): повторные занятия увеличивают items_done, а created_at остаётся от
+  -- первого за день. Поэтому «считать то, что случилось после выдачи» по
+  -- created_at не работает: позанимался утром, получил домашку днём — и вечерние
+  -- занятия уже не попадают в строку, созданную утром. Прогресс замирал на нуле
+  -- при честно сделанной работе, а полоса «осталось 3» показывала неправду.
+  -- Считать по updated_at было бы не лучше: тогда в зачёт уходило бы и утреннее.
+  -- Поэтому запоминаем счётчик в момент выдачи и меряем прирост.
+  alter table public.homework_items add column if not exists base_count int not null default 0;
+
+  alter table public.homework       enable row level security;
+  alter table public.homework_items enable row level security;
+
+  drop policy if exists "see own homework" on public.homework;
+  create policy "see own homework" on public.homework
+    for select using (auth.uid() in (student_id, teacher_id));
+
+  drop policy if exists "see own homework items" on public.homework_items;
+  create policy "see own homework items" on public.homework_items
+    for select using (exists (
+      select 1 from homework h
+       where h.id = homework_items.homework_id
+         and auth.uid() in (h.student_id, h.teacher_id)
+    ));
+
+  -- ⚠️ Всё, что можно подделать, считает сервер. Ученик, дописавший done_at
+  -- напрямую, обесценил бы весь экран преподавателя.
+  revoke insert, update, delete on public.homework       from authenticated;
+  revoke insert, update, delete on public.homework_items from authenticated;
+
+end $$;
+
+-- ---------------------------------------------------------------------------
+-- Сколько всего занятий данных типов у ученика (за всё время).
+-- Нужна двум местам — снятию отметки при выдаче и подсчёту прогресса, — и
+-- поэтому живёт отдельно: две копии этого запроса разошлись бы, и прогресс
+-- перестал бы сходиться с отметкой.
+-- ---------------------------------------------------------------------------
+create or replace function public.activity_total(p_user uuid, p_types text[])
+returns int language sql stable security definer set search_path = public as $fn$
+  select coalesce(sum(items_done), 0)::int
+    from activity_log
+   where user_id = p_user and type = any(p_types)
+$fn$;
+
+-- ---------------------------------------------------------------------------
+-- Сколько ученик уже сделал по пункту. Меряем ТОЛЬКО то, что случилось ПОСЛЕ
+-- выдачи домашки: иначе прошлые заслуги закрывали бы новое задание.
+-- ---------------------------------------------------------------------------
+create or replace function public.homework_item_progress(p_item uuid)
+returns int language plpgsql stable security definer set search_path = public as $fn$
+declare
+  it      record;
+  hw      record;
+  v_since timestamptz;
+  v_count int := 0;
+begin
+  select * into it from homework_items where id = p_item;
+  if it is null then return 0; end if;
+  select * into hw from homework where id = it.homework_id;
+  if hw is null then return 0; end if;
+  v_since := hw.created_at;
+
+  if it.kind = 'words' then
+    select count(distinct rs.card_id) into v_count
+      from review_states rs
+      join cards c on c.id = rs.card_id
+      join decks d on d.id = c.deck_id
+     where rs.user_id = hw.student_id
+       and d.owner_id = hw.student_id
+       and d.lang = hw.lang
+       and rs.last_review >= v_since;
+
+  elsif it.kind = 'text' then
+    if it.ref_id is not null then
+      select count(*) into v_count from material_assignments ma
+       where ma.material_id = it.ref_id and ma.student_id = hw.student_id
+         and ma.submitted_at is not null and ma.submitted_at >= v_since;
+    else
+      -- ⚠️ Считаем и чтение, и сданные задания преподавателя ('assignment').
+      -- Это одно и то же дело: задание — тот же текст с разбором, просто
+      -- открытый из другого списка. Пока в зачёт шло только 'reader', ученик
+      -- разбирал заданный материал и видел пункт «прочитать текст» незакрытым —
+      -- то есть два пути к одной работе вели себя по-разному.
+      v_count := public.activity_total(hw.student_id, array['reader','assignment'])
+                 - it.base_count;
+    end if;
+
+  elsif it.kind = 'quest' then
+    select count(*) into v_count from grammar_quests q
+     where q.student_id = hw.student_id and q.status = 'completed'
+       and q.completed_at >= v_since
+       and (it.ref_id is null or q.id = it.ref_id);
+
+  elsif it.kind = 'writing' then
+    -- ⚠️ Два источника, и «учительский» тут главный: работа по заданию учителя
+    -- лежит в writing_task_assignments, свободное письмо — в writing_submissions.
+    -- Считать только второе означало не закрывать пункт как раз тогда, когда
+    -- ученик сделал ровно то, что задали.
+    select
+      (select count(*) from writing_submissions ws
+        where ws.user_id = hw.student_id and ws.created_at >= v_since)
+      +
+      (select count(*) from writing_task_assignments wa
+        where wa.student_id = hw.student_id
+          and wa.submitted_at is not null and wa.submitted_at >= v_since
+          and (it.ref_id is null or wa.task_id = it.ref_id))
+    into v_count;
+
+  elsif it.kind = 'speech' then
+    v_count := public.activity_total(hw.student_id, array['pronunciation']) - it.base_count;
+
+  else
+    v_count := 0;
+  end if;
+
+  return greatest(coalesce(v_count, 0), 0);
+end $fn$;
+
+-- ---------------------------------------------------------------------------
+-- Зафиксировать выбор ученика внутри группы «на выбор».
+--
+-- ⚠️ ОДНО место на три пути: явное нажатие (choose_homework_item), автозачёт
+-- сервером (refresh_homework_for) и галочка (complete_homework_item). Три копии
+-- этой пары UPDATE разошлись бы при первой же правке, и группа осталась бы с
+-- двумя выбранными пунктами — то есть без выбора вообще.
+-- ---------------------------------------------------------------------------
+create or replace function public.mark_homework_choice(p_item uuid)
+returns void language plpgsql security definer set search_path = public as $fn$
+declare v_hw uuid; v_group int;
+begin
+  select homework_id, pick_group into v_hw, v_group
+    from homework_items where id = p_item;
+  if v_group is null then return; end if;   -- обычный пункт, выбирать нечего
+  update homework_items set chosen_at = now()
+   where id = p_item and chosen_at is null;
+  update homework_items set chosen_at = null
+   where homework_id = v_hw and pick_group = v_group and id <> p_item;
+end $fn$;
+
+-- ---------------------------------------------------------------------------
+-- Пересчёт: закрывает всё, что уже выполнено. Зовётся из log_activity (то есть
+-- после ЛЮБОГО действия ученика) и при чтении домашки — чтобы учитель видел
+-- свежее состояние.
+--
+-- Однажды закрытый пункт назад не открывается: домашку сдают, а не удерживают.
+-- ---------------------------------------------------------------------------
+create or replace function public.refresh_homework_for(p_student uuid)
+returns void language plpgsql security definer set search_path = public as $fn$
+declare it record;
+begin
+  if p_student is null then return; end if;
+  for it in
+    select i.id, i.target, i.pick_group
+      from homework_items i
+      join homework h on h.id = i.homework_id
+     where h.student_id = p_student
+       and i.done_at is null
+       and i.kind <> 'free'
+       and h.due_at >= now() - interval '7 days'
+       -- ⚠️ Если ученик уже выбрал в этой группе ДРУГОЙ пункт — этот не
+       -- закрываем. Иначе выбор ничего не значит: сделал речь по своим делам —
+       -- и закрылся квест, который ученик выбирать не собирался.
+       and not exists (
+         select 1 from homework_items s
+          where s.homework_id = i.homework_id
+            and s.pick_group is not null and s.pick_group = i.pick_group
+            and s.id <> i.id and s.chosen_at is not null
+       )
+  loop
+    if public.homework_item_progress(it.id) >= it.target then
+      update homework_items
+         set done_at = now(), done_by = 'server'
+       where id = it.id and done_at is null;
+      -- сделал — значит выбрал: закрытый пункт становится выбором группы
+      if it.pick_group is not null then
+        perform public.mark_homework_choice(it.id);
+      end if;
+    end if;
+  end loop;
+end $fn$;
+
+-- ---------------------------------------------------------------------------
+-- Ученик выбирает, какой из альтернативных пунктов будет делать. Заранее, до
+-- выполнения: преподаватель видит намерение, а список ученика становится
+-- короче на один пункт.
+-- ---------------------------------------------------------------------------
+create or replace function public.choose_homework_item(p_item uuid)
+returns void language plpgsql security definer set search_path = public as $fn$
+declare it record;
+begin
+  if auth.uid() is null then raise exception 'RECALL_NO_AUTH'; end if;
+  select i.pick_group, i.homework_id, h.student_id into it
+    from homework_items i join homework h on h.id = i.homework_id
+   where i.id = p_item;
+  if it is null then raise exception 'RECALL_NO_ITEM'; end if;
+  if it.student_id <> auth.uid() then raise exception 'RECALL_NOT_YOURS'; end if;
+  -- Выбор возможен только там, где есть из чего выбирать. Иначе это был бы
+  -- способ пометить любой пункт «выбранным» и запутать преподавателя.
+  if it.pick_group is null then raise exception 'RECALL_NOT_A_CHOICE'; end if;
+  -- ⚠️ Группа уже закрыта — переигрывать поздно. Иначе получалось расхождение:
+  -- ученик делает речь (пункт закрывается сервером), потом нажимает «выбрать
+  -- квест» — и преподаватель видит «квест · выбрал ученик» с галочкой
+  -- выполнения, хотя квеста не было. Выбор — это заявка ДО работы.
+  if exists (
+    select 1 from homework_items s
+     where s.homework_id = it.homework_id and s.pick_group = it.pick_group
+       and s.done_at is not null
+  ) then
+    raise exception 'RECALL_CHOICE_DONE';
+  end if;
+  perform public.mark_homework_choice(p_item);
+end $fn$;
+
+-- ---------------------------------------------------------------------------
+-- Выдать домашку. Один вызов вместо обхода четырёх разделов.
+-- ---------------------------------------------------------------------------
+create or replace function public.create_homework(
+  p_student_id uuid, p_lang text, p_due timestamptz, p_items jsonb, p_note text default null
+)
+returns uuid language plpgsql security definer set search_path = public as $fn$
+declare
+  v_id   uuid;
+  v_item jsonb;
+  v_pos  int := 0;
+begin
+  if auth.uid() is null then raise exception 'RECALL_NO_AUTH'; end if;
+  if not public.is_student_of(auth.uid(), p_student_id) then
+    raise exception 'RECALL_NOT_YOUR_STUDENT';
+  end if;
+  if p_lang not in ('en','es') then raise exception 'RECALL_BAD_LANG'; end if;
+  if p_due is null or p_due < now() - interval '1 day' or p_due > now() + interval '90 days' then
+    raise exception 'RECALL_BAD_DUE';
+  end if;
+  if p_items is null or jsonb_typeof(p_items) <> 'array'
+     or jsonb_array_length(p_items) = 0 or jsonb_array_length(p_items) > 12 then
+    raise exception 'RECALL_BAD_ITEMS';
+  end if;
+
+  insert into homework (teacher_id, student_id, lang, due_at, note)
+    values (auth.uid(), p_student_id, p_lang, p_due, nullif(btrim(coalesce(p_note, '')), ''))
+    returning id into v_id;
+
+  for v_item in select * from jsonb_array_elements(p_items) loop
+    v_pos := v_pos + 1;
+    insert into homework_items (homework_id, kind, ref_id, title, target, pos, pick_group)
+    values (
+      v_id,
+      coalesce(v_item->>'kind', 'free'),
+      nullif(v_item->>'ref_id', '')::uuid,
+      left(btrim(coalesce(v_item->>'title', 'Задание')), 200),
+      greatest(1, least(500, coalesce((v_item->>'target')::int, 1))),
+      v_pos,
+      nullif(v_item->>'pick_group', '')::int
+    );
+  end loop;
+
+  -- ⚠️ Группа «на выбор» из одного пункта — это не выбор, а обычный пункт с
+  -- вводящей в заблуждение пометкой. Такие распускаем сразу: правило живёт и на
+  -- клиенте (applyRules), но сервер обязан устоять и против прямого вызова RPC.
+  update homework_items i set pick_group = null
+   where i.homework_id = v_id and i.pick_group is not null
+     and (select count(*) from homework_items s
+           where s.homework_id = v_id and s.pick_group = i.pick_group) < 2;
+
+  -- Снимаем отметку счётчиков для пунктов, которые меряются по activity_log
+  -- (см. комментарий у base_count): дальше прогресс считается как прирост.
+  update homework_items i
+     set base_count = public.activity_total(
+           p_student_id,
+           case when i.kind = 'speech' then array['pronunciation']
+                else array['reader','assignment'] end)
+   where i.homework_id = v_id
+     and (i.kind = 'speech' or (i.kind = 'text' and i.ref_id is null));
+
+  -- Часть пунктов может быть выполнена ещё до выдачи — пересчитываем сразу,
+  -- чтобы учитель не смотрел на заведомо неверный ноль.
+  perform public.refresh_homework_for(p_student_id);
+  return v_id;
+end $fn$;
+
+-- ---------------------------------------------------------------------------
+-- Галочка ученика. Для пунктов, которые сервер измерить не может.
+-- ---------------------------------------------------------------------------
+create or replace function public.complete_homework_item(p_item uuid)
+returns void language plpgsql security definer set search_path = public as $fn$
+declare it record;
+begin
+  if auth.uid() is null then raise exception 'RECALL_NO_AUTH'; end if;
+  select i.id as item_id, i.done_at, i.kind, h.student_id into it
+    from homework_items i join homework h on h.id = i.homework_id
+   where i.id = p_item;
+  if it is null then raise exception 'RECALL_NO_ITEM'; end if;
+  if it.student_id <> auth.uid() then raise exception 'RECALL_NOT_YOURS'; end if;
+  -- ⚠️ Галочка возможна ТОЛЬКО там, где измерить нечем. Иначе весь экран
+  -- преподавателя превращается в то, что ученик о себе сообщил.
+  if it.kind <> 'free' then raise exception 'RECALL_MEASURED_ITEM'; end if;
+  if it.done_at is not null then return; end if;
+
+  update homework_items set done_at = now(), done_by = 'student' where id = p_item;
+  -- отметил — значит выбрал (если пункт был из группы «на выбор»)
+  perform public.mark_homework_choice(p_item);
+end $fn$;
+
+-- ---------------------------------------------------------------------------
+-- Чтение: последняя домашка с пунктами, уже пересчитанными.
+-- Ученик зовёт без аргумента, учитель — с id ученика.
+-- ---------------------------------------------------------------------------
+-- Сборка объекта домашки. Прав НЕ проверяет — это делают вызывающие; здесь
+-- только форма ответа.
+--
+-- ⚠️ ОДИН строитель на карточку ученика И на список учеников. Список показывает
+-- «3 из 5 · до вторника» по тем же данным, что открытая карточка, и считает их
+-- той же функцией на клиенте (homeworkProgress). Свой, «лёгкий» подсчёт для
+-- списка разошёлся бы с карточкой на первом же пункте «на выбор»: сервер видит
+-- два пункта, а человек делает один. Разойдясь, два числа обесценивают друг
+-- друга — преподаватель перестаёт верить обоим.
+--
+-- p_teacher: null — смотрит сам ученик (видит последнюю домашку от кого угодно);
+-- иначе только домашка ЭТОГО преподавателя (у ученика бывает два репетитора, и
+-- заметка одного не должна попадать на экран другому).
+create or replace function public.homework_json(p_student uuid, p_teacher uuid default null)
+returns jsonb language plpgsql stable security definer set search_path = public as $fn$
+declare v_hw record; v_items jsonb;
+begin
+  if p_teacher is null then
+    select * into v_hw from homework
+     where student_id = p_student
+     order by created_at desc limit 1;
+  else
+    select * into v_hw from homework
+     where student_id = p_student and teacher_id = p_teacher
+     order by created_at desc limit 1;
+  end if;
+  if v_hw is null then return null; end if;
+
+  select jsonb_agg(jsonb_build_object(
+           'id', i.id, 'kind', i.kind, 'ref_id', i.ref_id, 'title', i.title,
+           'target', i.target, 'progress', public.homework_item_progress(i.id),
+           'done_at', i.done_at, 'done_by', i.done_by,
+           'pick_group', i.pick_group, 'chosen_at', i.chosen_at
+         ) order by i.pos)
+    into v_items
+    from homework_items i where i.homework_id = v_hw.id;
+
+  return jsonb_build_object(
+    'id', v_hw.id, 'lang', v_hw.lang, 'due_at', v_hw.due_at, 'note', v_hw.note,
+    'created_at', v_hw.created_at,
+    'items', coalesce(v_items, '[]'::jsonb)
+  );
+end $fn$;
+
+create or replace function public.get_homework(p_student uuid default null)
+returns jsonb language plpgsql security definer set search_path = public as $fn$
+declare v_student uuid;
+begin
+  if auth.uid() is null then raise exception 'RECALL_NO_AUTH'; end if;
+  v_student := coalesce(p_student, auth.uid());
+  if v_student <> auth.uid() and not public.is_student_of(auth.uid(), v_student) then
+    raise exception 'RECALL_NOT_YOUR_STUDENT';
+  end if;
+
+  perform public.refresh_homework_for(v_student);
+  return public.homework_json(
+    v_student,
+    case when v_student = auth.uid() then null else auth.uid() end
+  );
+end $fn$;
+
+-- Домашки всех своих учеников ОДНИМ запросом: {"<student_id>": {…} | null}.
+--
+-- Зачем не звать get_homework по разу на ученика: у преподавателя их до
+-- тридцати, и это тридцать round-trip при каждом открытии списка. Форму ответа
+-- строит тот же homework_json — значит список и карточка не могут разойтись.
+create or replace function public.get_homework_many()
+returns jsonb language plpgsql security definer set search_path = public as $fn$
+declare v_out jsonb := '{}'::jsonb; s record;
+begin
+  if auth.uid() is null then raise exception 'RECALL_NO_AUTH'; end if;
+  for s in
+    select student_id from teacher_students where teacher_id = auth.uid()
+  loop
+    perform public.refresh_homework_for(s.student_id);
+    v_out := v_out || jsonb_build_object(
+      s.student_id::text,
+      coalesce(public.homework_json(s.student_id, auth.uid()), 'null'::jsonb)
+    );
+  end loop;
+  return v_out;
+end $fn$;
+
+
+-- Гранты — ПОСЛЕ финального revoke в конце файла.
+-- homework_item_progress и refresh_homework_for клиенту НЕ отдаём: их зовут
+-- только другие функции, а снаружи они дали бы способ считать чужой прогресс.
+revoke execute on function public.homework_item_progress(uuid) from public, anon, authenticated;
+revoke execute on function public.refresh_homework_for(uuid)   from public, anon, authenticated;
+-- mark_homework_choice снаружи не нужна: она без проверки прав (её зовут уже
+-- проверившие вызывающие), и открытый доступ дал бы способ переставить чужой
+-- выбор.
+revoke execute on function public.mark_homework_choice(uuid)   from public, anon, authenticated;
+-- activity_total читает чужие занятия по любому uid — снаружи это способ
+-- узнать, сколько занимается другой человек. Зовут только функции домашки.
+revoke execute on function public.activity_total(uuid, text[])  from public, anon, authenticated;
+grant execute on function public.create_homework(uuid, text, timestamptz, jsonb, text) to authenticated;
+grant execute on function public.complete_homework_item(uuid) to authenticated;
+grant execute on function public.choose_homework_item(uuid) to authenticated;
+grant execute on function public.get_homework(uuid) to authenticated;
+grant execute on function public.get_homework_many() to authenticated;
+-- homework_json прав не проверяет (их проверяют вызывающие) — снаружи она была
+-- бы способом прочитать чужую домашку по id.
+revoke execute on function public.homework_json(uuid, uuid) from public, anon, authenticated;
+grant execute on function public.log_activity(text, date, int, int) to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Триггер: любая запись «сдано/пройдено» пересчитывает домашку этого ученика.
+-- Вешается на таблицы, а не на функции: RPC можно добавить новый и забыть про
+-- домашку, таблицу — нет.
+-- ---------------------------------------------------------------------------
+create or replace function public.homework_refresh_trigger()
+returns trigger language plpgsql security definer set search_path = public as $fn$
+begin
+  perform public.refresh_homework_for(new.student_id);
+  return null;                      -- AFTER-триггер, возвращаемое значение не важно
+end $fn$;
+
+drop trigger if exists trg_homework_after_writing on public.writing_task_assignments;
+create trigger trg_homework_after_writing
+  after update of submitted_at on public.writing_task_assignments
+  for each row when (new.submitted_at is not null)
+  execute function public.homework_refresh_trigger();
+
+drop trigger if exists trg_homework_after_material on public.material_assignments;
+create trigger trg_homework_after_material
+  after update of submitted_at on public.material_assignments
+  for each row when (new.submitted_at is not null)
+  execute function public.homework_refresh_trigger();
+
+drop trigger if exists trg_homework_after_quest on public.grammar_quests;
+create trigger trg_homework_after_quest
+  after update of status on public.grammar_quests
+  for each row when (new.status = 'completed')
+  execute function public.homework_refresh_trigger();
+
+-- Свободное письмо ученик пишет в таблицу сам — тот же приём.
+create or replace function public.homework_refresh_by_user()
+returns trigger language plpgsql security definer set search_path = public as $fn$
+begin
+  perform public.refresh_homework_for(new.user_id);
+  return null;
+end $fn$;
+
+drop trigger if exists trg_homework_after_free_writing on public.writing_submissions;
+create trigger trg_homework_after_free_writing
+  after insert on public.writing_submissions
+  for each row execute function public.homework_refresh_by_user();
+
+-- Триггерные функции клиенту не нужны — их зовёт только Postgres.
+revoke execute on function public.homework_refresh_trigger()  from public, anon, authenticated;
+revoke execute on function public.homework_refresh_by_user()  from public, anon, authenticated;
+
+-- ============================================================================
+-- ФИНАЛЬНАЯ СТРАХОВКА: аноним не зовёт ничего, кроме одной разрешённой функции.
+-- Этот блок обязан оставаться ПОСЛЕДНИМ в файле.
+--
+-- Класс ошибки, который он закрывает (ловился дважды, оба раза случайно).
+-- В середине файла стоит `revoke execute on all functions … from public, anon`.
+-- Он действует на функции, существующие НА ТОТ МОМЕНТ. Функция, объявленная
+-- ниже, при СОЗДАНИИ получает права по умолчанию: PUBLIC — из самого Postgres,
+-- anon — из ALTER DEFAULT PRIVILEGES, которые настраивает Supabase. Рядом с
+-- ней обычно стоит аккуратный `grant … to authenticated`, и выглядит всё верно.
+--
+-- Точная механика (проверена на живой базе, а не додумана):
+--   • обычная функция открыта анониму ОТ своего создания ДО следующей полной
+--     заливки файла — тогда её накрывает revoke из середины. Окно длиной в один
+--     заход, и именно в нём сейчас находилась choose_homework_item;
+--   • функция, которую файл каждый раз DROP-ает и создаёт заново (так делают
+--     там, где менялся тип возврата), получает права по умолчанию НА КАЖДОЙ
+--     заливке — и остаётся открытой навсегда. Так жила submit_word_check.
+-- Обе первой строкой проверяют auth.uid(), то есть данных аноним не получал,
+-- но полагаться на то, что следующий автор эту строку не забудет, нельзя.
+--
+-- ⚠️ Честно про пользу этого блока: на ПОЛНОЙ повторной заливке он не меняет
+-- ничего — revoke из середины уже всё закрыл (доказано check-schema-equal:
+-- ноль расхождений с версией без блока). Он закрывает ровно два случая выше:
+-- первый заход новой функции и функции с drop/create. Поимённые revoke их не
+-- лечат: их надо не забыть, а забывают именно их.
+--
+-- Проверка со стороны живой базы: node scripts/check-anon-access.mjs
+--
+-- ⚠️ track_event — единственное исключение, и оно осознанное: визиты пишутся ДО
+-- регистрации, иначе у воронки нет знаменателя (см. блок «АНАЛИТИКА»).
+-- ============================================================================
+-- ============================================================================
+-- ensure_rls — СТРАХОВКА ПЛАТФОРМЫ SUPABASE, перенесена с прода (PLAN.md Ф1.2)
+-- ============================================================================
+-- На живой базе её поставил Supabase (в schema.sql её не было): событийный
+-- триггер сам включает RLS на каждой новой таблице public. Все наши таблицы
+-- и так включают RLS явно — это второй пояс на случай, если забудут.
+-- Текст функции — ровно как на проде (pg_get_functiondef), до байта.
+CREATE OR REPLACE FUNCTION public.rls_auto_enable()
+ RETURNS event_trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'pg_catalog'
+AS $function$
+DECLARE
+  cmd record;
+BEGIN
+  FOR cmd IN
+    SELECT *
+    FROM pg_event_trigger_ddl_commands()
+    WHERE command_tag IN ('CREATE TABLE', 'CREATE TABLE AS', 'SELECT INTO')
+      AND object_type IN ('table','partitioned table')
+  LOOP
+     IF cmd.schema_name IS NOT NULL AND cmd.schema_name IN ('public') AND cmd.schema_name NOT IN ('pg_catalog','information_schema') AND cmd.schema_name NOT LIKE 'pg_toast%' AND cmd.schema_name NOT LIKE 'pg_temp%' THEN
+      BEGIN
+        EXECUTE format('alter table if exists %s enable row level security', cmd.object_identity);
+        RAISE LOG 'rls_auto_enable: enabled RLS on %', cmd.object_identity;
+      EXCEPTION
+        WHEN OTHERS THEN
+          RAISE LOG 'rls_auto_enable: failed to enable RLS on %', cmd.object_identity;
+      END;
+     ELSE
+        RAISE LOG 'rls_auto_enable: skip % (either system schema or not in enforced list: %.)', cmd.object_identity, cmd.schema_name;
+     END IF;
+  END LOOP;
+END;
+$function$;
+
+drop event trigger if exists ensure_rls;
+create event trigger ensure_rls on ddl_command_end
+  when tag in ('CREATE TABLE', 'CREATE TABLE AS', 'SELECT INTO')
+  execute function public.rls_auto_enable();
+
+do $harden$
+declare f record;
+begin
+  for f in
+    select p.oid::regprocedure as sig
+      from pg_proc p
+      join pg_namespace n on n.oid = p.pronamespace
+     where n.nspname = 'public'
+       and p.prokind = 'f'
+       and p.proname <> 'track_event'
+  loop
+    execute format('revoke execute on function %s from public, anon', f.sig);
+  end loop;
+end $harden$;
+
+grant execute on function public.track_event(text, jsonb, uuid, text) to anon, authenticated;
+
