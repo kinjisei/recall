@@ -117,7 +117,7 @@ VS Code, где у Claude есть файлы и терминал: фичи со
 
 ```
 src/
-  lib/          вся логика вне экранов (62 файла). Ключевые:
+  lib/          вся логика вне экранов. Ключевые:
                 supabase.ts · profile.ts (PROFILE_COLUMNS!) · billing.ts (тарифы)
                 fsrs.ts · cards.ts · wordPool.ts · recentWords.ts · distractors.ts
                 gemini.ts (клиент /api) · level.ts · contextDict.ts · definitions.ts
@@ -130,9 +130,10 @@ src/
   data/         english/ · spanish/ · writingPrompts.ts · wordOfDay.ts · teacher-guide.ts
   components/   RowCard (база всех списков) · Button · Card · BottomNav · Layout
                 BackButton · EnergyBar · WordSheet · exercises.tsx · icons.tsx
-  features/     21 папка по экранам
+  features/     папки по экранам (счёт — node scripts/arch-map.mjs)
 api/            gemini.ts · transcribe.ts · _core.ts · _auth.ts · _tasks.ts · _groq.ts
-scripts/        58 файлов: смоуки, чистые тесты, аудит, валидаторы
+scripts/        смоуки, чистые тесты (test-*), живые проверки (check-*), аудит,
+                валидаторы; checks/ — сторожа и их списки «к исправлению»
 ```
 
 Локальный `/api/*` живёт в `vite.config.ts` — Vercel CLI не нужен. Ключи в
@@ -660,6 +661,9 @@ FSRS, текст по покрытию, тема квеста по ошибка�
 ```
 npm run dev            # http://localhost:5173
 npm run build          # tsc -b + сборка — обязательно после правок
+npm run check          # все сторожа (~4 с с кэшем) — обязательно после правок
+npm test               # все чистые тесты scripts/test-*.mjs
+npm run check:prune    # сузить списки «к исправлению», когда исправил старое
 node scripts/ux-audit.mjs          # 15 экранов: контраст, тач-цели, подписи
 node scripts/smoke-features.mjs    # интерактивный обход фич
 node scripts/smoke-navigation.mjs  # адресуемость экранов
@@ -670,6 +674,34 @@ node scripts/validate-schema-dryrun.mjs   # прогон schema.sql с отка�
 node scripts/check-schema-equal.mjs       # правка схемы не изменила базу
 node scripts/check-api-vercel.mjs  # api/ так, как их собирает Vercel
 ```
+
+### Сторожа (с 27.09.2026, PLAN.md Ф1.1)
+
+Подробно — `scripts/checks/README.md`. Коротко:
+
+- **Шесть сторожей:** линтер (ESLint), границы (dependency-cruiser, правила
+  архитектуры §2), токены (сырые цвета и `[Npx]`), размер (файл ≤ 400 строк,
+  компонент ≤ 250), план (поля пунктов `PLAN.md`), описания (код модуля
+  изменён — его `CLAUDE.md` тоже, или в сообщении коммита «описание не
+  меняется, потому что …»).
+- **Где работают:** хук `pre-commit` (всё, кроме описаний), хук `commit-msg`
+  (описания), `npm run check`, CI на каждом пуше в любую ветку. Хуки — папка
+  `.githooks/`, включаются сами на `npm install` (`prepare`), без зависимостей.
+  `--no-verify` — только с согласия владельца.
+- **Старые нарушения** — в `scripts/checks/baseline/` («к исправлению») и не
+  мешают; новые не проходят. Исправил старое — `npm run check:prune` (только
+  сужает список). Список не расширять: новое нарушение исправляется, а не
+  вносится.
+- ⚠️ **Большие файлы не растут** (решение владельца 27.09.2026): число в
+  `baseline/size.json` — планка до переезда раздела. Нужно дописать — выноси
+  новое в отдельный файл; поднять планку — только осознанно
+  (`npm run check:size -- --allow <файл>`) и с причиной в коммите.
+- ⚠️ **`test-*.mjs` — только чистые тесты** (без сети, базы, секретов): CI
+  запускает их все по шаблону имени. Проверка с живой базой называется
+  `check-*` (так `test-answermatches-sql` стал `check-answermatches-sql`).
+- ⚠️ `install-hooks.mjs` выполняется и на сборке Vercel (`prepare`) — он обязан
+  молча выходить с кодом 0 без `.git` и при `CI`/`VERCEL`, иначе сломается
+  выкатка.
 
 ⚠️ **`npm run build` не видит того, на чём падает Vercel.** Мы проверяем `api/`
 по `tsconfig.node.json` со `strict: true`, а Vercel читает КОРНЕВОЙ
@@ -719,7 +751,7 @@ headless-вкладке кадры не выдаются: ожидание мо�
 
 - Не ломать контракты из `docs/ARCHITECTURE.md`; типы — из `src/types`.
 - Фича = папка в `features/*` + файл в `lib/*`. Общие файлы менять аккуратно.
-- После правок — `npm run build`.
+- После правок — `npm run build` и `npm run check`.
 - **Нашёл ошибку — почини весь её класс.** Не одно место, а все соседние того
   же вида; общее решение выноси, в отчёте называй, сколько нашлось. Проверено
   дорого: пока правку откладывали, класс успевал вырасти.

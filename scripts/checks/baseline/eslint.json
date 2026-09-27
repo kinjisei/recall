@@ -1,0 +1,446 @@
+{
+  ".github/scripts/backup-explain.mjs": {
+    "no-useless-assignment": {
+      "count": 1
+    }
+  },
+  "api/_core.ts": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    }
+  },
+  "docs/textbook/build.mjs": {
+    "no-control-regex": {
+      "count": 1
+    }
+  },
+  "scripts/_profile.mjs": {
+    "no-useless-assignment": {
+      "count": 1
+    }
+  },
+  "scripts/check-api-vercel.mjs": {
+    "no-useless-assignment": {
+      "count": 1
+    }
+  },
+  "scripts/clean-smoke-browsers.mjs": {
+    "no-useless-assignment": {
+      "count": 1
+    }
+  },
+  "scripts/gen-icons.mjs": {
+    "no-sparse-arrays": {
+      "count": 2
+    },
+    "no-useless-escape": {
+      "count": 1
+    }
+  },
+  "scripts/measure-queries.mjs": {
+    "no-empty": {
+      "count": 1
+    },
+    "no-unused-vars": {
+      "count": 1
+    }
+  },
+  "scripts/measure-scroll.mjs": {
+    "no-empty": {
+      "count": 1
+    },
+    "no-unused-vars": {
+      "count": 2
+    }
+  },
+  "scripts/measure-startup.mjs": {
+    "no-empty": {
+      "count": 1
+    },
+    "no-unused-vars": {
+      "count": 1
+    }
+  },
+  "scripts/shot-content.mjs": {
+    "no-empty": {
+      "count": 2
+    },
+    "no-unused-vars": {
+      "count": 1
+    }
+  },
+  "scripts/smoke-basepacks.mjs": {
+    "no-empty": {
+      "count": 1
+    },
+    "no-unused-vars": {
+      "count": 1
+    }
+  },
+  "scripts/smoke-deeplink.mjs": {
+    "no-unused-vars": {
+      "count": 2
+    }
+  },
+  "scripts/smoke-dictation.mjs": {
+    "no-empty": {
+      "count": 1
+    },
+    "no-unused-vars": {
+      "count": 1
+    }
+  },
+  "scripts/smoke-energy.mjs": {
+    "no-empty": {
+      "count": 1
+    }
+  },
+  "scripts/smoke-features.mjs": {
+    "no-empty": {
+      "count": 1
+    },
+    "no-unused-vars": {
+      "count": 1
+    },
+    "no-useless-assignment": {
+      "count": 1
+    }
+  },
+  "scripts/smoke-homework-suggest.mjs": {
+    "no-empty": {
+      "count": 1
+    }
+  },
+  "scripts/smoke-homework-ui.mjs": {
+    "no-empty": {
+      "count": 2
+    }
+  },
+  "scripts/smoke-idioms.mjs": {
+    "no-empty": {
+      "count": 1
+    },
+    "no-unused-vars": {
+      "count": 1
+    }
+  },
+  "scripts/smoke-lost-students.mjs": {
+    "no-unused-vars": {
+      "count": 2
+    }
+  },
+  "scripts/smoke-markwords.mjs": {
+    "no-empty": {
+      "count": 2
+    },
+    "no-unused-vars": {
+      "count": 2
+    }
+  },
+  "scripts/smoke-motion.mjs": {
+    "no-unused-vars": {
+      "count": 1
+    }
+  },
+  "scripts/smoke-mytexts.mjs": {
+    "no-empty": {
+      "count": 1
+    }
+  },
+  "scripts/smoke-navigation.mjs": {
+    "no-useless-assignment": {
+      "count": 1
+    }
+  },
+  "scripts/smoke-offline.mjs": {
+    "no-unused-vars": {
+      "count": 2
+    }
+  },
+  "scripts/smoke-onboarding-placement.mjs": {
+    "no-empty": {
+      "count": 1
+    },
+    "no-unused-vars": {
+      "count": 1
+    }
+  },
+  "scripts/smoke-own-writing.mjs": {
+    "no-unused-vars": {
+      "count": 2
+    }
+  },
+  "scripts/smoke-phrasal.mjs": {
+    "no-empty": {
+      "count": 1
+    },
+    "no-unused-vars": {
+      "count": 1
+    }
+  },
+  "scripts/smoke-report-pdf.mjs": {
+    "no-empty": {
+      "count": 1
+    }
+  },
+  "scripts/smoke-writing-focus.mjs": {
+    "no-empty": {
+      "count": 1
+    },
+    "no-unused-vars": {
+      "count": 1
+    }
+  },
+  "scripts/smoke-writing.mjs": {
+    "no-empty": {
+      "count": 1
+    }
+  },
+  "scripts/ux-audit.mjs": {
+    "no-empty": {
+      "count": 1
+    },
+    "no-unused-vars": {
+      "count": 1
+    }
+  },
+  "src/components/AnalysisSheet.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/ChartView.tsx": {
+    "react-hooks/immutability": {
+      "count": 1
+    }
+  },
+  "src/components/GuidedNext.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/PhraseSheet.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/ProtectedRoute.tsx": {
+    "prefer-const": {
+      "count": 1
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 2
+    },
+    "react-hooks/set-state-in-effect": {
+      "count": 2
+    }
+  },
+  "src/components/Reveal.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/Sheet.tsx": {
+    "react-hooks/refs": {
+      "count": 2
+    }
+  },
+  "src/components/TextAnalysisSheet.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/WordSheet.tsx": {
+    "react-hooks/immutability": {
+      "count": 1
+    },
+    "react-hooks/set-state-in-effect": {
+      "count": 2
+    }
+  },
+  "src/components/exercises.tsx": {
+    "react-hooks/purity": {
+      "count": 1
+    }
+  },
+  "src/context/AuthContext.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    },
+    "react-refresh/only-export-components": {
+      "count": 1
+    }
+  },
+  "src/context/LanguageContext.tsx": {
+    "react-refresh/only-export-components": {
+      "count": 1
+    }
+  },
+  "src/features/auth/ResetPasswordPage.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/features/conversation/ConversationPage.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    },
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/features/dashboard/DashboardPage.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 2
+    }
+  },
+  "src/features/flashcards/DeckReview.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 2
+    }
+  },
+  "src/features/flashcards/SwipeCard.tsx": {
+    "react-hooks/refs": {
+      "count": 2
+    }
+  },
+  "src/features/grammar/ConjugationSection.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/features/grammar/PhrasalVerbsSection.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/features/onboarding/PlacementTest.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 2
+    }
+  },
+  "src/features/practice/GrammarMixMode.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/features/progress/ProgressPage.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 2
+    }
+  },
+  "src/features/pronunciation/PronunciationPage.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/features/study/StudyPage.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 2
+    }
+  },
+  "src/features/teacher/AssignmentsPage.tsx": {
+    "react-hooks/immutability": {
+      "count": 2
+    },
+    "react-hooks/refs": {
+      "count": 1
+    },
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/features/teacher/DiagnosticsSection.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/features/teacher/HomeworkSection.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/features/teacher/PlacementSection.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/features/teacher/StudentWordsSection.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/features/teacher/TeacherPage.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 2
+    }
+  },
+  "src/features/teacher/WordPicker.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 3
+    }
+  },
+  "src/features/teacher/materials/MaterialDetail.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/features/words/DictationMode.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/features/words/MatchMode.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/features/words/MyWords.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/features/words/SentenceBuilder.tsx": {
+    "react-hooks/purity": {
+      "count": 1
+    }
+  },
+  "src/features/writing/WritingPage.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/lib/aiHealth.ts": {
+    "no-useless-assignment": {
+      "count": 1
+    }
+  },
+  "src/lib/fsrs.ts": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    }
+  },
+  "src/lib/homeworkSuggest.ts": {
+    "no-useless-assignment": {
+      "count": 1
+    }
+  },
+  "src/lib/textAnalysis.ts": {
+    "no-useless-assignment": {
+      "count": 1
+    }
+  },
+  "src/lib/useAsyncData.ts": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    },
+    "react-hooks/use-memo": {
+      "count": 1
+    }
+  },
+  "src/lib/useCountUp.ts": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  }
+}
