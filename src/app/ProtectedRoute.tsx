@@ -6,7 +6,7 @@ import { isBlocked } from '../lib/access'
 import { hasPendingTeacherRole, clearPendingRole } from '../lib/pendingRole'
 import { becomeTeacher } from '../lib/teacher'
 import { BlockedScreen } from './BlockedScreen'
-import { Loading } from './Loading'
+import { Loading } from '../components/Loading'
 
 /**
  * Пускает дальше только авторизованных; иначе — на страницу входа.

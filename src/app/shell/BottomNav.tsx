@@ -8,8 +8,8 @@
 // все мини-игры, речь), Диалог — общаюсь с AI.
 // ============================================================================
 import { useLocation } from 'react-router-dom'
-import { AppLink } from './AppLink'
-import { useKeyboardInset } from '../lib/useKeyboardInset'
+import { AppLink } from '../../components/AppLink'
+import { useKeyboardInset } from '../../lib/useKeyboardInset'
 import {
   IconHome,
   IconHomeFill,
@@ -20,7 +20,7 @@ import {
   IconDialog,
   IconDialogFill,
   type IconProps,
-} from './icons'
+} from '../../components/icons'
 
 type IconCmp = (p: IconProps) => React.JSX.Element
 

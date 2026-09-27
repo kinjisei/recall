@@ -14,7 +14,7 @@
 >
 > ⚠️ Этот файл уже подводил: уверял, что премиум стоит 1490 ₸ (он стоит 1990),
 > и даже в этом предупреждении утверждал, что скользящего индикатора в
-> навигации нет, — а он есть (`BottomNav.tsx:89`). Правило:
+> навигации нет, — а он есть (`app/shell/BottomNav.tsx`). Правило:
 > **меняешь поведение — правь этот файл в том же коммите.** Документ, отставший
 > от кода, вреднее отсутствующего: по нему чинят уже починенное.
 
@@ -117,6 +117,9 @@ VS Code, где у Claude есть файлы и терминал: фичи со
 
 ```
 src/
+  app/          каркас — src/app/CLAUDE.md: main.tsx (вход), App.tsx (роутер),
+                routeChunks.ts (ленивые экраны), ProtectedRoute, ErrorBoundary,
+                shell/ (Layout: шапка + навигация)
   lib/          логика вне экранов (переезжает в domains/, PLAN.md Ф3). Ключевые:
                 profile.ts (PROFILE_COLUMNS!) · billing.ts (тарифы)
                 fsrs.ts · cards.ts · wordPool.ts · recentWords.ts · distractors.ts
@@ -129,11 +132,12 @@ src/
                 (генерируются) · errors.ts (dbError, AppError) · ai.ts (клиент
                 /api/gemini) · aiTypes.ts (AiTask, ChatTurn — общие с api/)
     lib/        storage · useUrlState (адрес = «где я») · viewTransition
-                useAsyncData · plural · contacts
+                useAsyncData · plural · contacts · focusMode (режим раунда)
+                routePreload (прогрев экранов для AppLink)
   types/        index.ts — общие типы (AiTask, ChatTurn — реэкспорт из shared/api)
   context/      AuthContext, LanguageContext
   data/         english/ · spanish/ · writingPrompts.ts · wordOfDay.ts · teacher-guide.ts
-  components/   RowCard (база всех списков) · Button · Card · BottomNav · Layout
+  components/   RowCard (база всех списков) · Button · Card · AppLink · Sheet
                 BackButton · EnergyBar · WordSheet · exercises.tsx · icons.tsx
   features/     папки по экранам (счёт — node scripts/arch-map.mjs)
 api/            gemini.ts · transcribe.ts · _core.ts · _geminiBody.ts · _auth.ts
@@ -845,7 +849,7 @@ headless-вкладке кадры не выдаются: ожидание мо�
   в одном — меняй в другом, иначе клиент покажет «верно», а балл не начислится.
   Есть парная проверка `check-answermatches-sql.mjs` (живая база, вне CI).
 - **iOS проверяет новую версию PWA только при холодном старте** — отсюда
-  `reg.update()` на `visibilitychange` в `main.tsx`.
+  `reg.update()` на `visibilitychange` в `app/main.tsx`.
 - **Нормализация приводит начертание символа, но не удаляет символ.** Кривой
   апостроф с телефона — вина клавиатуры; пропущенный апостроф — ошибка ученика.
 

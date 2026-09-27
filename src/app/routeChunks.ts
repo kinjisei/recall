@@ -12,11 +12,16 @@
 // отдаём настоящий компонент напрямую, Suspense не участвует вовсе. Пока не
 // подгружен — работает обычный lazy с заглушкой, как раньше.
 //
+// Прогрев для ссылок (components/AppLink) — этот же реестр: он регистрирует
+// себя в shared/lib/routePreload при импорте (App грузит его до первого
+// рендера). Ссылка не импортирует каркас напрямую (§2).
+//
 // ⚠️ Один источник правды: App.tsx берёт компоненты ОТСЮДА. Свои import() с
 // теми же путями рядом заводить нельзя — разъедутся при первом переименовании,
 // и греться будет не тот кусок (а по поведению это почти не отличить).
 // ============================================================================
 import { createElement, lazy, type ComponentType } from 'react'
+import { registerRoutePreloader } from '../shared/lib/routePreload'
 
 interface RouteScreen {
   (): ReturnType<typeof createElement>
@@ -90,7 +95,7 @@ function screenFor(path: string): RouteScreen | null {
 }
 
 /** Начать качать экран, ничего не дожидаясь (наведение, касание). */
-export function warmRoute(path: string): void {
+function warmRoute(path: string): void {
   screenFor(path)?.preload().catch(() => {})
 }
 
@@ -102,7 +107,7 @@ export function warmRoute(path: string): void {
  *
  * Адреса без ленивой загрузки (Главная, вход) сразу дают true.
  */
-export function preloadRoute(path: string, timeout = 700): Promise<boolean> {
+function preloadRoute(path: string, timeout = 700): Promise<boolean> {
   const screen = screenFor(path)
   if (!screen) return Promise.resolve(true)
   if (screen.ready()) return Promise.resolve(true)
@@ -115,3 +120,5 @@ export function preloadRoute(path: string, timeout = 700): Promise<boolean> {
     new Promise<boolean>((resolve) => setTimeout(() => resolve(false), timeout)),
   ])
 }
+
+registerRoutePreloader({ warm: warmRoute, preload: preloadRoute })

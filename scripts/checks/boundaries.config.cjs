@@ -58,11 +58,11 @@ module.exports = {
     {
       name: 'only-app-imports-app',
       comment:
-        'Каркас app/ импортирует всех, его — никто (§2). lib/routeChunks.ts — реестр ленивых экранов ' +
-        'роутера, то есть уже сейчас часть каркаса (переедет в app/, PLAN.md Ф1.3).',
+        'Каркас app/ импортирует всех, его — никто (§2). Экрану или общему коду нужно что-то от ' +
+        'каркаса — договор кладётся в shared/ (как shared/lib/focusMode и routePreload), каркас его выполняет.',
       severity: 'error',
-      from: { path: '^src/', pathNot: ['^src/app/', '^src/main\\.tsx$', '^src/App\\.tsx$'] },
-      to: { path: ['^src/app/', '^src/lib/routeChunks\\.ts$'] },
+      from: { path: '^src/', pathNot: '^src/app/' },
+      to: { path: '^src/app/' },
     },
     {
       name: 'content-imports-nothing',
@@ -103,8 +103,7 @@ module.exports = {
         'Общий код (lib/, components/, context/, types/) импортирует раздел из features/. ' +
         'Зависимость идёт от раздела к общему, не наоборот.',
       severity: 'error',
-      // реестр ленивых экранов — часть каркаса, ему экраны импортировать положено
-      from: { path: '^src/(lib|components|context|types)/', pathNot: '^src/lib/routeChunks\\.ts$' },
+      from: { path: '^src/(lib|components|context|types)/' },
       to: { path: '^src/features/' },
     },
     {

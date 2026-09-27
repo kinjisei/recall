@@ -60,17 +60,22 @@ recall-app/
                    _groq.ts, _stt.ts, _timeouts.ts (сроки ожидания: запросы
                    наружу — только через него)
   src/
-    main.tsx       регистрация SW + автообновление PWA
-    App.tsx        роутинг (см. §8)
+    app/           каркас (src/app/CLAUDE.md): main.tsx (регистрация SW +
+                   автообновление PWA), App.tsx (роутинг, см. §8),
+                   routeChunks.ts, ProtectedRoute, ErrorBoundary, BlockedScreen,
+                   ScrollToTop, PageTracker; shell/ — Layout (шапка: BrandLogo,
+                   EN/ES, AvatarMenu), BottomNav (4 вкладки)
+    shared/        нижний слой без предметной логики (src/shared/CLAUDE.md):
+                   api/ (клиент базы, типы базы, разбор ошибок, клиент AI),
+                   lib/ (storage, useUrlState, viewTransition, useAsyncData…)
     types/index.ts ВСЕ общие типы
     context/       AuthContext (вход/выход, кэш профиля), LanguageContext (EN/ES)
-    components/    Layout (шапка: BrandLogo, EN/ES, AvatarMenu), BottomNav (4
-                   вкладки), Button, Card, RowCard, BackButton(+BackHeader),
-                   ProtectedRoute, ErrorBoundary, WordSheet (шторка слова),
+    components/    Button, Card, RowCard, BackButton(+BackHeader), AppLink,
+                   WordSheet (шторка слова),
                    MarkableText (мультивыбор слов), exercises.tsx (движок
                    упражнений mcq/fill/order — грамматика И материалы),
                    icons.tsx (инлайн-SVG), Confetti, GuidedNext, RoundResult,
-                   ScrollToTop, SmartBack, BlockedScreen, LoadError, Brand
+                   SmartBack, LoadError, Brand
     data/
       spanish/     тексты/диалоги/фразы (eager index.ts); ЛЕНИВО: words.ts
                    (~4668 слов A1–B2), grammar.ts (74 урока), conjugation.ts,

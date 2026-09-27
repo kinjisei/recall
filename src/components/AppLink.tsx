@@ -13,7 +13,7 @@
 // ============================================================================
 import { useCallback, type CSSProperties, type MouseEvent, type ReactNode } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { preloadRoute, warmRoute } from '../lib/routeChunks'
+import { preloadRoute, warmRoute } from '../shared/lib/routePreload'
 import { withViewTransition, type TransitionDirection } from '../shared/lib/viewTransition'
 
 export interface AppLinkProps {

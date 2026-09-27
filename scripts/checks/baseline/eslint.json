@@ -204,6 +204,17 @@
       "count": 1
     }
   },
+  "src/app/ProtectedRoute.tsx": {
+    "prefer-const": {
+      "count": 1
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 2
+    },
+    "react-hooks/set-state-in-effect": {
+      "count": 2
+    }
+  },
   "src/components/AnalysisSheet.tsx": {
     "react-hooks/set-state-in-effect": {
       "count": 1
@@ -222,17 +233,6 @@
   "src/components/PhraseSheet.tsx": {
     "react-hooks/set-state-in-effect": {
       "count": 1
-    }
-  },
-  "src/components/ProtectedRoute.tsx": {
-    "prefer-const": {
-      "count": 1
-    },
-    "react-hooks/exhaustive-deps": {
-      "count": 2
-    },
-    "react-hooks/set-state-in-effect": {
-      "count": 2
     }
   },
   "src/components/Reveal.tsx": {

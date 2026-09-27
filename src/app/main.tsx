@@ -3,10 +3,10 @@ import { createRoot } from 'react-dom/client'
 import { registerSW } from 'virtual:pwa-register'
 import { inject } from '@vercel/analytics'
 import App from './App'
-import { installErrorLogging } from './lib/errorLog'
-import { track } from './lib/analytics'
-import { onAiRequest } from './shared/api/ai'
-import './index.css'
+import { installErrorLogging } from '../lib/errorLog'
+import { track } from '../lib/analytics'
+import { onAiRequest } from '../shared/api/ai'
+import '../index.css'
 
 // Обезличенная аналитика посещений (Vercel Web Analytics, бесплатный тариф).
 // Только в проде; чтобы заработала, в Vercel-дашборде проекта должен быть

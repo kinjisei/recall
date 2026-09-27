@@ -1,5 +1,5 @@
 import { useAuth } from '../context/AuthContext'
-import { BrandMark } from './Brand'
+import { BrandMark } from '../components/Brand'
 
 /**
  * Экран для заблокированного аккаунта: показывается вместо всего приложения,

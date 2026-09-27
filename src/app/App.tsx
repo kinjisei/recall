@@ -1,23 +1,23 @@
 import { Suspense } from 'react'
-import { routeScreens } from './lib/routeChunks'
-import { Loading } from './components/Loading'
+import { routeScreens } from './routeChunks'
+import { Loading } from '../components/Loading'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { AuthProvider } from './context/AuthContext'
-import { LanguageProvider } from './context/LanguageContext'
-import { ConfettiLayer } from './components/Confetti'
-import { ScrollToTop } from './components/ScrollToTop'
-import { PageTracker } from './components/PageTracker'
-import { ErrorBoundary } from './components/ErrorBoundary'
-import { ProtectedRoute } from './components/ProtectedRoute'
-import { Layout } from './components/Layout'
-import { LoginPage } from './features/auth/LoginPage'
-import { DashboardPage } from './features/dashboard/DashboardPage'
+import { AuthProvider } from '../context/AuthContext'
+import { LanguageProvider } from '../context/LanguageContext'
+import { ConfettiLayer } from '../components/Confetti'
+import { ScrollToTop } from './ScrollToTop'
+import { PageTracker } from './PageTracker'
+import { ErrorBoundary } from './ErrorBoundary'
+import { ProtectedRoute } from './ProtectedRoute'
+import { Layout } from './shell/Layout'
+import { LoginPage } from '../features/auth/LoginPage'
+import { DashboardPage } from '../features/dashboard/DashboardPage'
 
 // Роуты — лениво: каждая страница (и её данные) грузится при переходе, а не
 // в стартовом бандле. Особенно важно для «Ввода» и грамматики — они тянут
 // сотни КБ контента, который не нужен на старте.
 //
-// Определения живут в lib/routeChunks: там же лежит предзагрузка, которой
+// Определения живут в app/routeChunks: там же лежит предзагрузка, которой
 // пользуются ссылки (components/AppLink). Уже подгруженный экран показывается
 // БЕЗ Suspense — иначе переход между вкладками снимал бы кадр с «Загрузка…».
 const PracticePage = routeScreens['/practice']

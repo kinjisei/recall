@@ -40,7 +40,7 @@ import { markAutoOpened, shouldAutoOpen, skipReviewIfNoWords } from '../../lib/g
 import { getMistakes } from '../../lib/mistakes'
 import { DeckReview } from '../flashcards/DeckReview'
 import { useScrollTop } from '../../lib/useScrollTop'
-import { useFocusMode } from '../../components/Layout'
+import { useFocusMode } from '../../shared/lib/focusMode'
 import { Loading } from '../../components/Loading'
 import { markMorph } from '../../lib/morph'
 import { withViewTransition } from '../../shared/lib/viewTransition'
@@ -186,7 +186,7 @@ export function PracticePage() {
   // смена ?m= маршрут не меняет — глобальный ScrollToTop не срабатывает
   useScrollTop(mode)
   // на время раунда убираем шапку и нижнюю навигацию: без них игра влезает в
-  // экран целиком и перестаёт «ездить» на каждом тапе (см. Layout)
+  // экран целиком и перестаёт «ездить» на каждом тапе (см. shared/lib/focusMode)
   useFocusMode(mode !== 'hub')
   // Заход в игру пушит запись в историю, выход кареткой — ЗАМЕНЯЕТ её.
   // Раньше выход тоже пушил, и свайп-назад после выхода возвращал обратно в

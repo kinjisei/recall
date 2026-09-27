@@ -2,18 +2,19 @@
 // Каркас приложения в теме «Nocturne»: шапка (бренд, EN/ES, аватар → прогресс)
 // и плавающая нижняя навигация. Контент — Outlet.
 // ============================================================================
-import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Outlet } from 'react-router-dom'
-import { IconChart, IconTeacher, IconGear, IconSignOut, IconCards, IconBadgeCheck, IconThumbsUp } from './icons'
-import { FeedbackSheet } from './FeedbackSheet'
-import { getProfile } from '../lib/profile'
-import { getMyPlan } from '../lib/billing'
+import { IconChart, IconTeacher, IconGear, IconSignOut, IconCards, IconBadgeCheck, IconThumbsUp } from '../../components/icons'
+import { FeedbackSheet } from '../../components/FeedbackSheet'
+import { getProfile } from '../../lib/profile'
+import { getMyPlan } from '../../lib/billing'
 import { BottomNav } from './BottomNav'
-import { BrandLogo } from './Brand'
-import { useLanguage } from '../context/LanguageContext'
-import { useAuth } from '../context/AuthContext'
-import type { AppLang } from '../types'
-import { AppLink } from './AppLink'
+import { BrandLogo } from '../../components/Brand'
+import { useLanguage } from '../../context/LanguageContext'
+import { useAuth } from '../../context/AuthContext'
+import type { AppLang } from '../../types'
+import { AppLink } from '../../components/AppLink'
+import { FocusModeContext } from '../../shared/lib/focusMode'
 
 const langTabs: { id: AppLang; label: string }[] = [
   { id: 'en', label: 'EN' },
@@ -174,32 +175,11 @@ function TopBar() {
   )
 }
 
-// ---------------------------------------------------------------------------
-// Режим раунда: на время мини-игры шапка и нижняя навигация убираются.
-//
-// Зачем: шапка (79px) + отступ сверху (20px) + отступ снизу под плавающую
-// навигацию (88px) съедали 187px ещё до содержимого. Играм оставалось 450-670px,
-// и они не влезали — но всего на 11-38px (замер scripts/measure-scroll.mjs на
-// экранах 640-844). Это худший случай: прокрутка есть, но короткая, поэтому на
-// каждом тапе экран подпрыгивал. Правим не отступы (любое слово подлиннее — и
-// снова вылезет), а убираем лишнее на время раунда: выход всё равно есть
-// кнопкой «назад» внутри самой игры.
-// ---------------------------------------------------------------------------
-const FocusCtx = createContext<(on: boolean) => void>(() => {})
-
-/** Включает режим раунда на время жизни компонента. */
-export function useFocusMode(on = true): void {
-  const set = useContext(FocusCtx)
-  useEffect(() => {
-    set(on)
-    return () => set(false)
-  }, [on, set])
-}
-
+// Режим раунда (шапка и навигация прячутся на время игры) — shared/lib/focusMode.
 export function Layout() {
   const [focus, setFocus] = useState(false)
   return (
-    <FocusCtx.Provider value={setFocus}>
+    <FocusModeContext.Provider value={setFocus}>
     <div className="min-h-[100dvh] bg-[var(--night-bg)] text-[var(--night-text)]">
       {!focus && <TopBar />}
       {/* pb — ровно под плавающую навигацию: её высота (~69px) + отступ снизу
@@ -216,6 +196,6 @@ export function Layout() {
       </main>
       {!focus && <BottomNav />}
     </div>
-    </FocusCtx.Provider>
+    </FocusModeContext.Provider>
   )
 }

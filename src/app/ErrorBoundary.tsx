@@ -7,7 +7,7 @@
 // ============================================================================
 import { Component, type ReactNode } from 'react'
 import { supportMailto } from '../shared/lib/contacts'
-import { IconWarning } from './icons'
+import { IconWarning } from '../components/icons'
 import { logError } from '../lib/errorLog'
 
 const RELOAD_AT = 'recall.chunk_reload_at'
