@@ -1,3 +1,4 @@
+import { APP_URL } from './_env.mjs'
 /**
  * Смоук: «Диалог» отдаёт ответ ПОТОКОМ, а не одним куском.
  *
@@ -9,11 +10,11 @@
  * application/json, и проверка «ответ — поток» упадёт. Просит длинный ответ
  * (счёт до 15), чтобы кусков было заведомо несколько.
  *
- * Запуск: dev-сервер на 5173, затем `node scripts/smoke-dialog-stream.mjs`.
+ * Запуск: `npm run dev:test` (5174, тестовая база), затем `node scripts/smoke-dialog-stream.mjs`.
  * Прод: AUDIT_BASE_URL=https://recall-pgkz.vercel.app (там нужен вход — смоук
  * рассчитан на локальный dev, где /api/gemini без токена).
  */
-const BASE = process.env.AUDIT_BASE_URL || 'http://localhost:5173'
+const BASE = process.env.AUDIT_BASE_URL || APP_URL
 
 const results = []
 const check = (name, ok, extra = '') => {

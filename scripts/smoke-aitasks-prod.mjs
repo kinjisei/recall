@@ -7,20 +7,16 @@
  *   4. Выдуманное имя задачи → обрабатывается как обычная (standard), не как Pro.
  *   5. Старый клиент (tier:'max', без task) → пропускается, но НЕ на Pro-уровне
  *      (снаружи видно только то, что запрос принят — модель проверяем по коду).
- * Запуск: node scripts/smoke-aitasks-prod.mjs
+ * Запуск: node scripts/smoke-aitasks-prod.mjs --prod   (живой сайт — только с живой базой)
  *         node scripts/smoke-aitasks-prod.mjs http://localhost:3000  (иной хост)
  */
 import { createClient } from '@supabase/supabase-js'
-import { readFileSync } from 'node:fs'
+import { PROD_SITE, assertSiteMatchesDb, firstArg, scriptEnv } from './_env.mjs'
 
-const BASE = process.argv[2] || 'https://recall-pgkz.vercel.app'
+const BASE = firstArg() || PROD_SITE
+assertSiteMatchesDb(BASE)
 
-const env = Object.fromEntries(
-  readFileSync(new URL('../.env.local', import.meta.url), 'utf8')
-    .split('\n')
-    .filter((l) => /^[A-Z_]+=/.test(l))
-    .map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1).trim()]),
-)
+const env = scriptEnv()
 const URL_ = env.VITE_SUPABASE_URL
 const admin = createClient(URL_, env.SUPABASE_SERVICE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },

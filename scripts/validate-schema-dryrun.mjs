@@ -11,18 +11,13 @@
  * Запуск: node scripts/validate-schema-dryrun.mjs
  * Нужен SUPABASE_ACCESS_TOKEN в .env.local (токен Supabase Management API).
  *
- * ⚠️ Прогон идёт на РАБОЧЕЙ базе: транзакция откатывается, но на время
- * выполнения берутся блокировки таблиц. На нашем объёме это доли секунды,
- * при больших данных так делать не стоит.
+ * Прогон — на ТЕСТОВОЙ базе (scripts/_env.mjs), транзакция откатывается.
+ * На живой не работает намеренно: токен прода — только чтение (Ф0.2).
  */
 import { readFileSync } from 'node:fs'
+import { scriptEnv } from './_env.mjs'
 
-const env = Object.fromEntries(
-  readFileSync(new URL('../.env.local', import.meta.url), 'utf8')
-    .split('\n')
-    .filter((l) => /^[A-Z_]+=/.test(l))
-    .map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1).trim()]),
-)
+const env = scriptEnv()
 
 if (!env.SUPABASE_ACCESS_TOKEN) {
   console.error('Нет SUPABASE_ACCESS_TOKEN в .env.local — сухой прогон невозможен.')

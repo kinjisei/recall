@@ -3,27 +3,22 @@
  * Жалоба владельца: «в играх экран ездит и мешает». Скрипт меряет, НА СКОЛЬКО
  * страница выше экрана — и заодно показывает, из чего складывается высота.
  *
- * Запуск: node scripts/measure-scroll.mjs   (dev-сервер на 5173)
+ * Запуск: node scripts/measure-scroll.mjs   (`npm run dev:test` — 5174, тестовая база)
  * Тестовый аккаунт со словами создаётся через service_role и удаляется в конце.
  */
 import { createClient } from '@supabase/supabase-js'
 import { spawn } from 'node:child_process'
-import { readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import puppeteer from 'puppeteer-core'
 import { profileDir } from './_profile.mjs'
+import { APP_URL, scriptEnv } from './_env.mjs'
 
 const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
-const BASE = process.env.AUDIT_BASE_URL || 'http://localhost:5173'
+const BASE = process.env.AUDIT_BASE_URL || APP_URL
 const EMAIL = 'scroll-audit@recall.test'
 const PASSWORD = 'Scroll!2026-temp'
 
-const env = Object.fromEntries(
-  readFileSync(new URL('../.env.local', import.meta.url), 'utf8')
-    .split('\n')
-    .filter((l) => /^[A-Z_]+=/.test(l))
-    .map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1).trim()]),
-)
+const env = scriptEnv()
 const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SERVICE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 })

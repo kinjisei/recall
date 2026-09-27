@@ -688,7 +688,9 @@ FSRS, текст по покрытию, тема квеста по ошибка�
 ## Как запустить и как проверять
 
 ```
-npm run dev            # http://localhost:5173
+npm run dev            # http://localhost:5173 — ЖИВАЯ база
+npm run dev:test       # http://localhost:5174 — тестовая база (для смоуков)
+node scripts/seed-test.mjs   # тестовая: настройки как на проде + учитель и 2 ученика
 npm run build          # tsc -b + сборка — обязательно после правок
 npm run check          # все сторожа (~4 с с кэшем) — обязательно после правок
 npm test               # все чистые тесты scripts/test-*.mjs
@@ -698,8 +700,9 @@ node scripts/smoke-features.mjs    # интерактивный обход фи�
 node scripts/smoke-navigation.mjs  # адресуемость экранов
 node scripts/smoke-motion.mjs      # переходы, вкладки, живые ожидания и ответы
 node scripts/check-schema.mjs      # перед заливкой схемы
-node scripts/check-anon-access.mjs # что может вызвать невошедший (живая база)
+node scripts/check-anon-access.mjs # что может вызвать невошедший (тестовая; --prod — живая)
 node scripts/check-types-drift.mjs # типы = схема тестовой базы (--write — перегенерировать)
+node scripts/check-db-equal.mjs    # каталог тестовой = живой (живая — только чтение)
 node scripts/validate-schema-dryrun.mjs   # прогон schema.sql с откатом
 node scripts/check-schema-equal.mjs       # правка схемы не изменила базу
 node scripts/check-api-vercel.mjs  # api/ так, как их собирает Vercel
@@ -748,8 +751,16 @@ node scripts/check-api-vercel.mjs  # api/ так, как их собирает V
 В корневом tsconfig теперь есть строгие настройки, и `check-api-vercel.mjs`
 проверяет api/ в самом слабом режиме — оба конца класса закрыты.
 
-Смоуки сами создают и удаляют тестовые аккаунты через `SUPABASE_SERVICE_KEY`
-(в `.env.local`, gitignored). Нужен запущенный dev-сервер.
+**Скрипты работают с ТЕСТОВОЙ базой по умолчанию** (`scripts/_env.mjs`,
+PLAN.md Ф1.2): `scriptEnv()` отдаёт им прежние имена (`VITE_SUPABASE_URL`,
+`SUPABASE_SERVICE_KEY`…), но значения тестовой базы. Живая — только явным
+`--prod`, и писать туда нечем: токен прода только читает, пароля базы прода в
+`.env.local` нет. Смоуки сами создают и удаляют аккаунты; им нужен
+`npm run dev:test` (порт 5174 — отдельный от `npm run dev`, который смотрит в
+прод, чтобы смоук не завёл аккаунт на живой базе через интерфейс). Сайт
+`recall-pgkz.vercel.app` без `--prod` скрипты не примут: он пускает только
+живую базу. Новая тестовая база → `node scripts/seed-test.mjs` (иначе
+регистрация закрыта и аккаунт не создать).
 
 ⚠️ `puppeteer.launch` с Edge не работает при открытом пользовательском Edge —
 скрипты запускают `msedge` сами и цепляются через `puppeteer.connect`.

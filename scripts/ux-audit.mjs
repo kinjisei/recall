@@ -5,28 +5,24 @@
  *                      подписи у полей и кнопок-иконок;
  *   §2 Touch         — тач-цели ≥44×44 (кроме inline-ссылок в тексте, WCAG 2.5.5).
  *
- * Запуск:  node scripts/ux-audit.mjs   (dev-сервер должен работать на 5173)
+ * Запуск:  node scripts/ux-audit.mjs   (нужен `npm run dev:test` — 5174, тестовая база)
  * Тестовый аккаунт создаётся через service_role и удаляется в конце.
  */
 import { createClient } from '@supabase/supabase-js'
 import { spawn } from 'node:child_process'
-import { readFileSync, writeFileSync } from 'node:fs'
+import { writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import puppeteer from 'puppeteer-core'
 import { profileDir } from './_profile.mjs'
+import { APP_URL, scriptEnv } from './_env.mjs'
 
 const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
-const BASE = process.env.AUDIT_BASE_URL || 'http://localhost:5173'
+const BASE = process.env.AUDIT_BASE_URL || APP_URL
 const EMAIL = 'ux-audit@recall.test'
 const PASSWORD = 'UxAudit!2026-temp'
 
 // ---- ключи из .env.local (без dotenv) ----
-const env = Object.fromEntries(
-  readFileSync(new URL('../.env.local', import.meta.url), 'utf8')
-    .split('\n')
-    .filter((l) => /^[A-Z_]+=/.test(l))
-    .map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1).trim()]),
-)
+const env = scriptEnv()
 const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SERVICE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 })

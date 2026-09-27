@@ -12,16 +12,16 @@
  * преподавателя. Заодно это проверяет запасной путь: подбор обязан отработать
  * и без модели — состав считают данные, модель только пишет формулировки.
  *
- * Запуск: dev-сервер на 5173, затем `node scripts/smoke-homework-suggest.mjs`.
+ * Запуск: `npm run dev:test` (5174, тестовая база), затем `node scripts/smoke-homework-suggest.mjs`.
  */
 import { createClient } from '@supabase/supabase-js'
 import { spawn } from 'node:child_process'
-import { readFileSync } from 'node:fs'
 import puppeteer from 'puppeteer-core'
 import { profileDir } from './_profile.mjs'
+import { APP_URL, scriptEnv } from './_env.mjs'
 
 const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
-const BASE = process.env.AUDIT_BASE_URL || 'http://localhost:5173'
+const BASE = process.env.AUDIT_BASE_URL || APP_URL
 const T_EMAIL = 'hwsug-teacher@recall.test'
 const S_EMAIL = 'hwsug-student@recall.test'
 const PASSWORD = 'HwSug!Smoke2026'
@@ -33,12 +33,7 @@ const MISTAKE_TOPIC = 0
 /** Столько карточек делаем просроченными: число попадёт в объяснение пункта. */
 const OVERDUE = 12
 
-const env = Object.fromEntries(
-  readFileSync(new URL('../.env.local', import.meta.url), 'utf8')
-    .split('\n')
-    .filter((l) => /^[A-Z_]+=/.test(l))
-    .map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1).trim()]),
-)
+const env = scriptEnv()
 const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SERVICE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 })

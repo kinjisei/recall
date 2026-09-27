@@ -5,28 +5,24 @@
  *  2. Headless Edge: вход учителем → карточка ученицы → «Диагностическая
  *     карта» → блок «Динамика за месяц» виден → «🖨 Отчёт для родителей» →
  *     комментарий → page.pdf() → проверка, что PDF не пустой и содержит лист.
- * Запуск: node scripts/smoke-report-pdf.mjs (dev-сервер на 5173).
+ * Запуск: node scripts/smoke-report-pdf.mjs (`npm run dev:test` — 5174, тестовая база).
  */
 import { createClient } from '@supabase/supabase-js'
 import { spawn } from 'node:child_process'
-import { readFileSync, statSync } from 'node:fs'
+import { statSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import puppeteer from 'puppeteer-core'
 import { profileDir } from './_profile.mjs'
+import { APP_URL, scriptEnv } from './_env.mjs'
 
 const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
-const BASE = process.env.AUDIT_BASE_URL || 'http://localhost:5173'
+const BASE = process.env.AUDIT_BASE_URL || APP_URL
 const T_EMAIL = 'report-teacher@recall.test'
 const S_EMAIL = 'report-student@recall.test'
 const PASSWORD = 'ReportSmoke!2026'
 const PDF_PATH = `${tmpdir()}\\recall-report-smoke.pdf`
 
-const env = Object.fromEntries(
-  readFileSync(new URL('../.env.local', import.meta.url), 'utf8')
-    .split('\n')
-    .filter((l) => /^[A-Z_]+=/.test(l))
-    .map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1).trim()]),
-)
+const env = scriptEnv()
 const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SERVICE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 })

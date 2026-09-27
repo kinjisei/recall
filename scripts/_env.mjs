@@ -62,6 +62,63 @@ export function dbTarget(argv = process.argv.slice(2)) {
   return target
 }
 
+/**
+ * Окружение для скриптов: ТЕ ЖЕ имена, что они всегда читали из .env.local
+ * (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, SUPABASE_SERVICE_KEY,
+ * SUPABASE_ACCESS_TOKEN), но значения — ВЫБРАННОЙ базы: тестовой по
+ * умолчанию, живой только с --prod. Так перевод полусотни проверок на
+ * тестовую базу — одна строка в каждой, а их тела не меняются.
+ *
+ * ⚠️ Имя VITE_SUPABASE_URL здесь значит «адрес выбранной базы», а не прода.
+ * Тестовая база — на новых ключах (sb_publishable_/sb_secret_, Ф0.1).
+ */
+export function scriptEnv(argv = process.argv.slice(2)) {
+  const env = readEnv()
+  const target = dbTarget(argv)
+  assertSiteMatchesDb(process.env.AUDIT_BASE_URL)
+  console.log(`▸ база: ${target.label}${target.name === 'test' ? '' : ' — --prod'}`)
+  if (target.name === 'prod') return env
+  const first = (...keys) => keys.map((k) => env[k]).find(Boolean)
+  const mapped = {
+    VITE_SUPABASE_URL: target.url,
+    VITE_SUPABASE_ANON_KEY: first('TEST_SUPABASE_PUBLISHABLE_KEY', 'TEST_SUPABASE_ANON_KEY'),
+    SUPABASE_SERVICE_KEY: first('TEST_SUPABASE_SECRET_KEY', 'TEST_SUPABASE_SERVICE_KEY'),
+    SUPABASE_ACCESS_TOKEN: target.accessToken,
+  }
+  const missing = Object.entries(mapped).filter(([, v]) => !v).map(([k]) => k)
+  if (missing.length) throw new Error(`Для тестовой базы нет ключей в .env.local: ${missing.join(', ')}`)
+  return { ...env, ...mapped }
+}
+
+/**
+ * Адрес приложения для смоуков. Тестовая база — отдельный dev-сервер на 5174
+ * (`npm run dev:test`), чтобы смоук никогда не попал в обычный `npm run dev`
+ * на 5173: тот смотрит в ЖИВУЮ базу, и аккаунт, заведённый через интерфейс,
+ * остался бы на проде без уборки.
+ */
+export const APP_URL = process.argv.includes('--prod')
+  ? 'http://localhost:5173'
+  : 'http://localhost:5174'
+
+export const PROD_SITE = 'https://recall-pgkz.vercel.app'
+
+/**
+ * Живой сайт принимает вход только ЖИВОЙ базы. Если сайт живой, а база
+ * тестовая (забыли --prod), скрипт завёл бы аккаунт на тестовой и упёрся бы в
+ * 401 на проде — ложное красное, по которому потом чинят рабочий код. Лучше
+ * отказаться сразу и сказать почему.
+ */
+export function assertSiteMatchesDb(site, argv = process.argv.slice(2)) {
+  if (site?.startsWith(PROD_SITE) && !argv.includes('--prod')) {
+    throw new Error(`Сайт ${PROD_SITE} — живой: запускай с --prod (иначе база тестовая)`)
+  }
+}
+
+/** Первый аргумент командной строки, который не флаг (--prod и т.п.). */
+export function firstArg(argv = process.argv.slice(2)) {
+  return argv.find((a) => !a.startsWith('--'))
+}
+
 /** SQL через Management API. Возвращает строки последнего запроса. */
 export async function runSql(target, query) {
   const res = await fetch(`https://api.supabase.com/v1/projects/${target.ref}/database/query`, {

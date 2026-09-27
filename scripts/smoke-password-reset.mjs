@@ -14,32 +14,27 @@
  * Иначе каждый прогон жёг бы квоту Brevo и слал письма на несуществующий домен,
  * портя репутацию отправителя.
  *
- * Запуск: dev-сервер на 5173, затем `node scripts/smoke-password-reset.mjs`.
+ * Запуск: `npm run dev:test` (5174, тестовая база), затем `node scripts/smoke-password-reset.mjs`.
  */
 import { createClient } from '@supabase/supabase-js'
 import { spawn } from 'node:child_process'
-import { readFileSync } from 'node:fs'
 import puppeteer from 'puppeteer-core'
 import { profileDir } from './_profile.mjs'
+import { APP_URL, scriptEnv } from './_env.mjs'
 
 const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
-// По умолчанию локальный сервер. Прод проверяется тем же прогоном:
-//   AUDIT_BASE_URL=https://recall-pgkz.vercel.app node scripts/smoke-password-reset.mjs
-// База у прода и у dev одна и та же, так что временный аккаунт и ссылки
-// восстановления работают одинаково — писем по-прежнему не отправляется.
-const BASE = process.env.AUDIT_BASE_URL || 'http://localhost:5173'
+// По умолчанию — `npm run dev:test` и тестовая база. Прод проверяется тем же
+// прогоном, но только вместе с живой базой (сайт принимает вход только её):
+//   AUDIT_BASE_URL=https://recall-pgkz.vercel.app node scripts/smoke-password-reset.mjs --prod
+// Писем не отправляется ни там, ни там.
+const BASE = process.env.AUDIT_BASE_URL || APP_URL
 const EMAIL = 'pwreset-smoke@recall.test'
 const PASS_OLD = 'Old!Password2026'
 const PASS_LINK = 'Link!Password2026'
 const PASS_CODE = 'Code!Password2026'
 const PASS_SETTINGS = 'Settings!Password2026'
 
-const env = Object.fromEntries(
-  readFileSync(new URL('../.env.local', import.meta.url), 'utf8')
-    .split('\n')
-    .filter((l) => /^[A-Z_]+=/.test(l))
-    .map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1).trim()]),
-)
+const env = scriptEnv()
 const URL_ = env.VITE_SUPABASE_URL
 const ANON = env.VITE_SUPABASE_ANON_KEY
 const admin = createClient(URL_, env.SUPABASE_SERVICE_KEY, {

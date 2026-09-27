@@ -10,22 +10,18 @@
  * поле ввода на месте. Сам разбор AI не запускаем: он стоит энергии, а его
  * качество проверяется отдельно (ревью 2Б).
  *
- * Запуск: node scripts/smoke-own-writing.mjs (нужен dev-сервер на 5173).
+ * Запуск: node scripts/smoke-own-writing.mjs (нужен `npm run dev:test` — 5174, тестовая база).
  */
 import { createClient } from '@supabase/supabase-js'
 import { spawn } from 'node:child_process'
-import { readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import puppeteer from 'puppeteer-core'
 import { profileDir } from './_profile.mjs'
+import { APP_URL, scriptEnv } from './_env.mjs'
 
 const EDGE = 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'
-const env = Object.fromEntries(
-  readFileSync(new URL('../.env.local', import.meta.url), 'utf8')
-    .split('\n').filter((l) => /^[A-Z_]+=/.test(l))
-    .map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1).trim()]),
-)
+const env = scriptEnv()
 const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SERVICE_KEY, { auth: { persistSession: false } })
 const EMAIL = 'own-writing@recall.test'
 const PASS = 'OwnWrite!2026'
@@ -67,7 +63,7 @@ await page.setViewport({ width: 390, height: 844 })
 const jsErrors = []
 page.on('pageerror', (e) => jsErrors.push(String(e)))
 
-await page.goto('http://localhost:5173/login', { waitUntil: 'networkidle2' })
+await page.goto(`${APP_URL}/login`, { waitUntil: 'networkidle2' })
 await page.evaluate(() => localStorage.setItem('recall.onboarded', '1'))
 await page.evaluate(() => [...document.querySelectorAll('button')].find((x) => x.textContent.trim() === 'Войти')?.click())
 await sleep(400)
@@ -77,13 +73,13 @@ await page.click('button[type="submit"]')
 await sleep(4500)
 
 // 1. строка «Письмо» видна БЕЗ преподавателя
-await page.goto('http://localhost:5173/study', { waitUntil: 'networkidle2' })
+await page.goto(`${APP_URL}/study`, { waitUntil: 'networkidle2' })
 await sleep(3000)
 const studyTxt = await page.evaluate(() => document.body.innerText)
 check('строка «Письмо» видна без преподавателя', /Письмо/.test(studyTxt))
 
 // 2. заходим и выбираем тему
-await page.goto('http://localhost:5173/writing', { waitUntil: 'networkidle2' })
+await page.goto(`${APP_URL}/writing`, { waitUntil: 'networkidle2' })
 await sleep(2500)
 const empty = await page.evaluate(() => document.body.innerText)
 check('пустой экран предлагает начать', /Выбрать тему/.test(empty))

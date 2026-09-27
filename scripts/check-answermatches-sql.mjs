@@ -17,13 +17,9 @@
  */
 import { readFileSync } from 'node:fs'
 import { CASES } from './test-answermatches.mjs'
+import { scriptEnv } from './_env.mjs'
 
-const env = Object.fromEntries(
-  readFileSync(new URL('../.env.local', import.meta.url), 'utf8')
-    .split('\n')
-    .filter((l) => /^[A-Z_]+=/.test(l))
-    .map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1).trim()]),
-)
+const env = scriptEnv()
 if (!env.SUPABASE_ACCESS_TOKEN) {
   console.error('Нет SUPABASE_ACCESS_TOKEN в .env.local')
   process.exitCode = 1

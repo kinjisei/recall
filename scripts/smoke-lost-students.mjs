@@ -9,22 +9,18 @@
  * Сеет трёх учеников с разной давностью: сегодня, девять дней назад и «ни разу
  * не начинал» — и проверяет, что сводка называет ровно двух последних.
  *
- * Запуск: node scripts/smoke-lost-students.mjs (нужен dev-сервер на 5173).
+ * Запуск: node scripts/smoke-lost-students.mjs (нужен `npm run dev:test` — 5174, тестовая база).
  */
 import { createClient } from '@supabase/supabase-js'
 import { spawn } from 'node:child_process'
-import { readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import puppeteer from 'puppeteer-core'
 import { profileDir } from './_profile.mjs'
+import { APP_URL, scriptEnv } from './_env.mjs'
 
 const EDGE = 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'
-const env = Object.fromEntries(
-  readFileSync(new URL('../.env.local', import.meta.url), 'utf8')
-    .split('\n').filter((l) => /^[A-Z_]+=/.test(l))
-    .map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1).trim()]),
-)
+const env = scriptEnv()
 const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SERVICE_KEY, { auth: { persistSession: false } })
 const T = { email: 'lost-t@recall.test', pass: 'Lost!2026teach' }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
@@ -143,7 +139,7 @@ for (let i = 0; i < 30 && !b; i++) {
 }
 const page = await b.newPage()
 await page.setViewport({ width: 390, height: 844 })
-await page.goto('http://localhost:5173/login', { waitUntil: 'networkidle2' })
+await page.goto(`${APP_URL}/login`, { waitUntil: 'networkidle2' })
 await page.evaluate(() => localStorage.setItem('recall.onboarded', '1'))
 await page.evaluate(() => [...document.querySelectorAll('button')].find((x) => x.textContent.trim() === 'Войти')?.click())
 await sleep(400)
@@ -151,7 +147,7 @@ await page.type('#f-email', T.email)
 await page.type('#f-password', T.pass)
 await page.click('button[type="submit"]')
 await sleep(4500)
-await page.goto('http://localhost:5173/teacher', { waitUntil: 'networkidle2' })
+await page.goto(`${APP_URL}/teacher`, { waitUntil: 'networkidle2' })
 await sleep(3000)
 
 const txt = await page.evaluate(() => document.body.innerText)

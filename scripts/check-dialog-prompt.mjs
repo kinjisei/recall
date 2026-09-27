@@ -1,12 +1,9 @@
+// ⚠️ Только с --prod: ходит в ЖИВОЙ /api/gemini, а тот принимает вход только
+// живой базы. Без флага аккаунт заведётся на тестовой, и прод ответит 401.
 import { createClient } from '@supabase/supabase-js'
-import { readFileSync } from 'node:fs'
+import { scriptEnv } from './_env.mjs'
 
-const env = Object.fromEntries(
-  readFileSync('d:/projects/recall-app/.env.local', 'utf8')
-    .split('\n')
-    .filter((l) => /^[A-Z_]+=/.test(l))
-    .map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1).trim()]),
-)
+const env = scriptEnv()
 const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SERVICE_KEY, {
   auth: { persistSession: false },
 })

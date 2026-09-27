@@ -8,17 +8,12 @@
  * По умолчанию шлёт на k.yerbolat.2004+test@gmail.com — письмо придёт владельцу.
  */
 import { createClient } from '@supabase/supabase-js'
-import { readFileSync } from 'node:fs'
+import { scriptEnv } from './_env.mjs'
 
 const TO = process.argv[2] || 'k.yerbolat.2004+test@gmail.com'
 const PASS = 'MailCheck!2026'
 
-const env = Object.fromEntries(
-  readFileSync(new URL('../.env.local', import.meta.url), 'utf8')
-    .split('\n')
-    .filter((l) => /^[A-Z_]+=/.test(l))
-    .map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1).trim()]),
-)
+const env = scriptEnv()
 const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SERVICE_KEY, {
   auth: { persistSession: false },
 })

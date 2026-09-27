@@ -6,22 +6,18 @@
  * Раньше после входа она забывалась, и человек оказывался на Главной, где
  * искал нужное заново (находка ревью 1Г).
  *
- * Запуск: node scripts/smoke-deeplink.mjs (нужен dev-сервер на 5173).
+ * Запуск: node scripts/smoke-deeplink.mjs (нужен `npm run dev:test` — 5174, тестовая база).
  */
 import { createClient } from '@supabase/supabase-js'
 import { spawn } from 'node:child_process'
-import { readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import puppeteer from 'puppeteer-core'
 import { profileDir } from './_profile.mjs'
+import { APP_URL, scriptEnv } from './_env.mjs'
 
 const EDGE = 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'
-const env = Object.fromEntries(
-  readFileSync(new URL('../.env.local', import.meta.url), 'utf8')
-    .split('\n').filter((l) => /^[A-Z_]+=/.test(l))
-    .map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1).trim()]),
-)
+const env = scriptEnv()
 const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SERVICE_KEY, { auth: { persistSession: false } })
 const EMAIL = 'deeplink@recall.test', PASS = 'Deep!2026link'
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
@@ -53,9 +49,9 @@ await page.setViewport({ width: 390, height: 844 })
 
 // ссылка «прочитай вот этот текст», открытая БЕЗ входа
 const target = '/study?view=reader&text=b1-habits'
-await page.goto('http://localhost:5173' + target, { waitUntil: 'networkidle2' })
+await page.goto(APP_URL + target, { waitUntil: 'networkidle2' })
 await page.evaluate(() => localStorage.setItem('recall.onboarded', '1'))
-await page.goto('http://localhost:5173' + target, { waitUntil: 'networkidle2' })
+await page.goto(APP_URL + target, { waitUntil: 'networkidle2' })
 await sleep(2500)
 const results = []
 const check = (n, ok, extra = '') => {

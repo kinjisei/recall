@@ -4,26 +4,22 @@
  * до того, как пользователь открыл соответствующий раздел.
  *
  * Логин без UI — инжект сессии (как в smoke-onboarding-placement).
- * Запуск: node scripts/measure-startup.mjs [BASE]   (по умолчанию прод)
+ * Запуск: node scripts/measure-startup.mjs --prod [BASE]   (по умолчанию живой сайт)
  */
 import { createClient } from '@supabase/supabase-js'
 import { spawn } from 'node:child_process'
-import { readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import puppeteer from 'puppeteer-core'
 import { profileDir } from './_profile.mjs'
+import { PROD_SITE, assertSiteMatchesDb, firstArg, scriptEnv } from './_env.mjs'
 
 const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
-const BASE = process.argv[2] || 'https://recall-pgkz.vercel.app'
+const BASE = firstArg() || PROD_SITE
+assertSiteMatchesDb(BASE)
 const EMAIL = 'startup-measure@recall.test'
 const PASSWORD = 'Startup!2026'
 
-const env = Object.fromEntries(
-  readFileSync(new URL('../.env.local', import.meta.url), 'utf8')
-    .split('\n')
-    .filter((l) => /^[A-Z_]+=/.test(l))
-    .map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1).trim()]),
-)
+const env = scriptEnv()
 const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SERVICE_KEY, {
   auth: { persistSession: false },
 })

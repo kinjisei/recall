@@ -14,14 +14,9 @@
  * Требует SUPABASE_SERVICE_KEY в .env.local. Аккаунты создаёт и удаляет сам.
  */
 import { createClient } from '@supabase/supabase-js'
-import { readFileSync } from 'node:fs'
+import { scriptEnv } from './_env.mjs'
 
-const env = Object.fromEntries(
-  readFileSync(new URL('../.env.local', import.meta.url), 'utf8')
-    .split('\n')
-    .filter((l) => /^[A-Z_]+=/.test(l))
-    .map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1).trim()]),
-)
+const env = scriptEnv()
 const URL_ = env.VITE_SUPABASE_URL
 const ANON = env.VITE_SUPABASE_ANON_KEY
 const admin = createClient(URL_, env.SUPABASE_SERVICE_KEY, {

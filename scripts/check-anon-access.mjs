@@ -14,13 +14,14 @@
  * открытой оказывается только самая свежая.
  *
  * Поэтому спрашиваем каталог: кто на самом деле может вызвать что.
- * В самой схеме класс закрыт финальным блоком-страховкой; эта проверка —
- * независимый свидетель, что страховка выполнена и никто её не обошёл.
+ * С миграций (PLAN.md Ф1.2) класс закрыт дважды: права по умолчанию (0001)
+ * и блок-страховка в конце каждой миграции; эта проверка — независимый
+ * свидетель, что оба пояса на месте и никто их не обошёл.
  *
- * Запуск: node scripts/check-anon-access.mjs
- * Нужен SUPABASE_ACCESS_TOKEN в .env.local.
+ * Запуск: node scripts/check-anon-access.mjs          (тестовая база)
+ *         node scripts/check-anon-access.mjs --prod   (живая, только чтение)
  */
-import { readFileSync } from 'node:fs'
+import { scriptEnv } from './_env.mjs'
 
 /**
  * ЕДИНСТВЕННОЕ разрешённое анониму. Добавлять сюда — осознанное решение:
@@ -29,12 +30,7 @@ import { readFileSync } from 'node:fs'
  */
 const ALLOWED = new Set(['track_event'])
 
-const env = Object.fromEntries(
-  readFileSync(new URL('../.env.local', import.meta.url), 'utf8')
-    .split('\n')
-    .filter((l) => /^[A-Z_]+=/.test(l))
-    .map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1).trim()]),
-)
+const env = scriptEnv()
 if (!env.SUPABASE_ACCESS_TOKEN) {
   console.error('Нет SUPABASE_ACCESS_TOKEN в .env.local — проверить права нечем.')
   process.exit(1)
@@ -125,8 +121,8 @@ if (missing.length > 0) {
   console.error(`\n✗ Аноним может вызвать лишнее (${bad.length}):`)
   for (const b of bad) console.error(`  ${b.name}(${b.args})\n      ${b.why}`)
   console.error(
-    '\nПочини в docs/schema.sql и перезалей: финальный блок-страховка в конце файла\n' +
-      'должен закрывать всё, кроме track_event. Если функция ДОЛЖНА быть публичной —\n' +
+    '\nПочини НОВОЙ миграцией (supabase/migrations): блок-страховка в её конце\n' +
+      'закрывает всё, кроме track_event. Если функция ДОЛЖНА быть публичной —\n' +
       'добавь её в ALLOWED здесь же, осознанно.',
   )
   process.exitCode = 1
