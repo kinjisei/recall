@@ -105,8 +105,12 @@ function ask(question, hidden = false) {
 
 if (isProd) {
   console.log('\n⚠️  Это ЖИВАЯ база: изменения увидят ученики.')
-  const yes = (await ask('Применить на живой базе? Напиши «да»: ')).trim().toLowerCase()
+  // Вопрос легко не заметить под выводом проверок и решить, что команда
+  // зависла (так и было 27.09) — поэтому отдельной заметной строкой.
+  console.log('\n⌨️  ЖДУ ТВОЕГО ОТВЕТА ↓')
+  const yes = (await ask('Применить на живой базе? Напиши «да» и нажми Enter: ')).trim().toLowerCase()
   if (yes !== 'да') fail('отменено — ничего не записано')
+  console.log('\n⌨️  ЖДУ ПАРОЛЬ ↓ (набранное не отображается — так задумано; вставка — правой кнопкой мыши)')
 }
 const password =
   isProd || argv.includes('--ask-password')
@@ -114,6 +118,7 @@ const password =
     : readEnv().TEST_SUPABASE_DB_PASSWORD
 if (!password) fail('нет пароля базы')
 target.dbPassword = password // чтобы supabaseCli спрятал его в выводе
+console.log('✓ пароль принят. Дальше до пары минут без новых строк — CLI подключается и применяет, это нормально…')
 const url = await dbUrl(target, password)
 
 const run = (args) => {
