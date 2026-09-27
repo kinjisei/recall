@@ -26,3 +26,6 @@ twa/*
 
 # временная папка supabase CLI (gen types) — не коммитим
 supabase/
+
+# Сгенерированная карта кода (пересобирается: node scripts/arch-map.mjs)
+docs/architecture/code-map.json

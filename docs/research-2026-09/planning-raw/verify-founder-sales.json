@@ -1,0 +1,100 @@
+{
+ "checked": [
+  {
+   "claim": "Kazanjy «Founding Sales»: founder-led этап 0→~30 клиентов = 9 глав Part 1 (настрой, нарратив/продуктовый маркетинг, материалы, поиск первых клиентов, аутрич и назначение демо, входящие, питч/демо/возражения, переговоры/закрытие/пайплайн, customer success/продления), затем Part 2 — масштабирование, найм, онбординг продавцов.",
+   "status": "confirmed",
+   "note": "Оглавление на foundingsales.com совпадает дословно, есть формулировка «from 0 to ~30 customers». На самом сайте термина «minimum viable sales motion» и чисел 30–50/10–20 нет. Бесплатно книгу целиком не прочесть: онлайн-чтение после регистрации/покупки.",
+   "source_url": "https://www.foundingsales.com/"
+  },
+  {
+   "claim": "«Minimum viable sales motion»: провести 30–50 квалифицированных лидов через процесс, 10–20 из них конвертировать; после этого нанимать исполнителей, а не строителей; меньший объём не спасти количеством попыток.",
+   "status": "confirmed",
+   "note": "Это вторичный текст: статья GTMfund (написали Sophie Buonassisi и команда GTMfund, 27.03.2026) по воркшопу Казанджи. Дословно: «The target is somewhere in the range of 30 to 50 qualified prospects run through your process, with 10 to 20 converting». Там же стадии: Stage 1 — «maybe five to ten» клиентов, закрытых «through force of personality, domain credibility, and network effects»; Stage 2 — описанный процесс со статистически значимой конверсией; Stage 3 — 2–4 продавца работают по нему. Цитаты: «Hire to execute the motion, not to discover it», «The early hires are executors, not builders». Фразу про то, что «меньший объём не спасти количеством попыток», в тексте найти не удалось: эта часть не подтверждена.",
+   "source_url": "https://gtmnow.com/the-founder-led-sales-playbook/"
+  },
+  {
+   "claim": "ICP у Kazanjy — три вопроса (какие компании / кто внутри / когда триггер); путь покупателя — 5 стадий: осознание проблемы → приоритизация → предпочтение решения → коммерческое согласие → чемпионство.",
+   "status": "confirmed",
+   "note": "Есть в той же статье GTMfund (вторичный пересказ воркшопа). Пятая стадия называется просто «Championship».",
+   "source_url": "https://gtmnow.com/the-founder-led-sales-playbook/"
+  },
+  {
+   "claim": "First Round Review: первого продажника нанимают после ~10–20 закрытых сделок, описанных возражений и чёткого ICP; первый найм — «founding AE», который проверяет готовый сценарий; срок работы первых продажников меньше года — обычное дело.",
+   "status": "refuted",
+   "note": "Цифра искажена. Статья «0-$5M: When, Who, and How to Make Your First Sales Hire» (опубликована 11.03.2025; на 25.09.2026 адрес отдаёт 404, прочитана через снимок Wayback от 18.02.2026) говорит: «at least 10, but probably closer to 25 customers for B2B companies», с оговоркой Becca Lindquist «Having 10 customers who are all your best friends doesn't count». Подтверждено: «some degree of repeatability — not a collection of one-off wins»; Mike Molinet: «If you can't clearly articulate how your last five deals got done, you're not ready for a sales hire»; список вопросов до найма включает ICP и «common objections»; «Sub-one-year tenures are ridiculously common». Термина «founding AE» в статье нет. Мысль «первый найм проверяет, а не изобретает» есть в статье GTMfund, а не у First Round. Paywall нет, страница просто удалена.",
+   "source_url": "https://web.archive.org/web/20260218215327/https://review.firstround.com/0-5m-first-sales-hire/"
+  },
+  {
+   "claim": "Figma сделала первый найм в продажи примерно при 40 сотрудниках и ~$2M ARR.",
+   "status": "confirmed",
+   "note": "Та же статья First Round: «at around ~40 employees and $2M ARR» (Kyle Parrish — первый продажник Figma). Подкаст First Round (11.01.2024): пришёл в июле 2018, «about 40 to 45 employees». Подкаст GTMnow: «basically 2 million when I joined». Уверенность выше, чем low у коллеги.",
+   "source_url": "https://review.firstround.com/podcast/inside-figmas-early-days-how-to-build-a-world-class-sales-org-kyle-parrish-vp-of-sales/"
+  },
+  {
+   "claim": "Lenny's Newsletter, 05.09.2023, «How to win your first 10 B2B customers»: каналы по удалённости от основателя; примеры Retool, Zip, Vanta, Gusto, Figma, Databricks.",
+   "status": "confirmed",
+   "note": "Дата и автор (Lenny Rachitsky) верны, выпуск только для подписчиков. Порядок: personal network → cold outbound → investor networks → community → content → press → organic/launch, «decreasing levels of trust». Retool: Crunchbase, «operationally heavy» компании, письма CTO и VP of operations → DoorDash, Rappi, Brex. Zip: первые 10 через LinkedIn «reaching out for advice»; Deserve предложил $1000, основатели назвали 10, сошлись на «seven, I think» (цифра приблизительная). Vanta: письма всем, кто писал «compliance» на Bookface. Gusto: стартапы из батча, «children's swimming camp» и цветочный магазин. Figma: скрипт по дизайнерам в Twitter и холодные DM. Databricks: AMP Camps примерно на 70 человек.",
+   "source_url": "https://www.lennysnewsletter.com/p/how-to-win-your-first-10-b2b-customers"
+  },
+  {
+   "claim": "Lenny's Newsletter, 07.07.2020: три канала (личная сеть, сообщества, пресса); примеры Slack, Asana, Salesforce, Stripe, Shopify, Plaid, Square, Twilio, Canva.",
+   "status": "confirmed",
+   "note": "Цитаты сходятся: Slack «six to ten companies», Asana «first ~15 users», Stripe «our first user actually became one of the first employees» и дальше распространение через друзей, Shopify «a few thousand emails» и «a few hundred stores» на бете, Plaid (Zach Perret) — в том числе стартап-акселераторы. Есть неточность: Twilio запуск не «организовывал через Макклюра». Первая публикация в прессе случилась, потому что Dave McClure с помощью сервиса разыграл (rickroll) Michael Arrington из TechCrunch. Square цитирует Cameron Walters, а не основатель.",
+   "source_url": "https://www.lennysnewsletter.com/p/how-todays-fastest-growing-b2b-businesses"
+  },
+  {
+   "claim": "a16z, Martin Casado (09.08.2019): сначала простой продукт с bottom-up-принятием и рост через контент/SEO, потом поверх базы пользователей строится продажный движок; ошибки — пользователь ≠ покупатель, слишком много бесплатно, рост и продажи разнесены, продажи подрывают органический рост.",
+   "status": "confirmed",
+   "note": "Это расшифровка доклада Casado на 4YFN 2019. Модель и четыре подводных камня в тексте есть. Контекст — open source и инструменты разработчика с bottom-up-принятием. К продажам частным репетиторам переносится слабо.",
+   "source_url": "https://a16z.com/growth-sales-and-a-new-era-of-b2b/"
+  },
+  {
+   "claim": "По Casado, около 70% компаний спотыкаются на этих четырёх ошибках.",
+   "status": "refuted",
+   "note": "Цифра приписана неверно. Дословно: «I would say a good 70% of open source companies run into this problem». Речь об ОДНОЙ проблеме: open source-компании пытаются монетизировать скромный ранний рост продажным движком и быстро упираются в его предел. Это не про все четыре ошибки и не про компании вообще.",
+   "source_url": "https://a16z.com/growth-sales-and-a-new-era-of-b2b/"
+  },
+  {
+   "claim": "YC Startup Library советует добывать первых клиентов «любыми средствами», включая немасштабируемую ручную работу; пример — основатели Airbnb сами фотографировали жильё хозяев.",
+   "status": "confirmed",
+   "note": "Источник нужно уточнить. Страница YC — это доклад Gustaf Alströmer (YC Group Partner) «How to get your first customers» (страница создана 29.12.2022). Он ссылается на эссе Пола Грэма «Do Things That Don't Scale» и на Airbnb, но про фотографии в докладе ничего нет. Деталь про фото — из эссе Грэма (июль 2013): «taking 'professional' photos of their first hosts' apartments», «going door to door in New York». Слов «любыми средствами» дословно нет.",
+   "source_url": "https://www.paulgraham.com/ds.html"
+  },
+  {
+   "claim": "Выпускник YC S23 (пересказ в блоге): «free pilots, design partnerships and advisors are a trap» — сигнал ценности только в готовности платить.",
+   "status": "confirmed",
+   "note": "Цитата есть: «If they won't pay for it, it's not valuable - free pilots, design partnerships and advisors are a trap». Её автор — Will Lawrence (Greenlite), пост в LinkedIn. Pascal Unger перепечатал его в блоге 14.09.2023, сам пост в LinkedIn не проверялся. Эту мысль подтверждает и первичный источник YC — Alströmer: «if you don't charge your customers, they are not a customer».",
+   "source_url": "https://pascalsnotes.substack.com/p/8-lessons-from-ycs23"
+  },
+  {
+   "claim": "Common Paper: договор с design partner на одну страницу, ритм «45-минутный созвон раз в 2 недели + асинхронный отзыв за 5 рабочих дней», точка решения в конце пилота; символическая оплата — более сильный сигнал, чем бесплатный пилот.",
+   "status": "refuted",
+   "note": "Common Paper (Jake Stein, обновлено 28.11.2024) пишет другое: согласовать ритм встреч «(biweekly, monthly, etc.)»; назначить веху, например публичный запуск, после которой партнёр становится обычным клиентом; «Charging upfront can be a part of that, but more importantly, having a clear set of goals and an agreement on what pricing will look like in the future». Про одну страницу, 45 минут, 5 рабочих дней и «символическая оплата сильнее» там ничего нет. «45 минут / 5 рабочих дней / одна страница» — из документации вендора Koji (koji.so, 23.09.2026). Koji при этом советует обратное оплате: «Free access during the design phase; locked-in discounted pricing (typically 30–50% off list) for the first 12–24 months».",
+   "source_url": "https://commonpaper.com/blog/design-partner/"
+  },
+  {
+   "claim": "Гайд по founder-led продажам: 30–60 мин в день 5 дней в неделю, 5–10 персональных сообщений, 2–3 discovery-звонка в неделю, пайплайн в простом файле; тест готовности к найму — новичок выходит на 50–70% конверсии основателя за 90 дней; основатель закрывает сделки, пока минимум два продажника не выполняют план.",
+   "status": "confirmed",
+   "note": "В тексте это есть (Viraj Shah, 18.05.2026). Но автор — основатель Embers, вендора сервиса LinkedIn-сигналов, и статья продвигает его продукт. Это мнение одного практика, а не отраслевая норма.",
+   "source_url": "https://useembers.com/blog/founder-led-sales/"
+  },
+  {
+   "claim": "«Консенсус практических блогов»: 3 еженедельные метрики (конверсия между стадиями, покрытие пайплайна ~3x, длина цикла сделки), воронка из 5 стадий, еженедельный просмотр на 2–4 часа, инструмент менее важен, чем дисциплина.",
+   "status": "refuted",
+   "note": "Опирается на один блог CRM-вендора Clarify (15.03.2026), и нужных цифр в нём нет. Нет «ровно трёх метрик», нет «2–4 часов в неделю», нет длины цикла сделки, нет фразы про инструмент и дисциплину. Есть: еженедельный разбор пайплайна для ранних команд, конверсия по стадиям, возраст сделки на стадии, покрытие «two to three times», «a five-stage pipeline you update every day beats a twelve-stage pipeline you update whenever you remember», и предупреждение не путать активность с результатом. Называть это «консенсусом» нельзя.",
+   "source_url": "https://www.clarify.ai/blog/startup-sales-pipeline"
+  }
+ ],
+ "missed": [
+  "Коллега не использовал первичный источник YC, хотя он лежит по его же ссылке: доклад Gustaf Alströmer «How to get your first customers» (YC Startup Library, в расшифровке). Воронка «языком основателя»: список в Google Sheets (колонки industry, company, title, name, email, LinkedIn) → письмо/LinkedIn → демо/встреча → цена → закрытие → ОНБОРДИНГ (без него, по его словам, будет отток). Основатель продаёт сам и не нанимает продавцов, пока не научился. Книгу Founding Sales он прямо рекомендует. https://www.ycombinator.com/library/Ip-how-to-get-your-first-customers",
+  "Там же — ключевой приём для цели 13–15 платящих: считать назад от цели. Пример Alströmer: 500 сообщений → 50% открыли → 5% ответили → ~50% дошли до демо → 20% купили = 2 клиента; при 100 сообщениях — ноль, и основатели ошибочно решают, что «продажи не работают». Цитата: «you cannot close five customers from 10 leads». Конверсии надо записывать с первого дня. Оговорка: в расшифровке арифметика неточна (5% от 250 он называет «about 20»), поэтому брать нужно метод, а не сами проценты.",
+  "YC против бесплатного триала в B2B, и это напрямую касается 14-дневного триала Recall и включённого вручную Pro. Цитаты: «you should not offer free trials in B2B sales. Go for a money-back guarantee and go for the ability to opt out instead», «if you don't charge your customers, they are not a customer», повышать цену, «until your customers are complaining but still paying». Про потребительские триалы он же замечает, что они обычно берут карту заранее.",
+  "YC: первые клиенты должны быть самыми лёгкими; медленных отпускать («we should talk again in six months»); знакомым продавать проще; большинство людей не ранние последователи, поэтому нужен объём касаний.",
+  "YC о реферальных программах, и это прямо про желание владельца «сильную реферальную систему»: у Airbnb «The referral program did not bring in the first 2,000 customers». Масштабируемые каналы (SEO, рефералы, реклама) — конечное состояние, а не старт.",
+  "First Round (Becca Lindquist): «Having 10 customers who are all your best friends doesn't count». Для Recall, где единственный известный источник — друзья, это значит: 14 аккаунтов не валидируют спрос, считать нужно платящих людей со стороны.",
+  "Предупреждение о переносимости, которого коллега не сделал: почти все примеры — B2B со сделками в тысячи долларов (первая сделка Zip около $7K, клиенты Retool — DoorDash, Brex). Christoph Janz (Point Nine, «Five ways to build a $100 million business», 05.10.2014): для SMB SaaS около $1k в год «cold calling usually doesn't work at this ARPA level», а для «мышей» около $100 в год нужна виральность или «powered by». Тарифы Recall по грубой оценке (курс ~500 ₸/$, это моя прикидка) — около $8–30 в месяц за репетитора и около $4 за Premium. Личные звонки основателя годятся, чтобы научиться продавать первым десяткам («do things that don't scale»), но масштабируемый канал должен быть low-touch: рекомендации, входящие. https://christophjanz.blogspot.com/2014/10/five-ways-to-build-100-million-business.html",
+  "Коллега приравнял цель 13–15 к «10–20 конверсиям из 30–50»: это подмена. У Казанджи 30–50 — уже КВАЛИФИЦИРОВАННЫЕ потенциальные клиенты, прошедшие процесс, и это порог обучения B2B-процессу, а не цель по выручке. От холодных объявлений на OLX/Kaspi сырых контактов понадобится на порядок больше (см. расчёт назад у YC). По стадиям GTMfund Recall сейчас на Stage 0: платящих ноль.",
+  "Ссылки коллеги устарели: review.firstround.com/0-5m-first-sales-hire/ отдаёт 404 (это не paywall), текст доступен через Wayback. Статья First Round опубликована 11.03.2025. Имя автора (партнёр First Round) не проверено."
+ ],
+ "corrected_summary": "Что подтвердилось по founder-led продажам. (1) Pete Kazanjy, «Founding Sales» (foundingsales.com): первая часть книги ведёт от 0 до ~30 клиентов силами основателя. Шаги: нарратив, материалы, поиск первых клиентов, аутрич и назначение демо, входящие, питч/демо/возражения, закрытие и ведение пайплайна, customer success и продления. Найм и масштабирование — только во второй части. (2) Пересказ воркшопа Казанджи от GTMfund (27.03.2026): цель первой стадии — 30–50 квалифицированных потенциальных клиентов, прошедших процесс, из них 10–20 конверсий. Нанимать «to execute the motion, not to discover it». ICP — три вопроса: какие клиенты, кто внутри, какой триггер. Stage 0 — гипотеза, Stage 1 — 5–10 клиентов, закрытых личным обаянием и связями основателя. (3) First Round Review (11.03.2025): первого продажника в B2B нанимают после «at least 10, but probably closer to 25 customers». «10 клиентов — лучшие друзья — не в счёт». Нужна повторяемость, а не набор разовых побед. Основатель должен уметь объяснить, как закрылись последние пять сделок, и знать ICP и типовые возражения. Первые продажники часто уходят меньше чем через год. Figma наняла первого продажника примерно при 40 сотрудниках и $2M ARR. (4) YC, Gustaf Alströmer (первичный источник): основатель продаёт сам. Воронка: список в Google Sheets → письмо → демо → цена → закрытие → онбординг. Количество касаний считается назад от цели, конверсии записываются. Бесплатных триалов в B2B не давать — вместо них возврат денег или возможность выйти. Первые клиенты — самые лёгкие. Реферальная программа Airbnb не дала первых 2000 клиентов. (5) Lenny Rachitsky (05.09.2023 и 07.07.2020): первые 10 клиентов B2B-компаний почти всегда приходили из ближнего круга — личная сеть, холодный персональный аутрич, сети инвесторов, сообщества, реже пресса. Примеры: Retool (Crunchbase → CTO/VP Ops → DoorDash, Brex), Zip (LinkedIn, первая сделка около $7K), Vanta (Bookface), Gusto (батч YC + местный малый бизнес), Slack (6–10 компаний друзей), Stripe (сарафан). (6) Design partners: Common Paper советует договориться о ритме встреч и о будущей цене, а в заданной точке (например, публичном запуске) переводить партнёра в обычные клиенты. Тезис «бесплатные пилоты — ловушка» — пересказанный пост Will Lawrence (YC S23), его поддерживает первичное «if you don't charge your customers, they are not a customer» у YC. (7) Casado (a16z, 2019): bottom-up-рост, поверх него продажи. Цифра 70% относится к одной проблеме open source-компаний, а не ко всем. Чего источники НЕ подтверждают: «10–20 сделок» у First Round, «45 минут / 5 рабочих дней / символическая оплата» у Common Paper, «3 метрики и 2–4 часа в неделю» как консенсус. Ограничение для Recall: примеры взяты из B2B с чеками в тысячи долларов. По Janz, при годовом чеке порядка $100–1000 холодные звонки обычно не окупаются как масштабируемый канал. Поэтому личный обзвон — способ научиться продавать первым десяткам, а рост потом должен идти через дешёвые каналы (рекомендации, входящие)."
+}

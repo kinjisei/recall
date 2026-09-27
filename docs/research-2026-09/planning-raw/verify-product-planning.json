@@ -1,0 +1,159 @@
+{
+ "checked": [
+  {
+   "claim": "Shape Up: автор Ryan Singer, предисловие Jason Fried, книга вышла в 2019; цикл 6 недель; appetite — бюджет времени вместо оценки; small batch — проекты на 1–2 недели в одном цикле, big batch — один проект на весь цикл.",
+   "status": "confirmed",
+   "note": "Глоссарий книги: appetite — «The amount of time we want to spend on a project, as opposed to an estimate»; small batch — «A set of 1-2 week projects… by the end of a six week cycle»; big batch — «One project that occupies a team for a whole cycle». Год 2019 на самой странице книги не указан, его подтверждает страница подкаста 37signals (https://37signals.com/podcast/shape-up/).",
+   "source_url": "https://basecamp.com/shapeup"
+  },
+  {
+   "claim": "Между циклами идёт cool-down на 2 недели; betting table собирается во время cool-down; единого бэклога нет, важные идеи возвращаются сами.",
+   "status": "confirmed",
+   "note": "Глава 7: «Backlogs are a big weight we don't need to carry», «Really important ideas will come back to you». Есть оговорка, которую коллега не упомянул: общего бэклога нет, но отделы ведут собственные списки (поддержка, продукт, баги у программистов). Эти списки не идут прямо на стол ставок, идеи всплывают из разговоров между отделами.",
+   "source_url": "https://basecamp.com/shapeup/2.1-chapter-07"
+  },
+  {
+   "claim": "Артефакты Shape Up: pitch (проблема, appetite, решение, rabbit holes, no-gos) и hill chart, где прогресс показан от «неизвестного» к «сделанному».",
+   "status": "confirmed",
+   "note": "В pitch пять частей: Problem, Appetite, Solution, Rabbit Holes, No Gos. Hill chart — «A diagram showing the status of work on a spectrum from unknown to known to done».",
+   "source_url": "https://basecamp.com/shapeup"
+  },
+  {
+   "claim": "В книге есть приложение «Adjust to Your Size» (от команд, «достаточно малых, чтобы работать без формальностей», до команд, «достаточно больших, чтобы специализироваться»); метод возник как ответ на вопрос, как Basecamp успевает так много маленьким штатом.",
+   "status": "confirmed",
+   "note": "Appendix 2, разделы «Small enough to wing it» и «Big enough to specialize». Вопрос «How we get so much done so quickly… with such a small team» стоит в предисловии Джейсона Фрайда, а не в приложении. Главное из приложения коллега не вынес: команде из 2–3 человек, по тексту, не нужны формальные 6-недельные циклы, cool-down и betting table. Совет такой: «Set an appetite, shape what to do next, build it, then shape the next thing», длина ставки — «maybe two weeks here, three weeks there».",
+   "source_url": "https://basecamp.com/shapeup/4.1-appendix-02"
+  },
+  {
+   "claim": "OKR придумал Энди Гроув в Intel (iMBO), развив MBO Друкера. Отличия от MBO: цикл квартальный, а не годовой, и нет связи с оплатой труда. Джон Дорр принёс метод основателям Google в 1999.",
+   "status": "confirmed",
+   "note": "Цитаты whatmatters: «quarterly», «divorced from compensation», Doerr → Google 1999. Google re:Work тоже подтверждает: «OKRs are not synonymous with employee evaluations».",
+   "source_url": "https://www.whatmatters.com/faqs/okr-meaning-definition-example"
+  },
+  {
+   "claim": "Структура OKR: objective — качественная и вдохновляющая цель, key results (обычно 3–5 на objective) — измеримые и привязанные к сроку.",
+   "status": "confirmed",
+   "note": "whatmatters: objective — «significant, concrete, action oriented, and (ideally) inspirational», KR — «specific, time-bound, and aggressive yet realistic», 3–5 KR на objective. Цифры Google re:Work немного другие: «three to five objectives with about three key results for each».",
+   "source_url": "https://www.whatmatters.com/faqs/okr-meaning-definition-example"
+  },
+  {
+   "claim": "Ритм OKR: квартальный цикл, промежуточные check-in и итоговая оценка в конце. whatmatters учит ритуалам CFR (Conversations, Feedback, Recognition).",
+   "status": "confirmed",
+   "note": "Цитированная страница get-started только называет урок про CFR. Прямое подтверждение — статья whatmatters (автор Sam Prince): ревью не реже раза в неделю, формальная оценка в конце цикла, «typically quarterly», CFR проходят на еженедельных 1:1. Шкала Google 0–1.0, «sweet spot… 60% – 70%» (re:Work).",
+   "source_url": "https://www.whatmatters.com/faqs/weekly-okr-grading-check-in"
+  },
+  {
+   "claim": "Роадмап Now/Next/Later придумали Джанна Бастоу и Саймон Каст (ProdPad) в 2012 году.",
+   "status": "confirmed",
+   "note": "Так говорит сама ProdPad («created… in 2012 while building ProdPad»), то есть это заявление компании об её основателях. Страница обновлена 29.06.2026.",
+   "source_url": "https://www.prodpad.com/blog/now-next-later-roadmap/"
+  },
+  {
+   "claim": "Now — подтверждённая работа в процессе, Next — проблемы в исследовании, Later — стратегические направления без формы. Вместо дат — горизонты уверенности.",
+   "status": "confirmed",
+   "note": "Now: «validated Initiatives… the problem is well understood and the focus has shifted to the solution». Later: «Strategic problem areas… not yet shaped». Работа организована по «confidence horizons» вместо дат.",
+   "source_url": "https://www.prodpad.com/blog/now-next-later-roadmap/"
+  },
+  {
+   "claim": "Working Backwards в Amazon идёт примерно с 2004 года; процесс описали бывшие сотрудники Колин Брайар и Билл Карр.",
+   "status": "confirmed",
+   "note": "Amazon Staff: «Most of Amazon's major products and initiatives since 2004…», «Colin was in his tenure as Jeff's shadow when the Working Backwards process was launched». Дата публикации статьи не указана.",
+   "source_url": "https://www.aboutamazon.com/news/workplace/an-insider-look-at-amazons-culture-and-processes"
+  },
+  {
+   "claim": "PR/FAQ: макет пресс-релиза (до страницы) и FAQ (внешние и внутренние вопросы, до 5 страниц). Пишется до разработки; если идея не проходит, её переделывают или откладывают.",
+   "status": "confirmed",
+   "note": "На workingbackwards.com нет длины документов: там только внешние и внутренние FAQ и пять исходов для неодобренной идеи. Длину даёт aboutamazon: «The press release… always less than one page. The FAQ should be five pages or less». Нижней границы в «2 страницы» в первоисточнике нет.",
+   "source_url": "https://www.aboutamazon.com/news/workplace/an-insider-look-at-amazons-culture-and-processes"
+  },
+  {
+   "claim": "Narrative meeting: сначала около 20 минут молчаливого чтения, потом обсуждение; документ до ~6 страниц, встреча около часа.",
+   "status": "confirmed",
+   "note": "В указанном источнике (koji.so, вторичный) этого НЕТ. «About 20 minutes» тишины — слова Брайара и Карра в подкасте a16z от 07.02.2021. «Six-page memos» и чтение в начале встречи («study hall») — письмо Безоса акционерам за 2017 год. Встреча на час — aboutamazon.",
+   "source_url": "https://a16z.com/podcast/amazon-narratives-memos-working-backwards-from-release-more/"
+  },
+  {
+   "claim": "RICE описал Sean McBride (продакт-менеджер Intercom), чтобы бороться с предвзятостью: «любимые» идеи вместо идей с широким охватом, недооценка трудозатрат, неучтённая уверенность.",
+   "status": "confirmed",
+   "note": "Авторство подтверждено. Роль PM на самой странице не указана, её называют вторичные источники. Мотив пересказан неточно: в статье четыре искажения — pet ideas вместо broad reach, «clever ideas» вместо целей, новые идеи вместо тех, в которых уверены, недооценка усилий. Утверждения «уверенность вообще не учитывалась» в тексте нет.",
+   "source_url": "https://www.intercom.com/blog/rice-simple-prioritization-for-product-managers/"
+  },
+  {
+   "claim": "Статья про RICE опубликована 5 января 2018 года.",
+   "status": "unverified",
+   "note": "На странице Intercom стоит 05.01.2018, но ряд вторичных источников называет оригиналом публикацию в Inside Intercom 2016 года. Архив проверить не удалось. Надёжно одно: не позже января 2018.",
+   "source_url": "https://www.intercom.com/blog/rice-simple-prioritization-for-product-managers/"
+  },
+  {
+   "claim": "Формула RICE = (Reach × Impact × Confidence) / Effort. Impact 3/2/1/0.5/0.25, Confidence 100/80/50%, Effort в человеко-месяцах целыми числами.",
+   "status": "confirmed",
+   "note": "Есть уточнение: для проектов «well under a month» Effort можно ставить 0.5. Ниже 50% уверенности — «total moonshot».",
+   "source_url": "https://www.intercom.com/blog/rice-simple-prioritization-for-product-managers/"
+  },
+  {
+   "claim": "ICE (Impact × Confidence × Ease) приписывают Sean Ellis.",
+   "status": "confirmed",
+   "note": "Это общепринятая атрибуция во вторичных источниках: airfocus («widely credited»), Lenny's Newsletter, Itamar Gilad. Прямого текста самого Эллиса о происхождении метода не нашёл, в интервью Lenny он об этом не говорит. Каждый множитель оценивается по шкале 1–10.",
+   "source_url": "https://airfocus.com/glossary/what-is-the-ice-scoring-model/"
+  },
+  {
+   "claim": "ICE появился для экспериментов роста в LogMeIn и Dropbox.",
+   "status": "unverified",
+   "note": "В указанной странице airfocus про LogMeIn и Dropbox нет ни слова. Эта деталь встречается только в маркетинговых блогах без ссылок. Итамар Гилад пишет лишь, что Эллис «помогал расти DropBox и Eventbrite».",
+   "source_url": "https://airfocus.com/glossary/what-is-the-ice-scoring-model/"
+  },
+  {
+   "claim": "Linear Method начинается с «lost art» качественного софта и делится на Direction и Building.",
+   "status": "confirmed",
+   "note": "«There is a lost art of building true quality software». В Direction: Set the product direction, Set useful goals, Prioritize enablers and blockers, Scope projects down. В Building: Generate momentum, Write issues not user stories, Manage design projects, Build with users, Launch and keep launching, Build in public.",
+   "source_url": "https://linear.app/method"
+  },
+  {
+   "claim": "По интервью с Head of Product Linear Нэн Ю (Lenny's Newsletter, 26.09.2023): PM нет, есть один Head of Product; команды собираются под проект и потом распускаются.",
+   "status": "refuted",
+   "note": "Автор цитат указан неверно. В статье говорит сооснователь и CEO Карри Сааринен (Karri Saarinen), а Нэн Ю только упоминается как единственный PM / Head of Product. Суть верна: «we expect the project team to be the PM», команды временные, обычно «one designer and two engineers», после проекта «they disperse». Дата 26.09.2023 верна.",
+   "source_url": "https://www.lennysnewsletter.com/p/how-linear-builds-product"
+  },
+  {
+   "claim": "Linear не использует OKR и метрики-цели, ставит тематические цели («Be the default tool for startups»). Причина — B2B-инструмент долго внедряется. Решения по «вкусу», без A/B-тестов.",
+   "status": "confirmed",
+   "note": "Слова Сааринена: «For a B2B tool like ours that takes some time for a company to adopt… setting specific metrics goals… can lead you astray», «We don't do A/B tests». Важная поправка: метрики-цели у Linear всё же есть — «we do have a North Star company-level metric goal». Метрик нет на уровне продукта и проектов.",
+   "source_url": "https://www.lennysnewsletter.com/p/how-linear-builds-product"
+  },
+  {
+   "claim": "Горизонт Linear: стратегия на 12 месяцев, подробный план на 2 квартала, следующее полугодие намечено эскизом; еженедельные апдейты проектов в Slack.",
+   "status": "confirmed",
+   "note": "«we try to plan out in detail for two quarters, then sketch out the next half, and leave a pretty extensive backlog», «Project teams do weekly updates». Слов «вместо статус-митингов» в статье не нашёл.",
+   "source_url": "https://www.lennysnewsletter.com/p/how-linear-builds-product"
+  },
+  {
+   "claim": "В инструменте Linear рекомендуемая длина цикла — 1–2 недели.",
+   "status": "refuted",
+   "note": "В документации Linear: «Cycles can last anywhere from 1-8 weeks», конкретной длины не рекомендуют. Linear Method пишет только «2-week cycles are the most common in software building». Длину внутренних циклов самой Linear статья Lenny не называет.",
+   "source_url": "https://linear.app/docs/use-cycles"
+  },
+  {
+   "claim": "(Итог коллеги) Shape Up и Linear Method оба демонстративно отказываются от бэклога и OKR-метрик.",
+   "status": "refuted",
+   "note": "Linear бэклог держит: в методе есть практика «Keep a manageable backlog», Сааринен говорит «leave a pretty extensive backlog». Есть и метрика-цель North Star на уровне компании. Совпадают они только в том, что не хранят всё подряд: «Important ones will resurface» у Linear и «Important ideas come back» у Basecamp.",
+   "source_url": "https://linear.app/method/introduction"
+  },
+  {
+   "claim": "(Итог коллеги) ICE — упрощённая версия RICE без Reach.",
+   "status": "refuted",
+   "note": "Это отдельные фреймворки разного происхождения: ICE приписывают Эллису, RICE — McBride из Intercom. ICE не выведен из RICE, и шкалы у них разные: у ICE 1–10 по каждому фактору, у RICE фиксированные множители и человеко-месяцы. Называть ICE «RICE минус Reach» исторически неверно.",
+   "source_url": "https://airfocus.com/glossary/what-is-the-ice-scoring-model/"
+  }
+ ],
+ "missed": [
+  "Коллега сослался на приложение Shape Up «Adjust to Your Size», но не вынес из него главное. Для команды из 2–3 человек оно прямо разрешает не держать 6-недельные циклы, cool-down и betting table. Совет там такой: задать appetite, продумать следующую задачу, сделать её, продумать следующую; длина ставки — «maybe two weeks here, three weeks there». Это первоисточник для ставок по 2–3 недели. Обоснование «потому что деплой раз в 2–3 часа» такой опоры не даёт (https://basecamp.com/shapeup/4.1-appendix-02).",
+  "Первоисточник Google по OKR (re:Work): 3–5 objectives, около 3 KR на каждую, шкала 0–1.0, нормальный результат — 60–70%, цели делятся на committed и aspirational, OKR не служат оценкой сотрудника. Если цель «13–15 платящих» считать aspirational, то 0.6–0.7 по правилам метода — нормальный исход, а не провал (https://rework.withgoogle.com/intl/en/guides/set-goals-with-okrs).",
+  "Первичные цифры Amazon: PR короче страницы, FAQ не больше 5 страниц, встреча на час (aboutamazon); около 20 минут тишины на чтение (Bryar и Carr, подкаст a16z, 07.02.2021). В письме Безоса за 2017 год сказано, что хорошая записка требует недели и больше, а не одного-двух дней (https://www.aboutamazon.com/news/company-news/2017-letter-to-shareholders). Поэтому PR-FAQ-lite «за 20 минут» — это уже упрощение метода, так его и надо подписывать.",
+  "Confidence Meter Итамара Гилада: уверенность в ICE выставляется по типу доказательства, а не на глаз. Шкала идёт от «self conviction» и чужих мнений через «anecdotal support» и оценки к «market data» и «customer evidence». Для продукта почти без данных, как Recall, это прямая замена «ICE на глаз» (https://itamargilad.com/the-tool-that-will-help-you-choose-better-product-ideas/).",
+  "Все разобранные методы планируют разработку и приоритеты фич в командах, у которых уже есть продукт и спрос. Этап «ноль оплат, нужно найти первых платящих» ни один из них не покрывает. Про него есть эссе Пола Грэма «Do Things that Don't Scale» (июль 2013): «the most common unscalable thing founders have to do at the start is to recruit users manually»; хотя бы один основатель должен тратить много времени на продажи; основатели избегают этого из-за «shyness and laziness», предпочитая писать код (https://paulgraham.com/ds.html). Отсюда вывод для плана: appetite нужно выделять и на продажи (звонки репетиторам), а не только на фичи.",
+  "У Linear один документ задаёт и направление, и практику «Keep a manageable backlog» («Important ones will resurface, low priority ones will never get fixed»). Это ближайший аналог «no backlog» Shape Up для одиночки: не удалять все списки, а держать их короткими (https://linear.app/method/introduction).",
+  "Нюанс Shape Up про «no backlog»: общего бэклога нет, но у отделов есть свои списки (поддержка, продукт, баги). Идея «никаких списков вообще» — упрощение.",
+  "Дата RICE спорная: на странице Intercom стоит 05.01.2018, вторичные источники называют оригиналом 2016 год. В итоговом документе лучше писать «не позже 2018»."
+ ],
+ "corrected_summary": "Что подтвердилось по первоисточникам.\n\nShape Up (Ryan Singer, Basecamp, 2019, предисловие Джейсона Фрайда). Время фиксировано, объём гибкий. Циклы по 6 недель, между ними cool-down на 2 недели. Вместо оценки задачи — appetite, то есть сколько времени готовы на неё потратить. Предложение оформляется как pitch из пяти частей: проблема, appetite, решение, rabbit holes, no-gos. На betting table во время cool-down решают, что берут в следующий цикл. Общего бэклога нет: «важные идеи вернутся сами», отделы ведут свои короткие списки. Прогресс показывает hill chart: от «неизвестно» к «известно» и «сделано». Для одиночки главное — приложение «Adjust to Your Size». Команде из 2–3 человек формальные циклы, cool-down и стол ставок не нужны: задай appetite, продумай, сделай, продумай следующее, ставки по 2–3 недели.\n\nOKR. Придумал Энди Гроув в Intel (iMBO, на основе MBO Друкера). Джон Дорр принёс метод в Google в 1999 году. Отличия от MBO: квартальный цикл и нет связи с оплатой труда. Objective — качественная вдохновляющая цель; на неё 3–5 измеримых KR с жёстким сроком (whatmatters) или около трёх (Google re:Work). Ревью не реже раза в неделю, оценка в конце квартала. Шкала Google 0–1.0; для амбициозных целей нормальный результат 60–70%.\n\nNow/Next/Later (Джанна Бастоу и Саймон Каст, ProdPad, 2012, по словам самой ProdPad). Вместо дат — горизонты уверенности. Now — подтверждённая проблема, работа над решением. Next — идёт исследование. Later — стратегические направления без формы.\n\nAmazon Working Backwards (с 2004 года, описали Колин Брайар и Билл Карр). До разработки пишется PR/FAQ: пресс-релиз короче страницы и FAQ не больше 5 страниц, с внешними и внутренними вопросами. На часовой встрече первые ~20 минут все молча читают, потом обсуждают. По Безосу, хорошая записка пишется неделю и больше.\n\nRICE (Sean McBride, Intercom; на странице стоит дата 05.01.2018, вторичные источники называют 2016). Формула (Reach × Impact × Confidence) / Effort. Impact — множители 3/2/1/0.5/0.25, Confidence — 100/80/50%, Effort — в человеко-месяцах, минимум 0.5. Метод создан против перекосов: любимые идеи, «умные» идеи мимо целей, увлечение новым, недооценка усилий.\n\nICE (Impact × Confidence × Ease, каждое 1–10) принято приписывать Sean Ellis. Происхождение «из LogMeIn и Dropbox» не подтверждено. Это самостоятельный метод, а не урезанный RICE. При малом количестве данных Confidence разумно ставить по типу доказательства, как в Confidence Meter Итамара Гилада, а не на глаз.\n\nLinear. Метод начинается словами о «lost art» качественного софта и делится на Direction и Building. Из интервью CEO Карри Сааринена (Lenny's Newsletter, 26.09.2023; говорит он, а не Нэн Ю): единственный PM — Head of Product, роль PM выполняет проектная команда (обычно дизайнер и два инженера), после проекта команда расходится. OKR нет, цели тематические («Be the default tool for startups»). Метрик на уровне продукта и проектов нет, потому что B2B-инструмент долго внедряется, но есть метрика North Star для всей компании. A/B-тестов нет, решают «вкус и мнение». Стратегия на 12 месяцев, детальный план на 2 квартала, следующее полугодие — эскизом, апдейты проектов раз в неделю. Бэклог у Linear ЕСТЬ, но «управляемый». Циклы в инструменте от 1 до 8 недель; по Linear Method, чаще всего бывают двухнедельные.\n\nЧто разумно взять одиночному основателю (только из подтверждённого):\n1. Ставки по 2–3 недели с заранее заданным appetite и без формальных ритуалов — так прямо советует приложение Shape Up для команд из 2–3 человек.\n2. Один документ Now/Next/Later вместо разрозненных планов, с уровнем уверенности вместо дат.\n3. Короткий список вместо растущего бэклога (Shape Up, Linear).\n4. Одна objective на квартал с 2–3 измеримыми KR, где 60–70% считается нормальным результатом для амбициозной цели.\n5. Письменная проверка ценности до кода в духе PR/FAQ; это облегчённая версия, у Amazon записку пишут неделю.\n6. ICE с уверенностью, выставленной по типу доказательства.\n\nВсе эти методы про разработку, а не про поиск первых покупателей. Для этапа «0 оплат» есть эссе Пола Грэма (2013): первых пользователей основатель набирает вручную и тратит на продажи много времени. Поэтому время на звонки нужно закладывать в план так же явно, как на фичи."
+}

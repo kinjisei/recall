@@ -1,0 +1,122 @@
+{
+ "checked": [
+  {
+   "claim": "Rob Walling, «Stair Step»: (1) простой продукт на чужой платформе с одним каналом трафика; (2) повторять, пока доход не заменит зарплату; (3) переход к отдельному SaaS. Коллега датирует книгой The SaaS Playbook (2023).",
+   "status": "confirmed",
+   "note": "Суть подтверждена первоисточником, эссе Walling от 26.03.2015: Step 1 — «a simple product, with a simple marketing plan — one that only requires a single traffic channel», Step 2 — «doubling-down on the model that worked in Step 1 and repeating it until you own your time», Step 3 — отдельный продукт с регулярной выручкой. Поправка к дате: метод описан задолго до книги 2023 года — в эссе 2015 года (по вторичным пересказам, название дано в 2013-м). У коллеги ссылка на пересказ с substack от 08.04.2026, а не на первоисточник.",
+   "source_url": "https://robwalling.com/essays/2015/03/26/the-stair-step-method-of-bootstrapping"
+  },
+  {
+   "claim": "Rob Walling, 14.10.2010: маркетинг начинают в день решения делать продукт; лендинг со сбором почты — 2–4 часа; это такая же базовая вещь, как система контроля версий.",
+   "status": "confirmed",
+   "note": "Цитаты на месте: «In 2-4 hours you can setup a landing page and begin collecting emails»; риторическое сравнение с компиляцией, source control и сохранением файлов; «consider marketing a fundamental building block of the process».",
+   "source_url": "https://robwalling.com/essays/2010/10/14/startup-marketing-part-6-why-you-should-start-marketing-the-day-you-start-coding"
+  },
+  {
+   "claim": "Rob Walling, «Start Small, Stay Small»: код — лишь около 30% работы для запуска успешного продукта.",
+   "status": "confirmed",
+   "note": "Цитата существует: «Writing code, where most of us are well-versed, is only about 30% of the work needed to launch a successful product». Но источник коллеги (обзор mtlynch.io) этой цифры НЕ содержит — проверено; цитату приводит другой обзор книги (justinspencer.us, 2019).",
+   "source_url": "https://www.justinspencer.us/2019/03/start-small-stay-small-by-rob-walling.html"
+  },
+  {
+   "claim": "Rob Walling о нишах: «The genius of niches is they are too small for large competitors»; лучше 100% ниши из 5000, чем 10% рынка из 50000; в нише дешевле маркетинг.",
+   "status": "confirmed",
+   "note": "Обе мысли — из «Start Small, Stay Small» (2010): цитата о нишах есть на Goodreads/quotefancy, сравнение 100%×5000 против 10%×50000 и довод, что малые ниши неинтересны крупным игрокам, — в обзоре mtlynch.io. Пояснение про то, что в нише все читают одни и те же площадки, в проверенных источниках не найдено — это додумано.",
+   "source_url": "https://mtlynch.io/book-reports/start-small-stay-small/"
+  },
+  {
+   "claim": "Rob Walling о запросах на фичи: не спрашивать «делать ли X», а показать топ-5 роадмапа и спросить, должен ли X вытеснить один из пунктов; Drip получал ~175 запросов в месяц при возможности сделать ~5 (коллега ссылается на эпизод 767).",
+   "status": "confirmed",
+   "note": "Суть подтверждена, но НЕ по ссылке коллеги: в эпизоде 767 (25.03.2025) этого нет, о приоритизации там говорит гость Brendan Fortune. Источник — интервью Walling у Arvid Kahl (22.11.2023): «here's the next five things we're building. We got a request for this. Do you think I should bump into these?»; «175 feature requests a month»; говорить «нет» «90 plus percent of those». Цифру «сделать можно ~5» в первоисточнике найти не удалось.",
+   "source_url": "https://thebootstrappedfounder.com/rob-walling-stair-stepping-into-saas-success/"
+  },
+  {
+   "claim": "Rob Walling, эпизод 170 (все пункты приписаны ему): год → кварталы → месяцы, фиксированный «Marketing Monday», еженедельная рефлексия, мастермайнд, «один проект за раз», обучение отдельно от работы.",
+   "status": "refuted",
+   "note": "Ошибка в авторстве. В эпизоде (04.02.2014) две ведущих — Rob Walling и Mike Taber. За Walling: годовой план с разбивкой по кварталам и месяцам, таймбоксинг в календаре, подотчётность через мастермайнд, различие «продуктивность или развлечение» и обучение «точно под задачу» (just-in-time learning — термин Jeremy из подкаста Internet Business Mastery, Rob его цитирует). За Mike Taber: «Marketing Monday» («dedicating all of your marketing tasks for one specific day of the week»), еженедельная рефлексия и «одно дело за раз». Сами практики в эпизоде есть.",
+   "source_url": "https://www.startupsfortherestofus.com/episodes/episode-170-12-strategies-for-avoiding-shiny-object-syndrome"
+  },
+  {
+   "claim": "Jon Yongfook (Bannerbear): 50% код / 50% маркетинг, чередовать по неделям; за 6 месяцев MRR с ~$800 до $6000+.",
+   "status": "confirmed",
+   "note": "Статья от октября 2022: «50:50 split», «One week of this, one week of that», рост «from around $800 MRR to over $6K MRR» за полгода, позже — $48K MRR. Маркетинговая неделя в его версии — это контент: твиты, пост в блоге, рассылка о сделанном за неделю разработки.",
+   "source_url": "https://www.bannerbear.com/blog/why-you-should-do-50-coding-and-50-marketing-as-a-solo-tech-founder/"
+  },
+  {
+   "claim": "Jon Yongfook: большинство соло-основателей держат 90/10 в пользу кода и упираются в потолок выручки (вывод «80–90%» в applicable_to_recall приписан ещё и Walling).",
+   "status": "refuted",
+   "note": "В статье нет ни «90/10», ни «90%», ни «потолка выручки». Процентное соотношение упомянуто одно — «80% coding and 20% marketing», и то как ошибочная мысль, которую автор опровергает. Его тезис качественный: «when a solo founder thinks they need to do more coding than marketing, it's because they don't want to do marketing». У Walling цифры «80–90% времени на код» тоже не найдено.",
+   "source_url": "https://www.bannerbear.com/blog/why-you-should-do-50-coding-and-50-marketing-as-a-solo-tech-founder/"
+  },
+  {
+   "claim": "Arvid Kahl: FeedbackPanda вместе с Даниэль Симпсон примерно за 18 месяцев до $55 000 MRR без сотрудников и инвестиций; продажа SureSwift Capital в июне 2019 за семизначную сумму; ежедневное общение с клиентами.",
+   "status": "refuted",
+   "note": "Срок неверен. Сам Kahl в посте на Indie Hackers (18.10.2019): «We built this EdTech SaaS to $55k MRR over two years, from idea to exit. We never took any funding nor did we ever hire an employee» — то есть около 24 месяцев, а не 18. Сумма сделки не раскрыта (у него — «life-changing amount of money»), «семизначная» — только оценки вторичных источников. Покупатель SureSwift и отсутствие сотрудников подтверждены. «Ежедневное общение с клиентами» есть только во вторичном пересказе (startupanatomy).",
+   "source_url": "https://www.indiehackers.com/product/feedbackpanda/we-sold-our-saas--LrUcYNuXXigVCyxMGRJ"
+  },
+  {
+   "claim": "Arvid Kahl (The Embedded Entrepreneur): сначала аудитория и её проблема, потом решение; цитата «кодинг — это как четвёртый шаг в построении бизнеса; первый — понять, кому ты служишь».",
+   "status": "refuted",
+   "note": "Как цитата не подтверждается: в указанном эпизоде (12.02.2021) нет слов «fourth», «coding» и «code». Суть есть, но другими словами — последовательность из четырёх шагов: «get your audience right, understand that critical problem, find a solution to the problem, then, build a product that implements that solution». Приводить в кавычках можно только эту формулировку.",
+   "source_url": "https://gettheaudience.com/e09-arvid-kahl-your-audience-is-already-out-there/"
+  },
+  {
+   "claim": "Pieter Levels, 01.03.2014: «12 стартапов за 12 месяцев» — против перфекционизма и страха запуска.",
+   "status": "confirmed",
+   "note": "Дата и обе причины подтверждены: недоделанность («There's always that extra part to arrange... that extra feature add») и страх («scared shitless to launch 'our baby'»).",
+   "source_url": "https://levels.io/12-startups-12-months"
+  },
+  {
+   "claim": "Pieter Levels: идеи — из собственных раздражений; список концепций в WorkFlowy/Trello, идеи вызревают месяцами; начинать одному, без партнёров; открыто вместо стелса.",
+   "status": "confirmed",
+   "note": "Пост от 24.01.2018: «what am I really annoyed with?», «concepts list», «Do it yourself. Don't work with other people», «Nobody's gonna steal your idea. It's all about execution».",
+   "source_url": "https://levels.io/startups"
+  },
+  {
+   "claim": "Levels: ~600 тыс. подписчиков за ~10 лет параллельно с 40+ продуктами; building in public как стратегия на годы.",
+   "status": "unverified",
+   "note": "«Over 40 startups» подтверждено описанием выпуска Lex Fridman #440 (20.08.2024). Цифры «600K» и «10 лет», как и трактовка «стратегия дистрибуции на 10 лет», есть только во вторичном блоге (softwareseni, 13.01.2026). Первоисточника по числу подписчиков нет.",
+   "source_url": "https://lexfridman.com/pieter-levels/"
+  },
+  {
+   "claim": "Tyler Tringas: calm company — прибыльная, устойчивая компания с намеренно небыстрым ростом, не зависящая от раундов; венчурный путь — лишь одна ниша предпринимательства.",
+   "status": "confirmed",
+   "note": "Подтверждено словами самого Tringas, но в другом источнике (интервью у Arvid Kahl, 20.03.2024): «a revenue focused, sustainable, slow but intentional growth company»; «venture capital and this whole mindset of building venture scale businesses is really actually like a niche subset of the ways to do entrepreneurship». В статье visible.vc, на которую ссылается коллега, его собственного определения нет. Слов «не зависящая от последующих раундов» у Tringas не найдено.",
+   "source_url": "https://thebootstrappedfounder.com/tyler-tringas-investing-in-bootstrapped-saas/"
+  },
+  {
+   "claim": "Justin Jackson (Marketing for Developers, курс Build Your Audience): аудитория до продукта, список подписчиков с начала работы, исследование спроса до кода.",
+   "status": "confirmed",
+   "note": "Подтверждено для курса «Build Your Audience» (страница 2014 года): «build your audience before you build your product», «build your launch list from 0 to 1,000», поиск паттернов, из которых получаются продукты. Книга «Marketing for Developers» на этой странице не упоминается — ссылаться на неё этой страницей нельзя.",
+   "source_url": "https://justinjackson.ca/audiencecourse/"
+  },
+  {
+   "claim": "Rob Walling о ловушке «build it and they will come» и вере, что можно «sell everything on Twitter».",
+   "status": "confirmed",
+   "note": "Эпизод 760 (25.02.2025): «The build it and they will come thing or just say, okay, so I built this product. Now how do I market it?»; критика убеждения, что можно «sell everything on Twitter and they don't have to do any hard work». Коллега поставил уверенность low, но это подтверждается.",
+   "source_url": "https://www.startupsfortherestofus.com/episodes/episode-760-white-labeling-founder-mindset-and-more-listener-questions-a-rob-solo-adventure"
+  },
+  {
+   "claim": "Rob Walling: white-label только при гарантированном объёме ($50–100 тыс. в год); отклонял 90%+ запросов на фичи.",
+   "status": "confirmed",
+   "note": "«I want a minimum commit of, you know, 50 grand upfront or 100 grand a year»; про 175 запросов в месяц: «you have to say no to 90 plus%». Интервью от 22.11.2023. Добавка «ориентируясь на собственное видение» — трактовка коллеги.",
+   "source_url": "https://thebootstrappedfounder.com/rob-walling-stair-stepping-into-saas-success/"
+  },
+  {
+   "claim": "Культура Indie Hackers: MRR публикуют открыто; пороги нарратива $1, $100, $1000, $10000, $100000.",
+   "status": "unverified",
+   "note": "Единственный источник — рекламный блог сервиса Monolit (01.04.2026), не Indie Hackers и не первоисточник. Сами пороги там есть, но это мнение вендора, а не установленная практика.",
+   "source_url": "https://monolit.sh/blog/indie-hacker-revenue-milestones-how-to-celebrate-share-publicly"
+  }
+ ],
+ "missed": [
+  "Самый близкий к Recall кейс упущен, хотя он у коллеги в источниках: FeedbackPanda — SaaS для онлайн-преподавателей английского (фрилансеров). Kahl в эпизоде 492 Startups for the Rest of Us (14.04.2020): весь маркетинг шёл в Facebook-группах и Instagram-сообществах учителей («It boiled down to a number of comments on some Facebook posts»). Цены: $5 → $10 → $15 в месяц. Реферальную систему запустили вместе с повышением цены: приглашённый и пригласивший сохраняли прежние $10 («referral system with this really, really high 30% coupon or something for life»). Это прямой ориентир для реферальной системы Recall. https://www.startupsfortherestofus.com/episodes/episode-492-from-zero-to-55k-mrr-to-exit-in-2-years-with-feedback-panda",
+  "Walling противоречит тезису «все источники сходятся: сначала аудитория». По его подсчёту, аудитория до старта была лишь у «4% or 4 and a half percent» компаний портфеля TinySeed. Для B2B SaaS он называет рабочими каналами «SEO, content, cold outreach, integrations, in person events, affiliate programs», а не личный бренд. Это поддерживает выбранный владельцем холодный обзвон репетиторов, а подход Kahl/Jackson (аудитория прежде всего) остаётся спорным. Интервью от 22.11.2023: https://thebootstrappedfounder.com/rob-walling-stair-stepping-into-saas-success/",
+  "Paul Graham, «Do Things that Don't Scale» (июль 2013) — первоисточник о ручном привлечении первых пользователей: «The most common unscalable thing founders have to do at the start is to recruit users manually». Основатели избегают этого из-за «shyness and laziness. They'd rather sit at home writing code than go out and talk to a bunch of strangers». Точнее всего описывает перекос Recall (319 коммитов, 0 оплат) и прямо обосновывает обзвон. https://paulgraham.com/ds.html",
+  "Реалистичные ожидания по темпу. Gail Goodman (Constant Contact), доклад «The Long, Slow SaaS Ramp of Death» на Business of Software USA 2012: ранний рост SaaS долгий и неровный. Полезно при мягкой дате. https://businessofsoftware.org/2016/06/the-long-slow-saas-ramp-of-death-ama-video-gail-goodman-ama-building-a-saas-business/",
+  "В applicable_to_recall есть утверждения без опоры на источники: (а) что Recall «не прошёл Step 1» stair-step — это натяжка: Step 1 у Walling — дополнение к чужой платформе со встроенным поиском (Shopify, WordPress), а Recall уже самостоятельный продукт; (б) что Calm Company Fund «предостерегает от спешки ради даты» — о дедлайнах Tringas в проверенных источниках не говорит; (в) что «80–90% времени на код» — позиция Walling и Yongfook — не подтверждено.",
+  "Модель Yongfook «неделя кода / неделя маркетинга» построена на контенте (твиты, блог, рассылка о сделанном) для аудитории разработчиков. У Recall канал другой: личный обзвон репетиторов с OLX и Kaspi. Переносить стоит сам ритм, а не содержание маркетинговой недели.",
+  "Одна практика Walling из эпизода 170 упущена: таймбоксинг — заранее выделенные в календаре отрезки времени под разные задачи."
+ ],
+ "corrected_summary": "Что подтвердилось по первоисточникам.\n\nRob Walling:\n- Маркетинг начинают в день решения делать продукт, а не после кода. Лендинг со сбором почты занимает 2–4 часа (эссе от 14.10.2010).\n- Код — «only about 30% of the work needed to launch a successful product» («Start Small, Stay Small», 2010).\n- Узкая ниша слишком мала для крупных конкурентов: лучше 100% ниши из 5000 человек, чем 10% рынка из 50000.\n- Метод stair-step (эссе 2015 года): (1) простой продукт с одним каналом трафика; (2) повторять, пока не выкупишь своё время; (3) отдельный продукт с регулярной выручкой.\n- Запросы на фичи: не спрашивать «делать ли X», а показать ближайшие пять пунктов роадмапа и спросить, должен ли X вытеснить один из них. В Drip приходило 175 запросов в месяц, отказывать приходилось в 90%+ (интервью от 22.11.2023).\n- Ловушки «build it and they will come» и «продам всё в Twitter» (эпизод 760, 25.02.2025). White-label — только при гарантии «50 grand upfront or 100 grand a year».\n- Аудитория до старта была лишь у ~4–4,5% компаний TinySeed. Для B2B он называет каналы SEO, контент, холодные контакты, интеграции, офлайн-события и партнёрки.\n\nЭпизод 170 Startups for the Rest of Us (04.02.2014) делит практики между двумя ведущими:\n- Walling — годовой план с разбивкой по кварталам и месяцам, таймбоксинг, мастермайнд для подотчётности, различие «работа или потребление контента», обучение точно под задачу.\n- Mike Taber — «Marketing Monday» (один фиксированный день на весь маркетинг), еженедельная сверка с целями, одно главное дело за раз.\n\nJon Yongfook (Bannerbear, октябрь 2022): 50/50 код и маркетинг, чередование по неделям. За полгода MRR вырос с ~$800 до $6K+, позже до $48K. Главный тезис: соло-основатель, которому кажется, что нужно больше кода, чаще всего просто не хочет заниматься маркетингом. Цифры «90/10» у него нет.\n\nArvid Kahl:\n- FeedbackPanda — продукт для онлайн-преподавателей английского. Около двух лет от идеи до продажи, $55K MRR, без инвестиций и сотрудников. Продан SureSwift Capital в 2019 году, сумма не раскрыта.\n- Маркетинг — комментарии в Facebook-группах учителей. Цены росли $5 → $10 → $15. Реферальная программа запущена вместе с повышением цены: приглашённый и пригласивший сохраняли прежнюю цену (~30% скидки навсегда).\n- Порядок: аудитория → её проблема → решение → продукт. Цитата про «кодинг — четвёртый шаг» не подтверждена.\n\nPieter Levels:\n- «12 startups in 12 months» (01.03.2014) — против недоделанности и страха запуска.\n- Идеи — из собственных раздражений, хранятся в списке концепций. Начинать одному. Показывать открыто, без стелса (2018).\n- Запустил 40+ стартапов (Lex Fridman, 2024). Цифра «600 тыс. подписчиков за 10 лет» не подтверждена.\n\nTyler Tringas: calm company — «a revenue focused, sustainable, slow but intentional growth company». Венчурный путь — «a niche subset of the ways to do entrepreneurship» (20.03.2024).\n\nJustin Jackson (курс Build Your Audience, 2014): собирать аудиторию до продукта, список для запуска — «from 0 to 1,000».\n\nPaul Graham (июль 2013): первых пользователей набирают вручную. Основатели этого избегают из «застенчивости и лени» и предпочитают писать код.\n\nЧто из этого следует для Recall (выводы, не цитаты):\n- Нужен фиксированный ритм, в котором продажи не вытесняются кодом: день или неделя под обзвон.\n- План — один, с одним активным треком и еженедельной сверкой.\n- Приоритеты с двумя действующими преподавателями разбирать через выбор из короткого списка, а не вопросом «что доделать».\n- Реферальную систему строить по образцу FeedbackPanda: выгода обеим сторонам, в сообществе, где преподаватели и так общаются.\n- Холодный обзвон репетиторов согласуется с позицией Walling для B2B и с Graham.\n\nСпорные места и то, что не подтвердилось:\n- «Сначала аудитория» — позиция Kahl и Jackson, а не консенсус: Walling с ней спорит.\n- Пороги MRR для публичных историй взяты из рекламного блога.\n- Стоит убрать: «18 месяцев», «90/10», цитату про «четвёртый шаг» и приписывание Walling всех двенадцати практик."
+}

@@ -1,0 +1,187 @@
+{
+ "checked": [
+  {
+   "claim": "Спольски: переписывание с нуля — «худшая стратегическая ошибка, которую может совершить софтверная компания»; Netscape почти три года шла от 4.0 до 6.0 beta, и её доля рынка обвалилась.",
+   "status": "confirmed",
+   "note": "Дословно: «the single worst strategic mistake that any software company can make»; «nearly three years» между 4.0 и 6.0 beta; «their market share plummeted». Дата 06.04.2000.",
+   "source_url": "https://www.joelonsoftware.com/2000/04/06/things-you-should-never-do-part-i/"
+  },
+  {
+   "claim": "Спольски: старый код содержит фиксы багов, которые находили неделями реального использования; переписывание выбрасывает годы отладки.",
+   "status": "confirmed",
+   "note": "Дословно: «Each of these bugs took weeks of real-world usage before they were found… you are throwing away all that knowledge. All those collected bug fixes. Years of programming work.»",
+   "source_url": "https://www.joelonsoftware.com/2000/04/06/things-you-should-never-do-part-i/"
+  },
+  {
+   "claim": "Спольски: на время переписывания компания годами продаёт старую версию и не может сделать стратегический ход, конкуренты нагоняют.",
+   "status": "confirmed",
+   "note": "Дословно: «giving a gift of two or three years to your competitors… shipping an old version of the code for several years, completely unable to make any strategic changes».",
+   "source_url": "https://www.joelonsoftware.com/2000/04/06/things-you-should-never-do-part-i/"
+  },
+  {
+   "claim": "Спольски советует вместо переписывания точечные улучшения: аккуратно рефакторить архитектуру в существующем коде, ускорять медленные куски, чистить стиль.",
+   "status": "confirmed",
+   "note": "Архитектурные проблемы решаются «carefully, with our existing code base», стиль — «with a macro in Emacs, not by starting from scratch». Контекст статьи — 2000 год и большие коробочные продукты.",
+   "source_url": "https://www.joelonsoftware.com/2000/04/06/things-you-should-never-do-part-i/"
+  },
+  {
+   "claim": "Strangler Fig (Фаулер): новое строится рядом со старой системой, поведение переносится кусками, старая система постепенно отмирает; метафора — фиговые деревья-душители, увиденные в 2001 году.",
+   "status": "confirmed",
+   "note": "«During a vacation in the rain forests of Queensland in 2001, we saw some strangler figs.» Текущая версия статьи — переработка от 22.08.2024 (первая версия — 2004), поэтому ссылаться лучше на дату 2024.",
+   "source_url": "https://martinfowler.com/bliki/StranglerFigApplication.html"
+  },
+  {
+   "claim": "Четыре действия (Картрайт, Хорн, Льюис, на которых ссылается Фаулер): понять нужный результат, решить, как разбить задачу на части, успешно довести части до поставки, менять организацию, чтобы это шло постоянно.",
+   "status": "confirmed",
+   "note": "Дословно: «Understand the outcomes you want to achieve / Decide how to break the problem up into smaller parts / Successfully deliver the parts / Change the organization to allow this to happen on an ongoing basis».",
+   "source_url": "https://martinfowler.com/bliki/StranglerFigApplication.html"
+  },
+  {
+   "claim": "Фаулер: переходная архитектура выглядит как лишняя работа, но меньший риск и более ранняя отдача от постепенного подхода перевешивают эти затраты.",
+   "status": "confirmed",
+   "note": "Дословно: «While this may appear to be a waste, the reduced risk and earlier value from the gradual approach outweigh its costs.»",
+   "source_url": "https://martinfowler.com/bliki/StranglerFigApplication.html"
+  },
+  {
+   "claim": "Квадрант техдолга: разумный намеренный долг можно не возвращать, если «проценты» малы; безрассудный намеренный долг опасен, потому что недооценивают, где проходит design payoff line.",
+   "status": "confirmed",
+   "note": "Дата 14.10.2009. «may not be worth paying down if the interest payments are sufficiently small - such as if it were in a rarely touched part of the code-base»; «usually a reckless debt, because people underestimate where the DesignPayoffLine is» (Фаулер тут соглашается с Uncle Bob).",
+   "source_url": "https://martinfowler.com/bliki/TechnicalDebtQuadrant.html"
+  },
+  {
+   "claim": "«Is High Quality Software Worth the Cost?»: низкое качество кода заметно тормозит разработку уже через несколько недель, поэтому окно, где выгодно менять качество на скорость, очень короткое.",
+   "status": "confirmed",
+   "note": "Статья от 29.05.2019. «poor quality code significantly slows them down within a few weeks. So there's not much runway where the trade-off… applies.» Оговорка из исходной заметки DesignStaminaHypothesis (2007): это гипотеза, объективно не измеренная, а «weeks not months» — оценка самого Фаулера.",
+   "source_url": "https://martinfowler.com/articles/is-quality-worth-cost.html"
+  },
+  {
+   "claim": "Торнхилл и Борг (добавлено в статью Фаулера в 2024): в низкокачественном коде задачи решаются более чем вдвое дольше, дефектов в 15 раз больше.",
+   "status": "confirmed",
+   "note": "Пометка «added: 2024-01-29». Первоисточник — статья «Code Red», IEEE/ACM TechDebt 2022, 39 закрытых кодовых баз, в среднем +124% времени. Оговорка: авторы связаны с CodeScene, и качество мерили метрикой этого вендора (Code Health), так что исследование не независимое.",
+   "source_url": "https://arxiv.org/abs/2203.04374"
+  },
+  {
+   "claim": "Кент Бек, твит от 25.09.2012: «for each desired change, make the change easy (warning: this may be hard), then make the easy change».",
+   "status": "confirmed",
+   "note": "Текст и дата совпадают по x.com (статус 250733358307500032; дата следует и из самого ID). Фаулер независимо приписывает фразу Беку в статье «An example of preparatory refactoring» (05.01.2015). Надёжнее ссылаться на x.com или Фаулера, а не на зеркало Nitter.",
+   "source_url": "https://x.com/KentBeck/status/250733358307500032"
+  },
+  {
+   "claim": "Shopify (16.09.2020): монолит больше 2,8 млн строк Ruby, 500 тыс. коммитов, разработка как минимум с 2006 года; сотни разработчиков добавляют фичи параллельно с модуляризацией.",
+   "status": "confirmed",
+   "note": "«over 2.8 million lines of Ruby code and 500,000 commits», «since at least 2006», «hundreds of developers currently adding features», «feature development on the monolith is going on as fast as ever, many developers are making things more modular at the same time».",
+   "source_url": "https://shopify.engineering/shopify-monolith"
+  },
+  {
+   "claim": "Shopify выбрала модульный монолит, потому что распределённые сервисы «значительно повышают общую сложность»; сервисы выделяли только при явной причине (рендер витрины, хранилище карт).",
+   "status": "confirmed",
+   "note": "«increases the overall complexity considerably»; витрина — «read-only use case with very high throughput», карты — «sensitive data that shouldn't flow through other parts of the system».",
+   "source_url": "https://shopify.engineering/shopify-monolith"
+  },
+  {
+   "claim": "Shopify решила реструктурировать монолит по итогам опроса разработчиков; симптомы: каскад несвязанных падений тестов от безобидной правки, переплетённые домены, новичку нужно знать слишком много.",
+   "status": "confirmed",
+   "note": "Автор — Kirsten Westeinde, 21.02.2019. Уточнение: 2016 — год, когда проблема «стала очевидной», дата опроса в статье не названа. Решение принято по итогам опроса, команда собрана в начале 2017.",
+   "source_url": "https://shopify.engineering/deconstructing-monolith-designing-software-maximizes-developer-productivity"
+  },
+  {
+   "claim": "Componentization стартовал в начале 2017 силами небольшой выделенной команды; около 6000 классов разложили по доменам одним большим PR; прогресс отслеживали инструментом Wedge на основе CI.",
+   "status": "confirmed",
+   "note": "Уточнение: классы вручную размечали в таблице («massive spreadsheet… manually labeling»), а переносили «one big bang PR built by automated scripts». Размер команды не назван (только «small but mighty»). Позже Wedge (логирование графа вызовов, где «hard to separate the signal from the noise») заменили статическим Packwerk.",
+   "source_url": "https://shopify.engineering/deconstructing-monolith-designing-software-maximizes-developer-productivity"
+  },
+  {
+   "claim": "Shopify: перестраивать архитектуру нужно «как можно позже», потому что по ходу работы всё лучше понимаешь систему и домен.",
+   "status": "confirmed",
+   "note": "Дословно: «The best time to refactor and re-architect is as late as possible…». Дальше в тексте видно, что это прежде всего предостережение против проектирования микросервисов до того, как появилось понимание домена.",
+   "source_url": "https://shopify.engineering/deconstructing-monolith-designing-software-maximizes-developer-productivity"
+  },
+  {
+   "claim": "…и именно этот принцип позволил Shopify не тормозить продажи.",
+   "status": "unverified",
+   "note": "В статье нет ни слова о продажах, клиентах или влиянии на бизнес. Причинная связь — вывод коллеги, а не источника.",
+   "source_url": "https://shopify.engineering/deconstructing-monolith-designing-software-maximizes-developer-productivity"
+  },
+  {
+   "claim": "Stripe «Online migrations at scale»: 4 шага — двойная запись, перевод чтения, перевод записи, удаление старого; за раз меняли не больше нескольких сотен строк.",
+   "status": "confirmed",
+   "note": "Автор Jacqueline Xu, 02.02.2017. «We never attempted to change more than a few hundred lines of code at one time.» Кейс про миграцию МОДЕЛИ ДАННЫХ (подписки), а не про структуру кода.",
+   "source_url": "https://stripe.com/blog/online-migrations"
+  },
+  {
+   "claim": "Stripe проверяет эквивалентность старого и нового пути через GitHub Scientist и наращивает объём постепенно, следя за метриками.",
+   "status": "confirmed",
+   "note": "Scientist — для проверки путей ЧТЕНИЯ. Постепенно наращивали долю объектов, которые дублируются при двойной записи («slowly ramping up the percentage of objects that get duplicated… eye on operational metrics»), а не трафик на новый путь.",
+   "source_url": "https://stripe.com/blog/online-migrations"
+  },
+  {
+   "claim": "GitHub: монолит на Rails — почти 2 млн строк, больше 1000 инженеров, около 20 деплоев в день.",
+   "status": "confirmed",
+   "note": "Цифры взяты из вводного абзаца страницы-рубрики «Architecture & optimization» без даты, это не отдельная статья. Цифры вписывать с пометкой «на момент проверки 25.09.2026, дата снимка неизвестна».",
+   "source_url": "https://github.blog/engineering/architecture-optimization/"
+  },
+  {
+   "claim": "(там же) Сервисы у GitHub выделяются постепенно, поверх ежедневной поставки, а не остановленным проектом.",
+   "status": "unverified",
+   "note": "На этой странице ничего подобного нет: во вводном абзаце ни слова о выделении сервисов. По смыслу это подтверждает статья Sha Ma на InfoQ (следующий пункт), но ссылку нужно брать оттуда.",
+   "source_url": "https://github.blog/engineering/architecture-optimization/"
+  },
+  {
+   "claim": "GitHub: принцип «enablement, not replacement», сознательная гибридная архитектура, первыми из ключевых сервисов вынесены auth/authz, подход обкатывали на несложных фичах (вебхуки, подсветка синтаксиса).",
+   "status": "confirmed",
+   "note": "Поправка: это не «пересказ InfoQ», а статья самого Sha Ma (VP Engineering GitHub) от 28.07.2021 по его докладу на QCon Plus в ноябре 2020, то есть первоисточник. Дословно: «The goal for us is enablement and not replacement»; «we started with webhook deliveries and syntax highlighting»; «for the foreseeable future, we will be a hybrid monolith-microservices environment».",
+   "source_url": "https://www.infoq.com/articles/github-monolith-microservices/"
+  },
+  {
+   "claim": "Cagan/SVPG: постоянно отдавать ~20% мощности инженерии (30%+, если всё плохо) на инфраструктуру и рефакторинг по выбору инженеров, чтобы никогда не прийти к «надо остановиться и переписать».",
+   "status": "confirmed",
+   "note": "Статья от 29.03.2007, ей почти 20 лет; это мнение, основанное на опыте eBay («headroom»), а не исследование. «takes 20% of the capacity right off the top and gives this to engineering to spend as they see fit… to avoid ever having to… say 'we need to stop and rewrite'».",
+   "source_url": "https://www.svpg.com/engineering-wants-to-rewrite/"
+  },
+  {
+   "claim": "Cagan называет eBay «самым впечатляющим известным ему примером пересборки двигателя на лету».",
+   "status": "confirmed",
+   "note": "Уточнение: 1999 год для eBay — это кризис, когда компания была «far closer to collapsing than most people ever realized». Пример «engine mid-flight» — последующие переписывания, сделанные «well in advance of issues».",
+   "source_url": "https://www.svpg.com/engineering-wants-to-rewrite/"
+  },
+  {
+   "claim": "По Cagan, полное переписывание Friendster открыло дорогу MySpace, а Netscape тоже пострадала от полного переписывания.",
+   "status": "refuted",
+   "note": "Cagan пишет, что со всеми тремя (eBay, Friendster, Netscape) случилась СИТУАЦИЯ, когда инженеры требуют «остановиться и переписать», потому что код не держит нагрузку. Что Friendster сделала полное переписывание, у него не сказано. Про переписывание в Netscape писал Спольски, а не Cagan.",
+   "source_url": "https://www.svpg.com/engineering-wants-to-rewrite/"
+  },
+  {
+   "claim": "LinkedIn, Operation InVersion (2011): монолит Leo деплоился раз в две недели, были ночные аварии на выходных; Кевин Скотт остановил разработку новых фич на два месяца.",
+   "status": "confirmed",
+   "note": "Разбор Gene Kim от 13.11.2023. Независимый источник — Ashlee Vance, Bloomberg Businessweek, 10.04.2013. Остановка была через полгода после IPO, при сотнях инженеров.",
+   "source_url": "https://www.bloomberg.com/news/articles/2013-04-10/inside-operation-inversion-the-code-freeze-that-saved-linkedin"
+  },
+  {
+   "claim": "После InVersion LinkedIn перешёл на несколько релизов в день; сервисов стало больше: ~150 (2010) → 750+ (2015).",
+   "status": "confirmed",
+   "note": "У Gene Kim — «three times daily» и 150 → 750+. Важно: оба источника подают заморозку как УСПЕХ (заголовок Bloomberg: «the code freeze that saved LinkedIn»), а не только как цену отложенного долга. Поэтому вывод коллеги, что LinkedIn «подтверждает выбор strangler-метода», из источников не следует.",
+   "source_url": "https://itrevolution.com/articles/case-study-linkedins-2011-operation-inversion-through-the-lens-of-slowify-simplify-and-amplify/"
+  },
+  {
+   "claim": "Критика правила «20% на техдолг»: отдельный бэклог без связи с продуктом, ценность не объяснена бизнесу, 20% размазываются по многим инициативам без результата; альтернатива — вписывать техработу в общий роадмап с явной ценностью.",
+   "status": "confirmed",
+   "note": "Автор Anton Zaides, 06.08.2024, авторская рассылка (мнение и личный опыт, не исследование). Тезис, что техработа «первой режется под дедлайнами», дословно в тексте не найден — его убрать.",
+   "source_url": "https://www.manager.dev/newsletter/how-to-implement-20-for-tech-debt-"
+  }
+ ],
+ "missed": [
+  "Parallel Change / expand–migrate–contract (Danilo Sato, martinfowler.com, 13.05.2014): расширить интерфейс, чтобы он поддерживал и старую, и новую версию, постепенно перевести клиентов, потом удалить старое. Прямо касается эволюции схемы БД и удалённых API, выпускать можно на любой из трёх фаз. Для Recall это ровно правило «сначала schema.sql, потом push» при смене сигнатуры RPC: https://martinfowler.com/bliki/ParallelChange.html",
+  "Branch by Abstraction (Фаулер, 07.01.2014; термин ввёл Paul Hammant): крупную замену делают постепенно, а система собирается и выпускается всё время, пока замена идёт. Это способ менять большой кусок (например, общий lib-модуль) без долгой ветки: https://martinfowler.com/bliki/BranchByAbstraction.html",
+  "Правило GitHub из той же статьи Sha Ma: «From this point on, any new feature should be created as a microservice outside of the monolith». Это strangler-правило для НОВОГО кода: новое сразу пишется по новой структуре, старое переносится, когда его трогают: https://www.infoq.com/articles/github-monolith-microservices/",
+  "Shopify заменила Wedge на Packwerk (Maple Ong, 23.09.2020): статическая проверка границ между пакетами в CI, которая не пускает в main новые нарушения, а существующие записывает списком «к исправлению». Так границы вводятся постепенно, без большой переделки. Аналог для JS/TS — dependency-cruiser: проверяет зависимости по вашим правилам и работает в CI. Это вписывается в правило Recall «проверка должна уметь краснеть»: https://shopify.engineering/enforcing-modularity-rails-apps-packwerk , https://github.com/sverweij/dependency-cruiser",
+  "Пост Shopify 2020 предупреждает: «all large architecture changes end up in an incomplete state… the temporary incomplete state will at least last longer than you expect». Незавершённое состояние надо планировать как норму, а критерий «готово» ставить на каждый заход, а не на всю перестройку: https://shopify.engineering/shopify-monolith",
+  "Как выбрать ПЕРВУЮ цель без опроса команды: метод горячих точек Адама Торнхилла («Your Code as a Crime Scene», 2-е изд., февраль 2024). По истории коммитов ищут файлы, которые меняются часто и при этом сложны; большую часть кода трогают редко, и долг там можно терпеть. У Recall есть git log на 319+ коммитов, это замена опросу Shopify для одного владельца: https://pragprog.com/titles/atcrime2/your-code-as-a-crime-scene-second-edition/",
+  "Kent Beck, «Tidy First?» и заметка «Structure & Behavior» (09.02.2021): структурные изменения обратимы и отличаются от изменений поведения, проверять их можно легче. По обзору книги, их держат в отдельных PR или хотя бы в отдельных коммитах. Для работы с AI-ассистентом и деплоя раз в 2–3 часа это готовое правило разбивки на заходы: https://newsletter.kentbeck.com/p/structure-and-behavior , https://henrikwarne.com/2024/01/10/tidy-first/",
+  "MonolithFirst (Фаулер, 03.06.2015): «Almost all the successful microservice stories have started with a monolith that got too big and was broken up». Под «нормальной архитектурой» на этом масштабе не стоит понимать дробление на сервисы: https://martinfowler.com/bliki/MonolithFirst.html",
+  "Design Stamina Hypothesis (Фаулер, 20.06.2007) прямо называет себя гипотезой без объективного измерения и допускает жертвовать дизайном ради скорости, если объём ниже design payoff line. Recall с ~36 тыс. строк явно выше неё, но саму цифру «недели» надо подавать как мнение Фаулера, а не как факт: https://martinfowler.com/bliki/DesignStaminaHypothesis.html",
+  "LinkedIn — контрпример к «никогда не останавливаться»: ограниченная по времени заморозка ФИЧ (прод при этом работал) подаётся как успех. Вывод для Recall: короткое окно без новых фич, привязанное к конкретной боли, допустимо, если деплои исправлений и продажи продолжаются. Масштаб, правда, несопоставим: сотни инженеров, компания после IPO.",
+  "Ни один из проверенных источников не связывает перестройку архитектуры с ранней выручкой. У Recall 0 оплат, и главный риск бизнеса — продажи, а не код. Перестройка оправдана, только если привязана к конкретной правке, которую ждут платящие или почти платящие клиенты (по Беку: «make the change easy» ради КОНКРЕТНОЙ нужной правки). Это вывод, а не цитата: источника на стадию «14 аккаунтов, один основатель» нет.",
+  "Аналогия «85 смоуков = Stripe Scientist» натянута. Scientist сравнивает старый и новый путь на живом трафике, а смоуки — проверки при разработке. Ближе всего к Scientist у Recall check-schema-equal.mjs: он выполняет обе версии схемы и сравнивает слепки каталога."
+ ],
+ "corrected_summary": "Подтверждено по первоисточникам:\n(1) Полное переписывание рабочего продукта — стратегически опасный ход. Спольски (06.04.2000) называет его «худшей стратегической ошибкой»: у Netscape почти три года без крупного релиза, доля рынка обвалилась, выброшены годы накопленных фиксов багов. Вместо этого он советует аккуратно рефакторить внутри существующего кода.\n(2) Альтернатива — Strangler Fig (Фаулер, редакция 22.08.2024). Новое строится рядом со старым, поведение переносится частями. Четыре действия: понять нужный результат, разбить на части, довести каждую часть до поставки, менять процесс так, чтобы это шло постоянно. Переходная архитектура выглядит лишней работой, но окупается меньшим риском и более ранней отдачей.\n(3) Когда «пора». Фаулер: низкое качество тормозит «в пределах нескольких недель», окно выгодного обмена качества на скорость короткое, но это его гипотеза, а не измерение. Исследование Торнхилла и Борга (TechDebt 2022, 39 баз, авторы связаны с CodeScene): в плохом коде задачи решаются более чем вдвое дольше, дефектов в 15 раз больше. Shopify (Kirsten Westeinde, 21.02.2019) увидела симптомы через опрос разработчиков: каскад несвязанных падений тестов от безобидной правки, переплетённые домены, новичку надо знать слишком много. Её принцип — перестраивать «как можно позже», в контексте «не проектировать сервисы до понимания домена». Что это помогло не тормозить продажи, в источнике не сказано.\n(4) Как делают по частям, не останавливая поставку. Shopify (16.09.2020): монолит на 2,8 млн строк, сотни разработчиков пишут фичи параллельно с модуляризацией. Модульный монолит вместо микросервисов, потому что сервисы «значительно повышают сложность». Классы размечали вручную в таблице, переносили одним PR через скрипты. Границы сначала следил Wedge, потом статический Packwerk в CI. Автор поста предупреждает, что незавершённое состояние длится дольше, чем ожидаешь. Stripe (Jacqueline Xu, 02.02.2017): миграция данных в 4 шага (двойная запись → чтение → запись → удаление), за раз не больше нескольких сотен строк; чтение сверяют через Scientist, долю дублируемых объектов наращивают постепенно по метрикам. GitHub (Sha Ma, VP Engineering, InfoQ 28.07.2021): «enablement and not replacement», гибридная архитектура надолго, новые фичи — сразу вне монолита, подход обкатан на простых фичах (вебхуки, подсветка синтаксиса). Кент Бек (твит 25.09.2012): «make the change easy (warning: this may be hard), then make the easy change». Позже в «Tidy First?» он предлагает отделять структурные изменения от изменений поведения. Для схемы и API есть Parallel Change (expand → migrate → contract) и Branch by Abstraction: систему можно выпускать на каждом шаге.\n(5) Бюджет на долг. Cagan (SVPG, 29.03.2007, опыт eBay): постоянно отдавать ~20% мощности (30%+ в плохом состоянии) инженерам на их выбор, чтобы не дойти до «стоп, переписываем». Это мнение почти двадцатилетней давности. Критика (Anton Zaides, 06.08.2024, мнение): фиксированный процент отрывается от продукта и размазывается; лучше вписывать техработу в общий роадмап с явной ценностью.\n(6) LinkedIn 2011 (Bloomberg 10.04.2013; Gene Kim 13.11.2023) — контрпример «никогда не останавливаться». Двухмесячная заморозка фич подаётся как успех: от деплоя раз в две недели к трём в день. Но это сотни инженеров после IPO.\nУ Cagan eBay/Friendster/Netscape — примеры КРИЗИСА «надо переписывать», а не доказательство, что переписывание погубило Friendster.\n\nЧто из этого следует для Recall (один владелец + AI, ~36 тыс. строк, React 19 + Supabase, 0 оплат):\n— не переписывать и не дробить на сервисы (MonolithFirst, Shopify, GitHub);\n— сначала назвать конкретную боль. У владельца её пока нет — это открытый вопрос. Замена опросу Shopify — горячие точки по git log (часто меняются × сложны);\n— каждый заход привязывать к конкретной нужной правке (Бек), держать структурные коммиты отдельно от поведенческих, выпускать на каждом шаге (Parallel Change для RPC и схемы);\n— границы закреплять проверкой, которая краснеет, со списком существующих нарушений как «к исправлению» (аналог Packwerk — dependency-cruiser), а незавершённое состояние считать нормой.\nПроцент времени «на долг» из источников для команд напрямую не переносится. Ни один источник не описывает стадию «14 аккаунтов, один основатель», и не связывает перестройку с ранней выручкой."
+}
