@@ -10,7 +10,7 @@
 // выдуманных отзывов (соц. доказательства появятся после пилота).
 // ============================================================================
 
-import { SUPPORT_SLA, supportMailto } from '../../lib/contacts'
+import { SUPPORT_SLA, supportMailto } from '../../shared/lib/contacts'
 import { BrandLogo } from '../../components/Brand'
 import { AppLink } from '../../components/AppLink'
 import {

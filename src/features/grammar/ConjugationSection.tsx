@@ -13,7 +13,7 @@ import { RoundResult, RoundProgress } from '../../components/RoundResult'
 import type { ReviewItem } from '../../components/RoundReview'
 import { speak } from '../../lib/speech'
 import { logActivity } from '../../lib/activity'
-import { useUrlState, useUrlStates } from '../../lib/useUrlState'
+import { useUrlState, useUrlStates } from '../../shared/lib/useUrlState'
 import { getVerbMistakes, addVerbMistake, removeVerbMistake } from '../../lib/verbMistakes'
 import { RowsSkeleton } from '../../components/Loading'
 import { Reveal } from '../../components/Reveal'
@@ -41,7 +41,7 @@ const TAB_KEYS = ['vm', 'tense']
 export function ConjugationSection() {
   const [data, setData] = useState<Data | null>(null)
   // Вкладка — в адресе: без этого «назад» из тренажёра выбрасывал из
-  // «Грамматики» целиком, а F5 возвращал в справочник (см. lib/useUrlState).
+  // «Грамматики» целиком, а F5 возвращал в справочник (см. shared/lib/useUrlState).
   const [nav, setNav] = useUrlStates(TAB_KEYS)
   const tab: Tab = nav.vm === 'trainer' ? 'trainer' : 'reference'
   const setTab = (t: Tab) => setNav({ vm: t === 'trainer' ? 'trainer' : null, tense: null })

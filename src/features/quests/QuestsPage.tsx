@@ -19,8 +19,8 @@ import { LoadError } from '../../components/LoadError'
 import { celebrate } from '../../components/Confetti'
 import { chat } from '../../lib/gemini'
 import { logActivity } from '../../lib/activity'
-import { useAsyncData } from '../../lib/useAsyncData'
-import { useUrlState } from '../../lib/useUrlState'
+import { useAsyncData } from '../../shared/lib/useAsyncData'
+import { useUrlState } from '../../shared/lib/useUrlState'
 import {
   listMyQuests,
   questCorrectAnswer,
@@ -74,7 +74,7 @@ export function QuestsPage() {
   const navigate = useNavigate()
   // Открытый чат — в адресе (?q=<id>), а не в useState: иначе «назад» из квеста
   // уводил на Главную мимо списка, а свайп-назад в PWA — единственный выход.
-  // Правило пуш/replace — в lib/useUrlState.ts.
+  // Правило пуш/replace — в shared/lib/useUrlState.ts.
   const [questId, setQuestId] = useUrlState('q')
   const { data: quests, error, loading, reload } = useAsyncData<GrammarQuest[]>(
     () => listMyQuests(),

@@ -17,7 +17,7 @@ import type { ReviewItem } from '../../components/RoundReview'
 import { speak } from '../../lib/speech'
 import { logActivity } from '../../lib/activity'
 import { shuffle, sample } from '../../lib/random'
-import { useUrlState } from '../../lib/useUrlState'
+import { useUrlState } from '../../shared/lib/useUrlState'
 import type { PhrasalEntry, PhrasalItem } from '../../data/english/phrasal'
 import { RowsSkeleton } from '../../components/Loading'
 import { Reveal } from '../../components/Reveal'
@@ -30,7 +30,7 @@ export function PhrasalVerbsSection() {
   const [entries, setEntries] = useState<PhrasalEntry[] | null>(null)
   // Режим — в адресе (?vm=trainer), как и у неправильных глаголов: «назад» из
   // тренажёра возвращает в справочник. Ход раунда адресуемым не делаем — после
-  // F5 раунд начинается заново (правило в lib/useUrlState).
+  // F5 раунд начинается заново (правило в shared/lib/useUrlState).
   const [vm, setVm] = useUrlState('vm', (v) => v === 'trainer')
   const mode: Mode = vm === 'trainer' ? 'trainer' : 'reference'
   const setMode = (m: Mode) => setVm(m === 'trainer' ? 'trainer' : null)

@@ -5,7 +5,7 @@
 // После изменения профиля (экран «Настройки») вызвать invalidateProfile().
 // ============================================================================
 import { supabase } from './supabase'
-import { readRaw, writeRaw } from './storage'
+import { readRaw, writeRaw } from '../shared/lib/storage'
 import type { Profile } from '../types'
 
 let cache: { userId: string; promise: Promise<Profile | null> } | null = null

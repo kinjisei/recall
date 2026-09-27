@@ -42,7 +42,7 @@ import {
   tokenize,
   wordForms,
 } from '../src/lib/homeworkRules.ts'
-import { plural } from '../src/lib/text.ts'
+import { plural } from '../src/shared/lib/plural.ts'
 
 let pass = 0
 let fail = 0

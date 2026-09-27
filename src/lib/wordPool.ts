@@ -12,7 +12,7 @@ import { supabase, currentUserId } from './supabase'
 import { getDeckIds } from './cards'
 import { getEsLevel } from './esLevel'
 import { getProfile } from './profile'
-import { readJson, writeJson } from './storage'
+import { readJson, writeJson } from '../shared/lib/storage'
 import type { AppLang, Card, ReviewState } from '../types'
 
 /** Слово для игры: термин + перевод (+ пример и связь с карточкой колоды). */

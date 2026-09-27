@@ -14,9 +14,9 @@
 // ============================================================================
 import { SmartBack } from '../../components/SmartBack'
 
-// адрес — из общего lib/contacts: раньше он был вписан здесь и больше нигде,
+// адрес — из общего shared/lib/contacts: раньше он был вписан здесь и больше нигде,
 // поэтому из самого приложения написать было некуда
-import { SUPPORT_EMAIL as CONTACT } from '../../lib/contacts'
+import { SUPPORT_EMAIL as CONTACT } from '../../shared/lib/contacts'
 const UPDATED = '9 августа 2026'
 
 function Shell({ title, children }: { title: string; children: React.ReactNode }) {

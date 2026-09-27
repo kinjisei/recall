@@ -7,7 +7,7 @@
 import { useEffect, useState } from 'react'
 
 import { SecuritySection } from './SecuritySection'
-import { SUPPORT_EMAIL, SUPPORT_SLA, supportMailto } from '../../lib/contacts'
+import { SUPPORT_EMAIL, SUPPORT_SLA, supportMailto } from '../../shared/lib/contacts'
 import { IconBack, IconSpeaker, IconCheck, IconThumbsUp } from '../../components/icons'
 import { useSmartBack } from '../../components/SmartBack'
 import { useAuth } from '../../context/AuthContext'

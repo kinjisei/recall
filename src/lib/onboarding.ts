@@ -8,7 +8,7 @@
 // INEFFECTIVE_DYNAMIC_IMPORT.
 // ============================================================================
 import { supabase, currentUserId } from './supabase'
-import { readRaw, writeRaw } from './storage'
+import { readRaw, writeRaw } from '../shared/lib/storage'
 
 const KEY = 'recall.onboarded'
 

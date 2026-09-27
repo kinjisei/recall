@@ -8,7 +8,7 @@ import { useCallback, useState } from 'react'
 import { Button } from '../../components/Button'
 import { LoadError } from '../../components/LoadError'
 import { Picker } from '../../components/Picker'
-import { useAsyncData } from '../../lib/useAsyncData'
+import { useAsyncData } from '../../shared/lib/useAsyncData'
 import {
   archivePlan,
   currentWeekIndex,

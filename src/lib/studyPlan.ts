@@ -11,7 +11,7 @@ import type { Tables } from './database.types'
 import { chat } from './gemini'
 import { getStudentDiagnostics } from './diagnostics'
 import { diagnosticsBrief, grammarCatalog } from './diagnosticsBrief'
-import { readRaw, writeRaw } from './storage'
+import { readRaw, writeRaw } from '../shared/lib/storage'
 import type { AppLang, PlanItem, PlanWeek, StudyPlan } from '../types'
 
 // Флаг «ученик открывал программу» — карточка «Тебе назначили программу» на

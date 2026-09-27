@@ -9,7 +9,7 @@ import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { BackHeader } from '../../components/BackButton'
 import { LoadError } from '../../components/LoadError'
-import { useAsyncData } from '../../lib/useAsyncData'
+import { useAsyncData } from '../../shared/lib/useAsyncData'
 import {
   createWritingTask,
   listMyWritingTasks,

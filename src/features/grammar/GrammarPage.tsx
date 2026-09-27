@@ -26,7 +26,7 @@ import { RoundResult, RoundProgress } from '../../components/RoundResult'
 import { speak } from '../../lib/speech'
 import { logActivity } from '../../lib/activity'
 import { useScrollTop } from '../../lib/useScrollTop'
-import { useUrlStates } from '../../lib/useUrlState'
+import { useUrlStates } from '../../shared/lib/useUrlState'
 import {
   addMistake,
   getMistakes,
@@ -84,7 +84,7 @@ export function GrammarPage() {
   const [nav, setNav] = useUrlStates(NAV_KEYS)
   const section: Section = nav.verbs ? 'verbs' : 'lessons'
   // «Уроки» — раздел по умолчанию, поэтому возврат в него параметры снимает
-  // (запись в истории не плодится, см. правило в lib/useUrlState)
+  // (запись в истории не плодится, см. правило в shared/lib/useUrlState)
   const setSection = (s: Section) =>
     setNav({ ...NAV_EMPTY, verbs: s === 'verbs' ? '1' : null })
 

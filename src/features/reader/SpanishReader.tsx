@@ -25,7 +25,7 @@ import {
 } from '../../data/spanish'
 import type { SpanishDialogue, SpanishReading } from '../../types'
 import { useScrollTop } from '../../lib/useScrollTop'
-import { useUrlState } from '../../lib/useUrlState'
+import { useUrlState } from '../../shared/lib/useUrlState'
 
 type Kind = 'texts' | 'dialogues'
 

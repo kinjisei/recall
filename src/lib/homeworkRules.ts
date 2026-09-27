@@ -25,7 +25,7 @@
 // ⚠️ Расширение обязательно: этот модуль грузит не только Vite, но и node
 // напрямую (scripts/test-homework-suggest.mjs), а node без расширения
 // относительный импорт не находит. Тот же приём — в lib/recentWords.
-import { plural } from './text.ts'
+import { plural } from '../shared/lib/plural.ts'
 import type { AppLang, CEFRLevel } from '../types'
 import type { HomeworkKind, NewHomeworkItem } from './homework'
 

@@ -5,7 +5,7 @@
 // убирает; в тренажёре появляется группа «Мои ошибки», гоняющая только их.
 // Всё в localStorage — как и грамматический банк ([[mistakes]]).
 // ============================================================================
-import { readJson, writeJson } from './storage'
+import { readJson, writeJson } from '../shared/lib/storage'
 import type { AppLang } from '../types'
 
 const key = (lang: AppLang) => `recall.verb_mistakes.${lang}`

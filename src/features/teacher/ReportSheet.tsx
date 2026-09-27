@@ -14,7 +14,7 @@ import { Button } from '../../components/Button'
 import { IconPrinter } from '../../components/icons'
 import type { StudentDiagnostics } from '../../lib/diagnostics'
 import type { MetricDelta } from '../../lib/dynamics'
-import { plural } from '../../lib/text'
+import { plural } from '../../shared/lib/plural'
 
 const KIND_LABELS: Record<string, string> = {
   comprehension: 'понимание текста',

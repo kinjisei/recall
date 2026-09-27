@@ -9,7 +9,7 @@
 // Ведомая сессия «Начать занятие» открывает читалку сразу (?view=reader).
 // ============================================================================
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
-import { useUrlState } from '../../lib/useUrlState'
+import { useUrlState } from '../../shared/lib/useUrlState'
 import {
   IconGap,
   IconSparkle,
@@ -55,7 +55,7 @@ export function StudyPage() {
   const { lang } = useLanguage()
   // Внутренний экран — в адресе (?view=reader), а не в useState: иначе «назад»
   // и свайп на телефоне уводили сразу на Главную мимо хаба, а F5 терял место.
-  // Общее правило и оговорки — в lib/useUrlState.ts.
+  // Общее правило и оговорки — в shared/lib/useUrlState.ts.
   const [rawView, setRawView] = useUrlState('view', (v) => v === 'reader' || v === 'words')
   const view: View = (rawView as View | null) ?? 'hub'
   const setView = (v: View) => setRawView(v === 'hub' ? null : v)

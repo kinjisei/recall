@@ -27,7 +27,7 @@ import { getStudentDiagnostics } from './diagnostics'
 import { grammarCatalog, studentBriefBlock } from './diagnosticsBrief'
 import { getStudentWords } from './wordChecks'
 import { supabase } from './supabase'
-import { plural } from './text'
+import { plural } from '../shared/lib/plural'
 import {
   FUNCTION_WORDS,
   GOAL_LABEL,

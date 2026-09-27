@@ -43,7 +43,7 @@ import { useScrollTop } from '../../lib/useScrollTop'
 import { useFocusMode } from '../../components/Layout'
 import { Loading } from '../../components/Loading'
 import { markMorph } from '../../lib/morph'
-import { withViewTransition } from '../../lib/viewTransition'
+import { withViewTransition } from '../../shared/lib/viewTransition'
 
 const MatchMode = lazy(() => import('../words/MatchMode').then((m) => ({ default: m.MatchMode })))
 const GapMode = lazy(() => import('../words/QuizModes').then((m) => ({ default: m.GapMode })))
@@ -191,7 +191,7 @@ export function PracticePage() {
   // Заход в игру пушит запись в историю, выход кареткой — ЗАМЕНЯЕТ её.
   // Раньше выход тоже пушил, и свайп-назад после выхода возвращал обратно в
   // только что закрытый «Спринт» (замер ревью 1Г). Правило то же, что в общем
-  // хуке lib/useUrlState — здесь оно записано руками, потому что режим ещё
+  // хуке shared/lib/useUrlState — здесь оно записано руками, потому что режим ещё
   // и переключается программно (ведомая сессия ниже).
   const setMode = (m: Mode) =>
     setSearchParams(m === 'hub' ? {} : { m }, { replace: m === 'hub' })

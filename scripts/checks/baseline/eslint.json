@@ -430,7 +430,7 @@
       "count": 1
     }
   },
-  "src/lib/useAsyncData.ts": {
+  "src/shared/lib/useAsyncData.ts": {
     "react-hooks/set-state-in-effect": {
       "count": 1
     },

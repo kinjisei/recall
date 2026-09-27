@@ -15,7 +15,7 @@
 // ============================================================================
 import { lookup, type DictionarySense } from './dictionary'
 import { chat } from './gemini'
-import { readJson, writeJson } from './storage'
+import { readJson, writeJson } from '../shared/lib/storage'
 
 const CACHE_KEY = 'recall.definitions'
 const MAX_LEN = 110

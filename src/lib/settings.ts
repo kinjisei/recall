@@ -6,7 +6,7 @@
 // см. features/settings/SettingsPage.
 // ============================================================================
 
-import { readJson, writeJson } from './storage'
+import { readJson, writeJson } from '../shared/lib/storage'
 
 const KEY = 'recall.settings'
 

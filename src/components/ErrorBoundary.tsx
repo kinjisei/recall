@@ -6,7 +6,7 @@
 // а на прочие ошибки показываем понятный экран с кнопкой.
 // ============================================================================
 import { Component, type ReactNode } from 'react'
-import { supportMailto } from '../lib/contacts'
+import { supportMailto } from '../shared/lib/contacts'
 import { IconWarning } from './icons'
 import { logError } from '../lib/errorLog'
 

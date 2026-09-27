@@ -10,7 +10,7 @@
 // промахнулся MISS_LIMIT раз за MISS_WINDOW_DAYS — это уже не случайность.
 // ============================================================================
 
-import { readJson, writeJson } from './storage'
+import { readJson, writeJson } from '../shared/lib/storage'
 
 const KEY = 'recall.game_misses'
 const MISS_WINDOW_DAYS = 7

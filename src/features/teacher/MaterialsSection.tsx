@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { LoadError } from '../../components/LoadError'
-import { useAsyncData } from '../../lib/useAsyncData'
+import { useAsyncData } from '../../shared/lib/useAsyncData'
 import { getMyPlan } from '../../lib/billing'
 import {
   listMyMaterials,
@@ -19,7 +19,7 @@ import {
 } from '../../lib/materials'
 import type { StudentInfo } from '../../lib/teacher'
 import { useScrollTop } from '../../lib/useScrollTop'
-import { useUrlState } from '../../lib/useUrlState'
+import { useUrlState } from '../../shared/lib/useUrlState'
 import type { Material, MaterialAssignment, MaterialPlan } from '../../types'
 import { MaterialsByLevel } from './materials/MaterialsByLevel'
 import { RequestForm } from './materials/RequestForm'

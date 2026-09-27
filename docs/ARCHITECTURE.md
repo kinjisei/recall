@@ -256,7 +256,7 @@ chat(messages: ChatTurn[], opts: { task: AiTask; system?: string }): Promise<str
 // lib/guided.ts — ведомая сессия; lib/settings.ts — локальные настройки
 // lib/text.ts — answerMatches (варианты через «/»; ЕДИНАЯ проверка ответов —
 // та же логика в SQL submit_material)
-// lib/storage.ts — readJson/writeJson/readRaw/writeRaw: ЕДИНЫЙ безопасный
+// shared/lib/storage.ts — readJson/writeJson/readRaw/writeRaw: ЕДИНЫЙ безопасный
 // доступ к localStorage (try/catch + fallback). Весь localStorage — через него
 // (кроме перечисления ключей в profile.clearUserLocalData).
 ```

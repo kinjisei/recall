@@ -2,7 +2,7 @@
 // Уровень испанского пользователя (результат placement-теста).
 // Храним в localStorage — как и выбор языка; своей колонки в БД не заводим.
 // ============================================================================
-import { readRaw, writeRaw } from './storage'
+import { readRaw, writeRaw } from '../shared/lib/storage'
 import type { CEFRLevel } from '../types'
 
 const KEY = 'recall.es_level'

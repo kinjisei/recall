@@ -16,7 +16,7 @@ import { speak } from '../../lib/speech'
 import { logActivity } from '../../lib/activity'
 import { getVerbMistakes, addVerbMistake, removeVerbMistake } from '../../lib/verbMistakes'
 import { answerMatches } from '../../lib/text'
-import { useUrlState } from '../../lib/useUrlState'
+import { useUrlState } from '../../shared/lib/useUrlState'
 import { RowsSkeleton } from '../../components/Loading'
 import { Reveal } from '../../components/Reveal'
 import type {
@@ -31,7 +31,7 @@ type Mode = 'reference' | 'trainer'
 export function IrregularVerbsSection() {
   const [groups, setGroups] = useState<IrregularGroup[] | null>(null)
   // Режим — в адресе (?vm=trainer): «назад» из тренажёра должен возвращать в
-  // справочник, а не выбрасывать из «Грамматики» (см. lib/useUrlState). Ход
+  // справочник, а не выбрасывать из «Грамматики» (см. shared/lib/useUrlState). Ход
   // самого раунда в адрес НЕ выносим — после F5 раунд честно начинается заново.
   const [vm, setVm] = useUrlState('vm', (v) => v === 'trainer')
   const mode: Mode = vm === 'trainer' ? 'trainer' : 'reference'

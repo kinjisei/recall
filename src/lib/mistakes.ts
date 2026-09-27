@@ -9,7 +9,7 @@
 // диагностической карте ученика. Сбои сети глотаем: банк не должен ломать урок.
 // ============================================================================
 import { supabase } from './supabase'
-import { readJson, writeJson, readRaw, writeRaw } from './storage'
+import { readJson, writeJson, readRaw, writeRaw } from '../shared/lib/storage'
 import type { AppLang } from '../types'
 
 export interface GrammarMistake {

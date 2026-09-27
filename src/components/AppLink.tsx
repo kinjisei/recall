@@ -9,12 +9,12 @@
 // обычный переход без анимации: лучше без неё, чем с мельканием заглушки.
 //
 // ⚠️ Внутренние экраны (список → текст, студия → карточка ученика) сюда НЕ
-// относятся: они живут в адресных параметрах и анимируются в lib/useUrlState.
+// относятся: они живут в адресных параметрах и анимируются в shared/lib/useUrlState.
 // ============================================================================
 import { useCallback, type CSSProperties, type MouseEvent, type ReactNode } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { preloadRoute, warmRoute } from '../lib/routeChunks'
-import { withViewTransition, type TransitionDirection } from '../lib/viewTransition'
+import { withViewTransition, type TransitionDirection } from '../shared/lib/viewTransition'
 
 export interface AppLinkProps {
   to: string

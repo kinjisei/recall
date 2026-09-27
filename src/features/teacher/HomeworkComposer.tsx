@@ -24,7 +24,7 @@ import { IconClose, IconPlus, IconSparkle, IconTrash } from '../../components/ic
 import { KIND_LABEL, createHomework, type HomeworkKind } from '../../lib/homework'
 import { countableItems, MAX_ITEMS } from '../../lib/homeworkRules'
 import { suggestHomework, type SuggestedItem } from '../../lib/homeworkSuggest'
-import { plural } from '../../lib/text'
+import { plural } from '../../shared/lib/plural'
 import type { AppLang } from '../../types'
 
 /** Через сколько дней срок по умолчанию: неделя — обычный шаг между уроками. */

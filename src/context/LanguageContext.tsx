@@ -3,7 +3,7 @@
 // Выбор хранится в localStorage и переживает перезагрузку страницы.
 // ============================================================================
 import { createContext, useContext, useState, type ReactNode } from 'react'
-import { readRaw, writeRaw } from '../lib/storage'
+import { readRaw, writeRaw } from '../shared/lib/storage'
 import type { AppLang } from '../types'
 
 const STORAGE_KEY = 'recall.lang'

@@ -6,7 +6,7 @@
 // Парсеры файлов грузятся ЛЕНИВО: pdfjs (~2МБ) и mammoth не попадают в бандл,
 // пока пользователь не выбрал файл.
 // ============================================================================
-import { readJson, writeJson } from './storage'
+import { readJson, writeJson } from '../shared/lib/storage'
 import type { AppLang } from '../types'
 
 export interface MyText {

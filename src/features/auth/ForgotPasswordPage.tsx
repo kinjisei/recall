@@ -9,7 +9,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AppLink } from '../../components/AppLink'
-import { SUPPORT_EMAIL, supportMailto } from '../../lib/contacts'
+import { SUPPORT_EMAIL, supportMailto } from '../../shared/lib/contacts'
 import { RESET_SENT_TEXT, requestReset } from '../../lib/passwordReset'
 import { AuthCard, InputGroup, PrimaryButton } from './authUi'
 
@@ -122,7 +122,7 @@ export function ForgotPasswordPage() {
           Вспомнил пароль — войти
         </AppLink>
         {/* Тупик без этой строчки: доступа к почте нет, и человек просто теряет
-            всю свою учёбу. Адрес — из lib/contacts, второго заводить не надо. */}
+            всю свою учёбу. Адрес — из shared/lib/contacts, второго заводить не надо. */}
         <p className="text-xs leading-relaxed text-[var(--night-text-40)]">
           Нет доступа к почте?{' '}
           <a

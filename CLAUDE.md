@@ -123,8 +123,11 @@ src/
                 gemini.ts (клиент /api) · level.ts · contextDict.ts · definitions.ts
                 teacher.ts · materials.ts · studyPlan.ts · diagnostics.ts · quests.ts
                 writing.ts · writingGrade.ts · correctionRules.ts
-                useUrlState.ts (адрес = «где я») · dbError.ts · errorLog.ts
+                dbError.ts · errorLog.ts
                 text.ts (answerMatches — сверка ответов, парная к SQL norm_typed)
+  shared/       нижний слой без предметной логики — src/shared/CLAUDE.md:
+    lib/        storage · useUrlState (адрес = «где я») · viewTransition
+                useAsyncData · plural · contacts
   types/        index.ts — общие типы, включая AiTask
   context/      AuthContext, LanguageContext
   data/         english/ · spanish/ · writingPrompts.ts · wordOfDay.ts · teacher-guide.ts
@@ -443,7 +446,7 @@ FSRS, текст по покрытию, тема квеста по ошибка�
 побеждает заявленный, — экран обязан быть верным и на данных из прошлого
 состояния, не полагаясь на то, что сервер их не пропустит.
 
-Числительные — общий `plural` в `lib/text.ts` (был приватным в `ReportSheet`).
+Числительные — общий `plural` в `shared/lib/plural.ts` (был приватным в `ReportSheet`).
 «32 новых слов» выглядит почти правильно и потому живёт в интерфейсе годами;
 формы проверяются тестом на 1/2/5/11/21/112.
 
@@ -584,7 +587,7 @@ FSRS, текст по покрытию, тема квеста по ошибка�
 
 ### Навигация: адрес = «где я»
 
-`lib/useUrlState.ts` — 12 экранов держат внутреннее состояние в query-параметрах.
+`shared/lib/useUrlState.ts` — 12 экранов держат внутреннее состояние в query-параметрах.
 Заход внутрь пушит запись в историю, возврат кареткой — заменяет. В PWA на
 телефоне свайп-назад единственный способ вернуться, поэтому это не косметика.
 
@@ -603,7 +606,7 @@ FSRS, текст по покрытию, тема квеста по ошибка�
 Всё на CSS и браузерном View Transitions API; вся плавность продукта стоит
 **0,8 КБ gzip**.
 
-- Переходы между экранами — `lib/viewTransition.ts`. Включены в `useUrlState`
+- Переходы между экранами — `shared/lib/viewTransition.ts`. Включены в `useUrlState`
   (внутренние экраны) и в `components/AppLink` (между роутами и вкладками).
   Ссылки внутри приложения — **только `AppLink`**, не `<Link>`: он греет
   ленивый экран заранее и не запускает переход, пока экран не готов.
@@ -651,7 +654,7 @@ FSRS, текст по покрытию, тема квеста по ошибка�
   Регистрация занятого адреса тоже не раскрывает (Supabase отдаёт успех с
   пустым `identities`) — проверено на проекте.
 - Без доступа к почте восстановления нет намеренно: строчка «Напишите нам»
-  (`lib/contacts.ts`), адрес меняется руками в панели. Кнопок «сбросить пароль
+  (`shared/lib/contacts.ts`), адрес меняется руками в панели. Кнопок «сбросить пароль
   ученику» у преподавателя и у владельца нет — это кнопка «забрать аккаунт».
 
 Письмо собирает Supabase, а не мы: шаблон, Redirect URLs и срок жизни кода —

@@ -22,7 +22,7 @@ import { correctAnswerText } from '../../lib/text'
 import type { ReviewItem } from '../../components/RoundReview'
 import { MarkableText } from '../../components/MarkableText'
 import { logActivity } from '../../lib/activity'
-import { useAsyncData } from '../../lib/useAsyncData'
+import { useAsyncData } from '../../shared/lib/useAsyncData'
 import { LoadError } from '../../components/LoadError'
 import { IconTray } from '../../components/icons'
 import {
@@ -32,7 +32,7 @@ import {
 import { getHomework, type Homework } from '../../lib/homework'
 import { StudentHomework } from '../homework/StudentHomework'
 import { useScrollTop } from '../../lib/useScrollTop'
-import { useUrlStates } from '../../lib/useUrlState'
+import { useUrlStates } from '../../shared/lib/useUrlState'
 import { RowsSkeleton } from '../../components/Loading'
 import type {
   AppLang,
@@ -47,7 +47,7 @@ type Row = MaterialAssignment & { material: Material }
  * Стадия прохождения задания — живёт в адресе (?stage=).
  * Итога раунда здесь нет намеренно: результат — это ход раунда, а не место.
  * После F5 он показал бы честный «0 из 13» вместо набранного, поэтому остаётся
- * локальным состоянием раннера (правило из lib/useUrlState.ts).
+ * локальным состоянием раннера (правило из shared/lib/useUrlState.ts).
  */
 type Stage = 'read' | 'exercises' | 'review'
 const STAGES: string[] = ['read', 'exercises', 'review']

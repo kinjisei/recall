@@ -6,7 +6,7 @@
 // ============================================================================
 import { supabase, requireUserId } from './supabase'
 import { dbError } from './dbError'
-import { SUPPORT_EMAIL } from './contacts'
+import { SUPPORT_EMAIL } from '../shared/lib/contacts'
 import { selectProfiles, invalidateProfile } from './profile'
 import { track } from './analytics'
 import {

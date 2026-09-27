@@ -17,7 +17,7 @@
 // подробность НЕ проглатывается, а уходит в console.error, чтобы диагностика
 // («открой консоль и покажи») осталась возможной.
 // ============================================================================
-import { SUPPORT_EMAIL } from './contacts'
+import { SUPPORT_EMAIL } from '../shared/lib/contacts'
 
 /**
  * Форма ошибки supabase-js. PostgrestError — обычный объект (не Error!) с

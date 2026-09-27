@@ -16,7 +16,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { AppLink } from '../../components/AppLink'
-import { supportMailto } from '../../lib/contacts'
+import { supportMailto } from '../../shared/lib/contacts'
 import {
   MIN_PASSWORD,
   completeReset,
