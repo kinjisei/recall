@@ -5,7 +5,7 @@
 // (добавляемые в «Мои слова») и грамматические структуры (объяснение + ссылка
 // на урок). Ответу AI не доверяем на тип — санитайз; topicId сверяем с каталогом.
 // ============================================================================
-import { chat } from './gemini'
+import { chat } from '../shared/api/ai'
 import type { AppLang } from '../types'
 
 export type AnalyzedKind = 'phrasal' | 'expression' | 'word' | 'grammar'

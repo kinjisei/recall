@@ -5,7 +5,7 @@
 // весь фрагмент по смыслу». Лёгкая модель (task 'word') справляется — проверено
 // на проде.
 // ============================================================================
-import { chat } from './gemini'
+import { chat } from '../shared/api/ai'
 import type { AppLang } from '../types'
 
 export async function translatePhrase(text: string, lang: AppLang): Promise<string> {

@@ -23,7 +23,7 @@ const config = defineConfig([
     // прототип экрана от дизайна, не входит в сборку
     'handoff/**',
     // генерируется из схемы базы (PLAN.md Ф1.2)
-    'src/lib/database.types.ts',
+    'src/shared/api/database.types.ts',
   ]),
   {
     files: ['**/*.{js,mjs,cjs,ts,tsx}'],

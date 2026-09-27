@@ -4,7 +4,7 @@
 // игр) — без кэша каждый экран делал свой запрос к profiles за тем же рядом.
 // После изменения профиля (экран «Настройки») вызвать invalidateProfile().
 // ============================================================================
-import { supabase } from './supabase'
+import { supabase } from '../shared/api/supabase'
 import { readRaw, writeRaw } from '../shared/lib/storage'
 import type { Profile } from '../types'
 

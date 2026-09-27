@@ -10,7 +10,7 @@
 // преподавателя падало качество генерации материалов. Параметр model закрыли
 // раньше по той же причине — этот файл закрывает весь класс целиком.
 // ============================================================================
-import type { AiTask } from '../src/types/index.js'
+import type { AiTask } from '../src/shared/api/aiTypes.js'
 import type { AiTier } from './_core.js'
 import type { QuotaKind } from './_auth.js'
 

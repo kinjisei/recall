@@ -3,9 +3,9 @@
 // как материалы: writing_tasks / writing_task_assignments, RLS + RPC (supabase/migrations).
 // 5a — создание/назначение; оценка и проверка — в 5b/5c.
 // ============================================================================
-import { supabase, requireUserId, toJson } from './supabase'
-import { dbError } from './dbError'
-import { chat } from './gemini'
+import { supabase, requireUserId, toJson } from '../shared/api/supabase'
+import { dbError } from '../shared/api/errors'
+import { chat } from '../shared/api/ai'
 import type {
   AppLang,
   CEFRLevel,

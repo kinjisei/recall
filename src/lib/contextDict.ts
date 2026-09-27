@@ -3,7 +3,7 @@
 // Обычные словари дают значение без контекста (will → «завещание»), поэтому
 // перевод берём у AI, а словарное API остаётся для транскрипции/аудио (EN).
 // ============================================================================
-import { chat } from './gemini'
+import { chat } from '../shared/api/ai'
 import type { AppLang } from '../types'
 
 export interface ContextLookup {

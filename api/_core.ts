@@ -5,7 +5,7 @@
 // КЛЮЧ СЮДА НЕ ПИСАТЬ — он приходит параметром из серверного окружения.
 // Тело запроса под модель — _geminiBody.ts, сроки ожидания — _timeouts.ts.
 // ============================================================================
-import type { ChatTurn } from '../src/types/index.js'
+import type { ChatTurn } from '../src/shared/api/aiTypes.js'
 import {
   TIMEOUTS,
   TimeoutError,

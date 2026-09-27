@@ -8,7 +8,7 @@
 // День считается в МЕСТНОМ времени пользователя, а не в UTC, чтобы вечерние
 // занятия не «уезжали» на другую дату.
 // ============================================================================
-import { supabase, currentUserId } from './supabase'
+import { supabase, currentUserId } from '../shared/api/supabase'
 import type { ActivityType } from '../types'
 
 /** YYYY-MM-DD в местном времени (offsetDays: 0 — сегодня, -1 — вчера…). */

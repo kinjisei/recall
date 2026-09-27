@@ -4,8 +4,8 @@
 // (supabase/migrations, блок «Админ-RPC (только is_admin)») — вся защита на
 // сервере, здесь только вызовы и человеко-читаемые ошибки.
 // ============================================================================
-import { supabase } from './supabase'
-import { dbError } from './dbError'
+import { supabase } from '../shared/api/supabase'
+import { dbError } from '../shared/api/errors'
 import { track } from './analytics'
 
 export type PlanId = 'free' | 'premium' | 'teacher_mini' | 'teacher_start' | 'teacher_pro'

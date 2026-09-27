@@ -95,7 +95,7 @@ module.exports = {
           '^src/context/',
         ],
       },
-      to: { path: ['(^|/)node_modules/@supabase/', '^src/lib/supabase\\.ts$', '^src/shared/api/supabase'] },
+      to: { path: ['(^|/)node_modules/@supabase/', '^src/shared/api/supabase'] },
     },
     {
       name: 'common-imports-feature',

@@ -6,7 +6,7 @@
 // Все запросы идут под RLS преподавателя: чужих учеников не видно, отвязка
 // отбирает доступ. Ничего не пишет в БД — только чтение.
 // ============================================================================
-import { supabase } from './supabase'
+import { supabase } from '../shared/api/supabase'
 import { getStudentWords } from './wordChecks'
 import { listStudentQuests } from './quests'
 import { finalScore, scoreSamples } from './assignmentScore'

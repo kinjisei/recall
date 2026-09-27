@@ -3,6 +3,13 @@
 // Все воркеры импортируют типы ОТСЮДА и не плодят свои дубликаты.
 // ============================================================================
 
+// Протокол AI (ChatTurn, AiTask) определён рядом с клиентом AI —
+// shared/api/aiTypes.ts: его читает и сервер (api/*), а shared/ не может
+// импортировать этот файл. Здесь — реэкспорт, чтобы правило «типы — отсюда»
+// оставалось верным.
+import type { ChatTurn } from '../shared/api/aiTypes'
+export type { AiTask, ChatTurn } from '../shared/api/aiTypes'
+
 export type CEFRLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2'
 
 /** Язык изучения. Приложение объединяет английский и испанский. */
@@ -93,41 +100,6 @@ export interface ReviewState {
   lapses: number
   state: ReviewStateName
 }
-
-/** Реплика для AI-чата (то, что летит в /api/gemini; не таблица БД). */
-export interface ChatTurn {
-  role: 'user' | 'assistant' | 'system'
-  content: string
-}
-
-/**
- * ТИП ЗАДАЧИ для AI — единственное, что клиент сообщает про свой запрос.
- * Модель, класс квоты и право на вызов выбирает СЕРВЕР по этому типу
- * (карта — api/_tasks.ts). Клиент НЕ выбирает уровень модели: раньше он слал
- * tier, и любой вошедший мог поставить tier:'max', уводя обычную реплику
- * Диалога на дефицитные Pro-модели и выжигая их общую суточную квоту
- * (пентест, заход 18). Теперь подделать можно только НАЗВАНИЕ задачи, а у
- * каждой задачи уровень модели зафиксирован на сервере.
- *   word/definition/batch — перевод и определения слов (лёгкие модели);
- *   dialog/writing/quest/review — разговорные и проверочные задачи;
- *   material/program/homework — генерация у преподавателя (только role='teacher');
- *   self_material — материал, который ученик генерит СЕБЕ (режим самоучки):
- *     не teacherOnly, тратит СВОЙ месячный лимит генераций (energy_source), а не
- *     учительский; дешёвая standard-цепочка (одиночке хватит).
- */
-export type AiTask =
-  | 'word'
-  | 'definition'
-  | 'batch'
-  | 'analyze'
-  | 'dialog'
-  | 'writing'
-  | 'quest'
-  | 'review'
-  | 'material'
-  | 'program'
-  | 'homework'
-  | 'self_material'
 
 /** AI-квест по грамматике: учитель назначает, ученик играет с AI. */
 export interface GrammarQuest {

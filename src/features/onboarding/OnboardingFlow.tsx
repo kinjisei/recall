@@ -17,7 +17,7 @@ import {
 } from '../../components/icons'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
-import { supabase } from '../../lib/supabase'
+import { supabase } from '../../shared/api/supabase'
 import { joinTeacher } from '../../lib/teacher'
 import { invalidateProfile } from '../../lib/profile'
 import { setEsLevel } from '../../lib/esLevel'

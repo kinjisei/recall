@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { supabase } from '../shared/api/supabase'
 
 /**
  * Контроль доступа: белый список приглашённых + флаг блокировки.

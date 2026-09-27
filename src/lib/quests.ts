@@ -3,7 +3,7 @@
 // Запись — только через security-definer RPC: назначает учитель, прогресс
 // и переписку пишет ученик. Чтение — по RLS (обе стороны).
 // ============================================================================
-import { supabase, toJson } from './supabase'
+import { supabase, toJson } from '../shared/api/supabase'
 import type { AppLang, ChatTurn, GrammarQuest } from '../types'
 
 /** Квесты текущего ученика (новые сверху). */

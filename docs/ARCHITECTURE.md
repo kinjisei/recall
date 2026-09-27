@@ -123,7 +123,7 @@ recall-app/
 ```
 
 Правило изоляции: каждая фича — в своей папке `features/*` + свой файл `lib/*`.
-Общие вещи (`types/`, `components/`, `lib/supabase.ts`, `lib/cards.ts`) менять
+Общие вещи (`types/`, `components/`, `shared/`, `lib/cards.ts`) менять
 аккуратно и осознанно.
 
 ## 5. Модель данных (Supabase / Postgres)
@@ -132,14 +132,14 @@ recall-app/
 `docs/schema.sql` в архиве (`docs/archive/`). RLS включён на всех таблицах. Здесь — карта
 таблиц и ключевые инварианты.
 
-⚠️ **Типы базы для клиента** — `src/lib/database.types.ts` генерируются
+⚠️ **Типы базы для клиента** — `src/shared/api/database.types.ts` генерируются
 из тестовой базы: `node scripts/check-types-drift.mjs --write` (Supabase CLI
 через Management API, Docker не нужен). Клиент `createClient<Database>`
 типизирован ими: расхождение «код ↔ база» ловится на сборке. **После каждой
 миграции — перегенерировать и закоммитить вместе с ней**; без `--write` та же
 команда сверяет файл со схемой и краснеет при расхождении. Приведения
 `supabase.rpc as unknown as …` не нужны — функции есть в типах. Запись наших
-структур в jsonb-колонки/аргументы RPC — через `toJson()` (lib/supabase.ts).
+структур в jsonb-колонки/аргументы RPC — через `toJson()` (shared/api/supabase.ts).
 
 Ядро:
 - `profiles` — 1:1 с auth.users. Базовые: display_name, level (A1..C2),
@@ -194,7 +194,8 @@ finish/reassign/assign_*, quest_*, submit_placement, admin_set_plan...);
 Message, WritingSubmission`, `CEFRLevel = 'A1'..'C2'`, `Rating = 'again'|'hard'|
 'good'|'easy'` (UI колоды использует again/good), `AppLang = 'en'|'es'`,
 `ChatTurn`, `AiTask = 'word'|'definition'|'batch'|'dialog'|'writing'|'quest'|
-'review'|'material'|'program'`.
+'review'|'material'|'program'` (определены в `shared/api/aiTypes.ts` — их читает
+и сервер `api/*`; здесь реэкспорт).
 Контент: `SpanishTopic, SpanishWord, SpanishReading, SpanishDialogue,
 SpanishSentence, EnglishWord, WordTopic`, грамматика/упражнения (общие типы
 уроков и Exercise для движка components/exercises.tsx).
@@ -224,7 +225,7 @@ lookup(word) / lookupInContext(word, sentence, lang)
 // scorePronunciation(target, spoken) -> { percent, words[] }
 // lib/transcribe.ts (STT) — isMicSupported, startRecording, transcribe(blob, lang)
 
-// lib/gemini.ts — зовёт НАШ /api/gemini
+// shared/api/ai.ts — зовёт НАШ /api/gemini (+ onAiRequest — подписка воронки)
 chat(messages: ChatTurn[], opts: { task: AiTask; system?: string }): Promise<string>
 // Уровень модели, карман квоты и права выбирает СЕРВЕР по task (api/_tasks.ts).
 // Клиент модель/tier НЕ задаёт (пентест, заход 18). material/program — только teacher.

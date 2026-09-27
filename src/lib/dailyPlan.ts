@@ -2,8 +2,8 @@
 // План дня — работа с БД (настройка учителя в teacher_students.daily_plan).
 // Чистая логика построения плана — lib/dailyPlanCore (тестируется отдельно).
 // ============================================================================
-import { supabase, requireUserId, toJson } from './supabase'
-import { dbError } from './dbError'
+import { supabase, requireUserId, toJson } from '../shared/api/supabase'
+import { dbError } from '../shared/api/errors'
 import type { DailyPlanConfig, PlanKind } from './dailyPlanCore'
 export * from './dailyPlanCore'
 

@@ -3,9 +3,9 @@
 // (двухшаговая: план → материал) + хранение и назначение (Supabase).
 // Таблицы materials / material_assignments, RLS — supabase/migrations.
 // ============================================================================
-import { supabase, requireUserId, toJson } from './supabase'
-import { dbError } from './dbError'
-import { chat } from './gemini'
+import { supabase, requireUserId, toJson } from '../shared/api/supabase'
+import { dbError } from '../shared/api/errors'
+import { chat } from '../shared/api/ai'
 import { correctAnswerText } from './text'
 import { validExercises } from './materialExercises'
 import { studentBriefBlock } from './diagnosticsBrief'

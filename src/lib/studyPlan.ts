@@ -5,10 +5,10 @@
 // (id из каталога — чтобы пункты плана вели на реальные экраны приложения).
 // Хранение — таблица study_plans (supabase/migrations, блок «ПРОГРАММА ОБУЧЕНИЯ»).
 // ============================================================================
-import { supabase, requireUserId, toJson } from './supabase'
-import { dbError } from './dbError'
-import type { Tables } from './database.types'
-import { chat } from './gemini'
+import { supabase, requireUserId, toJson } from '../shared/api/supabase'
+import { dbError } from '../shared/api/errors'
+import type { Tables } from '../shared/api/database.types'
+import { chat } from '../shared/api/ai'
 import { getStudentDiagnostics } from './diagnostics'
 import { diagnosticsBrief, grammarCatalog } from './diagnosticsBrief'
 import { readRaw, writeRaw } from '../shared/lib/storage'

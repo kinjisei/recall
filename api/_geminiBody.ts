@@ -4,7 +4,7 @@
 // отдельную функцию. Вынесено из _core.ts, когда туда пришли сроки ожидания
 // (PLAN.md Ф1.10): вызов, фолбэки и сроки — там, сборка тела — здесь.
 // ============================================================================
-import type { ChatTurn } from '../src/types/index.js'
+import type { ChatTurn } from '../src/shared/api/aiTypes.js'
 import type { AiTier } from './_core.js'
 
 /**

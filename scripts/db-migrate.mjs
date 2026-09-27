@@ -161,7 +161,7 @@ if (isProd) {
 } else {
   console.log('\n— типы под новую схему')
   node('check-types-drift.mjs', ['--write'])
-  const typesChanged = spawnSync('git', ['diff', '--quiet', '--', 'src/lib/database.types.ts']).status !== 0
+  const typesChanged = spawnSync('git', ['diff', '--quiet', '--', 'src/shared/api/database.types.ts']).status !== 0
   if (typesChanged) console.log('  ⚠️ database.types.ts изменился — закоммить вместе с миграцией')
 }
 if (anon !== 0) fail('анониму открыто лишнее — см. выше')

@@ -12,8 +12,8 @@ import { IconBack, IconSpeaker, IconCheck, IconThumbsUp } from '../../components
 import { useSmartBack } from '../../components/SmartBack'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
-import { supabase } from '../../lib/supabase'
-import type { TablesUpdate } from '../../lib/database.types'
+import { supabase } from '../../shared/api/supabase'
+import type { TablesUpdate } from '../../shared/api/database.types'
 import { invalidateProfile, selectProfiles } from '../../lib/profile'
 import { speak } from '../../lib/speech'
 import {

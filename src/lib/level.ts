@@ -4,7 +4,7 @@
 //   EN — profiles.level в БД (онбординг или placement).
 // null — уровень ещё не определён (вызывающий сам решает, что по умолчанию).
 // ============================================================================
-import { supabase } from './supabase'
+import { supabase } from '../shared/api/supabase'
 import { getProfile } from './profile'
 import { getEsLevel } from './esLevel'
 import type { AppLang } from '../types'

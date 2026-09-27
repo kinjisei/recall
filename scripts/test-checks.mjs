@@ -91,7 +91,7 @@ both('токены: похожие слова — не цвета', '<div classN
 }
 
 // ── описания
-check('isCode: код модулей', ['src/lib/text.ts', 'api/gemini.ts', 'src/index.css', 'src/data/english/x.ts', 'src/lib/database.types.ts', 'scripts/x.mjs', 'CLAUDE.md'].map(isCode), [
+check('isCode: код модулей', ['src/lib/text.ts', 'api/gemini.ts', 'src/index.css', 'src/data/english/x.ts', 'src/shared/api/database.types.ts', 'scripts/x.mjs', 'CLAUDE.md'].map(isCode), [
   true, true, true, false, false, false, false,
 ])
 {

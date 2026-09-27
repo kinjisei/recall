@@ -5,8 +5,8 @@
 // Таблица placement_requests + RPC (supabase/migrations, блок «ТЕСТ УРОВНЯ ОТ
 // ПРЕПОДАВАТЕЛЯ»): запись только через функции, чтение — обеим сторонам.
 // ============================================================================
-import { supabase, requireUserId } from './supabase'
-import { dbError } from './dbError'
+import { supabase, requireUserId } from '../shared/api/supabase'
+import { dbError } from '../shared/api/errors'
 import type { AppLang, CEFRLevel } from '../types'
 
 export interface PlacementRequest {

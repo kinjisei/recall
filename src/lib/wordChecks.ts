@@ -3,8 +3,8 @@
 // печатает их по памяти (рус → англ/исп). Неверные возвращаются в колоду
 // оценкой «again». Таблица word_checks, RLS — supabase/migrations.
 // ============================================================================
-import { supabase, requireUserId, toJson } from './supabase'
-import { dbError } from './dbError'
+import { supabase, requireUserId, toJson } from '../shared/api/supabase'
+import { dbError } from '../shared/api/errors'
 import { reviewCard } from './fsrs'
 import type { AppLang, Card, ReviewState, WordCheck, WordCheckResult } from '../types'
 

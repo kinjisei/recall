@@ -3,9 +3,22 @@
 // фронт никогда не ходит в Google напрямую.
 // Контракт: docs/ARCHITECTURE.md §7 — chat(messages, opts).
 // ============================================================================
-import type { AiTask, ChatTurn } from '../types'
+import type { AiTask, ChatTurn } from './aiTypes'
 import { supabase } from './supabase'
-import { track } from './analytics'
+
+/**
+ * Подписка на каждый запрос к AI — для воронки аналитики (событие ai_first).
+ *
+ * Аналитика — предметная область и живёт выше shared/, поэтому клиент не
+ * зовёт её сам, а каркас подписывает её при старте (app/main.tsx, до первого
+ * рендера — ни один запрос мимо воронки не пройдёт). Подписчик один: второй
+ * заменил бы первого, а не встал рядом.
+ */
+let notifyRequest: (task: AiTask) => void = () => {}
+
+export function onAiRequest(listener: (task: AiTask) => void): void {
+  notifyRequest = listener
+}
 
 /**
  * Ошибка «запрос не дошёл до сервера» (нет интернета). Помечаем флагом, чтобы
@@ -37,7 +50,7 @@ export async function chat(
   opts: { task: AiTask; system?: string },
 ): Promise<string> {
   // одна точка на все AI-механики: любой экран, зовущий AI, попадает в воронку
-  void track('ai_first', { task: opts.task })
+  notifyRequest(opts.task)
 
   // токен сессии — прокси пускает только вошедших (защита квоты от абьюза)
   const {
@@ -97,7 +110,7 @@ export async function chatStream(
   opts: { task: AiTask; system?: string },
   onChunk: (delta: string) => void,
 ): Promise<string> {
-  void track('ai_first', { task: opts.task })
+  notifyRequest(opts.task)
 
   const {
     data: { session },

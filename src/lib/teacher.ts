@@ -4,8 +4,8 @@
 //   Ученик: привязка по коду (RPC join_teacher), список своих преподавателей.
 // Доступы разруливает RLS (supabase/migrations, блок «ФАЗА 4»).
 // ============================================================================
-import { supabase, requireUserId } from './supabase'
-import { dbError } from './dbError'
+import { supabase, requireUserId } from '../shared/api/supabase'
+import { dbError } from '../shared/api/errors'
 import { SUPPORT_EMAIL } from '../shared/lib/contacts'
 import { selectProfiles, invalidateProfile } from './profile'
 import { track } from './analytics'

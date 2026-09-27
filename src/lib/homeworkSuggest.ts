@@ -22,11 +22,11 @@
 // ⚠️ Это ГЕНЕРАЦИЯ преподавателя (task 'homework' в api/_tasks.ts): списывается
 // из месячного лимита генераций, а не из энергии ученика.
 // ============================================================================
-import { chat } from './gemini'
+import { chat } from '../shared/api/ai'
 import { getStudentDiagnostics } from './diagnostics'
 import { grammarCatalog, studentBriefBlock } from './diagnosticsBrief'
 import { getStudentWords } from './wordChecks'
-import { supabase } from './supabase'
+import { supabase } from '../shared/api/supabase'
 import { plural } from '../shared/lib/plural'
 import {
   FUNCTION_WORDS,

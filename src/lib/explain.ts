@@ -3,7 +3,7 @@
 // по запросу (дешёвая модель, task 'word'). Кэш в памяти на сессию — повторный
 // тап по тому же вопросу не тратит лимит.
 // ============================================================================
-import { chat } from './gemini'
+import { chat } from '../shared/api/ai'
 import type { AppLang } from '../types'
 
 const cache = new Map<string, string>()

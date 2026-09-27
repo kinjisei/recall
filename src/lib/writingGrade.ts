@@ -4,7 +4,7 @@
 // (уровень + чек-листы целевых слов/грамматики). Оба: список ошибок (было→стало),
 // сильные стороны, что подтянуть, 1-2 rewrites. task 'writing' (heavy).
 // ============================================================================
-import { chat } from './gemini'
+import { chat } from '../shared/api/ai'
 import type { AppLang, WritingGrade, WritingTask } from '../types'
 import { CORRECTION_RULES } from './correctionRules'
 

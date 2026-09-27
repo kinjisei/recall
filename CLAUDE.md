@@ -117,18 +117,20 @@ VS Code, где у Claude есть файлы и терминал: фичи со
 
 ```
 src/
-  lib/          вся логика вне экранов. Ключевые:
-                supabase.ts · profile.ts (PROFILE_COLUMNS!) · billing.ts (тарифы)
+  lib/          логика вне экранов (переезжает в domains/, PLAN.md Ф3). Ключевые:
+                profile.ts (PROFILE_COLUMNS!) · billing.ts (тарифы)
                 fsrs.ts · cards.ts · wordPool.ts · recentWords.ts · distractors.ts
-                gemini.ts (клиент /api) · level.ts · contextDict.ts · definitions.ts
+                level.ts · contextDict.ts · definitions.ts
                 teacher.ts · materials.ts · studyPlan.ts · diagnostics.ts · quests.ts
-                writing.ts · writingGrade.ts · correctionRules.ts
-                dbError.ts · errorLog.ts
+                writing.ts · writingGrade.ts · correctionRules.ts · errorLog.ts
                 text.ts (answerMatches — сверка ответов, парная к SQL norm_typed)
   shared/       нижний слой без предметной логики — src/shared/CLAUDE.md:
+    api/        supabase.ts (единственный клиент базы) · database.types.ts
+                (генерируются) · errors.ts (dbError, AppError) · ai.ts (клиент
+                /api/gemini) · aiTypes.ts (AiTask, ChatTurn — общие с api/)
     lib/        storage · useUrlState (адрес = «где я») · viewTransition
                 useAsyncData · plural · contacts
-  types/        index.ts — общие типы, включая AiTask
+  types/        index.ts — общие типы (AiTask, ChatTurn — реэкспорт из shared/api)
   context/      AuthContext, LanguageContext
   data/         english/ · spanish/ · writingPrompts.ts · wordOfDay.ts · teacher-guide.ts
   components/   RowCard (база всех списков) · Button · Card · BottomNav · Layout

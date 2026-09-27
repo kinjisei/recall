@@ -1,5 +1,5 @@
 /**
- * Дрейф типов: совпадает ли src/lib/database.types.ts со схемой базы
+ * Дрейф типов: совпадает ли src/shared/api/database.types.ts со схемой базы
  * (PLAN.md Ф1.2, архитектура §8).
  *
  * Зачем. Клиент типизирован этим файлом: .rpc() и .from() знают форму
@@ -23,7 +23,7 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { ROOT, dbTarget, supabaseCli } from './_env.mjs'
 
-const FILE = new URL('src/lib/database.types.ts', ROOT)
+const FILE = new URL('src/shared/api/database.types.ts', ROOT)
 const lf = (s) => s.replace(/\r\n/g, '\n')
 
 const target = dbTarget()
@@ -36,7 +36,7 @@ const fresh = lf(r.stdout)
 
 if (process.argv.includes('--write')) {
   writeFileSync(FILE, fresh)
-  console.log(`✓ src/lib/database.types.ts перегенерирован (${target.label})`)
+  console.log(`✓ src/shared/api/database.types.ts перегенерирован (${target.label})`)
   process.exit(0)
 }
 

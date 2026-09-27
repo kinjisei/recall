@@ -16,7 +16,7 @@ import {
   IconHeadphones,
   IconRefresh,
 } from '../../components/icons'
-import { supabase } from '../../lib/supabase'
+import { supabase } from '../../shared/api/supabase'
 import { getDeckIds } from '../../lib/cards'
 import { getUserLevel } from '../../lib/level'
 import { logActivity } from '../../lib/activity'

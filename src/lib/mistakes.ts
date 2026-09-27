@@ -8,7 +8,7 @@
 // таблицу grammar_mistakes — чтобы ПРЕПОДАВАТЕЛЬ видел буксующие темы в
 // диагностической карте ученика. Сбои сети глотаем: банк не должен ломать урок.
 // ============================================================================
-import { supabase } from './supabase'
+import { supabase } from '../shared/api/supabase'
 import { readJson, writeJson, readRaw, writeRaw } from '../shared/lib/storage'
 import type { AppLang } from '../types'
 

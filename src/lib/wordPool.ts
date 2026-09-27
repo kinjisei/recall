@@ -8,7 +8,7 @@
 //
 // Контракт: docs/ARCHITECTURE.md §7.
 // ============================================================================
-import { supabase, currentUserId } from './supabase'
+import { supabase, currentUserId } from '../shared/api/supabase'
 import { getDeckIds } from './cards'
 import { getEsLevel } from './esLevel'
 import { getProfile } from './profile'

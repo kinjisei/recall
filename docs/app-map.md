@@ -131,10 +131,13 @@ placement. Пути: `src/data/spanish/*`.
 
 ## 6. Где что живёт
 
-- `src/lib/` — вся логика вне экранов (~64 файла). Источники правды: `supabase.ts`,
-  `profile.ts` (PROFILE_COLUMNS!), `billing.ts`, `fsrs.ts`, `gemini.ts` (клиент,
-  `chat`/`chatStream`), `aiHealth.ts` (защита от серии сбоёв), `homework*.ts`,
-  `useUrlState.ts`, `text.ts` (`answerMatches` ↔ SQL `norm_typed`).
+- `src/lib/` — логика вне экранов (переезжает в `domains/`, PLAN.md Ф3). Источники
+  правды: `profile.ts` (PROFILE_COLUMNS!), `billing.ts`, `fsrs.ts`, `aiHealth.ts`
+  (защита от серии сбоёв), `homework*.ts`, `text.ts` (`answerMatches` ↔ SQL
+  `norm_typed`).
+- `src/shared/` — нижний слой без предметной логики: `api/supabase.ts` (клиент
+  базы), `api/ai.ts` (клиент AI, `chat`/`chatStream`), `api/errors.ts` (разбор
+  ошибок базы), `lib/useUrlState.ts` и др. — `src/shared/CLAUDE.md`.
 - `api/` — serverless: `gemini.ts`, `transcribe.ts`, `_core.ts`, `_auth.ts`,
   `_tasks.ts` (задача→модель/квота), `_groq.ts`, `_stt.ts`. Локально их же
   обслуживает `vite.config.ts`.

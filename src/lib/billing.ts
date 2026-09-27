@@ -4,7 +4,7 @@
 // ещё может быть не создана в базе на момент деплоя этого экрана — поэтому
 // getMyPlan() при любой ошибке молча возвращает null, а не бросает.
 // ============================================================================
-import { supabase } from './supabase'
+import { supabase } from '../shared/api/supabase'
 
 export type Plan = 'free' | 'premium' | 'teacher_mini' | 'teacher_start' | 'teacher_pro'
 

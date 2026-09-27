@@ -4,6 +4,8 @@ import { registerSW } from 'virtual:pwa-register'
 import { inject } from '@vercel/analytics'
 import App from './App'
 import { installErrorLogging } from './lib/errorLog'
+import { track } from './lib/analytics'
+import { onAiRequest } from './shared/api/ai'
 import './index.css'
 
 // Обезличенная аналитика посещений (Vercel Web Analytics, бесплатный тариф).
@@ -14,6 +16,10 @@ if (import.meta.env.PROD) inject()
 // Глобальные ловушки ошибок ДО первого рендера: иначе сбой на старте
 // (самый неприятный — белый экран) не попал бы никуда.
 installErrorLogging()
+
+// Воронка: каждый запрос к AI отмечается событием ai_first. Клиент AI лежит
+// в shared/ и аналитику сам не зовёт — подписываем здесь, до первого рендера.
+onAiRequest((task) => void track('ai_first', { task }))
 
 // iOS проверяет новую версию PWA только при холодном старте — если приложение
 // разворачивают из фона, оно неделями может жить на старом коде. Поэтому

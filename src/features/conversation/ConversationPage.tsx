@@ -8,9 +8,9 @@ import {
   IconMaterials,
 } from '../../components/icons'
 import { Card } from '../../components/Card'
-import { supabase } from '../../lib/supabase'
+import { supabase } from '../../shared/api/supabase'
 import { getProfile } from '../../lib/profile'
-import { chatStream, isNetworkError } from '../../lib/gemini'
+import { chatStream, isNetworkError } from '../../shared/api/ai'
 import { aiOverloaded, clearAiFailures, recordAiServerFailure } from '../../lib/aiHealth'
 import { logActivity } from '../../lib/activity'
 import { useAuth } from '../../context/AuthContext'

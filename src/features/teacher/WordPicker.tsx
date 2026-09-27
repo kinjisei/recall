@@ -26,7 +26,7 @@ import {
   type LoadedPacks,
   type PackWord,
 } from '../../lib/wordPacks'
-import { describeDbError } from '../../lib/dbError'
+import { describeDbError } from '../../shared/api/errors'
 import type { AppLang, CEFRLevel, Deck, WordTopic } from '../../types'
 
 const SEARCH_FROM = 20 // поиск показываем только на длинных списках

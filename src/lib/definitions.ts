@@ -14,7 +14,7 @@
 // карточки: «храбрый» → нужно adjective, «шептать» → verb.
 // ============================================================================
 import { lookup, type DictionarySense } from './dictionary'
-import { chat } from './gemini'
+import { chat } from '../shared/api/ai'
 import { readJson, writeJson } from '../shared/lib/storage'
 
 const CACHE_KEY = 'recall.definitions'

@@ -10,7 +10,7 @@
 // библиотека не попадает в стартовый бандл Главной.
 // ============================================================================
 import type { FSRS, Card as FsrsCard, Grade, State } from 'ts-fsrs'
-import { supabase, requireUserId } from './supabase'
+import { supabase, requireUserId } from '../shared/api/supabase'
 import { getDeckIds } from './cards'
 import type { AppLang, Card, ReviewState, ReviewStateName, Rating } from '../types'
 

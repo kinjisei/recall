@@ -7,7 +7,7 @@
 // добор полезным, без выдумывания; плюс страховка-повтор при пустом ответе.
 // Финальный запрос (синтез) — только «почему» и «что выучишь». Цена = части + 1.
 // ============================================================================
-import { chat } from './gemini'
+import { chat } from '../shared/api/ai'
 import { loadGrammarCatalog, parseAnalyzedItems, type AnalyzedItem } from './analyze'
 import { splitChunks } from './textChunks'
 import { levelRange } from './cefr'

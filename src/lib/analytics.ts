@@ -11,7 +11,7 @@
 //  3. Источник запоминается ПЕРВЫЙ (first touch) — человек мог прийти из
 //     телеграма, а зарегистрироваться через неделю по прямой ссылке.
 // ============================================================================
-import { supabase } from './supabase'
+import { supabase } from '../shared/api/supabase'
 
 const ANON_KEY = 'recall.anon_id'
 const ATTR_KEY = 'recall.attr'

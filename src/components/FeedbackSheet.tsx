@@ -14,7 +14,7 @@ import { Sheet } from './Sheet'
 import { Button } from './Button'
 import { IconCheck, IconClose, IconThumbsUp } from './icons'
 import { FEEDBACK_MAX, sendFeedback } from '../lib/feedback'
-import { describeDbError } from '../lib/dbError'
+import { describeDbError } from '../shared/api/errors'
 
 export function FeedbackSheet({ where, onClose }: { where: string; onClose: () => void }) {
   const [rating, setRating] = useState<'up' | 'down' | null>(null)

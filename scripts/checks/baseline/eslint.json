@@ -430,16 +430,16 @@
       "count": 1
     }
   },
+  "src/lib/useCountUp.ts": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
   "src/shared/lib/useAsyncData.ts": {
     "react-hooks/set-state-in-effect": {
       "count": 1
     },
     "react-hooks/use-memo": {
-      "count": 1
-    }
-  },
-  "src/lib/useCountUp.ts": {
-    "react-hooks/set-state-in-effect": {
       "count": 1
     }
   }

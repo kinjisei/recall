@@ -7,7 +7,7 @@ import {
   type ReactNode,
 } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
-import { supabase } from '../lib/supabase'
+import { supabase } from '../shared/api/supabase'
 import { clearUserLocalData } from '../lib/profile'
 
 interface AuthContextValue {

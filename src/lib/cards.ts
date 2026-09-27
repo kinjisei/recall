@@ -1,6 +1,6 @@
-import { supabase, requireUserId } from './supabase'
+import { supabase, requireUserId } from '../shared/api/supabase'
 import { track } from './analytics'
-import type { TablesUpdate } from './database.types'
+import type { TablesUpdate } from '../shared/api/database.types'
 import type { AppLang, Card, Deck, ReviewState } from '../types'
 import { statusOf, type WordStatus } from './wordChecks'
 

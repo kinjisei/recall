@@ -7,7 +7,7 @@
 // в главный бандл и обнулял его lazy() — сборка ругалась
 // INEFFECTIVE_DYNAMIC_IMPORT.
 // ============================================================================
-import { supabase, currentUserId } from './supabase'
+import { supabase, currentUserId } from '../shared/api/supabase'
 import { readRaw, writeRaw } from '../shared/lib/storage'
 
 const KEY = 'recall.onboarded'

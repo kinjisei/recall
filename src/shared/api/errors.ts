@@ -8,16 +8,16 @@
 // школьники: такой текст не говорит ни что случилось, ни что делать, и
 // человек просто уходит, не написав в поддержку.
 //
-// Почему здесь, а не в supabase.ts: там транспорт (клиент, requireUserId), а
+// Почему отдельно от supabase.ts: там транспорт (клиент, requireUserId), а
 // это — формулировки для человека, ими пользуются восемь разных модулей.
-// Рядом уже лежит access.ts, который так же переводит ошибки входа от GoTrue;
-// dbError — его сосед для ошибок базы, а не часть клиента.
+// Ошибки входа от GoTrue так же переводит lib/access.ts; этот файл — его
+// сосед по смыслу для ошибок базы, а не часть клиента.
 //
 // Правило: пользователю — что произошло и что делать дальше; техническая
 // подробность НЕ проглатывается, а уходит в console.error, чтобы диагностика
 // («открой консоль и покажи») осталась возможной.
 // ============================================================================
-import { SUPPORT_EMAIL } from '../shared/lib/contacts'
+import { SUPPORT_EMAIL } from '../lib/contacts'
 
 /**
  * Форма ошибки supabase-js. PostgrestError — обычный объект (не Error!) с
@@ -145,7 +145,32 @@ export function describeDbError(error: unknown, action: string): string {
  *
  * Использовать так: `if (error) throw dbError(error, 'отправить работу')`.
  */
-export function dbError(error: unknown, action: string): Error {
+export function dbError(error: unknown, action: string): AppError {
   console.error(`[db] не удалось ${action}:`, error)
-  return new Error(describeDbError(error, action))
+  return new AppError(describeDbError(error, action), errorCode(error))
+}
+
+/**
+ * Ошибка приложения: `message` — текст для человека (его показывает экран, как
+ * и у обычного Error), `code` — причина для кода: наш RECALL_* из RPC или код
+ * supabase-js/Postgres (PGRST301, 42501…). По коду можно решать, что делать
+ * (повторить, позвать войти заново), не разбирая русский текст.
+ *
+ * Наследник Error: `instanceof Error`, `message` и `name` те же, что раньше, —
+ * все места с `e instanceof Error ? e.message : …` работают как прежде.
+ */
+export class AppError extends Error {
+  readonly code: string | undefined
+
+  constructor(message: string, code?: string) {
+    super(message)
+    this.code = code
+  }
+}
+
+/** Код причины: наш маркер RECALL_* точнее кода библиотеки. */
+function errorCode(error: unknown): string | undefined {
+  const message = readMessage(error)
+  const ours = Object.keys(RECALL_TEXTS).find((marker) => message.includes(marker))
+  return ours ?? (readCode(error) || undefined)
 }
