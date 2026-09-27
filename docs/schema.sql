@@ -3984,6 +3984,45 @@ revoke execute on function public.homework_refresh_trigger()  from public, anon,
 revoke execute on function public.homework_refresh_by_user()  from public, anon, authenticated;
 
 -- ============================================================================
+-- ХВОСТ БЛОКА 5 (2026-08-23): долговечность ES-уровня + самоудаление аккаунта.
+-- ============================================================================
+
+-- ---- ES-уровень в профиле (долговечность между устройствами) ---------------
+-- Было: уровень испанского жил ТОЛЬКО в localStorage (recall.es_level) и
+-- терялся при смене устройства/браузера — placement-тест приходилось проходить
+-- заново. Английский уровень давно в profiles.level; испанскому заводим свою
+-- колонку. Клиент по-прежнему читает localStorage синхронно (кэш), но пишет
+-- ЧЕРЕЗ профиль и подтягивает значение с сервера на новом устройстве
+-- (lib/esLevel.ts write-through + гидрация).
+alter table public.profiles add column if not exists es_level text;
+alter table public.profiles drop constraint if exists profiles_es_level_check;
+alter table public.profiles add constraint profiles_es_level_check
+  check (es_level is null or es_level in ('A1','A2','B1','B2','C1','C2'));
+
+-- ⚠️ У profiles КОЛОНОЧНЫЕ гранты (блок «УТЕЧКА ПРОФИЛЯ»): без явного гранта
+-- новая колонка невидима клиенту и не сохранится — молча. Гранты на колонки
+-- аддитивны, поэтому добавляем ТОЛЬКО es_level, не трогая остальной список.
+grant select (es_level) on public.profiles to authenticated;
+grant update (es_level) on public.profiles to authenticated;
+
+-- ---- Самоудаление аккаунта -------------------------------------------------
+-- Было: уйти можно было только «напишите нам» — владелец удалял руками. Даём
+-- пользователю право самому стереть аккаунт. Удаляем строку из auth.users —
+-- профиль и ВСЕ данные уходят каскадом (FK on delete cascade по всей схеме).
+-- security definer: доступ к auth.users есть у владельца функции (postgres),
+-- не у клиента напрямую. Подтверждение (ввод своего email) — на клиенте;
+-- сервер лишь стирает свой аккаунт (жёстко student_id = auth.uid()).
+create or replace function public.delete_my_account()
+returns void language plpgsql security definer set search_path = public as $fn$
+declare uid uuid := auth.uid();
+begin
+  if uid is null then raise exception 'RECALL_NO_AUTH'; end if;
+  delete from auth.users where id = uid;
+end $fn$;
+
+grant execute on function public.delete_my_account() to authenticated;
+
+-- ============================================================================
 -- ФИНАЛЬНАЯ СТРАХОВКА: аноним не зовёт ничего, кроме одной разрешённой функции.
 -- Этот блок обязан оставаться ПОСЛЕДНИМ в файле.
 --

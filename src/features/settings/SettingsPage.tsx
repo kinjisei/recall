@@ -7,6 +7,7 @@
 import { useEffect, useState } from 'react'
 
 import { SecuritySection } from './SecuritySection'
+import { DataAccountSection } from './DataAccountSection'
 import { SUPPORT_EMAIL, SUPPORT_SLA, supportMailto } from '../../lib/contacts'
 import { IconBack, IconSpeaker, IconCheck, IconThumbsUp } from '../../components/icons'
 import { useSmartBack } from '../../components/SmartBack'
@@ -216,6 +217,9 @@ export function SettingsPage() {
       {/* Безопасность — отдельным файлом: форма со своим состоянием и
           проверкой текущего пароля, в общий экран настроек её мешать незачем. */}
       <SecuritySection />
+
+      {/* Данные и аккаунт: экспорт своих данных и самоудаление (хвост блока 5). */}
+      <DataAccountSection />
 
       <p className="px-1 text-xs text-[var(--night-text-40)]">
         Скорость озвучки и размер текста сохраняются на этом устройстве.

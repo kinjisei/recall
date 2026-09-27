@@ -6,6 +6,7 @@
 // ============================================================================
 import { supabase } from './supabase'
 import { readRaw, writeRaw } from './storage'
+import { hydrateEsLevel } from './esLevel'
 import type { Profile } from '../types'
 
 let cache: { userId: string; promise: Promise<Profile | null> } | null = null
@@ -29,7 +30,7 @@ export function getCachedEnLevel(): string | null | undefined {
  * ошибкой прав. Секреты (invite_code, plan, trial_until, is_admin) через REST
  * не читаются вовсе — их отдают RPC get_my_plan() и ensure_invite_code().
  */
-export const PROFILE_COLUMNS = 'id, display_name, level, native_lang, role, created_at, goal'
+export const PROFILE_COLUMNS = 'id, display_name, level, native_lang, role, created_at, goal, es_level'
 /** Без колонок, которые могли ещё не приехать в базу (см. fetchProfile). */
 const PROFILE_COLUMNS_BASE = 'id, display_name, level, native_lang, role, created_at'
 
@@ -60,6 +61,9 @@ async function fetchProfile(userId: string): Promise<Profile | null> {
   if (error || !data) return null
   const profile = data as Profile
   writeRaw(LEVEL_CACHE_KEY, profile.level ?? '')
+  // ES-уровень: сервер → локальный кэш (новое устройство) или наоборот
+  // (миграция значения, записанного до появления колонки es_level).
+  hydrateEsLevel(profile.es_level ?? null)
   return profile
 }
 

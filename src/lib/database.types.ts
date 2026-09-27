@@ -584,6 +584,7 @@ export type Database = {
           level: string | null
           native_lang: string | null
           goal: string | null
+          es_level: string | null
           plan: string
           plan_expires_at: string | null
           role: string | null
@@ -599,6 +600,7 @@ export type Database = {
           level?: string | null
           native_lang?: string | null
           goal?: string | null
+          es_level?: string | null
           plan?: string
           plan_expires_at?: string | null
           role?: string | null
@@ -614,6 +616,7 @@ export type Database = {
           level?: string | null
           native_lang?: string | null
           goal?: string | null
+          es_level?: string | null
           plan?: string
           plan_expires_at?: string | null
           role?: string | null
@@ -1080,6 +1083,7 @@ export type Database = {
       delete_grammar_quest: { Args: { p_id: string }; Returns: undefined }
       admin_funnel: { Args: { p_days?: number }; Returns: Json }
       become_teacher: { Args: never; Returns: undefined }
+      delete_my_account: { Args: never; Returns: undefined }
       track_event: {
         Args: { p_name: string; p_props?: Json; p_anon?: string | null; p_source?: string | null }
         Returns: undefined

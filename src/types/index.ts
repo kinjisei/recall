@@ -45,6 +45,9 @@ export interface Profile {
   created_at: string
   /** Зачем человек учит язык. Влияет на подсказки AI и видна преподавателю. */
   goal: LearningGoal | null
+  /** Уровень испанского (EN-уровень — в level). null — тест не пройден.
+   *  Долговечная копия localStorage-кэша recall.es_level (см. lib/esLevel). */
+  es_level?: CEFRLevel | null
 }
 
 /** Цель обучения. Список закрытый: значение попадает в промпты AI. */
