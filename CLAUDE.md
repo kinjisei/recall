@@ -849,8 +849,10 @@ headless-вкладке кадры не выдаются: ожидание мо�
 - **Первая миграция на проде** (PLAN.md Ф1.2): `npm run db:migrate:prod` —
   отметит baseline применённым (только если прод всё ещё равен ему) и
   применит `0001` (новые функции закрыты от анонима с рождения). Нужен пароль
-  базы прода; забыт — сброс в Supabase → Settings → Database, приложению не
-  мешает. После — `node scripts/check-db-equal.mjs` должен дать 0.
+  базы ОСНОВНОГО проекта (не recall-test и не вход на supabase.com). ⚠️ Он же
+  внутри секрета GitHub `SUPABASE_DB_URL`, на котором ночной бэкап: сбросил
+  пароль (Supabase → Settings → Database) — обнови и секрет, иначе бэкап
+  упадёт. После — `node scripts/check-db-equal.mjs` должен дать 0.
 - **Три старых смоук-аккаунта на проде** (`pg@`, `z1a@`, `dbg-newbie@recall.test`,
   июль–август) — удалить в панели Supabase → Authentication.
 - **Confirm email** в Supabase Auth.
