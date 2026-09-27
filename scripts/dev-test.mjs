@@ -9,23 +9,25 @@
  * Адрес базы и публичный ключ подменяются только этому процессу: Vite не
  * перезаписывает переменные, которые уже есть в окружении, поэтому
  * .env.local не трогается. Ключи ИИ (GEMINI_API_KEY…) — те же, из .env.local.
+ *
+ * ⚠️ Vite запускается В ЭТОМ ЖЕ процессе (API createServer), а не дочерним:
+ * на Windows остановка обёртки оставляла дочерний Vite сиротой на порту, и
+ * следующий запуск упирался в занятый 5174.
  */
-import { spawn } from 'node:child_process'
-import { fileURLToPath } from 'node:url'
-import { scriptEnv } from './_env.mjs'
+import { createServer } from 'vite'
+import { ROOT, scriptEnv } from './_env.mjs'
 
 if (process.argv.includes('--prod')) {
   console.error('Для живой базы — обычный `npm run dev` (порт 5173).')
   process.exit(1)
 }
 const env = scriptEnv()
-const vite = fileURLToPath(new URL('../node_modules/vite/bin/vite.js', import.meta.url))
-const child = spawn(process.execPath, [vite, '--port', '5174', '--strictPort'], {
-  stdio: 'inherit',
-  env: {
-    ...process.env,
-    VITE_SUPABASE_URL: env.VITE_SUPABASE_URL,
-    VITE_SUPABASE_ANON_KEY: env.VITE_SUPABASE_ANON_KEY,
-  },
+process.env.VITE_SUPABASE_URL = env.VITE_SUPABASE_URL
+process.env.VITE_SUPABASE_ANON_KEY = env.VITE_SUPABASE_ANON_KEY
+
+const server = await createServer({
+  root: new URL('.', ROOT).pathname.replace(/^\/([A-Za-z]:)/, '$1'),
+  server: { port: 5174, strictPort: true },
 })
-child.on('exit', (code) => process.exit(code ?? 0))
+await server.listen()
+server.printUrls()
