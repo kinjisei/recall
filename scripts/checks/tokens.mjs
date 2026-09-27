@@ -26,7 +26,9 @@ const UTILS =
   'bg|text|border(?:-[xytrblse])?|ring(?:-offset)?|outline|divide|placeholder|caret|accent|fill|stroke|decoration|shadow|inset-shadow|inset-ring|from|via|to'
 const RULES = {
   palette: new RegExp(`(?<![\\w-])(?:${UTILS})-(?:white|black|(?:${COLORS})-\\d{2,3})(?:\\/\\d+)?(?![\\w-])`, 'g'),
-  literal: /#[0-9a-fA-F]{3,8}(?![\w-])|\b(?:rgba?|hsla?|oklch|oklab)\(/g,
+  // перед rgba( может стоять «_» — так пишут пробел в значениях Tailwind:
+  // shadow-[0_0_4px_rgba(…)]; граница слова \b его не пропустила бы
+  literal: /#[0-9a-fA-F]{3,8}(?![\w-])|(?<![A-Za-z0-9-])(?:rgba?|hsla?|oklch|oklab)\(/g,
   px: /\[-?\d+(?:\.\d+)?px\]/g,
 }
 // свойство стиля, отвечающее за цвет; нарушение — если в значении нет ни одного
@@ -104,17 +106,23 @@ function styleBlocks(code) {
   return blocks
 }
 
+/** Нарушения в тексте одного файла: { palette, literal, px, inline }. */
+export function countIn(text) {
+  // CRLF (так git выдаёт файлы на Windows) — к LF: иначе «//» в конце строки
+  // не узнаётся как комментарий, и счёт расходится с CI
+  const code = codeLines(text.replace(/\r\n?/g, '\n')).join('\n')
+  const counts = {}
+  for (const [kind, re] of Object.entries(RULES)) counts[kind] = (code.match(re) || []).length
+  counts.inline = styleBlocks(code).reduce((s, b) => s + inlineColors(b), 0)
+  return counts
+}
+
 export function scan() {
   const current = {}
   for (const full of walk(join(ROOT, 'src'))) {
     const path = rel(full)
     if (EXEMPT.some((re) => re.test(path))) continue
-    const code = codeLines(readFileSync(full, 'utf8')).join('\n')
-    const add = (kind, n) => {
-      if (n) current[`${path} ${kind}`] = (current[`${path} ${kind}`] ?? 0) + n
-    }
-    for (const [kind, re] of Object.entries(RULES)) add(kind, (code.match(re) || []).length)
-    add('inline', styleBlocks(code).reduce((s, b) => s + inlineColors(b), 0))
+    for (const [kind, n] of Object.entries(countIn(readFileSync(full, 'utf8')))) if (n) current[`${path} ${kind}`] = n
   }
   return current
 }

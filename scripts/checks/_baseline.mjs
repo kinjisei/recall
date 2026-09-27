@@ -58,6 +58,25 @@ function writeItems(file, about, items) {
   writeFileSync(url, JSON.stringify({ about, items: sorted }, null, 2) + '\n')
 }
 
+/** Сравнение со списком: added — новое или выросшее, stale — исправленное (список пора сузить). */
+export function compare(base, current) {
+  const added = []
+  const stale = []
+  for (const [k, now] of Object.entries(current)) if (now > (base[k] ?? 0)) added.push([k, now, base[k] ?? 0])
+  for (const [k, was] of Object.entries(base)) if ((current[k] ?? 0) < was) stale.push([k, current[k] ?? 0, was])
+  return { added, stale }
+}
+
+/** Суженный список: каждое число — не больше текущего; новых ключей не появляется. */
+export function pruned(base, current) {
+  const next = {}
+  for (const [k, was] of Object.entries(base)) {
+    const n = Math.min(was, current[k] ?? 0)
+    if (n > 0) next[k] = n
+  }
+  return next
+}
+
 /**
  * Сравнить текущие нарушения со списком и напечатать итог.
  * @param {object} o
@@ -78,8 +97,7 @@ export function settle({ name, file, about, current, describe, total = true, mod
     return true
   }
   if (mode.kind === 'prune') {
-    const next = {}
-    for (const [k, was] of Object.entries(base)) next[k] = Math.min(was, current[k] ?? 0)
+    const next = pruned(base, current)
     const removed = Object.keys(base).filter((k) => !next[k]).length
     const lowered = Object.keys(base).filter((k) => next[k] && next[k] < base[k]).length
     writeItems(file, about, next)
@@ -101,11 +119,7 @@ export function settle({ name, file, about, current, describe, total = true, mod
     return true
   }
 
-  const added = []
-  const stale = []
-  for (const [k, now] of Object.entries(current)) if (now > (base[k] ?? 0)) added.push([k, now, base[k] ?? 0])
-  for (const [k, was] of Object.entries(base)) if ((current[k] ?? 0) < was) stale.push([k, current[k] ?? 0, was])
-
+  const { added, stale } = compare(base, current)
   if (added.length) {
     console.log(`✖ ${name}: новые нарушения — ${added.length}:`)
     for (const [k, now, was] of added) console.log(`  ${describe(k, now, was)}`)

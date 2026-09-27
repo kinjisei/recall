@@ -43,7 +43,10 @@ export function docFor(path, docs) {
 
 /** Есть ли в сообщении осмысленная причина (хотя бы два слова после «потому что»). */
 export function hasReason(message) {
+  // сообщение из редактора на Windows приходит с CRLF, а «.» в регулярке
+  // не проходит через \r — причина со второй строки терялась бы
   const text = message
+    .replace(/\r/g, '')
     .split('\n')
     .filter((l) => !l.startsWith('#'))
     .join(' ')

@@ -14,7 +14,7 @@
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
 import ts from 'typescript'
-import { countLines, isMain, rootPath, settle } from './_baseline.mjs'
+import { countLines, isMain, plural, rootPath, settle } from './_baseline.mjs'
 
 export const FILE_MAX = 400
 export const COMPONENT_MAX = 250
@@ -43,8 +43,9 @@ function holdsFunction(node) {
   return false
 }
 
-/** Компоненты верхнего уровня .tsx-файла: имя с большой буквы и тело-функция. */
-function components(source) {
+/** Компоненты верхнего уровня .tsx-файла: [имя, строк] — имя с большой буквы и тело-функция. */
+export function componentsIn(path, text) {
+  const source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
   const out = []
   const lines = (node) =>
     source.getLineAndCharacterOfPosition(node.end).line - source.getLineAndCharacterOfPosition(node.getStart(source)).line + 1
@@ -72,8 +73,7 @@ export function measure() {
     const n = countLines(text)
     if (n > FILE_MAX) current[path] = n
     if (path.endsWith('.tsx')) {
-      const source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
-      for (const [name, len] of components(source)) if (len > COMPONENT_MAX) current[`${path}#${name}`] = len
+      for (const [name, len] of componentsIn(path, text)) if (len > COMPONENT_MAX) current[`${path}#${name}`] = len
     }
   }
   return current
@@ -91,7 +91,7 @@ if (isMain(import.meta.url)) {
     describe: (key, now, was) => {
       const limit = key.includes('#') ? COMPONENT_MAX : FILE_MAX
       const what = key.includes('#') ? 'компонент' : 'файл'
-      if (!was) return `${key}: ${now} строк — ${what} больше лимита ${limit}; разрежь на части (образец — features/teacher/materials/*)`
+      if (!was) return `${key}: ${plural(now, 'строка', 'строки', 'строк')} — ${what} больше лимита ${limit}; разрежь на части (образец — features/teacher/materials/*)`
       return (
         `${key}: было ${was}, стало ${now} — ${what} уже в списке больших и расти не должен. ` +
         `Вынеси новое в отдельный файл; поднять планку осознанно: npm run check:size -- --allow ${key.split('#')[0]}`
