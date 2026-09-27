@@ -10,7 +10,9 @@
  * Схема выполняется в транзакции и откатывается, поэтому проверять можно ДО
  * заливки — то есть ровно тогда, когда это нужно.
  *
- * Запуск: node scripts/test-answermatches-sql.mjs
+ * Запуск: node scripts/check-answermatches-sql.mjs
+ * Имя check-*, а не test-*: ходит в живую базу, поэтому в CI не входит
+ * (там запускаются все test-*.mjs по шаблону — только чистые тесты).
  * Нужен SUPABASE_ACCESS_TOKEN в .env.local (Management API).
  */
 import { readFileSync } from 'node:fs'
