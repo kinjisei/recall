@@ -11,6 +11,7 @@
 // ============================================================================
 import { randomUUID } from 'node:crypto'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { TIMEOUTS, timedFetch } from './_timeouts.js'
 
 // CORS: только известные origin'ы (реальный фронт ходит same-origin).
 export const ALLOWED_ORIGINS = ['https://recall-pgkz.vercel.app', 'http://localhost:5173']
@@ -53,12 +54,25 @@ export type QuotaKind = 'heavy' | 'light' | 'speech'
 
 const DENIED: AuthResult = { ok: false, status: 401, error: 'Требуется вход в приложение' }
 
+/**
+ * Supabase не ответил вовремя или связь оборвалась. Это НЕ «нужен вход» и не
+ * «ты не преподаватель»: доступ закрыт, но говорим правду — иначе человек
+ * полезет перелогиниваться или решит, что у него отняли роль.
+ */
+export const UNAVAILABLE: AuthDenied = {
+  ok: false,
+  status: 503,
+  error: 'Сервис AI временно недоступен. Попробуй через минуту.',
+}
+
 /** Резервная проверка токена — на случай, если RPC ещё не создана в БД. */
-async function tokenValid(url: string, anon: string, token: string): Promise<boolean> {
-  const r = await fetch(`${url}/auth/v1/user`, {
-    headers: { Authorization: `Bearer ${token}`, apikey: anon },
-  })
-  return r.ok
+async function tokenValid(url: string, anon: string, token: string, ms: number): Promise<boolean> {
+  return timedFetch(
+    `${url}/auth/v1/user`,
+    { headers: { Authorization: `Bearer ${token}`, apikey: anon } },
+    ms,
+    async (r) => r.ok,
+  )
 }
 
 /**
@@ -73,31 +87,37 @@ async function tokenValid(url: string, anon: string, token: string): Promise<boo
  * только свою строку (ученица видит профиль своего преподавателя). Возьми мы
  * id из токена «на веру» — ученица подставила бы id учителя и прочитала бы его
  * role='teacher', то есть проверка бы её же и пропустила.
- * При любой ошибке отвечаем false — закрыто по умолчанию.
+ * Закрыто по умолчанию: при любой ошибке — не пускаем. Но «Supabase не
+ * ответил» (null) отличаем от «не преподаватель» (false), чтобы не сказать
+ * учителю неправду про его роль.
  */
-export async function isTeacher(req: VercelRequest): Promise<boolean> {
+export async function isTeacher(
+  req: VercelRequest,
+  ms = TIMEOUTS.supabaseMs,
+): Promise<boolean | null> {
   const auth = req.headers.authorization
   const token = auth?.startsWith('Bearer ') ? auth.slice(7) : null
   const url = process.env.VITE_SUPABASE_URL
   const anon = process.env.VITE_SUPABASE_ANON_KEY
   if (!token || !url || !anon) return false
 
+  const headers = { Authorization: `Bearer ${token}`, apikey: anon }
+  const readJson = async (r: Response) => (r.ok ? ((await r.json()) as unknown) : null)
   try {
-    const headers = { Authorization: `Bearer ${token}`, apikey: anon }
-    const me = await fetch(`${url}/auth/v1/user`, { headers })
-    if (!me.ok) return false
-    const { id } = (await me.json()) as { id?: string }
-    if (!id) return false
+    const me = (await timedFetch(`${url}/auth/v1/user`, { headers }, ms, readJson)) as {
+      id?: string
+    } | null
+    if (!me?.id) return false
 
-    const r = await fetch(
-      `${url}/rest/v1/profiles?id=eq.${encodeURIComponent(id)}&select=role`,
+    const rows = (await timedFetch(
+      `${url}/rest/v1/profiles?id=eq.${encodeURIComponent(me.id)}&select=role`,
       { headers },
-    )
-    if (!r.ok) return false
-    const rows = (await r.json()) as { role?: string }[]
-    return rows[0]?.role === 'teacher'
+      ms,
+      readJson,
+    )) as { role?: string }[] | null
+    return rows?.[0]?.role === 'teacher'
   } catch {
-    return false
+    return null // не ответил вовремя или оборвалась связь
   }
 }
 
@@ -110,6 +130,8 @@ export async function authorize(
   kind: QuotaKind = 'heavy',
   cost?: number,
   generation = false,
+  /** Окно одного запроса в Supabase, мс (api/_timeouts.ts). */
+  supabaseMs = TIMEOUTS.supabaseMs,
 ): Promise<AuthResult> {
   const auth = req.headers.authorization
   const token = auth?.startsWith('Bearer ') ? auth.slice(7) : null
@@ -118,25 +140,31 @@ export async function authorize(
   if (!token || !url || !anon) return DENIED
   // энергия действия: heavy по умолчанию 1 ⚡, light/speech — 0 (только анти-абьюз)
   const p_cost = cost ?? (kind === 'heavy' ? 1 : 0)
+  // Токен возврата рождается ЗДЕСЬ, на сервере, и клиенту не уходит. Иначе
+  // возврат стал бы отмычкой: RPC доступна пользователю с его же токеном, и
+  // «верни последнее списание» означало бы безлимитный AI в один вызов.
+  const nonce = randomUUID()
 
   try {
+    // Тело читаем внутри окна: зависнуть можно и на середине ответа.
     const rpc = (fn: string, body: string) =>
-      fetch(`${url}/rest/v1/rpc/${fn}`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          apikey: anon,
-          'Content-Type': 'application/json',
+      timedFetch(
+        `${url}/rest/v1/rpc/${fn}`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            apikey: anon,
+            'Content-Type': 'application/json',
+          },
+          body,
         },
-        body,
-      })
+        supabaseMs,
+        async (r) => ({ ok: r.ok, status: r.status, text: await r.text() }),
+      )
 
     // Основной путь — энергия (E1). Фолбэки на старую RPC держат деплой безопасным
     // и до, и после миграции (клиент/сервер не ломаются в переходный момент).
-    // Токен возврата рождается ЗДЕСЬ, на сервере, и клиенту не уходит. Иначе
-    // возврат стал бы отмычкой: RPC доступна пользователю с его же токеном, и
-    // «верни последнее списание» означало бы безлимитный AI в один вызов.
-    const nonce = randomUUID()
     let refundable = true
     let r = await rpc(
       'spend_energy',
@@ -158,7 +186,7 @@ export async function authorize(
     if (r.ok) return { ok: true, refundToken: refundable ? nonce : undefined }
     if (r.status === 401 || r.status === 403) return DENIED
 
-    const body = await r.text()
+    const body = r.text
     if (body.includes('RECALL_NO_AUTH')) return DENIED
     if (body.includes('RECALL_ENERGY_POOL')) {
       return {
@@ -274,7 +302,7 @@ export async function authorize(
     //     заливки. Ситуация краткая и ожидаемая.
     if (r.status === 404 || body.includes('PGRST202')) {
       console.error('consume_ai_quota НЕ НАЙДЕНА (миграция не залита?) — лимиты временно не действуют:', body.slice(0, 200))
-      return (await tokenValid(url, anon, token)) ? { ok: true } : DENIED
+      return (await tokenValid(url, anon, token, supabaseMs)) ? { ok: true } : DENIED
     }
 
     // (б) Функция ЕСТЬ, но упала с неизвестной ошибкой — это БАГ в SQL квот
@@ -282,13 +310,18 @@ export async function authorize(
     //     на неделю). fail-CLOSED: не открываем доступ молча, а отказываем —
     //     сбой видно сразу по жалобам, а не потом по счёту за токены.
     console.error('consume_ai_quota упала с неожиданной ошибкой — AI закрыт (fail-closed):', body.slice(0, 300))
-    return {
-      ok: false,
-      status: 503,
-      error: 'Сервис AI временно недоступен. Попробуй через минуту.',
-    }
+    return UNAVAILABLE
   } catch {
-    return DENIED
+    // Supabase не ответил вовремя или оборвалась связь. Списание могло пройти
+    // на той стороне, а ответ до нас не дойти — тогда человек заплатил бы за
+    // отказ. Возвращаем по тому же номеру: незнакомый номер refund_ai_call
+    // просто пропускает. Если списание ещё идёт, общий замок пользователя
+    // (pg_advisory_xact_lock в обеих функциях) заставит возврат его дождаться.
+    // Остаток: запрос списания ещё не дошёл до базы — возврат ничего не найдёт,
+    // и единица пропадёт. Это редкость в редкости, и лучше, чем без возврата.
+    console.warn('Supabase не ответил на списание — AI закрыт, возврат по номеру')
+    await refundNonce(url, anon, token, nonce, supabaseMs)
+    return UNAVAILABLE
   }
 }
 
@@ -317,23 +350,38 @@ export function applyCors(req: VercelRequest, res: VercelResponse): boolean {
  * потерял одну единицу энергии, это неприятно, но безопасно; уронить ответ
  * из-за неудачного возврата было бы хуже.
  */
-export async function refundAiCall(req: VercelRequest, token?: string): Promise<void> {
+export async function refundAiCall(
+  req: VercelRequest,
+  token?: string,
+  /** Окно запроса, мс: возврат обязан успеть до обрыва функции. */
+  ms = TIMEOUTS.supabaseMs,
+): Promise<void> {
   if (!token) return
   const auth = req.headers.authorization
   const jwt = auth?.startsWith('Bearer ') ? auth.slice(7) : null
   const url = process.env.VITE_SUPABASE_URL
   const anon = process.env.VITE_SUPABASE_ANON_KEY
   if (!jwt || !url || !anon) return
+  await refundNonce(url, anon, jwt, token, ms)
+}
+
+/** Сам запрос возврата — общий для refundAiCall и отказа на списании. */
+async function refundNonce(url: string, anon: string, jwt: string, nonce: string, ms: number) {
   try {
-    await fetch(`${url}/rest/v1/rpc/refund_ai_call`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${jwt}`,
-        apikey: anon,
-        'Content-Type': 'application/json',
+    await timedFetch(
+      `${url}/rest/v1/rpc/refund_ai_call`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+          apikey: anon,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ p_nonce: nonce }),
       },
-      body: JSON.stringify({ p_nonce: token }),
-    })
+      ms,
+      async (r) => r.ok,
+    )
   } catch {
     /* возврат — «лучшее усилие», молча */
   }

@@ -8,14 +8,25 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 // расширение .js обязательно в ESM ("type": "module")
 import { authorize, applyCors, authDenied, refundAiCall } from './_auth.js'
 import { transcribeWithGroq } from './_stt.js'
+import { TIMEOUTS, windowUntil, workDeadline, type Timeouts } from './_timeouts.js'
 
 export const config = { maxDuration: 30 }
+
+// Бюджет (числа — api/_timeouts.ts): распознавание кончается к 22-й секунде
+// (30 − 3 запас − 5 на возврат), окно Whisper — 15 с.
+const LIMITS: Timeouts = { ...TIMEOUTS, functionMs: config.maxDuration * 1000 }
 
 // Фраза для тренировки — несколько секунд. Больше ~4 МБ (после base64) не ждём;
 // ограничение отсекает и случайные большие записи, и попытки грузить лишнее.
 const MAX_AUDIO_BYTES = 3_000_000
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default function handler(req: VercelRequest, res: VercelResponse) {
+  return handle(req, res)
+}
+
+/** Сам обработчик. Сроки — параметром: тест гоняет те же пути за доли секунды. */
+export async function handle(req: VercelRequest, res: VercelResponse, t: Timeouts = LIMITS) {
+  const startedAt = Date.now()
   if (applyCors(req, res)) return
   if (req.method !== 'POST') return res.status(405).json({ error: 'Только POST' })
 
@@ -50,17 +61,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // класс speech: у произношения свой щедрый лимит — попытки шэдоуинга не
   // должны съедать дневные «AI-действия» Диалога (их всего 12 на триале)
-  const access = await authorize(req, 'speech')
+  const access = await authorize(req, 'speech', undefined, false, t.supabaseMs)
   if (authDenied(access)) return res.status(access.status).json({ error: access.error })
 
   try {
-    const text = await transcribeWithGroq(buf, mime || 'audio/webm', speechLang, apiKey)
+    const ms = windowUntil(workDeadline(startedAt, t), t.sttMs)
+    const text = await transcribeWithGroq(buf, mime || 'audio/webm', speechLang, apiKey, ms)
     return res.status(200).json({ text })
   } catch (e) {
     // то же правило, что в api/gemini: не распознали — не берём плату.
     // У «Речи» свой суточный карман, и терять его попытки из-за сбоя
     // поставщика особенно обидно: тренажёр произношения — наше отличие.
-    await refundAiCall(req, access.refundToken)
+    await refundAiCall(req, access.refundToken, t.supabaseMs)
     const msg = e instanceof Error ? e.message : 'Ошибка распознавания'
     return res.status(msg.includes('лимит') ? 429 : 502).json({ error: msg })
   }

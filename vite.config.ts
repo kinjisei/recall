@@ -87,10 +87,12 @@ function geminiDevEndpoint(apiKey: string | undefined, groqKey: string | undefin
                 res.write(first.value)
                 try {
                   for await (const chunk of gen) res.write(chunk)
+                  res.end()
                 } catch {
-                  /* оборвалось — отдаём что успели (в dev энергии нет) */
+                  // оборвалось — рвём соединение, как прод (api/gemini.ts):
+                  // чистое закрытие клиент принял бы за целый ответ
+                  res.destroy()
                 }
-                res.end()
                 return
               }
               if (!apiKey) {

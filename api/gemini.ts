@@ -9,12 +9,20 @@ import type { ChatTurn } from '../src/types/index.js'
 // не находит модуль без расширения (FUNCTION_INVOCATION_FAILED при старте)
 import { callGemini, streamGemini, GEMINI_TIER_CHAINS, type AiTier } from './_core.js'
 import { groqChat, DEFAULT_GROQ_MODEL, FAST_GROQ_MODEL } from './_groq.js'
-import { authorize, applyCors, authDenied, isTeacher, refundAiCall } from './_auth.js'
+import { authorize, applyCors, authDenied, isTeacher, refundAiCall, UNAVAILABLE } from './_auth.js'
 import { taskSpec } from './_tasks.js'
+import { TIMEOUTS, chainTime, windowUntil, workDeadline, type Timeouts } from './_timeouts.js'
 
 // Генерация материала занимает 20–40 с (два запроса к Gemini), плюс повторы
 // при 503. Дефолтные 10 с Vercel обрывали её раньше времени.
 export const config = { maxDuration: 60 }
+
+/**
+ * Бюджет минуты (числа — api/_timeouts.ts): работа кончается к 52-й секунде
+ * (60 − 3 запас − 5 на возврат энергии), а цепочка Gemini — к 40-й, чтобы
+ * Groq-у как последнему рубежу осталось его окно в 12 с.
+ */
+const LIMITS: Timeouts = { ...TIMEOUTS, functionMs: config.maxDuration * 1000 }
 
 // Лимиты на вход — отсекают злоупотребление токенами (сжигание бесплатной квоты).
 const MAX_MESSAGES = 50
@@ -30,7 +38,13 @@ const MAX_SYSTEM_CHARS = 12_000
 const MAX_MESSAGES_LITE = 4
 const MAX_TOTAL_CHARS_LITE = 8_000
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default function handler(req: VercelRequest, res: VercelResponse) {
+  return handle(req, res)
+}
+
+/** Сам обработчик. Сроки — параметром: тест гоняет те же пути за доли секунды. */
+export async function handle(req: VercelRequest, res: VercelResponse, t: Timeouts = LIMITS) {
+  const startedAt = Date.now()
   if (applyCors(req, res)) return
   if (req.method !== 'POST') return res.status(405).json({ error: 'Только POST' })
 
@@ -94,11 +108,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // это задачи-генерации, и для не-учителя лимит генераций пула = 0, то есть
   // authorize вернул бы 429 «лимит генераций» вместо понятного 403. Проверка
   // роли ничего не стоит по энергии, поэтому переборa она не поощряет.
-  if (spec?.teacherOnly && !(await isTeacher(req))) {
-    return res.status(403).json({ error: 'Эта функция доступна только преподавателю.' })
+  if (spec?.teacherOnly) {
+    const teacher = await isTeacher(req, t.supabaseMs)
+    if (teacher === null) return res.status(UNAVAILABLE.status).json({ error: UNAVAILABLE.error })
+    if (!teacher) return res.status(403).json({ error: 'Эта функция доступна только преподавателю.' })
   }
 
-  const access = await authorize(req, quota, energyCost, generation)
+  const access = await authorize(req, quota, energyCost, generation, t.supabaseMs)
   if (authDenied(access)) {
     return res.status(access.status).json({ error: access.error })
   }
@@ -107,10 +123,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // БЕРЁМ ПЛАТУ. Раньше при выгорании всей цепочки моделей (у Google суточные
   // лимиты общие на проект, а не на человека) пользователь терял ⚡ и получал
   // отказ — то есть расплачивался за чужую активность.
-  const refund = () => refundAiCall(req, access.refundToken)
+  const refund = () => refundAiCall(req, access.refundToken, t.supabaseMs)
 
   const apiKey = process.env.GEMINI_API_KEY
   const groqKey = process.env.GROQ_API_KEY
+  // Сроки: всё, кроме возврата энергии, кончается к endBy. Цепочка Gemini, за
+  // которой ещё стоит Groq, кончается раньше — на его окно.
+  const endBy = workDeadline(startedAt, t)
+  const geminiBy = groqKey ? endBy - t.groqMs : endBy
   if (!apiKey && !groqKey) {
     await refund()
     // имя переменной окружения наружу не отдаём — это подсказка для атакующего
@@ -137,14 +157,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (aiTier === 'lite') {
       if (groqKey) {
         try {
-          return res.status(200).json({ text: await groqChat(messages, system, groqKey, FAST_GROQ_MODEL) })
+          const ms = windowUntil(endBy, t.attemptMs.lite)
+          return res.status(200).json({ text: await groqChat(messages, system, groqKey, FAST_GROQ_MODEL, ms) })
         } catch {
-          /* Groq лёг/лимит — уходим на Gemini-lite */
+          /* Groq лёг/лимит/завис — уходим на Gemini-lite */
         }
       }
       if (!apiKey) return unavailable()
       const chain = GEMINI_TIER_CHAINS.lite
-      return res.status(200).json({ text: await callGemini(messages, system, apiKey, chain[0], chain.slice(1), 'lite') })
+      const time = chainTime(t, 'lite', endBy)
+      return res.status(200).json({ text: await callGemini(messages, system, apiKey, chain[0], chain.slice(1), 'lite', time) })
     }
 
     // Потоковый «Диалог»: ответ льётся кусками по мере генерации — начинает
@@ -155,7 +177,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // завершился (ни слова / оборвался) — возвращаем.
     if (stream === true && task === 'dialog' && apiKey) {
       const chain = GEMINI_TIER_CHAINS[aiTier]
-      const gen = streamGemini(messages, system, apiKey, chain[0], chain, aiTier)
+      // у потока нет Groq-рубежа — ему вся минута до возврата энергии
+      const time = chainTime(t, aiTier, endBy)
+      const gen = streamGemini(messages, system, apiKey, chain[0], chain, aiTier, time)
       let first
       try {
         first = await gen.next() // до первого куска можно упасть — тогда возврат
@@ -172,9 +196,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         for await (const chunk of gen) res.write(chunk)
         res.end() // поток завершился STOP — ответ доставлен, плату оставляем
       } catch {
-        // Оборвалось после первого куска — возвращаем энергию, отдаём что успели.
-        res.end()
+        // Оборвалось или встало после первого куска — возвращаем энергию, а
+        // соединение РВЁМ, а не закрываем чисто: иначе клиент примет обрывок
+        // за целый ответ (статус 200 уже ушёл, другого сигнала у нас нет).
+        // Сначала возврат — после ответа функцию могут и не дождаться.
         await refund()
+        res.destroy()
       }
       return
     }
@@ -187,14 +214,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const chain = GEMINI_TIER_CHAINS[aiTier]
     if (apiKey) {
       try {
-        return res.status(200).json({ text: await callGemini(messages, system, apiKey, chain[0], chain, aiTier) })
+        const time = chainTime(t, aiTier, geminiBy)
+        return res.status(200).json({ text: await callGemini(messages, system, apiKey, chain[0], chain, aiTier, time) })
       } catch (e) {
         if (!groqKey) return await fail(e, 'Ошибка Gemini')
-        /* вся Gemini-цепочка легла — последний рубеж Groq */
+        /* вся Gemini-цепочка легла или не успела — последний рубеж Groq */
       }
     }
     if (!groqKey) return unavailable()
-    return res.status(200).json({ text: await groqChat(messages, system, groqKey, DEFAULT_GROQ_MODEL) })
+    const ms = windowUntil(endBy, t.groqMs)
+    return res.status(200).json({ text: await groqChat(messages, system, groqKey, DEFAULT_GROQ_MODEL, ms) })
   } catch (e) {
     return await fail(e, 'Ошибка AI')
   }

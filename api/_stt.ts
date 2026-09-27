@@ -8,6 +8,8 @@
 // language передаём явно ('en'/'es') — иначе Whisper может «перевести» речь на
 // английский и ухудшить распознавание.
 // ============================================================================
+import { TIMEOUTS, TimeoutError, timedFetch } from './_timeouts.js'
+
 const GROQ_URL = 'https://api.groq.com/openai/v1/audio/transcriptions'
 const MODEL = 'whisper-large-v3-turbo'
 
@@ -30,6 +32,8 @@ export async function transcribeWithGroq(
   mime: string,
   lang: 'en' | 'es',
   apiKey: string,
+  /** Сколько ждём распознавание целиком, мс (api/_timeouts.ts). */
+  timeoutMs = TIMEOUTS.sttMs,
 ): Promise<string> {
   const form = new FormData()
   const bytes = Uint8Array.from(audio)
@@ -39,21 +43,26 @@ export async function transcribeWithGroq(
   form.append('response_format', 'json')
   form.append('temperature', '0')
 
-  let res: Response
+  let res: { ok: boolean; status: number; text: string }
   try {
-    res = await fetch(GROQ_URL, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${apiKey}` },
-      body: form,
-    })
-  } catch {
-    throw new Error('Не удалось связаться с сервисом распознавания.')
+    res = await timedFetch(
+      GROQ_URL,
+      { method: 'POST', headers: { Authorization: `Bearer ${apiKey}` }, body: form },
+      timeoutMs,
+      async (r) => ({ ok: r.ok, status: r.status, text: await r.text() }),
+    )
+  } catch (e) {
+    if (e instanceof TimeoutError) {
+      console.warn(`Whisper: ${e.message}`)
+      throw new Error('Сервис распознавания не ответил вовремя. Попробуй ещё раз.', { cause: e })
+    }
+    throw new Error('Не удалось связаться с сервисом распознавания.', { cause: e })
   }
 
   if (!res.ok) {
     let detail = ''
     try {
-      const err = (await res.json()) as { error?: { message?: string } }
+      const err = JSON.parse(res.text) as { error?: { message?: string } }
       detail = err.error?.message ?? ''
     } catch {
       /* тело не JSON */
@@ -65,6 +74,6 @@ export async function transcribeWithGroq(
     throw new Error(`Сервис распознавания временно недоступен (${res.status}).`)
   }
 
-  const data = (await res.json()) as { text?: string }
+  const data = JSON.parse(res.text) as { text?: string }
   return (data.text ?? '').trim()
 }

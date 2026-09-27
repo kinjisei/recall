@@ -5,6 +5,7 @@
 // Файл с «_» — Vercel НЕ делает из него функцию. Ключ приходит параметром.
 // ============================================================================
 import type { ChatTurn } from '../src/types/index.js'
+import { TIMEOUTS, TimeoutError, timedFetch } from './_timeouts.js'
 
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions'
 
@@ -27,6 +28,8 @@ export async function groqChat(
   system: string | undefined,
   apiKey: string,
   model = DEFAULT_GROQ_MODEL,
+  /** Сколько ждём ответ целиком, мс (api/_timeouts.ts). */
+  timeoutMs = TIMEOUTS.groqMs,
 ): Promise<string> {
   // system-реплики склеиваем в одну системную инструкцию
   const sys = [system ?? '', ...messages.filter((m) => m.role === 'system').map((m) => m.content)]
@@ -39,21 +42,31 @@ export async function groqChat(
     msgs.push({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content })
   }
 
-  let res: Response
+  let res: { ok: boolean; status: number; text: string }
   try {
-    res = await fetch(GROQ_URL, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model, messages: msgs, temperature: 0.4, max_tokens: 1024 }),
-    })
-  } catch {
-    throw new Error('Не удалось связаться с Groq.')
+    res = await timedFetch(
+      GROQ_URL,
+      {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model, messages: msgs, temperature: 0.4, max_tokens: 1024 }),
+      },
+      timeoutMs,
+      async (r) => ({ ok: r.ok, status: r.status, text: await r.text() }),
+    )
+  } catch (e) {
+    if (e instanceof TimeoutError) {
+      console.warn(`Groq ${model}: ${e.message}`)
+      // тот же текст, что у зависшей цепочки Gemini: Groq — её последний рубеж
+      throw new Error('AI сейчас не отвечает. Энергия не потрачена — попробуй позже.', { cause: e })
+    }
+    throw new Error('Не удалось связаться с Groq.', { cause: e })
   }
 
   if (!res.ok) {
     let detail = ''
     try {
-      const err = (await res.json()) as { error?: { message?: string } }
+      const err = JSON.parse(res.text) as { error?: { message?: string } }
       detail = err.error?.message ?? ''
     } catch {
       /* тело не JSON */
@@ -63,7 +76,7 @@ export async function groqChat(
     throw new Error(`Сервис AI (Groq) временно недоступен (${res.status}).`)
   }
 
-  const data = (await res.json()) as GroqResponse
+  const data = JSON.parse(res.text) as GroqResponse
   const text = (data.choices?.[0]?.message?.content ?? '').trim()
   if (!text) throw new Error('Groq вернул пустой ответ.')
   return text

@@ -55,8 +55,10 @@ recall-app/
                    правды по таблицам), work-plan.md (план заходов),
                    findings.md (журнал находок аудитов), costs.md, textbook/
   api/             gemini.ts, transcribe.ts, _core.ts (вызов моделей + фолбэки),
-                   _tasks.ts (карта task→модели/квота/права), _auth.ts (JWT,
-                   квота, isTeacher), _stt.ts
+                   _geminiBody.ts (тело запроса под модель), _tasks.ts (карта
+                   task→модели/квота/права), _auth.ts (JWT, квота, isTeacher),
+                   _groq.ts, _stt.ts, _timeouts.ts (сроки ожидания: запросы
+                   наружу — только через него)
   src/
     main.tsx       регистрация SW + автообновление PWA
     App.tsx        роутинг (см. §8)

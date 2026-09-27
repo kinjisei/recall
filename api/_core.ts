@@ -3,8 +3,20 @@
 // Файл начинается с "_" — Vercel НЕ делает из него отдельную функцию.
 // Его используют двое: api/gemini.ts (прод) и vite.config.ts (локальный dev).
 // КЛЮЧ СЮДА НЕ ПИСАТЬ — он приходит параметром из серверного окружения.
+// Тело запроса под модель — _geminiBody.ts, сроки ожидания — _timeouts.ts.
 // ============================================================================
 import type { ChatTurn } from '../src/types/index.js'
+import {
+  TIMEOUTS,
+  TimeoutError,
+  chainTime,
+  openStream,
+  timedFetch,
+  windowUntil,
+  within,
+  type ChainTime,
+} from './_timeouts.js'
+import { geminiBody, splitMessages } from './_geminiBody.js'
 
 export const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash'
 
@@ -76,93 +88,8 @@ export const GEMINI_TIER_CHAINS: Record<AiTier, string[]> = {
 
 const FALLBACK_MODELS = GEMINI_TIER_CHAINS.standard.slice(1)
 
-/**
- * Системная инструкция для Gemma (у неё нет systemInstruction) — ОТДЕЛЬНОЙ
- * парой реплик в начале переписки, а не подклейкой в текст сообщения.
- *
- * История вопроса (2026-07-24): инструкцию вклеивали в первое user-сообщение
- * («инструкция --- текст»). Gemma принимала её за содержание разговора и
- * отвечала разбором задания: пересказывала правила, писала план, самопроверку
- * («Plain text? Yes. No emojis? Yes.») и дублировала реплику — всё это лезло
- * пользователю в чат «Диалога». Обрамление границами не спасло: модель просто
- * добавила запрет «no meta-talk» в свой же пересказ правил и продолжила.
- * Работает другое: инструкция подаётся как УЖЕ состоявшийся обмен репликами
- * (пользователь дал правила — модель их приняла), и разбирать в ответе нечего.
- */
-function gemmaPreamble(systemText: string): { role: string; parts: { text: string }[] }[] {
-  return [
-    { role: 'user', parts: [{ text: systemText }] },
-    {
-      role: 'model',
-      parts: [{ text: 'Понял правила. Дальше выдаю только сам ответ, без пояснений о правилах.' }],
-    },
-  ]
-}
-
 interface GeminiResponse {
   candidates?: { content?: { parts?: { text?: string }[] }; finishReason?: string }[]
-}
-
-/** Роль-контент для API: system-реплики отдельно, остальное — в contents. */
-function splitMessages(
-  messages: ChatTurn[],
-  system: string | undefined,
-): { systemText: string; contents: { role: string; parts: { text: string }[] }[] } {
-  const systemText = [
-    system ?? '',
-    ...messages.filter((m) => m.role === 'system').map((m) => m.content),
-  ]
-    .filter(Boolean)
-    .join('\n\n')
-  const contents = messages
-    .filter((m) => m.role !== 'system')
-    .map((m) => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content }],
-    }))
-  return { systemText, contents }
-}
-
-/**
- * Тело запроса под конкретную модель. Общее для обычного и потокового вызова —
- * иначе настройки генерации (температура, потолок, «размышления») разошлись бы.
- * У Gemma нет systemInstruction: инструкцию подаём отдельной парой реплик.
- *
- * Настройки зависят от уровня задачи (наблюдение владельца 24.07: упираемся в
- * ЧИСЛО запросов, не в токены, поэтому токены не жалеем ради качества):
- *   lite     — перевод слова: низкая температура, короткий ответ, без
- *              «размышлений» — быстро;
- *   standard — Диалог/письмо/разбор: «размышления» включены, ответ длиннее;
- *   max      — материалы/программа: самый большой потолок ответа.
- */
-function geminiBody(
-  model: string,
-  systemText: string,
-  contents: { role: string; parts: { text: string }[] }[],
-  tier: AiTier,
-): string {
-  const isGemma = model.startsWith('gemma')
-  const isThinkingModel = model.startsWith('gemini-2.5')
-  const gen: Record<string, unknown> =
-    tier === 'lite'
-      ? {
-          temperature: 0.2,
-          maxOutputTokens: 1024,
-          ...(isThinkingModel ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
-        }
-      : {
-          temperature: 0.7,
-          maxOutputTokens: tier === 'max' ? 8192 : 4096,
-        }
-  const body: Record<string, unknown> = {
-    contents:
-      isGemma && systemText && contents.length > 0
-        ? [...gemmaPreamble(systemText), ...contents]
-        : contents,
-    generationConfig: gen,
-  }
-  if (systemText && !isGemma) body.systemInstruction = { parts: [{ text: systemText }] }
-  return JSON.stringify(body)
 }
 
 /** Коды, при которых имеет смысл повторить: модель перегружена или сбой у Google. */
@@ -170,6 +97,21 @@ const RETRIABLE = [500, 502, 503, 504]
 const RETRY_DELAYS_MS = [900, 2500]
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
+// ⚠️ Это НЕ лимит пользователя, а наш общий потолок у поставщика моделей:
+// у Google суточные квоты считаются на весь проект. Человек не должен думать,
+// что «сам всё истратил», — и энергию за неотвеченный запрос ему возвращает
+// api/gemini (правило «не доставили ответ — не берём плату»).
+const QUOTA_GONE =
+  'AI сегодня недоступен: у наших моделей закончился общий дневной запас. ' +
+  'Это не твой лимит, энергия не потрачена. Слова, чтение, грамматика и ' +
+  'произношение работают как обычно.'
+// код ответа наружу не показываем: пользователю он ничего не говорит,
+// а атакующему подсказывает внутренности (находка ревью 2В)
+const NO_ANSWER = 'AI сейчас не отвечает. Энергия не потрачена — попробуй позже.'
+
+/** Почему модель не ответила — для лога сервера. */
+const whyFailed = (e: unknown) => (e instanceof TimeoutError ? e.message : 'сбой связи')
 
 /**
  * Вызывает Gemini и возвращает текст ответа. Бросает Error с понятным сообщением.
@@ -187,57 +129,66 @@ export async function callGemini(
   fallbacks: string[] = FALLBACK_MODELS,
   /** Уровень задачи — от него зависит «щедрость» генерации (см. geminiBody). */
   tier: AiTier = 'standard',
+  /** Сроки (api/_timeouts.ts): окно попытки и общий срок цепочки. */
+  time: ChainTime = chainTime(TIMEOUTS, tier),
 ): Promise<string> {
   const { systemText, contents } = splitMessages(messages, system)
 
   // Цепочка моделей: выбранная + фолбэки. 429 (квота) и 404 (модель пропала) —
   // сразу пробуем следующую модель; 5xx — повторяем эту же с паузой.
   const chain = [model, ...fallbacks.filter((m) => m !== model)]
-  let res: Response | null = null
+  let got: { ok: boolean; status: number; text: string } | null = null
   let lastStatus = 0
 
   outer: for (const m of chain) {
     for (let attempt = 0; ; attempt++) {
-      res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-          body: geminiBody(m, systemText, contents, tier),
-        },
-      )
-      if (res.ok) break outer
-      lastStatus = res.status
-      if (res.status === 429 || res.status === 404) {
-        console.warn(`Gemini ${m}: ${res.status} — пробуем следующую модель цепочки`)
+      const ms = windowUntil(time.deadline, time.attemptMs)
+      if (ms < time.minAttemptMs) break outer // общий срок цепочки вышел
+      try {
+        got = await timedFetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+            body: geminiBody(m, systemText, contents, tier),
+          },
+          ms,
+          async (r) => ({ ok: r.ok, status: r.status, text: await r.text() }),
+        )
+      } catch (e) {
+        // Зависла или оборвалась связь — отказ модели, как 429: следующая.
+        // Повтор той же съел бы ещё одно окно целиком.
+        got = null
+        lastStatus = 0
+        console.warn(`Gemini ${m}: ${whyFailed(e)} — следующая модель`)
         continue outer
       }
-      const canRetry = RETRIABLE.includes(res.status) && attempt < RETRY_DELAYS_MS.length
+      if (got.ok) break outer
+      lastStatus = got.status
+      if (got.status === 429 || got.status === 404) {
+        console.warn(`Gemini ${m}: ${got.status} — пробуем следующую модель цепочки`)
+        continue outer
+      }
+      const canRetry =
+        RETRIABLE.includes(got.status) &&
+        attempt < RETRY_DELAYS_MS.length &&
+        // пауза не должна съесть окно самого повтора
+        time.deadline - Date.now() - RETRY_DELAYS_MS[attempt] >= time.minAttemptMs
       if (!canRetry) break outer
-      console.warn(`Gemini ${m} ${res.status}, повтор ${attempt + 1}/${RETRY_DELAYS_MS.length}`)
+      console.warn(`Gemini ${m} ${got.status}, повтор ${attempt + 1}/${RETRY_DELAYS_MS.length}`)
       await sleep(RETRY_DELAYS_MS[attempt])
     }
   }
 
-  if (!res || !res.ok) {
+  if (!got || !got.ok) {
     let detail = ''
     try {
-      const err = (await res?.json()) as { error?: { message?: string } } | undefined
+      const err = got ? (JSON.parse(got.text) as { error?: { message?: string } }) : undefined
       detail = err?.error?.message ?? ''
     } catch {
       /* тело не JSON — не страшно */
     }
-    // ⚠️ Это НЕ лимит пользователя, а наш общий потолок у поставщика моделей:
-    // у Google суточные квоты считаются на весь проект. Человек не должен
-    // думать, что «сам всё истратил», — и энергию за неотвеченный запрос ему
-    // возвращает api/gemini (правило «не доставили ответ — не берём плату»).
-    if (lastStatus === 429) {
-      throw new Error(
-        'AI сегодня недоступен: у наших моделей закончился общий дневной запас. ' +
-          'Это не твой лимит, энергия не потрачена. Слова, чтение, грамматика и ' +
-          'произношение работают как обычно.',
-      )
-    }
+    if (lastStatus === 429) throw new Error(QUOTA_GONE)
     // детали Google пишем в лог сервера (Vercel), клиенту — обобщённый текст,
     // чтобы не раскрывать внутренности провайдера
     if (detail) console.error(`Gemini error ${lastStatus}: ${detail}`)
@@ -248,12 +199,10 @@ export async function callGemini(
         'AI сейчас перегружен — подожди минуту и нажми ещё раз. Энергия не потрачена.',
       )
     }
-    // код ответа наружу не показываем: пользователю он ничего не говорит,
-    // а атакующему подсказывает внутренности (находка ревью 2В)
-    throw new Error('AI сейчас не отвечает. Энергия не потрачена — попробуй позже.')
+    throw new Error(NO_ANSWER)
   }
 
-  const data = (await res.json()) as GeminiResponse
+  const data = JSON.parse(got.text) as GeminiResponse
   const text = (data.candidates?.[0]?.content?.parts ?? [])
     .map((p) => p.text ?? '')
     .join('')
@@ -276,6 +225,7 @@ export async function callGemini(
  *     сигнал «доставили, плату берём»;
  *   • бросает ПОСЛЕ выдачи кусков, если поток оборвался без STOP, — сигнал
  *     «оборвалось, вернуть энергию» (правило владельца: не завершился — не берём).
+ *     Встал (пауза дольше idleMs или общий срок вышел) — тоже обрыв.
  */
 export async function* streamGemini(
   messages: ChatTurn[],
@@ -284,6 +234,8 @@ export async function* streamGemini(
   model = DEFAULT_GEMINI_MODEL,
   fallbacks: string[] = FALLBACK_MODELS,
   tier: AiTier = 'standard',
+  /** Сроки (api/_timeouts.ts): окно до первых слов, пауза, общий срок. */
+  time: ChainTime = chainTime(TIMEOUTS, tier),
 ): AsyncGenerator<string, void, unknown> {
   const { systemText, contents } = splitMessages(messages, system)
   const chain = [model, ...fallbacks.filter((m) => m !== model)]
@@ -291,33 +243,49 @@ export async function* streamGemini(
   let produced = false
 
   for (const m of chain) {
-    let res: Response
+    const firstMs = windowUntil(time.deadline, time.firstTextMs)
+    if (firstMs < time.minAttemptMs) break // общий срок вышел
+    const firstBy = Date.now() + firstMs
+    let opened: { res: Response; abort: () => void }
     try {
-      res = await fetch(
+      opened = await openStream(
         `https://generativelanguage.googleapis.com/v1beta/models/${m}:streamGenerateContent?alt=sse`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
           body: geminiBody(m, systemText, contents, tier),
         },
+        firstMs,
       )
-    } catch {
-      continue // сетевой сбой к этой модели — следующая
+    } catch (e) {
+      console.warn(`Gemini stream ${m}: ${whyFailed(e)} — следующая модель`)
+      continue // зависла или сетевой сбой до заголовков — следующая
     }
+    const { res, abort } = opened
     if (!res.ok || !res.body) {
       lastStatus = res.status
+      abort()
       console.warn(`Gemini stream ${m}: ${res.status} — следующая модель`)
       continue
     }
 
     const reader = res.body.getReader()
+    const stop = () => {
+      abort()
+      reader.cancel().catch(() => {})
+    }
     const decoder = new TextDecoder()
     let buf = ''
     let gotText = false
     let finished = false
     try {
       for (;;) {
-        const { value, done } = await reader.read()
+        // До первых слов — в пределах окна модели; дальше — пауза idleMs, но
+        // не дальше общего срока, иначе возврат энергии не успеет.
+        const wait = gotText
+          ? windowUntil(time.deadline, time.idleMs)
+          : Math.max(0, firstBy - Date.now())
+        const { value, done } = await within(reader.read(), wait, stop)
         if (done) break
         buf += decoder.decode(value, { stream: true })
         // SSE: события разделены пустой строкой, полезное — строки «data: {…}».
@@ -345,10 +313,11 @@ export async function* streamGemini(
           }
         }
       }
-    } catch {
-      // Обрыв соединения. До первого куска — следующая модель; после — отдавать
-      // нечего, сигналим «не завершилось» (энергия вернётся).
-      if (gotText) throw new Error('Поток оборвался — ответ пришёл не полностью.')
+    } catch (e) {
+      // Обрыв или зависание. До первого куска — следующая модель; после —
+      // отдавать нечего, сигналим «не завершилось» (энергия вернётся).
+      if (gotText) throw new Error('Поток оборвался — ответ пришёл не полностью.', { cause: e })
+      console.warn(`Gemini stream ${m}: до первых слов — ${whyFailed(e)}, следующая модель`)
       continue
     }
     if (gotText) {
@@ -359,12 +328,5 @@ export async function* streamGemini(
   }
 
   // Ни одна модель не отдала ни слова.
-  if (lastStatus === 429) {
-    throw new Error(
-      'AI сегодня недоступен: у наших моделей закончился общий дневной запас. ' +
-        'Это не твой лимит, энергия не потрачена. Слова, чтение, грамматика и ' +
-        'произношение работают как обычно.',
-    )
-  }
-  throw new Error('AI сейчас не отвечает. Энергия не потрачена — попробуй позже.')
+  throw new Error(lastStatus === 429 ? QUOTA_GONE : NO_ANSWER)
 }
