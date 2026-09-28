@@ -2,9 +2,9 @@
  * Смоук блоков «КЛАССЫ КВОТ» и «ЛИМИТ УЧЕНИЦ + ГОНКА КВОТЫ».
  *  A. Места тарифа: у преподавателя без плана и без триала мест 0 — привязка
  *     отклоняется; с триалом (3 места) и с teacher_mini (5) — проходит.
- *  B. Классы квот: heavy у free-аккаунта кончается на 6-м запросе, а light и
- *     speech после этого ПРОДОЛЖАЮТ работать (перевод слова и произношение
- *     больше не съедают лимит Диалога).
+ *  B. Классы квот: энергия free-аккаунта (5 ⚡) кончается на 6-м списании, а
+ *     light и speech после этого ПРОДОЛЖАЮТ работать (перевод слова и
+ *     произношение не съедают энергию Диалога).
  * Запуск: node scripts/smoke-quota-seats.mjs
  */
 import { createClient } from '@supabase/supabase-js'
@@ -101,16 +101,20 @@ try {
   await admin.from('teacher_students').delete().eq('student_id', s1)
   await admin.from('ai_calls').delete().eq('user_id', s1)
 
+  // Списание — как у сервера (api/_auth.ts): spend_energy со своим номером.
+  // consume_ai_quota, которую смоук звал раньше, удалена в Ф1.6.
+  const spend = (kind, cost) =>
+    st1.rpc('spend_energy', { p_kind: kind, p_cost: cost, p_generation: false, p_nonce: crypto.randomUUID() })
   const heavy = []
-  for (let i = 0; i < 6; i++) heavy.push((await st1.rpc('consume_ai_quota', { p_kind: 'heavy' })).error)
-  check('free: 5 heavy прошли, 6-й отклонён',
+  for (let i = 0; i < 6; i++) heavy.push((await spend('heavy', 1)).error)
+  check('free: 5 ⚡ прошли, 6-я отклонена',
     heavy.slice(0, 5).every((e) => !e) && !!heavy[5] && heavy[5].message.includes('RECALL_FREE_LIMIT'),
-    heavy[5]?.message?.slice(0, 50) ?? 'шестой прошёл — лимит не работает!')
+    heavy[5]?.message?.slice(0, 50) ?? 'шестая прошла — лимит не работает!')
 
-  const light = await st1.rpc('consume_ai_quota', { p_kind: 'light' })
-  check('light работает при исчерпанном heavy (перевод слова)', !light.error, light.error?.message)
-  const speech = await st1.rpc('consume_ai_quota', { p_kind: 'speech' })
-  check('speech работает при исчерпанном heavy (произношение)', !speech.error, speech.error?.message)
+  const light = await spend('light', 0)
+  check('light работает при исчерпанной энергии (перевод слова)', !light.error, light.error?.message)
+  const speech = await spend('speech', 0)
+  check('speech работает при исчерпанной энергии (произношение)', !speech.error, speech.error?.message)
 
   const { data: plan } = await st1.rpc('get_my_plan')
   check('get_my_plan считает только heavy', plan?.ai_used_today === 5 && plan?.ai_day_limit === 5,

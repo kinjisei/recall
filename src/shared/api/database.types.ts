@@ -52,6 +52,53 @@ export type Database = {
           },
         ]
       }
+      ai_call_log: {
+        Row: {
+          attempts: Json
+          call_token: string
+          called_at: string
+          id: number
+          latency_ms: number | null
+          model: string | null
+          status: string
+          task: string
+          tier: string | null
+          user_id: string
+        }
+        Insert: {
+          attempts?: Json
+          call_token: string
+          called_at?: string
+          id?: never
+          latency_ms?: number | null
+          model?: string | null
+          status: string
+          task: string
+          tier?: string | null
+          user_id: string
+        }
+        Update: {
+          attempts?: Json
+          call_token?: string
+          called_at?: string
+          id?: never
+          latency_ms?: number | null
+          model?: string | null
+          status?: string
+          task?: string
+          tier?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_call_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "access_overview"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       ai_calls: {
         Row: {
           called_at: string
@@ -1299,6 +1346,33 @@ export type Database = {
         Args: { p_types: string[]; p_user: string }
         Returns: number
       }
+      admin_ai_tasks: {
+        Args: { p_days?: number }
+        Returns: {
+          avg_ms: number
+          calls: number
+          cut: number
+          day: string
+          failed: number
+          ok: number
+          p95_ms: number
+          task: string
+        }[]
+      }
+      admin_ai_usage: {
+        Args: { p_days?: number }
+        Returns: {
+          avg_first_ms: number
+          avg_ms: number
+          day: string
+          failed: number
+          model: string
+          ok: number
+          p95_ms: number
+          refused: number
+          requests: number
+        }[]
+      }
       admin_feedback: {
         Args: { p_days?: number; p_limit?: number }
         Returns: Json
@@ -1357,7 +1431,6 @@ export type Database = {
       cancel_placement: { Args: { p_id: string }; Returns: undefined }
       choose_homework_item: { Args: { p_item: string }; Returns: undefined }
       complete_homework_item: { Args: { p_item: string }; Returns: undefined }
-      consume_ai_quota: { Args: { p_kind?: string }; Returns: undefined }
       covering_teacher: {
         Args: { p_paid_only?: boolean; p_student: string }
         Returns: string
@@ -1414,6 +1487,19 @@ export type Database = {
           p_type: string
         }
         Returns: undefined
+      }
+      log_ai_call: {
+        Args: {
+          p_attempts: Json
+          p_latency_ms: number
+          p_model: string
+          p_nonce: string
+          p_refund?: boolean
+          p_status: string
+          p_task: string
+          p_tier: string
+        }
+        Returns: boolean
       }
       mark_homework_choice: { Args: { p_item: string }; Returns: undefined }
       mark_notifications_read: { Args: { p_ids?: string[] }; Returns: number }
