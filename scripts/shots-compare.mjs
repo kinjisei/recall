@@ -115,6 +115,12 @@ async function save(dir) {
         // держит прогон по полминуты, а к этому моменту он давно нарисован
         await page.goto(`${BASE}${p}`, { waitUntil: 'networkidle2', timeout: 10000 }).catch(() => {})
         await sleep(2500)
+        // Досрочно завершить все анимации: у строк списков появление с
+        // задержкой по очереди, а в headless-вкладке кадры идут рывками — без
+        // этого снимок ловит разное число проявившихся строк, и «разница» —
+        // это время, а не код.
+        await page.evaluate(() => document.getAnimations().forEach((a) => a.finish()))
+        await sleep(200)
         await page.screenshot({ path: join(dir, fileName(tag, p)), fullPage: true })
       }
     }

@@ -145,9 +145,12 @@ src/
     api/        supabase.ts (единственный клиент базы) · database.types.ts
                 (генерируются) · errors.ts (dbError, AppError) · ai.ts (клиент
                 /api/gemini) · aiTypes.ts (AiTask, ChatTurn — общие с api/)
-    ui/         дизайн-система: RowCard (база всех списков) · Button · Card
-                AppLink · Sheet · Picker · TabPicker · Reveal · BackButton
-                Loading · LoadError · Thinking · Brand · icons.tsx
+    ui/         дизайн-система — src/shared/ui/CLAUDE.md: tokens.css (ВСЕ
+                значения, две темы) · theme · breakpoints · layouts (общие
+                раскладки) · roundKeys (клавиатура в упражнениях) · RowCard
+                (база всех списков) · Button · Card · AppLink · Sheet · Picker
+                TabPicker · Reveal · BackButton · Loading · LoadError
+                Thinking · Brand · icons.tsx
     lib/        storage · useUrlState (адрес = «где я») · viewTransition
                 useAsyncData · plural · contacts · focusMode (режим раунда)
                 routePreload (прогрев экранов для AppLink) · shellInsets
