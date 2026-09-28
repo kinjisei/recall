@@ -218,7 +218,7 @@ function ChatSection({
   const kb = useKeyboardInset() // высота клавиатуры — панель ввода над ней
   // лента скроллится ВНУТРИ себя (мессенджер-паттерн): шапка всегда видна,
   // клавиатура сжимает список, новые сообщения показывают низ ленты
-  const { listRef, height } = useChatList(kb, [msgs, busy])
+  const { listRef, height, barStyle } = useChatList(kb, [msgs, busy])
 
   // Поднимаем прошлую переписку этого языка. Раньше реплики писались в базу и
   // НИКОГДА не читались: уход за словом или уроком обнулял чат.
@@ -396,11 +396,11 @@ function ChatSection({
       </div>
 
       {/* Панель ввода прижата к низу. Когда открыта клавиатура (visualViewport
-          даёт её высоту kb) — поднимаем панель над ней; иначе панель стоит над
-          плавающей навигацией. Так заголовок не уезжает и клавиатура не режет UI. */}
+          даёт её высоту kb) — поднимаем панель над ней; иначе — над навигацией
+          каркаса (положение считает useChatList). Заголовок не уезжает. */}
       <div
         className="fixed inset-x-0 z-30 mx-auto max-w-screen-sm border-t border-white/[0.06] bg-[var(--night-bg)] px-4 pb-2 pt-2"
-        style={{ bottom: kb > 0 ? kb : 'calc(5.5rem + env(safe-area-inset-bottom))' }}
+        style={barStyle}
       >
         {/* поле без рамки + квадратная accent-кнопка отправки */}
         <form onSubmit={send} className="flex items-center gap-2.5">

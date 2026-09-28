@@ -158,7 +158,7 @@ function QuestChat({ quest, onBack }: { quest: GrammarQuest; onBack: () => void 
   const kb = useKeyboardInset()
   // мессенджер-паттерн (как в «Диалоге»): лента скроллится внутри себя,
   // заголовок и прогресс всегда видны, клавиатура ничего не сдвигает
-  const { listRef, height } = useChatList(kb, [msgs, busy])
+  const { listRef, height, barStyle } = useChatList(kb, [msgs, busy])
 
   // вход в квест — всегда с верха страницы (заголовок и прогресс на виду)
   useEffect(() => {
@@ -290,11 +290,11 @@ function QuestChat({ quest, onBack }: { quest: GrammarQuest; onBack: () => void 
       </div>
 
       {/* панель ввода прижата к низу (как в «Диалоге»): над клавиатурой или
-          над плавающей навигацией */}
+          над навигацией каркаса — положение считает useChatList */}
       {!completed && (
         <div
           className="fixed inset-x-0 z-30 mx-auto max-w-screen-sm border-t border-white/[0.06] bg-[var(--night-bg)] px-4 pb-2 pt-2"
-          style={{ bottom: kb > 0 ? kb : 'calc(5.5rem + env(safe-area-inset-bottom))' }}
+          style={barStyle}
         >
           <form onSubmit={send} className="flex items-center gap-2.5">
             <input

@@ -1,201 +1,63 @@
 // ============================================================================
-// Каркас приложения в теме «Nocturne»: шапка (бренд, EN/ES, аватар → прогресс)
-// и плавающая нижняя навигация. Контент — Outlet.
+// Общая рамка экранов в теме «Nocturne». Раскладка по ширине экрана
+// (журнал п.45–46; архитектура §5, §16):
+//   • телефон и планшет — шапка сверху (TopBar), плавающая нижняя навигация
+//     (BottomNav);
+//   • компьютер (от 1024 px) — меню слева (SideNav), шапки нет.
+// Экраны, которые ещё не переехали в новую структуру, на любой ширине
+// остаются колонкой 640 px; на компьютере — по центру места рядом с меню.
+//
+// Режим раунда (игра на весь экран) прячет навигацию на любой ширине —
+// shared/lib/focusMode. Сколько места занимает каркас вокруг экрана, экраны
+// с закреплёнными элементами узнают из shared/lib/shellInsets.
 // ============================================================================
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
-import { IconChart, IconTeacher, IconGear, IconSignOut, IconCards, IconBadgeCheck, IconThumbsUp } from '../../components/icons'
-import { FeedbackSheet } from '../../components/FeedbackSheet'
-import { getProfile } from '../../lib/profile'
-import { getMyPlan } from '../../lib/billing'
-import { BottomNav } from './BottomNav'
-import { BrandLogo } from '../../components/Brand'
-import { useLanguage } from '../../context/LanguageContext'
-import { useAuth } from '../../context/AuthContext'
-import type { AppLang } from '../../types'
-import { AppLink } from '../../components/AppLink'
 import { FocusModeContext } from '../../shared/lib/focusMode'
+import { PHONE_INSETS, ShellInsetsContext, type ShellInsets } from '../../shared/lib/shellInsets'
+import { useIsDesktop } from '../../shared/lib/useMediaQuery'
+import { BottomNav } from './BottomNav'
+import { SideNav } from './SideNav'
+import { TopBar } from './TopBar'
 
-const langTabs: { id: AppLang; label: string }[] = [
-  { id: 'en', label: 'EN' },
-  { id: 'es', label: 'ES' },
-]
+/** Меню компьютера — 15rem (w-60 в SideNav, pl-60 ниже) слева; снизу ничего нет. */
+const DESKTOP_INSETS: ShellInsets = { left: '15rem', bottom: '0px', bottomPx: 0 }
+/** В раунде навигации нет ни снизу, ни слева. */
+const FOCUS_INSETS: ShellInsets = { left: '0px', bottom: '0px', bottomPx: 0 }
 
-/**
- * Кружок с инициалом → меню: прогресс, ученики (у преподавателя), выход.
- * Раньше вёл только на прогресс, а вход в режим преподавателя был лишь
- * карточкой внизу Главной — теперь всё «служебное» собрано в одном месте.
- */
-function AvatarMenu() {
-  const { user, signOut } = useAuth()
-  const [open, setOpen] = useState(false)
-  const [feedback, setFeedback] = useState(false)
-  const [isTeacher, setIsTeacher] = useState(false)
-  const [isAdmin, setIsAdmin] = useState(false)
-  const boxRef = useRef<HTMLDivElement>(null)
-
-  const name = (user?.user_metadata?.display_name as string | undefined) ?? user?.email ?? '?'
-  const initial = name.trim().charAt(0).toUpperCase() || '?'
-
-  useEffect(() => {
-    if (!user) return
-    // профиль — из общего кэша (lib/profile): Главная запрашивает тот же ряд
-    getProfile(user.id).then((p) => setIsTeacher(p?.role === 'teacher'))
-    // пункт «Админка» — только владельцу; это лишь видимость ссылки,
-    // настоящая защита в БД (is_admin проверяют сами RPC)
-    getMyPlan().then((p) => setIsAdmin(!!p?.is_admin))
-  }, [user])
-
-  // при открытии меню перепроверяем план: если запрос при старте не прошёл
-  // (сеть моргнула), «Админка» иначе не появится до перезагрузки
-  useEffect(() => {
-    if (!open || isAdmin) return
-    getMyPlan().then((p) => setIsAdmin(!!p?.is_admin))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open])
-
-  // закрытие по клику мимо меню и по Escape
-  useEffect(() => {
-    if (!open) return
-    const onDown = (e: MouseEvent) => {
-      if (!boxRef.current?.contains(e.target as Node)) setOpen(false)
-    }
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
-    document.addEventListener('mousedown', onDown)
-    document.addEventListener('keydown', onKey)
-    return () => {
-      document.removeEventListener('mousedown', onDown)
-      document.removeEventListener('keydown', onKey)
-    }
-  }, [open])
-
-  const itemCls =
-    'flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-[var(--night-text-70)] hover:bg-white/[0.06] hover:text-[var(--night-text)]'
-
-  return (
-    <div className="relative" ref={boxRef}>
-      <button
-        onClick={() => setOpen((v) => !v)}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-label="Меню профиля"
-        className="lift flex h-11 w-11 items-center justify-center rounded-full border border-white/[0.08] bg-[var(--night-surface)] text-sm font-medium text-[var(--night-accent-100)]"
-      >
-        {initial}
-      </button>
-
-      {open && (
-        <div
-          role="menu"
-          className="animate-fade-up absolute right-0 top-11 z-30 w-56 overflow-hidden rounded-2xl border border-white/[0.10] bg-[rgba(30,32,48,.96)] py-1 backdrop-blur-xl"
-        >
-          <p className="truncate px-4 pb-2 pt-1.5 text-xs text-[var(--night-text-40)]">{name}</p>
-          <AppLink to="/progress" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
-            <IconChart size={17} /> Мой прогресс
-          </AppLink>
-          {/* не-преподавателю показываем вход в режим: до A1 попасть в студию
-              самостоятельно было нельзя вообще, роль выдавалась вручную SQL-ом */}
-          <AppLink to="/teacher" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
-            {/* Экран /teacher зовётся «Преподаватель» и в заголовке, и на
-                Главной: раньше меню обещало «Мои ученики», а открывался экран
-                с другим названием и четырьмя вкладками (ревью 1Г). Для НЕ
-                преподавателя это по-прежнему приглашение, а не название. */}
-            <IconTeacher size={17} /> {isTeacher ? 'Преподаватель' : 'Я веду учеников'}
-          </AppLink>
-          <AppLink to="/pricing" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
-            <IconCards size={17} /> Тарифы
-          </AppLink>
-          <AppLink to="/settings" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
-            <IconGear size={17} /> Настройки
-          </AppLink>
-          {/* Отзыв — прямо в меню: до этого сообщить нам что-либо было НЕЧЕМ,
-              и человек, которому что-то мешало, просто уходил молча. */}
-          <button
-            role="menuitem"
-            onClick={() => {
-              setOpen(false)
-              setFeedback(true)
-            }}
-            className={itemCls}
-          >
-            <IconThumbsUp size={17} /> Оставить отзыв
-          </button>
-          {isAdmin && (
-            <AppLink to="/admin" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
-              <IconBadgeCheck size={17} /> Админка
-            </AppLink>
-          )}
-          <button role="menuitem" onClick={() => void signOut()} className={itemCls}>
-            <IconSignOut size={17} /> Выйти
-          </button>
-        </div>
-      )}
-      {feedback && <FeedbackSheet where="menu" onClose={() => setFeedback(false)} />}
-    </div>
-  )
-}
-
-function TopBar() {
-  const { lang, setLang } = useLanguage()
-  return (
-    // vt-topbar — шапка не участвует в переходе между экранами и стоит
-    // неподвижно, пока содержимое под ней меняется (см. index.css)
-    <header className="vt-topbar sticky top-0 z-20 border-b border-white/[0.06] bg-[rgba(22,24,38,.82)] pt-[env(safe-area-inset-top)] backdrop-blur-xl">
-      <div className="mx-auto flex max-w-screen-sm items-center justify-between px-4 py-3">
-        {/* полный логотип из макета (слово на флеш-карточке) вместо знака+текста */}
-        <AppLink to="/" className="flex min-h-[44px] items-center" aria-label="На главную">
-          <BrandLogo width={96} />
-        </AppLink>
-
-        <div className="flex items-center gap-3">
-          <div
-            className="flex gap-0.5 rounded-full border border-white/[0.08] bg-[var(--night-surface)] p-1"
-            role="group"
-            aria-label="Язык изучения"
-          >
-            {langTabs.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setLang(t.id)}
-                aria-pressed={lang === t.id}
-                className={`min-h-[44px] min-w-[48px] rounded-full px-4 text-xs font-medium transition-colors ${
-                  lang === t.id
-                    ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
-                    : 'text-[var(--night-text-40)] hover:text-[var(--night-text-70)]'
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-          <AvatarMenu />
-        </div>
-      </div>
-    </header>
-  )
-}
-
-// Режим раунда (шапка и навигация прячутся на время игры) — shared/lib/focusMode.
 export function Layout() {
   const [focus, setFocus] = useState(false)
+  const desktop = useIsDesktop()
+  const withMenu = desktop && !focus
+  const insets = focus ? FOCUS_INSETS : desktop ? DESKTOP_INSETS : PHONE_INSETS
+
   return (
     <FocusModeContext.Provider value={setFocus}>
-    <div className="min-h-[100dvh] bg-[var(--night-bg)] text-[var(--night-text)]">
-      {!focus && <TopBar />}
-      {/* pb — ровно под плавающую навигацию: её высота (~69px) + отступ снизу
-          (16px) + safe-area. Больше — и внизу зияет пустота.
-          В режиме раунда навигации нет — хватает safe-area. */}
-      <main
-        className={`mx-auto min-h-[60vh] max-w-screen-sm animate-fade-in px-4 pt-5 ${
-          focus
-            ? 'pb-[calc(1rem+env(safe-area-inset-bottom))] pt-[calc(env(safe-area-inset-top)+0.75rem)]'
-            : 'pb-[calc(5.5rem+env(safe-area-inset-bottom))]'
-        }`}
-      >
-        <Outlet />
-      </main>
-      {!focus && <BottomNav />}
-    </div>
+      <ShellInsetsContext.Provider value={insets}>
+        <div className="min-h-[100dvh] bg-[var(--night-bg)] text-[var(--night-text)]">
+          {!focus && (desktop ? <SideNav /> : <TopBar />)}
+          {/* Обёртка есть всегда (на телефоне без классов): иначе при смене
+              ширины окна экран пересоздавался бы и терял набранное. */}
+          <div className={withMenu ? 'pl-60' : undefined}>
+            {/* pb на телефоне — ровно под плавающую навигацию: её высота
+                (~69px) + отступ снизу (16px) + safe-area. Больше — и внизу
+                зияет пустота. В режиме раунда навигации нет — хватает
+                safe-area; на компьютере навигации снизу нет вовсе. */}
+            <main
+              className={`mx-auto min-h-[60vh] max-w-screen-sm animate-fade-in px-4 ${
+                focus
+                  ? 'pt-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-[calc(env(safe-area-inset-top)+0.75rem)]'
+                  : desktop
+                    ? 'pb-10 pt-8'
+                    : 'pt-5 pb-[calc(5.5rem+env(safe-area-inset-bottom))]'
+              }`}
+            >
+              <Outlet />
+            </main>
+          </div>
+          {!focus && !desktop && <BottomNav />}
+        </div>
+      </ShellInsetsContext.Provider>
     </FocusModeContext.Provider>
   )
 }

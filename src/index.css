@@ -268,7 +268,7 @@ a,
 
 /* ==========================================================================
    Переход между экранами (View Transitions API). Запускается из
-   lib/viewTransition.ts, направление приезжает атрибутом data-vt на <html>.
+   shared/lib/viewTransition.ts, направление приезжает атрибутом data-vt на <html>.
 
    ⚠️ Внутри <main> НИЧЕГО не именуем: элемент с view-transition-name получает
    layout-containment и становится containing block для fixed-потомков — ровно
@@ -319,7 +319,7 @@ html[data-vt='out']::view-transition-new(root) { animation-name: vt-in-left; }
 
   /* Псевдоэлементы перехода живут вне дерева документа, под `*` не попадают —
      их приходится глушить отдельно. Сам переход и так не запускается
-     (lib/viewTransition.ts проверяет настройку), это страховка. */
+     (shared/lib/viewTransition.ts проверяет настройку), это страховка. */
   ::view-transition-group(*),
   ::view-transition-old(*),
   ::view-transition-new(*) {

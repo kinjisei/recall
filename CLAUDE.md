@@ -98,6 +98,10 @@ VS Code, где у Claude есть файлы и терминал: фичи со
 Моя учёба) там уже есть, но выключено до PLAN.md Ф2.10 — сейчас все видят
 меню ученика.
 
+**Раскладка по ширине** (журнал п.45–46): телефон и планшет — шапка сверху,
+вкладки снизу; компьютер от 1024 px — меню слева, шапки нет. Экраны пока
+везде колонкой 640 px. Подробно — `src/app/CLAUDE.md`.
+
 | Роут | Что там |
 |---|---|
 | `/` | стрик-герой, план на сегодня, слово дня, «Начать занятие» |
@@ -123,7 +127,8 @@ src/
   app/          каркас — src/app/CLAUDE.md: main.tsx (вход), routes.ts (ВСЕ
                 адреса и кто куда пускается), routeChunks.ts (ленивые экраны),
                 App.tsx (роутер), ProtectedRoute, RoleGate, ErrorBoundary,
-                shell/ (Layout: шапка + навигация)
+                navigation.ts (меню по роли, выключено до Ф2.10), shell/
+                (Layout по ширине: TopBar + BottomNav или SideNav)
   lib/          логика вне экранов (переезжает в domains/, PLAN.md Ф3). Ключевые:
                 profile.ts (PROFILE_COLUMNS!) · billing.ts (тарифы)
                 fsrs.ts · cards.ts · wordPool.ts · recentWords.ts · distractors.ts
@@ -137,7 +142,8 @@ src/
                 /api/gemini) · aiTypes.ts (AiTask, ChatTurn — общие с api/)
     lib/        storage · useUrlState (адрес = «где я») · viewTransition
                 useAsyncData · plural · contacts · focusMode (режим раунда)
-                routePreload (прогрев экранов для AppLink)
+                routePreload (прогрев экранов для AppLink) · shellInsets
+                (место каркаса вокруг экрана) · useMediaQuery (useIsDesktop)
   types/        index.ts — общие типы (AiTask, ChatTurn — реэкспорт из shared/api)
   context/      AuthContext, LanguageContext
   data/         english/ · spanish/ · writingPrompts.ts · wordOfDay.ts · teacher-guide.ts
@@ -706,6 +712,7 @@ node scripts/ux-audit.mjs          # 15 экранов: контраст, тач
 node scripts/smoke-features.mjs    # интерактивный обход фич
 node scripts/smoke-navigation.mjs  # адресуемость экранов
 node scripts/smoke-motion.mjs      # переходы, вкладки, живые ожидания и ответы
+node scripts/smoke-shell.mjs       # каркас: доступ по роли, раскладка телефон/компьютер
 npm run db:migrate     # миграции → тестовая база (+ права анонима, типы)
 npm run db:migrate:prod  # миграции → живая база: ТОЛЬКО владелец, пароль руками
 node scripts/check-anon-access.mjs # что может вызвать невошедший (тестовая; --prod — живая)
@@ -790,7 +797,11 @@ Alt+Tab как «Recall — английский» с пустым эскизо�
 
 ⚠️ `waitForFunction` по умолчанию опрашивает через `requestAnimationFrame`, а в
 headless-вкладке кадры не выдаются: ожидание молча висит до таймаута. Всем
-ожиданиям в смоуках нужен `polling: 250`.
+ожиданиям в смоуках нужен `polling: 250`. Та же причина у медиа-запросов:
+после `page.setViewport` событие `matchMedia` `change` приходит только с
+кадром, и раскладка «не переключается». Перед замером — `page.screenshot()`,
+он заставляет отрисовать кадр (`smoke-shell`, проверено: без него красное при
+верном коде).
 
 ⚠️ Смоук переживает правку интерфейса молча. Переименовал раздел, свернул
 аккордеон, сделал экран адресуемым — пройди `grep` по `scripts/` на старую

@@ -1,19 +1,25 @@
 /**
- * Смоук каркаса (src/app): доступ по таблице маршрутов.
+ * Смоук каркаса (src/app): доступ по таблице маршрутов и раскладка по ширине.
  *
- * Зачем. С PLAN.md Ф1.3 кто куда пускается, решает таблица app/routes.ts, а не
- * экран: админку проверяет RoleGate по флагу role: 'admin'. Раньше владельца
- * проверяла сама админка. Смоук держит, что перенос ничего не открыл и не
- * закрыл лишнего:
- *   1. обычный пользователь на /admin видит «Доступно только владельцу», а не
- *      саму админку;
- *   2. владелец (is_admin) видит админку.
+ * Зачем. С PLAN.md Ф1.3:
+ *   1. кто куда пускается, решает таблица app/routes.ts, а не экран: админку
+ *      проверяет RoleGate по флагу role: 'admin'. Не владелец видит «Доступно
+ *      только владельцу», владелец — админку;
+ *   2. раскладка по ширине (журнал п.45–46): телефон и планшет — как было
+ *      (шапка сверху, плавающая панель снизу); компьютер (от 1024 px) — меню
+ *      слева на всю высоту, EN/ES и аватар внизу панели, экраны остаются
+ *      колонкой 640 px по центру свободного места; закреплённая панель ввода
+ *      чата — в колонке; в раунде меню прячется; смена ширины окна
+ *      переключает раскладку без перезагрузки.
  *
- * Запуск: `npm run dev:test` (5174, тестовая база), затем `node scripts/smoke-shell.mjs`.
+ * Запуск: `npm run dev:test` (5174, тестовая база), затем
+ * `node scripts/smoke-shell.mjs [--shots <папка>]` — со скриншотами 1280 и 390.
  * Аккаунт создаётся и удаляется сам (service_role тестовой базы).
  */
 import { createClient } from '@supabase/supabase-js'
 import { spawn } from 'node:child_process'
+import { mkdirSync } from 'node:fs'
+import { join } from 'node:path'
 import puppeteer from 'puppeteer-core'
 import { profileDir } from './_profile.mjs'
 import { APP_URL, scriptEnv } from './_env.mjs'
@@ -22,6 +28,8 @@ const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
 const BASE = APP_URL
 const EMAIL = 'shell-smoke@recall.test'
 const PASSWORD = 'ShellSmoke!2026'
+const shotsAt = process.argv.indexOf('--shots')
+const SHOTS = shotsAt !== -1 ? process.argv[shotsAt + 1] : null
 
 const env = scriptEnv()
 const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SERVICE_KEY, {
@@ -96,9 +104,151 @@ async function openBrowser() {
   throw new Error('Edge не поднялся')
 }
 
-async function main() {
-  const userId = await createUser()
-  const browser = await openBrowser()
+/** Размеры главных частей каркаса на текущем экране. */
+const geometry = (page) =>
+  page.evaluate(() => {
+    const box = (el) => {
+      if (!el) return null
+      const r = el.getBoundingClientRect()
+      return { left: r.left, right: r.right, top: r.top, bottom: r.bottom, width: r.width, height: r.height }
+    }
+    const nav = document.querySelector('nav.vt-nav')
+    return {
+      vw: document.documentElement.clientWidth, // без полосы прокрутки: innerWidth её включает
+      vh: window.innerHeight,
+      header: box(document.querySelector('header.vt-topbar')),
+      nav: box(nav),
+      main: box(document.querySelector('main')),
+      tabs: nav ? [...nav.querySelectorAll('a[href]')].map((a) => (a.textContent || '').trim()).filter(Boolean) : [],
+      active: (nav?.querySelector('a[aria-current="page"]')?.textContent || '').trim(),
+      langInNav: !!nav?.querySelector('[aria-label="Язык изучения"]'),
+      avatarInNav: !!nav?.querySelector('[aria-label="Меню профиля"]'),
+    }
+  })
+
+const TABS = ['Главная', 'Учёба', 'Практика', 'Диалог']
+const hasTabs = (g) => TABS.every((t) => g.tabs.some((x) => x.includes(t)))
+const px = (n) => Math.round(n)
+
+/** Телефон и планшет: как было — шапка сверху, плавающая панель снизу, колонка ≤ 640. */
+async function phoneLayout(page, width, height, name) {
+  await page.setViewport({ width, height, deviceScaleFactor: 1 })
+  await page.goto(`${BASE}/`, { waitUntil: 'networkidle2' })
+  await sleep(1500)
+  const g = await geometry(page)
+  check(`${name}: шапка сверху`, !!g.header && px(g.header.top) === 0)
+  check(`${name}: навигация внизу`, !!g.nav && g.vh - g.nav.bottom < 40, g.nav ? `низ ${px(g.nav.bottom)} из ${g.vh}` : 'нет')
+  check(`${name}: четыре вкладки`, hasTabs(g), g.tabs.join(' · '))
+  check(`${name}: колонка не шире 640`, !!g.main && g.main.width <= 640, g.main ? `${px(g.main.width)}px` : 'нет')
+}
+
+/** Компьютер (от 1024 px): меню слева, колонка 640 по центру оставшегося места. */
+async function desktopLayout(page) {
+  await page.setViewport({ width: 1280, height: 800, deviceScaleFactor: 1 })
+  await page.goto(`${BASE}/`, { waitUntil: 'networkidle2' })
+  await sleep(1500)
+  let g = await geometry(page)
+  check('компьютер: шапки сверху нет — всё в панели слева', !g.header)
+  check(
+    'компьютер: меню слева на всю высоту',
+    !!g.nav && px(g.nav.left) === 0 && px(g.nav.top) === 0 && px(g.nav.height) === g.vh && g.nav.width >= 200 && g.nav.width <= 280,
+    g.nav ? `x ${px(g.nav.left)}, ширина ${px(g.nav.width)}, высота ${px(g.nav.height)} из ${g.vh}` : 'нет',
+  )
+  check('компьютер: четыре вкладки в меню', hasTabs(g), g.tabs.join(' · '))
+  check('компьютер: EN/ES и аватар — в панели', g.langInNav && g.avatarInNav)
+  const gapL = g.main && g.nav ? g.main.left - g.nav.right : -1
+  const gapR = g.main ? g.vw - g.main.right : -1
+  check('компьютер: колонка не заходит под меню', gapL >= 0, `зазор ${px(gapL)}px`)
+  check('компьютер: колонка не шире 640', !!g.main && g.main.width <= 640, g.main ? `${px(g.main.width)}px` : 'нет')
+  check('компьютер: колонка по центру свободного места', Math.abs(gapL - gapR) <= 2, `${px(gapL)} / ${px(gapR)}`)
+
+  // меню профиля внизу панели открывается вверх и целиком в окне
+  await page.evaluate(() => document.querySelector('nav.vt-nav [aria-label="Меню профиля"]')?.click())
+  await sleep(400)
+  const menu = await page.evaluate(() => {
+    const r = document.querySelector('[role="menu"]')?.getBoundingClientRect()
+    return r ? { top: r.top, bottom: r.bottom, left: r.left, right: r.right } : null
+  })
+  check(
+    'компьютер: меню профиля целиком в окне',
+    !!menu && menu.top >= 0 && menu.bottom <= g.vh && menu.left >= 0 && menu.right <= g.vw,
+    menu ? `y ${px(menu.top)}–${px(menu.bottom)}, x ${px(menu.left)}–${px(menu.right)}` : 'не открылось',
+  )
+  await page.keyboard.press('Escape')
+
+  // вкладка работает и подсвечивается
+  await page.evaluate(() => {
+    const a = [...document.querySelectorAll('nav.vt-nav a')].find((e) => (e.textContent || '').includes('Учёба'))
+    a?.click()
+  })
+  await page.waitForFunction(() => location.pathname === '/study', { polling: 250, timeout: 8000 }).catch(() => {})
+  await sleep(800)
+  g = await geometry(page)
+  check('компьютер: вкладка «Учёба» открывает /study и подсвечена', page.url().endsWith('/study') && g.active.includes('Учёба'), `${new URL(page.url()).pathname}, активна: ${g.active}`)
+
+  // закреплённая панель ввода чата стоит в колонке, а не по центру окна
+  await page.goto(`${BASE}/conversation`, { waitUntil: 'networkidle2' })
+  await sleep(1500)
+  const chat = await page.evaluate(() => {
+    const bar = document.querySelector('form input[aria-label^="Сообщение"]')?.closest('div.fixed')
+    const main = document.querySelector('main')?.getBoundingClientRect()
+    const r = bar?.getBoundingClientRect()
+    return r && main ? { left: r.left, right: r.right, bottom: r.bottom, mainLeft: main.left, mainRight: main.right, vh: window.innerHeight } : null
+  })
+  check(
+    'компьютер: панель ввода «Диалога» — в колонке и у низа окна',
+    !!chat && Math.abs(chat.left - chat.mainLeft) <= 1 && Math.abs(chat.right - chat.mainRight) <= 1 && Math.abs(chat.bottom - chat.vh) <= 1,
+    chat ? `x ${px(chat.left)}–${px(chat.right)} при колонке ${px(chat.mainLeft)}–${px(chat.mainRight)}, низ ${px(chat.bottom)} из ${chat.vh}` : 'нет панели',
+  )
+
+  // режим раунда: на время игры меню прячется, как нижняя панель на телефоне
+  await page.goto(`${BASE}/practice?m=translate`, { waitUntil: 'networkidle2' })
+  await sleep(1500)
+  g = await geometry(page)
+  const gl = g.main ? g.main.left : -1
+  const gr = g.main ? g.vw - g.main.right : -1
+  check('компьютер: в раунде меню нет', !g.nav)
+  check('компьютер: в раунде колонка по центру окна', Math.abs(gl - gr) <= 2, `${px(gl)} / ${px(gr)}`)
+
+  // окно сузили — раскладка переключилась без перезагрузки
+  await page.goto(`${BASE}/`, { waitUntil: 'networkidle2' })
+  await sleep(1000)
+  await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 })
+  // Изменение медиа-запроса браузер рассылает на шаге отрисовки кадра, а в
+  // headless-вкладке кадры сами не выдаются (как и у waitForFunction без
+  // polling). Скриншот заставляет отрисовать кадр — как у живого окна.
+  await page.screenshot({ encoding: 'base64' })
+  await sleep(800)
+  g = await geometry(page)
+  const diag = await page.evaluate(() => ({
+    desktop: matchMedia('(min-width: 64rem)').matches,
+    ih: innerHeight,
+    vvh: Math.round(visualViewport?.height ?? -1),
+  }))
+  check(
+    'сузили окно: снова шапка и нижняя панель',
+    !!g.header && !!g.nav && g.vh - g.nav.bottom < 40,
+    `ширина ${g.vw}, шапка ${g.header ? 'есть' : 'нет'}, навигация ${g.nav ? `x ${px(g.nav.left)}, низ ${px(g.nav.bottom)} из ${g.vh}` : 'нет'}; ${JSON.stringify(diag)}`,
+  )
+}
+
+/** Скриншоты для приёмки: --shots <папка>. */
+async function screenshots(page) {
+  mkdirSync(SHOTS, { recursive: true })
+  const pages = ['/', '/study', '/practice', '/conversation', '/teacher', '/settings']
+  for (const [w, h, tag] of [[1280, 800, 'desk'], [390, 844, 'phone']]) {
+    await page.setViewport({ width: w, height: h, deviceScaleFactor: 1 })
+    for (const p of pages) {
+      await page.goto(`${BASE}${p}`, { waitUntil: 'networkidle2' })
+      await sleep(1800)
+      const name = `${tag}-${p === '/' ? 'home' : p.slice(1)}.png`
+      await page.screenshot({ path: join(SHOTS, name) })
+    }
+  }
+  console.log(`скриншоты: ${SHOTS}`)
+}
+
+async function run(browser, userId) {
   const page = await browser.newPage()
   await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2 })
   const jsErrors = []
@@ -129,12 +279,29 @@ async function main() {
   check('у владельца нет отказа', !(await seen(page, 'Доступно только владельцу')))
   await admin.from('profiles').update({ is_admin: false }).eq('id', userId)
 
-  check('JS-ошибок за прогон нет', jsErrors.length === 0, jsErrors.slice(0, 2).join(' | '))
+  // ── 2. раскладка по ширине экрана ───────────────────────────────────────
+  await phoneLayout(page, 390, 844, 'телефон')
+  await phoneLayout(page, 820, 1180, 'планшет')
+  await desktopLayout(page)
+  if (SHOTS) await screenshots(page)
 
-  await browser.close()
-  await admin.auth.admin.deleteUser(userId).catch(() => {})
-  await admin.from('allowed_emails').delete().eq('email', EMAIL)
-  console.log('Тестовый аккаунт удалён.')
+  check('JS-ошибок за прогон нет', jsErrors.length === 0, jsErrors.slice(0, 2).join(' | '))
+}
+
+async function main() {
+  const userId = await createUser()
+  const browser = await openBrowser()
+  try {
+    await run(browser, userId)
+  } catch (e) {
+    // упавший шаг — красная проверка, а не брошенный браузер и аккаунт
+    check('смоук дошёл до конца', false, String(e?.message ?? e).split('\n')[0])
+  } finally {
+    await browser.close().catch(() => {})
+    await admin.auth.admin.deleteUser(userId).catch(() => {})
+    await admin.from('allowed_emails').delete().eq('email', EMAIL)
+    console.log('Тестовый аккаунт удалён.')
+  }
 
   const ok = results.filter(Boolean).length
   console.log(`\nИтог: ${ok}/${results.length}`)
