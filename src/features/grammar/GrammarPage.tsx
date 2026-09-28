@@ -224,7 +224,7 @@ function LessonsSection({ lang }: { lang: AppLang }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-sm text-[var(--night-text-40)]">
+      <p className="text-sm text-fg-muted">
         {lang === 'es'
           ? 'Уроки испанской грамматики от A1 до B2: короткая теория и упражнения с проверкой.'
           : 'Уроки английской грамматики: короткая теория и упражнения с проверкой. Разделы пополняются.'}
@@ -232,12 +232,12 @@ function LessonsSection({ lang }: { lang: AppLang }) {
 
       {mistakeCount > 0 && (
         <button onClick={() => setNav({ mistakes: '1' })} className="text-left">
-          <Card className="flex items-center justify-between gap-2 border-[var(--night-accent-45)] transition-transform active:scale-[0.99]">
+          <Card className="flex items-center justify-between gap-2 border-accent-line transition-transform active:scale-[0.99]">
             <span className="flex min-w-0 items-center gap-2 font-medium">
-              <IconRefresh size={18} className="shrink-0 text-[var(--night-accent-text)]" />
+              <IconRefresh size={18} className="shrink-0 text-accent-strong" />
               Мои ошибки
             </span>
-            <span className="flex-none rounded-full bg-[var(--night-accent)] px-2 py-0.5 text-xs font-medium text-white">
+            <span className="flex-none rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-white">
               {mistakeCount}
             </span>
           </Card>
@@ -255,13 +255,13 @@ function LessonsSection({ lang }: { lang: AppLang }) {
             <div key={level}>
               <button
                 onClick={() => setOpenLevel((cur) => (cur === level ? null : level))}
-                className="flex min-h-11 w-full items-center justify-between rounded-lg bg-[var(--night-surface)] px-3 py-2 text-left"
+                className="flex min-h-11 w-full items-center justify-between rounded-lg bg-surface px-3 py-2 text-left"
               >
                 <span className="text-sm font-bold">
                   Уровень {level}{' '}
-                  <span className="font-normal text-[var(--night-text-40)]">· {list.length} тем</span>
+                  <span className="font-normal text-fg-muted">· {list.length} тем</span>
                 </span>
-                <span className="text-[var(--night-text-40)]">
+                <span className="text-fg-muted">
                   {isOpen ? <IconCaretDown size={16} /> : <IconArrowRight size={16} />}
                 </span>
               </button>
@@ -275,7 +275,7 @@ function LessonsSection({ lang }: { lang: AppLang }) {
                       <button key={t.id} onClick={() => openLesson(t.id)} className="text-left">
                         <Card className="flex items-center justify-between gap-2 transition-transform active:scale-[0.99]">
                           <span className="min-w-0 truncate font-medium">{t.title}</span>
-                          <span className="shrink-0 text-xs text-[var(--night-text-40)]">
+                          <span className="shrink-0 text-xs text-fg-muted">
                             {t.exercises.length} упр.
                           </span>
                         </Card>
@@ -318,8 +318,8 @@ function TopicScreen({
           onClick={() => setMode('theory')}
           className={`min-h-[44px] rounded-lg px-4 text-sm font-semibold ${
             mode === 'theory'
-              ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
-              : 'bg-white/[0.07] text-[var(--night-text-70)]'
+              ? 'bg-accent-soft text-accent-soft-fg'
+              : 'bg-white/[0.07] text-fg-secondary'
           }`}
         >
           Теория
@@ -329,8 +329,8 @@ function TopicScreen({
             onClick={() => setMode('exercises')}
             className={`min-h-[44px] rounded-lg px-4 text-sm font-semibold ${
               mode === 'exercises'
-                ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
-                : 'bg-white/[0.07] text-[var(--night-text-70)]'
+                ? 'bg-accent-soft text-accent-soft-fg'
+                : 'bg-white/[0.07] text-fg-secondary'
             }`}
           >
             Упражнения ({topic.exercises.length})
@@ -398,24 +398,24 @@ function TheoryBlock({ block, lang }: { block: GrammarTheoryBlock; lang: AppLang
         </div>
       )
     }
-    return <p className="leading-relaxed text-[var(--night-text-70)]">{block.text}</p>
+    return <p className="leading-relaxed text-fg-secondary">{block.text}</p>
   }
   if (block.type === 'example') {
     // текст примера: испанские уроки хранят его в es, английские — в en
     const sample = block.es ?? block.en ?? ''
     return (
-      <div className="rounded-xl bg-[var(--night-surface)] px-3 py-2">
+      <div className="rounded-xl bg-surface px-3 py-2">
         <div className="flex items-center gap-2">
-          <p className="font-medium text-[var(--night-text)]">{sample}</p>
+          <p className="font-medium text-fg">{sample}</p>
           <button
             onClick={() => speak(sample, { lang })}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/[0.08] text-[var(--night-text-70)]"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/[0.08] text-fg-secondary"
             aria-label="Озвучить"
           >
             <IconSpeaker size={16} />
           </button>
         </div>
-        <p className="mt-0.5 text-sm text-[var(--night-text-40)]">{block.ru}</p>
+        <p className="mt-0.5 text-sm text-fg-muted">{block.ru}</p>
       </div>
     )
   }
@@ -428,7 +428,7 @@ function TheoryBlock({ block, lang }: { block: GrammarTheoryBlock; lang: AppLang
             {block.headers.map((h, i) => (
               <th
                 key={i}
-                className="border border-white/[0.08] bg-[var(--night-surface)] px-2 py-1 text-left font-semibold"
+                className="border border-white/[0.08] bg-surface px-2 py-1 text-left font-semibold"
               >
                 {h}
               </th>
@@ -590,7 +590,7 @@ function MistakesScreen({
         {total === 0 ? (
           <Card className="text-center">
             <p className="font-semibold">Ошибок на повтор нет</p>
-            <p className="mt-1 text-sm text-[var(--night-text-40)]">
+            <p className="mt-1 text-sm text-fg-muted">
               Ошибки из уроков будут копиться здесь — и исчезать после верного ответа.
             </p>
           </Card>
@@ -629,7 +629,7 @@ function MistakesScreen({
     <div className="flex flex-col gap-3">
       <BackHeader onBack={onBack} title="Мои ошибки" />
       <RoundProgress index={index + 1} total={total} correct={correct} progressLabel="Ошибка" />
-      <p className="text-sm text-[var(--night-text-40)]">Тема: {current.topicTitle}</p>
+      <p className="text-sm text-fg-muted">Тема: {current.topicTitle}</p>
       <ExerciseView
         key={index}
         exercise={current.exercise}

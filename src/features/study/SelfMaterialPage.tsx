@@ -30,7 +30,7 @@ const LEN_LABEL: Record<(typeof MATERIAL_LENGTHS)[number], string> = {
 }
 
 const inputCls =
-  'w-full rounded-xl border border-white/[0.10] bg-[var(--night-input)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--night-accent-45)]'
+  'w-full rounded-xl border border-white/[0.10] bg-input px-3.5 py-2.5 text-sm outline-none focus:border-accent-line'
 
 export function SelfMaterialPage() {
   const goBack = useSmartBack('/study')
@@ -77,14 +77,14 @@ export function SelfMaterialPage() {
         <button
           onClick={goBack}
           aria-label="Назад"
-          className="lift -ml-2 flex h-11 w-11 items-center justify-center rounded-full text-[var(--night-text-70)]"
+          className="lift -ml-2 flex h-11 w-11 items-center justify-center rounded-full text-fg-secondary"
         >
           <IconBack size={20} />
         </button>
         <h1 className="text-2xl font-medium tracking-tight">Материал под себя</h1>
       </header>
 
-      <p className="text-sm text-[var(--night-text-40)]">
+      <p className="text-sm text-fg-muted">
         AI соберёт текст с упражнениями под твою тему и уровень — и подстроит его под твои слабые
         места. Готовый материал появится в «Домашке». Тратит месячный лимит генераций (на Premium).
       </p>

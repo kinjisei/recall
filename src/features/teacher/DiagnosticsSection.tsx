@@ -28,15 +28,15 @@ type TopicTitles = Map<string, { title: string; level: string }>
 function Stat({ label, value, tone }: { label: string; value: string | number; tone?: string }) {
   return (
     <div className="rounded-xl bg-white/[0.05] px-3 py-2 text-center">
-      <p className={`text-lg font-bold ${tone ?? 'text-[var(--night-text)]'}`}>{value}</p>
-      <p className="text-[11px] leading-tight text-[var(--night-text-40)]">{label}</p>
+      <p className={`text-lg font-bold ${tone ?? 'text-fg'}`}>{value}</p>
+      <p className="text-[11px] leading-tight text-fg-muted">{label}</p>
     </div>
   )
 }
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-[var(--night-text-40)]">
+    <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-fg-muted">
       {children}
     </p>
   )
@@ -63,12 +63,12 @@ function TrendRow({
   const improved = diff !== null && diff !== 0 && diff > 0 === moreIsBetter
   return (
     <div className="flex items-baseline justify-between gap-2 text-sm">
-      <span className="text-[var(--night-text-70)]">{label}</span>
+      <span className="text-fg-secondary">{label}</span>
       <span className="shrink-0 tabular-nums">
-        <span className="text-[var(--night-text-40)]">
+        <span className="text-fg-muted">
           {d.prev === null ? '—' : `${d.prev}${unit}`}
         </span>
-        <span className="mx-1 text-[var(--night-text-25)]">→</span>
+        <span className="mx-1 text-fg-faint">→</span>
         <span className="font-semibold">{d.now === null ? '—' : `${d.now}${unit}`}</span>
         {diff !== null && diff !== 0 && (
           <span className={`ml-1.5 text-xs ${improved ? 'text-emerald-400' : 'text-red-400'}`}>
@@ -140,7 +140,7 @@ export function DiagnosticsSection({
   }, [studentId, attempt, preloaded])
 
   if (error) return <LoadError message={error} onRetry={() => setAttempt((n) => n + 1)} />
-  if (!diag) return <p className="text-sm text-[var(--night-text-40)]">Собираю карту…</p>
+  if (!diag) return <p className="text-sm text-fg-muted">Собираю карту…</p>
 
   const w = diag.words
   const kinds = (Object.keys(KIND_LABELS) as MaterialExerciseKind[])
@@ -165,7 +165,7 @@ export function DiagnosticsSection({
         />
         <TrendRow label="Идеальных дней (весь план)" d={diag.dynamics.perfectDays} unit="" />
         {diag.dynamics.learnedRecently > 0 && (
-          <p className="text-xs text-[var(--night-text-40)]">
+          <p className="text-xs text-fg-muted">
             За 30 дней выучено слов: {diag.dynamics.learnedRecently}
           </p>
         )}
@@ -210,7 +210,7 @@ export function DiagnosticsSection({
       </div>
       {w.struggling.length > 0 && (
         <div>
-          <p className="mb-1 text-xs text-[var(--night-text-40)]">
+          <p className="mb-1 text-xs text-fg-muted">
             Буксуют (частые срывы — стоит перепроверить):
           </p>
           <div className="flex flex-wrap gap-1.5">
@@ -237,7 +237,7 @@ export function DiagnosticsSection({
                 const pct = Math.round((ok / total) * 100)
                 return (
                   <div key={kind} className="flex items-center gap-2 text-sm">
-                    <span className="w-36 shrink-0 text-[var(--night-text-70)]">
+                    <span className="w-36 shrink-0 text-fg-secondary">
                       {KIND_LABELS[kind]}
                     </span>
                     <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/[0.07]">
@@ -258,11 +258,11 @@ export function DiagnosticsSection({
             <ul className="flex flex-col gap-1">
               {diag.assignments.map((a) => (
                 <li key={a.id} className="flex items-baseline justify-between gap-2 text-sm">
-                  <span className="min-w-0 truncate text-[var(--night-text-70)]">
+                  <span className="min-w-0 truncate text-fg-secondary">
                     {LANG_FLAG[a.lang]} · {a.title}
                   </span>
                   <span
-                    className={`shrink-0 text-xs ${a.percent !== null ? pctTone(a.percent) : 'text-[var(--night-text-40)]'}`}
+                    className={`shrink-0 text-xs ${a.percent !== null ? pctTone(a.percent) : 'text-fg-muted'}`}
                   >
                     {a.percent !== null
                       ? `${a.percent}%${a.fromAttempt ? ' (прошлая попытка)' : ''}`
@@ -284,7 +284,7 @@ export function DiagnosticsSection({
           Таблица ошибок ещё не создана — выполни блок «ДИАГНОСТИКА» из supabase/migrations.
         </p>
       ) : diag.mistakes.length === 0 ? (
-        <p className="text-xs text-[var(--night-text-40)]">
+        <p className="text-xs text-fg-muted">
           Ошибок пока не накоплено. Они появляются, когда ученик решает
           упражнения в грамматике (копятся с момента обновления приложения).
         </p>
@@ -297,7 +297,7 @@ export function DiagnosticsSection({
                 key={`${m.lang}:${m.topicId}`}
                 className="flex items-baseline justify-between gap-2 text-sm"
               >
-                <span className="min-w-0 truncate text-[var(--night-text-70)]">
+                <span className="min-w-0 truncate text-fg-secondary">
                   {LANG_FLAG[m.lang]} · {t ? `${t.level} · ${t.title}` : `тема №${m.topicId}`}
                 </span>
                 <span className="shrink-0 text-xs text-red-300">
@@ -313,10 +313,10 @@ export function DiagnosticsSection({
       {diag.quests.length > 0 && (
         <>
           <SectionTitle>AI-квесты</SectionTitle>
-          <p className="text-sm text-[var(--night-text-70)]">
+          <p className="text-sm text-fg-secondary">
             Активных: {activeQuests.length} · завершено: {doneQuests.length}
             {activeQuests.length > 0 && (
-              <span className="text-[var(--night-text-40)]">
+              <span className="text-fg-muted">
                 {' '}
                 (
                 {activeQuests
@@ -329,7 +329,7 @@ export function DiagnosticsSection({
         </>
       )}
 
-      <p className="text-[11px] text-[var(--night-text-25)]">
+      <p className="text-[11px] text-fg-faint">
         Последнее занятие: {diag.lastActiveDay ?? 'не было'} · карта собирается из
         колоды, заданий, грамматики и квестов автоматически.
       </p>

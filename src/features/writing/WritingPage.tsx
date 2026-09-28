@@ -96,11 +96,11 @@ export function WritingPage() {
         >
           <div className="min-w-0">
             <p className="text-sm font-medium">Быстрая проверка текста</p>
-            <p className="text-xs text-[var(--night-text-40)]">
+            <p className="text-xs text-fg-muted">
               Напиши что угодно — AI разберёт сразу, без темы
             </p>
           </div>
-          <span className="flex-none text-[var(--night-text-40)]">
+          <span className="flex-none text-fg-muted">
             <IconPencil size={18} />
           </span>
         </button>
@@ -141,7 +141,7 @@ export function WritingPage() {
       ) : rows.length === 0 ? (
         <Card className="text-center">
           <p className="font-semibold">Пока ни одной работы</p>
-          <p className="mt-1 text-sm text-[var(--night-text-40)]">
+          <p className="mt-1 text-sm text-fg-muted">
             Напиши текст — AI разберёт его по критериям экзамена и покажет, что
             подтянуть. Преподаватель, если он есть, тоже может назначить работу.
           </p>
@@ -165,7 +165,7 @@ export function WritingPage() {
             >
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium">{r.task.prompt}</p>
-                <p className="text-xs text-[var(--night-text-40)]">
+                <p className="text-xs text-fg-muted">
                   {r.task.mode === 'ielts'
                     ? `IELTS · ${r.task.settings?.ieltsTask === 'gt1' ? 'GT Task 1' : 'Task 2'}`
                     : `Эссе · ${r.task.level}`}{' '}
@@ -224,7 +224,7 @@ function WritingRunner({
       <BackHeader onBack={onBack} title="Письменная работа" label="К списку" />
 
       <Card>
-        <p className="text-xs text-[var(--night-text-40)]">
+        <p className="text-xs text-fg-muted">
           {task.mode === 'ielts'
             ? `IELTS · ${task.settings?.ieltsTask === 'gt1' ? 'GT Task 1' : 'Task 2'}${
                 task.settings?.targetBand ? ` · цель band ${task.settings.targetBand}` : ''
@@ -238,12 +238,12 @@ function WritingRunner({
           </div>
         )}
         {task.mode === 'regular' && task.settings?.targetWords?.length ? (
-          <p className="mt-2 text-xs text-[var(--night-text-40)]">
+          <p className="mt-2 text-xs text-fg-muted">
             Постарайся употребить: {task.settings.targetWords.join(', ')}
           </p>
         ) : null}
         {row.note && (
-          <p className="mt-2 rounded-lg bg-white/[0.05] px-3 py-2 text-sm text-[var(--night-text-70)]">
+          <p className="mt-2 rounded-lg bg-white/[0.05] px-3 py-2 text-sm text-fg-secondary">
             От преподавателя: {row.note}
           </p>
         )}
@@ -252,18 +252,18 @@ function WritingRunner({
       {editing ? (
         <>
           <textarea
-            className="min-h-[220px] w-full rounded-2xl border border-white/[0.10] bg-[var(--night-input)] px-3 py-3 leading-relaxed outline-none focus:border-[var(--night-accent-45)]"
+            className="min-h-[220px] w-full rounded-2xl border border-white/[0.10] bg-input px-3 py-3 leading-relaxed outline-none focus:border-accent-line"
             placeholder={`Пиши на ${task.lang === 'es' ? 'испанском' : 'английском'}…`}
             value={essay}
             onChange={(e) => setEssay(e.target.value)}
             autoCapitalize="sentences"
           />
-          <div className="flex items-center justify-between text-xs text-[var(--night-text-40)]">
+          <div className="flex items-center justify-between text-xs text-fg-muted">
             <span className={tooShort ? 'text-amber-400' : ''}>
               {words} слов{minWords ? ` (минимум ${minWords})` : ''}
             </span>
             {grade && (
-              <button className="text-[var(--night-text-40)]" onClick={() => setEditing(false)}>
+              <button className="text-fg-muted" onClick={() => setEditing(false)}>
                 отмена
               </button>
             )}
@@ -272,22 +272,22 @@ function WritingRunner({
           <Button onClick={submit} disabled={busy || !essay.trim()} loading={busy}>
             {busy ? 'AI проверяет…' : grade ? 'Пересдать' : 'Сдать на проверку'}
           </Button>
-          <p className="text-center text-xs text-[var(--night-text-40)]">
+          <p className="text-center text-xs text-fg-muted">
             AI оценит сразу. Можешь править и пересдавать, пока преподаватель не проверил.
           </p>
         </>
       ) : (
         <>
           <Card>
-            <p className="mb-1 text-[10px] uppercase tracking-wider text-[var(--night-text-40)]">Твой текст</p>
-            <p className="whitespace-pre-wrap leading-relaxed text-[var(--night-text-70)]">{essay}</p>
+            <p className="mb-1 text-[10px] uppercase tracking-wider text-fg-muted">Твой текст</p>
+            <p className="whitespace-pre-wrap leading-relaxed text-fg-secondary">{essay}</p>
           </Card>
 
           {reviewed && row.teacher_review ? (
             <Card>
               <p className="mb-2 text-sm font-semibold">Разбор преподавателя</p>
               {row.teacher_review.comment && (
-                <p className="mb-3 rounded-lg bg-white/[0.05] px-3 py-2 text-sm text-[var(--night-text-70)]">
+                <p className="mb-3 rounded-lg bg-white/[0.05] px-3 py-2 text-sm text-fg-secondary">
                   {row.teacher_review.comment}
                 </p>
               )}
@@ -307,7 +307,7 @@ function WritingRunner({
           )}
 
           {reviewed ? (
-            <p className="text-center text-sm text-[var(--night-text-40)]">
+            <p className="text-center text-sm text-fg-muted">
               Работа проверена преподавателем.
             </p>
           ) : (
@@ -350,20 +350,20 @@ function TopicPicker({
   const group = (title: string, note: string, items: WritingPrompt[]) =>
     items.length === 0 ? null : (
       <div className="flex flex-col gap-2">
-        <h2 className="mt-2 text-xs font-semibold uppercase tracking-widest text-[var(--night-text-40)]">
+        <h2 className="mt-2 text-xs font-semibold uppercase tracking-widest text-fg-muted">
           {title}
         </h2>
-        <p className="-mt-1 text-sm text-[var(--night-text-40)]">{note}</p>
+        <p className="-mt-1 text-sm text-fg-muted">{note}</p>
         {items.map((p) => (
           <button key={p.id} onClick={() => onStart(p)} disabled={starting !== null} className="text-left">
             <Card interactive className="flex items-center justify-between gap-3">
               <span className="min-w-0">
                 <span className="block font-medium">{p.title}</span>
-                <span className="block truncate text-sm text-[var(--night-text-40)]">
+                <span className="block truncate text-sm text-fg-muted">
                   {p.level} · {p.prompt.slice(0, 60)}…
                 </span>
               </span>
-              <span className="shrink-0 text-sm font-medium text-[var(--night-accent-text)]">
+              <span className="shrink-0 text-sm font-medium text-accent-strong">
                 {starting === p.id ? '…' : '›'}
               </span>
             </Card>
@@ -377,7 +377,7 @@ function TopicPicker({
       <BackHeader onBack={onCancel} title="Выбор темы" label="Назад" />
       {lang === 'es' && (
         <Card>
-          <p className="text-sm text-[var(--night-text-70)]">
+          <p className="text-sm text-fg-secondary">
             Темы пока только для английского. Испанские добавим — напиши, если
             нужны раньше.
           </p>

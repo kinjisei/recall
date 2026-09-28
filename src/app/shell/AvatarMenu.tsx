@@ -58,7 +58,7 @@ export function AvatarMenu({ opensUp = false }: { opensUp?: boolean }) {
   }, [open])
 
   const itemCls =
-    'flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-[var(--night-text-70)] hover:bg-white/[0.06] hover:text-[var(--night-text)]'
+    'flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-fg-secondary hover:bg-white/[0.06] hover:text-fg'
 
   return (
     <div className="relative" ref={boxRef}>
@@ -67,7 +67,7 @@ export function AvatarMenu({ opensUp = false }: { opensUp?: boolean }) {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Меню профиля"
-        className="lift flex h-11 w-11 items-center justify-center rounded-full border border-white/[0.08] bg-[var(--night-surface)] text-sm font-medium text-[var(--night-accent-100)]"
+        className="lift flex h-11 w-11 items-center justify-center rounded-full border border-white/[0.08] bg-surface text-sm font-medium text-accent-soft-fg"
       >
         {initial}
       </button>
@@ -79,7 +79,7 @@ export function AvatarMenu({ opensUp = false }: { opensUp?: boolean }) {
             opensUp ? 'bottom-full left-0 mb-2' : 'right-0 top-11'
           }`}
         >
-          <p className="truncate px-4 pb-2 pt-1.5 text-xs text-[var(--night-text-40)]">{name}</p>
+          <p className="truncate px-4 pb-2 pt-1.5 text-xs text-fg-muted">{name}</p>
           <AppLink to="/progress" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
             <IconChart size={17} /> Мой прогресс
           </AppLink>

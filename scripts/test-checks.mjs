@@ -48,20 +48,27 @@ check('plural', [1, 2, 5, 11, 12, 21, 22, 25, 111, 112].map((n) => plural(n, 'з
 
 // ── токены
 both('токены: палитра, [Npx], литерал', '<div className="bg-zinc-800 text-white/80 w-[13px] shadow-[0_0_4px_rgba(1,2,3,.5)]" />\n', countIn, {
-  palette: 2, literal: 1, px: 1, inline: 0,
+  palette: 2, literal: 1, px: 1, form: 0, inline: 0,
 })
 both('токены: в комментариях не считается', '// text-white, w-[13px], #fff\nconst a = 1 /* bg-red-500 */\n/*\n text-black\n*/\n', countIn, {
-  palette: 0, literal: 0, px: 0, inline: 0,
+  palette: 0, literal: 0, px: 0, form: 0, inline: 0,
 })
 both('токены: https:// в строке — не комментарий', "const u = 'https://x.y'; const c = 'text-white'\n", countIn, {
-  palette: 1, literal: 0, px: 0, inline: 0,
+  palette: 1, literal: 0, px: 0, form: 0, inline: 0,
 })
 both('токены: style — литерал и переменная считаются, var(--…) нет',
-  "<a style={{ color: '#f00', background: colors[i] }} />\n<b style={{\n  background:\n    'linear-gradient(0deg, var(--night-accent) 0%, var(--x) 100%)',\n}} />\n",
-  countIn, { palette: 0, literal: 1, px: 0, inline: 2 })
+  "<a style={{ color: '#f00', background: colors[i] }} />\n<b style={{\n  background:\n    'linear-gradient(0deg, var(--color-accent) 0%, var(--x) 100%)',\n}} />\n",
+  countIn, { palette: 0, literal: 1, px: 0, form: 0, inline: 2 })
 both('токены: похожие слова — не цвета', '<div className="text-current bg-transparent border-night text-redder to-whitey" />\n', countIn, {
-  palette: 0, literal: 0, px: 0, inline: 0,
+  palette: 0, literal: 0, px: 0, form: 0, inline: 0,
 })
+
+both('токены: форма — старое имя, [var(--color-…)] в классе, dark:',
+  `<div className="text-[var(--night-text-40)] bg-[var(--color-surface)] dark:bg-page" style={{ color: 'var(--night-accent)' }} />\n`,
+  countIn, { palette: 0, literal: 0, px: 0, form: 4, inline: 0 })
+both('токены: форма — утилиты, var(--color-…) в style и слово dark — не нарушение',
+  `<div className="text-fg-muted bg-surface" style={{ color: 'var(--color-accent)' }} />\nconst dark = true; const t = { dark: 1 }\n`,
+  countIn, { palette: 0, literal: 0, px: 0, form: 0, inline: 0 })
 
 // ── размер: компоненты
 {

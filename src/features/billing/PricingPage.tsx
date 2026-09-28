@@ -32,11 +32,11 @@ function MyPlanBanner({ plan }: { plan: MyPlan }) {
   }
 
   return (
-    <div className="animate-fade-up flex items-center gap-3 rounded-2xl border border-[var(--night-accent-45)] bg-[var(--night-accent-900)] p-4">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--night-accent-45)] text-[var(--night-accent-100)]">
+    <div className="animate-fade-up flex items-center gap-3 rounded-2xl border border-accent-line bg-accent-soft p-4">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-line text-accent-soft-fg">
         <IconTrophy size={18} />
       </div>
-      <p className="text-sm text-[var(--night-accent-100)]">
+      <p className="text-sm text-accent-soft-fg">
         Твой тариф: <span className="font-medium">{planTitle}</span> · {statusLine}
       </p>
     </div>
@@ -45,8 +45,8 @@ function MyPlanBanner({ plan }: { plan: MyPlan }) {
 
 function Feature({ children }: { children: string }) {
   return (
-    <li className="flex items-start gap-2 text-sm text-[var(--night-text-70)]">
-      <span className="mt-0.5 text-[var(--night-accent-text)]">
+    <li className="flex items-start gap-2 text-sm text-fg-secondary">
+      <span className="mt-0.5 text-accent-strong">
         <IconCheck size={14} />
       </span>
       {children}
@@ -60,23 +60,23 @@ function Price({ price }: { price: number }) {
   }
   return (
     <p className="text-2xl font-medium">
-      {price.toLocaleString('ru-RU')} ₸<span className="text-sm font-normal text-[var(--night-text-40)]"> /мес</span>
+      {price.toLocaleString('ru-RU')} ₸<span className="text-sm font-normal text-fg-muted"> /мес</span>
     </p>
   )
 }
 
 function PlanCardView({ plan }: { plan: PlanCard }) {
   return (
-    <div className="animate-fade-up rounded-2xl border border-white/[0.08] bg-[var(--night-surface)] p-4">
+    <div className="animate-fade-up rounded-2xl border border-white/[0.08] bg-surface p-4">
       <div className="flex items-center justify-between gap-2">
         <h3 className="font-medium">{plan.title}</h3>
         {plan.studentLimit && (
-          <span className="rounded-full bg-white/[0.06] px-2.5 py-1 text-xs text-[var(--night-text-40)]">
+          <span className="rounded-full bg-white/[0.06] px-2.5 py-1 text-xs text-fg-muted">
             до {plan.studentLimit} учеников
           </span>
         )}
       </div>
-      <p className="mt-1 text-xs text-[var(--night-text-40)]">{plan.tagline}</p>
+      <p className="mt-1 text-xs text-fg-muted">{plan.tagline}</p>
       <div className="mt-3">
         <Price price={plan.price} />
       </div>
@@ -100,15 +100,15 @@ function PayDetails() {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="lift mt-3 inline-flex min-h-[44px] items-center rounded-xl border border-[var(--night-accent-45)] bg-[var(--night-accent-900)] px-4 text-sm font-medium text-[var(--night-accent-100)]"
+        className="lift mt-3 inline-flex min-h-[44px] items-center rounded-xl border border-accent-line bg-accent-soft px-4 text-sm font-medium text-accent-soft-fg"
       >
         Хочу оплатить — показать реквизиты
       </button>
     )
   }
   return (
-    <div className="mt-3 rounded-xl border border-[var(--night-accent-45)] bg-[var(--night-accent-900)]/40 p-3 text-sm leading-relaxed text-[var(--night-text-70)]">
-      Kaspi: <span className="font-medium text-[var(--night-text)]">{KASPI.phone}</span> ({KASPI.name}).
+    <div className="mt-3 rounded-xl border border-accent-line bg-accent-soft/40 p-3 text-sm leading-relaxed text-fg-secondary">
+      Kaspi: <span className="font-medium text-fg">{KASPI.phone}</span> ({KASPI.name}).
       <br />В комментарии к переводу укажи email своего аккаунта — так мы поймём, кому включить тариф.
     </div>
   )
@@ -127,11 +127,11 @@ export function PricingPage() {
   const soloPlans = PLANS.filter((p) => !p.id.startsWith('teacher_'))
 
   return (
-    <main className="mx-auto min-h-[100dvh] max-w-screen-sm bg-[var(--night-bg)] px-5 pb-16 pt-[calc(env(safe-area-inset-top)+1.5rem)] text-[var(--night-text)]">
+    <main className="mx-auto min-h-[100dvh] max-w-screen-sm bg-page px-5 pb-16 pt-[calc(env(safe-area-inset-top)+1.5rem)] text-fg">
       <SmartBack fallback={user ? '/' : '/login'} />
 
       <h1 className="text-2xl font-medium tracking-tight">Тарифы</h1>
-      <p className="mt-1 text-sm text-[var(--night-text-40)]">
+      <p className="mt-1 text-sm text-fg-muted">
         Для репетитора — дешевле одного часа твоей работы в месяц
       </p>
 
@@ -148,7 +148,7 @@ export function PricingPage() {
       </div>
 
       <div className="mt-8 flex items-center gap-2">
-        <IconTeacher size={18} className="text-[var(--night-text-40)]" />
+        <IconTeacher size={18} className="text-fg-muted" />
         <h2 className="font-medium">Для преподавателя</h2>
       </div>
       <div className="mt-3 flex flex-col gap-3">
@@ -157,16 +157,16 @@ export function PricingPage() {
         ))}
       </div>
 
-      <section className="animate-fade-up mt-8 rounded-2xl border border-white/[0.08] bg-[var(--night-surface)] p-4">
+      <section className="animate-fade-up mt-8 rounded-2xl border border-white/[0.08] bg-surface p-4">
         <h2 className="font-medium">Как оплатить</h2>
-        <p className="mt-2 text-sm leading-relaxed text-[var(--night-text-70)]">
+        <p className="mt-2 text-sm leading-relaxed text-fg-secondary">
           Оплата переводом в Kaspi. Реквизиты покажем, когда решишь платить, —
           нажми кнопку ниже. Тариф включаем руками, обычно в тот же день (если
           перевёл ночью — жди утра). Карту не привязываем и сами ничего не
           списываем: чтобы продлить, переведёшь снова.
         </p>
         <PayDetails />
-        <p className="mt-3 text-sm leading-relaxed text-[var(--night-text-70)]">
+        <p className="mt-3 text-sm leading-relaxed text-fg-secondary">
           Первые 14 дней после регистрации — пробный период: все разделы открыты.
           Энергии первые три дня столько же, сколько на Premium (30 ⚡ в день),
           дальше — 15 ⚡. Энергию тратят разговоры с AI: реплика в «Диалоге», ход

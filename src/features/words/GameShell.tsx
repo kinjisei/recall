@@ -36,9 +36,9 @@ export function EmptyPool({ title, onBack }: { title: string; onBack: () => void
     <div className="flex flex-col gap-4">
       <GameHeader title={title} onBack={onBack} />
       <Card className="items-center text-center">
-        <IconTray size={40} className="text-[var(--night-text-25)]" />
+        <IconTray size={40} className="text-fg-faint" />
         <p className="mt-2 font-semibold">Пока мало слов для игры</p>
-        <p className="mt-1 text-sm text-[var(--night-text-40)]">
+        <p className="mt-1 text-sm text-fg-muted">
           Возьми готовый набор по уровню — или тапни по незнакомому слову в
           любом тексте.
         </p>
@@ -156,7 +156,7 @@ export function QuizRunner({
         {q.say ? (
           <button
             onClick={() => speak(q.say!, { lang })}
-            className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[var(--night-accent-900)] text-[var(--night-accent-100)]"
+            className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-accent-soft text-accent-soft-fg"
             aria-label="Прослушать ещё раз"
           >
             <IconSpeaker size={32} />
@@ -164,7 +164,7 @@ export function QuizRunner({
         ) : (
           <p className="text-lg leading-relaxed">{q.prompt}</p>
         )}
-        {q.say && q.prompt && <p className="text-center text-sm text-[var(--night-text-40)]">{q.prompt}</p>}
+        {q.say && q.prompt && <p className="text-center text-sm text-fg-muted">{q.prompt}</p>}
 
         <div className="grid gap-2">
           {q.options.map((opt, i) => {
@@ -205,7 +205,7 @@ export function QuizRunner({
         )}
       </Card>
 
-      {picked === null && <p className="text-center text-sm text-[var(--night-text-40)]">{hint}</p>}
+      {picked === null && <p className="text-center text-sm text-fg-muted">{hint}</p>}
     </div>
   )
 }

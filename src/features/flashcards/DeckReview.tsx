@@ -212,7 +212,7 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
         <>
           {/* прогресс раунда: полоска + счётчик (очередь растёт от «ещё раз») */}
           <div>
-            <div className="mb-1 flex justify-between text-xs text-[var(--night-text-40)]">
+            <div className="mb-1 flex justify-between text-xs text-fg-muted">
               <span>
                 {index} / {queue.length}
               </span>
@@ -220,7 +220,7 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
             </div>
             <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.07]">
               <div
-                className="h-full origin-left rounded-full bg-[var(--night-accent)] transition-transform duration-300"
+                className="h-full origin-left rounded-full bg-accent transition-transform duration-300"
                 style={{ transform: `scaleX(${index / Math.max(queue.length, 1)})` }}
               />
             </div>
@@ -237,13 +237,13 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
             <div className="grid grid-cols-2 gap-2.5">
               <button
                 onClick={() => onSwipe('left')}
-                className="lift rounded-2xl border border-white/[0.12] py-3.5 text-sm font-medium text-[var(--night-text-70)]"
+                className="lift rounded-2xl border border-white/[0.12] py-3.5 text-sm font-medium text-fg-secondary"
               >
                 Ещё раз
               </button>
               <button
                 onClick={() => onSwipe('right')}
-                className="lift rounded-2xl border border-[var(--night-accent-45)] bg-[rgba(145,132,217,.18)] py-3.5 text-sm font-medium text-[var(--night-text)]"
+                className="lift rounded-2xl border border-accent-line bg-[rgba(145,132,217,.18)] py-3.5 text-sm font-medium text-fg"
               >
                 Помню
               </button>
@@ -256,7 +256,7 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
           <Card className="items-center text-center">
             <IconBadgeCheck
               size={44}
-              className="animate-pop-in text-[var(--night-accent-text)]"
+              className="animate-pop-in text-accent-strong"
             />
             <p className="mt-2 font-semibold">
               {reviewedCount > 0
@@ -265,7 +265,7 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
                   ? 'У тебя пока нет слов'
                   : 'Слов к повторению нет'}
             </p>
-            <p className="mt-1 text-sm text-[var(--night-text-40)]">
+            <p className="mt-1 text-sm text-fg-muted">
               {totalWords === 0
                 ? 'Возьми готовый набор по уровню или добавь своё слово — а можно просто тапнуть по незнакомому слову в любом тексте.'
                 : 'Новые слова добавляются в «Учёбе» или тапом по слову в тексте.'}

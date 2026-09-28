@@ -126,18 +126,18 @@ export function MaterialDetail({
       <BackHeader onBack={onBack} title={material.title ?? material.topic} label="К материалам" />
 
       <Card>
-        <p className="text-xs text-[var(--night-text-40)]">
+        <p className="text-xs text-fg-muted">
           {material.lang.toUpperCase()} · {material.level} · {material.format} ·{' '}
           {material.length_range} слов · {material.exercises.length} упр.
         </p>
         <button
           onClick={() => setShowBody((s) => !s)}
-          className="mt-2 text-sm font-medium text-[var(--night-accent-text)] hover:underline"
+          className="mt-2 text-sm font-medium text-accent-strong hover:underline"
         >
           {showBody ? '▾ Скрыть текст' : '▸ Показать текст'}
         </button>
         {showBody && (
-          <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-[var(--night-text-70)]">
+          <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-fg-secondary">
             {material.body}
           </p>
         )}
@@ -177,9 +177,9 @@ export function MaterialDetail({
           // Пустое состояние без выхода: материал уже стоил двух генераций, а
           // код-приглашение живёт на другой вкладке, и здесь о нём не говорили
           // ни слова (находка ревью 2В).
-          <p className="text-sm text-[var(--night-text-40)]">
+          <p className="text-sm text-fg-muted">
             Учеников пока нет. Отправь код-приглашение — он на вкладке{' '}
-            <AppLink to="/teacher" className="text-[var(--night-accent-text)] underline underline-offset-2">
+            <AppLink to="/teacher" className="text-accent-strong underline underline-offset-2">
               «Ученики»
             </AppLink>
             . Как только кто-то привяжется, материал назначается в один тап.
@@ -197,7 +197,7 @@ export function MaterialDetail({
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium">{name}</p>
                   {a && (
-                    <p className="text-xs text-[var(--night-text-40)]">
+                    <p className="text-xs text-fg-muted">
                       {a.status === 'assigned'
                         ? 'ещё не выполнено'
                         : a.status === 'submitted'

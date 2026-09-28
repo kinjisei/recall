@@ -33,7 +33,7 @@ export function HowItWorks({
         aria-expanded={open}
         // min-h-[44px]: тач-цель по WCAG 2.5.5 (ux-audit §2 — тогл не inline
         // внутри текста, поэтому исключением для ссылок в предложении не крыт).
-        className="flex min-h-[44px] items-center gap-1.5 text-sm text-[var(--night-text-40)] transition-colors hover:text-[var(--night-text-70)]"
+        className="flex min-h-[44px] items-center gap-1.5 text-sm text-fg-muted transition-colors hover:text-fg-secondary"
       >
         <IconHint size={16} />
         <span>{label}</span>
@@ -43,7 +43,7 @@ export function HowItWorks({
         />
       </button>
       <Reveal open={open}>
-        <div className="mt-2 rounded-2xl bg-white/[0.04] px-4 py-3 text-sm leading-relaxed text-[var(--night-text-70)]">
+        <div className="mt-2 rounded-2xl bg-white/[0.04] px-4 py-3 text-sm leading-relaxed text-fg-secondary">
           {children}
         </div>
       </Reveal>

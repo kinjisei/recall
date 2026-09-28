@@ -114,7 +114,7 @@ export function GrammarMixMode({
         <GameHeader title={title} onBack={onBack} />
         <Card className="text-center">
           <p className="font-semibold">Уроков для этого уровня пока нет</p>
-          <p className="mt-1 text-sm text-[var(--night-text-40)]">
+          <p className="mt-1 text-sm text-fg-muted">
             Загляни во вкладку «Учёба» → «Грамматика».
           </p>
         </Card>
@@ -175,7 +175,7 @@ export function GrammarMixMode({
     <div className="flex flex-col gap-3">
       <GameHeader title={title} onBack={onBack} />
       <RoundProgress index={index + 1} total={items.length} correct={correct} progressLabel="Упражнение" />
-      <p className="text-sm text-[var(--night-text-40)]">Тема: {current.topicTitle}</p>
+      <p className="text-sm text-fg-muted">Тема: {current.topicTitle}</p>
       <ExerciseView
         key={`${current.topicId}-${current.ex}-${index}`}
         exercise={current.exercise}

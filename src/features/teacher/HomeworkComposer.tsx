@@ -166,14 +166,14 @@ export function HomeworkComposer({
             <h2 id="hw-title" className="text-lg font-medium">
               Домашка для {studentName}
             </h2>
-            <p className="mt-0.5 text-sm text-[var(--night-text-40)]">
+            <p className="mt-0.5 text-sm text-fg-muted">
               Короткие задания чаще работают лучше одного длинного
             </p>
           </div>
           <button
             onClick={onClose}
             aria-label="Закрыть"
-            className="-mr-2 flex h-11 w-11 flex-none items-center justify-center rounded-full text-[var(--night-text-40)]"
+            className="-mr-2 flex h-11 w-11 flex-none items-center justify-center rounded-full text-fg-muted"
           >
             <IconClose size={20} />
           </button>
@@ -189,7 +189,7 @@ export function HomeworkComposer({
             value={due}
             min={isoDatePlus(0)}
             onChange={(e) => setDue(e.target.value)}
-            className="mt-1.5 h-11 w-full rounded-xl border border-white/[0.10] bg-[var(--night-input)] px-3.5 text-sm outline-none focus:border-[var(--night-accent-45)]"
+            className="mt-1.5 h-11 w-full rounded-xl border border-white/[0.10] bg-input px-3.5 text-sm outline-none focus:border-accent-line"
           />
 
           {/* Подбор — главное действие формы, поэтому стоит до списка: сперва
@@ -197,7 +197,7 @@ export function HomeworkComposer({
           <button
             onClick={pick}
             disabled={picking}
-            className="lift mt-3 flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl border border-[var(--night-accent-45)] bg-[var(--night-accent-900)] px-4 text-sm font-semibold text-[var(--night-accent-100)] transition-[filter,transform] active:scale-[0.99] disabled:opacity-60"
+            className="lift mt-3 flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl border border-accent-line bg-accent-soft px-4 text-sm font-semibold text-accent-soft-fg transition-[filter,transform] active:scale-[0.99] disabled:opacity-60"
           >
             {picking ? (
               <Thinking label="Смотрю, что у ученика буксует" />
@@ -218,7 +218,7 @@ export function HomeworkComposer({
           )}
 
           {picked && (
-            <p className="mt-2 text-xs text-[var(--night-text-40)]">
+            <p className="mt-2 text-xs text-fg-muted">
               Состав посчитан по словам и ошибкам ученика
               {picked.fromAi
                 ? '; формулировки — AI (списано из месячных генераций).'
@@ -228,7 +228,7 @@ export function HomeworkComposer({
 
           <div className="mt-4 flex items-baseline justify-between gap-2">
             <p className="text-sm font-medium">Задания</p>
-            <p className="text-xs text-[var(--night-text-40)]">
+            <p className="text-xs text-fg-muted">
               {countable} к выполнению
               {countable !== items.length && ` · ${items.length} строк`}
             </p>
@@ -245,12 +245,12 @@ export function HomeworkComposer({
                   key={i}
                   className={`flex flex-col gap-2 rounded-xl border p-3 ${
                     inGroup
-                      ? 'border-[var(--night-accent-45)]/40 bg-[var(--night-accent-900)]/30'
+                      ? 'border-accent-line/40 bg-accent-soft/30'
                       : 'border-white/[0.08] bg-white/[0.03]'
                   }`}
                 >
                   {firstInGroup && (
-                    <p className="text-xs font-medium text-[var(--night-accent-100)]">
+                    <p className="text-xs font-medium text-accent-soft-fg">
                       На выбор — ученик сделает одно из двух
                     </p>
                   )}
@@ -263,12 +263,12 @@ export function HomeworkComposer({
                       onChange={(kind) => patch(i, { kind, target: DEFAULT_TARGET[kind] })}
                       label="Тип задания"
                       options={KINDS.map((k) => ({ id: k, label: KIND_LABEL[k] }))}
-                      triggerClassName="flex h-11 min-w-0 flex-1 items-center justify-between gap-1 rounded-lg border border-white/[0.10] bg-[var(--night-input)] px-3 text-sm outline-none focus:border-[var(--night-accent-45)]"
+                      triggerClassName="flex h-11 min-w-0 flex-1 items-center justify-between gap-1 rounded-lg border border-white/[0.10] bg-input px-3 text-sm outline-none focus:border-accent-line"
                     />
                     <button
                       onClick={() => remove(i)}
                       aria-label="Убрать задание"
-                      className="flex h-11 w-11 flex-none items-center justify-center rounded-lg text-[var(--night-text-40)] hover:text-rose-300"
+                      className="flex h-11 w-11 flex-none items-center justify-center rounded-lg text-fg-muted hover:text-rose-300"
                     >
                       <IconTrash size={16} />
                     </button>
@@ -279,13 +279,13 @@ export function HomeworkComposer({
                     value={it.title}
                     placeholder="Что сделать"
                     onChange={(e) => patch(i, { title: e.target.value })}
-                    className="h-11 w-full rounded-lg border border-white/[0.10] bg-[var(--night-input)] px-3 text-sm outline-none focus:border-[var(--night-accent-45)]"
+                    className="h-11 w-full rounded-lg border border-white/[0.10] bg-input px-3 text-sm outline-none focus:border-accent-line"
                   />
 
                   {/* Число — только где реальное. Единица прямо у поля: «20» без
                       слова не говорило, чего именно двадцать. */}
                   {unit && (
-                    <label className="flex items-center gap-2 text-xs text-[var(--night-text-40)]">
+                    <label className="flex items-center gap-2 text-xs text-fg-muted">
                       <input
                         type="number"
                         min={1}
@@ -297,14 +297,14 @@ export function HomeworkComposer({
                             target: Math.max(1, Math.min(500, Number(e.target.value) || 1)),
                           })
                         }
-                        className="h-9 w-16 rounded-lg border border-white/[0.10] bg-[var(--night-input)] px-2 text-sm text-[var(--night-text)]"
+                        className="h-9 w-16 rounded-lg border border-white/[0.10] bg-input px-2 text-sm text-fg"
                       />
                       {plural(it.target ?? 1, unit[0], unit[1], unit[2])}
                     </label>
                   )}
 
                   {it.kind === 'free' && (
-                    <p className="text-xs text-[var(--night-text-40)]">
+                    <p className="text-xs text-fg-muted">
                       Такое приложение измерить не может — ученик отметит сам, и в карточке будет
                       видно, что это его отметка
                     </p>
@@ -314,7 +314,7 @@ export function HomeworkComposer({
                       решило», а с ним преподаватель может проверить и не
                       согласиться. */}
                   {it.why && (
-                    <p className="text-xs leading-snug text-[var(--night-text-40)]">{it.why}</p>
+                    <p className="text-xs leading-snug text-fg-muted">{it.why}</p>
                   )}
                 </li>
               )
@@ -324,7 +324,7 @@ export function HomeworkComposer({
           {items.length < MAX_ITEMS && (
             <button
               onClick={add}
-              className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-white/[0.14] text-sm text-[var(--night-text-40)] hover:text-[var(--night-text-70)]"
+              className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-white/[0.14] text-sm text-fg-muted hover:text-fg-secondary"
             >
               <IconPlus size={16} /> Добавить задание
             </button>
@@ -340,7 +340,7 @@ export function HomeworkComposer({
             placeholder="Например: сперва слова, потом текст"
             onChange={(e) => setNote(e.target.value)}
             rows={2}
-            className="mt-1.5 w-full resize-none overflow-hidden rounded-xl border border-white/[0.10] bg-[var(--night-input)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--night-accent-45)]"
+            className="mt-1.5 w-full resize-none overflow-hidden rounded-xl border border-white/[0.10] bg-input px-3.5 py-2.5 text-sm outline-none focus:border-accent-line"
           />
 
           {error && (

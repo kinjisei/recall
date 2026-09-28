@@ -49,8 +49,8 @@ export function FeedbackSheet({ where, onClose }: { where: string; onClose: () =
         aria-label={value === 'up' ? 'Нравится' : 'Не нравится'}
         className={`flex h-12 w-12 items-center justify-center rounded-2xl border transition-colors ${
           active
-            ? 'border-[var(--night-accent-45)] bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
-            : 'border-white/[0.10] text-[var(--night-text-40)] hover:text-[var(--night-text-70)]'
+            ? 'border-accent-line bg-accent-soft text-accent-soft-fg'
+            : 'border-white/[0.10] text-fg-muted hover:text-fg-secondary'
         }`}
       >
         {/* палец вниз — тот же знак, развёрнутый: отдельный SVG заводить незачем */}
@@ -64,11 +64,11 @@ export function FeedbackSheet({ where, onClose }: { where: string; onClose: () =
 
         {state === 'sent' ? (
           <div className="flex flex-col items-center gap-3 px-5 py-10 text-center">
-            <span className="animate-answer-pop flex h-14 w-14 items-center justify-center rounded-full bg-[var(--night-accent-900)] text-[var(--night-accent-100)]">
+            <span className="animate-answer-pop flex h-14 w-14 items-center justify-center rounded-full bg-accent-soft text-accent-soft-fg">
               <IconCheck size={28} />
             </span>
             <p className="text-lg font-medium">Спасибо, дошло</p>
-            <p className="text-sm text-[var(--night-text-40)]">
+            <p className="text-sm text-fg-muted">
               Читаю всё сам. Если оставил контакт — отвечу.
             </p>
           </div>
@@ -77,14 +77,14 @@ export function FeedbackSheet({ where, onClose }: { where: string; onClose: () =
             <div className="flex items-start justify-between gap-2">
               <div>
                 <h2 className="text-lg font-medium">Как тебе Recall?</h2>
-                <p className="mt-0.5 text-sm text-[var(--night-text-40)]">
+                <p className="mt-0.5 text-sm text-fg-muted">
                   Что мешает или чего не хватает — пиши прямо.
                 </p>
               </div>
               <button
                 onClick={onClose}
                 aria-label="Закрыть"
-                className="flex h-11 w-11 flex-none items-center justify-center rounded-xl text-[var(--night-text-40)]"
+                className="flex h-11 w-11 flex-none items-center justify-center rounded-xl text-fg-muted"
               >
                 <IconClose size={18} />
               </button>
@@ -95,7 +95,7 @@ export function FeedbackSheet({ where, onClose }: { where: string; onClose: () =
               {thumb('down')}
             </div>
 
-            <label htmlFor="fb-text" className="mt-4 block text-sm text-[var(--night-text-70)]">
+            <label htmlFor="fb-text" className="mt-4 block text-sm text-fg-secondary">
               Что улучшить?
             </label>
             <textarea
@@ -104,14 +104,14 @@ export function FeedbackSheet({ where, onClose }: { where: string; onClose: () =
               onChange={(e) => setText(e.target.value.slice(0, FEEDBACK_MAX))}
               rows={4}
               placeholder="Например: не нашёл, где смотреть свои ошибки"
-              className="mt-1.5 w-full resize-none rounded-xl bg-[var(--night-input)] px-3 py-2.5 text-[15px] outline-none focus:ring-1 focus:ring-[var(--night-accent-45)]"
+              className="mt-1.5 w-full resize-none rounded-xl bg-input px-3 py-2.5 text-[15px] outline-none focus:ring-1 focus:ring-accent-line"
             />
-            <p className="mt-1 text-right text-xs text-[var(--night-text-40)]">
+            <p className="mt-1 text-right text-xs text-fg-muted">
               {text.length} / {FEEDBACK_MAX}
             </p>
 
-            <label htmlFor="fb-contact" className="mt-2 block text-sm text-[var(--night-text-70)]">
-              Куда ответить <span className="text-[var(--night-text-40)]">— если нужен ответ</span>
+            <label htmlFor="fb-contact" className="mt-2 block text-sm text-fg-secondary">
+              Куда ответить <span className="text-fg-muted">— если нужен ответ</span>
             </label>
             <input
               id="fb-contact"
@@ -119,7 +119,7 @@ export function FeedbackSheet({ where, onClose }: { where: string; onClose: () =
               onChange={(e) => setContact(e.target.value)}
               placeholder="почта или @телеграм"
               autoComplete="off"
-              className="mt-1.5 w-full rounded-xl bg-[var(--night-input)] px-3 py-2.5 text-[15px] outline-none focus:ring-1 focus:ring-[var(--night-accent-45)]"
+              className="mt-1.5 w-full rounded-xl bg-input px-3 py-2.5 text-[15px] outline-none focus:ring-1 focus:ring-accent-line"
             />
 
             {error && <p className="mt-3 text-sm text-red-400">{error}</p>}

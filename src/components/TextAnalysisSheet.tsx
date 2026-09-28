@@ -68,7 +68,7 @@ export function TextAnalysisSheet({
   return (
     <Sheet onClose={onClose} maxH="85dvh" label="Разбор текста">
         <div className="min-h-0 overflow-y-auto px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-2">
-          <p className="text-[10px] uppercase tracking-wider text-[var(--night-text-40)]">
+          <p className="text-[10px] uppercase tracking-wider text-fg-muted">
             Разбор всего текста
           </p>
 
@@ -77,7 +77,7 @@ export function TextAnalysisSheet({
               {/* Единица — та же, что на полоске «Энергия AI»: раньше здесь
                   считали «AI-действия», и человек сверял цену с числом,
                   которого нигде на экране нет (находка ревью 2В). */}
-              <p className="text-sm leading-relaxed text-[var(--night-text-70)]">
+              <p className="text-sm leading-relaxed text-fg-secondary">
                 Разберу весь текст: уровень, ключевую лексику, фразовые глаголы и
                 грамматику. Спишется примерно <b>{cost} ⚡</b> из дневной энергии.
               </p>
@@ -94,12 +94,12 @@ export function TextAnalysisSheet({
 
           {phase === 'loading' && (
             <div className="mt-4">
-              <p className="text-sm text-[var(--night-text-40)]">
+              <p className="text-sm text-fg-muted">
                 Разбираю текст… {progress.done}/{progress.total}
               </p>
               <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.07]">
                 <div
-                  className="h-full origin-left rounded-full bg-[var(--night-accent)] transition-transform duration-300"
+                  className="h-full origin-left rounded-full bg-accent transition-transform duration-300"
                   style={{
                     transform: `scaleX(${progress.total ? progress.done / progress.total : 0})`,
                   }}
@@ -122,16 +122,16 @@ export function TextAnalysisSheet({
           {phase === 'result' && data && (
             <>
               <p className="mt-2 text-lg font-semibold">Уровень: {data.level || '—'}</p>
-              {data.why && <p className="mt-0.5 text-sm text-[var(--night-text-40)]">{data.why}</p>}
+              {data.why && <p className="mt-0.5 text-sm text-fg-muted">{data.why}</p>}
               {data.takeaway && (
-                <p className="mt-3 rounded-xl bg-white/[0.04] px-3 py-2 text-sm leading-relaxed text-[var(--night-text-70)]">
+                <p className="mt-3 rounded-xl bg-white/[0.04] px-3 py-2 text-sm leading-relaxed text-fg-secondary">
                   💡 {data.takeaway}
                 </p>
               )}
               <AnalyzedItemsView items={data.items} lang={lang} onClose={onClose} />
               <button
                 onClick={redo}
-                className="lift mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl border border-white/[0.10] py-2.5 text-sm text-[var(--night-text-40)]"
+                className="lift mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl border border-white/[0.10] py-2.5 text-sm text-fg-muted"
               >
                 <IconRefresh size={15} /> Разобрать заново
               </button>

@@ -68,7 +68,7 @@ export function WordPicker({
             <h2 className="text-lg font-medium">
               {chosen ? chosen.title : 'Выдать слова'}
             </h2>
-            <p className="mt-0.5 text-sm text-[var(--night-text-40)]">
+            <p className="mt-0.5 text-sm text-fg-muted">
               {chosen
                 ? 'Сними лишние — остальные уйдут ученику'
                 : 'Готовые наборы приложения или твои собственные'}
@@ -77,7 +77,7 @@ export function WordPicker({
           <button
             onClick={onClose}
             aria-label="Закрыть"
-            className="flex h-11 w-11 flex-none items-center justify-center rounded-xl text-[var(--night-text-40)]"
+            className="flex h-11 w-11 flex-none items-center justify-center rounded-xl text-fg-muted"
           >
             <IconClose size={18} />
           </button>
@@ -196,8 +196,8 @@ function SetList({
         ))}
       </div>
 
-      <label className="mt-3 flex items-center gap-2 rounded-xl bg-[var(--night-input)] px-3">
-        <IconSearch size={16} className="text-[var(--night-text-40)]" />
+      <label className="mt-3 flex items-center gap-2 rounded-xl bg-input px-3">
+        <IconSearch size={16} className="text-fg-muted" />
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -212,7 +212,7 @@ function SetList({
             <RowsSkeleton count={3} height={52} />
           </div>
         ) : myDecks.length === 0 ? (
-          <p className="mt-4 text-sm text-[var(--night-text-40)]">
+          <p className="mt-4 text-sm text-fg-muted">
             Своих наборов на этом языке нет. Их можно собрать в «Мой словарь», а
             пока рядом есть готовые.
           </p>
@@ -240,7 +240,7 @@ function SetList({
             if (!levels) return null
             return (
               <div key={cat}>
-                <p className="text-xs font-semibold uppercase tracking-widest text-[var(--night-text-40)]">
+                <p className="text-xs font-semibold uppercase tracking-widest text-fg-muted">
                   {PACK_CATEGORY_LABEL[cat]}
                 </p>
                 <div className="mt-1.5 flex flex-col gap-1.5">
@@ -258,12 +258,12 @@ function SetList({
                           <span className="font-medium">
                             {level}
                             {level === studentLevel && (
-                              <span className="ml-2 text-xs font-normal text-[var(--night-accent-text)]">
+                              <span className="ml-2 text-xs font-normal text-accent-strong">
                                 уровень ученика
                               </span>
                             )}
                           </span>
-                          <span className="text-[var(--night-text-40)]">
+                          <span className="text-fg-muted">
                             {list.length} · {isOpen ? '▾' : '▸'}
                           </span>
                         </button>
@@ -290,7 +290,7 @@ function SetList({
             )
           })}
           {Object.keys(byCategory).length === 0 && (
-            <p className="text-sm text-[var(--night-text-40)]">Ничего не нашлось.</p>
+            <p className="text-sm text-fg-muted">Ничего не нашлось.</p>
           )}
         </div>
       )}
@@ -386,7 +386,7 @@ function WordList({
       <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-3 pt-3">
         <button
           onClick={onBack}
-          className="min-h-[44px] text-sm font-medium text-[var(--night-accent-text)] hover:underline"
+          className="min-h-[44px] text-sm font-medium text-accent-strong hover:underline"
         >
           ← к наборам
         </button>
@@ -398,8 +398,8 @@ function WordList({
         ) : (
           <>
             {words.length >= SEARCH_FROM && (
-              <label className="mt-2 flex items-center gap-2 rounded-xl bg-[var(--night-input)] px-3">
-                <IconSearch size={16} className="text-[var(--night-text-40)]" />
+              <label className="mt-2 flex items-center gap-2 rounded-xl bg-input px-3">
+                <IconSearch size={16} className="text-fg-muted" />
                 <input
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
@@ -409,18 +409,18 @@ function WordList({
               </label>
             )}
 
-            <div className="mt-2 flex items-center gap-3 text-xs text-[var(--night-text-40)]">
+            <div className="mt-2 flex items-center gap-3 text-xs text-fg-muted">
               <button
                 onClick={() =>
                   setChecked(new Set((words ?? []).filter((w) => !known.has(norm(w.front))).map((w) => w.front)))
                 }
-                className="min-h-[44px] font-medium text-[var(--night-accent-text)]"
+                className="min-h-[44px] font-medium text-accent-strong"
               >
                 отметить все новые
               </button>
               <button
                 onClick={() => setChecked(new Set())}
-                className="min-h-[44px] font-medium text-[var(--night-accent-text)]"
+                className="min-h-[44px] font-medium text-accent-strong"
               >
                 снять все
               </button>
@@ -439,11 +439,11 @@ function WordList({
                       type="checkbox"
                       checked={on}
                       onChange={() => toggle(w.front)}
-                      className="h-5 w-5 flex-none accent-[var(--night-accent)]"
+                      className="h-5 w-5 flex-none accent-accent"
                     />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-[15px]">{w.front}</span>
-                      <span className="block truncate text-xs text-[var(--night-text-40)]">
+                      <span className="block truncate text-xs text-fg-muted">
                         {w.back}
                       </span>
                     </span>
@@ -451,7 +451,7 @@ function WordList({
                       // Не прячем такие слова: учитель должен видеть, что ученик
                       // уже знает из этой темы, а не гадать, почему из ста слов
                       // показано шестьдесят.
-                      <span className="flex-none rounded-full bg-white/[0.07] px-2 py-0.5 text-[11px] text-[var(--night-text-40)]">
+                      <span className="flex-none rounded-full bg-white/[0.07] px-2 py-0.5 text-[11px] text-fg-muted">
                         уже учит · {has}
                       </span>
                     )}
@@ -459,7 +459,7 @@ function WordList({
                 )
               })}
               {shown.length === 0 && (
-                <p className="py-4 text-sm text-[var(--night-text-40)]">Ничего не нашлось.</p>
+                <p className="py-4 text-sm text-fg-muted">Ничего не нашлось.</p>
               )}
             </div>
           </>
@@ -483,7 +483,7 @@ function norm(s: string): string {
 function chip(active: boolean): string {
   return `min-h-[44px] rounded-xl px-3.5 text-sm font-medium transition-colors ${
     active
-      ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
-      : 'bg-white/[0.06] text-[var(--night-text-40)]'
+      ? 'bg-accent-soft text-accent-soft-fg'
+      : 'bg-white/[0.06] text-fg-muted'
   }`
 }

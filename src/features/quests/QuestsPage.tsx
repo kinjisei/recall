@@ -108,7 +108,7 @@ export function QuestsPage() {
   return (
     <div className="flex flex-col gap-4">
       <BackHeader onBack={() => navigate('/study')} title="AI-квесты" label="К учёбе" />
-      <p className="text-sm text-[var(--night-text-40)]">
+      <p className="text-sm text-fg-muted">
         Текстовые приключения от преподавателя: AI ведёт историю и пропускает
         дальше только за ответы с правильной грамматикой.
       </p>
@@ -120,7 +120,7 @@ export function QuestsPage() {
       ) : (quests ?? []).length === 0 ? (
         <Card className="text-center">
           <p className="font-semibold">Квестов пока нет</p>
-          <p className="mt-1 text-sm text-[var(--night-text-40)]">
+          <p className="mt-1 text-sm text-fg-muted">
             Когда преподаватель назначит квест, он появится здесь.
           </p>
         </Card>
@@ -236,7 +236,7 @@ function QuestChat({ quest, onBack }: { quest: GrammarQuest; onBack: () => void 
 
       {/* прогресс: сколько верных ответов набрано */}
       <div>
-        <div className="mb-1 flex justify-between text-xs text-[var(--night-text-40)]">
+        <div className="mb-1 flex justify-between text-xs text-fg-muted">
           <span>
             {quest.topic} · {quest.lang.toUpperCase()} {quest.level}
           </span>
@@ -246,7 +246,7 @@ function QuestChat({ quest, onBack }: { quest: GrammarQuest; onBack: () => void 
         </div>
         <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.07]">
           <div
-            className="h-full origin-left rounded-full bg-[var(--night-accent)] transition-transform duration-300"
+            className="h-full origin-left rounded-full bg-accent transition-transform duration-300"
             style={{ transform: `scaleX(${Math.min(progress / quest.target, 1)})` }}
           />
         </div>
@@ -265,24 +265,24 @@ function QuestChat({ quest, onBack }: { quest: GrammarQuest; onBack: () => void 
               key={i}
               className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-[15px] leading-relaxed ${
                 m.role === 'user'
-                  ? 'self-end rounded-br-md border border-[var(--night-accent-45)] bg-[rgba(145,132,217,.18)]'
-                  : 'self-start rounded-bl-md border border-white/[0.08] bg-[var(--night-surface)]'
+                  ? 'self-end rounded-br-md border border-accent-line bg-[rgba(145,132,217,.18)]'
+                  : 'self-start rounded-bl-md border border-white/[0.08] bg-surface'
               }`}
             >
               {m.role === 'assistant' ? <QuestText content={m.content} /> : m.content}
             </div>
           ))}
         {busy && (
-          <div className="self-start rounded-2xl rounded-bl-md border border-white/[0.08] bg-[var(--night-surface)] px-4 py-2.5 text-[var(--night-text-40)]">
+          <div className="self-start rounded-2xl rounded-bl-md border border-white/[0.08] bg-surface px-4 py-2.5 text-fg-muted">
             <Thinking label="печатает" />
           </div>
         )}
         {error && <p className="text-sm text-red-500">{error}</p>}
         {completed && (
           <Card className="flex-none items-center text-center">
-            <IconBadgeCheck size={40} className="animate-pop-in text-[var(--night-accent-text)]" />
+            <IconBadgeCheck size={40} className="animate-pop-in text-accent-strong" />
             <p className="mt-1 font-semibold">Квест пройден!</p>
-            <p className="text-sm text-[var(--night-text-40)]">
+            <p className="text-sm text-fg-muted">
               {quest.target} верных ответов по теме «{quest.topic}». Преподаватель увидит результат.
             </p>
           </Card>
@@ -293,13 +293,13 @@ function QuestChat({ quest, onBack }: { quest: GrammarQuest; onBack: () => void 
           над навигацией каркаса — положение считает useChatList */}
       {!completed && (
         <div
-          className="fixed inset-x-0 z-30 mx-auto max-w-screen-sm border-t border-white/[0.06] bg-[var(--night-bg)] px-4 pb-2 pt-2"
+          className="fixed inset-x-0 z-30 mx-auto max-w-screen-sm border-t border-white/[0.06] bg-page px-4 pb-2 pt-2"
           style={barStyle}
         >
           <form onSubmit={send} className="flex items-center gap-2.5">
             <input
               aria-label={quest.lang === 'es' ? 'Ответ по-испански' : 'Ответ по-английски'}
-              className="h-12 min-w-0 flex-1 rounded-[14px] border-none bg-[var(--night-input)] px-4 text-[15px] outline-none placeholder:text-[var(--night-text-40)] focus:ring-2 focus:ring-[var(--night-accent-45)]"
+              className="h-12 min-w-0 flex-1 rounded-[14px] border-none bg-input px-4 text-[15px] outline-none placeholder:text-fg-muted focus:ring-2 focus:ring-accent-line"
               placeholder={quest.lang === 'es' ? 'Escribe en español…' : 'Write in English…'}
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -309,7 +309,7 @@ function QuestChat({ quest, onBack }: { quest: GrammarQuest; onBack: () => void 
               type="submit"
               aria-label="Отправить"
               disabled={busy || !input.trim()}
-              className="lift flex h-12 w-12 flex-none items-center justify-center rounded-[14px] border border-[var(--night-accent-45)] bg-[rgba(145,132,217,.14)] text-[var(--night-accent-100)] transition-colors hover:bg-[rgba(145,132,217,.22)] disabled:opacity-40"
+              className="lift flex h-12 w-12 flex-none items-center justify-center rounded-[14px] border border-accent-line bg-[rgba(145,132,217,.14)] text-accent-soft-fg transition-colors hover:bg-[rgba(145,132,217,.22)] disabled:opacity-40"
             >
               <IconSend size={20} />
             </button>
@@ -329,7 +329,7 @@ function QuestText({ content }: { content: string }) {
     <>
       {text.split('\n').map((line, i) =>
         FIX_RE.test(line) ? (
-          <span key={i} className="text-[var(--night-accent-text)]">
+          <span key={i} className="text-accent-strong">
             <IconPencil size={14} className="mr-1 inline align-[-2px]" />
             {line.replace(FIX_RE, '')}
             {'\n'}

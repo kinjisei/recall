@@ -74,14 +74,14 @@ export function OnboardingFlow() {
   }
 
   return (
-    <main className="mx-auto flex min-h-[100dvh] max-w-screen-sm flex-col gap-7 bg-[var(--night-bg)] px-5 pb-10 pt-[calc(env(safe-area-inset-top)+2rem)] text-[var(--night-text)]">
+    <main className="mx-auto flex min-h-[100dvh] max-w-screen-sm flex-col gap-7 bg-page px-5 pb-10 pt-[calc(env(safe-area-inset-top)+2rem)] text-fg">
       {/* прогресс из трёх сегментов */}
       <div className="flex gap-2" aria-label={`Шаг ${step + 1} из 3`}>
         {[0, 1, 2].map((i) => (
           <span
             key={i}
             className={`h-1 flex-1 rounded-full transition-colors duration-300 ${
-              i <= step ? 'bg-[var(--night-accent)]' : 'bg-white/[0.09]'
+              i <= step ? 'bg-accent' : 'bg-white/[0.09]'
             }`}
           />
         ))}
@@ -142,10 +142,10 @@ function StepLanguage({ onPick }: { onPick: (l: AppLang) => void }) {
           <button
             key={o.id}
             onClick={() => onPick(o.id)}
-            className="lift animate-fade-up flex aspect-square flex-col items-center justify-center gap-3 rounded-3xl border border-white/[0.08] bg-[var(--night-surface)]"
+            className="lift animate-fade-up flex aspect-square flex-col items-center justify-center gap-3 rounded-3xl border border-white/[0.08] bg-surface"
             style={{ animationDelay: `${0.05 + i * 0.08}s` }}
           >
-            <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--night-accent-900)] text-2xl font-medium text-[var(--night-accent-100)]">
+            <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-accent-soft text-2xl font-medium text-accent-soft-fg">
               {o.label}
             </span>
             <span className="text-[15px] font-medium">{o.desc}</span>
@@ -189,7 +189,7 @@ function StepLevel({
           занятия. Цель видна преподавателю и уходит в подсказки AI.
           Спрашиваем ПЕРВЫМ: ответить на неё легче, чем оценить свой уровень. */}
       <div className="flex flex-col gap-2">
-        <p className="text-sm text-[var(--night-text-70)]">Зачем тебе язык?</p>
+        <p className="text-sm text-fg-secondary">Зачем тебе язык?</p>
         <div className="flex flex-wrap gap-2">
           {(Object.keys(GOAL_LABELS) as LearningGoal[]).map((g) => (
             <button
@@ -197,8 +197,8 @@ function StepLevel({
               onClick={() => onGoal(g)}
               className={`min-h-11 rounded-full px-3.5 text-sm transition-colors ${
                 goal === g
-                  ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
-                  : 'bg-white/[0.06] text-[var(--night-text-70)]'
+                  ? 'bg-accent-soft text-accent-soft-fg'
+                  : 'bg-white/[0.06] text-fg-secondary'
               }`}
             >
               {GOAL_LABELS[g]}
@@ -211,19 +211,19 @@ function StepLevel({
           EN ещё и ручной выбор, чтобы не заставлять новичка проходить тест. */}
       <button
         onClick={onPlacement}
-        className="lift animate-fade-up rounded-2xl border border-[var(--night-accent-45)] bg-[linear-gradient(135deg,rgba(145,132,217,.22),rgba(145,132,217,.10))] px-4 py-4 text-left"
+        className="lift animate-fade-up rounded-2xl border border-accent-line bg-[linear-gradient(135deg,rgba(145,132,217,.22),rgba(145,132,217,.10))] px-4 py-4 text-left"
       >
         <span className="block text-[15px] font-medium">
           Пройти тест · до {lang === 'es' ? 40 : 50} вопросов
         </span>
-        <span className="block text-[13px] text-[var(--night-text-40)]">
+        <span className="block text-[13px] text-fg-muted">
           ~5 минут, результат сразу
         </span>
       </button>
 
       {lang === 'en' && (
         <>
-          <p className="text-center text-xs text-[var(--night-text-40)]">или выбери сам</p>
+          <p className="text-center text-xs text-fg-muted">или выбери сам</p>
           <div className="grid grid-cols-2 gap-3">
             {EN_LEVELS.map((l, i) => (
               <button
@@ -231,13 +231,13 @@ function StepLevel({
                 onClick={() => onPick(l)}
                 className={`lift animate-fade-up rounded-2xl border px-4 py-4 text-left ${
                   level === l
-                    ? 'border-[var(--night-accent-45)] bg-[rgba(145,132,217,.16)]'
-                    : 'border-white/[0.08] bg-[var(--night-surface)]'
+                    ? 'border-accent-line bg-[rgba(145,132,217,.16)]'
+                    : 'border-white/[0.08] bg-surface'
                 }`}
                 style={{ animationDelay: `${0.05 + i * 0.06}s` }}
               >
                 <span className="block text-lg font-medium">{l}</span>
-                <span className="block text-[12px] text-[var(--night-text-40)]">
+                <span className="block text-[12px] text-fg-muted">
                   {l === 'A1'
                     ? 'только начинаю'
                     : l === 'A2'
@@ -261,20 +261,20 @@ function StepLevel({
           не знать свой уровень нормально, мы его и так определим по ходу. */}
       <div className="mt-auto flex flex-col gap-3">
         {lang === 'en' && !level && (
-          <p className="text-center text-sm text-[var(--night-text-40)]">
+          <p className="text-center text-sm text-fg-muted">
             Выбери уровень — или нажми «Не знаю», подберём сами.
           </p>
         )}
         <button
           onClick={onNext}
           disabled={lang === 'en' && !level}
-          className="h-13 rounded-2xl bg-[var(--night-text)] py-3.5 font-medium text-[var(--night-bg)] transition-[filter,transform] active:scale-[0.98] disabled:opacity-40"
+          className="h-13 rounded-2xl bg-fg py-3.5 font-medium text-page transition-[filter,transform] active:scale-[0.98] disabled:opacity-40"
         >
           Дальше
         </button>
         <button
           onClick={onSkip}
-          className="h-13 rounded-2xl border border-white/[0.12] py-3.5 font-medium text-[var(--night-text-70)] transition-[filter,transform] active:scale-[0.98]"
+          className="h-13 rounded-2xl border border-white/[0.12] py-3.5 font-medium text-fg-secondary transition-[filter,transform] active:scale-[0.98]"
         >
           Не знаю свой уровень
         </button>
@@ -329,7 +329,7 @@ function StepReady({
       <div className="flex flex-col items-center gap-4 pt-6 text-center">
         <IconBadgeCheck
           size={64}
-          className="animate-pop-in text-[var(--night-accent)]"
+          className="animate-pop-in text-accent"
         />
         {/* «Твой план готов» звучало как персональная подборка, а порядок
             здесь у всех один и от уровня не зависит — обещание без механизма
@@ -345,15 +345,15 @@ function StepReady({
         {PLAN.map((p, i) => (
           <div
             key={p.title}
-            className="animate-fade-up flex items-center gap-3.5 rounded-2xl border border-white/[0.08] bg-[var(--night-surface)] px-4 py-3.5"
+            className="animate-fade-up flex items-center gap-3.5 rounded-2xl border border-white/[0.08] bg-surface px-4 py-3.5"
             style={{ animationDelay: `${0.1 + i * 0.09}s` }}
           >
-            <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-[var(--night-accent-900)] text-[var(--night-accent-100)]">
+            <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-accent-soft text-accent-soft-fg">
               <p.Icon size={20} />
             </span>
             <span className="flex flex-col">
               <span className="text-[15px] font-medium">{p.title}</span>
-              <span className="text-[13px] text-[var(--night-text-40)]">{p.desc}</span>
+              <span className="text-[13px] text-fg-muted">{p.desc}</span>
             </span>
           </div>
         ))}
@@ -364,7 +364,7 @@ function StepReady({
           всегда) и ловит сарафан, которого метки не видят вовсе.
           Отдельным шагом делать не стал: это налог на всех ради одной строки. */}
       <div className="flex flex-col gap-2.5">
-        <p className="text-sm text-[var(--night-text-40)]">Как ты о нас узнал?</p>
+        <p className="text-sm text-fg-muted">Как ты о нас узнал?</p>
         <div className="flex flex-wrap gap-2">
           {HOW_HEARD.map((h) => (
             <button
@@ -375,8 +375,8 @@ function StepReady({
               }}
               className={`min-h-11 rounded-xl border px-3.5 py-2 text-sm ${
                 heard === h
-                  ? 'border-[var(--night-accent-45)] bg-[rgba(145,132,217,.16)]'
-                  : 'border-white/[0.08] bg-[var(--night-surface)] text-[var(--night-text-70)]'
+                  ? 'border-accent-line bg-[rgba(145,132,217,.16)]'
+                  : 'border-white/[0.08] bg-surface text-fg-secondary'
               }`}
             >
               {h}
@@ -390,13 +390,13 @@ function StepReady({
           <>
             <button
               onClick={onFinish}
-              className="rounded-2xl bg-[var(--night-text)] py-4 font-medium text-[var(--night-bg)] transition-[filter,transform] active:scale-[0.98]"
+              className="rounded-2xl bg-fg py-4 font-medium text-page transition-[filter,transform] active:scale-[0.98]"
             >
               Занимаюсь сам — начать
             </button>
             <button
               onClick={() => setShowCode(true)}
-              className="rounded-2xl border border-white/[0.12] py-3.5 font-medium text-[var(--night-text-70)] transition-[filter,transform] active:scale-[0.98]"
+              className="rounded-2xl border border-white/[0.12] py-3.5 font-medium text-fg-secondary transition-[filter,transform] active:scale-[0.98]"
             >
               У меня есть преподаватель
             </button>
@@ -408,13 +408,13 @@ function StepReady({
               onChange={(e) => setCode(e.target.value)}
               placeholder="Код от преподавателя"
               autoFocus
-              className="h-12 rounded-2xl border border-white/[0.12] bg-[var(--night-input)] px-4 text-center text-lg tracking-widest outline-none focus:border-[var(--night-accent-45)]"
+              className="h-12 rounded-2xl border border-white/[0.12] bg-input px-4 text-center text-lg tracking-widest outline-none focus:border-accent-line"
             />
             {joinError && <p className="text-sm text-red-400">{joinError}</p>}
             <button
               type="submit"
               disabled={!code.trim() || joining}
-              className="rounded-2xl bg-[var(--night-text)] py-4 font-medium text-[var(--night-bg)] transition-[filter,transform] active:scale-[0.98] disabled:opacity-40"
+              className="rounded-2xl bg-fg py-4 font-medium text-page transition-[filter,transform] active:scale-[0.98] disabled:opacity-40"
             >
               {joining ? 'Привязываю…' : 'Привязаться и начать'}
             </button>
@@ -424,7 +424,7 @@ function StepReady({
                 setShowCode(false)
                 setJoinError(null)
               }}
-              className="min-h-[44px] py-1 text-sm text-[var(--night-text-40)]"
+              className="min-h-[44px] py-1 text-sm text-fg-muted"
             >
               Назад
             </button>
@@ -433,7 +433,7 @@ function StepReady({
         {/* вход для репетитора: роль включается изнутри приложения */}
         <button
           onClick={onTeacher}
-          className="min-h-[44px] py-1 text-sm text-[var(--night-text-40)] underline underline-offset-4"
+          className="min-h-[44px] py-1 text-sm text-fg-muted underline underline-offset-4"
         >
           Я преподаватель — веду своих учеников
         </button>
@@ -454,7 +454,7 @@ function Heading({
   return (
     <div className={`flex flex-col gap-2 ${center ? 'items-center text-center' : ''}`}>
       <h1 className="text-2xl font-medium tracking-tight">{title}</h1>
-      <p className="text-sm text-[var(--night-text-40)]">{desc}</p>
+      <p className="text-sm text-fg-muted">{desc}</p>
     </div>
   )
 }

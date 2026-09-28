@@ -159,8 +159,8 @@ export function DictationMode({ lang, onBack }: { lang: AppLang; onBack: () => v
       onClick={() => setSrc(id)}
       className={`min-h-11 rounded-full px-4 text-sm font-medium transition-colors ${
         src === id
-          ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
-          : 'bg-white/[0.06] text-[var(--night-text-40)]'
+          ? 'bg-accent-soft text-accent-soft-fg'
+          : 'bg-white/[0.06] text-fg-muted'
       }`}
     >
       {label}
@@ -182,7 +182,7 @@ export function DictationMode({ lang, onBack }: { lang: AppLang; onBack: () => v
           <p className="font-medium">
             {src === 'deck' ? 'Пока нет своих слов' : 'Нет слов для диктанта'}
           </p>
-          <p className="mt-1 text-sm text-[var(--night-text-40)]">
+          <p className="mt-1 text-sm text-fg-muted">
             {src === 'deck'
               ? 'Добавь слова в «Учёба» — или потренируйся на новых.'
               : 'Попробуй другой набор.'}
@@ -195,20 +195,20 @@ export function DictationMode({ lang, onBack }: { lang: AppLang; onBack: () => v
           <Card className="flex flex-col gap-3">
             <button
               onClick={() => current && speak(current.term, { lang })}
-              className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[var(--night-accent-900)] text-[var(--night-accent-100)]"
+              className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-accent-soft text-accent-soft-fg"
               aria-label="Прослушать ещё раз"
             >
               <IconSpeaker size={32} />
             </button>
-            <p className="text-center text-sm text-[var(--night-text-40)]">
+            <p className="text-center text-sm text-fg-muted">
               Напиши слово, которое услышишь
             </p>
 
             <input
               aria-label="Услышанное слово"
-              className={`w-full rounded-lg border bg-[var(--night-input)] px-3 py-2 outline-none ${
+              className={`w-full rounded-lg border bg-input px-3 py-2 outline-none ${
                 checked === null
-                  ? 'border-white/[0.10] focus:border-[var(--night-accent-45)]'
+                  ? 'border-white/[0.10] focus:border-accent-line'
                   : checked
                     ? 'border-emerald-500'
                     : 'border-red-500'
@@ -226,13 +226,13 @@ export function DictationMode({ lang, onBack }: { lang: AppLang; onBack: () => v
             {/* подсказка-перевод — только по кнопке, чтобы не подсматривать */}
             {checked === null && current?.translation && (
               revealed ? (
-                <p className="text-center text-sm text-[var(--night-text-40)]">
+                <p className="text-center text-sm text-fg-muted">
                   подсказка: «{current.translation}»
                 </p>
               ) : (
                 <button
                   onClick={() => setRevealed(true)}
-                  className="mx-auto min-h-11 text-sm font-medium text-[var(--night-accent-text)]"
+                  className="mx-auto min-h-11 text-sm font-medium text-accent-strong"
                 >
                   Показать подсказку
                 </button>
@@ -241,13 +241,13 @@ export function DictationMode({ lang, onBack }: { lang: AppLang; onBack: () => v
 
             {checked === null && hint && (
               <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
-                {hint} <span className="text-[var(--night-text-40)]">Попробуй ещё раз.</span>
+                {hint} <span className="text-fg-muted">Попробуй ещё раз.</span>
               </p>
             )}
             {checked === null && attempts > 0 && (
               <button
                 onClick={() => setChecked(false)}
-                className="mx-auto min-h-11 text-sm font-medium text-[var(--night-accent-text)]"
+                className="mx-auto min-h-11 text-sm font-medium text-accent-strong"
               >
                 Показать ответ
               </button>

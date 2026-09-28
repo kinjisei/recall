@@ -22,7 +22,7 @@ export interface PickerOption<T extends string> {
 }
 
 const TRIGGER =
-  'flex w-full items-center justify-between gap-2 rounded-lg border border-white/[0.10] bg-[var(--night-input)] px-3 py-2 text-left text-sm outline-none focus:border-[var(--night-accent-45)] disabled:opacity-60'
+  'flex w-full items-center justify-between gap-2 rounded-lg border border-white/[0.10] bg-input px-3 py-2 text-left text-sm outline-none focus:border-accent-line disabled:opacity-60'
 
 export function Picker<T extends string>({
   value,
@@ -56,7 +56,7 @@ export function Picker<T extends string>({
         className={triggerClassName}
       >
         <span className="min-w-0 truncate">{current?.label ?? '—'}</span>
-        <IconCaretDown size={16} className="flex-none text-[var(--night-text-40)]" />
+        <IconCaretDown size={16} className="flex-none text-fg-muted" />
       </button>
 
       {open && (
@@ -77,14 +77,14 @@ export function Picker<T extends string>({
                     }}
                     className={`flex min-h-11 w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left text-sm ${
                       active
-                        ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
-                        : 'text-[var(--night-text)] hover:bg-white/[0.04]'
+                        ? 'bg-accent-soft text-accent-soft-fg'
+                        : 'text-fg hover:bg-white/[0.04]'
                     }`}
                   >
                     <span className="min-w-0">
                       {o.label}
                       {o.hint && (
-                        <span className="block text-xs text-[var(--night-text-40)]">{o.hint}</span>
+                        <span className="block text-xs text-fg-muted">{o.hint}</span>
                       )}
                     </span>
                     {active && <IconCheck size={16} className="flex-none" />}

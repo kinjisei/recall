@@ -54,21 +54,21 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-[var(--night-bg)] px-6 text-center">
-          <IconWarning size={40} className="text-[var(--night-accent-text)]" />
-          <p className="font-semibold text-[var(--night-text-70)]">
+        <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-page px-6 text-center">
+          <IconWarning size={40} className="text-accent-strong" />
+          <p className="font-semibold text-fg-secondary">
             Что-то пошло не так
           </p>
-          <p className="max-w-sm text-sm text-[var(--night-text-40)]">
+          <p className="max-w-sm text-sm text-fg-muted">
             Попробуй обновить страницу — обычно это помогает.
           </p>
           {/* Экран поломки — самое место для контакта: если обновление не
               спасло, человеку больше некуда идти */}
-          <p className="max-w-sm text-sm text-[var(--night-text-40)]">
+          <p className="max-w-sm text-sm text-fg-muted">
             Не помогло?{' '}
             <a
               href={supportMailto('Recall — ошибка в приложении')}
-              className="text-[var(--night-accent-text)] underline"
+              className="text-accent-strong underline"
             >
               Напиши мне
             </a>
@@ -84,7 +84,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
                 sessionStorage.removeItem(RELOAD_AT)
                 window.location.reload()
               }}
-              className="min-h-11 rounded-xl bg-[var(--night-accent)] px-5 py-2.5 font-semibold text-white hover:brightness-110"
+              className="min-h-11 rounded-xl bg-accent px-5 py-2.5 font-semibold text-white hover:brightness-110"
             >
               Обновить
             </button>
@@ -93,7 +93,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
                 sessionStorage.removeItem(RELOAD_AT)
                 window.location.assign('/')
               }}
-              className="min-h-11 rounded-xl border border-white/[0.12] px-5 py-2.5 font-medium text-[var(--night-text-70)]"
+              className="min-h-11 rounded-xl border border-white/[0.12] px-5 py-2.5 font-medium text-fg-secondary"
             >
               На главную
             </button>

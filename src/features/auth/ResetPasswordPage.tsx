@@ -206,15 +206,15 @@ export function ResetPasswordPage() {
       <div className="flex flex-col gap-2 text-center text-sm">
         <AppLink
           to="/forgot"
-          className="-m-3 p-3 font-medium text-[var(--night-accent-text)] hover:underline"
+          className="-m-3 p-3 font-medium text-accent-strong hover:underline"
         >
           Код не подошёл — прислать новое письмо
         </AppLink>
-        <p className="text-xs leading-relaxed text-[var(--night-text-40)]">
+        <p className="text-xs leading-relaxed text-fg-muted">
           Совсем ничего не выходит?{' '}
           <a
             href={supportMailto('Recall — не удаётся сменить пароль')}
-            className="underline hover:text-[var(--night-text-70)]"
+            className="underline hover:text-fg-secondary"
           >
             Напиши нам
           </a>

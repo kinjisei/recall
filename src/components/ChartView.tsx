@@ -19,7 +19,7 @@ function fmt(v: number, unit?: string): string {
 export function ChartView({ chart }: { chart: ChartSpec }) {
   return (
     <figure className="w-full">
-      <figcaption className="mb-2 text-center text-sm font-medium text-[var(--night-text-70)]">
+      <figcaption className="mb-2 text-center text-sm font-medium text-fg-secondary">
         {chart.title}
       </figcaption>
       <div className="overflow-x-auto">
@@ -34,7 +34,7 @@ export function ChartView({ chart }: { chart: ChartSpec }) {
       {chart.series.length > 1 && chart.kind !== 'table' && (
         <div className="mt-2 flex flex-wrap justify-center gap-x-3 gap-y-1">
           {chart.series.map((s, i) => (
-            <span key={i} className="flex items-center gap-1.5 text-xs text-[var(--night-text-70)]">
+            <span key={i} className="flex items-center gap-1.5 text-xs text-fg-secondary">
               <span className="h-2.5 w-2.5 rounded-sm" style={{ background: COLORS[i % COLORS.length] }} />
               {s.name}
             </span>
@@ -173,7 +173,7 @@ function TableChart({ chart }: { chart: ChartSpec }) {
     <table className="w-full min-w-[360px] border-collapse text-sm">
       <thead>
         <tr>
-          <th className="border border-white/[0.10] px-3 py-1.5 text-left text-[var(--night-text-40)]">
+          <th className="border border-white/[0.10] px-3 py-1.5 text-left text-fg-muted">
             {chart.xLabel || ''}
           </th>
           {chart.series.map((s, i) => (
@@ -186,7 +186,7 @@ function TableChart({ chart }: { chart: ChartSpec }) {
       <tbody>
         {rows.map((r, ri) => (
           <tr key={ri}>
-            <td className="border border-white/[0.10] px-3 py-1.5 text-[var(--night-text-70)]">{r}</td>
+            <td className="border border-white/[0.10] px-3 py-1.5 text-fg-secondary">{r}</td>
             {chart.series.map((s, si) => (
               <td key={si} className="border border-white/[0.10] px-3 py-1.5 text-right">
                 {fmt(s.points[ri]?.value ?? 0, chart.unit)}

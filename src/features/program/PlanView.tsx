@@ -48,39 +48,39 @@ export function PlanView({ weeks, currentWeek }: { weeks: PlanWeek[]; currentWee
             key={n}
             className={`rounded-xl border p-3 ${
               isCurrent
-                ? 'border-[var(--night-accent-45)] bg-[rgba(145,132,217,.08)]'
+                ? 'border-accent-line bg-[rgba(145,132,217,.08)]'
                 : 'border-white/[0.08]'
             } ${isPast ? 'opacity-60' : ''}`}
           >
             <div className="flex items-baseline justify-between gap-2">
               <p className="text-sm font-semibold">{w.title || `Неделя ${n}`}</p>
               {isCurrent && (
-                <span className="flex-none rounded-full bg-[var(--night-accent)] px-2 py-0.5 text-[11px] font-medium text-white">
+                <span className="flex-none rounded-full bg-accent px-2 py-0.5 text-[11px] font-medium text-white">
                   текущая
                 </span>
               )}
               {isPast && (
-                <span className="flex-none text-[11px] text-[var(--night-text-40)]">прошла</span>
+                <span className="flex-none text-[11px] text-fg-muted">прошла</span>
               )}
             </div>
-            {w.focus && <p className="mt-0.5 text-xs text-[var(--night-text-40)]">{w.focus}</p>}
+            {w.focus && <p className="mt-0.5 text-xs text-fg-muted">{w.focus}</p>}
             <ul className="mt-2 flex flex-col gap-2">
               {w.items.map((it, j) => {
                 const Icon = ITEM_ICON[it.type] ?? IconSparkle
                 return (
                   <li key={j} className="flex gap-2.5">
-                    <span className="mt-0.5 flex h-7 w-7 flex-none items-center justify-center rounded-lg bg-white/[0.06] text-[var(--night-accent-text)]">
+                    <span className="mt-0.5 flex h-7 w-7 flex-none items-center justify-center rounded-lg bg-white/[0.06] text-accent-strong">
                       <Icon size={15} />
                     </span>
                     <div className="min-w-0">
-                      <p className="text-sm text-[var(--night-text)]">
-                        <span className="text-xs text-[var(--night-text-40)]">
+                      <p className="text-sm text-fg">
+                        <span className="text-xs text-fg-muted">
                           {ITEM_LABEL[it.type] ?? 'Задание'} ·{' '}
                         </span>
                         {it.title}
                       </p>
                       {it.note && (
-                        <p className="text-xs leading-relaxed text-[var(--night-text-60)]">
+                        <p className="text-xs leading-relaxed text-fg-tertiary">
                           {it.note}
                         </p>
                       )}

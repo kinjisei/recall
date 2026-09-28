@@ -81,7 +81,7 @@ export function WritingReviewScreen({
       <BackHeader onBack={onBack} title={`Проверка · ${studentName}`} label="Назад" />
 
       <Card>
-        <p className="text-xs text-[var(--night-text-40)]">
+        <p className="text-xs text-fg-muted">
           {task.mode === 'ielts'
             ? `IELTS · ${task.settings?.ieltsTask === 'gt1' ? 'GT Task 1' : 'Task 2'}`
             : `Эссе · ${task.level}`}
@@ -95,8 +95,8 @@ export function WritingReviewScreen({
       </Card>
 
       <Card>
-        <p className="mb-1 text-[10px] uppercase tracking-wider text-[var(--night-text-40)]">Текст ученика</p>
-        <p className="whitespace-pre-wrap leading-relaxed text-[var(--night-text-70)]">
+        <p className="mb-1 text-[10px] uppercase tracking-wider text-fg-muted">Текст ученика</p>
+        <p className="whitespace-pre-wrap leading-relaxed text-fg-secondary">
           {assignment.essay || '(пусто)'}
         </p>
       </Card>
@@ -113,7 +113,7 @@ export function WritingReviewScreen({
 
         {aiErrors.length > 0 && (
           <div>
-            <p className="mb-1 text-[10px] uppercase tracking-wider text-[var(--night-text-40)]">
+            <p className="mb-1 text-[10px] uppercase tracking-wider text-fg-muted">
               Правки AI — оставить/убрать
             </p>
             <div className="flex flex-col gap-1.5">
@@ -125,7 +125,7 @@ export function WritingReviewScreen({
                     kept[i] ? 'border-emerald-500/40' : 'border-white/[0.08] opacity-50'
                   }`}
                 >
-                  <span className={`mt-0.5 flex-none ${kept[i] ? 'text-emerald-400' : 'text-[var(--night-text-40)]'}`}>
+                  <span className={`mt-0.5 flex-none ${kept[i] ? 'text-emerald-400' : 'text-fg-muted'}`}>
                     {kept[i] ? <IconCheck size={16} /> : <IconClose size={16} />}
                   </span>
                   <span>
@@ -140,11 +140,11 @@ export function WritingReviewScreen({
         )}
 
         <div>
-          <p className="mb-1 text-[10px] uppercase tracking-wider text-[var(--night-text-40)]">
+          <p className="mb-1 text-[10px] uppercase tracking-wider text-fg-muted">
             Итоговый {task.mode === 'ielts' ? 'band' : 'уровень'}
           </p>
           <input
-            className="w-28 rounded-lg border border-white/[0.10] bg-[var(--night-input)] px-3 py-2 outline-none focus:border-[var(--night-accent-45)]"
+            className="w-28 rounded-lg border border-white/[0.10] bg-input px-3 py-2 outline-none focus:border-accent-line"
             value={band}
             onChange={(e) => setBand(e.target.value)}
             placeholder={task.mode === 'ielts' ? '6.5' : 'B1'}
@@ -152,11 +152,11 @@ export function WritingReviewScreen({
         </div>
 
         <div>
-          <p className="mb-1 text-[10px] uppercase tracking-wider text-[var(--night-text-40)]">
+          <p className="mb-1 text-[10px] uppercase tracking-wider text-fg-muted">
             Комментарий ученику
           </p>
           <textarea
-            className="min-h-[72px] w-full rounded-lg border border-white/[0.10] bg-[var(--night-input)] px-3 py-2 outline-none focus:border-[var(--night-accent-45)]"
+            className="min-h-[72px] w-full rounded-lg border border-white/[0.10] bg-input px-3 py-2 outline-none focus:border-accent-line"
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             placeholder="Что удалось, над чем поработать…"

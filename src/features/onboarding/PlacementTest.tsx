@@ -119,13 +119,13 @@ export function PlacementTest() {
       <div className="flex flex-col gap-4">
         <TopBack onBack={back} />
         <div className="flex flex-col items-center gap-3 py-6 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--night-accent-900)] text-[var(--night-accent-100)]">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-accent-soft text-accent-soft-fg">
             <IconSparkle size={30} />
           </div>
           <h1 className="text-2xl font-medium tracking-tight">
             Тест уровня {languageName}
           </h1>
-          <p className="max-w-sm text-[var(--night-text-40)]">
+          <p className="max-w-sm text-fg-muted">
             До {maxQuestions} вопросов от простого к сложному, блоками по
             уровням {levels[0]}–{levels[levels.length - 1]}. Если блок окажется
             слишком сложным, тест закончится раньше. Результат подстроит
@@ -171,9 +171,9 @@ export function PlacementTest() {
       <div className="flex flex-col gap-4">
         <TopBack onBack={back} />
         <Card className="items-center text-center">
-          <p className="text-sm text-[var(--night-text-40)]">Твой уровень</p>
-          <p className="my-2 text-5xl font-bold text-[var(--night-accent-text)]">{level}</p>
-          <p className="text-sm text-[var(--night-text-40)]">
+          <p className="text-sm text-fg-muted">Твой уровень</p>
+          <p className="my-2 text-5xl font-bold text-accent-strong">{level}</p>
+          <p className="text-sm text-fg-muted">
             {level === 'A1'
               ? 'Начинаем с самых основ — это нормально!'
               : level === levels[levels.length - 1]
@@ -229,13 +229,13 @@ export function PlacementTest() {
 
       {/* Прогресс */}
       <div>
-        <div className="mb-1 flex justify-between text-xs text-[var(--night-text-40)]">
+        <div className="mb-1 flex justify-between text-xs text-fg-muted">
           <span>Вопрос {index + 1} из {total}</span>
           <span>{q.level}</span>
         </div>
         <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.07]">
           <div
-            className="h-full origin-left rounded-full bg-[var(--night-accent)] transition-transform duration-300"
+            className="h-full origin-left rounded-full bg-accent transition-transform duration-300"
             style={{ transform: `scaleX(${(index + 1) / total})` }}
           />
         </div>
@@ -248,7 +248,7 @@ export function PlacementTest() {
             <button
               key={i}
               onClick={() => choose(i)}
-              className="rounded-xl border border-white/[0.10] px-4 py-2.5 text-left transition-colors hover:border-[var(--night-accent-45)] hover:bg-[rgba(145,132,217,.10)]"
+              className="rounded-xl border border-white/[0.10] px-4 py-2.5 text-left transition-colors hover:border-accent-line hover:bg-[rgba(145,132,217,.10)]"
             >
               {opt}
             </button>
@@ -263,7 +263,7 @@ function TopBack({ onBack }: { onBack: () => void }) {
   return (
     <button
       onClick={onBack}
-      className="flex min-h-11 w-fit items-center gap-1 text-sm font-medium text-[var(--night-text-40)] hover:text-[var(--night-text-70)]"
+      className="flex min-h-11 w-fit items-center gap-1 text-sm font-medium text-fg-muted hover:text-fg-secondary"
     >
       <IconBack size={16} /> На главную
     </button>

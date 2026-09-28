@@ -49,8 +49,8 @@ export function BottomNav() {
               aria-current={active ? 'page' : undefined}
               className={`relative flex min-h-[44px] flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-1 py-1.5 text-[11px] font-medium transition-colors duration-300 [transition-timing-function:cubic-bezier(.22,1,.36,1)] ${
                 active
-                  ? 'text-[var(--night-accent-100)]'
-                  : 'text-[var(--night-text-40)] hover:text-[var(--night-text-70)]'
+                  ? 'text-accent-soft-fg'
+                  : 'text-fg-muted hover:text-fg-secondary'
               }`}
             >
               <TabIcon

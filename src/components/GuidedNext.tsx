@@ -42,8 +42,8 @@ export function GuidedNext({ step }: { step: GuidedStep }) {
 
   if (!next) {
     return (
-      <div className="animate-fade-up flex items-center gap-3 rounded-2xl border border-[var(--night-accent-45)] bg-[rgba(145,132,217,.12)] px-4 py-3.5">
-        <IconSparkle size={22} className="flex-none text-[var(--night-accent-100)]" />
+      <div className="animate-fade-up flex items-center gap-3 rounded-2xl border border-accent-line bg-[rgba(145,132,217,.12)] px-4 py-3.5">
+        <IconSparkle size={22} className="flex-none text-accent-soft-fg" />
         <p className="text-sm">Занятие завершено — все три шага пройдены. Отличная работа!</p>
       </div>
     )
@@ -55,15 +55,15 @@ export function GuidedNext({ step }: { step: GuidedStep }) {
         advanceGuided(step)
         navigate(next.route)
       }}
-      className="lift animate-fade-up flex w-full items-center justify-between gap-3 rounded-2xl border border-[var(--night-accent-45)] bg-[linear-gradient(135deg,rgba(145,132,217,.22),rgba(145,132,217,.10))] px-4 py-3.5 text-left"
+      className="lift animate-fade-up flex w-full items-center justify-between gap-3 rounded-2xl border border-accent-line bg-[linear-gradient(135deg,rgba(145,132,217,.22),rgba(145,132,217,.10))] px-4 py-3.5 text-left"
     >
       <span className="flex flex-col">
-        <span className="text-[11px] uppercase tracking-wider text-[var(--night-text-40)]">
+        <span className="text-[11px] uppercase tracking-wider text-fg-muted">
           Занятие продолжается
         </span>
         <span className="text-[15px] font-medium">{next.label}</span>
       </span>
-      <IconArrowRight size={20} className="flex-none text-[var(--night-accent-100)]" />
+      <IconArrowRight size={20} className="flex-none text-accent-soft-fg" />
     </button>
   )
 }

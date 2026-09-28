@@ -11,7 +11,7 @@ import { BrandMark } from '../../shared/ui/Brand'
 import { IconEye } from '../../shared/ui/icons'
 
 export const inputClass =
-  'h-11 w-full rounded-xl border-none bg-[var(--night-input)] px-4 text-sm text-[var(--night-text)] placeholder:text-[var(--night-text-40)] outline-none focus:ring-2 focus:ring-[var(--night-accent-45)]'
+  'h-11 w-full rounded-xl border-none bg-input px-4 text-sm text-fg placeholder:text-fg-muted outline-none focus:ring-2 focus:ring-accent-line'
 
 /** Переливающийся фон: глубокий индиго-градиент + 3 дрейфующих blur-пятна + блик. */
 export function AuroraBg() {
@@ -41,18 +41,18 @@ export function AuthCard({
   children: ReactNode
 }) {
   return (
-    <main className="relative flex min-h-dvh w-full items-center justify-center bg-[var(--night-bg)] p-4 font-[family-name:var(--night-font)] text-[var(--night-text)] selection:bg-[var(--night-accent-45)]">
+    <main className="relative flex min-h-dvh w-full items-center justify-center bg-page p-4 font-sans text-fg selection:bg-accent-line">
       <div className="fixed inset-0" aria-hidden="true">
         <AuroraBg />
       </div>
-      <div className="relative z-10 flex w-full max-w-md animate-fade-in flex-col gap-7 rounded-3xl border border-[var(--night-text-10)] bg-[var(--night-glass)] p-6 backdrop-blur-2xl">
+      <div className="relative z-10 flex w-full max-w-md animate-fade-in flex-col gap-7 rounded-3xl border border-line bg-glass p-6 backdrop-blur-2xl">
         <div className="flex items-center gap-2">
           <BrandMark size={22} />
           <span className="text-lg font-medium tracking-tight">Recall</span>
         </div>
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-medium tracking-tight">{title}</h1>
-          <p className="text-sm leading-relaxed text-[var(--night-text-40)]">{subtitle}</p>
+          <p className="text-sm leading-relaxed text-fg-muted">{subtitle}</p>
         </div>
         {children}
       </div>
@@ -102,7 +102,7 @@ export function InputGroup({
         onChange={(e) => onChange(e.target.value)}
         required={required}
       />
-      {hint && <p className="text-xs text-[var(--night-text-40)]">{hint}</p>}
+      {hint && <p className="text-xs text-fg-muted">{hint}</p>}
     </div>
   )
 }
@@ -147,12 +147,12 @@ export function PasswordField({
           type="button"
           aria-label={shown ? 'Скрыть пароль' : 'Показать пароль'}
           onClick={() => setShown(!shown)}
-          className="absolute right-1 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center text-[var(--night-text-40)] hover:text-[var(--night-text)]"
+          className="absolute right-1 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center text-fg-muted hover:text-fg"
         >
           <EyeIcon off={shown} />
         </button>
       </div>
-      {hint && <p className="text-xs text-[var(--night-text-40)]">{hint}</p>}
+      {hint && <p className="text-xs text-fg-muted">{hint}</p>}
     </div>
   )
 }
@@ -186,7 +186,7 @@ export function PrimaryButton({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className="h-14 w-full rounded-xl bg-[var(--night-text)] font-semibold text-[var(--night-bg)] transition-[filter,transform] hover:brightness-95 active:scale-[0.98] disabled:opacity-50"
+      className="h-14 w-full rounded-xl bg-fg font-semibold text-page transition-[filter,transform] hover:brightness-95 active:scale-[0.98] disabled:opacity-50"
     >
       {children}
     </button>

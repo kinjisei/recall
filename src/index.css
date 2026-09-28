@@ -3,54 +3,15 @@
    Variable-начертание: один файл на все веса 100–900, кириллица включена. */
 @import '@fontsource-variable/onest';
 
-/* Тема «Nocturne» — единственная (светлой нет). Хрупкий паттерн light-first
-   (`bg-X-50 dark:bg-X-900`) вычищен из компонентов (2026-07-27, свип аудита):
-   цвета заданы одним значением, а не парой «светлое + dark:тёмное». Вариант
-   `dark` (класс `.dark` на <html>) оставлен как страховка — если `dark:`
-   снова где-то появится, он сработает, а не перекрасит экран в светлое. */
-@custom-variant dark (&:where(.dark, .dark *));
+/* Токены дизайн-системы: цвета двух тем, шрифт, размеры текста, точки
+   перехода, ширины раскладок. Значения — только там (архитектура §5). */
+@import './shared/ui/tokens.css';
 
 /* ==========================================================================
-   Recall — базовые стили и токены дизайн-системы «Nocturne».
-   Тёмный сине-серый фон, один акцент (blurple), шрифт Onest.
+   Recall — базовые стили и анимации. Тёмный сине-серый фон, один акцент
+   (blurple), шрифт Onest — всё из токенов (shared/ui/tokens.css).
    Всё адаптивно и уважает prefers-reduced-motion.
    ========================================================================== */
-
-:root {
-  color-scheme: dark;
-
-  /* --- Nocturne: основная палитра --- */
-  --night-bg: #161826; /* фон страницы */
-  --night-text: #e9e9ed; /* основной текст */
-  --night-surface: #1e2030; /* карточки-строки, панели */
-  --night-input: #262939; /* фон полей ввода */
-  --night-step: rgba(30, 32, 46, 0.72); /* неактивный шаг поверх авроры */
-  --night-glass: rgba(22, 24, 38, 0.74); /* glass-панели (форма, навигация) */
-  --night-accent: #9184d9; /* акцент: линии, рамки, метки */
-  --night-accent-text: #b9b0e8; /* акцент для мелкого текста/ссылок */
-  --night-accent-900: #2b2450; /* подложка активной иконки */
-  --night-accent-100: #cfc8f0; /* иконка/текст на подложке */
-  --night-font: 'Onest Variable', 'Onest', system-ui, sans-serif;
-
-  /* Прозрачные производные.
-     Значения подобраны по WCAG на фоне #161826: весь ТЕКСТОВЫЙ уровень даёт
-     ≥4.5:1, самый бледный (-25) — только для иконок и рамок (≥3:1).
-     Было 0.42 и 0.25 → 3.57:1 и 2.08:1, подписи читались плохо. */
-  --night-text-70: rgba(233, 233, 237, 0.75); /* ~8.4:1 */
-  --night-text-60: rgba(233, 233, 237, 0.66); /* ~6.8:1 */
-  --night-text-40: rgba(233, 233, 237, 0.58); /* ~5.3:1 — подписи и описания */
-  --night-text-25: rgba(233, 233, 237, 0.4); /* ~3.3:1 — иконки, разделители */
-  --night-text-10: rgba(233, 233, 237, 0.1);
-  --night-accent-45: rgba(145, 132, 217, 0.45);
-  --night-accent-30: rgba(145, 132, 217, 0.3);
-
-  /* Старые токены акцента — пока используются неперекрашенными экранами
-     (этап 7 их заменит). Переведены в тон Nocturne, чтобы не спорили с фоном. */
-  --brand-500: #9184d9;
-  --brand-600: #8878d4;
-  --brand-700: #6f63b8;
-  --accent-500: #6f63b8;
-}
 
 html,
 body,
@@ -72,9 +33,9 @@ body {
   min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  font-family: var(--night-font);
-  background: var(--night-bg);
-  color: var(--night-text);
+  font-family: var(--font-sans);
+  background: var(--color-page);
+  color: var(--color-fg);
 }
 
 /* iOS Safari АВТОЗУМИТ страницу при фокусе на поле со шрифтом < 16px —
@@ -99,14 +60,9 @@ a,
 
 /* Единое, доступное кольцо фокуса (только для клавиатуры). */
 :where(button, a, input, textarea, select, [tabindex]):focus-visible {
-  outline: 2px solid var(--brand-600);
+  outline: 2px solid var(--color-focus);
   outline-offset: 2px;
   border-radius: 0.5rem;
-}
-
-/* Градиент бренда — для стрик-героя и главных кнопок. */
-.bg-brand-gradient {
-  background-image: linear-gradient(135deg, var(--brand-500), var(--accent-500));
 }
 
 /* Мягкое появление контента.
@@ -203,8 +159,8 @@ a,
   to { transform: scaleX(1); }
 }
 @keyframes pulse-ring {
-  0%, 100% { box-shadow: 0 0 0 8px rgba(145, 132, 217, 0.12); }
-  50% { box-shadow: 0 0 0 18px rgba(145, 132, 217, 0.05); }
+  0%, 100% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--color-accent) 12%, transparent); }
+  50% { box-shadow: 0 0 0 18px color-mix(in srgb, var(--color-accent) 5%, transparent); }
 }
 @keyframes confetti-fall {
   0% { transform: translateY(-60px) rotate(0deg); opacity: 1; }

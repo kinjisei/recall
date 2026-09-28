@@ -307,9 +307,9 @@ export function PronunciationPage() {
           />
         ) : (
           <Card className="flex flex-col items-center gap-3 text-center">
-            <IconHeadphones size={40} className="text-[var(--night-accent-text)]" />
+            <IconHeadphones size={40} className="text-accent-strong" />
             <p className="text-lg font-bold">Раунд пройден</p>
-            <p className="text-sm text-[var(--night-text-40)]">
+            <p className="text-sm text-fg-muted">
               Ты повторил {round.length} фраз вслух — так держать!
             </p>
             <Button className="mt-1" onClick={restart}>
@@ -336,7 +336,7 @@ export function PronunciationPage() {
           <BackButton onClick={() => navigate('/practice')} label="К практике" />
           <h1 className="text-2xl font-medium tracking-tight">Речь</h1>
         </div>
-        <span className="text-sm text-[var(--night-text-40)]">
+        <span className="text-sm text-fg-muted">
           фраза {index + 1} / {round.length}
         </span>
       </div>
@@ -353,20 +353,20 @@ export function PronunciationPage() {
         {/* Своё слово помечаем: человек должен понимать, что проговаривает
             именно то, что учил, — иначе это выглядит как случайная фраза. */}
         {current.own && (
-          <p className="-mb-1 text-xs font-medium text-[var(--night-accent-100)]">
+          <p className="-mb-1 text-xs font-medium text-accent-soft-fg">
             Из твоей колоды — проговори вслух то, что учил
           </p>
         )}
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => speak(current.text, { lang })}
-            className="lift flex min-h-[44px] items-center gap-2 rounded-full border border-white/[0.10] px-4 text-sm text-[var(--night-text-70)]"
+            className="lift flex min-h-[44px] items-center gap-2 rounded-full border border-white/[0.10] px-4 text-sm text-fg-secondary"
           >
             <IconSpeaker size={16} /> Прослушать
           </button>
           <button
             onClick={() => speak(current.text, { lang, rate: SLOW_RATE })}
-            className="lift flex min-h-[44px] items-center gap-2 rounded-full border border-white/[0.10] px-4 text-sm text-[var(--night-text-70)]"
+            className="lift flex min-h-[44px] items-center gap-2 rounded-full border border-white/[0.10] px-4 text-sm text-fg-secondary"
           >
             <IconSpeakerSlow size={16} /> Медленно
           </button>
@@ -391,7 +391,7 @@ export function PronunciationPage() {
                       ? 'text-emerald-400'
                       : w.ok === false
                         ? 'text-red-400'
-                        : 'hover:text-[var(--night-accent-text)]')
+                        : 'hover:text-accent-strong')
                   }
                 >
                   {w.word}
@@ -402,7 +402,7 @@ export function PronunciationPage() {
         </p>
 
         {current.hint && !score && (
-          <p className="text-sm text-[var(--night-text-40)]">{current.hint}</p>
+          <p className="text-sm text-fg-muted">{current.hint}</p>
         )}
       </Card>
 
@@ -411,15 +411,15 @@ export function PronunciationPage() {
         <Card className="flex items-center gap-3">
           <IconBadgeCheck
             size={36}
-            className={score.percent >= PASS ? 'text-[var(--night-accent)]' : 'text-[var(--night-text-25)]'}
+            className={score.percent >= PASS ? 'text-accent' : 'text-fg-faint'}
           />
           <div className="min-w-0">
             <p className="font-bold">
               Совпадение — {score.percent}%
             </p>
-            <p className="text-sm text-[var(--night-text-60)]">{humanHint(score)}</p>
+            <p className="text-sm text-fg-tertiary">{humanHint(score)}</p>
             {heard && (
-              <p className="mt-1 text-xs text-[var(--night-text-40)]">Услышано: «{heard}»</p>
+              <p className="mt-1 text-xs text-fg-muted">Услышано: «{heard}»</p>
             )}
           </div>
         </Card>
@@ -437,7 +437,7 @@ export function PronunciationPage() {
             {/* мягкий ореол */}
             <span
               aria-hidden
-              className="absolute h-24 w-24 rounded-full bg-[var(--night-accent)] opacity-20 blur-xl"
+              className="absolute h-24 w-24 rounded-full bg-accent opacity-20 blur-xl"
             />
             <button
               onClick={onMic}
@@ -445,7 +445,7 @@ export function PronunciationPage() {
               aria-label={recording ? 'Остановить и оценить' : 'Записать произношение'}
               style={{
                 background:
-                  'linear-gradient(160deg, var(--night-accent) 0%, var(--night-accent-900) 100%)',
+                  'linear-gradient(160deg, var(--color-accent) 0%, var(--color-accent-soft) 100%)',
               }}
               className={`relative flex h-24 w-24 items-center justify-center rounded-full text-white shadow-lg disabled:opacity-70 ${
                 recording ? 'animate-pulse-ring' : 'lift'
@@ -460,7 +460,7 @@ export function PronunciationPage() {
               )}
             </button>
           </div>
-          <p className="text-xs text-[var(--night-text-40)]">
+          <p className="text-xs text-fg-muted">
             {processing
               ? 'Распознаю…'
               : recording
@@ -470,8 +470,8 @@ export function PronunciationPage() {
         </div>
       ) : (
         // Совсем нет микрофона — режим «слушай и повторяй» без оценки
-        <Card className="border-[var(--night-accent-30)]">
-          <p className="text-sm text-[var(--night-text-70)]">
+        <Card className="border-accent-line-soft">
+          <p className="text-sm text-fg-secondary">
             На этом устройстве нет доступа к микрофону. Послушай эталон (в т.ч.
             «Медленно») и повтори вслух — это главная тренировка.
           </p>

@@ -46,17 +46,17 @@ function ItemRow({ row }: { row: HomeworkRow }) {
         aria-hidden="true"
         className={`mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full text-[11px] ${
           done
-            ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
-            : 'border border-white/[0.14] text-[var(--night-text-40)]'
+            ? 'bg-accent-soft text-accent-soft-fg'
+            : 'border border-white/[0.14] text-fg-muted'
         }`}
       >
         {done ? <IconCheck size={12} /> : ''}
       </span>
       <span className="min-w-0 flex-1">
-        <span className={`block text-sm ${done ? 'text-[var(--night-text-70)]' : ''}`}>
+        <span className={`block text-sm ${done ? 'text-fg-secondary' : ''}`}>
           {head.title}
         </span>
-        <span className="text-xs text-[var(--night-text-40)]">
+        <span className="text-xs text-fg-muted">
           {KIND_LABEL[head.kind]}
           {head.target > 1 && ` · ${Math.min(head.progress, head.target)} из ${head.target}`}
           {done && (head.done_by === 'student' ? ' · отметил сам' : ' · засчитано по занятиям')}
@@ -64,7 +64,7 @@ function ItemRow({ row }: { row: HomeworkRow }) {
         </span>
         {pair &&
           other.map((o) => (
-            <span key={o.id} className="block text-xs text-[var(--night-text-40)]">
+            <span key={o.id} className="block text-xs text-fg-muted">
               вместо: {o.title}
             </span>
           ))}
@@ -105,7 +105,7 @@ export function HomeworkSection({
 
   if (loading) {
     return (
-      <div className="rounded-2xl border border-white/[0.08] bg-[var(--night-surface)] p-4">
+      <div className="rounded-2xl border border-white/[0.08] bg-surface p-4">
         <RowsSkeleton count={3} height={28} />
       </div>
     )
@@ -116,13 +116,13 @@ export function HomeworkSection({
   const ratio = total > 0 ? done / total : 0
 
   return (
-    <div className="rounded-2xl border border-white/[0.08] bg-[var(--night-surface)] p-4">
+    <div className="rounded-2xl border border-white/[0.08] bg-surface p-4">
       {error && <p className="mb-2 text-sm text-amber-300">{error}</p>}
 
       {!hw ? (
         <div className="flex flex-col gap-3">
           <p className="text-[15px] font-medium">Домашки нет</p>
-          <p className="text-sm text-[var(--night-text-40)]">
+          <p className="text-sm text-fg-muted">
             Между уроками ученик занимается сам — или не занимается. Домашка на неделю решает,
             что именно он откроет.
           </p>
@@ -132,7 +132,7 @@ export function HomeworkSection({
         <div className="flex flex-col gap-3">
           <div className="flex items-baseline justify-between gap-2">
             <p className="text-[15px] font-medium">Домашка на неделю</p>
-            <p className={`text-sm ${overdue ? 'text-amber-300' : 'text-[var(--night-text-40)]'}`}>
+            <p className={`text-sm ${overdue ? 'text-amber-300' : 'text-fg-muted'}`}>
               {dueLabel(hw.due_at)}
             </p>
           </div>
@@ -144,10 +144,10 @@ export function HomeworkSection({
             <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/[0.08]">
               <div
                 style={{ transform: `scaleX(${ratio})` }}
-                className="h-full w-full origin-left rounded-full bg-[var(--night-accent)] transition-transform duration-500 [transition-timing-function:cubic-bezier(.22,1,.36,1)]"
+                className="h-full w-full origin-left rounded-full bg-accent transition-transform duration-500 [transition-timing-function:cubic-bezier(.22,1,.36,1)]"
               />
             </div>
-            <span className="text-sm tabular-nums text-[var(--night-text-70)]">
+            <span className="text-sm tabular-nums text-fg-secondary">
               {done} из {total}
             </span>
           </div>
@@ -159,7 +159,7 @@ export function HomeworkSection({
           </ul>
 
           {hw.note && (
-            <p className="rounded-xl bg-white/[0.04] px-3 py-2 text-sm text-[var(--night-text-70)]">
+            <p className="rounded-xl bg-white/[0.04] px-3 py-2 text-sm text-fg-secondary">
               {hw.note}
             </p>
           )}
@@ -211,12 +211,12 @@ export function StatTiles({
       {tiles.map((t, i) => (
         <div
           key={i}
-          className="rounded-xl border border-white/[0.08] bg-[var(--night-surface)] px-2 py-3 text-center"
+          className="rounded-xl border border-white/[0.08] bg-surface px-2 py-3 text-center"
         >
           <p className="text-xl font-bold tabular-nums">
             {loading ? <span className="inline-block h-6 w-8 animate-pulse rounded bg-white/[0.08]" /> : t.value}
           </p>
-          <p className="mt-0.5 text-[11px] leading-tight text-[var(--night-text-40)]">
+          <p className="mt-0.5 text-[11px] leading-tight text-fg-muted">
             {t.icon && <IconFlame size={11} className="mr-0.5 inline align-text-bottom" />}
             {t.label}
           </p>

@@ -55,7 +55,7 @@ function TeacherCard() {
         <div>
           {/* то же имя, что у экрана и в меню аватара */}
           <p className="font-semibold">Преподаватель</p>
-          <p className="text-sm text-[var(--night-text-40)]">
+          <p className="text-sm text-fg-muted">
             {pending > 0
               ? `Работ на проверку: ${pending}`
               : 'Код-приглашение, наборы слов, материалы, прогресс'}
@@ -66,7 +66,7 @@ function TeacherCard() {
             {pending}
           </span>
         ) : (
-          <span className="text-[var(--night-text-40)]">→</span>
+          <span className="text-fg-muted">→</span>
         )}
       </Card>
     </AppLink>
@@ -119,11 +119,11 @@ export function AssignmentsNotice({
       <Card className="flex items-center justify-between transition-transform active:scale-[0.99]">
         <div>
           <p className="font-semibold">Задания от преподавателя</p>
-          <p className="text-sm text-[var(--night-text-40)]">
+          <p className="text-sm text-fg-muted">
             Все задания выполнены ✓
           </p>
         </div>
-        <span className="text-[var(--night-text-40)]">→</span>
+        <span className="text-fg-muted">→</span>
       </Card>
     </AppLink>
   )
@@ -168,9 +168,9 @@ function JoinTeacherBlock() {
   if (teachers.length > 0 && !open) {
     return (
       <Card className="flex items-center justify-between">
-        <p className="text-sm text-[var(--night-text-40)]">
+        <p className="text-sm text-fg-muted">
           Преподаватель:{' '}
-          <span className="font-semibold text-[var(--night-text-70)]">
+          <span className="font-semibold text-fg-secondary">
             {teachers.map((t) => t.display_name ?? 'Без имени').join(', ')}
           </span>
         </p>
@@ -184,14 +184,14 @@ function JoinTeacherBlock() {
       {!open ? (
         <button
           onClick={() => setOpen(true)}
-          className="flex min-h-[44px] items-center text-left text-sm text-[var(--night-accent-text)] hover:underline"
+          className="flex min-h-[44px] items-center text-left text-sm text-accent-strong hover:underline"
         >
           У меня есть код преподавателя →
         </button>
       ) : (
         <form onSubmit={submit} className="flex gap-2">
           <input
-            className="min-w-0 flex-1 rounded-lg border border-white/[0.10] bg-[var(--night-input)] px-3 py-2 font-mono text-sm uppercase tracking-widest outline-none focus:border-[var(--night-accent-45)]"
+            className="min-w-0 flex-1 rounded-lg border border-white/[0.10] bg-input px-3 py-2 font-mono text-sm uppercase tracking-widest outline-none focus:border-accent-line"
             placeholder="КОД (6 символов)"
             value={code}
             maxLength={6}

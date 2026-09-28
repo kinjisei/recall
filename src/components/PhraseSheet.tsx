@@ -76,13 +76,13 @@ export function PhraseSheet({
           <div className="min-h-0 overflow-y-auto px-5 pt-2">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="text-[10px] uppercase tracking-wider text-[var(--night-text-40)]">Фраза</p>
+                <p className="text-[10px] uppercase tracking-wider text-fg-muted">Фраза</p>
                 <p className="mt-0.5 text-[15px] font-medium leading-snug">{text}</p>
               </div>
               <button
                 onClick={() => speak(text, { lang })}
                 aria-label="Озвучить"
-                className="lift flex h-9 w-9 flex-none items-center justify-center rounded-full border border-white/[0.08] text-[var(--night-text-70)]"
+                className="lift flex h-9 w-9 flex-none items-center justify-center rounded-full border border-white/[0.08] text-fg-secondary"
               >
                 <IconSpeaker size={16} />
               </button>
@@ -91,16 +91,16 @@ export function PhraseSheet({
             {tr === null && !failed && (
               <Thinking label="Перевожу" className="mt-3 text-sm" />
             )}
-            {failed && <p className="mt-3 text-sm text-[var(--night-text-40)]">{failed}</p>}
+            {failed && <p className="mt-3 text-sm text-fg-muted">{failed}</p>}
             {tr && (
-              <p className="mt-2 rounded-xl bg-white/[0.04] px-3 py-2 text-[15px] leading-relaxed text-[var(--night-text)]">
+              <p className="mt-2 rounded-xl bg-white/[0.04] px-3 py-2 text-[15px] leading-relaxed text-fg">
                 {tr}
               </p>
             )}
 
             <button
               onClick={() => setAnalyze(true)}
-              className="lift mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl border border-[var(--night-accent-45)] bg-[rgba(145,132,217,.10)] py-2.5 text-sm font-medium text-[var(--night-accent-100)]"
+              className="lift mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl border border-accent-line bg-[rgba(145,132,217,.10)] py-2.5 text-sm font-medium text-accent-soft-fg"
             >
               <IconSearch size={16} /> Разбор предложения
             </button>

@@ -21,11 +21,11 @@ const UPDATED = '9 августа 2026'
 
 function Shell({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <main className="mx-auto min-h-[100dvh] max-w-screen-sm bg-[var(--night-bg)] px-5 pb-16 pt-[calc(env(safe-area-inset-top)+1.5rem)] text-[var(--night-text)]">
+    <main className="mx-auto min-h-[100dvh] max-w-screen-sm bg-page px-5 pb-16 pt-[calc(env(safe-area-inset-top)+1.5rem)] text-fg">
       <SmartBack fallback="/login" />
       <h1 className="text-2xl font-medium tracking-tight">{title}</h1>
-      <p className="mt-1 text-xs text-[var(--night-text-40)]">Обновлено: {UPDATED}</p>
-      <div className="mt-6 flex flex-col gap-4 text-[15px] leading-relaxed text-[var(--night-text-70)]">
+      <p className="mt-1 text-xs text-fg-muted">Обновлено: {UPDATED}</p>
+      <div className="mt-6 flex flex-col gap-4 text-[15px] leading-relaxed text-fg-secondary">
         {children}
       </div>
     </main>
@@ -33,7 +33,7 @@ function Shell({ title, children }: { title: string; children: React.ReactNode }
 }
 
 function H({ children }: { children: string }) {
-  return <h2 className="mt-3 font-medium text-[var(--night-text)]">{children}</h2>
+  return <h2 className="mt-3 font-medium text-fg">{children}</h2>
 }
 
 export function PrivacyPage() {
@@ -97,7 +97,7 @@ export function PrivacyPage() {
       <H>Твои права</H>
       <p>
         Можешь запросить копию своих данных или удаление аккаунта — напиши на{' '}
-        <a className="text-[var(--night-accent-text)] underline" href={`mailto:${CONTACT}`}>
+        <a className="text-accent-strong underline" href={`mailto:${CONTACT}`}>
           {CONTACT}
         </a>
         , отвечаем в течение нескольких дней. Удаление стирает прогресс безвозвратно.
@@ -216,7 +216,7 @@ export function TermsPage() {
       <H>Связь</H>
       <p>
         Вопросы по сервису и условиям:{' '}
-        <a className="text-[var(--night-accent-text)] underline" href={`mailto:${CONTACT}`}>
+        <a className="text-accent-strong underline" href={`mailto:${CONTACT}`}>
           {CONTACT}
         </a>
         .

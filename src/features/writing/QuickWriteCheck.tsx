@@ -103,7 +103,7 @@ export function QuickWriteCheck({
       <BackHeader onBack={onBack} title="Быстрая проверка" label="К письму" />
 
       <Card>
-        <p className="text-[var(--night-text-70)]">
+        <p className="text-fg-secondary">
           {lang === 'es'
             ? 'Напиши несколько предложений по-испански — AI разберёт ошибки, предложит улучшенную версию и даст совет.'
             : 'Напиши несколько предложений по-английски — AI разберёт ошибки, предложит улучшенную версию и даст совет.'}
@@ -111,7 +111,7 @@ export function QuickWriteCheck({
       </Card>
 
       <textarea
-        className="min-h-[140px] w-full rounded-xl border border-white/[0.10] bg-[var(--night-input)] px-4 py-3 text-base leading-relaxed outline-none focus:border-[var(--night-accent-45)]"
+        className="min-h-[140px] w-full rounded-xl border border-white/[0.10] bg-input px-4 py-3 text-base leading-relaxed outline-none focus:border-accent-line"
         placeholder={
           lang === 'es'
             ? 'Hola. Me gusta mucho la música española…'
@@ -130,7 +130,7 @@ export function QuickWriteCheck({
 
       {feedback && (
         <Card>
-          <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-[var(--night-text)]">
+          <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-fg">
             {feedback}
           </p>
           <Button

@@ -41,7 +41,7 @@ export function AnalysisSheet({
   return (
     <Sheet onClose={onClose} maxH="85dvh" label="Разбор предложения">
         <div className="min-h-0 overflow-y-auto px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-2">
-          <p className="text-[10px] uppercase tracking-wider text-[var(--night-text-40)]">Разбор</p>
+          <p className="text-[10px] uppercase tracking-wider text-fg-muted">Разбор</p>
           <p className="mt-0.5 text-[15px] font-medium leading-snug">«{text}»</p>
 
           {!data && !error && (
@@ -52,7 +52,7 @@ export function AnalysisSheet({
           {data && (
             <>
               {data.translation && (
-                <p className="mt-2 rounded-xl bg-white/[0.04] px-3 py-2 text-sm leading-relaxed text-[var(--night-text-70)]">
+                <p className="mt-2 rounded-xl bg-white/[0.04] px-3 py-2 text-sm leading-relaxed text-fg-secondary">
                   {data.translation}
                 </p>
               )}

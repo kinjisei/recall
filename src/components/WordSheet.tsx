@@ -140,7 +140,7 @@ export function TappableText({
             onClick={() => onWord(tok, i)}
             className={`cursor-pointer rounded px-0.5 transition-colors ${
               highlighted
-                ? 'bg-[rgba(145,132,217,.28)] ring-1 ring-[var(--night-accent-45)]'
+                ? 'bg-[rgba(145,132,217,.28)] ring-1 ring-accent-line'
                 : 'hover:bg-[rgba(145,132,217,.18)] active:bg-[rgba(145,132,217,.28)]'
             }`}
           >
@@ -256,7 +256,7 @@ export function WordSheet({
             <h3 className="min-w-0 text-xl font-bold">
               {word.toLowerCase()}
               {baseDiffers && (
-                <span className="ml-2 text-base font-normal text-[var(--night-text-40)]">
+                <span className="ml-2 text-base font-normal text-fg-muted">
                   → {ctx.base}
                 </span>
               )}
@@ -270,28 +270,28 @@ export function WordSheet({
             </button>
           </div>
 
-          {ipa && <p className="mt-1 text-[var(--night-text-40)]">/{ipa}/</p>}
+          {ipa && <p className="mt-1 text-fg-muted">/{ipa}/</p>}
 
           {!ctx && !ctxError && (
             <Thinking label="Перевожу в контексте" className="mt-3" />
           )}
           {ctx && (
             <div className="mt-3">
-              <p className="text-lg font-semibold text-[var(--night-text)]">
+              <p className="text-lg font-semibold text-fg">
                 {ctx.translation}
               </p>
               {ctx.note && (
-                <p className="mt-1 text-sm text-[var(--night-text-40)]">{ctx.note}</p>
+                <p className="mt-1 text-sm text-fg-muted">{ctx.note}</p>
               )}
             </div>
           )}
           {ctxError && (
-            <p className="mt-3 text-[var(--night-text-40)]">
+            <p className="mt-3 text-fg-muted">
               Перевод сейчас недоступен — слово всё равно можно добавить в мои слова.
             </p>
           )}
 
-          <p className="mt-3 rounded-lg bg-slate-700/60 px-3 py-2 text-sm italic text-[var(--night-text-40)]">
+          <p className="mt-3 rounded-lg bg-slate-700/60 px-3 py-2 text-sm italic text-fg-muted">
             «{sentence}»
           </p>
 
@@ -300,7 +300,7 @@ export function WordSheet({
           {/* Разбор всего предложения (фразовые глаголы/выражения/грамматика) */}
           <button
             onClick={() => setAnalyze(true)}
-            className="lift mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl border border-[var(--night-accent-45)] bg-[rgba(145,132,217,.10)] py-2.5 text-sm font-medium text-[var(--night-accent-100)]"
+            className="lift mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl border border-accent-line bg-[rgba(145,132,217,.10)] py-2.5 text-sm font-medium text-accent-soft-fg"
           >
             <IconSearch size={16} /> Разбор предложения
           </button>

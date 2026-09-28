@@ -15,19 +15,19 @@ function BlockView({ block }: { block: GuideBlock }) {
       <div className="mt-1.5 flex flex-col gap-1.5">
         {block.body.map((p, i) =>
           p.startsWith('• ') ? (
-            <p key={i} className="flex gap-2 text-sm leading-relaxed text-[var(--night-text-70)]">
-              <span className="text-[var(--night-accent-text)]">•</span>
+            <p key={i} className="flex gap-2 text-sm leading-relaxed text-fg-secondary">
+              <span className="text-accent-strong">•</span>
               <span>{p.slice(2)}</span>
             </p>
           ) : (
-            <p key={i} className="text-sm leading-relaxed text-[var(--night-text-70)]">
+            <p key={i} className="text-sm leading-relaxed text-fg-secondary">
               {p}
             </p>
           ),
         )}
       </div>
       {block.sources && block.sources.length > 0 && (
-        <p className="mt-2 text-[11px] leading-relaxed text-[var(--night-text-40)]">
+        <p className="mt-2 text-[11px] leading-relaxed text-fg-muted">
           Источники:{' '}
           {block.sources.map((s, i) => (
             <span key={s.url}>
@@ -36,7 +36,7 @@ function BlockView({ block }: { block: GuideBlock }) {
                 href={s.url}
                 target="_blank"
                 rel="noreferrer"
-                className="underline hover:text-[var(--night-text-70)]"
+                className="underline hover:text-fg-secondary"
               >
                 {s.title}
               </a>
@@ -53,7 +53,7 @@ export function GuideSection() {
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm text-[var(--night-text-40)]">
+      <p className="text-sm text-fg-muted">
         Как вести учеников в Recall: рабочий цикл, реакции на диагностику, проверенные
         методики и типичные ошибки. Читается за 15 минут, применяется годами.
       </p>
@@ -68,12 +68,12 @@ export function GuideSection() {
               aria-expanded={isOpen}
             >
               <span className="text-sm font-bold">{s.title}</span>
-              <span className="text-[var(--night-text-40)]">{isOpen ? '▾' : '▸'}</span>
+              <span className="text-fg-muted">{isOpen ? '▾' : '▸'}</span>
             </button>
             <Reveal open={isOpen}>
               <Card className="mt-2 flex flex-col gap-3">
                 {s.intro && (
-                  <p className="text-sm leading-relaxed text-[var(--night-text-60)]">{s.intro}</p>
+                  <p className="text-sm leading-relaxed text-fg-tertiary">{s.intro}</p>
                 )}
                 {s.blocks.map((b) => (
                   <BlockView key={b.title} block={b} />

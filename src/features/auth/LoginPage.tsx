@@ -13,7 +13,7 @@ import { AuroraBg, EyeIcon, InputGroup, inputClass } from './authUi'
  * Экран входа/регистрации Recall — тёмная версия «Nocturne».
  * Desktop (lg+): слева hero-панель с «авророй» (переливающийся фон) и 3 шагами.
  * Mobile: аврора — фон всего экрана, форма на полупрозрачной glass-панели.
- * Токены --night-* и keyframes — в index.css (см. index.css.additions.css).
+ * Цвета — токены shared/ui/tokens.css, keyframes — index.css.
  *
  * Фон, поля и глазок живут в authUi: те же детали нужны экранам восстановления
  * пароля, а скопированная «аврора» разъехалась бы при первой правке фона.
@@ -77,7 +77,7 @@ export function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-dvh w-full bg-[var(--night-bg)] p-2 font-[family-name:var(--night-font)] text-[var(--night-text)] selection:bg-[var(--night-accent-45)] lg:h-dvh lg:gap-4 lg:overflow-hidden lg:p-4">
+    <main className="flex min-h-dvh w-full bg-page p-2 font-sans text-fg selection:bg-accent-line lg:h-dvh lg:gap-4 lg:overflow-hidden lg:p-4">
       {/* Аврора как фон всего экрана — только на мобильных */}
       <div className="fixed inset-0 lg:hidden" aria-hidden="true">
         <AuroraBg />
@@ -94,7 +94,7 @@ export function LoginPage() {
             <h1 className="whitespace-nowrap text-4xl font-medium tracking-tight">
               Присоединяйся к Recall
             </h1>
-            <p className="px-4 text-sm leading-relaxed text-[var(--night-text-60)]">
+            <p className="px-4 text-sm leading-relaxed text-fg-tertiary">
               Две минуты на настройку — и можно заниматься.
             </p>
           </div>
@@ -108,7 +108,7 @@ export function LoginPage() {
 
       {/* ===== Правая колонка: форма ===== */}
       <div className="relative z-10 flex flex-1 flex-col items-center justify-center overflow-y-auto px-2 py-8 sm:px-12 lg:overflow-hidden lg:px-16 lg:py-6 xl:px-24">
-        <div className="flex w-full max-w-xl animate-fade-in flex-col gap-7 rounded-3xl border border-[var(--night-text-10)] bg-[var(--night-glass)] p-6 backdrop-blur-2xl lg:border-none lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
+        <div className="flex w-full max-w-xl animate-fade-in flex-col gap-7 rounded-3xl border border-line bg-glass p-6 backdrop-blur-2xl lg:border-none lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
           {/* Бренд над формой — только на мобильных (hero скрыт) */}
           <div className="-mb-2 flex items-center gap-2 lg:hidden">
             <BrandMark size={22} />
@@ -119,7 +119,7 @@ export function LoginPage() {
             <h2 className="text-3xl font-medium tracking-tight">
               {sentTo ? 'Проверь почту' : signup ? 'Создать новый профиль' : 'С возвращением'}
             </h2>
-            <p className="text-sm text-[var(--night-text-40)]">
+            <p className="text-sm text-fg-muted">
               {sentTo
                 ? 'Остался один шаг — подтвердить адрес.'
                 : signup
@@ -181,19 +181,19 @@ export function LoginPage() {
                   type="button"
                   aria-label={showPw ? 'Скрыть пароль' : 'Показать пароль'}
                   onClick={() => setShowPw(!showPw)}
-                  className="absolute right-1 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center text-[var(--night-text-40)] hover:text-[var(--night-text)]"
+                  className="absolute right-1 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center text-fg-muted hover:text-fg"
                 >
                   <EyeIcon off={showPw} />
                 </button>
               </div>
               {signup ? (
-                <p className="text-xs text-[var(--night-text-40)]">Минимум 8 символов.</p>
+                <p className="text-xs text-fg-muted">Минимум 8 символов.</p>
               ) : (
                 // Ссылка живёт рядом с полем пароля, а не внизу экрана: человек
                 // вспоминает, что пароля не знает, ровно в этот момент.
                 <AppLink
                   to="/forgot"
-                  className="self-start text-xs text-[var(--night-text-40)] underline hover:text-[var(--night-text-70)]"
+                  className="self-start text-xs text-fg-muted underline hover:text-fg-secondary"
                 >
                   Забыли пароль?
                 </AppLink>
@@ -210,19 +210,19 @@ export function LoginPage() {
             <button
               type="submit"
               disabled={busy}
-              className="mt-2 h-14 w-full rounded-xl bg-[var(--night-text)] font-semibold text-[var(--night-bg)] transition-[filter,transform] hover:brightness-95 active:scale-[0.98] disabled:opacity-50"
+              className="mt-2 h-14 w-full rounded-xl bg-fg font-semibold text-page transition-[filter,transform] hover:brightness-95 active:scale-[0.98] disabled:opacity-50"
             >
               {busy ? '…' : signup ? 'Создать аккаунт' : 'Войти'}
             </button>
 
             {signup && (
-              <p className="text-center text-xs leading-relaxed text-[var(--night-text-40)]">
+              <p className="text-center text-xs leading-relaxed text-fg-muted">
                 Создавая аккаунт, ты принимаешь{' '}
-                <AppLink to="/terms" className="underline hover:text-[var(--night-text-70)]">
+                <AppLink to="/terms" className="underline hover:text-fg-secondary">
                   условия
                 </AppLink>{' '}
                 и{' '}
-                <AppLink to="/privacy" className="underline hover:text-[var(--night-text-70)]">
+                <AppLink to="/privacy" className="underline hover:text-fg-secondary">
                   политику конфиденциальности
                 </AppLink>
               </p>
@@ -231,7 +231,7 @@ export function LoginPage() {
           )}
 
           {!sentTo && (
-          <p className="text-center text-sm text-[var(--night-text-40)]">
+          <p className="text-center text-sm text-fg-muted">
             {signup ? 'Уже есть аккаунт?' : 'Нет аккаунта?'}{' '}
             <button
               type="button"
@@ -240,7 +240,7 @@ export function LoginPage() {
                 setError(null)
                 setInfo(null)
               }}
-              className="-m-3 p-3 font-medium text-[var(--night-accent-text)] hover:underline"
+              className="-m-3 p-3 font-medium text-accent-strong hover:underline"
             >
               {signup ? 'Войти' : 'Зарегистрироваться'}
             </button>
@@ -302,10 +302,10 @@ function CheckEmail({
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="rounded-2xl border border-[var(--night-accent-45)] bg-[rgba(145,132,217,.10)] p-4">
-        <p className="text-sm text-[var(--night-text-70)]">Письмо ушло на адрес</p>
+      <div className="rounded-2xl border border-accent-line bg-[rgba(145,132,217,.10)] p-4">
+        <p className="text-sm text-fg-secondary">Письмо ушло на адрес</p>
         <p className="mt-1 break-all font-medium">{email}</p>
-        <p className="mt-3 text-sm text-[var(--night-text-70)]">
+        <p className="mt-3 text-sm text-fg-secondary">
           Открой ссылку из письма — и сразу попадёшь в приложение. Обычно приходит за
           минуту. Если не видно, загляни в «Спам» и «Промоакции».
         </p>
@@ -322,7 +322,7 @@ function CheckEmail({
         type="button"
         onClick={resend}
         disabled={busy || left > 0}
-        className="h-14 w-full rounded-xl bg-[var(--night-text)] font-semibold text-[var(--night-bg)] transition-[filter,transform] hover:brightness-95 active:scale-[0.98] disabled:opacity-40"
+        className="h-14 w-full rounded-xl bg-fg font-semibold text-page transition-[filter,transform] hover:brightness-95 active:scale-[0.98] disabled:opacity-40"
       >
         {busy ? '…' : left > 0 ? `Отправить ещё раз через ${left} с` : 'Отправить письмо ещё раз'}
       </button>
@@ -331,14 +331,14 @@ function CheckEmail({
         <button
           type="button"
           onClick={onGoSignIn}
-          className="-m-3 p-3 font-medium text-[var(--night-accent-text)] hover:underline"
+          className="-m-3 p-3 font-medium text-accent-strong hover:underline"
         >
           Уже подтвердил — войти
         </button>
         <button
           type="button"
           onClick={onChangeEmail}
-          className="-m-3 p-3 text-[var(--night-text-40)] hover:text-[var(--night-text-70)] hover:underline"
+          className="-m-3 p-3 text-fg-muted hover:text-fg-secondary hover:underline"
         >
           Ошибся в адресе — изменить
         </button>
@@ -363,15 +363,15 @@ function StepItem({
       style={{ animationDelay: delay }}
       className={`flex animate-fade-up items-center gap-3.5 rounded-2xl px-4.5 py-3.5 ${
         active
-          ? 'border border-[var(--night-accent-30)] bg-[var(--night-text)] text-[var(--night-bg)]'
-          : 'bg-[var(--night-step)] text-[var(--night-text-70)] backdrop-blur-sm'
+          ? 'border border-accent-line-soft bg-fg text-page'
+          : 'bg-step text-fg-secondary backdrop-blur-sm'
       }`}
     >
       <span
         className={`flex h-6.5 w-6.5 flex-none items-center justify-center rounded-full text-[13px] font-semibold ${
           active
-            ? 'bg-[var(--night-accent)] text-white'
-            : 'bg-[var(--night-text-10)] text-[var(--night-text-40)]'
+            ? 'bg-accent text-white'
+            : 'bg-line text-fg-muted'
         }`}
       >
         {number}

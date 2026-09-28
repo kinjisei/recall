@@ -132,7 +132,7 @@ export function StudentWordsSection({
             const wrong = (c.results ?? []).filter((r) => !r.ok)
             const date = new Date(c.created_at).toLocaleDateString('ru-RU')
             return (
-              <div key={c.id} className="rounded-lg bg-[var(--night-surface)] px-3 py-2 text-sm">
+              <div key={c.id} className="rounded-lg bg-surface px-3 py-2 text-sm">
                 {c.completed_at ? (
                   <>
                     <button
@@ -144,14 +144,14 @@ export function StudentWordsSection({
                         {okCount}/{c.card_ids.length}
                       </span>
                       {wrong.length > 0 && (
-                        <span className="text-[var(--night-text-40)]"> · показать провалы {openCheck === c.id ? '▾' : '▸'}</span>
+                        <span className="text-fg-muted"> · показать провалы {openCheck === c.id ? '▾' : '▸'}</span>
                       )}
                     </button>
                     {openCheck === c.id &&
                       wrong.map((r) => (
-                        <p key={r.card_id} className="mt-1 pl-4 text-xs text-[var(--night-text-40)]">
+                        <p key={r.card_id} className="mt-1 pl-4 text-xs text-fg-muted">
                           «{r.given || '—'}» →{' '}
-                          <span className="font-semibold text-[var(--night-text-70)]">
+                          <span className="font-semibold text-fg-secondary">
                             {r.front}
                           </span>
                           {r.back && ` (${r.back})`}
@@ -159,7 +159,7 @@ export function StudentWordsSection({
                       ))}
                   </>
                 ) : (
-                  <span className="text-[var(--night-text-40)]">
+                  <span className="text-fg-muted">
                     {date}: назначена, ещё не пройдена ({c.card_ids.length} слов)
                   </span>
                 )}
@@ -174,13 +174,13 @@ export function StudentWordsSection({
       </Button>
 
       {words.length === 0 ? (
-        <p className="text-sm text-[var(--night-text-40)]">
+        <p className="text-sm text-fg-muted">
           Словарь пуст. Выдай слова из готового набора — они появятся здесь со
           статусом изученности.
         </p>
       ) : (
         <>
-          <p className="text-xs text-[var(--night-text-40)]">
+          <p className="text-xs text-fg-muted">
             Отметь слова для перепроверки (сверху — с самым большим интервалом):
           </p>
           <div className="flex max-h-72 flex-col gap-1 overflow-y-auto pr-1">
@@ -199,11 +199,11 @@ export function StudentWordsSection({
                   />
                   <span className="min-w-0 flex-1 truncate text-sm">
                     <span className="font-medium">{w.card.front}</span>
-                    {w.card.back && <span className="text-[var(--night-text-40)]"> — {w.card.back}</span>}
+                    {w.card.back && <span className="text-fg-muted"> — {w.card.back}</span>}
                   </span>
                   {/* Происхождение: без него учитель удалял бы вслепую и мог
                       стереть слово, которое ученик добавил сам из чтения. */}
-                  <span className="shrink-0 text-[11px] text-[var(--night-text-40)]">
+                  <span className="shrink-0 text-[11px] text-fg-muted">
                     {w.card.source === 'teacher' ? 'выдал я' : 'ученик'}
                   </span>
                   <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${chip.cls}`}>
@@ -216,7 +216,7 @@ export function StudentWordsSection({
                       setToDelete(w)
                     }}
                     aria-label={`Удалить ${w.card.front}`}
-                    className="flex h-9 w-9 flex-none items-center justify-center rounded-lg text-[var(--night-text-40)] hover:text-red-400"
+                    className="flex h-9 w-9 flex-none items-center justify-center rounded-lg text-fg-muted hover:text-red-400"
                   >
                     <IconTrash size={16} />
                   </button>
@@ -242,7 +242,7 @@ export function StudentWordsSection({
         <div className="rounded-xl border border-red-500/40 bg-red-500/[0.07] p-3 text-sm">
           <p>
             Удалить «{toDelete.card.front}»?{' '}
-            <span className="text-[var(--night-text-40)]">
+            <span className="text-fg-muted">
               {toDelete.card.source === 'teacher'
                 ? 'Слово выдал ты.'
                 : 'Слово добавил ученик сам.'}{' '}

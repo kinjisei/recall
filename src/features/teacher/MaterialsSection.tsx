@@ -177,14 +177,14 @@ export function MaterialsSection({
                 <span className="block truncate text-sm font-medium">
                   {w.studentName} · {w.material.title ?? w.material.topic}
                 </span>
-                <span className="block text-xs text-[var(--night-text-40)]">
+                <span className="block text-xs text-fg-muted">
                   авто-балл {w.assignment.auto_score}/{w.assignment.auto_total}
                   {w.assignment.submitted_at
                     ? ` · сдано ${new Date(w.assignment.submitted_at).toLocaleDateString('ru-RU')}`
                     : ''}
                 </span>
               </span>
-              <span className="shrink-0 text-sm font-medium text-[var(--night-accent-text)]">
+              <span className="shrink-0 text-sm font-medium text-accent-strong">
                 Проверить ›
               </span>
             </button>
@@ -193,7 +193,7 @@ export function MaterialsSection({
       )}
 
       <Card>
-        <p className="text-sm text-[var(--night-text-70)]">
+        <p className="text-sm text-fg-secondary">
           Генератор учебных текстов: тема, уровень, формат — AI составит план,
           сгенерирует текст и упражнения. Материал можно назначить ученикам или
           просто хранить в библиотеке.
@@ -205,7 +205,7 @@ export function MaterialsSection({
             узнавали только по отказу в середине работы — а один материал
             стоит двух генераций (план + текст), и это тоже стоит сказать. */}
         {gens && (
-          <p className="mt-2 text-xs text-[var(--night-text-40)]">
+          <p className="mt-2 text-xs text-fg-muted">
             {gens.limit === 0 ? (
               // лимит НОЛЬ — это не «закончились»: генераций не было вовсе
               // (тариф истёк). Сказать «обновятся 1-го числа» было бы неправдой.
@@ -227,7 +227,7 @@ export function MaterialsSection({
       ) : loadError ? (
         <LoadError message={loadError} onRetry={reload} />
       ) : (materials ?? []).length === 0 ? (
-        <p className="text-sm text-[var(--night-text-40)]">Библиотека пустая. Созданные материалы останутся здесь: их можно назначать разным ученикам и печатать.</p>
+        <p className="text-sm text-fg-muted">Библиотека пустая. Созданные материалы останутся здесь: их можно назначать разным ученикам и печатать.</p>
       ) : (
         <MaterialsByLevel
           materials={materials ?? []}

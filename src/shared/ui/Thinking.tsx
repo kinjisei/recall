@@ -15,7 +15,7 @@ export function Thinking({ label, className = '' }: { label: string; className?:
   return (
     <span
       role="status"
-      className={`inline-flex items-center gap-1.5 text-[var(--night-text-40)] ${className}`}
+      className={`inline-flex items-center gap-1.5 text-fg-muted ${className}`}
     >
       {label}
       <span aria-hidden className="inline-flex items-end gap-[3px] pb-[3px]">

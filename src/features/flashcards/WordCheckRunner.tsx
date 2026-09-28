@@ -84,7 +84,7 @@ export function WordCheckRunner({
         </p>
         {wrong.length > 0 && (
           <div className="text-left">
-            <p className="text-sm font-semibold text-[var(--night-text-40)]">
+            <p className="text-sm font-semibold text-fg-muted">
               Эти слова вернулись в колоду на повторение:
             </p>
             {wrong.map((r) => (
@@ -94,12 +94,12 @@ export function WordCheckRunner({
                 <span className="font-semibold text-emerald-400">
                   {r.front}
                 </span>
-                {r.back && <span className="text-[var(--night-text-40)]"> ({r.back})</span>}
+                {r.back && <span className="text-fg-muted"> ({r.back})</span>}
               </p>
             ))}
           </div>
         )}
-        <p className="text-sm text-[var(--night-text-40)]">
+        <p className="text-sm text-fg-muted">
           {saving
             ? 'Сохраняю результат…'
             : saveError ?? 'Результат отправлен преподавателю ✓'}
@@ -113,7 +113,7 @@ export function WordCheckRunner({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between text-sm text-[var(--night-text-40)]">
+      <div className="flex items-center justify-between text-sm text-fg-muted">
         <span className="flex items-center gap-1.5">
           <IconRefresh size={14} /> Перепроверка от преподавателя
         </span>
@@ -123,18 +123,18 @@ export function WordCheckRunner({
       </div>
 
       <Card className="flex flex-col items-center gap-3 py-8 text-center">
-        <p className="text-sm text-[var(--night-text-40)]">Как пишется это слово?</p>
-        <p className="text-2xl font-bold text-[var(--night-text)]">
+        <p className="text-sm text-fg-muted">Как пишется это слово?</p>
+        <p className="text-2xl font-bold text-fg">
           {current.back ?? '(без перевода)'}
         </p>
 
         <input
-          className={`mt-2 w-full max-w-xs rounded-xl border bg-[var(--night-input)] px-4 py-3 text-center text-lg outline-none ${
+          className={`mt-2 w-full max-w-xs rounded-xl border bg-input px-4 py-3 text-center text-lg outline-none ${
             checked
               ? ok
                 ? 'border-emerald-500'
                 : 'border-red-500'
-              : 'border-white/[0.10] focus:border-[var(--night-accent-45)]'
+              : 'border-white/[0.10] focus:border-accent-line'
           }`}
           placeholder={lang === 'es' ? 'слово по-испански…' : 'слово по-английски…'}
           value={value}

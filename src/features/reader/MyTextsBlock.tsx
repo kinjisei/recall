@@ -37,7 +37,7 @@ export function MyTextsList({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <p className="text-xs font-semibold uppercase tracking-wide text-[var(--night-text-40)]">
+        <p className="text-xs font-semibold uppercase tracking-wide text-fg-muted">
           Мои тексты
         </p>
         <Button variant="secondary" className="px-3 py-1.5 text-sm" onClick={onAdd}>
@@ -51,7 +51,7 @@ export function MyTextsList({
               <button onClick={() => onOpen(t)} className="min-w-0 flex-1 text-left">
                 <Card className="px-4 py-3 transition-transform active:scale-[0.99]">
                   <p className="truncate text-sm font-semibold">{t.title}</p>
-                  <p className="mt-0.5 line-clamp-1 text-xs text-[var(--night-text-40)]">
+                  <p className="mt-0.5 line-clamp-1 text-xs text-fg-muted">
                     {t.body}
                   </p>
                 </Card>
@@ -64,7 +64,7 @@ export function MyTextsList({
                   }
                 }}
                 aria-label={`Удалить ${t.title}`}
-                className="flex h-11 w-11 flex-none items-center justify-center rounded-xl border border-white/[0.08] text-[var(--night-text-40)]"
+                className="flex h-11 w-11 flex-none items-center justify-center rounded-xl border border-white/[0.08] text-fg-muted"
               >
                 <IconTrash size={16} />
               </button>
@@ -116,7 +116,7 @@ export function AddTextForm({
   return (
     <div className="flex flex-col gap-3">
       <BackHeader onBack={() => onDone(null)} title="Свой текст" />
-      <p className="text-sm text-[var(--night-text-40)]">
+      <p className="text-sm text-fg-muted">
         Вставь текст или выбери файл (.pdf, .docx, .txt) — он откроется в
         читалке с переводом слов по тапу. Лимит {MY_TEXT_LIMIT.toLocaleString('ru-RU')}{' '}
         знаков; текст хранится только на этом устройстве.
@@ -127,7 +127,7 @@ export function AddTextForm({
         onChange={(e) => setTitle(e.target.value)}
         placeholder="Название (необязательно)"
         aria-label="Название текста"
-        className="rounded-xl border border-white/[0.10] bg-[var(--night-input)] px-4 py-2.5 outline-none focus:border-[var(--night-accent-45)]"
+        className="rounded-xl border border-white/[0.10] bg-input px-4 py-2.5 outline-none focus:border-accent-line"
       />
       <textarea
         value={body}
@@ -135,7 +135,7 @@ export function AddTextForm({
         rows={8}
         placeholder={lang === 'es' ? 'Pega el texto aquí…' : 'Paste your text here…'}
         aria-label="Текст"
-        className="rounded-xl border border-white/[0.10] bg-[var(--night-input)] px-4 py-2.5 text-[15px] leading-relaxed outline-none focus:border-[var(--night-accent-45)]"
+        className="rounded-xl border border-white/[0.10] bg-input px-4 py-2.5 text-[15px] leading-relaxed outline-none focus:border-accent-line"
       />
       {body.length > MY_TEXT_LIMIT && (
         <p className="text-xs text-amber-300">

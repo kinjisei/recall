@@ -33,8 +33,8 @@ export function MarkableText({
           onClick={() => setSelectMode((v) => !v)}
           className={`flex min-h-[40px] items-center gap-1.5 rounded-full border px-3.5 text-sm ${
             selectMode
-              ? 'border-[var(--night-accent-45)] bg-[rgba(145,132,217,.14)] text-[var(--night-accent-100)]'
-              : 'border-white/[0.10] text-[var(--night-text-40)]'
+              ? 'border-accent-line bg-[rgba(145,132,217,.14)] text-accent-soft-fg'
+              : 'border-white/[0.10] text-fg-muted'
           }`}
         >
           <IconTranslate size={14} />
@@ -42,14 +42,14 @@ export function MarkableText({
         </button>
         <button
           onClick={() => setAnalyzeAll(true)}
-          className="flex min-h-[40px] items-center gap-1.5 rounded-full border border-white/[0.10] px-3.5 text-sm text-[var(--night-text-40)]"
+          className="flex min-h-[40px] items-center gap-1.5 rounded-full border border-white/[0.10] px-3.5 text-sm text-fg-muted"
         >
           <IconSearch size={14} />
           Разобрать весь текст
         </button>
       </div>
 
-      <p className="text-xs text-[var(--night-text-40)]">
+      <p className="text-xs text-fg-muted">
         {selectMode
           ? 'Тапни ПЕРВОЕ и ПОСЛЕДНЕЕ слово фразы — покажу перевод и пример.'
           : 'Тап по слову — перевод и «Разбор предложения». Нужна фраза — «Выделить фразу».'}

@@ -75,7 +75,7 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
 
   if (loading || (user && (needsOnboarding === null || blocked === null))) {
     return (
-      <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--night-bg)]">
+      <div className="flex min-h-[100dvh] items-center justify-center bg-page">
         <Loading label="Проверяем вход" />
       </div>
     )

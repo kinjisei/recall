@@ -34,7 +34,7 @@ export function Layout() {
   return (
     <FocusModeContext.Provider value={setFocus}>
       <ShellInsetsContext.Provider value={insets}>
-        <div className="min-h-[100dvh] bg-[var(--night-bg)] text-[var(--night-text)]">
+        <div className="min-h-[100dvh] bg-page text-fg">
           {!focus && (desktop ? <SideNav /> : <TopBar />)}
           {/* Обёртка есть всегда (на телефоне без классов): иначе при смене
               ширины окна экран пересоздавался бы и терял набранное. */}

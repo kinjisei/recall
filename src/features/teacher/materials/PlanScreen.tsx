@@ -59,12 +59,12 @@ export function PlanScreen({
       <BackHeader onBack={onBack} title="План материала от AI" label="К форме" />
 
       <Card className="flex flex-col gap-3">
-        <p className="whitespace-pre-wrap text-sm text-[var(--night-text-70)]">
+        <p className="whitespace-pre-wrap text-sm text-fg-secondary">
           {plan.comments}
         </p>
 
         <div>
-          <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">Целевые слова</p>
+          <p className="mb-1 text-xs font-semibold text-fg-muted">Целевые слова</p>
           <div className="flex flex-wrap gap-1.5">
             {plan.vocabulary.map((w, i) => (
               <span key={i} className="rounded-full bg-sky-950/60 px-2.5 py-0.5 text-sm text-sky-300">
@@ -76,15 +76,15 @@ export function PlanScreen({
 
         {plan.grammar_focus && (
           <p className="text-sm">
-            <span className="text-xs font-semibold text-[var(--night-text-40)]">Грамматика: </span>
+            <span className="text-xs font-semibold text-fg-muted">Грамматика: </span>
             {plan.grammar_focus}
           </p>
         )}
 
         <div>
-          <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">Упражнения</p>
+          <p className="mb-1 text-xs font-semibold text-fg-muted">Упражнения</p>
           {plan.exercise_plan.map((p, i) => (
-            <p key={i} className="text-sm text-[var(--night-text-70)]">
+            <p key={i} className="text-sm text-fg-secondary">
               • {p.kind === 'comprehension' ? 'Понимание текста' : p.kind === 'grammar' ? 'Грамматика' : 'Словарь'}:{' '}
               {p.count} шт. — {p.note}
             </p>

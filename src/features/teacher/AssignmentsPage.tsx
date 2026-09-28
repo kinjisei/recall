@@ -155,9 +155,9 @@ export function AssignmentsPage() {
         <LoadError message={error} onRetry={reload} />
       ) : nothingAtAll ? (
         <Card className="text-center">
-          <IconTray size={38} className="mx-auto block text-[var(--night-text-40)]" />
+          <IconTray size={38} className="mx-auto block text-fg-muted" />
           <p className="mt-2 font-semibold">Пока ничего не задано</p>
-          <p className="mt-1 text-sm text-[var(--night-text-40)]">
+          <p className="mt-1 text-sm text-fg-muted">
             Когда преподаватель выдаст домашку или задание, они появятся здесь.
           </p>
         </Card>
@@ -165,7 +165,7 @@ export function AssignmentsPage() {
         <>
           {pending.length > 0 && (
             <section className="flex flex-col gap-2">
-              <h2 className="text-sm font-semibold text-[var(--night-text-40)]">
+              <h2 className="text-sm font-semibold text-fg-muted">
                 {hw ? 'Задания от преподавателя' : 'Новые'}
               </h2>
               {pending.map((r) => (
@@ -175,7 +175,7 @@ export function AssignmentsPage() {
           )}
           {done.length > 0 && (
             <section className="flex flex-col gap-2">
-              <h2 className="text-sm font-semibold text-[var(--night-text-40)]">Выполненные</h2>
+              <h2 className="text-sm font-semibold text-fg-muted">Выполненные</h2>
               {done.map((r) => (
                 <AssignmentCard key={r.id} row={r} onOpen={() => open(r)} />
               ))}
@@ -194,7 +194,7 @@ function AssignmentCard({ row, onOpen }: { row: Row; onOpen: () => void }) {
       <Card className="flex items-center justify-between gap-2 transition-transform active:scale-[0.99]">
         <div className="min-w-0">
           <p className="truncate font-medium">{m.title ?? m.topic}</p>
-          <p className="text-xs text-[var(--night-text-40)]">
+          <p className="text-xs text-fg-muted">
             {m.lang.toUpperCase()} · {m.level} · {m.format} · {m.exercises.length} упр.
             {(row.attempts?.length ?? 0) > 0 && row.status === 'assigned' && (
               <span className="ml-1 font-semibold text-amber-400">
@@ -210,15 +210,15 @@ function AssignmentCard({ row, onOpen }: { row: Row; onOpen: () => void }) {
             </span>
           ) : row.status === 'submitted' ? (
             <>
-              <span className="block text-[var(--night-text-40)]">на проверке</span>
-              <span className="block text-xs text-[var(--night-accent-text)]">тренироваться →</span>
+              <span className="block text-fg-muted">на проверке</span>
+              <span className="block text-xs text-accent-strong">тренироваться →</span>
             </>
           ) : (
             <>
               <span className="block font-semibold text-emerald-400">
                 ✓ {(row.teacher_review ?? []).filter((r) => r.ok).length}/{row.auto_total}
               </span>
-              <span className="block text-xs text-[var(--night-accent-text)]">тренироваться →</span>
+              <span className="block text-xs text-accent-strong">тренироваться →</span>
             </>
           )}
         </span>
@@ -256,7 +256,7 @@ function ReviewedView({
         <p className="mt-2 text-lg font-bold">
           Проверено преподавателем: {okCount} из {row.auto_total}
         </p>
-        <p className="mt-1 text-sm text-[var(--night-text-40)]">Разбор по каждому упражнению ниже.</p>
+        <p className="mt-1 text-sm text-fg-muted">Разбор по каждому упражнению ниже.</p>
       </Card>
 
       <div className="flex flex-wrap gap-2">
@@ -279,7 +279,7 @@ function ReviewedView({
         <Card>
           {/* тот же тап по словам, что и в «Учёбе»: разобранный текст —
               лучший источник слов для колоды */}
-          <p className="text-xs text-[var(--night-text-40)]">
+          <p className="text-xs text-fg-muted">
             Нажми на незнакомое слово, чтобы посмотреть перевод и добавить в колоду.
           </p>
           <TappableBody body={m.body} lang={m.lang} />
@@ -294,14 +294,14 @@ function ReviewedView({
         const ok = item?.ok ?? false
         return (
           <Card key={i} className="flex flex-col gap-1.5">
-            <p className="text-xs text-[var(--night-text-40)]">{i + 1}</p>
+            <p className="text-xs text-fg-muted">{i + 1}</p>
             <p className="text-sm font-medium">{ex.prompt}</p>
             <p className="text-sm">
               Твой ответ:{' '}
               <span className={ok ? 'font-semibold text-emerald-400' : 'font-semibold text-red-500'}>
                 {given} {ok ? '✓' : '✗'}
               </span>
-              {!ok && correct && <span className="text-[var(--night-text-40)]"> · правильно: {correct}</span>}
+              {!ok && correct && <span className="text-fg-muted"> · правильно: {correct}</span>}
             </p>
             {item?.comment && (
               <p className="rounded-lg bg-sky-950/40 px-3 py-2 text-sm text-slate-200">
@@ -454,7 +454,7 @@ function AssignmentRunner({
         )}
 
         <Card>
-          <p className="text-xs text-[var(--night-text-40)]">
+          <p className="text-xs text-fg-muted">
             {m.level} · {m.format} · прочитай внимательно — упражнения по тексту.
             Нажимай на незнакомые слова, чтобы добавить их в колоду.
           </p>
@@ -464,7 +464,7 @@ function AssignmentRunner({
           {alreadyDone ? 'Пройти ещё раз (без пересдачи) →' : `К упражнениям (${total}) →`}
         </Button>
         {alreadyDone && (
-          <p className="text-center text-xs text-[var(--night-text-40)]">
+          <p className="text-center text-xs text-fg-muted">
             Работа уже сдана ({row.auto_score}/{row.auto_total}) — повторное прохождение не отправляется.
           </p>
         )}
@@ -485,8 +485,8 @@ function AssignmentRunner({
           шаг вверх: «перечитать текст» рядом и так есть, а лишний push в
           историю возвращал бы свайпом обратно в упражнения. */}
       <BackHeader onBack={onBack} title={m.title ?? m.topic} label="К заданиям" />
-      <div className="flex items-center justify-between text-sm text-[var(--night-text-40)]">
-        <button onClick={() => onStage('read')} className="font-medium text-[var(--night-accent-text)] hover:underline">
+      <div className="flex items-center justify-between text-sm text-fg-muted">
+        <button onClick={() => onStage('read')} className="font-medium text-accent-strong hover:underline">
           ↑ перечитать текст
         </button>
         <span>
@@ -516,7 +516,7 @@ function TappableBody({ body, lang }: { body: string; lang: AppLang }) {
       <MarkableText
         text={body}
         lang={lang}
-        className="whitespace-pre-wrap leading-relaxed text-[var(--night-text-70)]"
+        className="whitespace-pre-wrap leading-relaxed text-fg-secondary"
       />
     </div>
   )

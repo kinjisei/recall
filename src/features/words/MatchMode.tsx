@@ -185,14 +185,14 @@ function MatchRound({
             {mistakes === 0 ? 'Все пары с первого раза!' : `Готово, ошибок: ${mistakes}`}
           </p>
           {mistakes > 0 && (
-            <p className="mt-1 text-sm text-[var(--night-text-40)]">
+            <p className="mt-1 text-sm text-fg-muted">
               Слова с ошибками вернутся в ближайшее повторение.
             </p>
           )}
           {wrongItems.length > 0 && (
             <button
               onClick={() => setShowReview(true)}
-              className="lift mt-4 w-full rounded-xl border border-white/[0.12] py-2.5 text-sm font-medium text-[var(--night-text-70)]"
+              className="lift mt-4 w-full rounded-xl border border-white/[0.12] py-2.5 text-sm font-medium text-fg-secondary"
             >
               Посмотреть результаты
             </button>
@@ -215,7 +215,7 @@ function MatchRound({
   return (
     <div className="flex flex-col gap-4">
       <GameHeader title="Значения" onBack={onBack} />
-      <p className="text-sm text-[var(--night-text-40)]">
+      <p className="text-sm text-fg-muted">
         {lang === 'en'
           ? 'Нажми слово слева, затем его значение справа — по-английски.'
           : 'Нажми слово слева, затем его перевод справа.'}
@@ -250,7 +250,7 @@ function MatchRound({
                   lDone
                     ? doneCls
                     : sel
-                      ? 'border-[var(--night-accent-45)] bg-[rgba(145,132,217,.14)]'
+                      ? 'border-accent-line bg-[rgba(145,132,217,.14)]'
                       : 'border-white/[0.10]'
                 }`}
               >
@@ -274,7 +274,7 @@ function MatchRound({
         })}
       </div>
 
-      <p className="text-center text-sm text-[var(--night-text-40)]">
+      <p className="text-center text-sm text-fg-muted">
         Найдено: {matched.size} / {pairs.length}
       </p>
     </div>

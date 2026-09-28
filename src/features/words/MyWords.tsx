@@ -151,13 +151,13 @@ export function MyWords({ lang, onBack }: { lang: AppLang; onBack: () => void })
       <div className="relative">
         <IconSearch
           size={18}
-          className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--night-text-40)]"
+          className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-fg-muted"
         />
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Найти слово или перевод…"
-          className="h-11 w-full rounded-xl border border-white/[0.10] bg-[var(--night-input)] pl-10 pr-3 text-sm outline-none focus:border-[var(--night-accent-45)]"
+          className="h-11 w-full rounded-xl border border-white/[0.10] bg-input pl-10 pr-3 text-sm outline-none focus:border-accent-line"
         />
       </div>
 
@@ -169,8 +169,8 @@ export function MyWords({ lang, onBack }: { lang: AppLang; onBack: () => void })
             onClick={() => setFilter(f.id)}
             className={`shrink-0 min-h-[44px] rounded-full px-4 text-xs font-medium transition-colors ${
               filter === f.id
-                ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
-                : 'bg-white/[0.06] text-[var(--night-text-40)]'
+                ? 'bg-accent-soft text-accent-soft-fg'
+                : 'bg-white/[0.06] text-fg-muted'
             }`}
           >
             {f.label}
@@ -188,11 +188,11 @@ export function MyWords({ lang, onBack }: { lang: AppLang; onBack: () => void })
         </div>
       ) : shown.length === 0 ? (
         <Card className="text-center">
-          <IconTray size={38} className="mx-auto block text-[var(--night-text-40)]" />
+          <IconTray size={38} className="mx-auto block text-fg-muted" />
           <p className="mt-2 font-medium">
             {counts.all === 0 ? 'Пока нет своих слов' : 'Ничего не найдено'}
           </p>
-          <p className="mt-1 text-sm text-[var(--night-text-40)]">
+          <p className="mt-1 text-sm text-fg-muted">
             {counts.all === 0
               ? 'Возьми готовый набор по уровню — или тапни по незнакомому слову в любом тексте.'
               : 'Попробуй другой запрос или фильтр.'}
@@ -294,7 +294,7 @@ function WordCardSheet({
                 и без пометки человек не поймёт, почему у него вдруг чужие
                 слова — а это первое, что он подумает. */}
             {card.source === 'teacher' && (
-              <span className="inline-block rounded-full bg-[var(--night-accent-900)] px-2.5 py-1 text-[11px] font-medium text-[var(--night-accent-100)]">
+              <span className="inline-block rounded-full bg-accent-soft px-2.5 py-1 text-[11px] font-medium text-accent-soft-fg">
                 от преподавателя
               </span>
             )}
@@ -303,11 +303,11 @@ function WordCardSheet({
           {card.back ? (
             <p className="mt-3 text-lg leading-relaxed">{card.back}</p>
           ) : (
-            <p className="mt-3 text-[var(--night-text-40)]">Перевода пока нет</p>
+            <p className="mt-3 text-fg-muted">Перевода пока нет</p>
           )}
 
           {card.example && (
-            <p className="mt-3 rounded-lg bg-white/[0.06] px-3 py-2 text-sm italic leading-relaxed text-[var(--night-text-40)]">
+            <p className="mt-3 rounded-lg bg-white/[0.06] px-3 py-2 text-sm italic leading-relaxed text-fg-muted">
               «{card.example}»
             </p>
           )}
@@ -366,7 +366,7 @@ function WordRow({
 
   const chip = STATUS_CHIP[status]
   const inputCls =
-    'w-full rounded-lg border border-white/[0.10] bg-[var(--night-input)] px-3 py-2 text-sm outline-none focus:border-[var(--night-accent-45)]'
+    'w-full rounded-lg border border-white/[0.10] bg-input px-3 py-2 text-sm outline-none focus:border-accent-line'
 
   if (editing) {
     return (
@@ -395,7 +395,7 @@ function WordRow({
     return (
       <Card className="flex items-center justify-between gap-3 border-red-400/40 bg-red-500/10 p-4">
         <p className="min-w-0 text-sm">
-          Удалить «{card.front}»? <span className="text-[var(--night-text-40)]">Отменить нельзя.</span>
+          Удалить «{card.front}»? <span className="text-fg-muted">Отменить нельзя.</span>
         </p>
         <div className="flex shrink-0 gap-2">
           <button
@@ -407,7 +407,7 @@ function WordRow({
           <button
             onClick={onCancelDelete}
             aria-label="Отмена"
-            className="rounded-lg border border-white/[0.10] px-2 py-1.5 text-[var(--night-text-70)]"
+            className="rounded-lg border border-white/[0.10] px-2 py-1.5 text-fg-secondary"
           >
             <IconClose size={16} />
           </button>
@@ -417,7 +417,7 @@ function WordRow({
   }
 
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-white/[0.08] bg-[var(--night-surface)] px-4 py-3">
+    <div className="flex items-center gap-3 rounded-2xl border border-white/[0.08] bg-surface px-4 py-3">
       {/* Тап по строке — карточка со ВСЕМ содержимым: в строке слово и перевод
           обрезаны, а пример не виден вовсе, и на телефоне длинный перевод было
           не прочитать (жалоба владельца 24.07). */}
@@ -434,7 +434,7 @@ function WordRow({
           </span>
         </div>
         {card.back && (
-          <p className="truncate text-[13px] text-[var(--night-text-40)]">{card.back}</p>
+          <p className="truncate text-[13px] text-fg-muted">{card.back}</p>
         )}
       </button>
 
@@ -442,21 +442,21 @@ function WordRow({
         <button
           onClick={() => speak(card.front, { lang })}
           aria-label="Озвучить"
-          className="rounded-lg p-2 text-[var(--night-text-40)] hover:text-[var(--night-text)]"
+          className="rounded-lg p-2 text-fg-muted hover:text-fg"
         >
           <IconSpeaker size={17} />
         </button>
         <button
           onClick={onEdit}
           aria-label={`Изменить ${card.front}`}
-          className="rounded-lg p-2 text-[var(--night-text-40)] hover:text-[var(--night-text)]"
+          className="rounded-lg p-2 text-fg-muted hover:text-fg"
         >
           <IconPencil size={17} />
         </button>
         <button
           onClick={onAskDelete}
           aria-label={`Удалить ${card.front}`}
-          className="rounded-lg p-2 text-[var(--night-text-40)] hover:text-red-400"
+          className="rounded-lg p-2 text-fg-muted hover:text-red-400"
         >
           <IconTrash size={17} />
         </button>

@@ -90,7 +90,7 @@ function Reference({ entries }: { entries: PhrasalEntry[] }) {
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm text-[var(--night-text-40)]">
+      <p className="text-sm text-fg-muted">
         {total} самых ходовых фразовых глаголов, сгруппированных по базовому глаголу.
         Пометка «разделяемый» — дополнение можно вставить внутрь: turn the light on.
       </p>
@@ -99,7 +99,7 @@ function Reference({ entries }: { entries: PhrasalEntry[] }) {
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Поиск: look for, откладывать…"
         aria-label="Поиск по фразовым глаголам"
-        className="rounded-xl border border-white/[0.10] bg-[var(--night-surface)] px-4 py-2.5"
+        className="rounded-xl border border-white/[0.10] bg-surface px-4 py-2.5"
       />
 
       {filtered.map((e) => {
@@ -112,9 +112,9 @@ function Reference({ entries }: { entries: PhrasalEntry[] }) {
             >
               <span className="text-sm font-bold">
                 {e.verb}{' '}
-                <span className="font-normal text-[var(--night-text-40)]">· {e.items.length}</span>
+                <span className="font-normal text-fg-muted">· {e.items.length}</span>
               </span>
-              <span className="text-[var(--night-text-40)]">{isOpen ? '▾' : '▸'}</span>
+              <span className="text-fg-muted">{isOpen ? '▾' : '▸'}</span>
             </button>
 
             <Reveal open={isOpen}>
@@ -124,15 +124,15 @@ function Reference({ entries }: { entries: PhrasalEntry[] }) {
                     <div className="flex items-baseline justify-between gap-2">
                       <p className="min-w-0 text-sm">
                         <span className="font-semibold">{i.phrase}</span>{' '}
-                        <span className="text-[var(--night-text-40)]">— {i.ru}</span>
+                        <span className="text-fg-muted">— {i.ru}</span>
                       </p>
                       <span className="flex flex-none items-center gap-1.5">
                         {i.separable && (
-                          <span className="rounded bg-white/[0.07] px-1.5 py-0.5 text-[10px] text-[var(--night-text-40)]">
+                          <span className="rounded bg-white/[0.07] px-1.5 py-0.5 text-[10px] text-fg-muted">
                             разделяемый
                           </span>
                         )}
-                        <span className="rounded bg-[var(--night-accent-900)] px-1.5 py-0.5 text-[10px] text-[var(--night-accent-100)]">
+                        <span className="rounded bg-accent-soft px-1.5 py-0.5 text-[10px] text-accent-soft-fg">
                           {i.level}
                         </span>
                         <button
@@ -144,9 +144,9 @@ function Reference({ entries }: { entries: PhrasalEntry[] }) {
                         </button>
                       </span>
                     </div>
-                    <p className="mt-0.5 text-xs leading-relaxed text-[var(--night-text-60)]">
+                    <p className="mt-0.5 text-xs leading-relaxed text-fg-tertiary">
                       {i.example}
-                      <span className="text-[var(--night-text-40)]"> — {i.exampleRu}</span>
+                      <span className="text-fg-muted"> — {i.exampleRu}</span>
                     </p>
                   </div>
                 ))}
@@ -241,7 +241,7 @@ function Trainer({ entries }: { entries: PhrasalEntry[] }) {
           <Card className="flex flex-col gap-2">
             <p className="text-sm font-semibold">Повтори</p>
             {wrong.map((w, i) => (
-              <p key={i} className="text-sm text-[var(--night-text-70)]">
+              <p key={i} className="text-sm text-fg-secondary">
                 <span className="font-semibold">{w.item.phrase}</span> — {w.item.ru}
               </p>
             ))}
@@ -281,14 +281,14 @@ function Trainer({ entries }: { entries: PhrasalEntry[] }) {
       <RoundProgress index={index + 1} total={round.length} correct={correct} />
 
       <Card className="flex flex-col items-center gap-2 py-6 text-center">
-        <p className="text-sm text-[var(--night-text-40)]">{q.item.ru}</p>
+        <p className="text-sm text-fg-muted">{q.item.ru}</p>
         <p className="text-2xl font-semibold">
-          {q.verb} <span className="text-[var(--night-accent-text)]">___</span>
+          {q.verb} <span className="text-accent-strong">___</span>
         </p>
         {chosen !== null && (
-          <p className="animate-fade-in text-sm text-[var(--night-text-60)]">
+          <p className="animate-fade-in text-sm text-fg-tertiary">
             {q.item.example}
-            <span className="text-[var(--night-text-40)]"> — {q.item.exampleRu}</span>
+            <span className="text-fg-muted"> — {q.item.exampleRu}</span>
           </p>
         )}
       </Card>
@@ -297,14 +297,14 @@ function Trainer({ entries }: { entries: PhrasalEntry[] }) {
         {q.options.map((opt, i) => {
           const state =
             chosen === null
-              ? 'border-white/[0.12] text-[var(--night-text-70)]'
+              ? 'border-white/[0.12] text-fg-secondary'
               : i === q.answer
                 ? `border-emerald-400/60 bg-emerald-400/10 text-emerald-300${
                     i === chosen ? ' animate-answer-pop' : ''
                   }`
                 : i === chosen
                   ? 'border-red-400/60 bg-red-400/10 text-red-300'
-                  : 'border-white/[0.08] text-[var(--night-text-40)]'
+                  : 'border-white/[0.08] text-fg-muted'
           return (
             <button
               key={opt}

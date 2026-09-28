@@ -92,7 +92,7 @@ export function SpanishReaderPage({
         ariaLabel="Уровень"
       />
 
-      <p className="text-sm text-[var(--night-text-40)]">
+      <p className="text-sm text-fg-muted">
         Выбери {kind === 'texts' ? 'текст' : 'диалог'} и нажимай на незнакомые
         слова — добавляй их в колоду.
       </p>
@@ -103,7 +103,7 @@ export function SpanishReaderPage({
               <button key={r.id} onClick={() => setEsKey(`text-${r.id}`)} className="text-left">
                 <Card className="transition-transform active:scale-[0.99]">
                   <p className="font-semibold">{r.title}</p>
-                  <p className="mt-1 text-sm text-[var(--night-text-40)]">{r.titleRu}</p>
+                  <p className="mt-1 text-sm text-fg-muted">{r.titleRu}</p>
                 </Card>
               </button>
             ))
@@ -111,7 +111,7 @@ export function SpanishReaderPage({
               <button key={d.id} onClick={() => setEsKey(`dlg-${d.id}`)} className="text-left">
                 <Card className="transition-transform active:scale-[0.99]">
                   <p className="font-semibold">{d.title}</p>
-                  <p className="mt-1 text-sm text-[var(--night-text-40)]">
+                  <p className="mt-1 text-sm text-fg-muted">
                     {d.lines.length} реплик
                   </p>
                 </Card>
@@ -150,7 +150,7 @@ function ReadingView({
         <BackButton onClick={onBack} />
         <div className="min-w-0">
           <h1 className="truncate text-xl font-medium tracking-tight">{reading.title}</h1>
-          <p className="truncate text-sm text-[var(--night-text-40)]">{reading.titleRu}</p>
+          <p className="truncate text-sm text-fg-muted">{reading.titleRu}</p>
         </div>
       </div>
 
@@ -162,13 +162,13 @@ function ReadingView({
             </p>
             <button
               onClick={() => toggleRu(i)}
-              className="mt-1 inline-flex min-h-[44px] items-center gap-1 text-xs font-semibold text-[var(--night-accent-text)]"
+              className="mt-1 inline-flex min-h-[44px] items-center gap-1 text-xs font-semibold text-accent-strong"
             >
               <IconTranslate size={14} />
               {openRu.has(i) ? 'Скрыть перевод' : 'Перевод'}
             </button>
             {openRu.has(i) && (
-              <p className="mt-1 rounded-lg bg-[var(--night-surface)] px-3 py-2 text-sm text-[var(--night-text-25)]">
+              <p className="mt-1 rounded-lg bg-surface px-3 py-2 text-sm text-fg-faint">
                 {p.ru}
               </p>
             )}
@@ -219,19 +219,19 @@ function DialogueView({
           <Card key={i} className="py-3">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="text-xs font-bold uppercase tracking-wide text-[var(--night-accent-text)]">
+                <p className="text-xs font-bold uppercase tracking-wide text-accent-strong">
                   {line.speaker}
                 </p>
                 <p className="mt-0.5 leading-relaxed">
                   <TappableText text={line.es} onSelect={setSelected} />
                 </p>
                 {showRu && (
-                  <p className="mt-1 text-sm text-[var(--night-text-40)]">{line.ru}</p>
+                  <p className="mt-1 text-sm text-fg-muted">{line.ru}</p>
                 )}
               </div>
               <button
                 onClick={() => speak(line.es, { lang: 'es' })}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/[0.08] text-[var(--night-text-70)]"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/[0.08] text-fg-secondary"
                 aria-label="Озвучить реплику"
               >
                 <IconSpeaker size={18} />

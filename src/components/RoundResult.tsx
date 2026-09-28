@@ -16,9 +16,9 @@ import type { AppLang } from '../types'
  * стиль с остальным интерфейсом и корректная тёмная тема.
  */
 export function ScoreGlyph({ percent, size = 40 }: { percent: number; size?: number }) {
-  if (percent >= 80) return <IconTrophy size={size} className="text-[var(--night-accent-100)]" />
-  if (percent >= 50) return <IconThumbsUp size={size} className="text-[var(--night-accent-text)]" />
-  return <IconArrowUp size={size} className="text-[var(--night-text-40)]" />
+  if (percent >= 80) return <IconTrophy size={size} className="text-accent-soft-fg" />
+  if (percent >= 50) return <IconThumbsUp size={size} className="text-accent-strong" />
+  return <IconArrowUp size={size} className="text-fg-muted" />
 }
 
 export function RoundResult({
@@ -54,12 +54,12 @@ export function RoundResult({
       <p className="text-lg font-bold">
         {correct} из {total} верно ({percent}%)
       </p>
-      {note && <p className="-mt-1 text-sm text-[var(--night-text-40)]">{note}</p>}
+      {note && <p className="-mt-1 text-sm text-fg-muted">{note}</p>}
       {children}
       {review && review.length > 0 && lang && (
         <button
           onClick={() => setShowReview(true)}
-          className="lift w-full rounded-xl border border-white/[0.12] py-2.5 text-sm font-medium text-[var(--night-text-70)]"
+          className="lift w-full rounded-xl border border-white/[0.12] py-2.5 text-sm font-medium text-fg-secondary"
         >
           Посмотреть результаты
         </button>
@@ -91,7 +91,7 @@ export function RoundProgress({
   progressLabel?: string
 }) {
   return (
-    <div className="flex items-center justify-between text-sm text-[var(--night-text-40)]">
+    <div className="flex items-center justify-between text-sm text-fg-muted">
       <span>
         {progressLabel ? `${progressLabel} ` : ''}
         {index} / {total}

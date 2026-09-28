@@ -40,7 +40,7 @@ function ItemBar({ progress, target }: { progress: number; target: number }) {
     <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/[0.08]">
       <div
         style={{ transform: `scaleX(${ratio})` }}
-        className="h-full w-full origin-left rounded-full bg-[var(--night-accent)] transition-transform duration-500 [transition-timing-function:cubic-bezier(.22,1,.36,1)]"
+        className="h-full w-full origin-left rounded-full bg-accent transition-transform duration-500 [transition-timing-function:cubic-bezier(.22,1,.36,1)]"
       />
     </div>
   )
@@ -70,17 +70,17 @@ function Variant({
           aria-hidden="true"
           className={`mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full text-[11px] ${
             done
-              ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
+              ? 'bg-accent-soft text-accent-soft-fg'
               : 'border border-white/[0.14]'
           }`}
         >
           {done ? <IconCheck size={12} /> : ''}
         </span>
         <div className="min-w-0 flex-1">
-          <p className={`text-[15px] ${done ? 'text-[var(--night-text-40)] line-through' : ''}`}>
+          <p className={`text-[15px] ${done ? 'text-fg-muted line-through' : ''}`}>
             {item.title}
           </p>
-          <p className="mt-0.5 text-xs text-[var(--night-text-40)]">
+          <p className="mt-0.5 text-xs text-fg-muted">
             {KIND_LABEL[item.kind]} · {done ? 'сделано' : KIND_HINT[item.kind]}
           </p>
 
@@ -90,10 +90,10 @@ function Variant({
           {item.target > 1 && !done && (
             <>
               <ItemBar progress={item.progress} target={item.target} />
-              <p className="mt-1 text-xs tabular-nums text-[var(--night-text-70)]">
+              <p className="mt-1 text-xs tabular-nums text-fg-secondary">
                 {Math.min(item.progress, item.target)} из {item.target}
                 {started && (
-                  <span className="text-[var(--night-accent-text)]">
+                  <span className="text-accent-strong">
                     {' '}
                     · осталось {item.target - item.progress}
                   </span>
@@ -107,7 +107,7 @@ function Variant({
               {link && (
                 <AppLink
                   to={link.to}
-                  className="inline-flex min-h-[40px] items-center rounded-xl bg-[var(--night-accent-900)] px-3.5 text-sm font-medium text-[var(--night-accent-100)]"
+                  className="inline-flex min-h-[40px] items-center rounded-xl bg-accent-soft px-3.5 text-sm font-medium text-accent-soft-fg"
                 >
                   {link.label} →
                 </AppLink>
@@ -119,7 +119,7 @@ function Variant({
                 <button
                   onClick={() => onDone(item.id)}
                   disabled={busy}
-                  className="inline-flex min-h-[40px] items-center rounded-xl border border-white/[0.14] px-3.5 text-sm text-[var(--night-text-70)] disabled:opacity-50"
+                  className="inline-flex min-h-[40px] items-center rounded-xl border border-white/[0.14] px-3.5 text-sm text-fg-secondary disabled:opacity-50"
                 >
                   Отметить, что сделал
                 </button>
@@ -146,8 +146,8 @@ function PickRow({
 }) {
   const chosen = row.chosen
   return (
-    <li className="rounded-xl border border-[var(--night-accent-45)]/40 bg-[var(--night-accent-900)]/25 p-3">
-      <p className="mb-2 text-xs font-medium text-[var(--night-accent-100)]">
+    <li className="rounded-xl border border-accent-line/40 bg-accent-soft/25 p-3">
+      <p className="mb-2 text-xs font-medium text-accent-soft-fg">
         {chosen ? 'Ты выбрал' : 'На выбор — сделай что-то одно'}
       </p>
       <div className="flex flex-col gap-3">
@@ -165,7 +165,7 @@ function PickRow({
               <button
                 onClick={() => onChoose(it.id)}
                 disabled={busy}
-                className="ml-[30px] mt-1.5 text-sm font-medium text-[var(--night-accent-text)] disabled:opacity-50"
+                className="ml-[30px] mt-1.5 text-sm font-medium text-accent-strong disabled:opacity-50"
               >
                 Выбрать это
               </button>
@@ -209,7 +209,7 @@ export function StudentHomework({
     <Card className="flex flex-col gap-3">
       <div className="flex items-baseline justify-between gap-2">
         <h2 className="text-[15px] font-semibold">Домашка на неделю</h2>
-        <span className={`text-sm ${overdue ? 'text-amber-300' : 'text-[var(--night-text-40)]'}`}>
+        <span className={`text-sm ${overdue ? 'text-amber-300' : 'text-fg-muted'}`}>
           {dueLabel(hw.due_at)}
         </span>
       </div>
@@ -218,16 +218,16 @@ export function StudentHomework({
         <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/[0.08]">
           <div
             style={{ transform: `scaleX(${ratio})` }}
-            className="h-full w-full origin-left rounded-full bg-[var(--night-accent)] transition-transform duration-500 [transition-timing-function:cubic-bezier(.22,1,.36,1)]"
+            className="h-full w-full origin-left rounded-full bg-accent transition-transform duration-500 [transition-timing-function:cubic-bezier(.22,1,.36,1)]"
           />
         </div>
-        <span className="text-sm tabular-nums text-[var(--night-text-70)]">
+        <span className="text-sm tabular-nums text-fg-secondary">
           {done} из {total}
         </span>
       </div>
 
       {hw.note && (
-        <p className="rounded-xl bg-white/[0.04] px-3 py-2 text-sm text-[var(--night-text-70)]">
+        <p className="rounded-xl bg-white/[0.04] px-3 py-2 text-sm text-fg-secondary">
           {hw.note}
         </p>
       )}
@@ -262,7 +262,7 @@ export function StudentHomework({
 
       {/* Честная граница — та же, что видит преподаватель. Без неё «засчитано»
           читается как «проверено», а это разные вещи. */}
-      <p className="text-xs text-[var(--night-text-40)]">
+      <p className="text-xs text-fg-muted">
         Пункты закрываются сами по твоим занятиям — отмечать ничего не нужно.
       </p>
     </Card>

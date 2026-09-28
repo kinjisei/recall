@@ -48,8 +48,8 @@ const BANDS = ['5.5', '6.0', '6.5', '7.0', '7.5', '8.0']
 function chipCls(active: boolean) {
   return `rounded-lg px-3 py-1.5 text-sm font-semibold ${
     active
-      ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
-      : 'bg-white/[0.07] text-[var(--night-text-70)]'
+      ? 'bg-accent-soft text-accent-soft-fg'
+      : 'bg-white/[0.07] text-fg-secondary'
   }`
 }
 
@@ -102,7 +102,7 @@ export function WritingSection({ students }: { students: StudentInfo[] }) {
       ) : (tasks ?? []).length === 0 ? (
         <Card className="text-center">
           <p className="font-semibold">Пока нет заданий</p>
-          <p className="mt-1 text-sm text-[var(--night-text-40)]">
+          <p className="mt-1 text-sm text-fg-muted">
             Создай письмо в режиме IELTS или обычного эссе и назначь ученикам.
           </p>
         </Card>
@@ -115,7 +115,7 @@ export function WritingSection({ students }: { students: StudentInfo[] }) {
           >
             <div className="min-w-0">
               <p className="truncate text-sm font-medium">{t.prompt}</p>
-              <p className="text-xs text-[var(--night-text-40)]">
+              <p className="text-xs text-fg-muted">
                 {t.mode === 'ielts'
                   ? `IELTS · ${t.settings?.ieltsTask === 'gt1' ? 'GT Task 1' : 'Task 2'}${
                       t.settings?.targetBand ? ` · band ${t.settings.targetBand}` : ''
@@ -219,7 +219,7 @@ function WritingForm({
 
       <Card className="flex flex-col gap-3">
         <div>
-          <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">Режим</p>
+          <p className="mb-1 text-xs font-semibold text-fg-muted">Режим</p>
           <div className="flex gap-2">
             <button className={chipCls(mode === 'ielts')} onClick={() => setMode('ielts')}>IELTS</button>
             <button className={chipCls(mode === 'regular')} onClick={() => setMode('regular')}>Обычное эссе</button>
@@ -229,7 +229,7 @@ function WritingForm({
         {mode === 'ielts' ? (
           <>
             <div>
-              <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">Тип</p>
+              <p className="mb-1 text-xs font-semibold text-fg-muted">Тип</p>
               <div className="flex flex-wrap gap-2">
                 <button className={chipCls(ieltsTask === 'task2')} onClick={() => setIeltsTask('task2')}>Task 2 (эссе)</button>
                 <button className={chipCls(ieltsTask === 'gt1')} onClick={() => setIeltsTask('gt1')}>GT Task 1 (письмо)</button>
@@ -237,7 +237,7 @@ function WritingForm({
               </div>
             </div>
             <div>
-              <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">Целевой балл (band)</p>
+              <p className="mb-1 text-xs font-semibold text-fg-muted">Целевой балл (band)</p>
               <div className="flex flex-wrap gap-2">
                 {BANDS.map((b) => (
                   <button key={b} className={chipCls(targetBand === b)} onClick={() => setTargetBand(b)}>{b}</button>
@@ -248,7 +248,7 @@ function WritingForm({
             {ieltsTask === 'academic1' && (
               <div className="flex flex-col gap-2">
                 <div>
-                  <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">Тип графика</p>
+                  <p className="mb-1 text-xs font-semibold text-fg-muted">Тип графика</p>
                   <div className="flex flex-wrap gap-2">
                     {CHART_KINDS.map((k) => (
                       <button key={k.id} className={chipCls(chartKind === k.id)} onClick={() => setChartKind(k.id)}>
@@ -277,14 +277,14 @@ function WritingForm({
         ) : (
           <>
             <div>
-              <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">Язык</p>
+              <p className="mb-1 text-xs font-semibold text-fg-muted">Язык</p>
               <div className="flex gap-2">
                 <button className={chipCls(lang === 'en')} onClick={() => setLang('en')}>Английский</button>
                 <button className={chipCls(lang === 'es')} onClick={() => setLang('es')}>Испанский</button>
               </div>
             </div>
             <div>
-              <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">Уровень ученика</p>
+              <p className="mb-1 text-xs font-semibold text-fg-muted">Уровень ученика</p>
               <div className="flex flex-wrap gap-2">
                 {LEVELS.map((l) => (
                   <button key={l} className={chipCls(level === l)} onClick={() => setLevel(l)}>{l}</button>
@@ -296,14 +296,14 @@ function WritingForm({
 
         <div>
           <div className="mb-1 flex items-center justify-between">
-            <p className="text-xs font-semibold text-[var(--night-text-40)]">
+            <p className="text-xs font-semibold text-fg-muted">
               {mode === 'ielts' ? 'Вопрос задания' : 'Тема / задание'}
             </p>
             {mode === 'ielts' && ieltsTask !== 'academic1' && (
               <button
                 onClick={genQuestion}
                 disabled={busy !== null}
-                className="text-xs font-semibold text-[var(--night-accent-text)] disabled:opacity-50"
+                className="text-xs font-semibold text-accent-strong disabled:opacity-50"
               >
                 {busy === 'gen' ? 'AI придумывает…' : '✨ Придумать вопрос'}
               </button>
@@ -324,7 +324,7 @@ function WritingForm({
         {mode === 'regular' && (
           <>
             <div>
-              <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">
+              <p className="mb-1 text-xs font-semibold text-fg-muted">
                 Целевые слова через запятую (необязательно)
               </p>
               <input
@@ -335,7 +335,7 @@ function WritingForm({
               />
             </div>
             <div>
-              <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">
+              <p className="mb-1 text-xs font-semibold text-fg-muted">
                 Целевая грамматика через запятую (необязательно)
               </p>
               <input
@@ -346,7 +346,7 @@ function WritingForm({
               />
             </div>
             <div>
-              <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">
+              <p className="mb-1 text-xs font-semibold text-fg-muted">
                 Минимум слов (необязательно)
               </p>
               <input
@@ -449,7 +449,7 @@ function WritingDetail({
       <BackHeader onBack={onBack} title="Задание" label="К списку" />
 
       <Card>
-        <p className="text-xs text-[var(--night-text-40)]">
+        <p className="text-xs text-fg-muted">
           {task.mode === 'ielts'
             ? `IELTS · ${s?.ieltsTask === 'gt1' ? 'GT Task 1' : 'Task 2'}${s?.targetBand ? ` · целевой band ${s.targetBand}` : ''}`
             : `Обычное эссе · ${task.lang === 'es' ? 'испанский' : 'английский'} · ${task.level}`}
@@ -461,7 +461,7 @@ function WritingDetail({
           </div>
         )}
         {task.mode === 'regular' && (
-          <div className="mt-2 flex flex-col gap-1 text-xs text-[var(--night-text-40)]">
+          <div className="mt-2 flex flex-col gap-1 text-xs text-fg-muted">
             {s?.targetWords?.length ? <p>Слова: {s.targetWords.join(', ')}</p> : null}
             {s?.targetGrammar?.length ? <p>Грамматика: {s.targetGrammar.join(', ')}</p> : null}
             {s?.minWords ? <p>Минимум слов: {s.minWords}</p> : null}
@@ -477,9 +477,9 @@ function WritingDetail({
           <RowsSkeleton count={2} height={56} />
         ) : students.length === 0 ? (
           // то же пустое состояние-тупик, что было в карточке материала
-          <p className="text-sm text-[var(--night-text-40)]">
+          <p className="text-sm text-fg-muted">
             Учеников пока нет. Отправь код-приглашение — он на вкладке{' '}
-            <AppLink to="/teacher" className="text-[var(--night-accent-text)] underline underline-offset-2">
+            <AppLink to="/teacher" className="text-accent-strong underline underline-offset-2">
               «Ученики»
             </AppLink>
             . Как только кто-то привяжется, задание назначается в один тап.
@@ -496,7 +496,7 @@ function WritingDetail({
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium">{name}</p>
                   {a && (
-                    <p className="text-xs text-[var(--night-text-40)]">
+                    <p className="text-xs text-fg-muted">
                       {a.status === 'assigned'
                         ? 'ещё не выполнено'
                         : a.status === 'submitted'

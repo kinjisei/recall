@@ -254,7 +254,7 @@ export function DashboardPage() {
       {/* 1. Приветствие */}
       <header className="animate-fade-up">
         <h1 className="text-2xl font-medium tracking-tight">Привет, {name}</h1>
-        <p className="mt-1 text-sm text-[var(--night-text-40)]">
+        <p className="mt-1 text-sm text-fg-muted">
           {lang === 'es' ? 'Испанский' : 'Английский'}
           {level ? ` · ${level}` : ''} ·{' '}
           {didToday ? 'сегодня уже занимался' : 'готов к практике?'}
@@ -276,7 +276,7 @@ export function DashboardPage() {
       ) : (
         <div
           aria-hidden
-          className="h-[196px] animate-pulse rounded-3xl border border-[var(--night-accent-45)] bg-white/[0.04]"
+          className="h-[196px] animate-pulse rounded-3xl border border-accent-line bg-white/[0.04]"
         />
       )}
 
@@ -303,13 +303,13 @@ export function DashboardPage() {
           под пальцем (замер ревью 1А). */}
       <button
         onClick={() => void startGuidedRoute(lang).then((r) => navigate(r))}
-        className="lift animate-fade-up flex h-[58px] items-center justify-center gap-2.5 rounded-2xl border border-[var(--night-accent-45)] bg-[linear-gradient(135deg,rgba(145,132,217,.22),rgba(145,132,217,.10))] font-medium text-[var(--night-text)]"
+        className="lift animate-fade-up flex h-[58px] items-center justify-center gap-2.5 rounded-2xl border border-accent-line bg-[linear-gradient(135deg,rgba(145,132,217,.22),rgba(145,132,217,.10))] font-medium text-fg"
         style={{ animationDelay: '.12s' }}
       >
-        <IconArrowRight size={22} className="text-[var(--night-accent-100)]" />
+        <IconArrowRight size={22} className="text-accent-soft-fg" />
         <span className="flex flex-col items-start leading-tight">
           Начать занятие
-          <span className="text-[11px] font-normal text-[var(--night-text-40)]">
+          <span className="text-[11px] font-normal text-fg-muted">
             ~15 минут · слова → чтение → речь
           </span>
         </span>
@@ -320,7 +320,7 @@ export function DashboardPage() {
         <div className="mb-3 flex items-baseline justify-between">
           <h2 className="text-lg font-medium tracking-tight">План на сегодня</h2>
           {todayPlan && (
-            <span className={`text-sm ${perfect ? 'font-medium text-amber-300' : allDone ? 'text-[var(--night-accent-text)]' : 'text-[var(--night-text-40)]'}`}>
+            <span className={`text-sm ${perfect ? 'font-medium text-amber-300' : allDone ? 'text-accent-strong' : 'text-fg-muted'}`}>
               {perfect ? 'Идеальный день ✦' : `${doneCount} из ${todayPlan.length} готово`}
             </span>
           )}
@@ -350,7 +350,7 @@ export function DashboardPage() {
                   done ? (
                     <IconCheck
                       size={20}
-                      className="flex-none text-[var(--night-accent)]"
+                      className="flex-none text-accent"
                     />
                   ) : undefined
                 }
@@ -394,9 +394,9 @@ function HomeSkeleton() {
         <div className="h-7 w-44 animate-pulse rounded-lg bg-white/[0.06]" />
         <div className="mt-2 h-4 w-60 animate-pulse rounded bg-white/[0.04]" />
       </header>
-      <div className="h-[196px] animate-pulse rounded-3xl border border-[var(--night-accent-45)] bg-white/[0.04]" />
+      <div className="h-[196px] animate-pulse rounded-3xl border border-accent-line bg-white/[0.04]" />
       <div className="h-[86px] animate-pulse rounded-2xl bg-white/[0.04]" />
-      <div className="h-[58px] animate-pulse rounded-2xl border border-[var(--night-accent-45)] bg-white/[0.04]" />
+      <div className="h-[58px] animate-pulse rounded-2xl border border-accent-line bg-white/[0.04]" />
       <section>
         <div className="mb-3 h-6 w-40 animate-pulse rounded bg-white/[0.06]" />
         <div className="flex flex-col gap-2.5">
@@ -448,16 +448,16 @@ function StreakHero({
 
       <div className="relative flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm text-[var(--night-text-60)]">Серия дней подряд</p>
+          <p className="text-sm text-fg-tertiary">Серия дней подряд</p>
           <p className="mt-1.5 flex items-center gap-2.5">
             <IconFlame
               size={34}
-              className={`animate-flame ${perfect ? 'text-amber-300' : 'text-[var(--night-accent-100)]'}`}
+              className={`animate-flame ${perfect ? 'text-amber-300' : 'text-accent-soft-fg'}`}
             />
             <span className="animate-pop-in text-4xl font-medium tabular-nums">{streak}</span>
           </p>
         </div>
-        <p className="max-w-[48%] pt-1 text-right text-sm leading-snug text-[var(--night-text-60)]">
+        <p className="max-w-[48%] pt-1 text-right text-sm leading-snug text-fg-tertiary">
           {hint}
         </p>
       </div>
@@ -468,14 +468,14 @@ function StreakHero({
           <div key={d.day} className="flex flex-1 flex-col items-center gap-1.5">
             <span
               className={`animate-grow-bar h-1.5 w-full rounded-full ${
-                d.active ? 'bg-[var(--night-accent)]' : 'bg-white/[0.09]'
-              } ${d.isToday && !d.active ? 'ring-1 ring-[var(--night-accent-45)]' : ''}`}
+                d.active ? 'bg-accent' : 'bg-white/[0.09]'
+              } ${d.isToday && !d.active ? 'ring-1 ring-accent-line' : ''}`}
               // заметный каскад слева направо: пн → вт → ср → …
               style={{ animationDelay: `${0.2 + i * 0.12}s` }}
             />
             <span
               className={`text-[10px] ${
-                d.isToday ? 'text-[var(--night-accent-text)]' : 'text-[var(--night-text-40)]'
+                d.isToday ? 'text-accent-strong' : 'text-fg-muted'
               }`}
             >
               {d.label}
@@ -486,7 +486,7 @@ function StreakHero({
 
       <AppLink
         to="/progress"
-        className="relative mt-3 inline-flex min-h-[44px] items-center gap-1 text-sm text-[var(--night-accent-text)] hover:underline"
+        className="relative mt-3 inline-flex min-h-[44px] items-center gap-1 text-sm text-accent-strong hover:underline"
       >
         Мой прогресс <IconArrowRight size={14} />
       </AppLink>
@@ -520,22 +520,22 @@ function WordOfDay({ word, lang }: { word: PoolItem; lang: 'en' | 'es' }) {
       {/* Вся строка — кнопка: тап открывает окно со словом (стрелка-подсказка) */}
       <button
         onClick={() => setOpen(true)}
-        className="lift animate-fade-up flex w-full items-center gap-3.5 rounded-2xl border border-white/[0.08] bg-[var(--night-surface)] px-4 py-3.5 text-left"
+        className="lift animate-fade-up flex w-full items-center gap-3.5 rounded-2xl border border-white/[0.08] bg-surface px-4 py-3.5 text-left"
         style={{ animationDelay: '.45s' }}
       >
-        <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-[var(--night-accent-900)] text-[var(--night-accent-100)]">
+        <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-accent-soft text-accent-soft-fg">
           <IconHint size={20} />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] uppercase tracking-wider text-[var(--night-text-40)]">
+          <p className="text-[10px] uppercase tracking-wider text-fg-muted">
             Слово дня
           </p>
           <p className="truncate text-[15px] font-medium">
             {word.term}
-            <span className="text-[var(--night-text-40)]"> — {word.translation}</span>
+            <span className="text-fg-muted"> — {word.translation}</span>
           </p>
         </div>
-        <IconArrowRight size={18} className="flex-none text-[var(--night-text-40)]" />
+        <IconArrowRight size={18} className="flex-none text-fg-muted" />
       </button>
 
       {open &&
@@ -545,25 +545,25 @@ function WordOfDay({ word, lang }: { word: PoolItem; lang: 'en' | 'es' }) {
             onClick={() => setOpen(false)}
           >
             <div
-              className="animate-fade-up w-full rounded-t-3xl border border-white/[0.08] bg-[var(--night-surface)] p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] sm:max-w-sm sm:rounded-3xl sm:pb-5"
+              className="animate-fade-up w-full rounded-t-3xl border border-white/[0.08] bg-surface p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] sm:max-w-sm sm:rounded-3xl sm:pb-5"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-start justify-between">
-                <p className="text-[10px] uppercase tracking-wider text-[var(--night-text-40)]">
+                <p className="text-[10px] uppercase tracking-wider text-fg-muted">
                   Слово дня
                 </p>
                 <button
                   onClick={() => setOpen(false)}
                   aria-label="Закрыть"
-                  className="lift -mr-2 -mt-2 flex h-11 w-11 items-center justify-center rounded-full text-[var(--night-text-40)]"
+                  className="lift -mr-2 -mt-2 flex h-11 w-11 items-center justify-center rounded-full text-fg-muted"
                 >
                   <IconClose size={20} />
                 </button>
               </div>
               <p className="mt-1 text-2xl font-semibold">{word.term}</p>
-              <p className="text-[var(--night-text-70)]">{word.translation}</p>
+              <p className="text-fg-secondary">{word.translation}</p>
               {word.example && (
-                <p className="mt-3 rounded-xl bg-white/[0.04] px-3 py-2 text-sm italic leading-relaxed text-[var(--night-text-70)]">
+                <p className="mt-3 rounded-xl bg-white/[0.04] px-3 py-2 text-sm italic leading-relaxed text-fg-secondary">
                   {word.example}
                 </p>
               )}

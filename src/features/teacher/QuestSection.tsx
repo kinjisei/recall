@@ -41,7 +41,7 @@ const TOPIC_HINTS = [
 ]
 
 const inputCls =
-  'w-full rounded-lg border border-white/[0.10] bg-[var(--night-input)] px-3 py-2 text-sm outline-none focus:border-[var(--night-accent-45)]'
+  'w-full rounded-lg border border-white/[0.10] bg-input px-3 py-2 text-sm outline-none focus:border-accent-line'
 
 export function QuestSection({ studentId }: { studentId: string }) {
   const load = useCallback(() => listStudentQuests(studentId), [studentId])
@@ -113,7 +113,7 @@ export function QuestSection({ studentId }: { studentId: string }) {
       ) : error ? (
         <LoadError message={error} onRetry={reload} />
       ) : (quests ?? []).length === 0 ? (
-        <p className="text-sm text-[var(--night-text-40)]">
+        <p className="text-sm text-fg-muted">
           Квестов пока нет — назначь первый ниже.
         </p>
       ) : (
@@ -123,7 +123,7 @@ export function QuestSection({ studentId }: { studentId: string }) {
               <div className="flex items-center justify-between gap-2">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium">{q.scenario}</p>
-                  <p className="text-xs text-[var(--night-text-40)]">
+                  <p className="text-xs text-fg-muted">
                     {q.topic} · {q.lang.toUpperCase()} {q.level} ·{' '}
                     {q.status === 'completed' ? (
                       <span className="font-semibold text-emerald-400">
@@ -163,8 +163,8 @@ export function QuestSection({ studentId }: { studentId: string }) {
                         key={i}
                         className={`whitespace-pre-wrap text-xs leading-relaxed ${
                           m.role === 'user'
-                            ? 'text-[var(--night-accent-text)]'
-                            : 'text-[var(--night-text-70)]'
+                            ? 'text-accent-strong'
+                            : 'text-fg-secondary'
                         }`}
                       >
                         <b>{m.role === 'user' ? 'Ученик: ' : 'AI: '}</b>
@@ -181,7 +181,7 @@ export function QuestSection({ studentId }: { studentId: string }) {
       {/* форма назначения */}
       <div className="flex flex-col gap-2 border-t border-white/[0.08] pt-3">
         <div className="grid grid-cols-2 gap-2">
-          <div className="flex flex-col gap-1 text-xs text-[var(--night-text-40)]">
+          <div className="flex flex-col gap-1 text-xs text-fg-muted">
             Язык
             <TabPicker
               value={lang}
@@ -193,7 +193,7 @@ export function QuestSection({ studentId }: { studentId: string }) {
               ]}
             />
           </div>
-          <div className="flex flex-col gap-1 text-xs text-[var(--night-text-40)]">
+          <div className="flex flex-col gap-1 text-xs text-fg-muted">
             Уровень
             <Picker
               value={level}
@@ -203,7 +203,7 @@ export function QuestSection({ studentId }: { studentId: string }) {
             />
           </div>
         </div>
-        <label className="flex flex-col gap-1 text-xs text-[var(--night-text-40)]">
+        <label className="flex flex-col gap-1 text-xs text-fg-muted">
           Тема грамматики
           <input
             list="quest-topics"
@@ -218,7 +218,7 @@ export function QuestSection({ studentId }: { studentId: string }) {
             ))}
           </datalist>
         </label>
-        <div className="flex flex-col gap-1 text-xs text-[var(--night-text-40)]">
+        <div className="flex flex-col gap-1 text-xs text-fg-muted">
           Сценарий
           <Picker
             value={scenario}
@@ -227,7 +227,7 @@ export function QuestSection({ studentId }: { studentId: string }) {
             options={SCENARIOS.map((s) => ({ id: s, label: s }))}
           />
         </div>
-        <label className="flex flex-col gap-1 text-xs text-[var(--night-text-40)]">
+        <label className="flex flex-col gap-1 text-xs text-fg-muted">
           Или свой сценарий (перекрывает выбор выше)
           <input
             value={custom}
@@ -236,7 +236,7 @@ export function QuestSection({ studentId }: { studentId: string }) {
             className={inputCls}
           />
         </label>
-        <label className="flex flex-col gap-1 text-xs text-[var(--night-text-40)]">
+        <label className="flex flex-col gap-1 text-xs text-fg-muted">
           Верных ответов для зачёта: {target}
           <input
             type="range"
@@ -244,7 +244,7 @@ export function QuestSection({ studentId }: { studentId: string }) {
             max={30}
             value={target}
             onChange={(e) => setTarget(Number(e.target.value))}
-            className="accent-[var(--night-accent)]"
+            className="accent-accent"
           />
         </label>
         {formError && <p className="text-sm text-red-400">{formError}</p>}

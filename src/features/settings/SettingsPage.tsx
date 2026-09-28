@@ -104,7 +104,7 @@ export function SettingsPage() {
         <button
           onClick={goBack}
           aria-label="Назад"
-          className="lift -ml-2 flex h-11 w-11 items-center justify-center rounded-full text-[var(--night-text-70)]"
+          className="lift -ml-2 flex h-11 w-11 items-center justify-center rounded-full text-fg-secondary"
         >
           <IconBack size={20} />
         </button>
@@ -113,7 +113,7 @@ export function SettingsPage() {
 
       {/* Профиль */}
       <Section title="Профиль" delay=".05s">
-        <label htmlFor="settings-name" className="block text-sm text-[var(--night-text-40)]">
+        <label htmlFor="settings-name" className="block text-sm text-fg-muted">
           Как тебя зовут
         </label>
         <input
@@ -121,10 +121,10 @@ export function SettingsPage() {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Имя"
-          className="mt-1.5 h-11 w-full rounded-xl border border-white/[0.10] bg-[var(--night-input)] px-3.5 text-sm outline-none focus:border-[var(--night-accent-45)]"
+          className="mt-1.5 h-11 w-full rounded-xl border border-white/[0.10] bg-input px-3.5 text-sm outline-none focus:border-accent-line"
         />
 
-        <p className="mt-4 text-sm text-[var(--night-text-40)]">
+        <p className="mt-4 text-sm text-fg-muted">
           Мой уровень {lang === 'es' ? 'испанского' : 'английского'}
         </p>
         <div className="mt-1.5 flex flex-wrap gap-2">
@@ -134,8 +134,8 @@ export function SettingsPage() {
               onClick={() => setLevel(l)}
               className={`min-h-[44px] rounded-xl px-4 text-sm font-medium transition-colors ${
                 level === l
-                  ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
-                  : 'bg-white/[0.06] text-[var(--night-text-40)]'
+                  ? 'bg-accent-soft text-accent-soft-fg'
+                  : 'bg-white/[0.06] text-fg-muted'
               }`}
             >
               {l}
@@ -158,7 +158,7 @@ export function SettingsPage() {
 
       {/* Озвучка */}
       <Section title="Озвучка" delay=".11s">
-        <p className="text-sm text-[var(--night-text-40)]">
+        <p className="text-sm text-fg-muted">
           Скорость чтения вслух — в карточках, текстах и упражнениях.
         </p>
         <div className="mt-2.5 flex gap-2">
@@ -168,8 +168,8 @@ export function SettingsPage() {
               onClick={() => patchLocal({ speechRate: s.id })}
               className={`min-h-[44px] flex-1 rounded-xl px-3 text-sm font-medium transition-colors ${
                 local.speechRate === s.id
-                  ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
-                  : 'bg-white/[0.06] text-[var(--night-text-40)]'
+                  ? 'bg-accent-soft text-accent-soft-fg'
+                  : 'bg-white/[0.06] text-fg-muted'
               }`}
             >
               {s.label}
@@ -183,7 +183,7 @@ export function SettingsPage() {
               rate: SPEECH_RATES[local.speechRate],
             })
           }
-          className="lift mt-3 flex min-h-[44px] items-center gap-2 rounded-full border border-white/[0.10] px-4 text-sm text-[var(--night-text-70)]"
+          className="lift mt-3 flex min-h-[44px] items-center gap-2 rounded-full border border-white/[0.10] px-4 text-sm text-fg-secondary"
         >
           <IconSpeaker size={16} /> Проверить
         </button>
@@ -191,7 +191,7 @@ export function SettingsPage() {
 
       {/* Размер текста */}
       <Section title="Текст в чтении" delay=".17s">
-        <p className="text-sm text-[var(--night-text-40)]">
+        <p className="text-sm text-fg-muted">
           Размер шрифта в текстах раздела «Учёба».
         </p>
         <div className="mt-2.5 flex gap-2">
@@ -203,8 +203,8 @@ export function SettingsPage() {
                 s.id === 'small' ? 'text-sm' : s.id === 'large' ? 'text-lg' : 'text-base'
               } ${
                 local.readerSize === s.id
-                  ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
-                  : 'bg-white/[0.06] text-[var(--night-text-40)]'
+                  ? 'bg-accent-soft text-accent-soft-fg'
+                  : 'bg-white/[0.06] text-fg-muted'
               }`}
             >
               {s.label}
@@ -217,16 +217,16 @@ export function SettingsPage() {
           проверкой текущего пароля, в общий экран настроек её мешать незачем. */}
       <SecuritySection />
 
-      <p className="px-1 text-xs text-[var(--night-text-40)]">
+      <p className="px-1 text-xs text-fg-muted">
         Скорость озвучки и размер текста сохраняются на этом устройстве.
         Имя и уровень — в аккаунте.
       </p>
 
       {/* Написать владельцу. До этого из приложения написать было НЕКУДА:
           адрес лежал только в юридических страницах, куда никто не заходит. */}
-      <div className="rounded-2xl border border-white/[0.08] bg-[var(--night-surface)] p-4">
+      <div className="rounded-2xl border border-white/[0.08] bg-surface p-4">
         <p className="text-[15px] font-medium">Что-то не работает или непонятно?</p>
-        <p className="mt-1 text-sm text-[var(--night-text-70)]">
+        <p className="mt-1 text-sm text-fg-secondary">
           Напиши мне — починю или объясню. {SUPPORT_SLA}.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
@@ -235,13 +235,13 @@ export function SettingsPage() {
               должен быть в один тап. */}
           <button
             onClick={() => setFeedback(true)}
-            className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[var(--night-accent-900)] px-4 text-sm font-medium text-[var(--night-accent-100)]"
+            className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-accent-soft px-4 text-sm font-medium text-accent-soft-fg"
           >
             <IconThumbsUp size={16} /> Оставить отзыв
           </button>
           <a
             href={supportMailto()}
-            className="inline-flex min-h-11 items-center rounded-xl border border-white/[0.10] px-4 text-sm font-medium text-[var(--night-text-70)]"
+            className="inline-flex min-h-11 items-center rounded-xl border border-white/[0.10] px-4 text-sm font-medium text-fg-secondary"
           >
             Написать на {SUPPORT_EMAIL}
           </a>
@@ -252,16 +252,16 @@ export function SettingsPage() {
 
       {/* Link, не <a>: обычная ссылка перезагружает всё приложение и рвёт
           историю — «Назад» с тех страниц переставал возвращать сюда */}
-      <p className="px-1 text-xs text-[var(--night-text-40)]">
-        <AppLink to="/terms" className="underline hover:text-[var(--night-text-70)]">
+      <p className="px-1 text-xs text-fg-muted">
+        <AppLink to="/terms" className="underline hover:text-fg-secondary">
           Условия использования
         </AppLink>{' '}
         ·{' '}
-        <AppLink to="/privacy" className="underline hover:text-[var(--night-text-70)]">
+        <AppLink to="/privacy" className="underline hover:text-fg-secondary">
           Политика конфиденциальности
         </AppLink>{' '}
         ·{' '}
-        <AppLink to="/pricing" className="underline hover:text-[var(--night-text-70)]">
+        <AppLink to="/pricing" className="underline hover:text-fg-secondary">
           Тарифы
         </AppLink>
       </p>
@@ -280,7 +280,7 @@ function Section({
 }) {
   return (
     <section
-      className="animate-fade-up rounded-2xl border border-white/[0.08] bg-[var(--night-surface)] p-4"
+      className="animate-fade-up rounded-2xl border border-white/[0.08] bg-surface p-4"
       style={{ animationDelay: delay }}
     >
       <h2 className="mb-3 font-medium">{title}</h2>

@@ -95,7 +95,7 @@ export function Sheet({
         aria-modal="true"
         aria-label={label}
         aria-labelledby={labelledBy}
-        className={`animate-fade-up flex w-full flex-col rounded-t-3xl bg-[var(--night-surface)] pb-[env(safe-area-inset-bottom)] ${className}`}
+        className={`animate-fade-up flex w-full flex-col rounded-t-3xl bg-surface pb-[env(safe-area-inset-bottom)] ${className}`}
         style={{
           maxHeight: maxH,
           transform: dy ? `translateY(${dy}px)` : undefined,

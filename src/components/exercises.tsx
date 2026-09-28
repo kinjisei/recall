@@ -25,7 +25,7 @@ import type { GrammarExercise } from '../types'
 function HintLine({ text }: { text: string }) {
   return (
     <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
-      {text} <span className="text-[var(--night-text-40)]">Попробуй ещё раз.</span>
+      {text} <span className="text-fg-muted">Попробуй ещё раз.</span>
     </p>
   )
 }
@@ -35,7 +35,7 @@ function RevealButton({ onClick }: { onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="self-start text-sm font-medium text-[var(--night-accent-text)]"
+      className="self-start text-sm font-medium text-accent-strong"
     >
       Показать ответ
     </button>
@@ -119,7 +119,7 @@ export function McqExercise({
         {exercise.options.map((opt, i) => {
           const isAnswer = i === exercise.answer
           const isWrong = wrong.includes(i)
-          let cls = 'border-white/[0.10] hover:border-[var(--night-accent-45)]'
+          let cls = 'border-white/[0.10] hover:border-accent-line'
           // ⚠️ Правильный вариант подсвечиваем ТОЛЬКО когда всё кончено. Пока
           // идёт вторая попытка, зелёная рамка была бы тем же готовым ответом.
           if (isWrong) cls = 'border-red-500 bg-red-950/40 opacity-60'
@@ -190,14 +190,14 @@ export function FillExercise({
     <Card className="flex flex-col gap-3">
       <p className="text-lg font-medium">{exercise.prompt}</p>
       <input
-        className={`w-full rounded-lg border bg-[var(--night-input)] px-3 py-2 outline-none ${
+        className={`w-full rounded-lg border bg-input px-3 py-2 outline-none ${
           done
             ? solved
               ? 'border-emerald-500'
               : 'border-red-500'
             : hint
               ? 'border-amber-500'
-              : 'border-white/[0.10] focus:border-[var(--night-accent-45)]'
+              : 'border-white/[0.10] focus:border-accent-line'
         }`}
         placeholder="Твой ответ…"
         value={value}
@@ -216,13 +216,13 @@ export function FillExercise({
       {!done && attempts === 0 && exercise.hint && (
         <button
           onClick={() => setShowHint((s) => !s)}
-          className="self-start text-xs font-semibold text-[var(--night-accent-text)]"
+          className="self-start text-xs font-semibold text-accent-strong"
         >
           {showHint ? 'скрыть подсказку' : 'подсказка'}
         </button>
       )}
       {!done && attempts === 0 && showHint && exercise.hint && (
-        <p className="text-sm text-[var(--night-text-40)]">{exercise.hint}</p>
+        <p className="text-sm text-fg-muted">{exercise.hint}</p>
       )}
 
       {!done && hint && <HintLine text={hint} />}
@@ -318,13 +318,13 @@ export function OrderExercise({
               key={i}
               onClick={() => !checked && setBuilt((arr) => arr.filter((_, j) => j !== i))}
               disabled={checked}
-              className="rounded-lg bg-[var(--night-accent)] px-3 py-1.5 text-sm text-white"
+              className="rounded-lg bg-accent px-3 py-1.5 text-sm text-white"
             >
               {b.w}
             </button>
           ))}
           {built.length === 0 && (
-            <span className="px-1 py-1 text-sm text-[var(--night-text-40)]">
+            <span className="px-1 py-1 text-sm text-fg-muted">
               нажимай слова снизу по порядку
             </span>
           )}
@@ -340,7 +340,7 @@ export function OrderExercise({
             disabled={checked || usedIdx.has(item.i)}
             className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${
               usedIdx.has(item.i)
-                ? 'border-white/[0.06] text-[var(--night-text-40)]' // использованное слово — приглушено
+                ? 'border-white/[0.06] text-fg-muted' // использованное слово — приглушено
                 : 'border-white/[0.10] active:scale-[0.97]'
             }`}
           >

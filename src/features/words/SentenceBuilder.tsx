@@ -171,7 +171,7 @@ function BuildTask({
 
   return (
     <Card className="flex flex-col gap-3">
-      <p className="text-sm text-[var(--night-text-40)]">
+      <p className="text-sm text-fg-muted">
         Переведи на {lang === 'es' ? 'испанский' : 'английский'}:
       </p>
       <p className="text-lg font-medium">{task.ru}</p>
@@ -187,13 +187,13 @@ function BuildTask({
               key={i}
               onClick={() => !checked && setBuilt((arr) => arr.filter((_, j) => j !== i))}
               disabled={checked}
-              className="rounded-lg bg-[var(--night-accent)] px-3 py-1.5 text-sm text-white"
+              className="rounded-lg bg-accent px-3 py-1.5 text-sm text-white"
             >
               {b.w}
             </button>
           ))}
           {built.length === 0 && (
-            <span className="px-1 py-1 text-sm text-[var(--night-text-40)]">нажимай слова снизу по порядку</span>
+            <span className="px-1 py-1 text-sm text-fg-muted">нажимай слова снизу по порядку</span>
           )}
         </div>
       </div>
@@ -206,7 +206,7 @@ function BuildTask({
             disabled={checked || used.has(item.i)}
             className={`rounded-lg border px-3 py-1.5 text-sm ${
               used.has(item.i)
-                ? 'border-white/[0.08] text-[var(--night-text-25)]'
+                ? 'border-white/[0.08] text-fg-faint'
                 : 'border-white/[0.10]'
             }`}
           >
@@ -217,13 +217,13 @@ function BuildTask({
 
       {!checked && hint && (
         <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
-          {hint} <span className="text-[var(--night-text-40)]">Попробуй ещё раз.</span>
+          {hint} <span className="text-fg-muted">Попробуй ещё раз.</span>
         </p>
       )}
       {!checked && attempts > 0 && (
         <button
           onClick={() => setRevealed(true)}
-          className="self-start text-sm font-medium text-[var(--night-accent-text)]"
+          className="self-start text-sm font-medium text-accent-strong"
         >
           Показать ответ
         </button>
@@ -243,7 +243,7 @@ function BuildTask({
           )}
           <button
             onClick={() => speak(task.target, { lang })}
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-white/[0.08] text-[var(--night-text-70)]"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-white/[0.08] text-fg-secondary"
             aria-label="Озвучить"
           >
             <IconSpeaker size={18} />

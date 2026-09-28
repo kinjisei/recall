@@ -11,7 +11,7 @@ export function WritingHistory({ attempts }: { attempts: WritingAttempt[] }) {
 
   return (
     <div className="flex flex-col gap-1.5">
-      <p className="text-[10px] uppercase tracking-wider text-[var(--night-text-40)]">
+      <p className="text-[10px] uppercase tracking-wider text-fg-muted">
         История попыток ({attempts.length})
       </p>
       {attempts.map((a, i) => {
@@ -24,17 +24,17 @@ export function WritingHistory({ attempts }: { attempts: WritingAttempt[] }) {
             >
               <span className="text-sm">
                 Попытка {i + 1}
-                {a.band ? <span className="text-[var(--night-accent-text)]"> · {a.band}</span> : null}
+                {a.band ? <span className="text-accent-strong"> · {a.band}</span> : null}
               </span>
-              <span className="text-xs text-[var(--night-text-40)]">{when}</span>
+              <span className="text-xs text-fg-muted">{when}</span>
             </button>
             {open === i && (
               <div className="border-t border-white/[0.06] px-3 py-2">
-                <p className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--night-text-70)]">
+                <p className="whitespace-pre-wrap text-sm leading-relaxed text-fg-secondary">
                   {a.essay}
                 </p>
                 {a.teacher_review?.comment && (
-                  <p className="mt-2 rounded-lg bg-white/[0.05] px-2.5 py-1.5 text-sm text-[var(--night-text-70)]">
+                  <p className="mt-2 rounded-lg bg-white/[0.05] px-2.5 py-1.5 text-sm text-fg-secondary">
                     Учитель: {a.teacher_review.comment}
                   </p>
                 )}

@@ -169,7 +169,7 @@ export function SprintMode({ lang, onBack }: { lang: AppLang; onBack: () => void
     <div className="flex min-h-[calc(100dvh-11rem)] flex-col gap-4">
       <GameHeader title={TITLE} onBack={onBack} />
 
-      <div className="flex items-center justify-between text-sm text-[var(--night-text-40)]">
+      <div className="flex items-center justify-between text-sm text-fg-muted">
         <span className="flex items-center gap-1.5">
           <IconTimer size={16} />
           <span className={timeLeft <= 10 ? 'font-bold text-red-400' : ''}>{timeLeft} с</span>
@@ -187,7 +187,7 @@ export function SprintMode({ lang, onBack }: { lang: AppLang; onBack: () => void
         }`}
       >
         <p className="text-3xl font-bold">{pair.item.term}</p>
-        <p className="text-xl text-[var(--night-text-70)]">= {pair.shown} ?</p>
+        <p className="text-xl text-fg-secondary">= {pair.shown} ?</p>
       </Card>
 
       <div className="flex-1" />
@@ -195,13 +195,13 @@ export function SprintMode({ lang, onBack }: { lang: AppLang; onBack: () => void
       <div className="grid grid-cols-2 gap-2.5">
         <button
           onClick={() => answer(false)}
-          className="lift flex min-h-16 items-center justify-center gap-2 rounded-2xl border border-white/[0.12] font-medium text-[var(--night-text-70)]"
+          className="lift flex min-h-16 items-center justify-center gap-2 rounded-2xl border border-white/[0.12] font-medium text-fg-secondary"
         >
           <IconClose size={20} /> Неверно
         </button>
         <button
           onClick={() => answer(true)}
-          className="lift flex min-h-16 items-center justify-center gap-2 rounded-2xl border border-[var(--night-accent-45)] bg-[rgba(145,132,217,.18)] font-medium text-[var(--night-text)]"
+          className="lift flex min-h-16 items-center justify-center gap-2 rounded-2xl border border-accent-line bg-[rgba(145,132,217,.18)] font-medium text-fg"
         >
           <IconCheck size={20} /> Верно
         </button>

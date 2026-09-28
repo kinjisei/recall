@@ -39,7 +39,7 @@ export function ProgramPage() {
       ) : (plans ?? []).length === 0 ? (
         <Card className="text-center">
           <p className="font-semibold">Программы пока нет</p>
-          <p className="mt-1 text-sm text-[var(--night-text-40)]">
+          <p className="mt-1 text-sm text-fg-muted">
             Программу обучения составляет преподаватель — попроси её назначить.
           </p>
         </Card>
@@ -52,7 +52,7 @@ export function ProgramPage() {
                 <h2 className="text-lg font-semibold">
                   {plan.lang.toUpperCase()} · неделя {week} из {plan.weeks.length}
                 </h2>
-                <p className="text-xs text-[var(--night-text-40)]">
+                <p className="text-xs text-fg-muted">
                   Уровень {plan.level} · старт {plan.start_day}
                 </p>
               </div>

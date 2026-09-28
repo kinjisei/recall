@@ -17,13 +17,13 @@ export function Loading({ label = 'Загружаем' }: { label?: string }) {
     <div
       role="status"
       aria-label={label}
-      className="flex flex-col items-center justify-center gap-3 py-16 text-[var(--night-text-40)]"
+      className="flex flex-col items-center justify-center gap-3 py-16 text-fg-muted"
     >
       <span aria-hidden className="flex items-end gap-1.5">
         {[0, 1, 2].map((i) => (
           <span
             key={i}
-            className="dot-bounce h-2 w-2 rounded-full bg-[var(--night-accent)]"
+            className="dot-bounce h-2 w-2 rounded-full bg-accent"
             // сдвиг фазы: синхронные точки читаются как одна мигающая
             style={{ animationDelay: `${i * 160}ms` }}
           />

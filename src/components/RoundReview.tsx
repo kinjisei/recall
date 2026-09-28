@@ -54,7 +54,7 @@ export function RoundReview({
   return (
     <Sheet onClose={onClose} maxH="85dvh" label="Итоги раунда">
         <div className="min-h-0 overflow-y-auto px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-2">
-          <p className="text-[10px] uppercase tracking-wider text-[var(--night-text-40)]">Результаты</p>
+          <p className="text-[10px] uppercase tracking-wider text-fg-muted">Результаты</p>
           <div className="mt-2 flex flex-col gap-2">
             {items.map((it, i) => (
               <div
@@ -68,17 +68,17 @@ export function RoundReview({
                   <div className="min-w-0 flex-1">
                     {it.prompt && <p className="text-sm font-medium">{it.prompt}</p>}
                     {!it.ok && (
-                      <p className="text-sm text-[var(--night-text-40)]">
+                      <p className="text-sm text-fg-muted">
                         Твой ответ: <span className="text-red-300">{it.given}</span>
                       </p>
                     )}
-                    <p className="text-sm text-[var(--night-text-40)]">
+                    <p className="text-sm text-fg-muted">
                       {it.ok ? 'Верно: ' : 'Правильно: '}
                       <span className="text-emerald-300">{it.correct}</span>
                     </p>
                     {!it.ok &&
                       (why[i] ? (
-                        <p className="mt-1 rounded-lg bg-white/[0.04] px-2.5 py-1.5 text-sm leading-relaxed text-[var(--night-text-70)]">
+                        <p className="mt-1 rounded-lg bg-white/[0.04] px-2.5 py-1.5 text-sm leading-relaxed text-fg-secondary">
                           {why[i]}
                         </p>
                       ) : loading[i] ? (
@@ -86,7 +86,7 @@ export function RoundReview({
                       ) : (
                         <button
                           onClick={() => explain(i, it)}
-                          className="mt-1 text-sm font-semibold text-[var(--night-accent-text)]"
+                          className="mt-1 text-sm font-semibold text-accent-strong"
                         >
                           Почему?
                         </button>

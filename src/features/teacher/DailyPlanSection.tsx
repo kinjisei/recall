@@ -68,15 +68,15 @@ export function DailyPlanSection({ studentId }: { studentId: string }) {
 
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-white/[0.08] p-3">
-      <p className="text-xs text-[var(--night-text-40)]">
+      <p className="text-xs text-fg-muted">
         Что ученик делает каждый день. «Слова» включены всегда — это ядро
         повторений. Выполнила весь план — получает «идеальный день» ✦ (виден в
         диагностике и отчёте родителям); серия дней при этом растёт от любого
         одного занятия, как раньше.
       </p>
 
-      <label className="flex min-h-[44px] items-center gap-2.5 rounded-lg bg-white/[0.04] px-3 text-sm text-[var(--night-text-40)]">
-        <input type="checkbox" checked disabled className="h-4 w-4 accent-[var(--night-accent)]" />
+      <label className="flex min-h-[44px] items-center gap-2.5 rounded-lg bg-white/[0.04] px-3 text-sm text-fg-muted">
+        <input type="checkbox" checked disabled className="h-4 w-4 accent-accent" />
         Слова (повторение) — всегда в плане
       </label>
       {KIND_LABELS.map(({ kind, label }) => (
@@ -88,7 +88,7 @@ export function DailyPlanSection({ studentId }: { studentId: string }) {
             type="checkbox"
             checked={kinds.includes(kind)}
             onChange={() => toggleKind(kind)}
-            className="h-4 w-4 accent-[var(--night-accent)]"
+            className="h-4 w-4 accent-accent"
           />
           {label}
         </label>
@@ -101,7 +101,7 @@ export function DailyPlanSection({ studentId }: { studentId: string }) {
             setDraft({ kinds, auto: !auto })
             setNotice(null)
           }}
-          className="h-4 w-4 accent-[var(--night-accent)]"
+          className="h-4 w-4 accent-accent"
         />
         Задания и квесты сами попадают в план
       </label>

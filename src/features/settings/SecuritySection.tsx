@@ -45,12 +45,12 @@ export function SecuritySection() {
   return (
     <section
       id="security"
-      className="animate-fade-up rounded-2xl border border-white/[0.08] bg-[var(--night-surface)] p-4"
+      className="animate-fade-up rounded-2xl border border-white/[0.08] bg-surface p-4"
       style={{ animationDelay: '.23s' }}
     >
       <h2 className="mb-3 font-medium">Безопасность</h2>
-      <p className="text-sm text-[var(--night-text-40)]">
-        Вход по адресу <span className="break-all text-[var(--night-text-70)]">{email}</span>
+      <p className="text-sm text-fg-muted">
+        Вход по адресу <span className="break-all text-fg-secondary">{email}</span>
       </p>
 
       {done && !open && (
@@ -66,7 +66,7 @@ export function SecuritySection() {
             setDone(false)
             setError(null)
           }}
-          className="mt-3 inline-flex min-h-11 items-center rounded-xl border border-white/[0.10] px-4 text-sm font-medium text-[var(--night-text-70)]"
+          className="mt-3 inline-flex min-h-11 items-center rounded-xl border border-white/[0.10] px-4 text-sm font-medium text-fg-secondary"
         >
           Сменить пароль
         </button>
@@ -105,7 +105,7 @@ export function SecuritySection() {
             <button
               type="submit"
               disabled={busy || current.length === 0 || next.length < MIN_PASSWORD}
-              className="min-h-11 flex-1 rounded-xl bg-[var(--night-accent-900)] px-4 text-sm font-medium text-[var(--night-accent-100)] disabled:opacity-40"
+              className="min-h-11 flex-1 rounded-xl bg-accent-soft px-4 text-sm font-medium text-accent-soft-fg disabled:opacity-40"
             >
               {busy ? '…' : 'Сохранить пароль'}
             </button>
@@ -117,7 +117,7 @@ export function SecuritySection() {
                 setNext('')
                 setError(null)
               }}
-              className="min-h-11 rounded-xl border border-white/[0.10] px-4 text-sm font-medium text-[var(--night-text-40)]"
+              className="min-h-11 rounded-xl border border-white/[0.10] px-4 text-sm font-medium text-fg-muted"
             >
               Отмена
             </button>

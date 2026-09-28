@@ -8,12 +8,7 @@
 // рендере — мигания «сперва телефонная раскладка» нет.
 // ============================================================================
 import { useCallback, useSyncExternalStore } from 'react'
-
-/**
- * Компьютер — от 1024 px (64rem, как `lg` в Tailwind). Точки перехода
- * переедут в shared/ui вместе с общими раскладками (PLAN.md Ф1.4).
- */
-export const DESKTOP_QUERY = '(min-width: 64rem)'
+import { DESKTOP_QUERY } from '../ui/breakpoints'
 
 export function useMediaQuery(query: string): boolean {
   const subscribe = useCallback(

@@ -146,7 +146,7 @@ function EnglishReaderPage({
         ariaLabel="Уровень текста"
       />
 
-      <p className="text-sm text-[var(--night-text-40)]">
+      <p className="text-sm text-fg-muted">
         Выбери текст и нажимай на незнакомые слова. Долгое нажатие и протяжка
         по словам — перевод целой фразы.
       </p>
@@ -156,7 +156,7 @@ function EnglishReaderPage({
           <button key={t.id} onClick={() => setTextId(String(t.id))} className="text-left">
             <Card className="transition-transform active:scale-[0.99]">
               <p className="font-semibold">{t.title}</p>
-              <p className="mt-1 line-clamp-2 text-sm text-[var(--night-text-40)]">{t.body}</p>
+              <p className="mt-1 line-clamp-2 text-sm text-fg-muted">{t.body}</p>
             </Card>
           </button>
         ))}

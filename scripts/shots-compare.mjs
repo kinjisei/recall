@@ -26,7 +26,11 @@ import { profileDir } from './_profile.mjs'
 import { APP_URL, scriptEnv } from './_env.mjs'
 
 const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
-const EMAIL = 'shots-compare@recall.test'
+// --url — снимать с другого сервера (например, vite preview отдельной сборки
+// на тестовой базе: тогда код можно править, пока идёт съёмка)
+const BASE = process.argv.includes('--url') ? process.argv[process.argv.indexOf('--url') + 1] : APP_URL
+// свой аккаунт на каждый сервер: два прогона параллельно не удаляют друг другу вход
+const EMAIL = `shots-compare-${new URL(BASE).port || 'p'}@recall.test`
 const PASSWORD = 'ShotsCompare!2026'
 
 // Экраны приёмки. Первые пять — «выглядит как раньше»; остальные — где правка
@@ -87,7 +91,11 @@ async function save(dir) {
     const page = await browser.newPage()
     await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }])
     await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 })
-    await page.goto(`${APP_URL}/login`, { waitUntil: 'networkidle2' })
+    await page.goto(`${BASE}/login`, { waitUntil: 'load' })
+    await page.waitForFunction(
+      () => [...document.querySelectorAll('button')].some((e) => (e.textContent || '').trim() === 'Войти'),
+      { polling: 250, timeout: 20000 },
+    )
     await page.evaluate(() => localStorage.setItem('recall.onboarded', '1'))
     await page.evaluate(() => {
       const b = [...document.querySelectorAll('button')].find((e) => (e.textContent || '').trim() === 'Войти')
@@ -105,7 +113,7 @@ async function save(dir) {
       for (const p of SCREENS) {
         // «тишины в сети» ждём не дольше 10 с: иначе экран с живым соединением
         // держит прогон по полминуты, а к этому моменту он давно нарисован
-        await page.goto(`${APP_URL}${p}`, { waitUntil: 'networkidle2', timeout: 10000 }).catch(() => {})
+        await page.goto(`${BASE}${p}`, { waitUntil: 'networkidle2', timeout: 10000 }).catch(() => {})
         await sleep(2500)
         await page.screenshot({ path: join(dir, fileName(tag, p)), fullPage: true })
       }

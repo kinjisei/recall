@@ -32,23 +32,23 @@ export function EnergyBar({ plan, className = '' }: { plan: MyPlan; className?: 
   const low = e.left <= Math.max(1, Math.round(e.cap * 0.2))
 
   return (
-    <div className={`rounded-2xl border border-white/[0.08] bg-[var(--night-surface)] px-4 py-3 ${className}`}>
+    <div className={`rounded-2xl border border-white/[0.08] bg-surface px-4 py-3 ${className}`}>
       <div className="flex items-center justify-between text-sm">
         <span className="flex items-center gap-1.5 font-medium">
-          <IconSparkle size={16} className={low ? 'text-amber-400' : 'text-[var(--night-accent-text)]'} />
+          <IconSparkle size={16} className={low ? 'text-amber-400' : 'text-accent-strong'} />
           Энергия AI
         </span>
-        <span className={low ? 'text-amber-400' : 'text-[var(--night-text-70)]'}>
+        <span className={low ? 'text-amber-400' : 'text-fg-secondary'}>
           {shownLeft} из {e.cap}
         </span>
       </div>
       <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/[0.07]">
         <div
-          className={`h-full w-full origin-left rounded-full transition-transform duration-500 [transition-timing-function:cubic-bezier(.22,1,.36,1)] ${low ? 'bg-amber-400' : 'bg-[var(--night-accent)]'}`}
+          className={`h-full w-full origin-left rounded-full transition-transform duration-500 [transition-timing-function:cubic-bezier(.22,1,.36,1)] ${low ? 'bg-amber-400' : 'bg-accent'}`}
           style={{ transform: `scaleX(${pct / 100})` }}
         />
       </div>
-      <p className="mt-1.5 text-xs text-[var(--night-text-40)]">
+      <p className="mt-1.5 text-xs text-fg-muted">
         {e.left === 0
           ? 'На сегодня всё — вернётся утром. Слова, тексты и игры работают без энергии.'
           : e.studio

@@ -12,7 +12,7 @@ export function LangSwitch() {
   const { lang, setLang } = useLanguage()
   return (
     <div
-      className="flex gap-0.5 rounded-full border border-white/[0.08] bg-[var(--night-surface)] p-1"
+      className="flex gap-0.5 rounded-full border border-white/[0.08] bg-surface p-1"
       role="group"
       aria-label="Язык изучения"
     >
@@ -23,8 +23,8 @@ export function LangSwitch() {
           aria-pressed={lang === t.id}
           className={`min-h-[44px] min-w-[48px] rounded-full px-4 text-xs font-medium transition-colors ${
             lang === t.id
-              ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
-              : 'text-[var(--night-text-40)] hover:text-[var(--night-text-70)]'
+              ? 'bg-accent-soft text-accent-soft-fg'
+              : 'text-fg-muted hover:text-fg-secondary'
           }`}
         >
           {t.label}

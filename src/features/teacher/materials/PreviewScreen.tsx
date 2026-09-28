@@ -76,10 +76,10 @@ export function PreviewScreen({
 
       <Card>
         <p className="text-lg font-bold">{content.title}</p>
-        <p className="mt-1 text-xs text-[var(--night-text-40)]">
+        <p className="mt-1 text-xs text-fg-muted">
           {req.level} · {req.format} · ~{wordCount} слов
         </p>
-        <p className="mt-3 whitespace-pre-wrap leading-relaxed text-[var(--night-text-70)]">
+        <p className="mt-3 whitespace-pre-wrap leading-relaxed text-fg-secondary">
           {content.body}
         </p>
       </Card>
@@ -87,15 +87,15 @@ export function PreviewScreen({
       <Card className="flex flex-col gap-2">
         <p className="text-sm font-semibold">Упражнения ({content.exercises.length}) — с ответами</p>
         {content.exercises.map((e, i) => (
-          <div key={i} className="rounded-lg bg-[var(--night-surface)] px-3 py-2 text-sm">
-            <p className="text-xs text-[var(--night-text-40)]">
+          <div key={i} className="rounded-lg bg-surface px-3 py-2 text-sm">
+            <p className="text-xs text-fg-muted">
               {i + 1}. {e.kind === 'comprehension' ? 'понимание' : e.kind === 'grammar' ? 'грамматика' : 'словарь'}
             </p>
             <p className="mt-0.5">{e.prompt}</p>
             {e.type === 'mcq' && (
               <p className="mt-0.5 text-emerald-400">
                 ✓ {e.options[e.answer]}
-                <span className="text-[var(--night-text-40)]"> (из: {e.options.join(' · ')})</span>
+                <span className="text-fg-muted"> (из: {e.options.join(' · ')})</span>
               </p>
             )}
             {e.type === 'fill' && (
@@ -104,7 +104,7 @@ export function PreviewScreen({
             {e.type === 'order' && (
               <p className="mt-0.5 text-emerald-400">
                 ✓ {correctAnswerText(e)}
-                <span className="text-[var(--night-text-40)]"> (слова: {e.words.join(' · ')})</span>
+                <span className="text-fg-muted"> (слова: {e.words.join(' · ')})</span>
               </p>
             )}
           </div>

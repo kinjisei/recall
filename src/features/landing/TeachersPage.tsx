@@ -30,14 +30,14 @@ function CTA({ label = 'Попробовать 14 дней бесплатно' }
     <div className="flex flex-col items-center gap-1.5">
       <AppLink
         to="/login?role=teacher"
-        className="lift inline-flex min-h-[52px] items-center justify-center rounded-2xl bg-[var(--night-accent)] px-7 font-medium text-white"
+        className="lift inline-flex min-h-[52px] items-center justify-center rounded-2xl bg-accent px-7 font-medium text-white"
       >
         {label}
       </AppLink>
       {/* ⚠️ «Отмена в любой момент» подразумевала подписку, которой нет:
           оплата — ручной перевод на Kaspi, автосписания не существует. Обещание
           отменить то, что не начиналось, — вежливое враньё. */}
-      <span className="text-xs text-[var(--night-text-40)]">
+      <span className="text-xs text-fg-muted">
         Карта не нужна. Оплата переводом — только если решишь продолжить
       </span>
     </div>
@@ -104,14 +104,14 @@ const FAQ = [
 
 export function TeachersPage() {
   return (
-    <main className="min-h-[100dvh] bg-[var(--night-bg)] text-[var(--night-text)]">
+    <main className="min-h-[100dvh] bg-page text-fg">
       {/* шапка: логотип + вход */}
       <header className="sticky top-0 z-20 border-b border-white/[0.06] bg-[rgba(22,24,38,.85)] pt-[env(safe-area-inset-top)] backdrop-blur-xl">
         <div className="mx-auto flex max-w-screen-md items-center justify-between px-5 py-3">
           <BrandLogo width={92} />
           <AppLink
             to="/login?role=teacher"
-            className="flex min-h-[40px] items-center rounded-full border border-white/[0.12] px-4 text-sm text-[var(--night-text-70)]"
+            className="flex min-h-[40px] items-center rounded-full border border-white/[0.12] px-4 text-sm text-fg-secondary"
           >
             Войти
           </AppLink>
@@ -121,15 +121,15 @@ export function TeachersPage() {
       <div className="mx-auto max-w-screen-md px-5 pb-16">
         {/* ---- Hero ---- */}
         <section className="flex flex-col items-center gap-6 pb-12 pt-10 text-center">
-          <p className="rounded-full border border-[var(--night-accent-45)] px-3 py-1 text-xs text-[var(--night-accent-text)]">
+          <p className="rounded-full border border-accent-line px-3 py-1 text-xs text-accent-strong">
             Для репетиторов английского и испанского
           </p>
           <h1 className="max-w-xl text-[2rem] font-semibold leading-tight tracking-tight">
             Твои ученики занимаются между уроками.
             <br />
-            <span className="text-[var(--night-accent-text)]">А рутину делает AI.</span>
+            <span className="text-accent-strong">А рутину делает AI.</span>
           </h1>
-          <p className="max-w-lg text-[15px] leading-relaxed text-[var(--night-text-60)]">
+          <p className="max-w-lg text-[15px] leading-relaxed text-fg-tertiary">
             Recall берёт на себя то, что съедает вечера: подбор материала, проверку
             работ и учёт, кто что забыл. Стоит меньше одного твоего занятия в месяц.
           </p>
@@ -170,13 +170,13 @@ export function TeachersPage() {
               ['Назначай и проверяй', 'Материалы, наборы слов, квесты и программа — из карточки ученика. Проверка приходит с готовым AI-разбором.'],
               ['Смотри, что было между уроками', 'Диагностика собирается из занятий сама. Раз в месяц — отчёт родителям на печать.'],
             ].map(([t, d], i) => (
-              <div key={t} className="flex gap-3 rounded-2xl border border-white/[0.08] bg-[var(--night-surface)] p-4">
-                <span className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-[var(--night-accent-900)] text-sm font-bold text-[var(--night-accent-100)]">
+              <div key={t} className="flex gap-3 rounded-2xl border border-white/[0.08] bg-surface p-4">
+                <span className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-accent-soft text-sm font-bold text-accent-soft-fg">
                   {i + 1}
                 </span>
                 <div>
                   <p className="font-medium">{t}</p>
-                  <p className="mt-0.5 text-sm leading-relaxed text-[var(--night-text-60)]">{d}</p>
+                  <p className="mt-0.5 text-sm leading-relaxed text-fg-tertiary">{d}</p>
                 </div>
               </div>
             ))}
@@ -188,12 +188,12 @@ export function TeachersPage() {
           <h2 className="text-center text-xl font-semibold">Что внутри</h2>
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
             {TOOLS.map(({ Icon, title, desc }) => (
-              <div key={title} className="rounded-2xl border border-white/[0.08] bg-[var(--night-surface)] p-4">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--night-accent-900)] text-[var(--night-accent-100)]">
+              <div key={title} className="rounded-2xl border border-white/[0.08] bg-surface p-4">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-soft text-accent-soft-fg">
                   <Icon size={18} />
                 </span>
                 <p className="mt-2.5 font-medium">{title}</p>
-                <p className="mt-1 text-sm leading-relaxed text-[var(--night-text-60)]">{desc}</p>
+                <p className="mt-1 text-sm leading-relaxed text-fg-tertiary">{desc}</p>
               </div>
             ))}
           </div>
@@ -201,12 +201,12 @@ export function TeachersPage() {
 
         {/* ---- Между уроками ---- */}
         <section className="border-t border-white/[0.06] py-10">
-          <div className="rounded-2xl border border-[var(--night-accent-30)] bg-[rgba(145,132,217,.07)] p-5">
+          <div className="rounded-2xl border border-accent-line-soft bg-[rgba(145,132,217,.07)] p-5">
             <h2 className="flex items-center gap-2 text-lg font-semibold">
-              <IconCards size={20} className="text-[var(--night-accent-text)]" />
+              <IconCards size={20} className="text-accent-strong" />
               Между уроками ученик не пропадает
             </h2>
-            <p className="mt-2 text-sm leading-relaxed text-[var(--night-text-70)]">
+            <p className="mt-2 text-sm leading-relaxed text-fg-secondary">
               Слова сами возвращаются на повторение тогда, когда начинают
               забываться: ученику не нужно решать, что учить сегодня.
               <br />
@@ -221,7 +221,7 @@ export function TeachersPage() {
         {/* ---- Цены ---- */}
         <section className="border-t border-white/[0.06] py-10">
           <h2 className="text-center text-xl font-semibold">Цена — меньше часа твоей работы</h2>
-          <p className="mx-auto mt-1 max-w-md text-center text-sm text-[var(--night-text-40)]">
+          <p className="mx-auto mt-1 max-w-md text-center text-sm text-fg-muted">
             Средняя ставка репетитора — 5 000 ₸/час. Recall стоит от 3 900 ₸ в месяц,
             а ученикам — бесплатно.
           </p>
@@ -231,8 +231,8 @@ export function TeachersPage() {
                 key={p.title}
                 className={`rounded-2xl border p-4 text-center ${
                   p.hot
-                    ? 'border-[var(--night-accent-45)] bg-[rgba(145,132,217,.10)]'
-                    : 'border-white/[0.08] bg-[var(--night-surface)]'
+                    ? 'border-accent-line bg-[rgba(145,132,217,.10)]'
+                    : 'border-white/[0.08] bg-surface'
                 }`}
               >
                 {/* ⚠️ Здесь стояло «Выбор большинства» — а большинства ещё нет:
@@ -241,16 +241,16 @@ export function TeachersPage() {
                     отказывается в своей же шапке. Осталась наша рекомендация,
                     названная нашей. */}
                 {p.hot && (
-                  <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-[var(--night-accent-text)]">
+                  <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-accent-strong">
                     Советуем начать с него
                   </p>
                 )}
                 <p className="font-medium">{p.title}</p>
                 <p className="mt-1 text-2xl font-semibold">
-                  {p.price} <span className="text-sm font-normal text-[var(--night-text-40)]">₸/мес</span>
+                  {p.price} <span className="text-sm font-normal text-fg-muted">₸/мес</span>
                 </p>
-                <p className="mt-0.5 text-xs text-[var(--night-text-40)]">{p.limit}</p>
-                <p className="mt-2 text-sm text-[var(--night-accent-text)]">{p.per}</p>
+                <p className="mt-0.5 text-xs text-fg-muted">{p.limit}</p>
+                <p className="mt-2 text-sm text-accent-strong">{p.per}</p>
               </div>
             ))}
           </div>
@@ -258,10 +258,10 @@ export function TeachersPage() {
               кода, ни поля, ни строчки в базе. Обещание без способа его
               получить — то же враньё, только вежливое (находка ревью 2В).
               Пока активация тарифов ручная, механизм тоже ручной и назван прямо. */}
-          <p className="mt-3 text-center text-xs text-[var(--night-text-40)]">
+          <p className="mt-3 text-center text-xs text-fg-muted">
             Для сравнения: аналоги берут ~1 000 ₸ за ученика. Привёл коллегу —{' '}
             <a
-              className="text-[var(--night-accent-text)] underline underline-offset-2"
+              className="text-accent-strong underline underline-offset-2"
               href={supportMailto('Recall — привёл коллегу')}
             >
               напиши нам
@@ -278,9 +278,9 @@ export function TeachersPage() {
           <h2 className="text-center text-xl font-semibold">Частые вопросы</h2>
           <div className="mt-6 flex flex-col gap-3">
             {FAQ.map((f) => (
-              <div key={f.q} className="rounded-2xl border border-white/[0.08] bg-[var(--night-surface)] p-4">
+              <div key={f.q} className="rounded-2xl border border-white/[0.08] bg-surface p-4">
                 <p className="font-medium">{f.q}</p>
-                <p className="mt-1 text-sm leading-relaxed text-[var(--night-text-60)]">{f.a}</p>
+                <p className="mt-1 text-sm leading-relaxed text-fg-tertiary">{f.a}</p>
               </div>
             ))}
           </div>
@@ -289,7 +289,7 @@ export function TeachersPage() {
         {/* ---- Финал ---- */}
         <section className="border-t border-white/[0.06] py-12 text-center">
           <h2 className="text-xl font-semibold">14 дней — достаточно, чтобы понять</h2>
-          <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-[var(--night-text-60)]">
+          <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-fg-tertiary">
             Подключи одного реального ученика, назначь ему материал и посмотри на диагностику
             через неделю. Если не сэкономит тебе время — просто не плати.
           </p>
@@ -298,14 +298,14 @@ export function TeachersPage() {
           </div>
           {/* Живой человек на другом конце — для холодного посетителя это часто
               решает больше, чем ещё один блок про возможности */}
-          <p className="mt-8 text-sm text-[var(--night-text-60)]">
+          <p className="mt-8 text-sm text-fg-tertiary">
             Вопросы до регистрации?{' '}
-            <a href={supportMailto('Recall — вопрос от преподавателя')} className="text-[var(--night-accent-text)] underline">
+            <a href={supportMailto('Recall — вопрос от преподавателя')} className="text-accent-strong underline">
               Напиши мне
             </a>
             . {SUPPORT_SLA}.
           </p>
-          <p className="mt-4 text-xs text-[var(--night-text-40)]">
+          <p className="mt-4 text-xs text-fg-muted">
             <AppLink to="/pricing" className="underline">Все тарифы</AppLink> ·{' '}
             <AppLink to="/terms" className="underline">Условия</AppLink> ·{' '}
             <AppLink to="/privacy" className="underline">Конфиденциальность</AppLink>

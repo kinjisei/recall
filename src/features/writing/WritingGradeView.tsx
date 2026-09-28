@@ -9,7 +9,7 @@ import type { WritingGrade, WritingMode } from '../../types'
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="mb-1 text-[10px] uppercase tracking-wider text-[var(--night-text-40)]">{title}</p>
+      <p className="mb-1 text-[10px] uppercase tracking-wider text-fg-muted">{title}</p>
       {children}
     </div>
   )
@@ -19,12 +19,12 @@ export function WritingGradeView({ grade, mode }: { grade: WritingGrade; mode: W
   return (
     <div className="flex flex-col gap-4">
       {mode === 'ielts' ? (
-        <div className="rounded-2xl bg-[var(--night-accent-900)] px-4 py-3 text-center">
-          <p className="text-3xl font-bold text-[var(--night-accent-100)]">
+        <div className="rounded-2xl bg-accent-soft px-4 py-3 text-center">
+          <p className="text-3xl font-bold text-accent-soft-fg">
             {grade.band != null ? `Band ${grade.band}` : '—'}
           </p>
           {grade.criteria && (
-            <div className="mt-2 grid grid-cols-4 gap-1 text-xs text-[var(--night-text-70)]">
+            <div className="mt-2 grid grid-cols-4 gap-1 text-xs text-fg-secondary">
               {(
                 [
                   ['Task', grade.criteria.task],
@@ -34,7 +34,7 @@ export function WritingGradeView({ grade, mode }: { grade: WritingGrade; mode: W
                 ] as [string, number][]
               ).map(([k, v]) => (
                 <div key={k}>
-                  <p className="font-semibold text-[var(--night-text)]">{v}</p>
+                  <p className="font-semibold text-fg">{v}</p>
                   <p>{k}</p>
                 </div>
               ))}
@@ -44,7 +44,7 @@ export function WritingGradeView({ grade, mode }: { grade: WritingGrade; mode: W
       ) : (
         <div className="flex flex-col gap-3">
           <p className="text-lg font-bold">
-            Уровень текста: <span className="text-[var(--night-accent-text)]">{grade.level || '—'}</span>
+            Уровень текста: <span className="text-accent-strong">{grade.level || '—'}</span>
           </p>
           {grade.targetWords && grade.targetWords.length > 0 && (
             <Section title="Целевые слова">
@@ -77,11 +77,11 @@ export function WritingGradeView({ grade, mode }: { grade: WritingGrade; mode: W
             {grade.focus.map((f, i) => (
               <div
                 key={i}
-                className="rounded-xl border border-[var(--night-accent-45)]/40 bg-[var(--night-accent-900)]/25 px-3 py-2.5"
+                className="rounded-xl border border-accent-line/40 bg-accent-soft/25 px-3 py-2.5"
               >
-                <p className="text-sm font-medium text-[var(--night-accent-100)]">{f.type}</p>
+                <p className="text-sm font-medium text-accent-soft-fg">{f.type}</p>
                 {f.why && (
-                  <p className="mt-0.5 text-sm text-[var(--night-text-70)]">{f.why}</p>
+                  <p className="mt-0.5 text-sm text-fg-secondary">{f.why}</p>
                 )}
                 <div className="mt-2 flex flex-col gap-1 text-sm">
                   {f.examples.map((e, j) => (
@@ -103,7 +103,7 @@ export function WritingGradeView({ grade, mode }: { grade: WritingGrade; mode: W
         <Section title={grade.focus?.length ? `Все правки · ${grade.errors.length}` : 'Ошибки'}>
           {grade.focus?.length ? (
             <details className="group">
-              <summary className="cursor-pointer list-none text-sm font-medium text-[var(--night-accent-text)]">
+              <summary className="cursor-pointer list-none text-sm font-medium text-accent-strong">
                 Показать полный разбор
               </summary>
               <div className="mt-2 flex flex-col gap-1.5">
@@ -130,7 +130,7 @@ export function WritingGradeView({ grade, mode }: { grade: WritingGrade; mode: W
 
       {grade.strengths && grade.strengths.length > 0 && (
         <Section title="Сильные стороны">
-          <ul className="flex flex-col gap-1 text-sm text-[var(--night-text-70)]">
+          <ul className="flex flex-col gap-1 text-sm text-fg-secondary">
             {grade.strengths.map((s, i) => <li key={i}>+ {s}</li>)}
           </ul>
         </Section>
@@ -138,7 +138,7 @@ export function WritingGradeView({ grade, mode }: { grade: WritingGrade; mode: W
 
       {grade.improve && grade.improve.length > 0 && (
         <Section title="Что подтянуть">
-          <ul className="flex flex-col gap-1 text-sm text-[var(--night-text-70)]">
+          <ul className="flex flex-col gap-1 text-sm text-fg-secondary">
             {grade.improve.map((s, i) => <li key={i}>• {s}</li>)}
           </ul>
         </Section>
@@ -148,7 +148,7 @@ export function WritingGradeView({ grade, mode }: { grade: WritingGrade; mode: W
         <Section title="Повторить">
           <div className="flex flex-wrap gap-1.5">
             {[...(grade.topics ?? []), ...(grade.words ?? [])].map((t, i) => (
-              <span key={i} className="rounded-full bg-white/[0.06] px-2.5 py-1 text-xs text-[var(--night-text-70)]">
+              <span key={i} className="rounded-full bg-white/[0.06] px-2.5 py-1 text-xs text-fg-secondary">
                 {t}
               </span>
             ))}
@@ -161,7 +161,7 @@ export function WritingGradeView({ grade, mode }: { grade: WritingGrade; mode: W
           <div className="flex flex-col gap-1.5">
             {grade.rewrites.map((r, i) => (
               <div key={i} className="rounded-xl bg-white/[0.04] px-3 py-2 text-sm">
-                <p className="text-[var(--night-text-40)]">{r.was}</p>
+                <p className="text-fg-muted">{r.was}</p>
                 <p className="text-emerald-300">→ {r.better}</p>
               </div>
             ))}
@@ -176,7 +176,7 @@ function Chip({ label, ok }: { label: string; ok: boolean }) {
   return (
     <span
       className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs ${
-        ok ? 'bg-emerald-500/15 text-emerald-300' : 'bg-white/[0.06] text-[var(--night-text-40)]'
+        ok ? 'bg-emerald-500/15 text-emerald-300' : 'bg-white/[0.06] text-fg-muted'
       }`}
     >
       {ok ? <IconCheck size={12} /> : <IconClose size={12} />}

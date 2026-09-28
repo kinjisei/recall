@@ -87,8 +87,8 @@ export function RequestForm({
   const chip = (active: boolean) =>
     `rounded-lg px-3 py-1.5 text-sm font-semibold ${
       active
-        ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
-        : 'bg-white/[0.07] text-[var(--night-text-70)]'
+        ? 'bg-accent-soft text-accent-soft-fg'
+        : 'bg-white/[0.07] text-fg-secondary'
     }`
 
   return (
@@ -96,7 +96,7 @@ export function RequestForm({
       <p className="font-semibold">Новый материал</p>
 
       <div>
-        <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">Источник текста</p>
+        <p className="mb-1 text-xs font-semibold text-fg-muted">Источник текста</p>
         <div className="flex gap-2">
           <button className={chip(source === 'generate')} onClick={() => setSource('generate')}>
             Сгенерировать
@@ -108,7 +108,7 @@ export function RequestForm({
       </div>
 
       <div>
-        <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">Язык</p>
+        <p className="mb-1 text-xs font-semibold text-fg-muted">Язык</p>
         <div className="flex gap-2">
           <button className={chip(lang === 'en')} onClick={() => setLang('en')}>Английский</button>
           <button className={chip(lang === 'es')} onClick={() => setLang('es')}>Испанский</button>
@@ -116,7 +116,7 @@ export function RequestForm({
       </div>
 
       <div>
-        <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">Уровень ученика</p>
+        <p className="mb-1 text-xs font-semibold text-fg-muted">Уровень ученика</p>
         <div className="flex flex-wrap gap-2">
           {LEVELS.map((l) => (
             <button key={l} className={chip(level === l)} onClick={() => setLevel(l)}>{l}</button>
@@ -129,7 +129,7 @@ export function RequestForm({
           строит задание вокруг них. Без выбора материал общий, как раньше. */}
       {students.length > 0 && (
         <div>
-          <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">Для кого</p>
+          <p className="mb-1 text-xs font-semibold text-fg-muted">Для кого</p>
           <div className="flex flex-wrap gap-2">
             <button className={chip(studentId === null)} onClick={() => setStudentId(null)}>
               Общий материал
@@ -144,7 +144,7 @@ export function RequestForm({
               </button>
             ))}
           </div>
-          <p className="mt-1 text-xs text-[var(--night-text-40)]">
+          <p className="mt-1 text-xs text-fg-muted">
             {studentId
               ? 'AI учтёт слова и темы, где этот ученик ошибается.'
               : 'Без ученика материал соберётся по общим правилам уровня.'}
@@ -155,7 +155,7 @@ export function RequestForm({
       {source === 'generate' ? (
         <>
           <div>
-            <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">Тема текста *</p>
+            <p className="mb-1 text-xs font-semibold text-fg-muted">Тема текста *</p>
             <input
               className={inputClass}
               placeholder="Например: Путешествие в горы"
@@ -165,7 +165,7 @@ export function RequestForm({
           </div>
 
           <div>
-            <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">Формат</p>
+            <p className="mb-1 text-xs font-semibold text-fg-muted">Формат</p>
             <div className="flex flex-wrap gap-2">
               {MATERIAL_FORMATS.map((f) => (
                 <button key={f} className={chip(format === f)} onClick={() => setFormat(f)}>{f}</button>
@@ -174,7 +174,7 @@ export function RequestForm({
           </div>
 
           <div>
-            <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">Длина (слов)</p>
+            <p className="mb-1 text-xs font-semibold text-fg-muted">Длина (слов)</p>
             <div className="flex gap-2">
               {MATERIAL_LENGTHS.map((l) => (
                 <button key={l} className={chip(lengthRange === l)} onClick={() => setLengthRange(l)}>{l}</button>
@@ -184,7 +184,7 @@ export function RequestForm({
         </>
       ) : (
         <div>
-          <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">
+          <p className="mb-1 text-xs font-semibold text-fg-muted">
             Твой текст (упражнения соберутся строго по нему)
           </p>
           <textarea
@@ -194,14 +194,14 @@ export function RequestForm({
             maxLength={MY_TEXT_LIMIT}
             onChange={(e) => setBody(e.target.value)}
           />
-          <p className="mt-1 text-right text-xs text-[var(--night-text-40)]">
+          <p className="mt-1 text-right text-xs text-fg-muted">
             {body.trim().length} / {MY_TEXT_LIMIT}
           </p>
         </div>
       )}
 
       <div>
-        <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">
+        <p className="mb-1 text-xs font-semibold text-fg-muted">
           {source === 'own'
             ? 'Слова для акцента в словаре (необязательно)'
             : 'Слова через запятую или тема словаря (необязательно)'}
@@ -215,7 +215,7 @@ export function RequestForm({
       </div>
 
       <div>
-        <p className="mb-1 text-xs font-semibold text-[var(--night-text-40)]">
+        <p className="mb-1 text-xs font-semibold text-fg-muted">
           {source === 'own' ? 'Акцент на грамматике (необязательно)' : 'Грамматическая тема (необязательно)'}
         </p>
         <input

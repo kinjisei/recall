@@ -15,8 +15,8 @@ export type WordStatus = 'new' | 'learning' | 'learned'
  *  («Мои слова») и у преподавателя, чтобы «учу» не был двух разных цветов.
  *  Подпись задаётся на месте (перспектива: «учу» у себя / «учится» у учителя). */
 export const WORD_STATUS_CLS: Record<WordStatus, string> = {
-  new: 'bg-white/[0.08] text-[var(--night-text-40)]',
-  learning: 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]',
+  new: 'bg-white/[0.08] text-fg-muted',
+  learning: 'bg-accent-soft text-accent-soft-fg',
   learned: 'bg-emerald-500/20 text-emerald-300',
 }
 

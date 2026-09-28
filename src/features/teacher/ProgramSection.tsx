@@ -26,7 +26,7 @@ const LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1'] as const
 const WEEK_OPTIONS = [2, 3, 4, 6, 8] as const
 
 const inputCls =
-  'w-full rounded-lg border border-white/[0.10] bg-[var(--night-input)] px-3 py-2 text-sm outline-none focus:border-[var(--night-accent-45)]'
+  'w-full rounded-lg border border-white/[0.10] bg-input px-3 py-2 text-sm outline-none focus:border-accent-line'
 
 export function ProgramSection({ studentId }: { studentId: string }) {
   const [lang, setLang] = useState<AppLang>('en')
@@ -52,8 +52,8 @@ export function ProgramSection({ studentId }: { studentId: string }) {
             }}
             className={`min-h-[36px] rounded-lg px-3 text-xs font-semibold ${
               lang === l
-                ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
-                : 'bg-white/[0.07] text-[var(--night-text-70)]'
+                ? 'bg-accent-soft text-accent-soft-fg'
+                : 'bg-white/[0.07] text-fg-secondary'
             }`}
           >
             {l.toUpperCase()}
@@ -118,12 +118,12 @@ function ActivePlanView({
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-xs text-[var(--night-text-40)]">
+      <p className="text-xs text-fg-muted">
         Уровень {plan.level} · {plan.weeks.length} нед. · старт {plan.start_day} · неделя {week} из{' '}
         {plan.weeks.length}
       </p>
       {plan.summary && (
-        <p className="rounded-lg bg-white/[0.05] px-3 py-2 text-xs leading-relaxed text-[var(--night-text-60)]">
+        <p className="rounded-lg bg-white/[0.05] px-3 py-2 text-xs leading-relaxed text-fg-tertiary">
           {plan.summary}
         </p>
       )}
@@ -207,7 +207,7 @@ function PlanForm({
       {!preview ? (
         <>
           <div className="grid grid-cols-2 gap-2">
-            <div className="flex flex-col gap-1 text-xs text-[var(--night-text-40)]">
+            <div className="flex flex-col gap-1 text-xs text-fg-muted">
               Уровень ученика
               <Picker
                 value={level}
@@ -216,7 +216,7 @@ function PlanForm({
                 options={LEVELS.map((l) => ({ id: l, label: l }))}
               />
             </div>
-            <div className="flex flex-col gap-1 text-xs text-[var(--night-text-40)]">
+            <div className="flex flex-col gap-1 text-xs text-fg-muted">
               Недель
               <Picker
                 value={String(weeks)}
@@ -226,7 +226,7 @@ function PlanForm({
               />
             </div>
           </div>
-          <label className="flex flex-col gap-1 text-xs text-[var(--night-text-40)]">
+          <label className="flex flex-col gap-1 text-xs text-fg-muted">
             Цель / пожелания (необязательно)
             <textarea
               value={goal}
@@ -236,7 +236,7 @@ function PlanForm({
               className={inputCls}
             />
           </label>
-          <p className="text-xs text-[var(--night-text-40)]">
+          <p className="text-xs text-fg-muted">
             AI учтёт диагностику ученика: слабые темы грамматики, буксующие слова и баллы по
             заданиям.
           </p>
@@ -259,12 +259,12 @@ function PlanForm({
       ) : (
         <>
           {preview.summary && (
-            <p className="rounded-lg bg-white/[0.05] px-3 py-2 text-xs leading-relaxed text-[var(--night-text-60)]">
+            <p className="rounded-lg bg-white/[0.05] px-3 py-2 text-xs leading-relaxed text-fg-tertiary">
               {preview.summary}
             </p>
           )}
           <PlanView weeks={preview.weeks} />
-          <label className="flex flex-col gap-1 text-xs text-[var(--night-text-40)]">
+          <label className="flex flex-col gap-1 text-xs text-fg-muted">
             Правки (что изменить при пересоставлении)
             <textarea
               value={feedback}

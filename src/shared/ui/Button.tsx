@@ -12,11 +12,11 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 // вторичная — акцентная outline, ghost — только текст акцентом.
 const styles: Record<Variant, string> = {
   primary:
-    'bg-[var(--night-text)] text-[var(--night-bg)] hover:brightness-95 active:brightness-90',
+    'bg-fg text-page hover:brightness-95 active:brightness-90',
   secondary:
-    'border border-[var(--night-accent-45)] bg-[rgba(145,132,217,.14)] text-[var(--night-text)] hover:bg-[rgba(145,132,217,.22)]',
+    'border border-accent-line bg-[rgba(145,132,217,.14)] text-fg hover:bg-[rgba(145,132,217,.22)]',
   ghost:
-    'bg-transparent text-[var(--night-accent-text)] hover:bg-white/[0.06]',
+    'bg-transparent text-accent-strong hover:bg-white/[0.06]',
   danger: 'bg-red-500/90 text-white hover:bg-red-500',
 }
 

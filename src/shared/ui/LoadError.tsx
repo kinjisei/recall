@@ -16,7 +16,7 @@ export function LoadError({
       <IconWarning size={28} className="text-red-300" />
       <div>
         <p className="font-medium">{message}</p>
-        <p className="mt-1 text-sm text-[var(--night-text-40)]">
+        <p className="mt-1 text-sm text-fg-muted">
           Проверь соединение — данные не потеряны.
         </p>
       </div>

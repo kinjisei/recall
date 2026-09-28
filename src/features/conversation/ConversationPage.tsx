@@ -56,7 +56,7 @@ export function ConversationPage() {
           одну вещь. */}
       <header className="min-w-0">
         <h1 className="text-2xl font-medium tracking-tight">Диалог</h1>
-        <p className="text-xs text-[var(--night-text-40)]">
+        <p className="text-xs text-fg-muted">
           {/* Уровень показываем, только если он ИЗВЕСТЕН: у нового аккаунта
               его нет, а B1 здесь — рабочее умолчание для промпта, не факт
               о человеке. Раньше экран уверенно писал «уровень B1». */}
@@ -160,9 +160,9 @@ function chatSystemPrompt(level: CEFRLevel, lang: AppLang, goal: LearningGoal | 
  * сообщения могли начинаться с эмодзи (✏️/✅/📚) — распознаём и их.
  */
 const MARKERS = [
-  { re: /^(?:✏️|\[fix\])\s*/i, Icon: IconPencil, cls: 'text-[var(--night-accent-text)]' },
+  { re: /^(?:✏️|\[fix\])\s*/i, Icon: IconPencil, cls: 'text-accent-strong' },
   { re: /^(?:✅|\[ok\])\s*/i, Icon: IconCheck, cls: 'text-emerald-400' },
-  { re: /^(?:📚|\[topic\])\s*/i, Icon: IconMaterials, cls: 'font-medium text-[var(--night-accent-text)]' },
+  { re: /^(?:📚|\[topic\])\s*/i, Icon: IconMaterials, cls: 'font-medium text-accent-strong' },
 ] as const
 
 function AssistantText({ content }: { content: string }) {
@@ -349,12 +349,12 @@ function ChatSection({
       {loadingHistory && msgs.length === 0 && <Loading label="Открываем диалог" />}
       {!loadingHistory && msgs.length === 0 && (
         <Card className="flex-none">
-          <p className="text-[var(--night-text-70)]">
+          <p className="text-fg-secondary">
             {lang === 'es'
               ? 'Напиши что-нибудь по-испански — AI ответит просто, поддержит разговор и отдельной строкой поправит ошибки.'
               : 'Напиши что-нибудь по-английски — AI ответит, поддержит разговор и отдельной строкой поправит ошибки.'}
           </p>
-          <p className="mt-2 text-sm text-[var(--night-text-40)]">
+          <p className="mt-2 text-sm text-fg-muted">
             {lang === 'es'
               ? 'Например: «¡Hola! Me llamo Iván. ¿Cómo estás?»'
               : 'Например: «Hi! I want to talk about travelling.»'}
@@ -368,15 +368,15 @@ function ChatSection({
             key={i}
             className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-[15px] leading-relaxed ${
               m.role === 'user'
-                ? 'self-end rounded-br-md border border-[var(--night-accent-45)] bg-[rgba(145,132,217,.18)] text-[var(--night-text)]'
-                : 'self-start rounded-bl-md border border-white/[0.08] bg-[var(--night-surface)] text-[var(--night-text)]'
+                ? 'self-end rounded-br-md border border-accent-line bg-[rgba(145,132,217,.18)] text-fg'
+                : 'self-start rounded-bl-md border border-white/[0.08] bg-surface text-fg'
             }`}
           >
             {m.role === 'assistant' ? <AssistantText content={m.content} /> : m.content}
           </div>
         ))}
         {busy && !streaming && (
-          <div className="self-start rounded-2xl rounded-bl-md border border-white/[0.08] bg-[var(--night-surface)] px-4 py-2.5 text-[var(--night-text-40)]">
+          <div className="self-start rounded-2xl rounded-bl-md border border-white/[0.08] bg-surface px-4 py-2.5 text-fg-muted">
             <Thinking label="печатает" />
           </div>
         )}
@@ -399,14 +399,14 @@ function ChatSection({
           даёт её высоту kb) — поднимаем панель над ней; иначе — над навигацией
           каркаса (положение считает useChatList). Заголовок не уезжает. */}
       <div
-        className="fixed inset-x-0 z-30 mx-auto max-w-screen-sm border-t border-white/[0.06] bg-[var(--night-bg)] px-4 pb-2 pt-2"
+        className="fixed inset-x-0 z-30 mx-auto max-w-screen-sm border-t border-white/[0.06] bg-page px-4 pb-2 pt-2"
         style={barStyle}
       >
         {/* поле без рамки + квадратная accent-кнопка отправки */}
         <form onSubmit={send} className="flex items-center gap-2.5">
           <input
             aria-label={lang === 'es' ? 'Сообщение по-испански' : 'Сообщение по-английски'}
-            className="h-12 min-w-0 flex-1 rounded-[14px] border-none bg-[var(--night-input)] px-4 text-[15px] outline-none placeholder:text-[var(--night-text-40)] focus:ring-2 focus:ring-[var(--night-accent-45)]"
+            className="h-12 min-w-0 flex-1 rounded-[14px] border-none bg-input px-4 text-[15px] outline-none placeholder:text-fg-muted focus:ring-2 focus:ring-accent-line"
             placeholder={lang === 'es' ? 'Escribe en español…' : 'Write in English…'}
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -416,7 +416,7 @@ function ChatSection({
             type="submit"
             aria-label="Отправить"
             disabled={busy || !input.trim()}
-            className="lift flex h-12 w-12 flex-none items-center justify-center rounded-[14px] border border-[var(--night-accent-45)] bg-[rgba(145,132,217,.14)] text-[var(--night-accent-100)] transition-colors hover:bg-[rgba(145,132,217,.22)] disabled:opacity-40"
+            className="lift flex h-12 w-12 flex-none items-center justify-center rounded-[14px] border border-accent-line bg-[rgba(145,132,217,.14)] text-accent-soft-fg transition-colors hover:bg-[rgba(145,132,217,.22)] disabled:opacity-40"
           >
             <IconSend size={20} />
           </button>
@@ -425,7 +425,7 @@ function ChatSection({
         {msgs.length > 0 && (
           <button
             onClick={reset}
-            className="mx-auto mt-1.5 block px-3 py-0.5 text-xs text-[var(--night-text-40)]"
+            className="mx-auto mt-1.5 block px-3 py-0.5 text-xs text-fg-muted"
           >
             Новый диалог
           </button>

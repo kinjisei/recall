@@ -89,12 +89,12 @@ export function PlacementSection({
         className="flex min-h-[44px] w-full items-center justify-between px-3 py-2 text-left text-sm font-medium"
       >
         Тест уровня
-        <span className="text-[var(--night-text-40)]">{open ? '▲' : '▼'}</span>
+        <span className="text-fg-muted">{open ? '▲' : '▼'}</span>
       </button>
 
       {open && (
         <div className="flex flex-col gap-3 border-t border-white/[0.08] px-3 py-3">
-          <p className="text-xs leading-relaxed text-[var(--night-text-40)]">
+          <p className="text-xs leading-relaxed text-fg-muted">
             Назначь тест, если не знаешь уровень {studentName}. Тест появится у
             ученика в «Учёбе», а результат вернётся сюда.
           </p>
@@ -121,7 +121,7 @@ export function PlacementSection({
           ) : rows === null ? (
             <RowsSkeleton count={2} height={44} />
           ) : rows.length === 0 ? (
-            <p className="text-sm text-[var(--night-text-40)]">Тестов пока не было.</p>
+            <p className="text-sm text-fg-muted">Тестов пока не было.</p>
           ) : (
             <ul className="flex flex-col gap-2">
               {rows.map((r) => (
@@ -137,10 +137,10 @@ export function PlacementSection({
                           {r.result_level}
                         </span>
                       ) : (
-                        <span className="ml-2 text-[var(--night-text-40)]">ждём результат</span>
+                        <span className="ml-2 text-fg-muted">ждём результат</span>
                       )}
                     </p>
-                    <p className="text-xs text-[var(--night-text-40)]">
+                    <p className="text-xs text-fg-muted">
                       назначен {fmt(r.created_at)}
                       {r.completed_at ? ` · пройден ${fmt(r.completed_at)}` : ''}
                     </p>

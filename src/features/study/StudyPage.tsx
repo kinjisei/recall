@@ -197,7 +197,7 @@ export function StudyPage() {
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-medium tracking-tight">Учёба</h1>
-      <p className="-mt-2 text-sm text-[var(--night-text-40)]">
+      <p className="-mt-2 text-sm text-fg-muted">
         Тексты, грамматика и словарь — всё для изучения нового.
       </p>
       <HowItWorks>
@@ -246,7 +246,7 @@ export function StudyPage() {
               !!hub?.placement
             const SectionLabel = ({ text }: { text: string }) => (
               <p
-                className="animate-fade-up pt-1 text-[11px] font-medium uppercase tracking-wider text-[var(--night-text-40)]"
+                className="animate-fade-up pt-1 text-[11px] font-medium uppercase tracking-wider text-fg-muted"
                 style={stagger()}
               >
                 {text}
@@ -276,7 +276,7 @@ export function StudyPage() {
                         active={left > 0}
                         trailing={
                           left > 0 ? (
-                            <span className="flex-none rounded-full bg-[var(--night-accent)] px-2 py-0.5 text-xs font-medium text-white">
+                            <span className="flex-none rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-white">
                               {left}
                             </span>
                           ) : undefined
@@ -299,7 +299,7 @@ export function StudyPage() {
                     active={assignments.pending > 0}
                     trailing={
                       assignments.pending > 0 ? (
-                        <span className="flex-none rounded-full bg-[var(--night-accent)] px-2 py-0.5 text-xs font-medium text-white">
+                        <span className="flex-none rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-white">
                           {assignments.pending}
                         </span>
                       ) : undefined
@@ -321,7 +321,7 @@ export function StudyPage() {
                     active={quests.active > 0}
                     trailing={
                       quests.active > 0 ? (
-                        <span className="flex-none rounded-full bg-[var(--night-accent)] px-2 py-0.5 text-xs font-medium text-white">
+                        <span className="flex-none rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-white">
                           {quests.active}
                         </span>
                       ) : undefined
@@ -409,7 +409,7 @@ export function StudyPage() {
                     active={writing.pending > 0}
                     trailing={
                       writing.pending > 0 ? (
-                        <span className="flex-none rounded-full bg-[var(--night-accent)] px-2 py-0.5 text-xs font-medium text-white">
+                        <span className="flex-none rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-white">
                           {writing.pending}
                         </span>
                       ) : undefined
@@ -547,7 +547,7 @@ function WordsStudy({ onBack }: { onBack: () => void }) {
           идти (замер ревью 1Б: 3 тапа против 2). Теперь у каждой вкладки одна
           роль — здесь слова собирают, там на них тренируются, — а вместо
           спрятанного дубля стоит указатель. */}
-      <p className="text-sm text-[var(--night-text-40)]">
+      <p className="text-sm text-fg-muted">
         Повторение и игры на этих словах — во вкладке «Практика».
       </p>
     </div>

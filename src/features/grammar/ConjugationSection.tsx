@@ -93,8 +93,8 @@ function SubTab({
       onClick={onClick}
       className={`rounded-lg px-4 py-2 text-sm font-semibold ${
         active
-          ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
-          : 'bg-white/[0.07] text-[var(--night-text-70)]'
+          ? 'bg-accent-soft text-accent-soft-fg'
+          : 'bg-white/[0.07] text-fg-secondary'
       }`}
     >
       {children}
@@ -149,13 +149,13 @@ function ReferenceView({ reference }: { reference: ConjugationReference }) {
           <div key={level}>
             <button
               onClick={() => setOpenLevel((cur) => (cur === level ? null : level))}
-              className="flex w-full items-center justify-between rounded-lg bg-[var(--night-surface)] px-3 py-2 text-left"
+              className="flex w-full items-center justify-between rounded-lg bg-surface px-3 py-2 text-left"
             >
               <span className="text-sm font-bold">
                 Уровень {level}{' '}
-                <span className="font-normal text-[var(--night-text-40)]">· {list.length} времён</span>
+                <span className="font-normal text-fg-muted">· {list.length} времён</span>
               </span>
-              <span className="text-[var(--night-text-40)]">{isOpen ? '▾' : '▸'}</span>
+              <span className="text-fg-muted">{isOpen ? '▾' : '▸'}</span>
             </button>
 
             <Reveal open={isOpen}>
@@ -164,7 +164,7 @@ function ReferenceView({ reference }: { reference: ConjugationReference }) {
                   <button key={t.id} onClick={() => setTenseId(String(t.id))} className="text-left">
                     <Card className="transition-transform active:scale-[0.99]">
                       <p className="font-medium">{t.nameRu}</p>
-                      <p className="text-xs text-[var(--night-text-40)]">{t.name}</p>
+                      <p className="text-xs text-fg-muted">{t.name}</p>
                     </Card>
                   </button>
                 ))}
@@ -192,24 +192,24 @@ function TenseDetail({
         <BackButton onClick={onBack} />
         <div className="min-w-0">
           <h2 className="truncate text-lg font-medium tracking-tight">{tense.nameRu}</h2>
-          <p className="truncate text-sm text-[var(--night-text-40)]">{tense.name}</p>
+          <p className="truncate text-sm text-fg-muted">{tense.name}</p>
         </div>
       </div>
 
       <Card className="flex flex-col gap-2">
-        <p className="text-sm text-[var(--night-text-70)]">{tense.usage}</p>
-        <div className="rounded-lg bg-[var(--night-surface)] px-3 py-2">
+        <p className="text-sm text-fg-secondary">{tense.usage}</p>
+        <div className="rounded-lg bg-surface px-3 py-2">
           <div className="flex items-center gap-2">
             <p className="font-medium">{tense.example}</p>
             <button
               onClick={() => speak(tense.example, { lang: 'es' })}
-              className="rounded-full bg-[var(--night-surface)] px-2 py-1"
+              className="rounded-full bg-surface px-2 py-1"
               aria-label="Озвучить"
             >
               <IconSpeaker size={15} />
             </button>
           </div>
-          <p className="mt-0.5 text-sm text-[var(--night-text-40)]">{tense.exampleRu}</p>
+          <p className="mt-0.5 text-sm text-fg-muted">{tense.exampleRu}</p>
         </div>
       </Card>
 
@@ -235,7 +235,7 @@ function TenseDetail({
             cells: v.forms,
           }))}
         />
-        <p className="mt-1 text-xs text-[var(--night-text-40)]">* — неправильный глагол</p>
+        <p className="mt-1 text-xs text-fg-muted">* — неправильный глагол</p>
       </div>
     </div>
   )
@@ -256,13 +256,13 @@ function ConjTable({
       <table className="min-w-full border-collapse text-sm">
         <thead>
           <tr>
-            <th className="border border-white/[0.08] bg-[var(--night-surface)] px-2 py-1 text-left font-semibold">
+            <th className="border border-white/[0.08] bg-surface px-2 py-1 text-left font-semibold">
               {firstHeader}
             </th>
             {persons.map((p, i) => (
               <th
                 key={i}
-                className="whitespace-nowrap border border-white/[0.08] bg-[var(--night-surface)] px-2 py-1 text-left font-semibold"
+                className="whitespace-nowrap border border-white/[0.08] bg-surface px-2 py-1 text-left font-semibold"
               >
                 {p}
               </th>
@@ -275,7 +275,7 @@ function ConjTable({
               <td className="whitespace-nowrap border border-white/[0.08] px-2 py-1 font-medium">
                 {row.head}
                 {row.sub && (
-                  <span className="block text-xs font-normal text-[var(--night-text-40)]">
+                  <span className="block text-xs font-normal text-fg-muted">
                     {row.sub}
                   </span>
                 )}
@@ -331,8 +331,8 @@ function TrainerView({ exercises }: { exercises: EndingsExercise[] }) {
             onClick={() => setLevel(id)}
             className={`rounded-lg px-3 py-1.5 text-sm font-semibold ${
               level === id
-                ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
-                : 'bg-white/[0.07] text-[var(--night-text-70)]'
+                ? 'bg-accent-soft text-accent-soft-fg'
+                : 'bg-white/[0.07] text-fg-secondary'
             }`}
           >
             {label}
@@ -428,11 +428,11 @@ function TrainerRunner({
       <RoundProgress index={index + 1} total={total} correct={correct} />
 
       <Card className="flex flex-col gap-3">
-        <p className="text-xs font-semibold uppercase tracking-wide text-[var(--night-accent-text)]">
+        <p className="text-xs font-semibold uppercase tracking-wide text-accent-strong">
           {current.rule}
         </p>
         <p className="text-lg font-medium">{current.prompt}</p>
-        <p className="text-sm text-[var(--night-text-40)]">
+        <p className="text-sm text-fg-muted">
           глагол: <b>{current.infinitive}</b>
         </p>
 
@@ -440,7 +440,7 @@ function TrainerRunner({
           {current.options.map((opt, i) => {
             const isAnswer = i === current.answer
             const isPicked = i === picked
-            let cls = 'border-white/[0.10] hover:border-[var(--night-accent-45)]'
+            let cls = 'border-white/[0.10] hover:border-accent-line'
             if (picked !== null) {
               if (isAnswer) cls = 'border-emerald-500 bg-emerald-950/40'
               else if (isPicked) cls = 'border-red-500 bg-red-950/40'
@@ -463,7 +463,7 @@ function TrainerRunner({
 
         {picked !== null && (
           <>
-            <p className="rounded-lg bg-[var(--night-surface)] px-3 py-2 text-sm text-[var(--night-text-25)]">
+            <p className="rounded-lg bg-surface px-3 py-2 text-sm text-fg-faint">
               {current.explanation}
             </p>
             <Button onClick={next}>

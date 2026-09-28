@@ -25,7 +25,7 @@ function SpeakButton({ text, lang }: { text: string; lang: AppLang }) {
         speak(text, { lang })
       }}
       onPointerDown={(e) => e.stopPropagation()}
-      className="flex h-11 w-11 items-center justify-center rounded-full bg-white/[0.08] text-[var(--night-text-70)]"
+      className="flex h-11 w-11 items-center justify-center rounded-full bg-white/[0.08] text-fg-secondary"
       aria-label="Озвучить"
     >
       <IconSpeaker size={18} />
@@ -119,13 +119,13 @@ export function SwipeCard({
         style={{ transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }}
       >
         {/* лицевая грань — слово */}
-        <div className={faceCls} style={{ background: 'var(--night-surface)' }}>
+        <div className={faceCls} style={{ background: 'var(--color-surface)' }}>
           <div className="flex items-center gap-2">
             <p className="text-3xl font-bold">{card.front}</p>
             <SpeakButton text={card.front} lang={lang} />
           </div>
-          {card.ipa && <p className="text-[var(--night-text-40)]">/{card.ipa}/</p>}
-          <p className="mt-6 flex items-center gap-1.5 text-sm text-[var(--night-text-40)]">
+          {card.ipa && <p className="text-fg-muted">/{card.ipa}/</p>}
+          <p className="mt-6 flex items-center gap-1.5 text-sm text-fg-muted">
             <IconHint size={16} /> тап — перевод · свайп, если знаешь
           </p>
         </div>
@@ -144,12 +144,12 @@ export function SwipeCard({
             <SpeakButton text={card.front} lang={lang} />
           </div>
           {card.back && (
-            <p className="text-xl text-[var(--night-text-70)]">{card.back}</p>
+            <p className="text-xl text-fg-secondary">{card.back}</p>
           )}
           {card.example && (
-            <p className="mt-2 text-sm italic text-[var(--night-text-40)]">«{card.example}»</p>
+            <p className="mt-2 text-sm italic text-fg-muted">«{card.example}»</p>
           )}
-          <p className="mt-5 flex items-center gap-2 text-xs text-[var(--night-text-40)]">
+          <p className="mt-5 flex items-center gap-2 text-xs text-fg-muted">
             <IconBack size={14} /> ещё раз&nbsp;·&nbsp;помню <IconArrowRight size={14} />
           </p>
         </div>
@@ -157,7 +157,7 @@ export function SwipeCard({
 
       {/* штампы направления — поверх, не участвуют во вращении */}
       <span
-        className="absolute left-4 top-4 z-10 rounded-xl border-2 border-[var(--night-accent)] px-3 py-1 text-lg font-bold text-[var(--night-accent-text)]"
+        className="absolute left-4 top-4 z-10 rounded-xl border-2 border-accent px-3 py-1 text-lg font-bold text-accent-strong"
         style={{ opacity: rememberOpacity, transform: 'rotate(-12deg)' }}
       >
         Помню
@@ -199,7 +199,7 @@ export function SwipeTutorial({ onDismiss }: { onDismiss: () => void }) {
           <IconArrowRight size={36} className="animate-pulse" />
           <span className="text-center text-sm">свайп вправо
             <br />
-            <span className="font-bold text-[var(--night-accent-text)]">помню</span>
+            <span className="font-bold text-accent-strong">помню</span>
           </span>
         </div>
       </div>

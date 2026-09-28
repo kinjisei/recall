@@ -30,13 +30,13 @@ export function MaterialsByLevel({
             onClick={() => setClosed((c) => ({ ...c, [level]: !c[level] }))}
             className="flex min-h-[44px] w-full items-center justify-between px-1 text-left"
           >
-            <span className="text-sm font-semibold text-[var(--night-text-70)]">
+            <span className="text-sm font-semibold text-fg-secondary">
               {level}
-              <span className="ml-2 text-xs font-normal text-[var(--night-text-40)]">
+              <span className="ml-2 text-xs font-normal text-fg-muted">
                 {items.length}
               </span>
             </span>
-            <span className="text-[var(--night-text-40)]">{closed[level] ? '▸' : '▾'}</span>
+            <span className="text-fg-muted">{closed[level] ? '▸' : '▾'}</span>
           </button>
           {!closed[level] && (
             <div className="flex flex-col gap-2">
@@ -45,12 +45,12 @@ export function MaterialsByLevel({
                   <Card className="flex items-center justify-between gap-2 transition-transform active:scale-[0.99]">
                     <div className="min-w-0">
                       <p className="truncate font-medium">{m.title ?? m.topic}</p>
-                      <p className="text-xs text-[var(--night-text-40)]">
+                      <p className="text-xs text-fg-muted">
                         {m.lang.toUpperCase()} · {m.level} · {m.format} · {m.length_range} слов ·{' '}
                         {m.exercises.length} упр.
                       </p>
                     </div>
-                    <span className="shrink-0 text-[var(--night-text-40)]">›</span>
+                    <span className="shrink-0 text-fg-muted">›</span>
                   </Card>
                 </button>
               ))}

@@ -146,7 +146,7 @@ export function ProgressPage() {
         <button
           onClick={goBack}
           aria-label="Назад"
-          className="lift -ml-2 flex h-11 w-11 items-center justify-center rounded-full text-[var(--night-text-70)]"
+          className="lift -ml-2 flex h-11 w-11 items-center justify-center rounded-full text-fg-secondary"
         >
           <IconBack size={20} />
         </button>
@@ -155,12 +155,12 @@ export function ProgressPage() {
 
       {/* График недели */}
       <section
-        className="animate-fade-up rounded-3xl border border-white/[0.08] bg-[var(--night-surface)] p-5"
+        className="animate-fade-up rounded-3xl border border-white/[0.08] bg-surface p-5"
         style={{ animationDelay: '.05s' }}
       >
         <div className="flex items-baseline justify-between">
           <h2 className="text-lg font-medium tracking-tight">Эта неделя</h2>
-          <span className="text-sm text-[var(--night-text-40)]">
+          <span className="text-sm text-fg-muted">
             {activeDays} {activeDays === 1 ? 'день' : activeDays < 5 ? 'дня' : 'дней'} ·{' '}
             {totalMinutes > 0 ? `${totalMinutes} мин` : `${totalItems} упр.`}
           </span>
@@ -175,7 +175,7 @@ export function ProgressPage() {
                 <div className="relative w-full flex-1">
                   <div
                     className={`animate-bar-grow absolute bottom-0 w-full rounded-lg ${
-                      d.active ? 'bg-[var(--night-accent)]' : 'bg-white/[0.07]'
+                      d.active ? 'bg-accent' : 'bg-white/[0.07]'
                     }`}
                     style={{ height: `${height}%`, animationDelay: `${0.1 + i * 0.06}s` }}
                     title={d.items ? `${d.items} упражнений` : 'нет занятий'}
@@ -183,7 +183,7 @@ export function ProgressPage() {
                 </div>
                 <span
                   className={`text-[11px] ${
-                    d.isToday ? 'text-[var(--night-accent-text)]' : 'text-[var(--night-text-40)]'
+                    d.isToday ? 'text-accent-strong' : 'text-fg-muted'
                   }`}
                 >
                   {d.label}
@@ -231,7 +231,7 @@ export function ProgressPage() {
           блок. */}
       {weak && (weak.struggling.length > 0 || weak.weakTopics.length > 0) && (
         <section
-          className="animate-fade-up flex flex-col gap-4 rounded-3xl border border-white/[0.08] bg-[var(--night-surface)] p-5"
+          className="animate-fade-up flex flex-col gap-4 rounded-3xl border border-white/[0.08] bg-surface p-5"
           style={{ animationDelay: '.34s' }}
         >
           <h2 className="text-lg font-medium tracking-tight">Над чем поработать</h2>
@@ -246,15 +246,15 @@ export function ProgressPage() {
 
           {weak.struggling.length > 0 && (
             <div className="flex flex-col gap-2">
-              <p className="text-sm text-[var(--night-text-70)]">Слова, что буксуют</p>
+              <p className="text-sm text-fg-secondary">Слова, что буксуют</p>
               <ul className="flex flex-col gap-1.5">
                 {weak.struggling.map((w) => (
                   <li key={w.front} className="flex items-baseline justify-between gap-3 text-sm">
                     <span className="min-w-0">
                       <span className="font-medium">{w.front}</span>
-                      {w.back && <span className="text-[var(--night-text-40)]"> — {w.back}</span>}
+                      {w.back && <span className="text-fg-muted"> — {w.back}</span>}
                     </span>
-                    <span className="flex-none text-xs text-[var(--night-text-40)]">
+                    <span className="flex-none text-xs text-fg-muted">
                       срывов {w.lapses}
                     </span>
                   </li>
@@ -262,7 +262,7 @@ export function ProgressPage() {
               </ul>
               <AppLink
                 to="/practice?m=review"
-                className="text-sm text-[var(--night-accent-text)] hover:underline"
+                className="text-sm text-accent-strong hover:underline"
               >
                 Повторить эти слова →
               </AppLink>
@@ -271,12 +271,12 @@ export function ProgressPage() {
 
           {weak.weakTopics.length > 0 && (
             <div className="flex flex-col gap-2">
-              <p className="text-sm text-[var(--night-text-70)]">Слабые темы грамматики</p>
+              <p className="text-sm text-fg-secondary">Слабые темы грамматики</p>
               <ul className="flex flex-col gap-1.5">
                 {weak.weakTopics.map((t) => (
                   <li key={t.title} className="flex items-baseline justify-between gap-3 text-sm">
                     <span className="min-w-0">{t.title}</span>
-                    <span className="flex-none text-xs text-[var(--night-text-40)]">
+                    <span className="flex-none text-xs text-fg-muted">
                       ошибок {t.count}
                     </span>
                   </li>
@@ -284,7 +284,7 @@ export function ProgressPage() {
               </ul>
               <AppLink
                 to="/grammar?mistakes=1"
-                className="text-sm text-[var(--night-accent-text)] hover:underline"
+                className="text-sm text-accent-strong hover:underline"
               >
                 Разобрать мои ошибки →
               </AppLink>
@@ -295,7 +295,7 @@ export function ProgressPage() {
 
       <button
         onClick={signOut}
-        className="lift animate-fade-up mt-2 flex items-center justify-center gap-2 rounded-2xl border border-white/[0.08] px-4 py-3.5 text-[var(--night-text-70)]"
+        className="lift animate-fade-up mt-2 flex items-center justify-center gap-2 rounded-2xl border border-white/[0.08] px-4 py-3.5 text-fg-secondary"
         style={{ animationDelay: '.36s' }}
       >
         <IconSignOut size={18} />
@@ -320,16 +320,16 @@ function Metric({
 }) {
   return (
     <div
-      className="animate-fade-up flex flex-col gap-2 rounded-2xl border border-white/[0.08] bg-[var(--night-surface)] p-4"
+      className="animate-fade-up flex flex-col gap-2 rounded-2xl border border-white/[0.08] bg-surface p-4"
       style={{ animationDelay: delay }}
     >
-      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--night-accent-900)] text-[var(--night-accent-100)]">
+      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-soft text-accent-soft-fg">
         <IconCmp size={18} />
       </span>
       <span className="text-2xl font-medium tabular-nums">{value}</span>
       <span className="text-[13px] leading-tight">
         {label}
-        <span className="block text-[11px] text-[var(--night-text-40)]">{hint}</span>
+        <span className="block text-[11px] text-fg-muted">{hint}</span>
       </span>
     </div>
   )

@@ -116,16 +116,16 @@ function TileGrid({
           style={{ animationDelay: `${delayBase + 0.05 + i * 0.04}s` }}
         >
           <Card interactive className="relative flex h-full flex-col p-4">
-            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--night-accent-900)] text-[var(--night-accent-100)]">
+            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent-soft text-accent-soft-fg">
               <t.Icon size={22} />
             </span>
             {t.badge !== undefined && (
-              <span className="absolute right-3 top-3 rounded-full bg-[var(--night-accent)] px-2 py-0.5 text-xs font-medium text-white">
+              <span className="absolute right-3 top-3 rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-white">
                 {t.badge}
               </span>
             )}
             <span className="mt-3 font-medium">{t.title}</span>
-            <span className="text-sm text-[var(--night-text-40)]">{t.desc}</span>
+            <span className="text-sm text-fg-muted">{t.desc}</span>
           </Card>
         </button>
       ))}
@@ -370,7 +370,7 @@ export function PracticePage() {
       </HowItWorks>
       {words === 0 && (
         <Card className="flex flex-col gap-2">
-          <p className="text-sm text-[var(--night-text-70)]">
+          <p className="text-sm text-fg-secondary">
             Играть пока не с чем — сначала нужны слова.
           </p>
           <Button onClick={() => navigate('/study?view=words&sheet=packs')}>
@@ -386,16 +386,16 @@ export function PracticePage() {
           заставляет браузер показать, как одна карточка выросла, а другая
           сжалась: те же элементы, а не подмена содержимого. */}
       <div
-        className="animate-fade-up flex flex-col gap-3 rounded-3xl border border-[var(--night-accent-45)] bg-[linear-gradient(135deg,rgba(145,132,217,.16),rgba(145,132,217,.05))] p-4"
+        className="animate-fade-up flex flex-col gap-3 rounded-3xl border border-accent-line bg-[linear-gradient(135deg,rgba(145,132,217,.16),rgba(145,132,217,.05))] p-4"
         style={{ viewTransitionName: `pg-${active.id}` }}
       >
         <div className="flex items-center gap-3">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--night-accent-900)] text-[var(--night-accent-100)]">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-accent-soft text-accent-soft-fg">
             <active.Icon size={24} />
           </span>
           <span className="min-w-0">
             <span className="block text-lg font-medium">{active.title}</span>
-            <span className="block text-sm text-[var(--night-text-40)]">{active.hint}</span>
+            <span className="block text-sm text-fg-muted">{active.hint}</span>
           </span>
         </div>
 
@@ -420,14 +420,14 @@ export function PracticePage() {
             key={g.id}
             onClick={() => setGroup(g.id)}
             style={{ viewTransitionName: `pg-${g.id}` }}
-            className="lift relative flex flex-col items-center gap-1.5 rounded-2xl border border-white/[0.08] bg-[var(--night-surface)] px-2 py-3 text-center"
+            className="lift relative flex flex-col items-center gap-1.5 rounded-2xl border border-white/[0.08] bg-surface px-2 py-3 text-center"
           >
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.06] text-[var(--night-text-70)]">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.06] text-fg-secondary">
               <g.Icon size={20} />
             </span>
             <span className="text-[13px] font-medium leading-tight">{g.title}</span>
             {g.badge !== undefined && (
-              <span className="absolute right-1.5 top-1.5 rounded-full bg-[var(--night-accent)] px-1.5 text-[11px] font-medium text-white">
+              <span className="absolute right-1.5 top-1.5 rounded-full bg-accent px-1.5 text-[11px] font-medium text-white">
                 {g.badge}
               </span>
             )}

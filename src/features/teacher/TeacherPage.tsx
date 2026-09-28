@@ -112,12 +112,12 @@ function BecomeTeacher({ onDone, onBack }: { onDone: () => void; onBack: () => v
       <BackHeader onBack={onBack} title="Преподаватель" label="На главную" />
       <Card>
         <div className="flex items-start gap-3">
-          <span className="flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-[var(--night-accent-900)] text-[var(--night-accent-100)]">
+          <span className="flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-accent-soft text-accent-soft-fg">
             <IconGraduation size={22} />
           </span>
           <div>
             <h2 className="text-[17px] font-medium">Ведёшь учеников?</h2>
-            <p className="mt-1 text-sm text-[var(--night-text-70)]">
+            <p className="mt-1 text-sm text-fg-secondary">
               Включи режим преподавателя — появится своя студия с кодом-приглашением.
             </p>
           </div>
@@ -125,8 +125,8 @@ function BecomeTeacher({ onDone, onBack }: { onDone: () => void; onBack: () => v
 
         <ul className="mt-4 flex flex-col gap-2">
           {TEACHER_PERKS.map((p) => (
-            <li key={p} className="flex gap-2.5 text-sm text-[var(--night-text-70)]">
-              <IconBadgeCheck size={17} className="mt-0.5 flex-none text-[var(--night-accent)]" />
+            <li key={p} className="flex gap-2.5 text-sm text-fg-secondary">
+              <IconBadgeCheck size={17} className="mt-0.5 flex-none text-accent" />
               {p}
             </li>
           ))}
@@ -137,7 +137,7 @@ function BecomeTeacher({ onDone, onBack }: { onDone: () => void; onBack: () => v
         <Button className="mt-5 w-full" onClick={enable} loading={busy}>
           Включить режим преподавателя
         </Button>
-        <p className="mt-3 text-center text-xs text-[var(--night-text-40)]">
+        <p className="mt-3 text-center text-xs text-fg-muted">
           Включается бесплатно и ничего не меняет в твоих собственных занятиях.
           Общий запас AI для студии и генерация материалов появляются, когда
           привяжешь первого ученика
@@ -298,8 +298,8 @@ function TeacherDashboard() {
             onClick={() => setTab(id)}
             className={`min-h-11 rounded-lg px-4 py-2 text-sm font-semibold ${
               tab === id
-                ? 'bg-[var(--night-accent-900)] text-[var(--night-accent-100)]'
-                : 'bg-white/[0.07] text-[var(--night-text-70)]'
+                ? 'bg-accent-soft text-accent-soft-fg'
+                : 'bg-white/[0.07] text-fg-secondary'
             }`}
           >
             {label}
@@ -334,7 +334,7 @@ function TeacherDashboard() {
             <StudioEnergy plan={myPlan} />
           )}
           <Card>
-            <p className="text-sm text-[var(--night-text-40)]">
+            <p className="text-sm text-fg-muted">
               Код-приглашение — ученик вводит его у себя на Главной:
             </p>
             <div className="mt-2 flex items-center gap-3">
@@ -358,7 +358,7 @@ function TeacherDashboard() {
               >
                 Сменить код
               </Button>
-              <span className="text-xs text-[var(--night-text-40)]">
+              <span className="text-xs text-fg-muted">
                 если код попал не тем — старый перестанет работать
               </span>
             </div>
@@ -372,7 +372,7 @@ function TeacherDashboard() {
               <div className="mt-3 border-t border-white/[0.06] pt-3">
                 <Button
                   variant="ghost"
-                  className="min-h-[44px] px-3 py-2 text-sm text-[var(--night-text-40)]"
+                  className="min-h-[44px] px-3 py-2 text-sm text-fg-muted"
                   loading={stopping}
                   onClick={stopTeach}
                 >
@@ -392,9 +392,9 @@ function TeacherDashboard() {
             <RowsSkeleton count={3} />
           ) : students.length === 0 ? (
             <Card className="text-center">
-              <IconGraduation size={40} className="mx-auto block text-[var(--night-text-40)]" />
+              <IconGraduation size={40} className="mx-auto block text-fg-muted" />
               <p className="mt-2 font-semibold">Пока ни одного ученика</p>
-              <p className="mt-1 text-sm text-[var(--night-text-40)]">
+              <p className="mt-1 text-sm text-fg-muted">
                 Отправь код-приглашение — после ввода кода ученик появится здесь.
                 Тогда же включатся общий запас AI для студии и генерация материалов.
               </p>
@@ -432,7 +432,7 @@ function TeacherDashboard() {
                       <p className="text-sm font-semibold text-amber-200">
                         Нужно внимание: {attention}
                       </p>
-                      <p className="mt-1 text-sm text-[var(--night-text-70)]">
+                      <p className="mt-1 text-sm text-fg-secondary">
                         {shown
                           .filter(
                             (r) =>
@@ -446,7 +446,7 @@ function TeacherDashboard() {
                           )
                           .join(' · ')}
                       </p>
-                      <p className="mt-2 text-xs text-[var(--night-text-40)]">
+                      <p className="mt-2 text-xs text-fg-muted">
                         {lostRows.length > 0
                           ? 'Неделя без занятий — обычно момент, когда стоит написать самому.'
                           : 'Срок домашки прошёл, а сделано не всё.'}
@@ -529,18 +529,18 @@ function StudentRow({
           {signal.homeworkText ? (
             <span
               className={`block truncate text-sm ${
-                signal.overdue ? 'text-amber-200' : 'text-[var(--night-text-70)]'
+                signal.overdue ? 'text-amber-200' : 'text-fg-secondary'
               }`}
             >
               {signal.homeworkText} · {signal.dueText}
             </span>
           ) : (
-            <span className="block truncate text-sm text-[var(--night-text-40)]">
+            <span className="block truncate text-sm text-fg-muted">
               Домашка не выдана
             </span>
           )}
 
-          <span className="block truncate text-sm text-[var(--night-text-40)]">
+          <span className="block truncate text-sm text-fg-muted">
             {p.level ? `Уровень ${p.level}` : 'Уровень не определён'}
             {p.goal ? ` · ${GOAL_LABELS[p.goal]}` : ''}
           </span>
@@ -549,7 +549,7 @@ function StudentRow({
               вечер, «занимался 5 дней из 7» — привычка; для прогресса частота
               значит больше суммы. Стрик оставляем рядом: он про то же, но
               обнуляется от одного пропуска и в одиночку молчит о пропавшем. */}
-          <span className="mt-0.5 block text-sm text-[var(--night-text-40)]">
+          <span className="mt-0.5 block text-sm text-fg-muted">
             <IconFlame size={13} className="inline align-text-bottom" /> {student.streak} ·
             занимался {signal.regularity} ·{' '}
             <span className={signal.lost ? 'text-amber-200' : ''}>{lastSeen(student)}</span>
@@ -561,7 +561,7 @@ function StudentRow({
             </span>
           )}
         </span>
-        <span className="shrink-0 text-sm font-medium text-[var(--night-accent-text)]">›</span>
+        <span className="shrink-0 text-sm font-medium text-accent-strong">›</span>
       </Card>
     </button>
   )
@@ -651,7 +651,7 @@ function StudentCard({
       <div className="flex items-center justify-between">
         <div>
           <p className="font-semibold">{p.display_name ?? 'Без имени'}</p>
-          <p className="text-sm text-[var(--night-text-40)]">
+          <p className="text-sm text-fg-muted">
             {/* Уровня может НЕ БЫТЬ: пока ученик не прошёл тест, мы его не
                 знаем. Раньше здесь стояло «Уровень B1» (умолчание колонки), и
                 карточка противоречила строке ниже — «тестов пока не было». */}
@@ -664,7 +664,7 @@ function StudentCard({
               нужна раньше любых цифр: у готовящегося к IELTS и у школьника
               занятия строятся по-разному. */}
           {p.goal && (
-            <p className="mt-0.5 text-sm text-[var(--night-accent-text)]">
+            <p className="mt-0.5 text-sm text-accent-strong">
               Цель: {GOAL_LABELS[p.goal]}
             </p>
           )}
@@ -674,10 +674,10 @@ function StudentCard({
             </p>
           )}
         </div>
-        <p className="text-right text-sm text-[var(--night-text-40)]">
+        <p className="text-right text-sm text-fg-muted">
           за 7 дней:
           <br />
-          <span className="text-lg font-bold text-[var(--night-text-70)]">
+          <span className="text-lg font-bold text-fg-secondary">
             {student.weekItems}
           </span>{' '}
           заданий
@@ -720,7 +720,7 @@ function StudentCard({
           if (!next) setSection(null)
         }}
         aria-expanded={more}
-        className="mt-1 flex min-h-11 items-center gap-1.5 self-start text-sm font-medium text-[var(--night-accent-text)]"
+        className="mt-1 flex min-h-11 items-center gap-1.5 self-start text-sm font-medium text-accent-strong"
       >
         {more ? '▾' : '▸'} Ещё: тест уровня, диагностика, программа, слова
       </button>
@@ -735,7 +735,7 @@ function StudentCard({
                 className="flex min-h-11 w-full items-center justify-between gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3.5 text-left text-sm"
               >
                 <span>{s.title}</span>
-                <span className="text-[var(--night-text-40)]">{section === s.id ? '▾' : '▸'}</span>
+                <span className="text-fg-muted">{section === s.id ? '▾' : '▸'}</span>
               </button>
               <Reveal open={section === s.id}>
                 <div className="pt-2">
@@ -849,14 +849,14 @@ function Seats({ plan, used }: { plan: MyPlan | null; used: number }) {
   if (total === null) {
     return (
       <div className="mt-3 border-t border-white/[0.06] pt-3">
-        <p className="text-xs text-[var(--night-text-40)]">
-          Учеников: <span className="text-[var(--night-text-70)]">{used}</span> · приглашать
+        <p className="text-xs text-fg-muted">
+          Учеников: <span className="text-fg-secondary">{used}</span> · приглашать
           можно сколько нужно
         </p>
-        <p className="mt-1.5 text-xs text-[var(--night-text-40)]">
+        <p className="mt-1.5 text-xs text-fg-muted">
           Сейчас у каждого ученика обычный бесплатный запас AI. Общий запас на всю студию и
           генерация материалов —{' '}
-          <AppLink to="/pricing" className="text-[var(--night-accent)] underline underline-offset-2">
+          <AppLink to="/pricing" className="text-accent underline underline-offset-2">
             на тарифе для преподавателей
           </AppLink>
           .
@@ -869,15 +869,15 @@ function Seats({ plan, used }: { plan: MyPlan | null; used: number }) {
   const onTrialSeats = typeof plan.free_seats === 'number' && total === plan.free_seats
   return (
     <div className="mt-3 border-t border-white/[0.06] pt-3">
-      <p className="text-xs text-[var(--night-text-40)]">
-        Занято мест: <span className="text-[var(--night-text-70)]">{used} из {total}</span>
+      <p className="text-xs text-fg-muted">
+        Занято мест: <span className="text-fg-secondary">{used} из {total}</span>
       </p>
       {full && (
-        <p className="mt-1.5 text-xs text-[var(--night-text-70)]">
+        <p className="mt-1.5 text-xs text-fg-secondary">
           {onTrialSeats
             ? `Пока идёт пробный период, учеников можно вести до ${total} — зато у каждого повышенный запас AI. Чтобы взять больше — `
             : 'Места тарифа заняты. Чтобы взять больше учеников — '}
-          <AppLink to="/pricing" className="text-[var(--night-accent)] underline underline-offset-2">
+          <AppLink to="/pricing" className="text-accent underline underline-offset-2">
             подключи тариф
           </AppLink>
           . Уже привязанные ученики останутся в любом случае.
@@ -896,7 +896,7 @@ function StudioEnergy({ plan }: { plan: MyPlan }) {
   const bar = (used: number, cap: number) => (
     <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-white/[0.07]">
       <div
-        className="h-full rounded-full bg-[var(--night-accent)] transition-[width] duration-500"
+        className="h-full rounded-full bg-accent transition-[width] duration-500"
         style={{ width: `${cap ? Math.min(100, (used / cap) * 100) : 0}%` }}
       />
     </div>
@@ -904,15 +904,15 @@ function StudioEnergy({ plan }: { plan: MyPlan }) {
   return (
     <Card className="flex flex-col gap-3">
       <p className="flex items-center gap-1.5 text-sm font-semibold">
-        <IconSparkle size={16} className="text-[var(--night-accent-text)]" /> Энергия студии
+        <IconSparkle size={16} className="text-accent-strong" /> Энергия студии
       </p>
       <div>
         <div className="flex items-center justify-between text-sm">
-          <span className="text-[var(--night-text-70)]">Разговоры с AI сегодня</span>
+          <span className="text-fg-secondary">Разговоры с AI сегодня</span>
           <span className="font-medium">{left} из {max} осталось</span>
         </div>
         {bar(spent, max)}
-        <p className="mt-1 text-xs text-[var(--night-text-40)]">
+        <p className="mt-1 text-xs text-fg-muted">
           Общий дневной запас на всех учеников. Пополняется утром.
         </p>
       </div>
@@ -922,11 +922,11 @@ function StudioEnergy({ plan }: { plan: MyPlan }) {
             {/* Раньше подпись называла только материалы и программы, а тот же
                 счётчик тратят вопрос и график «Письма» — репетитор видел, как
                 лимит тает от действий, которые материалами не считал. */}
-            <span className="text-[var(--night-text-70)]">Генерации AI за месяц</span>
+            <span className="text-fg-secondary">Генерации AI за месяц</span>
             <span className="font-medium">{genUsed} из {genLim}</span>
           </div>
           {bar(genUsed, genLim)}
-          <p className="mt-1 text-xs text-[var(--night-text-40)]">
+          <p className="mt-1 text-xs text-fg-muted">
             Материалы, программы и задания «Письма». Материал стоит двух генераций
             (план и текст), каждая переделка — ещё одной.
           </p>
