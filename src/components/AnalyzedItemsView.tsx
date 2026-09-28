@@ -6,8 +6,8 @@
 // ============================================================================
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Button } from './Button'
-import { IconSpeaker, IconPlus, IconCheck, IconArrowRight } from './icons'
+import { Button } from '../shared/ui/Button'
+import { IconSpeaker, IconPlus, IconCheck, IconArrowRight } from '../shared/ui/icons'
 import { addCard } from '../lib/cards'
 import { speak } from '../lib/speech'
 import { logActivity } from '../lib/activity'

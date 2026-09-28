@@ -7,8 +7,8 @@
 // Ошибка кладёт упражнение в банк «Мои ошибки», верный ответ — убирает.
 // ============================================================================
 import { useEffect, useState } from 'react'
-import { Card } from '../../components/Card'
-import { Button } from '../../components/Button'
+import { Card } from '../../shared/ui/Card'
+import { Button } from '../../shared/ui/Button'
 import { RoundResult, RoundProgress } from '../../components/RoundResult'
 import { ExerciseView } from '../../components/exercises'
 import { useExerciseReview } from '../../components/useExerciseReview'
@@ -18,7 +18,7 @@ import { getUserLevel } from '../../lib/level'
 import { shuffle } from '../../lib/wordPool'
 import { GameHeader } from '../words/GameShell'
 import type { AppLang, GrammarExercise, GrammarTopic } from '../../types'
-import { Loading } from '../../components/Loading'
+import { Loading } from '../../shared/ui/Loading'
 
 const ROUND = 8
 const CEFR = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']

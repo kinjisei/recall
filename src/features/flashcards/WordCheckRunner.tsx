@@ -3,10 +3,10 @@
 // слово на изучаемом языке. Неверные слова возвращаются в колоду (again).
 // ============================================================================
 import { useState } from 'react'
-import { IconSpeaker, IconRefresh } from '../../components/icons'
-import { Card } from '../../components/Card'
+import { IconSpeaker, IconRefresh } from '../../shared/ui/icons'
+import { Card } from '../../shared/ui/Card'
 import { ScoreGlyph } from '../../components/RoundResult'
-import { Button } from '../../components/Button'
+import { Button } from '../../shared/ui/Button'
 import { answerMatches } from '../../lib/text'
 import { logActivity } from '../../lib/activity'
 import { submitWordCheck } from '../../lib/wordChecks'

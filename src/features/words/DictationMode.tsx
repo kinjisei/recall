@@ -6,9 +6,9 @@
 //   • перевод-подсказка скрыт за кнопкой (не подсматриваешь заранее).
 // ============================================================================
 import { useCallback, useEffect, useState } from 'react'
-import { IconSpeaker } from '../../components/icons'
-import { Card } from '../../components/Card'
-import { Button } from '../../components/Button'
+import { IconSpeaker } from '../../shared/ui/icons'
+import { Card } from '../../shared/ui/Card'
+import { Button } from '../../shared/ui/Button'
 import { RoundResult, RoundProgress } from '../../components/RoundResult'
 import type { ReviewItem } from '../../components/RoundReview'
 import { logActivity } from '../../lib/activity'

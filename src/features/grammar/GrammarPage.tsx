@@ -16,12 +16,12 @@ import {
   IconWarning,
   type IconProps,
   IconCaretDown,
-} from '../../components/icons'
-import { BackHeader } from '../../components/BackButton'
-import { useSmartBack } from '../../components/SmartBack'
-import { Card } from '../../components/Card'
-import { Button } from '../../components/Button'
-import { TabPicker } from '../../components/TabPicker'
+} from '../../shared/ui/icons'
+import { BackHeader } from '../../shared/ui/BackButton'
+import { useSmartBack } from '../../shared/ui/SmartBack'
+import { Card } from '../../shared/ui/Card'
+import { Button } from '../../shared/ui/Button'
+import { TabPicker } from '../../shared/ui/TabPicker'
 import { RoundResult, RoundProgress } from '../../components/RoundResult'
 import { speak } from '../../lib/speech'
 import { logActivity } from '../../lib/activity'
@@ -40,8 +40,8 @@ import { useExerciseReview } from '../../components/useExerciseReview'
 import { ConjugationSection } from './ConjugationSection'
 import { IrregularVerbsSection } from './IrregularVerbsSection'
 import { PhrasalVerbsSection } from './PhrasalVerbsSection'
-import { RowsSkeleton } from '../../components/Loading'
-import { Reveal } from '../../components/Reveal'
+import { RowsSkeleton } from '../../shared/ui/Loading'
+import { Reveal } from '../../shared/ui/Reveal'
 import type {
   AppLang,
   GrammarExercise,

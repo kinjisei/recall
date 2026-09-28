@@ -13,9 +13,9 @@
 // ============================================================================
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BackHeader } from '../../components/BackButton'
-import { Card } from '../../components/Card'
-import { Button } from '../../components/Button'
+import { BackHeader } from '../../shared/ui/BackButton'
+import { Card } from '../../shared/ui/Card'
+import { Button } from '../../shared/ui/Button'
 import { RoundResult, ScoreGlyph } from '../../components/RoundResult'
 import { ExerciseView } from '../../components/exercises'
 import { correctAnswerText } from '../../lib/text'
@@ -23,8 +23,8 @@ import type { ReviewItem } from '../../components/RoundReview'
 import { MarkableText } from '../../components/MarkableText'
 import { logActivity } from '../../lib/activity'
 import { useAsyncData } from '../../shared/lib/useAsyncData'
-import { LoadError } from '../../components/LoadError'
-import { IconTray } from '../../components/icons'
+import { LoadError } from '../../shared/ui/LoadError'
+import { IconTray } from '../../shared/ui/icons'
 import {
   getMyAssignments,
   submitAssignment,
@@ -33,7 +33,7 @@ import { getHomework, type Homework } from '../../lib/homework'
 import { StudentHomework } from '../homework/StudentHomework'
 import { useScrollTop } from '../../lib/useScrollTop'
 import { useUrlStates } from '../../shared/lib/useUrlState'
-import { RowsSkeleton } from '../../components/Loading'
+import { RowsSkeleton } from '../../shared/ui/Loading'
 import type {
   AppLang,
   AssignmentAnswer,

@@ -3,7 +3,7 @@
 // Раньше все материалы шли одной лентой по дате — с ростом библиотеки найти
 // текст нужного уровня было нельзя.
 import { useState } from 'react'
-import { Card } from '../../../components/Card'
+import { Card } from '../../../shared/ui/Card'
 import type { Material } from '../../../types'
 
 export function MaterialsByLevel({

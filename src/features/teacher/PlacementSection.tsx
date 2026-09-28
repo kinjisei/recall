@@ -8,8 +8,8 @@
 // показывался. Данные — lib/placement (таблица placement_requests).
 // ============================================================================
 import { useCallback, useEffect, useState } from 'react'
-import { Button } from '../../components/Button'
-import { LoadError } from '../../components/LoadError'
+import { Button } from '../../shared/ui/Button'
+import { LoadError } from '../../shared/ui/LoadError'
 import {
   assignPlacement,
   cancelPlacement,
@@ -17,7 +17,7 @@ import {
   type PlacementRequest,
 } from '../../lib/placement'
 import type { AppLang } from '../../types'
-import { RowsSkeleton } from '../../components/Loading'
+import { RowsSkeleton } from '../../shared/ui/Loading'
 
 const LANGS: { id: AppLang; label: string }[] = [
   { id: 'en', label: 'Английский' },

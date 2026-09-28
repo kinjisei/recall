@@ -5,18 +5,18 @@
 // Данные грузятся лениво (../../data/spanish/conjugation).
 // ============================================================================
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import { IconSpeaker } from '../../components/icons'
-import { BackButton } from '../../components/BackButton'
-import { Card } from '../../components/Card'
-import { Button } from '../../components/Button'
+import { IconSpeaker } from '../../shared/ui/icons'
+import { BackButton } from '../../shared/ui/BackButton'
+import { Card } from '../../shared/ui/Card'
+import { Button } from '../../shared/ui/Button'
 import { RoundResult, RoundProgress } from '../../components/RoundResult'
 import type { ReviewItem } from '../../components/RoundReview'
 import { speak } from '../../lib/speech'
 import { logActivity } from '../../lib/activity'
 import { useUrlState, useUrlStates } from '../../shared/lib/useUrlState'
 import { getVerbMistakes, addVerbMistake, removeVerbMistake } from '../../lib/verbMistakes'
-import { RowsSkeleton } from '../../components/Loading'
-import { Reveal } from '../../components/Reveal'
+import { RowsSkeleton } from '../../shared/ui/Loading'
+import { Reveal } from '../../shared/ui/Reveal'
 import type {
   ConjugationReference,
   ConjugationTense,

@@ -7,9 +7,9 @@
 // видны (safe-area учтён).
 // ============================================================================
 import { useEffect, useMemo, useState } from 'react'
-import { Sheet } from './Sheet'
-import { IconSearch, IconSpeaker } from './icons'
-import { Button } from './Button'
+import { Sheet } from '../shared/ui/Sheet'
+import { IconSearch, IconSpeaker } from '../shared/ui/icons'
+import { Button } from '../shared/ui/Button'
 import { AnalysisSheet } from './AnalysisSheet'
 import { addCard } from '../lib/cards'
 import { lookup } from '../lib/dictionary'
@@ -17,7 +17,7 @@ import { lookupInContext, type ContextLookup } from '../lib/contextDict'
 import { logActivity } from '../lib/activity'
 import { speak } from '../lib/speech'
 import type { AppLang } from '../types'
-import { Thinking } from './Thinking'
+import { Thinking } from '../shared/ui/Thinking'
 
 /** Выбранное слово + предложение, в котором оно встретилось. */
 export interface WordPick {

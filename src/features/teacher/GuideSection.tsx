@@ -4,9 +4,9 @@
 // Контент — src/data/teacher-guide.ts (статический, без БД).
 // ============================================================================
 import { useState } from 'react'
-import { Card } from '../../components/Card'
+import { Card } from '../../shared/ui/Card'
 import { teacherGuide, type GuideBlock } from '../../data/teacher-guide'
-import { Reveal } from '../../components/Reveal'
+import { Reveal } from '../../shared/ui/Reveal'
 
 function BlockView({ block }: { block: GuideBlock }) {
   return (

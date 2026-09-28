@@ -7,8 +7,8 @@
 // приложения по дороге к одному действию.
 // ============================================================================
 import { useState, type ReactNode } from 'react'
-import { BrandMark } from '../../components/Brand'
-import { IconEye } from '../../components/icons'
+import { BrandMark } from '../../shared/ui/Brand'
+import { IconEye } from '../../shared/ui/icons'
 
 export const inputClass =
   'h-11 w-full rounded-xl border-none bg-[var(--night-input)] px-4 text-sm text-[var(--night-text)] placeholder:text-[var(--night-text-40)] outline-none focus:ring-2 focus:ring-[var(--night-accent-45)]'

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Card } from '../../components/Card'
-import { Button } from '../../components/Button'
+import { Card } from '../../shared/ui/Card'
+import { Button } from '../../shared/ui/Button'
 import { getDefaultDeck, addCardsBulk } from '../../lib/cards'
 import type { AppLang, WordTopic } from '../../types'
 import {
@@ -10,7 +10,7 @@ import {
   type LoadedPacks,
   type PackWord,
 } from '../../lib/wordPacks'
-import { Loading } from '../../components/Loading'
+import { Loading } from '../../shared/ui/Loading'
 
 const LEVEL_ORDER = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const
 

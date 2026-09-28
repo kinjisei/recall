@@ -5,11 +5,11 @@
 // Хранение и парсинг файлов — lib/myTexts (локально, лимит 15 000 знаков).
 // ============================================================================
 import { useRef, useState } from 'react'
-import { Card } from '../../components/Card'
-import { Button } from '../../components/Button'
-import { BackHeader } from '../../components/BackButton'
+import { Card } from '../../shared/ui/Card'
+import { Button } from '../../shared/ui/Button'
+import { BackHeader } from '../../shared/ui/BackButton'
 import { MarkableText } from '../../components/MarkableText'
-import { IconPlus, IconTrash } from '../../components/icons'
+import { IconPlus, IconTrash } from '../../shared/ui/icons'
 import { getSettings, READER_CLASSES } from '../../lib/settings'
 import {
   addMyText,

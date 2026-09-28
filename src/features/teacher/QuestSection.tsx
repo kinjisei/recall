@@ -5,14 +5,14 @@
 // с AI можно раскрыть и проверить.
 // ============================================================================
 import { useCallback, useState } from 'react'
-import { Button } from '../../components/Button'
-import { LoadError } from '../../components/LoadError'
-import { Picker } from '../../components/Picker'
-import { TabPicker } from '../../components/TabPicker'
+import { Button } from '../../shared/ui/Button'
+import { LoadError } from '../../shared/ui/LoadError'
+import { Picker } from '../../shared/ui/Picker'
+import { TabPicker } from '../../shared/ui/TabPicker'
 import { useAsyncData } from '../../shared/lib/useAsyncData'
 import { assignQuest, deleteQuest, listStudentQuests } from '../../lib/quests'
 import type { AppLang, GrammarQuest } from '../../types'
-import { RowsSkeleton } from '../../components/Loading'
+import { RowsSkeleton } from '../../shared/ui/Loading'
 
 const LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1'] as const
 

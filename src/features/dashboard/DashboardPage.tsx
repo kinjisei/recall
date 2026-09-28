@@ -22,8 +22,8 @@ import {
   IconCards,
   IconRows,
   type IconLike,
-} from '../../components/icons'
-import { Button } from '../../components/Button'
+} from '../../shared/ui/icons'
+import { Button } from '../../shared/ui/Button'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { getProfile } from '../../lib/profile'
@@ -44,8 +44,8 @@ import { getMyPlan, type MyPlan } from '../../lib/billing'
 import { EnergyBar } from '../../components/EnergyBar'
 import { startGuidedRoute } from '../../lib/guided'
 import { speak } from '../../lib/speech'
-import { RowCard } from '../../components/RowCard'
-import { HowItWorks } from '../../components/HowItWorks'
+import { RowCard } from '../../shared/ui/RowCard'
+import { HowItWorks } from '../../shared/ui/HowItWorks'
 import {
   AssignmentsNotice,
   TeacherBlock,
@@ -53,7 +53,7 @@ import {
   type AssignmentCounts,
 } from '../teacher/TeacherBlock'
 import type { ActivityType, Profile, StudyPlan } from '../../types'
-import { AppLink } from '../../components/AppLink'
+import { AppLink } from '../../shared/ui/AppLink'
 
 /** Иконки пунктов плана дня (сами пункты строит lib/dailyPlan). */
 const PLAN_ICONS: Record<string, IconLike> = {

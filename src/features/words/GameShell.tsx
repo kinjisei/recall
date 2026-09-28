@@ -2,10 +2,10 @@
 // заглушка «мало слов» и универсальный движок вопросов с 4 вариантами.
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { IconSpeaker, IconTray } from '../../components/icons'
-import { BackHeader } from '../../components/BackButton'
-import { Card } from '../../components/Card'
-import { Button } from '../../components/Button'
+import { IconSpeaker, IconTray } from '../../shared/ui/icons'
+import { BackHeader } from '../../shared/ui/BackButton'
+import { Card } from '../../shared/ui/Card'
+import { Button } from '../../shared/ui/Button'
 import { RoundResult, RoundProgress } from '../../components/RoundResult'
 import type { ReviewItem } from '../../components/RoundReview'
 import { logActivity } from '../../lib/activity'
@@ -13,11 +13,11 @@ import { speak } from '../../lib/speech'
 import { markWrong } from './gameUtils'
 import type { PoolItem } from '../../lib/wordPool'
 import type { AppLang } from '../../types'
-import { Loading } from '../../components/Loading'
+import { Loading } from '../../shared/ui/Loading'
 
 export function GameHeader({ title, onBack }: { title: string; onBack: () => void }) {
   // morph: если сюда пришли тапом по плитке «Практики», заголовок и плитка —
-  // один элемент перехода, и экран вырастает из неё (lib/morph.ts)
+  // один элемент перехода, и экран вырастает из неё (shared/lib/morph.ts)
   return <BackHeader onBack={onBack} title={title} morph />
 }
 

@@ -16,11 +16,11 @@
 // пометки преподаватель ждал бы оба, а получил один и счёл это невыполнением.
 // ============================================================================
 import { useEffect, useRef, useState } from 'react'
-import { Button } from '../../components/Button'
-import { Picker } from '../../components/Picker'
-import { Sheet } from '../../components/Sheet'
-import { Thinking } from '../../components/Thinking'
-import { IconClose, IconPlus, IconSparkle, IconTrash } from '../../components/icons'
+import { Button } from '../../shared/ui/Button'
+import { Picker } from '../../shared/ui/Picker'
+import { Sheet } from '../../shared/ui/Sheet'
+import { Thinking } from '../../shared/ui/Thinking'
+import { IconClose, IconPlus, IconSparkle, IconTrash } from '../../shared/ui/icons'
 import { KIND_LABEL, createHomework, type HomeworkKind } from '../../lib/homework'
 import { countableItems, MAX_ITEMS } from '../../lib/homeworkRules'
 import { suggestHomework, type SuggestedItem } from '../../lib/homeworkSuggest'

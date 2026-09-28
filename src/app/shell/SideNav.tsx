@@ -10,8 +10,8 @@
 // ⚠️ Ширина w-60 (15rem) — та же, что отступ колонки и DESKTOP_INSETS в
 // Layout.tsx: меняешь здесь — меняй там.
 // ============================================================================
-import { AppLink } from '../../components/AppLink'
-import { BrandLogo } from '../../components/Brand'
+import { AppLink } from '../../shared/ui/AppLink'
+import { BrandLogo } from '../../shared/ui/Brand'
 import { AvatarMenu } from './AvatarMenu'
 import { LangSwitch } from './LangSwitch'
 import { NAV_ICONS } from './navIcons'

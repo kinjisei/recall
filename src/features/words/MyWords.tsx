@@ -7,7 +7,7 @@
 // каскадом, см. lib/cards.ts).
 // ============================================================================
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Sheet } from '../../components/Sheet'
+import { Sheet } from '../../shared/ui/Sheet'
 import { useNavigate } from 'react-router-dom'
 import {
   IconSearch,
@@ -17,9 +17,9 @@ import {
   IconTrash,
   IconClose,
   IconTray,
-} from '../../components/icons'
-import { Card } from '../../components/Card'
-import { Button } from '../../components/Button'
+} from '../../shared/ui/icons'
+import { Card } from '../../shared/ui/Card'
+import { Button } from '../../shared/ui/Button'
 import { deleteCard, listMyWords, updateCard, type MyWord } from '../../lib/cards'
 import { speak } from '../../lib/speech'
 import { WORD_STATUS_CLS, type WordStatus } from '../../lib/wordChecks'

@@ -6,9 +6,9 @@
 // AI-квесты, активность за 14 дней. Данные — lib/diagnostics.ts, только чтение.
 // ============================================================================
 import { useEffect, useState } from 'react'
-import { Button } from '../../components/Button'
-import { LoadError } from '../../components/LoadError'
-import { IconPrinter } from '../../components/icons'
+import { Button } from '../../shared/ui/Button'
+import { LoadError } from '../../shared/ui/LoadError'
+import { IconPrinter } from '../../shared/ui/icons'
 import { getStudentDiagnostics, type StudentDiagnostics } from '../../lib/diagnostics'
 import type { MetricDelta } from '../../lib/dynamics'
 import { ReportSheet } from './ReportSheet'

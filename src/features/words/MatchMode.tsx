@@ -7,10 +7,10 @@
 // Ошибка по слову из колоды возвращает карточку на повтор (FSRS «again»).
 // ============================================================================
 import { Fragment, useEffect, useMemo, useState } from 'react'
-import { Card } from '../../components/Card'
+import { Card } from '../../shared/ui/Card'
 import { ScoreGlyph } from '../../components/RoundResult'
 import { RoundReview, type ReviewItem } from '../../components/RoundReview'
-import { Button } from '../../components/Button'
+import { Button } from '../../shared/ui/Button'
 import { logActivity } from '../../lib/activity'
 import { speak } from '../../lib/speech'
 import { getDefinitions } from '../../lib/definitions'

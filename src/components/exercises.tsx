@@ -15,8 +15,8 @@
 // урок по завышенной цифре.
 // ============================================================================
 import { useMemo, useState } from 'react'
-import { Card } from './Card'
-import { Button } from './Button'
+import { Card } from '../shared/ui/Card'
+import { Button } from '../shared/ui/Button'
 import { answerMatches, normalizeAnswer } from '../lib/text'
 import { mcqHint, mistakeHint, orderHint, shouldReveal } from '../lib/selfCorrect'
 import type { GrammarExercise } from '../types'

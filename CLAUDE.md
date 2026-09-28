@@ -71,7 +71,7 @@ VS Code, где у Claude есть файлы и терминал: фичи со
 - **FSRS** — `ts-fsrs`.
 - **Хостинг** — Vercel, автодеплой из `main`. Прод: https://recall-pgkz.vercel.app
 
-Зависимостей UI — **ноль**: иконки свои (`components/icons.tsx`, инлайн-SVG в
+Зависимостей UI — **ноль**: иконки свои (`shared/ui/icons.tsx`, инлайн-SVG в
 стиле Phosphor), анимации — keyframes в `index.css`. Это осознанно: стартовый
 бандл 338 КБ / gzip 105, и каждая библиотека здесь дорога.
 
@@ -140,15 +140,19 @@ src/
     api/        supabase.ts (единственный клиент базы) · database.types.ts
                 (генерируются) · errors.ts (dbError, AppError) · ai.ts (клиент
                 /api/gemini) · aiTypes.ts (AiTask, ChatTurn — общие с api/)
+    ui/         дизайн-система: RowCard (база всех списков) · Button · Card
+                AppLink · Sheet · Picker · TabPicker · Reveal · BackButton
+                Loading · LoadError · Thinking · Brand · icons.tsx
     lib/        storage · useUrlState (адрес = «где я») · viewTransition
                 useAsyncData · plural · contacts · focusMode (режим раунда)
                 routePreload (прогрев экранов для AppLink) · shellInsets
                 (место каркаса вокруг экрана) · useMediaQuery (useIsDesktop)
+                morph (плитка «вырастает» в экран)
   types/        index.ts — общие типы (AiTask, ChatTurn — реэкспорт из shared/api)
   context/      AuthContext, LanguageContext
   data/         english/ · spanish/ · writingPrompts.ts · wordOfDay.ts · teacher-guide.ts
-  components/   RowCard (база всех списков) · Button · Card · AppLink · Sheet
-                BackButton · EnergyBar · WordSheet · exercises.tsx · icons.tsx
+  components/   общие куски С предметной логикой (переедут в разделы, Ф3):
+                EnergyBar · WordSheet · exercises.tsx · RoundResult · шторки разбора
   features/     папки по экранам (счёт — node scripts/arch-map.mjs)
 api/            gemini.ts · transcribe.ts · _core.ts · _geminiBody.ts · _auth.ts
                 _tasks.ts · _groq.ts · _stt.ts · _timeouts.ts (сроки — все запросы наружу)
@@ -623,7 +627,7 @@ FSRS, текст по покрытию, тема квеста по ошибка�
 **0,8 КБ gzip**.
 
 - Переходы между экранами — `shared/lib/viewTransition.ts`. Включены в `useUrlState`
-  (внутренние экраны) и в `components/AppLink` (между роутами и вкладками).
+  (внутренние экраны) и в `shared/ui/AppLink` (между роутами и вкладками).
   Ссылки внутри приложения — **только `AppLink`**, не `<Link>`: он греет
   ленивый экран заранее и не запускает переход, пока экран не готов.
 - Шапка и навигация помечены `.vt-topbar` / `.vt-nav` — так они выпадают из
@@ -635,11 +639,11 @@ FSRS, текст по покрытию, тема квеста по ошибка�
 - ⚠️ **Внутри `<main>` ничего не помечать `view-transition-name`**: элемент
   получает layout-containment и становится containing block для `fixed`
   потомков — шторки начнут позиционироваться от контента, а не от экрана.
-- Ожидание AI — `components/Thinking.tsx` (6 мест), верный ответ —
+- Ожидание AI — `shared/ui/Thinking.tsx` (6 мест), верный ответ —
   `.animate-answer-pop` (10 мест). Это КЛАССЫ: добавляешь новую игру или новое
   ожидание — подключай их же, иначе продукт разъедется.
-- Ожидание AI — `components/Thinking.tsx`, ожидание экрана — `Loading` /
-  `RowsSkeleton` из `components/Loading.tsx`, раскрывашки — `components/Reveal.tsx`
+- Ожидание AI — `shared/ui/Thinking.tsx`, ожидание экрана — `Loading` /
+  `RowsSkeleton` из `shared/ui/Loading.tsx`, раскрывашки — `shared/ui/Reveal.tsx`
   (высоту считает CSS-грид, содержимое монтируется только пока раскрыто).
 - Любая анимация — только `transform`/`opacity` и обязана попадать под
   `prefers-reduced-motion`.

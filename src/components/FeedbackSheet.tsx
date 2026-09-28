@@ -10,9 +10,9 @@
 // именно», поэтому палец только открывает поле, а отправка — осознанная.
 // ============================================================================
 import { useState } from 'react'
-import { Sheet } from './Sheet'
-import { Button } from './Button'
-import { IconCheck, IconClose, IconThumbsUp } from './icons'
+import { Sheet } from '../shared/ui/Sheet'
+import { Button } from '../shared/ui/Button'
+import { IconCheck, IconClose, IconThumbsUp } from '../shared/ui/icons'
 import { FEEDBACK_MAX, sendFeedback } from '../lib/feedback'
 import { describeDbError } from '../shared/api/errors'
 

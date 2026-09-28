@@ -1,11 +1,11 @@
 import { useEffect, useState, type FormEvent } from 'react'
 
-import { Card } from '../../components/Card'
-import { Button } from '../../components/Button'
+import { Card } from '../../shared/ui/Card'
+import { Button } from '../../shared/ui/Button'
 import { joinTeacher, getMyTeachers } from '../../lib/teacher'
 import { countSubmittedWorks, getMyAssignments } from '../../lib/materials'
 import type { Profile } from '../../types'
-import { AppLink } from '../../components/AppLink'
+import { AppLink } from '../../shared/ui/AppLink'
 
 /** Сколько заданий у ученика всего и сколько ещё не сдано. */
 export interface AssignmentCounts {

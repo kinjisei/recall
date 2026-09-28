@@ -5,7 +5,7 @@
 // review_states) + выход из аккаунта (перенесён сюда с Главной).
 // ============================================================================
 import { useEffect, useState } from 'react'
-import { useSmartBack } from '../../components/SmartBack'
+import { useSmartBack } from '../../shared/ui/SmartBack'
 import {
   IconBack,
   IconMaterials,
@@ -14,9 +14,9 @@ import {
   IconBadgeCheck,
   IconSignOut,
   type IconProps,
-} from '../../components/icons'
-import { AppLink } from '../../components/AppLink'
-import { HowItWorks } from '../../components/HowItWorks'
+} from '../../shared/ui/icons'
+import { AppLink } from '../../shared/ui/AppLink'
+import { HowItWorks } from '../../shared/ui/HowItWorks'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { supabase, currentUserId } from '../../shared/api/supabase'

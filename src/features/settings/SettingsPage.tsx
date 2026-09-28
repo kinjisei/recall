@@ -8,8 +8,8 @@ import { useEffect, useState } from 'react'
 
 import { SecuritySection } from './SecuritySection'
 import { SUPPORT_EMAIL, SUPPORT_SLA, supportMailto } from '../../shared/lib/contacts'
-import { IconBack, IconSpeaker, IconCheck, IconThumbsUp } from '../../components/icons'
-import { useSmartBack } from '../../components/SmartBack'
+import { IconBack, IconSpeaker, IconCheck, IconThumbsUp } from '../../shared/ui/icons'
+import { useSmartBack } from '../../shared/ui/SmartBack'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { supabase } from '../../shared/api/supabase'
@@ -24,9 +24,9 @@ import {
   type SpeechRate,
 } from '../../lib/settings'
 import { getEsLevel, setEsLevel } from '../../lib/esLevel'
-import { Button } from '../../components/Button'
+import { Button } from '../../shared/ui/Button'
 import type { CEFRLevel, Profile } from '../../types'
-import { AppLink } from '../../components/AppLink'
+import { AppLink } from '../../shared/ui/AppLink'
 import { FeedbackSheet } from '../../components/FeedbackSheet'
 
 // A1 включён: тест уровня может дать A1, и без кнопки его нельзя было выбрать —

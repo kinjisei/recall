@@ -5,9 +5,9 @@
 // программа показывается с подсветкой текущей недели. Данные — lib/studyPlan.
 // ============================================================================
 import { useCallback, useState } from 'react'
-import { Button } from '../../components/Button'
-import { LoadError } from '../../components/LoadError'
-import { Picker } from '../../components/Picker'
+import { Button } from '../../shared/ui/Button'
+import { LoadError } from '../../shared/ui/LoadError'
+import { Picker } from '../../shared/ui/Picker'
 import { useAsyncData } from '../../shared/lib/useAsyncData'
 import {
   archivePlan,
@@ -20,7 +20,7 @@ import {
 } from '../../lib/studyPlan'
 import { PlanView } from '../program/PlanView'
 import type { AppLang, StudyPlan } from '../../types'
-import { RowsSkeleton } from '../../components/Loading'
+import { RowsSkeleton } from '../../shared/ui/Loading'
 
 const LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1'] as const
 const WEEK_OPTIONS = [2, 3, 4, 6, 8] as const

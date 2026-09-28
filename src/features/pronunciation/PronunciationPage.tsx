@@ -1,11 +1,11 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BackButton } from '../../components/BackButton'
-import { Card } from '../../components/Card'
-import { Button } from '../../components/Button'
+import { BackButton } from '../../shared/ui/BackButton'
+import { Card } from '../../shared/ui/Card'
+import { Button } from '../../shared/ui/Button'
 import { RoundResult } from '../../components/RoundResult'
 import { GuidedNext } from '../../components/GuidedNext'
-import { celebrate } from '../../components/Confetti'
+import { celebrate } from '../../shared/ui/Confetti'
 import {
   IconMic,
   IconStop,
@@ -15,7 +15,7 @@ import {
   IconBadgeCheck,
   IconHeadphones,
   IconRefresh,
-} from '../../components/icons'
+} from '../../shared/ui/icons'
 import { supabase } from '../../shared/api/supabase'
 import { getDeckIds } from '../../lib/cards'
 import { getUserLevel } from '../../lib/level'
@@ -27,8 +27,8 @@ import { englishSentences } from '../../data/english'
 import { speak, scorePronunciation, type PronunciationScore } from '../../lib/speech'
 import { startRecording, transcribe, isMicSupported, type Recorder } from '../../lib/transcribe'
 import type { AppLang } from '../../types'
-import { Loading } from '../../components/Loading'
-import { HowItWorks } from '../../components/HowItWorks'
+import { Loading } from '../../shared/ui/Loading'
+import { HowItWorks } from '../../shared/ui/HowItWorks'
 
 /** Фраза для тренировки; hint — русский перевод, level — уровень CEFR. */
 interface Phrase {

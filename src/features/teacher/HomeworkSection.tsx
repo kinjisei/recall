@@ -14,8 +14,8 @@
 // ============================================================================
 import { useEffect, useState } from 'react'
 import { REGULARITY_WINDOW } from '../../lib/activityDays'
-import { RowsSkeleton } from '../../components/Loading'
-import { IconCheck, IconFlame, IconSparkle } from '../../components/icons'
+import { RowsSkeleton } from '../../shared/ui/Loading'
+import { IconCheck, IconFlame, IconSparkle } from '../../shared/ui/icons'
 import {
   KIND_LABEL,
   dueLabel,

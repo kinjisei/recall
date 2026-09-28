@@ -5,10 +5,10 @@
 // (текущий цикл уходит в историю attempts, ученик правит поверх прошлого текста).
 // ============================================================================
 import { useState } from 'react'
-import { Card } from '../../components/Card'
-import { Button } from '../../components/Button'
-import { BackHeader } from '../../components/BackButton'
-import { IconCheck, IconClose } from '../../components/icons'
+import { Card } from '../../shared/ui/Card'
+import { Button } from '../../shared/ui/Button'
+import { BackHeader } from '../../shared/ui/BackButton'
+import { IconCheck, IconClose } from '../../shared/ui/icons'
 import { finishWritingReview, reassignWriting } from '../../lib/writing'
 import type { WritingGrade, WritingTask, WritingTaskAssignment } from '../../types'
 import { WritingGradeView } from './WritingGradeView'

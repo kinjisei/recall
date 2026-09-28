@@ -6,19 +6,19 @@
 // Данные ленивые: src/data/english/irregular.ts.
 // ============================================================================
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { IconSpeaker } from '../../components/icons'
-import { Card } from '../../components/Card'
-import { Button } from '../../components/Button'
-import { Picker } from '../../components/Picker'
-import { TabPicker } from '../../components/TabPicker'
+import { IconSpeaker } from '../../shared/ui/icons'
+import { Card } from '../../shared/ui/Card'
+import { Button } from '../../shared/ui/Button'
+import { Picker } from '../../shared/ui/Picker'
+import { TabPicker } from '../../shared/ui/TabPicker'
 import { RoundResult } from '../../components/RoundResult'
 import { speak } from '../../lib/speech'
 import { logActivity } from '../../lib/activity'
 import { getVerbMistakes, addVerbMistake, removeVerbMistake } from '../../lib/verbMistakes'
 import { answerMatches } from '../../lib/text'
 import { useUrlState } from '../../shared/lib/useUrlState'
-import { RowsSkeleton } from '../../components/Loading'
-import { Reveal } from '../../components/Reveal'
+import { RowsSkeleton } from '../../shared/ui/Loading'
+import { Reveal } from '../../shared/ui/Reveal'
 import type {
   IrregularGroup,
   IrregularVerb,

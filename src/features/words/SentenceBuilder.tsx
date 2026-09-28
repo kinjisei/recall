@@ -1,9 +1,9 @@
 // «Собери фразу»: по русскому переводу собери фразу из слов (EN и ES).
 // Материал — встроенные фразы «Речи» (60 английских / 135 испанских).
 import { useEffect, useMemo, useState } from 'react'
-import { IconSpeaker } from '../../components/icons'
-import { Card } from '../../components/Card'
-import { Button } from '../../components/Button'
+import { IconSpeaker } from '../../shared/ui/icons'
+import { Card } from '../../shared/ui/Card'
+import { Button } from '../../shared/ui/Button'
 import { RoundResult, RoundProgress } from '../../components/RoundResult'
 import { orderHint, shouldReveal } from '../../lib/selfCorrect'
 import type { ReviewItem } from '../../components/RoundReview'

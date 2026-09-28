@@ -5,8 +5,8 @@
 // «Сохранить в PDF» — стандартный диалог печати браузера.
 // ============================================================================
 import { createPortal } from 'react-dom'
-import { Button } from '../../components/Button'
-import { IconPrinter } from '../../components/icons'
+import { Button } from '../../shared/ui/Button'
+import { IconPrinter } from '../../shared/ui/icons'
 import type { Material } from '../../types'
 
 // с запасом: mcq обычно 4 варианта, но валидатор допускает больше — лишние

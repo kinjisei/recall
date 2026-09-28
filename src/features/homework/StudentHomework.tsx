@@ -16,9 +16,9 @@
 // галочка ученика честно подписана.
 // ============================================================================
 import { useState } from 'react'
-import { AppLink } from '../../components/AppLink'
-import { Card } from '../../components/Card'
-import { IconCheck } from '../../components/icons'
+import { AppLink } from '../../shared/ui/AppLink'
+import { Card } from '../../shared/ui/Card'
+import { IconCheck } from '../../shared/ui/icons'
 import {
   KIND_LABEL,
   chooseItem,

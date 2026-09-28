@@ -11,7 +11,7 @@ import {
   IconBack,
   IconHint,
   IconSpeaker,
-} from '../../components/icons'
+} from '../../shared/ui/icons'
 import { speak } from '../../lib/speech'
 import type { AppLang, Card as CardType } from '../../types'
 

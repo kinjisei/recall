@@ -8,10 +8,10 @@
 // Данные ленивые: src/data/english/phrasal.ts (~300 проверенных фраз).
 // ============================================================================
 import { useEffect, useMemo, useState } from 'react'
-import { IconSpeaker } from '../../components/icons'
-import { Card } from '../../components/Card'
-import { Button } from '../../components/Button'
-import { TabPicker } from '../../components/TabPicker'
+import { IconSpeaker } from '../../shared/ui/icons'
+import { Card } from '../../shared/ui/Card'
+import { Button } from '../../shared/ui/Button'
+import { TabPicker } from '../../shared/ui/TabPicker'
 import { RoundResult, RoundProgress } from '../../components/RoundResult'
 import type { ReviewItem } from '../../components/RoundReview'
 import { speak } from '../../lib/speech'
@@ -19,8 +19,8 @@ import { logActivity } from '../../lib/activity'
 import { shuffle, sample } from '../../lib/random'
 import { useUrlState } from '../../shared/lib/useUrlState'
 import type { PhrasalEntry, PhrasalItem } from '../../data/english/phrasal'
-import { RowsSkeleton } from '../../components/Loading'
-import { Reveal } from '../../components/Reveal'
+import { RowsSkeleton } from '../../shared/ui/Loading'
+import { Reveal } from '../../shared/ui/Reveal'
 
 const ROUND_SIZE = 10
 

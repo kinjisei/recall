@@ -8,7 +8,7 @@
 // ============================================================================
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AppLink } from '../../components/AppLink'
+import { AppLink } from '../../shared/ui/AppLink'
 import { SUPPORT_EMAIL, supportMailto } from '../../shared/lib/contacts'
 import { RESET_SENT_TEXT, requestReset } from '../../lib/passwordReset'
 import { AuthCard, InputGroup, PrimaryButton } from './authUi'

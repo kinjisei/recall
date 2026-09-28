@@ -1,12 +1,12 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { BrandLogo, BrandMark } from '../../components/Brand'
+import { BrandLogo, BrandMark } from '../../shared/ui/Brand'
 import { describeAuthError, describeSignUpError } from '../../lib/access'
 import { supabase } from '../../shared/api/supabase'
 import { rememberPendingRole } from '../../lib/pendingRole'
 import { track } from '../../lib/analytics'
-import { AppLink } from '../../components/AppLink'
+import { AppLink } from '../../shared/ui/AppLink'
 import { AuroraBg, EyeIcon, InputGroup, inputClass } from './authUi'
 
 /**

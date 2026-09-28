@@ -14,7 +14,7 @@ import {
   IconTeacher,
   IconTimer,
   type IconProps,
-} from '../../components/icons'
+} from '../../shared/ui/icons'
 import type { NavIconName } from '../navigation'
 
 type IconCmp = (p: IconProps) => React.JSX.Element

@@ -8,9 +8,9 @@
 // ============================================================================
 import { useEffect, useState, type ReactNode } from 'react'
 import { getMyPlan } from '../lib/billing'
-import { Button } from '../components/Button'
-import { AppLink } from '../components/AppLink'
-import { IconHome, IconSpinner, IconWarning } from '../components/icons'
+import { Button } from '../shared/ui/Button'
+import { AppLink } from '../shared/ui/AppLink'
+import { IconHome, IconSpinner, IconWarning } from '../shared/ui/icons'
 import type { RouteRole } from './routes'
 
 type GateState = 'checking' | 'allowed' | 'denied'

@@ -4,9 +4,9 @@
 // формулировки успели разъехаться («Засчитано» / «Тема засчитана» / ничего).
 // ============================================================================
 import { useState, type ReactNode } from 'react'
-import { IconTrophy, IconThumbsUp, IconArrowUp } from './icons'
-import { Card } from './Card'
-import { Button } from './Button'
+import { IconTrophy, IconThumbsUp, IconArrowUp } from '../shared/ui/icons'
+import { Card } from '../shared/ui/Card'
+import { Button } from '../shared/ui/Button'
 import { RoundReview, type ReviewItem } from './RoundReview'
 import type { AppLang } from '../types'
 

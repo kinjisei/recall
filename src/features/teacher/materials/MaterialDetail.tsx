@@ -2,11 +2,11 @@
 // открытие проверки сданной работы, удаление.
 import { useCallback, useEffect, useState } from 'react'
 
-import { Card } from '../../../components/Card'
-import { Button } from '../../../components/Button'
-import { BackHeader } from '../../../components/BackButton'
-import { LoadError } from '../../../components/LoadError'
-import { IconPrinter, IconTrash } from '../../../components/icons'
+import { Card } from '../../../shared/ui/Card'
+import { Button } from '../../../shared/ui/Button'
+import { BackHeader } from '../../../shared/ui/BackButton'
+import { LoadError } from '../../../shared/ui/LoadError'
+import { IconPrinter, IconTrash } from '../../../shared/ui/icons'
 import {
   assignMaterial,
   deleteMaterial,
@@ -17,8 +17,8 @@ import type { StudentInfo } from '../../../lib/teacher'
 import type { Material, MaterialAssignment } from '../../../types'
 import { ReviewScreen } from '../ReviewScreen'
 import { PrintSheet } from '../PrintSheet'
-import { AppLink } from '../../../components/AppLink'
-import { RowsSkeleton } from '../../../components/Loading'
+import { AppLink } from '../../../shared/ui/AppLink'
+import { RowsSkeleton } from '../../../shared/ui/Loading'
 
 export function MaterialDetail({
   material,

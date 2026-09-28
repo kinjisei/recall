@@ -1,7 +1,7 @@
 // Шапка телефона и планшета: логотип, EN/ES, меню профиля. На компьютере
 // шапки нет — то же самое живёт в боковой панели (SideNav).
-import { AppLink } from '../../components/AppLink'
-import { BrandLogo } from '../../components/Brand'
+import { AppLink } from '../../shared/ui/AppLink'
+import { BrandLogo } from '../../shared/ui/Brand'
 import { AvatarMenu } from './AvatarMenu'
 import { LangSwitch } from './LangSwitch'
 

@@ -6,14 +6,14 @@
 // ============================================================================
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BackHeader } from '../../components/BackButton'
-import { Card } from '../../components/Card'
-import { LoadError } from '../../components/LoadError'
+import { BackHeader } from '../../shared/ui/BackButton'
+import { Card } from '../../shared/ui/Card'
+import { LoadError } from '../../shared/ui/LoadError'
 import { useAsyncData } from '../../shared/lib/useAsyncData'
 import { currentWeekIndex, getMyPlans, markProgramSeen } from '../../lib/studyPlan'
 import { PlanView } from './PlanView'
 import type { StudyPlan } from '../../types'
-import { RowsSkeleton } from '../../components/Loading'
+import { RowsSkeleton } from '../../shared/ui/Loading'
 
 export function ProgramPage() {
   const navigate = useNavigate()

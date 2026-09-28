@@ -5,9 +5,9 @@
 // список по уровням). Здесь только состояние Mode и разводка.
 // ============================================================================
 import { useEffect, useState } from 'react'
-import { Card } from '../../components/Card'
-import { Button } from '../../components/Button'
-import { LoadError } from '../../components/LoadError'
+import { Card } from '../../shared/ui/Card'
+import { Button } from '../../shared/ui/Button'
+import { LoadError } from '../../shared/ui/LoadError'
 import { useAsyncData } from '../../shared/lib/useAsyncData'
 import { getMyPlan } from '../../lib/billing'
 import {
@@ -26,7 +26,7 @@ import { RequestForm } from './materials/RequestForm'
 import { PlanScreen } from './materials/PlanScreen'
 import { PreviewScreen } from './materials/PreviewScreen'
 import { MaterialDetail } from './materials/MaterialDetail'
-import { RowsSkeleton } from '../../components/Loading'
+import { RowsSkeleton } from '../../shared/ui/Loading'
 
 type Mode =
   | { name: 'list' }

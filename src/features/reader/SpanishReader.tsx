@@ -10,12 +10,12 @@ import {
   IconSpeaker,
   IconTranslate,
   type IconProps,
-} from '../../components/icons'
+} from '../../shared/ui/icons'
 import { getSettings, READER_CLASSES } from '../../lib/settings'
-import { Card } from '../../components/Card'
-import { Button } from '../../components/Button'
-import { BackButton, BackHeader } from '../../components/BackButton'
-import { TabPicker } from '../../components/TabPicker'
+import { Card } from '../../shared/ui/Card'
+import { Button } from '../../shared/ui/Button'
+import { BackButton, BackHeader } from '../../shared/ui/BackButton'
+import { TabPicker } from '../../shared/ui/TabPicker'
 import { speak } from '../../lib/speech'
 import { TappableText, WordSheet, type WordPick } from '../../components/WordSheet'
 import {

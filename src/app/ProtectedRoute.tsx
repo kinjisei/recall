@@ -7,7 +7,7 @@ import { hasPendingTeacherRole, clearPendingRole } from '../lib/pendingRole'
 import { becomeTeacher } from '../lib/teacher'
 import { BlockedScreen } from './BlockedScreen'
 import { opensBeforeOnboarding } from './routes'
-import { Loading } from '../components/Loading'
+import { Loading } from '../shared/ui/Loading'
 
 /**
  * Пускает дальше только авторизованных; иначе — на страницу входа.

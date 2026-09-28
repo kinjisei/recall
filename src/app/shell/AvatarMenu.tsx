@@ -7,9 +7,9 @@
 // компьютера (раскрывается вверх — `opensUp`).
 // ============================================================================
 import { useEffect, useRef, useState } from 'react'
-import { IconChart, IconTeacher, IconGear, IconSignOut, IconCards, IconBadgeCheck, IconThumbsUp } from '../../components/icons'
+import { IconChart, IconTeacher, IconGear, IconSignOut, IconCards, IconBadgeCheck, IconThumbsUp } from '../../shared/ui/icons'
 import { FeedbackSheet } from '../../components/FeedbackSheet'
-import { AppLink } from '../../components/AppLink'
+import { AppLink } from '../../shared/ui/AppLink'
 import { getProfile } from '../../lib/profile'
 import { getMyPlan } from '../../lib/billing'
 import { useAuth } from '../../context/AuthContext'

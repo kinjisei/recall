@@ -8,7 +8,7 @@
 import type { ReactNode } from 'react'
 import { AuthProvider } from '../context/AuthContext'
 import { LanguageProvider } from '../context/LanguageContext'
-import { ConfettiLayer } from '../components/Confetti'
+import { ConfettiLayer } from '../shared/ui/Confetti'
 import { ErrorBoundary } from './ErrorBoundary'
 
 export function AppProviders({ children }: { children: ReactNode }) {

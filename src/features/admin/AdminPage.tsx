@@ -18,10 +18,10 @@ import {
   listFeedback,
   type FeedbackRow,
 } from '../../lib/admin'
-import { Button } from '../../components/Button'
-import { Picker } from '../../components/Picker'
-import { IconSearch } from '../../components/icons'
-import { RowsSkeleton } from '../../components/Loading'
+import { Button } from '../../shared/ui/Button'
+import { Picker } from '../../shared/ui/Picker'
+import { IconSearch } from '../../shared/ui/icons'
+import { RowsSkeleton } from '../../shared/ui/Loading'
 
 const PLAN_LABELS: Record<PlanId, string> = {
   free: 'Free',

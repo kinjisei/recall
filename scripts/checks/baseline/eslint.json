@@ -235,16 +235,6 @@
       "count": 1
     }
   },
-  "src/components/Reveal.tsx": {
-    "react-hooks/set-state-in-effect": {
-      "count": 1
-    }
-  },
-  "src/components/Sheet.tsx": {
-    "react-hooks/refs": {
-      "count": 2
-    }
-  },
   "src/components/TextAnalysisSheet.tsx": {
     "react-hooks/set-state-in-effect": {
       "count": 1
@@ -441,6 +431,16 @@
     },
     "react-hooks/use-memo": {
       "count": 1
+    }
+  },
+  "src/shared/ui/Reveal.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/shared/ui/Sheet.tsx": {
+    "react-hooks/refs": {
+      "count": 2
     }
   }
 }

@@ -6,8 +6,8 @@ import {
   IconPencil,
   IconCheck,
   IconMaterials,
-} from '../../components/icons'
-import { Card } from '../../components/Card'
+} from '../../shared/ui/icons'
+import { Card } from '../../shared/ui/Card'
 import { supabase } from '../../shared/api/supabase'
 import { getProfile } from '../../lib/profile'
 import { chatStream, isNetworkError } from '../../shared/api/ai'
@@ -15,12 +15,12 @@ import { aiOverloaded, clearAiFailures, recordAiServerFailure } from '../../lib/
 import { logActivity } from '../../lib/activity'
 import { useAuth } from '../../context/AuthContext'
 import { loadLastChat, startNewChat } from '../../lib/chatHistory'
-import { Loading } from '../../components/Loading'
+import { Loading } from '../../shared/ui/Loading'
 import { useLanguage } from '../../context/LanguageContext'
 import { getEsLevel } from '../../lib/esLevel'
 import type { AppLang, CEFRLevel, ChatTurn, LearningGoal } from '../../types'
-import { Thinking } from '../../components/Thinking'
-import { HowItWorks } from '../../components/HowItWorks'
+import { Thinking } from '../../shared/ui/Thinking'
+import { HowItWorks } from '../../shared/ui/HowItWorks'
 
 export function ConversationPage() {
   const { user } = useAuth()

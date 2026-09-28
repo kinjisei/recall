@@ -12,7 +12,7 @@
 // ============================================================================
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { IconArrowRight, IconSparkle } from './icons'
+import { IconArrowRight, IconSparkle } from '../shared/ui/icons'
 import {
   advanceGuided,
   currentGuidedStep,

@@ -4,11 +4,11 @@
 // lib/explain). Общий для всех режимов; открывается из RoundResult.
 // ============================================================================
 import { useState } from 'react'
-import { Sheet } from './Sheet'
-import { IconCheck, IconClose } from './icons'
+import { Sheet } from '../shared/ui/Sheet'
+import { IconCheck, IconClose } from '../shared/ui/icons'
 import { explainMistake } from '../lib/explain'
 import type { AppLang } from '../types'
-import { Thinking } from './Thinking'
+import { Thinking } from '../shared/ui/Thinking'
 
 export interface ReviewItem {
   /** Текст вопроса/задания. */

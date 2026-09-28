@@ -5,10 +5,10 @@
 // ============================================================================
 import { useState } from 'react'
 
-import { Card } from '../../components/Card'
-import { Button } from '../../components/Button'
-import { BackHeader } from '../../components/BackButton'
-import { LoadError } from '../../components/LoadError'
+import { Card } from '../../shared/ui/Card'
+import { Button } from '../../shared/ui/Button'
+import { BackHeader } from '../../shared/ui/BackButton'
+import { LoadError } from '../../shared/ui/LoadError'
 import { useAsyncData } from '../../shared/lib/useAsyncData'
 import {
   createWritingTask,
@@ -33,8 +33,8 @@ import type {
 import { LEVELS, inputClass } from './materials/shared'
 import { ChartView } from '../../components/ChartView'
 import { WritingReviewScreen } from '../writing/WritingReviewScreen'
-import { AppLink } from '../../components/AppLink'
-import { RowsSkeleton } from '../../components/Loading'
+import { AppLink } from '../../shared/ui/AppLink'
+import { RowsSkeleton } from '../../shared/ui/Loading'
 
 const CHART_KINDS: { id: ChartSpec['kind']; label: string }[] = [
   { id: 'bar', label: 'Столбцы' },

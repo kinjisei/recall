@@ -10,9 +10,9 @@
 // ============================================================================
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Card } from '../../components/Card'
-import { Button } from '../../components/Button'
-import { IconBack, IconSparkle } from '../../components/icons'
+import { Card } from '../../shared/ui/Card'
+import { Button } from '../../shared/ui/Button'
+import { IconBack, IconSparkle } from '../../shared/ui/icons'
 import { shuffle } from '../../lib/random'
 import { setEsLevel } from '../../lib/esLevel'
 import { reportPlacementResult } from '../../lib/placement'
@@ -22,7 +22,7 @@ import { invalidateProfile } from '../../lib/profile'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import type { AppLang, CEFRLevel, PlacementQuestion } from '../../types'
-import { Loading } from '../../components/Loading'
+import { Loading } from '../../shared/ui/Loading'
 
 const LEVELS_BY_LANG: Record<AppLang, CEFRLevel[]> = {
   es: ['A1', 'A2', 'B1', 'B2'],

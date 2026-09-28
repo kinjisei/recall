@@ -1,8 +1,8 @@
 // Шаг 3: предпросмотр материала (с ответами) — сохранить или перегенерировать.
 import { useState } from 'react'
-import { Card } from '../../../components/Card'
-import { Button } from '../../../components/Button'
-import { BackHeader } from '../../../components/BackButton'
+import { Card } from '../../../shared/ui/Card'
+import { Button } from '../../../shared/ui/Button'
+import { BackHeader } from '../../../shared/ui/BackButton'
 import {
   generateMaterialContent,
   generateExercisesForText,

@@ -10,8 +10,8 @@
 // ============================================================================
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Button } from '../../components/Button'
-import { IconPrinter } from '../../components/icons'
+import { Button } from '../../shared/ui/Button'
+import { IconPrinter } from '../../shared/ui/icons'
 import type { StudentDiagnostics } from '../../lib/diagnostics'
 import type { MetricDelta } from '../../lib/dynamics'
 import { plural } from '../../shared/lib/plural'

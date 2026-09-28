@@ -4,7 +4,7 @@
 // иконка. Набор вкладок и правило «какая активна» — общие с боковой панелью
 // компьютера: app/navigation.ts (там же — почему вкладок четыре).
 // ============================================================================
-import { AppLink } from '../../components/AppLink'
+import { AppLink } from '../../shared/ui/AppLink'
 import { useKeyboardInset } from '../../lib/useKeyboardInset'
 import { NAV_ICONS } from './navIcons'
 import { useNavTabs } from './useNavTabs'

@@ -10,8 +10,8 @@
 // словарь виден в одном списке.
 // ============================================================================
 import { useCallback, useEffect, useState } from 'react'
-import { Button } from '../../components/Button'
-import { LoadError } from '../../components/LoadError'
+import { Button } from '../../shared/ui/Button'
+import { LoadError } from '../../shared/ui/LoadError'
 import {
   assignWordCheck,
   getStudentWords,
@@ -20,10 +20,10 @@ import {
   type StudentWord,
 } from '../../lib/wordChecks'
 import type { CEFRLevel, WordCheck } from '../../types'
-import { IconTrash } from '../../components/icons'
+import { IconTrash } from '../../shared/ui/icons'
 import { deleteStudentCards } from '../../lib/teacher'
 import { WordPicker } from './WordPicker'
-import { RowsSkeleton } from '../../components/Loading'
+import { RowsSkeleton } from '../../shared/ui/Loading'
 
 // цвета — общий WORD_STATUS_CLS (тот же, что видит ученик); подписи от 3-го лица
 const statusChip = {

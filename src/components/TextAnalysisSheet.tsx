@@ -5,9 +5,9 @@
 // Движок — lib/textAnalysis (Заход 2a).
 // ============================================================================
 import { useEffect, useState } from 'react'
-import { Sheet } from './Sheet'
-import { Button } from './Button'
-import { IconRefresh } from './icons'
+import { Sheet } from '../shared/ui/Sheet'
+import { Button } from '../shared/ui/Button'
+import { IconRefresh } from '../shared/ui/icons'
 import { AnalyzedItemsView } from './AnalyzedItemsView'
 import { analyzeText, type TextAnalysis } from '../lib/textAnalysis'
 import { estimateCost } from '../lib/textChunks'

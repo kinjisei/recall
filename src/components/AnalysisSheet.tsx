@@ -3,11 +3,11 @@
 // Общий перевод + найденное (AnalyzedItemsView). Разбор — lib/analyze.
 // ============================================================================
 import { useEffect, useState } from 'react'
-import { Sheet } from './Sheet'
+import { Sheet } from '../shared/ui/Sheet'
 import { analyzeSelection, type Analysis } from '../lib/analyze'
 import { AnalyzedItemsView } from './AnalyzedItemsView'
 import type { AppLang } from '../types'
-import { Thinking } from './Thinking'
+import { Thinking } from '../shared/ui/Thinking'
 
 export function AnalysisSheet({
   text,

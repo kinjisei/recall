@@ -6,10 +6,10 @@
 // Хранение: teacher_students.daily_plan через RPC set_daily_plan.
 // ============================================================================
 import { useCallback, useState } from 'react'
-import { Button } from '../../components/Button'
-import { LoadError } from '../../components/LoadError'
+import { Button } from '../../shared/ui/Button'
+import { LoadError } from '../../shared/ui/LoadError'
 import { useAsyncData } from '../../shared/lib/useAsyncData'
-import { RowsSkeleton } from '../../components/Loading'
+import { RowsSkeleton } from '../../shared/ui/Loading'
 import {
   getStudentDailyPlan,
   setDailyPlan,

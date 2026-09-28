@@ -1,8 +1,8 @@
 // Шаг 1: форма заявки на материал (язык/уровень/тема/формат/длина/слова/
 // грамматика) → AI составляет план.
 import { useState } from 'react'
-import { Card } from '../../../components/Card'
-import { Button } from '../../../components/Button'
+import { Card } from '../../../shared/ui/Card'
+import { Button } from '../../../shared/ui/Button'
 import {
   MATERIAL_FORMATS,
   MATERIAL_LENGTHS,

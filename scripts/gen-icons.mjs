@@ -58,6 +58,6 @@ function icon(inner: string, strokeWidth = '1.75') {
 }
 
 `
-writeFileSync('src/components/icons.tsx', header + body)
+writeFileSync('src/shared/ui/icons.tsx', header + body)
 console.log(`icons.tsx: ${names.length} компонентов`)
 console.log(names.join(', '))

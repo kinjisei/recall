@@ -4,8 +4,8 @@
 // возвращает карточку на повтор (markWrong), как и в остальных играх.
 // ============================================================================
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { IconCheck, IconTimer, IconClose } from '../../components/icons'
-import { Card } from '../../components/Card'
+import { IconCheck, IconTimer, IconClose } from '../../shared/ui/icons'
+import { Card } from '../../shared/ui/Card'
 import { RoundResult } from '../../components/RoundResult'
 import type { ReviewItem } from '../../components/RoundReview'
 import { logActivity } from '../../lib/activity'

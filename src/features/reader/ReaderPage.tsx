@@ -1,8 +1,8 @@
 ﻿import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react'
-import { Card } from '../../components/Card'
+import { Card } from '../../shared/ui/Card'
 import { GuidedNext } from '../../components/GuidedNext'
-import { BackHeader } from '../../components/BackButton'
-import { TabPicker } from '../../components/TabPicker'
+import { BackHeader } from '../../shared/ui/BackButton'
+import { TabPicker } from '../../shared/ui/TabPicker'
 import { MarkableText } from '../../components/MarkableText'
 import { useLanguage } from '../../context/LanguageContext'
 import { getUserLevel } from '../../lib/level'
@@ -19,7 +19,7 @@ import { sampleTexts, type SampleText } from './sampleTexts'
 import type { CEFRLevel } from '../../types'
 import { useScrollTop } from '../../lib/useScrollTop'
 import { useUrlState } from '../../shared/lib/useUrlState'
-import { Loading } from '../../components/Loading'
+import { Loading } from '../../shared/ui/Loading'
 
 const levels: CEFRLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1']
 

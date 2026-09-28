@@ -3,7 +3,7 @@
 // IELTS: band + 4 критерия; обычный: уровень + чек-листы целевых слов/грамматики.
 // Плюс общий блок: ошибки (было→стало), сильные стороны, что подтянуть, rewrites.
 // ============================================================================
-import { IconCheck, IconClose } from '../../components/icons'
+import { IconCheck, IconClose } from '../../shared/ui/icons'
 import type { WritingGrade, WritingMode } from '../../types'
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {

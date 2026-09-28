@@ -3,13 +3,13 @@
 //
 // Экраны — лениво: каждая страница (и её данные) грузится при переходе, а не
 // в стартовом бандле. Определения живут в app/routeChunks: там же лежит
-// предзагрузка, которой пользуются ссылки (components/AppLink). Уже
+// предзагрузка, которой пользуются ссылки (shared/ui/AppLink). Уже
 // подгруженный экран показывается БЕЗ Suspense — иначе переход между
 // вкладками снимал бы кадр с «Загрузка…».
 // ============================================================================
 import { Suspense, type ReactNode } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { Loading } from '../components/Loading'
+import { Loading } from '../shared/ui/Loading'
 import { AppProviders } from './AppProviders'
 import { ScrollToTop } from './ScrollToTop'
 import { PageTracker } from './PageTracker'

@@ -29,10 +29,10 @@ import {
   IconTimer,
   type IconProps,
   IconCards,
-} from '../../components/icons'
-import { Card } from '../../components/Card'
-import { HowItWorks } from '../../components/HowItWorks'
-import { Button } from '../../components/Button'
+} from '../../shared/ui/icons'
+import { Card } from '../../shared/ui/Card'
+import { HowItWorks } from '../../shared/ui/HowItWorks'
+import { Button } from '../../shared/ui/Button'
 import { useLanguage } from '../../context/LanguageContext'
 import { countDueCards } from '../../lib/fsrs'
 import { countMyWords } from '../../lib/cards'
@@ -41,8 +41,8 @@ import { getMistakes } from '../../lib/mistakes'
 import { DeckReview } from '../flashcards/DeckReview'
 import { useScrollTop } from '../../lib/useScrollTop'
 import { useFocusMode } from '../../shared/lib/focusMode'
-import { Loading } from '../../components/Loading'
-import { markMorph } from '../../lib/morph'
+import { Loading } from '../../shared/ui/Loading'
+import { markMorph } from '../../shared/lib/morph'
 import { withViewTransition } from '../../shared/lib/viewTransition'
 
 const MatchMode = lazy(() => import('../words/MatchMode').then((m) => ({ default: m.MatchMode })))
@@ -108,7 +108,7 @@ function TileGrid({
           key={t.title}
           onClick={(e) => {
             // плитка «вырастает» в экран игры: помечаем её общим элементом
-            // перехода ДО смены состояния (см. lib/morph.ts)
+            // перехода ДО смены состояния (см. shared/lib/morph.ts)
             markMorph(e.currentTarget)
             onOpen(t)
           }}

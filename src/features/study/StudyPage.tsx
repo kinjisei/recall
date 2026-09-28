@@ -21,12 +21,12 @@ import {
   IconPlus,
   IconCards,
   IconPackage,
-} from '../../components/icons'
-import { RowCard } from '../../components/RowCard'
-import { HowItWorks } from '../../components/HowItWorks'
-import { LoadError } from '../../components/LoadError'
-import { BackHeader } from '../../components/BackButton'
-import { Button } from '../../components/Button'
+} from '../../shared/ui/icons'
+import { RowCard } from '../../shared/ui/RowCard'
+import { HowItWorks } from '../../shared/ui/HowItWorks'
+import { LoadError } from '../../shared/ui/LoadError'
+import { BackHeader } from '../../shared/ui/BackButton'
+import { Button } from '../../shared/ui/Button'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { getProfile, getCachedEnLevel } from '../../lib/profile'
@@ -44,7 +44,7 @@ import { PacksSheet } from '../flashcards/PacksSheet'
 import { AddCardForm } from '../words/AddCardForm'
 import { DeckReview } from '../flashcards/DeckReview'
 import { useScrollTop } from '../../lib/useScrollTop'
-import { Loading } from '../../components/Loading'
+import { Loading } from '../../shared/ui/Loading'
 
 const MyWords = lazy(() => import('../words/MyWords').then((m) => ({ default: m.MyWords })))
 

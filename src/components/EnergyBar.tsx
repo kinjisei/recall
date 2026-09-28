@@ -7,7 +7,7 @@
 // Показывает эффективный остаток: для соло — свой бюджет; для ученика студии —
 // её под-кап, но не больше остатка общего пула. У админа и без данных — не рисуем.
 // ============================================================================
-import { IconSparkle } from './icons'
+import { IconSparkle } from '../shared/ui/icons'
 import { useCountUp } from '../lib/useCountUp'
 import type { MyPlan } from '../lib/billing'
 

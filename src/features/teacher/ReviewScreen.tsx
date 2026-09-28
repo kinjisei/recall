@@ -4,10 +4,10 @@
 // с комментарием, затем завершает проверку (статус reviewed).
 // ============================================================================
 import { useEffect, useRef, useState } from 'react'
-import { BackButton } from '../../components/BackButton'
-import { Card } from '../../components/Card'
-import { Button } from '../../components/Button'
-import { IconCheck, IconClose } from '../../components/icons'
+import { BackButton } from '../../shared/ui/BackButton'
+import { Card } from '../../shared/ui/Card'
+import { Button } from '../../shared/ui/Button'
+import { IconCheck, IconClose } from '../../shared/ui/icons'
 import {
   finishReview,
   generateAiReview,

@@ -14,7 +14,7 @@ import {
   IconMic,
   IconCards,
   type IconLike,
-} from '../../components/icons'
+} from '../../shared/ui/icons'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { supabase } from '../../shared/api/supabase'
@@ -24,7 +24,7 @@ import { setEsLevel } from '../../lib/esLevel'
 import { markOnboarded } from '../../lib/onboarding'
 import { startGuidedRoute } from '../../lib/guided'
 import { track, setSelfReportedSource } from '../../lib/analytics'
-import { celebrate } from '../../components/Confetti'
+import { celebrate } from '../../shared/ui/Confetti'
 import { GOAL_LABELS, type AppLang, type CEFRLevel, type LearningGoal } from '../../types'
 
 // A1 добавлен: profiles.level и тест уровня теперь допускают его (новичок с нуля)

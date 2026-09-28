@@ -5,7 +5,7 @@
 // Используется в читалках EN/ES, «Моих текстах» и заданиях.
 // ============================================================================
 import { useState } from 'react'
-import { IconTranslate, IconSearch } from './icons'
+import { IconTranslate, IconSearch } from '../shared/ui/icons'
 import { TappableText, WordSheet, type WordPick } from './WordSheet'
 import { PhraseSheet, type PhrasePick } from './PhraseSheet'
 import { TextAnalysisSheet } from './TextAnalysisSheet'

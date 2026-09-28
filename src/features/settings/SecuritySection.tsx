@@ -11,7 +11,7 @@
 // ============================================================================
 import { useState, type FormEvent } from 'react'
 import { useAuth } from '../../context/AuthContext'
-import { Reveal } from '../../components/Reveal'
+import { Reveal } from '../../shared/ui/Reveal'
 import { MIN_PASSWORD, changePassword } from '../../lib/passwordReset'
 import { PasswordField } from '../auth/authUi'
 

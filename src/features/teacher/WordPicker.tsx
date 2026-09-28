@@ -12,10 +12,10 @@
 // равно делает сервер.
 // ============================================================================
 import { useEffect, useMemo, useState } from 'react'
-import { Sheet } from '../../components/Sheet'
-import { Button } from '../../components/Button'
-import { IconClose, IconSearch } from '../../components/icons'
-import { Loading, RowsSkeleton } from '../../components/Loading'
+import { Sheet } from '../../shared/ui/Sheet'
+import { Button } from '../../shared/ui/Button'
+import { IconClose, IconSearch } from '../../shared/ui/icons'
+import { Loading, RowsSkeleton } from '../../shared/ui/Loading'
 import { useLanguage } from '../../context/LanguageContext'
 import { assignWordsToStudent, getMyDecks, listDeckCards } from '../../lib/teacher'
 import {

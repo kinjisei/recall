@@ -11,8 +11,8 @@
 // ============================================================================
 
 import { SUPPORT_SLA, supportMailto } from '../../shared/lib/contacts'
-import { BrandLogo } from '../../components/Brand'
-import { AppLink } from '../../components/AppLink'
+import { BrandLogo } from '../../shared/ui/Brand'
+import { AppLink } from '../../shared/ui/AppLink'
 import {
   IconCheck,
   IconMaterials,
@@ -22,7 +22,7 @@ import {
   IconPrinter,
   IconCards,
   type IconLike,
-} from '../../components/icons'
+} from '../../shared/ui/icons'
 
 /** Главная кнопка действия — на регистрацию. */
 function CTA({ label = 'Попробовать 14 дней бесплатно' }: { label?: string }) {

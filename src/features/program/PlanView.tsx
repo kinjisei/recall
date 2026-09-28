@@ -11,7 +11,7 @@ import {
   IconMic,
   IconSparkle,
   type IconProps,
-} from '../../components/icons'
+} from '../../shared/ui/icons'
 import type { PlanItemType, PlanWeek } from '../../types'
 
 const ITEM_ICON: Record<PlanItemType, (p: IconProps) => React.JSX.Element> = {

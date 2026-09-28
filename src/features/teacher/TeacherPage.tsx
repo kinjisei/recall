@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { IconGraduation, IconFlame, IconBadgeCheck } from '../../components/icons'
-import { BackHeader } from '../../components/BackButton'
+import { IconGraduation, IconFlame, IconBadgeCheck } from '../../shared/ui/icons'
+import { BackHeader } from '../../shared/ui/BackButton'
 import { GOAL_LABELS } from '../../types'
 import { useUrlState } from '../../shared/lib/useUrlState'
-import { Card } from '../../components/Card'
-import { Button } from '../../components/Button'
-import { HowItWorks } from '../../components/HowItWorks'
+import { Card } from '../../shared/ui/Card'
+import { Button } from '../../shared/ui/Button'
+import { HowItWorks } from '../../shared/ui/HowItWorks'
 import { getProfile } from '../../lib/profile'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
@@ -38,15 +38,15 @@ import {
   studentSignal,
   type StudentSignal,
 } from '../../lib/studentSignals'
-import { Reveal } from '../../components/Reveal'
+import { Reveal } from '../../shared/ui/Reveal'
 import { getStudentDiagnostics, type StudentDiagnostics } from '../../lib/diagnostics'
 import { countSubmittedWorks } from '../../lib/materials'
 import { countSubmittedWriting } from '../../lib/writing'
 import { getMyPlan, type MyPlan } from '../../lib/billing'
-import { IconSparkle } from '../../components/icons'
+import { IconSparkle } from '../../shared/ui/icons'
 import type { Profile } from '../../types'
-import { AppLink } from '../../components/AppLink'
-import { Loading, RowsSkeleton } from '../../components/Loading'
+import { AppLink } from '../../shared/ui/AppLink'
+import { Loading, RowsSkeleton } from '../../shared/ui/Loading'
 
 export function TeacherPage() {
   const { user } = useAuth()

@@ -11,9 +11,9 @@
 // автозачёт пункта домашки «письмо» (триггер homework_refresh_by_user).
 // ============================================================================
 import { useState } from 'react'
-import { Card } from '../../components/Card'
-import { Button } from '../../components/Button'
-import { BackHeader } from '../../components/BackButton'
+import { Card } from '../../shared/ui/Card'
+import { Button } from '../../shared/ui/Button'
+import { BackHeader } from '../../shared/ui/BackButton'
 import { useAuth } from '../../context/AuthContext'
 import { chat } from '../../shared/api/ai'
 import { supabase } from '../../shared/api/supabase'

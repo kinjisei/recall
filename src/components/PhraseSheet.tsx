@@ -5,16 +5,16 @@
 // словарь + транскрипция), для фразы — эта шторка.
 // ============================================================================
 import { useEffect, useState } from 'react'
-import { Sheet } from './Sheet'
-import { Button } from './Button'
-import { IconSearch, IconSpeaker } from './icons'
+import { Sheet } from '../shared/ui/Sheet'
+import { Button } from '../shared/ui/Button'
+import { IconSearch, IconSpeaker } from '../shared/ui/icons'
 import { AnalysisSheet } from './AnalysisSheet'
 import { translatePhrase } from '../lib/phrase'
 import { addCard } from '../lib/cards'
 import { speak } from '../lib/speech'
 import { logActivity } from '../lib/activity'
 import type { AppLang } from '../types'
-import { Thinking } from './Thinking'
+import { Thinking } from '../shared/ui/Thinking'
 
 export interface PhrasePick {
   text: string

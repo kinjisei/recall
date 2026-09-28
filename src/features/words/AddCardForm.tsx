@@ -1,8 +1,8 @@
 // Форма ручного добавления слова. Живёт на уровне хаба «Слова»: добавление
 // не относится к режиму повторения, а нужно из любого места раздела.
 import { useState } from 'react'
-import { Card } from '../../components/Card'
-import { Button } from '../../components/Button'
+import { Card } from '../../shared/ui/Card'
+import { Button } from '../../shared/ui/Button'
 import { addCard } from '../../lib/cards'
 import type { AppLang } from '../../types'
 

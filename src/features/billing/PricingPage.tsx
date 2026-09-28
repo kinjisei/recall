@@ -5,8 +5,8 @@
 // БД, плашку с его текущим тарифом.
 // ============================================================================
 import { useEffect, useState } from 'react'
-import { IconCheck, IconTeacher, IconTrophy } from '../../components/icons'
-import { SmartBack } from '../../components/SmartBack'
+import { IconCheck, IconTeacher, IconTrophy } from '../../shared/ui/icons'
+import { SmartBack } from '../../shared/ui/SmartBack'
 import { useAuth } from '../../context/AuthContext'
 import { PLANS, KASPI, getMyPlan, type MyPlan, type PlanCard } from '../../lib/billing'
 import { energyLeft } from '../../components/EnergyBar'

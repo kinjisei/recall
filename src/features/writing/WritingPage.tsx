@@ -6,12 +6,12 @@
 // ============================================================================
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Card } from '../../components/Card'
-import { Button } from '../../components/Button'
-import { BackButton, BackHeader } from '../../components/BackButton'
-import { IconPencil } from '../../components/icons'
-import { LoadError } from '../../components/LoadError'
-import { HowItWorks } from '../../components/HowItWorks'
+import { Card } from '../../shared/ui/Card'
+import { Button } from '../../shared/ui/Button'
+import { BackButton, BackHeader } from '../../shared/ui/BackButton'
+import { IconPencil } from '../../shared/ui/icons'
+import { LoadError } from '../../shared/ui/LoadError'
+import { HowItWorks } from '../../shared/ui/HowItWorks'
 import { useScrollTop } from '../../lib/useScrollTop'
 import { getMyWritingAssignments, startOwnWriting, submitWriting } from '../../lib/writing'
 import { useLanguage } from '../../context/LanguageContext'
@@ -23,7 +23,7 @@ import { WritingGradeView } from './WritingGradeView'
 import { WritingHistory } from './WritingHistory'
 import { QuickWriteCheck } from './QuickWriteCheck'
 import { ChartView } from '../../components/ChartView'
-import { RowsSkeleton } from '../../components/Loading'
+import { RowsSkeleton } from '../../shared/ui/Loading'
 
 type Row = WritingTaskAssignment & { task: WritingTask }
 
