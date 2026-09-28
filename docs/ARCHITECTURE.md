@@ -35,8 +35,9 @@ PWA для изучения **двух языков: английского и �
 | PWA | **vite-plugin-pwa** | установка, офлайн; авто-проверка обновлений в main.tsx |
 | База + Вход | **Supabase** (Postgres + Auth + RLS) | бесплатно, синхронизация |
 | AI-прокси | **Vercel serverless** `/api/gemini`, `/api/transcribe` | ключи только на сервере |
-| AI-модели | Каскады Gemini (3.6/3.5-flash, lite, Pro) + Groq (llama, Whisper) | роутинг ПО ТИПУ ЗАДАЧИ — карта `api/_tasks.ts`; клиент модель/уровень НЕ выбирает |
-| Квоты AI | RPC `consume_ai_quota(kind)` — классы heavy/light/speech | лимиты по тарифу, защита от выжигания |
+| AI-модели | Каскады Gemini (3.6/3.5/2.5-flash, lite, Pro) + Groq (gpt-oss, Whisper) | роутинг ПО ТИПУ ЗАДАЧИ — карта `api/_tasks.ts`; клиент модель/уровень НЕ выбирает; что модели живы — `check-ai-models.mjs` |
+| Энергия AI | RPC `spend_energy` (⚡, генерации, анти-абьюз light/speech) + `refund_ai_call` | лимиты по тарифу; не доставили ответ — энергия возвращается |
+| Учёт расхода AI | журнал `ai_call_log` (модель, итог, задержка, попытки) → `/admin`, блок «Расход AI» | видно, какая модель отвечает и как близко дневные лимиты поставщиков |
 | Озвучка (TTS) | **Web Speech API** | бесплатно, en-US / es-ES |
 | Распознавание (STT) | MediaRecorder → `/api/transcribe` (**Groq Whisper**) | работает и на iPhone |
 | Словарь EN | Free Dictionary API + Gemini(light) | транскрипция/аудио + учебные определения |
@@ -57,11 +58,14 @@ recall-app/
                    findings.md (журнал находок аудитов), costs.md, textbook/
   api/             gemini.ts, transcribe.ts, _core.ts (вызов моделей + фолбэки),
                    _geminiBody.ts (тело запроса под модель), _tasks.ts (карта
-                   task→модели/квота/права), _auth.ts (JWT, квота, isTeacher),
-                   _groq.ts, _stt.ts, _timeouts.ts (сроки ожидания: запросы
-                   наружу — только через него), notify.ts (сервер доставки
-                   уведомлений: будит база через pg_net, вход — только секрет),
-                   _channels.ts (каналы доставки; пока пусто)
+                   task→модели/квота/права), _auth.ts (JWT, энергия, isTeacher),
+                   _usage.ts (журнал вызовов: попытки и итог, возврат вместе
+                   с итогом), _groq.ts, _stt.ts, _timeouts.ts (сроки ожидания:
+                   запросы наружу — только через него), notify.ts (сервер
+                   доставки уведомлений: будит база через pg_net, вход — только
+                   секрет), _channels.ts (каналы доставки; пока пусто).
+                   В dev те же обработчики зовёт vite.config.ts (адаптер
+                   vercelRoute) — второй копии роутинга нет
   src/
     app/           каркас (src/app/CLAUDE.md): main.tsx (регистрация SW +
                    автообновление PWA), App.tsx (роутинг, см. §8),
@@ -81,7 +85,8 @@ recall-app/
                    Thinking, Brand, Confetti, icons.tsx (генерируются)
     domains/       предметная логика по новой архитектуре (index — парадная
                    дверь, api — единственный вход в базу, model — чистые правила):
-                   notifications (лента, правила, доставка — Ф1.5)
+                   notifications (лента, правила, доставка — Ф1.5), ai (учёт
+                   расхода и лимиты моделей — Ф1.6)
     types/index.ts ВСЕ общие типы
     context/       AuthContext (вход/выход, кэш профиля), LanguageContext (EN/ES)
     components/    общее С предметной логикой (переезжает в разделы, Ф3):
@@ -129,7 +134,8 @@ recall-app/
                    DailyPlanSection, PlacementSection, StudentWordsSection,
                    DeckWordsPicker, GuideSection (методичка), PrintSheet (печать)
       billing/     PricingPage (/pricing, публичный)
-      admin/       AdminPage (/admin, is_admin): поиск по email, выдача плана
+      admin/       AdminPage (/admin, is_admin): поиск по email, выдача плана;
+                   AiUsage — блок «Расход AI» (модели против дневных лимитов)
       landing/     TeachersPage (/teachers, публичный лендинг)
       legal/       LegalPage (/privacy, /terms)
       notifications/ колокольчик и лента (в шапке и боковом меню; появляется,
@@ -213,9 +219,17 @@ recall-app/
 Монетизация и доступ:
 - `allowed_emails` — белый список регистрации (гейт в триггере handle_new_user;
   клиенту невидим полностью).
-- `ai_calls` (user_id, kind 'heavy'|'light'|'speech', called_at) — журнал AI;
-  пишется только RPC consume_ai_quota(kind): лимиты по тарифу и классу,
-  advisory-лок против гонки. Сводка — RPC get_my_plan().
+- `ai_calls` (user_id, kind 'heavy'|'light'|'speech', cost_energy, pool_owner,
+  is_generation, refund_token, called_at) — журнал СПИСАНИЙ; пишет только RPC
+  `spend_energy` (номер списания `refund_token` генерирует сервер), возврат
+  `refund_ai_call(nonce)` строку удаляет; advisory-лок против гонки. Сводка
+  человеку — RPC get_my_plan().
+- `ai_call_log` (user_id, call_token, task, tier, model, status
+  'ok'|'failed'|'cut', latency_ms, attempts jsonb) — журнал ВЫЗОВОВ, 40 дней;
+  отдельно от ai_calls, потому что возврат удаляет строку списания, а отказы и
+  есть то, что надо видеть. Пишет только сервер — `log_ai_call` по номеру
+  списания (без ответа — вместе с возвратом); читают только `admin_ai_usage`
+  (попытки по моделям и суткам Google) и `admin_ai_tasks` (вызовы по задачам).
 
 Ключевой инвариант безопасности: **все чувствительные записи — только через
 security-definer RPC** (submit_material с серверным пересчётом балла,
@@ -228,9 +242,10 @@ finish/reassign/assign_*, quest_*, submit_placement, admin_set_plan...);
 `Profile, Deck, Card, ReviewState, ActivityLog(+ActivityType), Conversation,
 Message, WritingSubmission`, `CEFRLevel = 'A1'..'C2'`, `Rating = 'again'|'hard'|
 'good'|'easy'` (UI колоды использует again/good), `AppLang = 'en'|'es'`,
-`ChatTurn`, `AiTask = 'word'|'definition'|'batch'|'dialog'|'writing'|'quest'|
-'review'|'material'|'program'` (определены в `shared/api/aiTypes.ts` — их читает
-и сервер `api/*`; здесь реэкспорт).
+`ChatTurn`, `AiTask = 'word'|'definition'|'analyze'|'dialog'|'writing'|'quest'|
+'review'|'material'|'program'|'homework'|'self_material'` (определены в
+`shared/api/aiTypes.ts` — их читает и сервер `api/*`; здесь реэкспорт; что карта
+сервера и клиент совпадают в обе стороны — `test-aitasks.mjs`).
 Контент: `SpanishTopic, SpanishWord, SpanishReading, SpanishDialogue,
 SpanishSentence, EnglishWord, WordTopic`, грамматика/упражнения (общие типы
 уроков и Exercise для движка components/exercises.tsx).
@@ -263,7 +278,8 @@ lookup(word) / lookupInContext(word, sentence, lang)
 // shared/api/ai.ts — зовёт НАШ /api/gemini (+ onAiRequest — подписка воронки)
 chat(messages: ChatTurn[], opts: { task: AiTask; system?: string }): Promise<string>
 // Уровень модели, карман квоты и права выбирает СЕРВЕР по task (api/_tasks.ts).
-// Клиент модель/tier НЕ задаёт (пентест, заход 18). material/program — только teacher.
+// Клиент модель/tier НЕ задаёт (пентест, заход 18; без task — 400, Ф1.6).
+// material/program/homework — только teacher.
 
 // lib/activity.ts — logActivity(type, items?, sec?) (не бросает), getStreak(),
 // getTodayTypes()
@@ -287,7 +303,6 @@ chat(messages: ChatTurn[], opts: { task: AiTask; system?: string }): Promise<str
 // lib/dynamics.ts (динамика за месяц, чистый); lib/assignmentScore.ts (общий балл)
 // lib/mistakes.ts — банк «Мои ошибки» (localStorage + тихий синк в БД)
 // lib/myTexts.ts — свои тексты (ТОЛЬКО localStorage, лимиты 15к/10шт)
-// lib/batchWords.ts — пакетное добавление слов (1 AI-запрос на ~15 слов, lite)
 // lib/wordPool.ts / distractors.ts / recentWords.ts / pickRound.ts — материал игр
 // lib/guided.ts — ведомая сессия; lib/settings.ts — локальные настройки
 // lib/text.ts — answerMatches (варианты через «/»; ЕДИНАЯ проверка ответов —
@@ -295,6 +310,10 @@ chat(messages: ChatTurn[], opts: { task: AiTask; system?: string }): Promise<str
 // domains/notifications — loadNotifications(limit?), notificationCounts() →
 // { total, unread }, markNotificationsRead(ids?), renderNotification({kind,data})
 // → { title, body?, href? } (href — только внутренний, safeHref), whenLabel
+// domains/ai — loadAiUsage(days) → { models: ModelDay[], tasks: TaskDay[] }
+// (только владельцу), modelsOnDay(rows, day, MODEL_LIMITS) — доля дневного
+// лимита без отказов 429, googleDay(now) / quotaReset(now) — сутки Google
+// (полночь по Тихоокеанскому времени), MODEL_LIMITS — лимиты с источником
 // shared/lib/share.ts — whatsappLink(text, phone?), telegramLink(text, url),
 // waPhone(raw), shareNative(text, url?) — «поделиться» со своего номера
 // shared/ui/theme.ts — themeChoice/applyTheme/setThemeChoice (тема устройства;
