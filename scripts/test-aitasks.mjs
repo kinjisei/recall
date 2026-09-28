@@ -1,10 +1,15 @@
 /**
- * Тест карты AI-задач (api/_tasks.ts) — заход 18.
+ * Тест карты AI-задач (api/_tasks.ts) — заход 18, Ф1.6.
  * Главный инвариант: Pro-модели (tier 'max') доступны ТОЛЬКО преподавателю.
  * Пока он держится, дыра «клиент просит самую дорогую модель» не вернётся,
  * даже если кто-то добавит новую задачу и забудет подумать о правах.
+ * Второй — карта и клиент совпадают в обе стороны: у каждой задачи клиента
+ * есть правило на сервере, и в карте нет задач, которых клиент не шлёт
+ * (мёртвая batch жила так с июля до Ф1.6).
  * Запуск: node scripts/test-aitasks.mjs (Node 22+, стрип типов).
  */
+import { readdirSync, readFileSync, statSync } from 'node:fs'
+import { join } from 'node:path'
 import { AI_TASKS, taskSpec } from '../api/_tasks.ts'
 
 const results = []
@@ -61,17 +66,36 @@ check(
   entries.every(([, s]) => s.quota !== 'speech'),
 )
 
-// --- полнота: задачи всех вызовов chat() на месте ---
-const expected = [
-  'word', 'definition', 'batch',
-  'dialog', 'writing', 'quest', 'review',
-  'material', 'program',
-]
+// --- карта и клиент совпадают в обе стороны ---
+const SRC = new URL('../src/', import.meta.url)
+const TYPES_FILE = 'shared/api/aiTypes.ts'
+const union = readFileSync(new URL(TYPES_FILE, SRC), 'utf8').match(/export type AiTask =([^;]*?)(?:\n\n|$)/)?.[1] ?? ''
+const declared = [...union.matchAll(/\|\s*'([a-z_]+)'/g)].map((m) => m[1])
+const inMap = entries.map(([t]) => t)
 check(
-  'карта покрывает все типы задач клиента',
-  expected.every((t) => AI_TASKS[t]),
-  `${entries.length} шт.`,
+  'у каждой задачи клиента (AiTask) есть правило на сервере',
+  declared.length > 0 && declared.every((t) => AI_TASKS[t]),
+  `нет правила: ${declared.filter((t) => !AI_TASKS[t]).join(', ') || '—'}`,
 )
+check(
+  'в карте нет задач, которых нет у клиента',
+  inMap.every((t) => declared.includes(t)),
+  `лишние: ${inMap.filter((t) => !declared.includes(t)).join(', ') || '—'}`,
+)
+
+// Задачу, которую ни один экран не шлёт, никто и не проверит — она живёт в
+// карте, пока кто-нибудь не забудет про её права. Ищем её имя строкой в коде.
+function sources(dir, out = []) {
+  for (const name of readdirSync(dir)) {
+    const full = join(dir, name)
+    if (statSync(full).isDirectory()) sources(full, out)
+    else if (/\.tsx?$/.test(name) && !full.replaceAll('\\', '/').endsWith(TYPES_FILE)) out.push(readFileSync(full, 'utf8'))
+  }
+  return out
+}
+const code = sources(new URL(SRC).pathname.replace(/^\/([A-Za-z]:)/, '$1')).join('\n')
+const unused = inMap.filter((t) => !code.includes(`'${t}'`))
+check('каждую задачу карты шлёт хотя бы один экран (мёртвых нет)', unused.length === 0, `никто не шлёт: ${unused.join(', ') || '—'}`)
 
 // --- taskSpec не пускает чужое ---
 check('taskSpec: известная задача', taskSpec('dialog')?.tier === 'standard')

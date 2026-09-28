@@ -2,12 +2,11 @@
 // Общая авторизация и CORS для серверных функций (api/gemini, api/transcribe).
 // Файл с «_» — Vercel НЕ делает из него отдельную функцию.
 //
-// Одна RPC consume_ai_quota(kind) (supabase/migrations, блоки «ЛИМИТЫ НА AI» и
-// «КЛАССЫ КВОТ»), вызванная с JWT пользователя, за один запрос покрывает:
-// валидность токена, бан, флаг blocked и суточный лимит СВОЕГО класса
-// (heavy / light / speech). Счётчик живёт в БД и клиенту недоступен.
-// Любой AI-эндпоинт обязан пройти через authorize(), иначе открытый прокси
-// позволит жечь бесплатную квоту.
+// Одна RPC spend_energy (supabase/migrations), вызванная с JWT пользователя,
+// за один запрос покрывает: валидность токена, бан, флаг blocked, энергию,
+// месячный лимит генераций и анти-абьюз-кэп своего класса (heavy / light /
+// speech). Счётчик живёт в БД и клиенту недоступен. Любой AI-эндпоинт обязан
+// пройти через authorize(), иначе открытый прокси позволит жечь квоту.
 // ============================================================================
 import { randomUUID } from 'node:crypto'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
@@ -17,9 +16,9 @@ import { TIMEOUTS, timedFetch } from './_timeouts.js'
 export const ALLOWED_ORIGINS = ['https://recall-pgkz.vercel.app', 'http://localhost:5173']
 
 export type AuthResult =
-  /** refundToken — серверная метка списания: по ней и только по ней его можно
-   *  вернуть, если ответа от AI так и не случилось (см. refundAiCall). */
-  | { ok: true; refundToken?: string }
+  /** refundToken — серверный номер списания: по нему и только по нему его
+   *  можно вернуть (refundAiCall) и записать итог вызова (api/_usage.ts). */
+  | { ok: true; refundToken: string }
   | { ok: false; status: number; error: string }
 
 /** Отказ авторизации — та ветка AuthResult, где есть код ответа и текст. */
@@ -42,17 +41,16 @@ export function authDenied(result: AuthResult): result is AuthDenied {
 
 /**
  * Класс запроса — от него зависит, из какого «кармана» списывается лимит:
- *   heavy  — Диалог, письмо, квесты, разбор работ, материалы (это и есть
- *            «AI-действие» из тарифов: дорогие умные модели);
- *   light  — перевод слова, определения, пакетное добавление слов (дешёвые
- *            модели с огромной бесплатной квотой);
- *   speech — распознавание речи в тренажёре произношения.
+ *   heavy  — Диалог, письмо, квесты, разбор работ, материалы (тратят энергию
+ *            или месячный лимит генераций);
+ *   light  — перевод слова, определения (0 ⚡, только анти-абьюз-кэп);
+ *   speech — распознавание речи в тренажёре произношения (0 ⚡, свой кэп).
  * Раньше всё считалось одним счётчиком, и десяток тапов по словам съедал
- * дневной лимит целиком (см. блок «КЛАССЫ КВОТ» в supabase/migrations).
+ * дневной лимит целиком.
  */
 export type QuotaKind = 'heavy' | 'light' | 'speech'
 
-const DENIED: AuthResult = { ok: false, status: 401, error: 'Требуется вход в приложение' }
+const DENIED: AuthDenied = { ok: false, status: 401, error: 'Требуется вход в приложение' }
 
 /**
  * Supabase не ответил вовремя или связь оборвалась. Это НЕ «нужен вход» и не
@@ -65,22 +63,61 @@ export const UNAVAILABLE: AuthDenied = {
   error: 'Сервис AI временно недоступен. Попробуй через минуту.',
 }
 
-/** Резервная проверка токена — на случай, если RPC ещё не создана в БД. */
-async function tokenValid(url: string, anon: string, token: string, ms: number): Promise<boolean> {
+/** Чем войти в базу от имени пользователя: его токен и адрес проекта. */
+interface Credentials {
+  url: string
+  anon: string
+  jwt: string
+}
+
+function credentials(req: VercelRequest): Credentials | null {
+  const auth = req.headers.authorization
+  const jwt = auth?.startsWith('Bearer ') ? auth.slice(7) : null
+  const url = process.env.VITE_SUPABASE_URL
+  const anon = process.env.VITE_SUPABASE_ANON_KEY
+  return jwt && url && anon ? { url, anon, jwt } : null
+}
+
+export interface RpcReply {
+  ok: boolean
+  status: number
+  text: string
+}
+
+/** RPC под токеном пользователя. Тело читаем внутри окна: зависнуть можно и на середине. */
+function rpcAs(c: Credentials, fn: string, args: object, ms: number): Promise<RpcReply> {
   return timedFetch(
-    `${url}/auth/v1/user`,
-    { headers: { Authorization: `Bearer ${token}`, apikey: anon } },
+    `${c.url}/rest/v1/rpc/${fn}`,
+    {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${c.jwt}`, apikey: c.anon, 'Content-Type': 'application/json' },
+      body: JSON.stringify(args),
+    },
     ms,
-    async (r) => r.ok,
+    async (r) => ({ ok: r.ok, status: r.status, text: await r.text() }),
   )
+}
+
+/**
+ * RPC от имени того, кто прислал запрос. null — войти нечем (нет токена или
+ * адреса базы). Бросает по сроку и при сбое связи.
+ */
+export function userRpc(
+  req: VercelRequest,
+  fn: string,
+  args: object,
+  ms = TIMEOUTS.supabaseMs,
+): Promise<RpcReply> | null {
+  const c = credentials(req)
+  return c ? rpcAs(c, fn, args, ms) : null
 }
 
 /**
  * Преподаватель ли вызывающий (profiles.role = 'teacher').
  *
- * Нужна для задач на Pro-моделях (material/program): их вправе запускать
- * только учитель. Зовётся ТОЛЬКО для этих задач — их единицы в день, поэтому
- * два лишних запроса не влияют на горячий путь (Диалог, перевод слова).
+ * Нужна для задач, которые вправе запускать только учитель (material,
+ * program, homework). Зовётся ТОЛЬКО для них — их единицы в день, поэтому два
+ * лишних запроса не влияют на горячий путь (Диалог, перевод слова).
  *
  * ⚠️ Id пользователя берём у Supabase (/auth/v1/user), а НЕ из полезной
  * нагрузки JWT: подпись мы не проверяем, а RLS на profiles разрешает читать не
@@ -95,22 +132,19 @@ export async function isTeacher(
   req: VercelRequest,
   ms = TIMEOUTS.supabaseMs,
 ): Promise<boolean | null> {
-  const auth = req.headers.authorization
-  const token = auth?.startsWith('Bearer ') ? auth.slice(7) : null
-  const url = process.env.VITE_SUPABASE_URL
-  const anon = process.env.VITE_SUPABASE_ANON_KEY
-  if (!token || !url || !anon) return false
+  const c = credentials(req)
+  if (!c) return false
 
-  const headers = { Authorization: `Bearer ${token}`, apikey: anon }
+  const headers = { Authorization: `Bearer ${c.jwt}`, apikey: c.anon }
   const readJson = async (r: Response) => (r.ok ? ((await r.json()) as unknown) : null)
   try {
-    const me = (await timedFetch(`${url}/auth/v1/user`, { headers }, ms, readJson)) as {
+    const me = (await timedFetch(`${c.url}/auth/v1/user`, { headers }, ms, readJson)) as {
       id?: string
     } | null
     if (!me?.id) return false
 
     const rows = (await timedFetch(
-      `${url}/rest/v1/profiles?id=eq.${encodeURIComponent(me.id)}&select=role`,
+      `${c.url}/rest/v1/profiles?id=eq.${encodeURIComponent(me.id)}&select=role`,
       { headers },
       ms,
       readJson,
@@ -121,10 +155,64 @@ export async function isTeacher(
   }
 }
 
+/**
+ * Отказы spend_energy → текст человеку. Про энергию — в ⚡, на том же языке,
+ * что счётчик на экране (CLAUDE.md, раздел «Энергия»).
+ */
+const REFUSALS: [code: string, status: number, error: string][] = [
+  [
+    'RECALL_ENERGY_POOL',
+    429,
+    'Энергия студии на сегодня закончилась. Она вернётся утром — ' +
+      'чтение, слова, грамматика и произношение работают как обычно.',
+  ],
+  [
+    'RECALL_ENERGY_SUBCAP',
+    429,
+    'На сегодня по твоему аккаунту хватит AI — чтобы хватило всей студии. ' +
+      'Энергия вернётся утром; слова, тексты и игры работают без ограничений.',
+  ],
+  [
+    'RECALL_ENERGY_DAY',
+    429,
+    'Дневная энергия закончилась — вернётся утром. Слова, тексты и игры ' +
+      'работают без лимитов; больше AI даёт тариф побольше.',
+  ],
+  // Ролево-нейтрально: лимит генераций есть и у самоучки (материалы под себя),
+  // и у репетитора (материалы и программы ученикам).
+  [
+    'RECALL_GEN_LIMIT',
+    429,
+    'Генерации на этот месяц закончились. Материалы под себя даёт ' +
+      'Premium; материалы и программы для учеников — тариф репетитора. ' +
+      'На пробном периоде доступен один материал.',
+  ],
+  ['RECALL_BLOCKED', 403, 'Доступ к аккаунту приостановлен'],
+  [
+    'RECALL_LIGHT_LIMIT',
+    429,
+    'Слишком много переводов слов за сутки. Лимит обновится завтра — ' +
+      'чтение, игры и повторение слов работают как обычно.',
+  ],
+  [
+    'RECALL_SPEECH_LIMIT',
+    429,
+    'Дневной лимит проверок произношения исчерпан. Он обновится завтра — ' +
+      'слушать эталон и повторять вслух можно без ограничений.',
+  ],
+  [
+    'RECALL_FREE_LIMIT',
+    429,
+    'Энергия на сегодня закончилась — на бесплатном тарифе это 5 ⚡ в день. ' +
+      'Вернётся утром. Слова, тексты и игры работают без лимитов; ' +
+      'больше AI даёт Premium — раздел «Тарифы» в настройках.',
+  ],
+  ['RECALL_RATE_HOUR', 429, 'Слишком много запросов к ИИ подряд. Попробуй через несколько минут.'],
+]
+
 /** Пускает только вошедших, не заблокированных и не исчерпавших лимит.
  * cost — цена действия в ЭНЕРГИИ (heavy), generation — материал/программа
- * (месячный лимит вместо энергии). Списывает через spend_energy; если функции
- * ещё нет в БД (миграция E1 не залита) — откат на consume_ai_quota. */
+ * (месячный лимит вместо энергии). Списывает через spend_energy. */
 export async function authorize(
   req: VercelRequest,
   kind: QuotaKind = 'heavy',
@@ -133,184 +221,18 @@ export async function authorize(
   /** Окно одного запроса в Supabase, мс (api/_timeouts.ts). */
   supabaseMs = TIMEOUTS.supabaseMs,
 ): Promise<AuthResult> {
-  const auth = req.headers.authorization
-  const token = auth?.startsWith('Bearer ') ? auth.slice(7) : null
-  const url = process.env.VITE_SUPABASE_URL
-  const anon = process.env.VITE_SUPABASE_ANON_KEY
-  if (!token || !url || !anon) return DENIED
+  const c = credentials(req)
+  if (!c) return DENIED
   // энергия действия: heavy по умолчанию 1 ⚡, light/speech — 0 (только анти-абьюз)
   const p_cost = cost ?? (kind === 'heavy' ? 1 : 0)
-  // Токен возврата рождается ЗДЕСЬ, на сервере, и клиенту не уходит. Иначе
+  // Номер списания рождается ЗДЕСЬ, на сервере, и клиенту не уходит. Иначе
   // возврат стал бы отмычкой: RPC доступна пользователю с его же токеном, и
   // «верни последнее списание» означало бы безлимитный AI в один вызов.
   const nonce = randomUUID()
 
+  let r: RpcReply
   try {
-    // Тело читаем внутри окна: зависнуть можно и на середине ответа.
-    const rpc = (fn: string, body: string) =>
-      timedFetch(
-        `${url}/rest/v1/rpc/${fn}`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            apikey: anon,
-            'Content-Type': 'application/json',
-          },
-          body,
-        },
-        supabaseMs,
-        async (r) => ({ ok: r.ok, status: r.status, text: await r.text() }),
-      )
-
-    // Основной путь — энергия (E1). Фолбэки на старую RPC держат деплой безопасным
-    // и до, и после миграции (клиент/сервер не ломаются в переходный момент).
-    let refundable = true
-    let r = await rpc(
-      'spend_energy',
-      JSON.stringify({ p_kind: kind, p_cost, p_generation: generation, p_nonce: nonce }),
-    )
-    if (r.status === 404) {
-      // База ещё без параметра p_nonce (миграция этапа 2 не залита) — пробуем
-      // прежнюю сигнатуру. Возврат в этом случае невозможен, и это честнее,
-      // чем притворяться: сервер просто не станет его звать.
-      refundable = false
-      r = await rpc('spend_energy', JSON.stringify({ p_kind: kind, p_cost, p_generation: generation }))
-    }
-    if (r.status === 404) {
-      // spend_energy ещё нет — старый путь по классам (блок «КЛАССЫ КВОТ»)…
-      r = await rpc('consume_ai_quota', JSON.stringify({ p_kind: kind }))
-      // …а если и её нет (совсем старая база) — по-старому без класса
-      if (r.status === 404) r = await rpc('consume_ai_quota', '{}')
-    }
-    if (r.ok) return { ok: true, refundToken: refundable ? nonce : undefined }
-    if (r.status === 401 || r.status === 403) return DENIED
-
-    const body = r.text
-    if (body.includes('RECALL_NO_AUTH')) return DENIED
-    if (body.includes('RECALL_ENERGY_POOL')) {
-      return {
-        ok: false,
-        status: 429,
-        error:
-          'Энергия студии на сегодня закончилась. Она вернётся утром — ' +
-          'чтение, слова, грамматика и произношение работают как обычно.',
-      }
-    }
-    if (body.includes('RECALL_ENERGY_SUBCAP')) {
-      return {
-        ok: false,
-        status: 429,
-        error:
-          'На сегодня по твоему аккаунту хватит AI — чтобы хватило всей студии. ' +
-          'Энергия вернётся утром; слова, тексты и игры работают без ограничений.',
-      }
-    }
-    if (body.includes('RECALL_ENERGY_DAY')) {
-      return {
-        ok: false,
-        status: 429,
-        error:
-          'Дневная энергия закончилась — вернётся утром. Слова, тексты и игры ' +
-          'работают без лимитов; больше AI даёт тариф побольше.',
-      }
-    }
-    if (body.includes('RECALL_GEN_LIMIT')) {
-      return {
-        ok: false,
-        status: 429,
-        // Сообщение ролево-нейтральное: лимит генераций есть и у самоучки
-        // (материалы под себя, 3b), и у репетитора (материалы/программы
-        // ученикам). Раньше текст говорил только про «тариф репетитора» — для
-        // самоучки это была неправда.
-        error:
-          'Генерации на этот месяц закончились. Материалы под себя даёт ' +
-          'Premium; материалы и программы для учеников — тариф репетитора. ' +
-          'На пробном периоде доступен один материал.',
-      }
-    }
-    if (body.includes('RECALL_BLOCKED')) {
-      return { ok: false, status: 403, error: 'Доступ к аккаунту приостановлен' }
-    }
-    if (body.includes('RECALL_LIGHT_LIMIT')) {
-      return {
-        ok: false,
-        status: 429,
-        error:
-          'Слишком много переводов слов за сутки. Лимит обновится завтра — ' +
-          'чтение, игры и повторение слов работают как обычно.',
-      }
-    }
-    if (body.includes('RECALL_SPEECH_LIMIT')) {
-      return {
-        ok: false,
-        status: 429,
-        error:
-          'Дневной лимит проверок произношения исчерпан. Он обновится завтра — ' +
-          'слушать эталон и повторять вслух можно без ограничений.',
-      }
-    }
-    // ⚠️ RECALL_TRIAL_LIMIT и RECALL_RATE_DAY ниже приходят ТОЛЬКО из legacy-пути
-    // consume_ai_quota (когда в базе ещё нет spend_energy). В текущем проде их не
-    // бывает: spend_energy у триала-Premium исчерпывает дневную ЭНЕРГИЮ и отдаёт
-    // RECALL_ENERGY_DAY (см. выше), а не эти коды. Поэтому здесь оставлен старый
-    // текст в терминах «N в день» — он верен именно для того счётного пути; под
-    // модель энергии его переписывать нельзя, это была бы неправда.
-    if (body.includes('RECALL_TRIAL_LIMIT')) {
-      return {
-        ok: false,
-        status: 429,
-        error:
-          'Дневной AI-лимит пробного периода исчерпан (12 в день). ' +
-          'Завтра он обновится, а после оплаты тарифа ограничение станет 200 в день. ' +
-          'Слова, тексты и игры работают без лимитов.',
-      }
-    }
-    if (body.includes('RECALL_FREE_LIMIT')) {
-      return {
-        ok: false,
-        status: 429,
-        // ⚡, а не «AI-лимит N в день»: на экране виден счётчик энергии, и текст
-        // про лимиты обязан говорить на том же языке (см. CLAUDE.md, раздел
-        // «Энергия»). Free = 5 ⚡ в сутки.
-        error:
-          'Энергия на сегодня закончилась — на бесплатном тарифе это 5 ⚡ в день. ' +
-          'Вернётся утром. Слова, тексты и игры работают без лимитов; ' +
-          'больше AI даёт Premium — раздел «Тарифы» в настройках.',
-      }
-    }
-    if (body.includes('RECALL_RATE_HOUR')) {
-      return {
-        ok: false,
-        status: 429,
-        error: 'Слишком много запросов к ИИ подряд. Попробуй через несколько минут.',
-      }
-    }
-    if (body.includes('RECALL_RATE_DAY')) {
-      return {
-        ok: false,
-        status: 429,
-        error: 'Дневной лимит запросов к ИИ исчерпан. Он обновится завтра.',
-      }
-    }
-
-    // Развилка (заход 3 аудита): «функции нет» vs «функция упала».
-    //
-    // (а) Функция ОТСУТСТВУЕТ (404 / PGRST202) — миграция ещё не применена:
-    //     деплой кода мог опередить заливку схемы. Только тут fail-OPEN —
-    //     пропускаем по валидности токена, чтобы новый деплой не ронял AI до
-    //     заливки. Ситуация краткая и ожидаемая.
-    if (r.status === 404 || body.includes('PGRST202')) {
-      console.error('consume_ai_quota НЕ НАЙДЕНА (миграция не залита?) — лимиты временно не действуют:', body.slice(0, 200))
-      return (await tokenValid(url, anon, token, supabaseMs)) ? { ok: true } : DENIED
-    }
-
-    // (б) Функция ЕСТЬ, но упала с неизвестной ошибкой — это БАГ в SQL квот
-    //     (как ambiguous-переменная 24.07, из-за которой лимиты ТИХО отключились
-    //     на неделю). fail-CLOSED: не открываем доступ молча, а отказываем —
-    //     сбой видно сразу по жалобам, а не потом по счёту за токены.
-    console.error('consume_ai_quota упала с неожиданной ошибкой — AI закрыт (fail-closed):', body.slice(0, 300))
-    return UNAVAILABLE
+    r = await rpcAs(c, 'spend_energy', { p_kind: kind, p_cost, p_generation: generation, p_nonce: nonce }, supabaseMs)
   } catch {
     // Supabase не ответил вовремя или оборвалась связь. Списание могло пройти
     // на той стороне, а ответ до нас не дойти — тогда человек заплатил бы за
@@ -320,9 +242,23 @@ export async function authorize(
     // Остаток: запрос списания ещё не дошёл до базы — возврат ничего не найдёт,
     // и единица пропадёт. Это редкость в редкости, и лучше, чем без возврата.
     console.warn('Supabase не ответил на списание — AI закрыт, возврат по номеру')
-    await refundNonce(url, anon, token, nonce, supabaseMs)
+    await rpcAs(c, 'refund_ai_call', { p_nonce: nonce }, supabaseMs).catch(() => {})
     return UNAVAILABLE
   }
+  if (r.ok) return { ok: true, refundToken: nonce }
+  if (r.status === 401 || r.status === 403 || r.text.includes('RECALL_NO_AUTH')) return DENIED
+
+  const refusal = REFUSALS.find(([code]) => r.text.includes(code))
+  if (refusal) return { ok: false, status: refusal[1], error: refusal[2] }
+
+  // Функции нет (404) или она упала с неизвестной ошибкой — AI ЗАКРЫТ.
+  // Раньше отсутствие функции пропускало по одной валидности токена, «пока
+  // миграция не залита». С порядком «миграция, потом код» (журнал п.47) этот
+  // случай — только поломка, а пропуск в нём означал бы AI без лимитов. Сбой
+  // видно сразу по жалобам, а не потом по счёту за токены (ambiguous-
+  // переменная 24.07 так ТИХО отключила лимиты на неделю).
+  console.error(`spend_energy ответила ${r.status} — AI закрыт:`, r.text.slice(0, 300))
+  return UNAVAILABLE
 }
 
 /** Проставляет CORS-заголовки; возвращает true, если это preflight (OPTIONS) и ответ уже закрыт. */
@@ -344,45 +280,19 @@ export function applyCors(req: VercelRequest, res: VercelResponse): boolean {
 /**
  * Возврат списания, если ответа от AI так и не было.
  *
- * Зовётся ТОЛЬКО сервером и только с токеном, который сам же и выдал в
- * authorize. Пользователь этого токена не видит, поэтому вернуть чужое или
+ * Зовётся ТОЛЬКО сервером и только с номером, который сам же и выдал в
+ * authorize. Пользователь этого номера не видит, поэтому вернуть чужое или
  * своё «по желанию» не может. Ошибки глушим: не смогли вернуть — человек
  * потерял одну единицу энергии, это неприятно, но безопасно; уронить ответ
  * из-за неудачного возврата было бы хуже.
+ * Обычно возврат идёт вместе с записью итога (api/_usage.ts); отдельно — когда
+ * журнал недоступен.
  */
 export async function refundAiCall(
   req: VercelRequest,
-  token?: string,
+  token: string,
   /** Окно запроса, мс: возврат обязан успеть до обрыва функции. */
   ms = TIMEOUTS.supabaseMs,
 ): Promise<void> {
-  if (!token) return
-  const auth = req.headers.authorization
-  const jwt = auth?.startsWith('Bearer ') ? auth.slice(7) : null
-  const url = process.env.VITE_SUPABASE_URL
-  const anon = process.env.VITE_SUPABASE_ANON_KEY
-  if (!jwt || !url || !anon) return
-  await refundNonce(url, anon, jwt, token, ms)
-}
-
-/** Сам запрос возврата — общий для refundAiCall и отказа на списании. */
-async function refundNonce(url: string, anon: string, jwt: string, nonce: string, ms: number) {
-  try {
-    await timedFetch(
-      `${url}/rest/v1/rpc/refund_ai_call`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${jwt}`,
-          apikey: anon,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ p_nonce: nonce }),
-      },
-      ms,
-      async (r) => r.ok,
-    )
-  } catch {
-    /* возврат — «лучшее усилие», молча */
-  }
+  await userRpc(req, 'refund_ai_call', { p_nonce: token }, ms)?.catch(() => {})
 }

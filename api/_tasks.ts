@@ -35,7 +35,6 @@ export const AI_TASKS: Record<AiTask, TaskSpec> = {
   // лёгкие массовые задачи — мини-модели, отдельный большой карман; 0 энергии
   word: { tier: 'lite', quota: 'light', energyCost: 0 },
   definition: { tier: 'lite', quota: 'light', energyCost: 0 },
-  batch: { tier: 'lite', quota: 'light', energyCost: 0 },
 
   // «AI-действия» — тратят энергию (dialog/quest/analyze = 1 ⚡; письмо/разбор = 2 ⚡)
   dialog: { tier: 'standard', quota: 'heavy', energyCost: 1 },

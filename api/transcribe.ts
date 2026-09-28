@@ -3,17 +3,19 @@
 // Распознаёт речь через Groq Whisper. Ключ — ТОЛЬКО из серверной env GROQ_API_KEY.
 // Работает на любом устройстве (в т.ч. iPhone, где браузерного распознавания нет):
 // клиент записывает аудио через MediaRecorder и присылает его сюда.
+// Тот же обработчик обслуживает /api/transcribe и в dev (vite.config.ts).
 // ============================================================================
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 // расширение .js обязательно в ESM ("type": "module")
-import { authorize, applyCors, authDenied, refundAiCall } from './_auth.js'
+import { authorize, applyCors, authDenied } from './_auth.js'
 import { transcribeWithGroq } from './_stt.js'
+import { startCall } from './_usage.js'
 import { TIMEOUTS, windowUntil, workDeadline, type Timeouts } from './_timeouts.js'
 
 export const config = { maxDuration: 30 }
 
 // Бюджет (числа — api/_timeouts.ts): распознавание кончается к 22-й секунде
-// (30 − 3 запас − 5 на возврат), окно Whisper — 15 с.
+// (30 − 3 запас − 5 на итог с возвратом), окно Whisper — 15 с.
 const LIMITS: Timeouts = { ...TIMEOUTS, functionMs: config.maxDuration * 1000 }
 
 // Фраза для тренировки — несколько секунд. Больше ~4 МБ (после base64) не ждём;
@@ -59,20 +61,30 @@ export async function handle(req: VercelRequest, res: VercelResponse, t: Timeout
     return res.status(400).json({ error: 'Слишком большая или пустая запись' })
   }
 
-  // класс speech: у произношения свой щедрый лимит — попытки шэдоуинга не
-  // должны съедать дневные «AI-действия» Диалога (их всего 12 на триале)
+  // класс speech: 0 ⚡ и свой суточный кэп — попытки шэдоуинга не должны
+  // съедать энергию Диалога
   const access = await authorize(req, 'speech', undefined, false, t.supabaseMs)
   if (authDenied(access)) return res.status(access.status).json({ error: access.error })
 
+  const endBy = workDeadline(startedAt, t)
+  const call = startCall(req, {
+    token: access.refundToken,
+    task: 'speech',
+    tier: null,
+    logMs: t.logMs,
+    supabaseMs: t.supabaseMs,
+    refundBy: endBy + t.supabaseMs,
+  })
   try {
-    const ms = windowUntil(workDeadline(startedAt, t), t.sttMs)
-    const text = await transcribeWithGroq(buf, mime || 'audio/webm', speechLang, apiKey, ms)
+    const ms = windowUntil(endBy, t.sttMs)
+    const text = await transcribeWithGroq(buf, mime || 'audio/webm', speechLang, apiKey, ms, call.trace)
+    await call.finish('ok') // итог — до ответа (api/_usage.ts)
     return res.status(200).json({ text })
   } catch (e) {
-    // то же правило, что в api/gemini: не распознали — не берём плату.
-    // У «Речи» свой суточный карман, и терять его попытки из-за сбоя
-    // поставщика особенно обидно: тренажёр произношения — наше отличие.
-    await refundAiCall(req, access.refundToken, t.supabaseMs)
+    // то же правило, что в api/gemini: не распознали — не берём плату (итог
+    // и возврат — одним запросом). У «Речи» свой суточный карман, и терять
+    // его попытки из-за сбоя поставщика особенно обидно.
+    await call.finish('failed')
     const msg = e instanceof Error ? e.message : 'Ошибка распознавания'
     return res.status(msg.includes('лимит') ? 429 : 502).json({ error: msg })
   }

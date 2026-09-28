@@ -11,28 +11,17 @@
  *   • зависла одна модель — цепочка идёт дальше и отвечает;
  *   • зависло всё — отказ и возврат энергии РАНЬШЕ maxDuration;
  *   • обычные ответы, 429 и 503 ведут себя как раньше;
+ *   • итог каждого вызова уходит в журнал (Ф1.6) ДО ответа, а без ответа —
+ *     вместе с возвратом, и возврат успевает, даже если журнал лёг;
+ *   • убранное не вернулось: tier/provider, задача batch, открытие AI без
+ *     функции списания;
  *   • в api/ нет голого fetch( — только через api/_timeouts.ts.
  * Сроки передаются параметром (handle(req, res, сроки)), поэтому весь прогон
  * занимает секунды. Без сети, базы и ключей.
  * Запуск: node scripts/test-ai-timeouts.mjs
  */
-import { registerHooks } from 'node:module'
+import './_api-loader.mjs'
 import { readdirSync, readFileSync } from 'node:fs'
-
-// api/*.ts импортируют друг друга с расширением .js (так требует Vercel в
-// ESM), а Node со срезом типов ищет файл буквально — подставляем .ts.
-registerHooks({
-  resolve(specifier, context, nextResolve) {
-    try {
-      return nextResolve(specifier, context)
-    } catch (e) {
-      if (specifier.startsWith('.') && specifier.endsWith('.js')) {
-        return nextResolve(specifier.slice(0, -3) + '.ts', context)
-      }
-      throw e
-    }
-  },
-})
 
 const SB = 'https://sb.test'
 process.env.VITE_SUPABASE_URL = SB
@@ -95,6 +84,20 @@ function streamReply(kind, signal, model) {
   if (typeof kind === 'number') return json(kind, { error: { message: `status ${kind}` } })
   if (kind === 'no-text') return endless()
   if (kind === 'stall') return endless([sse('Hola, ')])
+  if (kind === 'slow') {
+    // кусок, пауза, кусок — как настоящая модель на длинном ответе
+    return new Response(
+      new ReadableStream({
+        async start(c) {
+          c.enqueue(enc.encode(sse('Hola, ')))
+          await sleep(250)
+          c.enqueue(enc.encode(sse(answerOf(model), true)))
+          c.close()
+        },
+      }),
+      { status: 200 },
+    )
+  }
   return new Response(
     new ReadableStream({
       start(c) {
@@ -118,10 +121,18 @@ globalThis.fetch = async (input, init = {}) => {
 
   if (url === `${SB}/rest/v1/rpc/spend_energy`) {
     log.push(entry)
-    return plan.spend === 'hang' ? hang(signal) : new Response('null', { status: 200 })
+    if (plan.spend === 'hang') return hang(signal)
+    if (typeof plan.spend === 'number') return json(plan.spend, { message: 'Could not find the function' })
+    return new Response('null', { status: 200 })
   }
   if (url === `${SB}/rest/v1/rpc/refund_ai_call`) {
     log.push(entry)
+    return new Response('true', { status: 200 })
+  }
+  if (url === `${SB}/rest/v1/rpc/log_ai_call`) {
+    log.push(entry)
+    if (plan.log === 'hang') return hang(signal)
+    if (typeof plan.log === 'number') return json(plan.log, { message: `log ${plan.log}` })
     return new Response('true', { status: 200 })
   }
   if (url === `${SB}/auth/v1/user`) {
@@ -160,14 +171,14 @@ globalThis.fetch = async (input, init = {}) => {
 const makeReq = (body) => ({ method: 'POST', headers: { authorization: 'Bearer jwt' }, body })
 
 function makeRes() {
-  const r = { code: 200, payload: undefined, chunks: [], ended: false, destroyed: false, at: null }
+  const r = { code: 200, payload: undefined, chunks: [], writes: [], ended: false, destroyed: false, at: null }
   const done = () => {
     r.at ??= now()
   }
   r.status = (c) => ((r.code = c), r)
   r.json = (p) => ((r.payload = p), (r.ended = true), done(), r)
   r.setHeader = () => r
-  r.write = (c) => (r.chunks.push(String(c)), true)
+  r.write = (c) => (r.chunks.push(String(c)), r.writes.push(now()), true)
   r.end = () => ((r.ended = true), done(), r)
   r.destroy = () => ((r.destroyed = true), done(), r)
   return r
@@ -180,6 +191,7 @@ const T = {
   functionMs: FN,
   safetyMs: 50,
   supabaseMs: 80,
+  logMs: 60,
   groqMs: 120,
   sttMs: 150,
   attemptMs: { lite: 100, standard: 150, max: 150 },
@@ -192,6 +204,7 @@ const WATCHDOG = FN + 1500 // дольше — функцию уже оборв�
 const gemini = await import('../api/gemini.ts')
 const transcribe = await import('../api/transcribe.ts')
 const { GEMINI_TIER_CHAINS } = await import('../api/_core.ts')
+const { STT_MODEL } = await import('../api/_stt.ts')
 const aiApi = gemini.handle ?? ((req, res) => gemini.default(req, res))
 const sttApi = transcribe.handle ?? ((req, res) => transcribe.default(req, res))
 
@@ -209,6 +222,7 @@ async function scenario(handler, body, planOverride = {}, limits = T) {
     stream: () => 'hang',
     groq: 'hang',
     stt: 'hang',
+    log: 'ok',
     ...planOverride,
   }
   log = []
@@ -223,8 +237,15 @@ async function scenario(handler, body, planOverride = {}, limits = T) {
     ),
     sleep(WATCHDOG).then(() => 'hung'),
   ])
-  const refunds = log.filter((c) => c.url.endsWith('/rpc/refund_ai_call'))
-  return { res, outcome, refunds, finished: now() }
+  // Возврат — отдельный refund_ai_call или итог в журнал с p_refund (обычный
+  // путь с Ф1.6: итог и возврат одним запросом, api/_usage.ts).
+  const journal = log
+    .filter((c) => c.url.endsWith('/rpc/log_ai_call'))
+    .map((c) => ({ ...JSON.parse(c.body), at: c.at }))
+  const refunds = log.filter(
+    (c) => c.url.endsWith('/rpc/refund_ai_call') || (c.url.endsWith('/rpc/log_ai_call') && JSON.parse(c.body).p_refund),
+  )
+  return { res, outcome, refunds, journal, finished: now() }
 }
 
 const results = []
@@ -345,6 +366,15 @@ const streamBody = { task: 'dialog', messages: M, stream: true }
   const s = await scenario(aiApi, streamBody)
   check('в потоке зависли все модели → отказ JSON и возврат', s.res.code === 502 && refundedInTime(s), describe(s))
 }
+{
+  const s = await scenario(aiApi, streamBody, { stream: () => 'slow' }, PROD)
+  const [w0, w1] = s.res.writes
+  check(
+    'поток не копится: первый кусок уходит сразу, второй — когда модель его дала',
+    s.res.writes.length === 2 && w1 - w0 >= 200 && s.res.ended,
+    `куски на ${s.res.writes.join(', ')} мс`,
+  )
+}
 
 // --- 5. распознавание речи ---------------------------------------------------------------
 console.log('\n— распознавание речи (/api/transcribe)')
@@ -387,7 +417,115 @@ console.log('\n— без зависаний всё как раньше (сро�
     describe(s))
 }
 
-// --- 7. класс закрыт: новый голый fetch в api/ не пройдёт ----------------------------
+// --- 7. итог вызова в журнал (api/_usage.ts, PLAN.md Ф1.6) ------------------------------
+console.log('\n— журнал вызовов: итог до ответа, без ответа — вместе с возвратом')
+const chainOf = (j) => j?.p_attempts?.map((a) => `${a.model}:${a.status}`).join(',')
+{
+  const s = await scenario(aiApi, { task: 'dialog', messages: M }, { gemini: (m) => (m === STD[0] ? 429 : 'ok') })
+  const j = s.journal[0]
+  const spent = JSON.parse(log.find((c) => c.url.endsWith('/rpc/spend_energy')).body)
+  check(
+    'ответ доставлен → в журнале «ok», модель, что ответила, задача и уровень; без возврата',
+    s.journal.length === 1 && j.p_status === 'ok' && j.p_model === STD[1] &&
+      j.p_task === 'dialog' && j.p_tier === 'standard' && j.p_refund === false && s.refunds.length === 0,
+    JSON.stringify(s.journal),
+  )
+  check('в журнале обе попытки: отказ по квоте и ответ', chainOf(j) === `${STD[0]}:429,${STD[1]}:ok`, chainOf(j))
+  check('номер вызова в журнале — номер списания', j?.p_nonce === spent.p_nonce)
+  check(
+    'итог записан ДО ответа — после ответа Vercel вправе заморозить функцию',
+    j && s.res.at !== null && j.at <= s.res.at,
+    `журнал на ${j?.at} мс, ответ на ${s.res.at} мс`,
+  )
+}
+{
+  const s = await scenario(aiApi, { task: 'word', messages: M })
+  const j = s.journal[0]
+  check(
+    'не ответил никто → «failed» без модели, возврат ТЕМ ЖЕ запросом и в срок',
+    s.journal.length === 1 && j.p_status === 'failed' && j.p_model === null && j.p_refund === true &&
+      countCalls(/rpc\/refund_ai_call/) === 0 && refundedInTime(s),
+    describe(s),
+  )
+  check(
+    'каждая попытка в журнале — Groq и вся цепочка lite, все «timeout»',
+    j?.p_attempts?.length === LITE.length + 1 && j.p_attempts.every((a) => a.status === 'timeout'),
+    chainOf(j),
+  )
+}
+{
+  const s = await scenario(aiApi, { task: 'word', messages: M }, { log: 404 })
+  check(
+    'журнала нет в базе (404) → энергия всё равно вернулась, отдельным запросом',
+    countCalls(/rpc\/refund_ai_call/) === 1 && inTime(s),
+    describe(s),
+  )
+}
+{
+  const s = await scenario(aiApi, { task: 'word', messages: M }, { log: 'hang' })
+  check(
+    'журнал завис на отказе → возврат отдельно и всё равно раньше maxDuration',
+    countCalls(/rpc\/refund_ai_call/) === 1 && inTime(s),
+    describe(s),
+  )
+}
+{
+  const s = await scenario(aiApi, { task: 'dialog', messages: M }, { gemini: () => 'ok', log: 'hang' })
+  check(
+    'журнал завис на удачном вызове → ответ ждёт его не дольше logMs',
+    s.res.code === 200 && s.refunds.length === 0 && (s.res.at ?? Infinity) < T.logMs * 2,
+    describe(s),
+  )
+}
+{
+  const s = await scenario(aiApi, streamBody, { stream: () => 'stall' })
+  const j = s.journal[0]
+  check(
+    'поток оборвался → «cut», модель, что говорила, и возврат',
+    j?.p_status === 'cut' && j.p_model === STD[0] && j.p_refund === true,
+    JSON.stringify(s.journal),
+  )
+  check('у оборванной попытки записано время до первых слов', typeof j?.p_attempts?.[0]?.first === 'number', chainOf(j))
+}
+{
+  const s = await scenario(aiApi, streamBody, { stream: () => 'ok' }, PROD)
+  const j = s.journal[0]
+  check(
+    'поток дописан → «ok», итог записан до конца ответа',
+    j?.p_status === 'ok' && j.p_model === STD[0] && j.p_refund === false && j.at <= s.res.at,
+    JSON.stringify(s.journal),
+  )
+}
+{
+  const s = await scenario(sttApi, { audio: 'aGVsbG8=', mime: 'audio/webm', lang: 'en' }, { stt: 'ok' }, PROD)
+  const j = s.journal[0]
+  check(
+    'распознавание: в журнале задача speech и модель Whisper',
+    j?.p_task === 'speech' && j.p_model === STT_MODEL && j.p_status === 'ok',
+    JSON.stringify(s.journal),
+  )
+}
+
+// --- 8. уборка шлюза (Ф1.6) ---------------------------------------------------------------
+console.log('\n— уборка: старый путь tier/provider, задача batch, открытие без списания')
+{
+  const s = await scenario(aiApi, { tier: 'lite', provider: 'groq', messages: M }, {}, PROD)
+  check('запрос без task (tier/provider старых клиентов) → 400 без списания', s.res.code === 400 && countCalls(/spend_energy/) === 0, describe(s))
+}
+{
+  const s = await scenario(aiApi, { task: 'batch', messages: M }, {}, PROD)
+  check('задачи batch больше нет → 400 без списания', s.res.code === 400 && countCalls(/spend_energy/) === 0, describe(s))
+}
+{
+  const s = await scenario(aiApi, { task: 'dialog', messages: M }, { spend: 404, gemini: () => 'ok' }, PROD)
+  check(
+    'функции списания нет (404) → AI закрыт (503), а не открыт по одному токену',
+    s.res.code === 503 && countCalls(/generativelanguage|groq/) === 0 && countCalls(/auth\/v1\/user/) === 0,
+    describe(s),
+  )
+}
+
+// --- 9. класс закрыт: новый голый fetch в api/ не пройдёт ----------------------------
 console.log('\n— запросы наружу только через api/_timeouts.ts')
 {
   const dir = new URL('../api/', import.meta.url)

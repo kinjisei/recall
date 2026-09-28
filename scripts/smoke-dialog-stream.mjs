@@ -1,4 +1,3 @@
-import { APP_URL } from './_env.mjs'
 /**
  * Смоук: «Диалог» отдаёт ответ ПОТОКОМ, а не одним куском.
  *
@@ -8,13 +7,27 @@ import { APP_URL } from './_env.mjs'
  *
  * Умеет краснеть: откати стриминг на прежний `{text}` — Content-Type станет
  * application/json, и проверка «ответ — поток» упадёт. Просит длинный ответ
- * (счёт до 15), чтобы кусков было заведомо несколько.
+ * (счёт до 60), чтобы кусков было заведомо несколько и шли они во времени:
+ * на счёте до 15 (35 символов) модель 28.09 отдала оба куска разом, и
+ * проверка «первый раньше последнего» краснела на исправном потоке. Что сам
+ * сервер поток не копит, доказывает test-ai-timeouts.mjs без модели.
+ *
+ * С Ф1.6 dev отвечает тем же обработчиком, что прод, — со входом и энергией,
+ * поэтому смоук заводит временного ученика и спрашивает от его имени (1 ⚡ на
+ * тестовой базе и один настоящий запрос к модели).
  *
  * Запуск: `npm run dev:test` (5174, тестовая база), затем `node scripts/smoke-dialog-stream.mjs`.
- * Прод: AUDIT_BASE_URL=https://recall-pgkz.vercel.app (там нужен вход — смоук
- * рассчитан на локальный dev, где /api/gemini без токена).
  */
+import { createClient } from '@supabase/supabase-js'
+import { APP_URL, scriptEnv } from './_env.mjs'
+
 const BASE = process.env.AUDIT_BASE_URL || APP_URL
+const env = scriptEnv()
+const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SERVICE_KEY, {
+  auth: { autoRefreshToken: false, persistSession: false },
+})
+const EMAIL = 'dialog-stream-smoke@recall.test'
+const PASSWORD = 'DialogStream!2026'
 
 const results = []
 const check = (name, ok, extra = '') => {
@@ -22,13 +35,24 @@ const check = (name, ok, extra = '') => {
   console.log(`${ok ? '✓' : '✗'} ${name}${extra ? ' — ' + extra : ''}`)
 }
 
+let uid
 try {
+  await admin.from('allowed_emails').upsert({ email: EMAIL, note: 'smoke-dialog-stream (временный)' })
+  const { data: made, error } = await admin.auth.admin.createUser({ email: EMAIL, password: PASSWORD, email_confirm: true })
+  if (error && !/already/i.test(error.message)) throw new Error(error.message)
+  uid = made?.user?.id ?? (await admin.auth.admin.listUsers({ perPage: 1000 })).data.users.find((u) => u.email === EMAIL)?.id
+  const client = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  })
+  const { data: session, error: e2 } = await client.auth.signInWithPassword({ email: EMAIL, password: PASSWORD })
+  if (e2) throw new Error(`вход: ${e2.message}`)
+
   const res = await fetch(`${BASE}/api/gemini`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.session.access_token}` },
     body: JSON.stringify({
       messages: [
-        { role: 'user', content: 'Count from 1 to 15, one number per line, digits only.' },
+        { role: 'user', content: 'Count from 1 to 60, one number per line, digits only.' },
       ],
       task: 'dialog',
       stream: true,
@@ -68,6 +92,9 @@ try {
   check('это не JSON-блоб (стрим не откатили на {text})', !looksJson)
 } catch (e) {
   check('прогон завершился', false, e.message)
+} finally {
+  if (uid) await admin.auth.admin.deleteUser(uid).catch(() => {})
+  await admin.from('allowed_emails').delete().eq('email', EMAIL)
 }
 
 const ok = results.filter(Boolean).length

@@ -19,7 +19,8 @@ export interface ChatTurn {
  * Диалога на дефицитные Pro-модели и выжигая их общую суточную квоту
  * (пентест, заход 18). Теперь подделать можно только НАЗВАНИЕ задачи, а у
  * каждой задачи уровень модели зафиксирован на сервере.
- *   word/definition/batch — перевод и определения слов (лёгкие модели);
+ *   word/definition — перевод и определения слов (лёгкие модели);
+ *   analyze — разбор выделенного фрагмента в читалке;
  *   dialog/writing/quest/review — разговорные и проверочные задачи;
  *   material/program/homework — генерация у преподавателя (только role='teacher');
  *   self_material — материал, который ученик генерит СЕБЕ (режим самоучки):
@@ -29,7 +30,6 @@ export interface ChatTurn {
 export type AiTask =
   | 'word'
   | 'definition'
-  | 'batch'
   | 'analyze'
   | 'dialog'
   | 'writing'

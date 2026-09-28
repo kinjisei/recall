@@ -1,7 +1,7 @@
 // ============================================================================
 // Распознавание речи через Groq (Whisper large-v3-turbo, бесплатный тариф).
-// Файл с «_» — Vercel НЕ делает из него функцию. Используют двое:
-// api/transcribe.ts (прод) и vite.config.ts (локальный dev).
+// Файл с «_» — Vercel НЕ делает из него функцию. Зовёт его api/transcribe.ts —
+// и на проде, и в dev (vite.config.ts вызывает тот же обработчик).
 // КЛЮЧ СЮДА НЕ ПИСАТЬ — приходит параметром из серверного окружения (GROQ_API_KEY).
 //
 // Модель turbo: та же точность транскрипции, что у large-v3, но заметно быстрее.
@@ -9,9 +9,10 @@
 // английский и ухудшить распознавание.
 // ============================================================================
 import { TIMEOUTS, TimeoutError, timedFetch } from './_timeouts.js'
+import { failStatus, track, type Attempt } from './_usage.js'
 
 const GROQ_URL = 'https://api.groq.com/openai/v1/audio/transcriptions'
-const MODEL = 'whisper-large-v3-turbo'
+export const STT_MODEL = 'whisper-large-v3-turbo'
 
 /** Расширение файла по MIME — Groq ориентируется в т.ч. на имя файла. */
 function extFor(mime: string): string {
@@ -34,16 +35,19 @@ export async function transcribeWithGroq(
   apiKey: string,
   /** Сколько ждём распознавание целиком, мс (api/_timeouts.ts). */
   timeoutMs = TIMEOUTS.sttMs,
+  /** Журнал попыток (api/_usage.ts). */
+  trace?: Attempt[],
 ): Promise<string> {
   const form = new FormData()
   const bytes = Uint8Array.from(audio)
   form.append('file', new Blob([bytes], { type: mime || 'audio/webm' }), `audio.${extFor(mime)}`)
-  form.append('model', MODEL)
+  form.append('model', STT_MODEL)
   form.append('language', lang)
   form.append('response_format', 'json')
   form.append('temperature', '0')
 
   let res: { ok: boolean; status: number; text: string }
+  const done = track(trace, STT_MODEL)
   try {
     res = await timedFetch(
       GROQ_URL,
@@ -52,6 +56,7 @@ export async function transcribeWithGroq(
       async (r) => ({ ok: r.ok, status: r.status, text: await r.text() }),
     )
   } catch (e) {
+    done(failStatus(e))
     if (e instanceof TimeoutError) {
       console.warn(`Whisper: ${e.message}`)
       throw new Error('Сервис распознавания не ответил вовремя. Попробуй ещё раз.', { cause: e })
@@ -60,6 +65,7 @@ export async function transcribeWithGroq(
   }
 
   if (!res.ok) {
+    done(String(res.status))
     let detail = ''
     try {
       const err = JSON.parse(res.text) as { error?: { message?: string } }
@@ -74,6 +80,14 @@ export async function transcribeWithGroq(
     throw new Error(`Сервис распознавания временно недоступен (${res.status}).`)
   }
 
-  const data = JSON.parse(res.text) as { text?: string }
-  return (data.text ?? '').trim()
+  // Пустой текст — законный ответ: человек промолчал, Whisper так и сказал.
+  let text: string
+  try {
+    text = ((JSON.parse(res.text) as { text?: string }).text ?? '').trim()
+  } catch {
+    done('empty')
+    throw new Error('Сервис распознавания ответил непонятно. Попробуй ещё раз.')
+  }
+  done('ok')
+  return text
 }

@@ -1,7 +1,8 @@
 // ============================================================================
 // Общая логика вызова Gemini API (Google Generative Language, free tier).
 // Файл начинается с "_" — Vercel НЕ делает из него отдельную функцию.
-// Его используют двое: api/gemini.ts (прод) и vite.config.ts (локальный dev).
+// Зовёт его api/gemini.ts — и на проде, и в dev (vite.config.ts вызывает тот
+// же обработчик, второй копии роутинга больше нет).
 // КЛЮЧ СЮДА НЕ ПИСАТЬ — он приходит параметром из серверного окружения.
 // Тело запроса под модель — _geminiBody.ts, сроки ожидания — _timeouts.ts.
 // ============================================================================
@@ -17,6 +18,7 @@ import {
   type ChainTime,
 } from './_timeouts.js'
 import { geminiBody, splitMessages } from './_geminiBody.js'
+import { failStatus, track, type Attempt } from './_usage.js'
 
 export const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash'
 
@@ -30,9 +32,10 @@ export const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash'
  *   standard — чат Диалога, письмо, AI-разбор работ, квесты;
  *   max      — генерация материалов преподавателя (сложные составные запросы).
  * Внутри уровня — цепочка фолбэков при 429/404: у каждой модели своя
- * бесплатная квота, поэтому «лимит исчерпан» почти исчезает. Списки сверены
- * с /v1beta/models нашего ключа (2026-07-22). Gemma не поддерживает
- * systemInstruction (см. обработку в callGemini).
+ * бесплатная квота, поэтому «лимит исчерпан» почти исчезает. Что каждая модель
+ * ещё есть у Google, проверяет scripts/check-ai-models.mjs (28.09.2026 две
+ * оказались выключены: 2.0-flash-lite и 3-pro-preview — заменены прямыми
+ * наследниками). Gemma не поддерживает systemInstruction (см. _geminiBody).
  */
 export type AiTier = 'lite' | 'standard' | 'max'
 
@@ -53,7 +56,7 @@ export const GEMINI_TIER_CHAINS: Record<AiTier, string[]> = {
     'gemini-3.5-flash-lite',
     'gemini-3.1-flash-lite',
     'gemma-4-31b-it',
-    'gemini-2.0-flash-lite',
+    'gemini-2.5-flash-lite',
   ],
   // частое (Диалог, письмо, квесты, разбор работ).
   //
@@ -83,7 +86,7 @@ export const GEMINI_TIER_CHAINS: Record<AiTier, string[]> = {
       : ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-2.5-flash'],
   // материалы и программа обучения генерируются единицами в день — здесь
   // не жалеем самых умных моделей с их крошечными бесплатными квотами
-  max: ['gemini-2.5-pro', 'gemini-3-pro-preview', 'gemini-3.6-flash', 'gemini-2.5-flash'],
+  max: ['gemini-2.5-pro', 'gemini-3.1-pro-preview', 'gemini-3.6-flash', 'gemini-2.5-flash'],
 }
 
 const FALLBACK_MODELS = GEMINI_TIER_CHAINS.standard.slice(1)
@@ -131,6 +134,8 @@ export async function callGemini(
   tier: AiTier = 'standard',
   /** Сроки (api/_timeouts.ts): окно попытки и общий срок цепочки. */
   time: ChainTime = chainTime(TIMEOUTS, tier),
+  /** Журнал попыток (api/_usage.ts): каждая модель и каждый повтор. */
+  trace?: Attempt[],
 ): Promise<string> {
   const { systemText, contents } = splitMessages(messages, system)
 
@@ -144,6 +149,7 @@ export async function callGemini(
     for (let attempt = 0; ; attempt++) {
       const ms = windowUntil(time.deadline, time.attemptMs)
       if (ms < time.minAttemptMs) break outer // общий срок цепочки вышел
+      const done = track(trace, m)
       try {
         got = await timedFetch(
           `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`,
@@ -158,11 +164,13 @@ export async function callGemini(
       } catch (e) {
         // Зависла или оборвалась связь — отказ модели, как 429: следующая.
         // Повтор той же съел бы ещё одно окно целиком.
+        done(failStatus(e))
         got = null
         lastStatus = 0
         console.warn(`Gemini ${m}: ${whyFailed(e)} — следующая модель`)
         continue outer
       }
+      done(got.ok ? 'ok' : String(got.status))
       if (got.ok) break outer
       lastStatus = got.status
       if (got.status === 429 || got.status === 404) {
@@ -202,12 +210,21 @@ export async function callGemini(
     throw new Error(NO_ANSWER)
   }
 
-  const data = JSON.parse(got.text) as GeminiResponse
-  const text = (data.candidates?.[0]?.content?.parts ?? [])
-    .map((p) => p.text ?? '')
-    .join('')
-    .trim()
-  if (!text) throw new Error('Gemini вернул пустой ответ. Попробуй переформулировать.')
+  let text = ''
+  try {
+    const data = JSON.parse(got.text) as GeminiResponse
+    text = (data.candidates?.[0]?.content?.parts ?? [])
+      .map((p) => p.text ?? '')
+      .join('')
+      .trim()
+  } catch {
+    /* не JSON — то же, что пустой ответ: разбор наружу не показываем */
+  }
+  if (!text) {
+    const last = trace?.[trace.length - 1]
+    if (last) last.status = 'empty' // модель «ответила», но слов нет
+    throw new Error('Gemini вернул пустой ответ. Попробуй переформулировать.')
+  }
   return text
 }
 
@@ -236,16 +253,19 @@ export async function* streamGemini(
   tier: AiTier = 'standard',
   /** Сроки (api/_timeouts.ts): окно до первых слов, пауза, общий срок. */
   time: ChainTime = chainTime(TIMEOUTS, tier),
+  /** Журнал попыток (api/_usage.ts); у удачной — и время до первых слов. */
+  trace?: Attempt[],
 ): AsyncGenerator<string, void, unknown> {
   const { systemText, contents } = splitMessages(messages, system)
   const chain = [model, ...fallbacks.filter((m) => m !== model)]
   let lastStatus = 0
-  let produced = false
 
   for (const m of chain) {
     const firstMs = windowUntil(time.deadline, time.firstTextMs)
     if (firstMs < time.minAttemptMs) break // общий срок вышел
-    const firstBy = Date.now() + firstMs
+    const startedAt = Date.now()
+    const firstBy = startedAt + firstMs
+    const done = track(trace, m)
     let opened: { res: Response; abort: () => void }
     try {
       opened = await openStream(
@@ -258,12 +278,14 @@ export async function* streamGemini(
         firstMs,
       )
     } catch (e) {
+      done(failStatus(e))
       console.warn(`Gemini stream ${m}: ${whyFailed(e)} — следующая модель`)
       continue // зависла или сетевой сбой до заголовков — следующая
     }
     const { res, abort } = opened
     if (!res.ok || !res.body) {
       lastStatus = res.status
+      done(res.ok ? 'empty' : String(res.status))
       abort()
       console.warn(`Gemini stream ${m}: ${res.status} — следующая модель`)
       continue
@@ -278,6 +300,7 @@ export async function* streamGemini(
     let buf = ''
     let gotText = false
     let finished = false
+    let first: number | undefined // мс до первых слов
     try {
       for (;;) {
         // До первых слов — в пределах окна модели; дальше — пауза idleMs, но
@@ -307,8 +330,8 @@ export async function* streamGemini(
             .join('')
           if (obj.candidates?.[0]?.finishReason) finished = true
           if (delta) {
+            first ??= Date.now() - startedAt
             gotText = true
-            produced = true
             yield delta
           }
         }
@@ -316,15 +339,20 @@ export async function* streamGemini(
     } catch (e) {
       // Обрыв или зависание. До первого куска — следующая модель; после —
       // отдавать нечего, сигналим «не завершилось» (энергия вернётся).
-      if (gotText) throw new Error('Поток оборвался — ответ пришёл не полностью.', { cause: e })
+      if (gotText) {
+        done('cut', first)
+        throw new Error('Поток оборвался — ответ пришёл не полностью.', { cause: e })
+      }
+      done(failStatus(e))
       console.warn(`Gemini stream ${m}: до первых слов — ${whyFailed(e)}, следующая модель`)
       continue
     }
     if (gotText) {
+      done(finished ? 'ok' : 'cut', first)
       if (finished) return // ответ дописан целиком — успех
       throw new Error('Поток оборвался — ответ пришёл не полностью.')
     }
-    // модель ответила пусто — следующая
+    done('empty') // модель ответила пусто — следующая
   }
 
   // Ни одна модель не отдала ни слова.

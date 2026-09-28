@@ -2,172 +2,77 @@ import { defineConfig, loadEnv, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
-import { callGemini, streamGemini, GEMINI_TIER_CHAINS, type AiTier } from './api/_core'
-import { taskSpec } from './api/_tasks'
-import { transcribeWithGroq } from './api/_stt'
-import { groqChat, FAST_GROQ_MODEL } from './api/_groq'
-import type { ChatTurn } from './src/types'
+import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { handle as geminiHandle } from './api/gemini'
+import { handle as transcribeHandle } from './api/transcribe'
+
+/** Что серверные функции читают из окружения (process.env) — в dev берём из .env.local. */
+const SERVER_ENV = ['GEMINI_API_KEY', 'GROQ_API_KEY', 'VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY']
+
+type ApiHandler = (req: VercelRequest, res: VercelResponse) => unknown
 
 /**
- * Dev-эндпоинт /api/gemini: в проде этот путь обслуживает Vercel-функция
- * (api/gemini.ts), а при `npm run dev` — этот плагин, чтобы не ставить Vercel CLI.
- * Ключ берётся из .env.local: строка GEMINI_API_KEY=... (БЕЗ префикса VITE_,
- * поэтому в клиентский бандл он не попадает).
+ * Серверная функция из api/ как обработчик dev-сервера — ТОТ ЖЕ код, что
+ * отвечает на проде, без Vercel CLI.
+ *
+ * Раньше здесь жила вторая копия роутинга AI — без входа, прав и лимитов:
+ * локально ученик получал учительскую задачу, в которой прод ему отказывает,
+ * а правка порядка моделей в одном месте не доезжала до другого (архитектура
+ * §7). Адаптер только делает из запроса Node то, что Vercel даёт функции:
+ * разобранное тело и методы status/json/send/redirect.
+ *
+ * ⚠️ Раз код тот же, то и база та же, что у клиента: `npm run dev` списывает
+ * энергию на ЖИВОЙ базе, `npm run dev:test` — на тестовой.
  */
-function geminiDevEndpoint(apiKey: string | undefined, groqKey: string | undefined): Plugin {
+function vercelRoute(path: string, handler: ApiHandler, needs: string): Plugin {
   return {
-    name: 'gemini-dev-endpoint',
+    name: `vercel-route:${path}`,
     configureServer(server) {
-      server.middlewares.use('/api/gemini', (req, res) => {
-        if (req.method !== 'POST') {
-          res.statusCode = 405
-          res.setHeader('Content-Type', 'application/json')
-          res.end(JSON.stringify({ error: 'Только POST' }))
-          return
-        }
-        let raw = ''
-        req.on('data', (chunk) => {
-          raw += chunk
-        })
-        req.on('end', () => {
-          void (async () => {
-            res.setHeader('Content-Type', 'application/json')
-            try {
-              const { messages, system, provider, tier, task, stream } = JSON.parse(raw || '{}') as {
-                messages?: ChatTurn[]
-                system?: string
-                provider?: string
-                tier?: string
-                task?: string
-                stream?: boolean
-              }
-              if (!Array.isArray(messages) || messages.length === 0) {
-                res.statusCode = 400
-                res.end(JSON.stringify({ error: 'Нужно поле messages (непустой массив)' }))
-                return
-              }
-              // роутинг по ТИПУ задачи — как в проде (api/gemini.ts + _tasks.ts).
-              // Права (teacherOnly) здесь не проверяем: в dev нет JWT и квот,
-              // это лишь подбор модели. Правило «клиент не выбирает уровень»
-              // соблюдаем и тут, иначе локально не воспроизвести поведение прода.
-              const spec = taskSpec(task)
-              const aiTier: AiTier = spec
-                ? spec.tier
-                : tier === 'lite' || provider === 'groq'
-                  ? 'lite'
-                  : 'standard'
-              if (aiTier === 'lite' && groqKey) {
-                try {
-                  res.end(JSON.stringify({ text: await groqChat(messages, system, groqKey, FAST_GROQ_MODEL) }))
-                  return
-                } catch {
-                  /* мини-Groq лёг — уходим на Gemini-lite */
-                }
-              }
-              // Потоковый «Диалог» — как в проде (api/gemini.ts), чтобы стрим
-              // можно было проверить локально. Энергии/квот в dev нет.
-              if (stream === true && task === 'dialog' && apiKey) {
-                const chain = GEMINI_TIER_CHAINS[aiTier]
-                const gen = streamGemini(messages, system, apiKey, chain[0], chain, aiTier)
-                let first
-                try {
-                  first = await gen.next()
-                } catch (e) {
-                  const msg = e instanceof Error ? e.message : 'Ошибка AI'
-                  res.statusCode = msg.includes('лимит') ? 429 : 500
-                  res.end(JSON.stringify({ error: msg }))
-                  return
-                }
-                if (first.done) {
-                  res.statusCode = 502
-                  res.end(JSON.stringify({ error: 'AI сейчас не отвечает. Попробуй позже.' }))
-                  return
-                }
-                res.setHeader('Content-Type', 'text/plain; charset=utf-8')
-                res.write(first.value)
-                try {
-                  for await (const chunk of gen) res.write(chunk)
-                  res.end()
-                } catch {
-                  // оборвалось — рвём соединение, как прод (api/gemini.ts):
-                  // чистое закрытие клиент принял бы за целый ответ
-                  res.destroy()
-                }
-                return
-              }
-              if (!apiKey) {
-                throw new Error(
-                  'GEMINI_API_KEY не задан: добавь строку GEMINI_API_KEY=... в .env.local и перезапусти npm run dev',
-                )
-              }
-              const chain = GEMINI_TIER_CHAINS[aiTier]
-              const text = await callGemini(messages, system, apiKey, chain[0], chain, aiTier)
-              res.end(JSON.stringify({ text }))
-            } catch (e) {
-              const msg = e instanceof Error ? e.message : 'Ошибка AI'
-              res.statusCode = msg.includes('лимит') ? 429 : 500
-              res.end(JSON.stringify({ error: msg }))
-            }
-          })()
-        })
-      })
-    },
-  }
-}
-
-/**
- * Dev-эндпоинт /api/transcribe: в проде обслуживает Vercel-функция
- * (api/transcribe.ts), а при `npm run dev` — этот плагин. Ключ — из .env.local:
- * строка GROQ_API_KEY=... (БЕЗ префикса VITE_, в клиентский бандл не попадает).
- */
-function transcribeDevEndpoint(apiKey: string | undefined): Plugin {
-  return {
-    name: 'transcribe-dev-endpoint',
-    configureServer(server) {
-      server.middlewares.use('/api/transcribe', (req, res) => {
-        if (req.method !== 'POST') {
-          res.statusCode = 405
-          res.setHeader('Content-Type', 'application/json')
-          res.end(JSON.stringify({ error: 'Только POST' }))
-          return
-        }
+      server.middlewares.use(path, (req, res) => {
         const chunks: Buffer[] = []
-        req.on('data', (chunk) => chunks.push(chunk as Buffer))
+        req.on('data', (chunk: Buffer) => chunks.push(chunk))
         req.on('end', () => {
-          void (async () => {
-            res.setHeader('Content-Type', 'application/json')
-            try {
-              if (!apiKey) {
-                throw new Error(
-                  'GROQ_API_KEY не задан: добавь строку GROQ_API_KEY=... в .env.local и перезапусти npm run dev',
-                )
-              }
-              const { audio, mime, lang } = JSON.parse(Buffer.concat(chunks).toString() || '{}') as {
-                audio?: string
-                mime?: string
-                lang?: string
-              }
-              if (typeof audio !== 'string' || !audio) {
-                res.statusCode = 400
-                res.end(JSON.stringify({ error: 'Нужно поле audio (base64)' }))
-                return
-              }
-              const buf = Buffer.from(audio, 'base64')
-              const text = await transcribeWithGroq(
-                buf,
-                mime || 'audio/webm',
-                lang === 'es' ? 'es' : 'en',
-                apiKey,
-              )
-              res.end(JSON.stringify({ text }))
-            } catch (e) {
-              const msg = e instanceof Error ? e.message : 'Ошибка распознавания'
-              res.statusCode = msg.includes('лимит') ? 429 : 500
-              res.end(JSON.stringify({ error: msg }))
-            }
-          })()
+          const raw = Buffer.concat(chunks).toString()
+          let body: unknown
+          try {
+            body = raw ? JSON.parse(raw) : undefined
+          } catch {
+            res.statusCode = 400 // как Vercel на кривой JSON
+            res.end('Invalid JSON')
+            return
+          }
+          const vreq: VercelRequest = Object.assign(req, { body, query: {}, cookies: {} })
+          const vres: VercelResponse = Object.assign(res, {
+            status(code: number) {
+              res.statusCode = code
+              return vres
+            },
+            json(value: unknown) {
+              res.setHeader('Content-Type', 'application/json; charset=utf-8')
+              res.end(JSON.stringify(value))
+              return vres
+            },
+            send(value: unknown) {
+              res.end(typeof value === 'string' || Buffer.isBuffer(value) ? value : JSON.stringify(value))
+              return vres
+            },
+            redirect(statusOrUrl: string | number, url?: string) {
+              res.statusCode = typeof statusOrUrl === 'number' ? statusOrUrl : 307
+              res.setHeader('Location', url ?? String(statusOrUrl))
+              res.end()
+              return vres
+            },
+          })
+          Promise.resolve(handler(vreq, vres)).catch((e: unknown) => {
+            server.config.logger.error(`${path}: ${e instanceof Error ? e.stack : String(e)}`)
+            if (!res.headersSent) {
+              res.statusCode = 500
+              res.end(JSON.stringify({ error: 'Сбой обработчика в dev — смотри терминал.' }))
+            } else res.destroy()
+          })
         })
       })
+      if (!process.env[needs]) server.config.logger.warn(`${needs} нет в .env.local — ${path} в dev не ответит`)
     },
   }
 }
@@ -177,13 +82,16 @@ export default defineConfig(({ mode }) => {
   // Читаем .env.local целиком (третий аргумент '' = без фильтра по префиксу).
   // В клиентский код всё равно попадают только переменные с префиксом VITE_.
   const env = loadEnv(mode, process.cwd(), '')
+  // Серверным функциям — то, что им даёт Vercel. Уже заданное в окружении не
+  // трогаем: dev:test подменяет адрес базы на тестовую именно так.
+  for (const key of SERVER_ENV) if (process.env[key] === undefined && env[key]) process.env[key] = env[key]
 
   return {
     plugins: [
       react(),
       tailwindcss(),
-      geminiDevEndpoint(env.GEMINI_API_KEY, env.GROQ_API_KEY),
-      transcribeDevEndpoint(env.GROQ_API_KEY),
+      vercelRoute('/api/gemini', geminiHandle, 'GEMINI_API_KEY'),
+      vercelRoute('/api/transcribe', transcribeHandle, 'GROQ_API_KEY'),
       VitePWA({
         registerType: 'autoUpdate',
         // регистрируем SW сами в main.tsx (проверка обновлений при возврате в приложение)

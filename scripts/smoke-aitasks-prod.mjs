@@ -1,19 +1,21 @@
 /**
- * Прод-проверка карты AI-задач (заход 18). Локально не запускается: dev-эндпоинт
- * в vite.config вообще не авторизует, а вся суть — в правах и квотах.
+ * Карта AI-задач снаружи — права и квоты на живом эндпоинте (заход 18, Ф1.6).
+ * С Ф1.6 dev отвечает тем же обработчиком, что Vercel, поэтому проверка идёт и
+ * на тестовом стенде, и на проде.
  *   1. Ученица с task:'material' → 403 (Pro-модели только преподавателю).
- *   2. Преподаватель с task:'material' → НЕ 403 (гейт пропускает).
+ *   2. Преподаватель с task:'material' → НЕ 403 (гейт пропускает). Триал у
+ *      него снят — лимит генераций 0, ответ 429 до модели: Pro-запрос не тратим.
  *   3. Ученица с task:'word' → 200 (лёгкий путь работает, карман light).
- *   4. Выдуманное имя задачи → обрабатывается как обычная (standard), не как Pro.
- *   5. Старый клиент (tier:'max', без task) → пропускается, но НЕ на Pro-уровне
- *      (снаружи видно только то, что запрос принят — модель проверяем по коду).
- * Запуск: node scripts/smoke-aitasks-prod.mjs --prod   (живой сайт — только с живой базой)
- *         node scripts/smoke-aitasks-prod.mjs http://localhost:3000  (иной хост)
+ *   4. Выдуманное имя задачи → 400 (Ф1.6: неизвестная задача не обслуживается).
+ *   5. Старый клиент (tier:'max', без task) → 400 (путь tier/provider убран в Ф1.6).
+ *   6. Диалог под видом task:'word' → 400 (карман квоты не подменить).
+ * Запуск: node scripts/smoke-aitasks-prod.mjs          (тестовый стенд, нужен npm run dev:test)
+ *         node scripts/smoke-aitasks-prod.mjs --prod   (живой сайт — только с живой базой)
  */
 import { createClient } from '@supabase/supabase-js'
-import { PROD_SITE, assertSiteMatchesDb, firstArg, scriptEnv } from './_env.mjs'
+import { APP_URL, PROD_SITE, assertSiteMatchesDb, firstArg, scriptEnv } from './_env.mjs'
 
-const BASE = firstArg() || PROD_SITE
+const BASE = firstArg() || (process.argv.includes('--prod') ? PROD_SITE : APP_URL)
 assertSiteMatchesDb(BASE)
 
 const env = scriptEnv()
@@ -42,7 +44,10 @@ async function mk(email, role) {
     const { data: list } = await admin.auth.admin.listUsers({ perPage: 1000 })
     id = list.users.find((u) => u.email === email)?.id
   } else if (error) throw new Error(error.message)
-  await admin.from('profiles').update({ role }).eq('id', id)
+  // без триала: у преподавателя 0 генераций — гейт проверяется ответом 429 до
+  // модели, и дефицитный Pro-запрос не тратится на каждом прогоне
+  const past = new Date(Date.now() - 86_400_000).toISOString()
+  await admin.from('profiles').update({ role, trial_until: past }).eq('id', id)
   return id
 }
 async function token(email) {
@@ -102,21 +107,13 @@ try {
   const r3 = await ask(sTok, { task: 'word' })
   check('ученица с task:\'word\' → 200', r3.status === 200, `${r3.status} ${r3.error ?? ''}`)
 
-  // 4. выдуманная задача не даёт Pro и не ломает эндпоинт
+  // 4. выдуманная задача не обслуживается вовсе (Ф1.6) — ни Pro, ни обычной
   const r4 = await ask(sTok, { task: 'superpro' })
-  check(
-    'выдуманное имя задачи не даёт прав (не 403, обычная модель)',
-    r4.status === 200,
-    `${r4.status} ${r4.error ?? ''}`,
-  )
+  check('выдуманное имя задачи → 400, модель не зовётся', r4.status === 400, `${r4.status} ${r4.error ?? ''}`)
 
-  // 5. старый клиент из кэша PWA не ломается
+  // 5. путь tier/provider убран (Ф1.6): клиенты шлют task с июля 2026
   const r5 = await ask(sTok, { tier: 'max' })
-  check(
-    "старый клиент (tier:'max') принят как обычный запрос",
-    r5.status === 200,
-    `${r5.status} ${r5.error ?? ''}`,
-  )
+  check("старый клиент (tier:'max' без task) → 400", r5.status === 400, `${r5.status} ${r5.error ?? ''}`)
 
   // 6. подмена кармана квоты: многорепличный Диалог под видом task:'word' —
   // отклоняется (иначе списался бы из дешёвого light вместо heavy)
