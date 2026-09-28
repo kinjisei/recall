@@ -42,7 +42,8 @@ PWA для изучения **двух языков: английского и �
 | Словарь EN | Free Dictionary API + Gemini(light) | транскрипция/аудио + учебные определения |
 | Словарь ES | перевод встроен в паки; контекст — Gemini | `lib/contextDict.ts` |
 | SRS | **ts-fsrs** | реализация FSRS |
-| Дизайн | Nocturne: тёмная тема, токены `--night-*`, шрифт Onest (локально), иконки Phosphor | `src/index.css`, единая `class="dark"` |
+| Дизайн | Nocturne: токены двух тем (тёмная у всех, светлая — черновик владельца), шрифт Onest (локально), свой набор иконок | `src/shared/ui/tokens.css` → Tailwind `@theme`, `shared/ui/theme.ts` |
+| Уведомления | Supabase `pg_cron` (будильник) + `pg_net` → `/api/notify` (секрет в Vault) | одно на цикл — unique в базе; каналы подключаются (push Ф2.9, Telegram Ф4.3) |
 | Хостинг | **Vercel** (автодеплой из main) | фронт + serverless |
 
 **Ключи** (GEMINI_API_KEY, GROQ_API_KEY) — только в env Vercel/`.env.local`
@@ -58,24 +59,36 @@ recall-app/
                    _geminiBody.ts (тело запроса под модель), _tasks.ts (карта
                    task→модели/квота/права), _auth.ts (JWT, квота, isTeacher),
                    _groq.ts, _stt.ts, _timeouts.ts (сроки ожидания: запросы
-                   наружу — только через него)
+                   наружу — только через него), notify.ts (сервер доставки
+                   уведомлений: будит база через pg_net, вход — только секрет),
+                   _channels.ts (каналы доставки; пока пусто)
   src/
     app/           каркас (src/app/CLAUDE.md): main.tsx (регистрация SW +
                    автообновление PWA), App.tsx (роутинг, см. §8),
                    routeChunks.ts, ProtectedRoute, ErrorBoundary, BlockedScreen,
-                   ScrollToTop, PageTracker; shell/ — Layout (шапка: BrandLogo,
-                   EN/ES, AvatarMenu), BottomNav (4 вкладки)
+                   ScrollToTop, PageTracker, routes.ts (все адреса одной
+                   таблицей), navigation.ts (меню по роли, выключено); shell/ —
+                   Layout (раскладка по ширине), TopBar (телефон: логотип, EN/ES,
+                   колокольчик, аватар), BottomNav (4 вкладки), SideNav (компьютер)
     shared/        нижний слой без предметной логики (src/shared/CLAUDE.md):
                    api/ (клиент базы, типы базы, разбор ошибок, клиент AI),
-                   lib/ (storage, useUrlState, viewTransition, useAsyncData…)
+                   lib/ (storage, useUrlState, viewTransition, useAsyncData,
+                   focusMode, screenWidth, share…),
+                   ui/ — дизайн-система (src/shared/ui/CLAUDE.md): tokens.css
+                   (ВСЕ значения, две темы), theme, breakpoints, layouts,
+                   roundKeys, Button, Card, RowCard, Sheet, Picker, TabPicker,
+                   Reveal, BackButton(+BackHeader), AppLink, Loading, LoadError,
+                   Thinking, Brand, Confetti, icons.tsx (генерируются)
+    domains/       предметная логика по новой архитектуре (index — парадная
+                   дверь, api — единственный вход в базу, model — чистые правила):
+                   notifications (лента, правила, доставка — Ф1.5)
     types/index.ts ВСЕ общие типы
     context/       AuthContext (вход/выход, кэш профиля), LanguageContext (EN/ES)
-    components/    Button, Card, RowCard, BackButton(+BackHeader), AppLink,
-                   WordSheet (шторка слова),
-                   MarkableText (мультивыбор слов), exercises.tsx (движок
-                   упражнений mcq/fill/order — грамматика И материалы),
-                   icons.tsx (инлайн-SVG), Confetti, GuidedNext, RoundResult,
-                   SmartBack, LoadError, Brand
+    components/    общее С предметной логикой (переезжает в разделы, Ф3):
+                   WordSheet (шторка слова), MarkableText (мультивыбор слов),
+                   exercises.tsx (движок упражнений mcq/fill/order — грамматика
+                   И материалы), GuidedNext, RoundResult, RoundReview, EnergyBar,
+                   FeedbackSheet, шторки разбора текста, ChartView
     data/
       spanish/     тексты/диалоги/фразы (eager index.ts); ЛЕНИВО: words.ts
                    (~4668 слов A1–B2), grammar.ts (74 урока), conjugation.ts,
@@ -119,6 +132,9 @@ recall-app/
       admin/       AdminPage (/admin, is_admin): поиск по email, выдача плана
       landing/     TeachersPage (/teachers, публичный лендинг)
       legal/       LegalPage (/privacy, /terms)
+      notifications/ колокольчик и лента (в шапке и боковом меню; появляется,
+                   только когда у человека есть уведомления)
+      dev/         витрина дизайн-системы /dev/ui — ТОЛЬКО в разработке
     lib/           (по файлу на подсистему; контракты — §7)
   vercel.json      SPA-rewrite (не перекрывает /api/*)
   .env.local       VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, GEMINI_API_KEY,
@@ -179,6 +195,20 @@ recall-app/
   messages jsonb); `study_plans` — программа обучения (weeks jsonb, одна
   активная на пару+язык, замена — RPC replace_study_plan).
 - `grammar_mistakes` — синк банка «Мои ошибки» (учитель читает у своих учениц).
+
+Уведомления (Ф1.5, миграция 0002; src/domains/notifications/CLAUDE.md):
+- `notifications` (user_id, kind, data jsonb, dedupe_key, created_at, read_at,
+  sent_at) — лента; **unique (user_id, dedupe_key)**: одно уведомление на цикл
+  держит база. Читает только владелец (RLS); писать напрямую не может никто.
+- `notification_prefs` (lesson_reminders) — свои строки.
+- `notification_rules` (name, fn, enabled, last_*) — реестр правил, клиенту
+  невидим. Правило = функция базы без аргументов → число созданных, через
+  `notify()`.
+- RPC: `notify`, `run_notification_rules`, `dispatch_notifications` — закрыты
+  и от authenticated (их зовут правила и будильник); `mark_notifications_read` —
+  только свои. Будильник — `pg_cron` раз в 5 минут; доставка — `pg_net` →
+  `api/notify.ts` по секрету из Vault (`notify_url`, `notify_secret`; нет —
+  доставка спит).
 
 Монетизация и доступ:
 - `allowed_emails` — белый список регистрации (гейт в триггере handle_new_user;
@@ -262,6 +292,14 @@ chat(messages: ChatTurn[], opts: { task: AiTask; system?: string }): Promise<str
 // lib/guided.ts — ведомая сессия; lib/settings.ts — локальные настройки
 // lib/text.ts — answerMatches (варианты через «/»; ЕДИНАЯ проверка ответов —
 // та же логика в SQL submit_material)
+// domains/notifications — loadNotifications(limit?), notificationCounts() →
+// { total, unread }, markNotificationsRead(ids?), renderNotification({kind,data})
+// → { title, body?, href? } (href — только внутренний, safeHref), whenLabel
+// shared/lib/share.ts — whatsappLink(text, phone?), telegramLink(text, url),
+// waPhone(raw), shareNative(text, url?) — «поделиться» со своего номера
+// shared/ui/theme.ts — themeChoice/applyTheme/setThemeChoice (тема устройства;
+// THEME_FOR_EVERYONE = false до редизайна); shared/ui/layouts.tsx — CenterColumn,
+// ReadingColumn, ListDetail; shared/ui/roundKeys.tsx — useRoundKeys/useRoundMode
 // shared/lib/storage.ts — readJson/writeJson/readRaw/writeRaw: ЕДИНЫЙ безопасный
 // доступ к localStorage (try/catch + fallback). Весь localStorage — через него
 // (кроме перечисления ключей в profile.clearUserLocalData).
@@ -292,12 +330,18 @@ chat(messages: ChatTurn[], opts: { task: AiTask; system?: string }): Promise<str
 **Навигация — 4 вкладки: Главная / Учёба / Практика / Диалог**
 («изучаю новое» / «тренируюсь» / «общаюсь»), набор — `src/app/navigation.ts`.
 Телефон и планшет: шапка (логотип, EN/ES, аватар-меню) и нижняя панель.
-Компьютер (от 1024 px): меню слева, шапки нет; экраны — колонка 640 px.
+Компьютер (от 1024 px): меню слева, шапки нет; экран — колонка 640 px, общие
+раскладки с панелью раздвигают её до 1100 px (`shared/lib/screenWidth`).
 
-Дизайн: ЕДИНАЯ тёмная тема Nocturne (`class="dark"` на html, токены `--night-*`
-в index.css, самый бледный текст `--night-text-25` — только для иконок), шрифт
-Onest (@fontsource-variable, офлайн), иконки Phosphor + свои SVG, тач-цели
-≥44px, focus-кольца, prefers-reduced-motion, print-стили белые (PrintSheet).
+Дизайн: токены `src/shared/ui/tokens.css` (Tailwind `@theme` → утилиты
+`bg-surface`, `text-fg-muted`, `text-danger-strong`…; сырые цвета, `[Npx]`,
+`--night-*` и `dark:` запрещены сторожем). Две темы: тёмная Nocturne — у всех;
+светлая — черновик, меняет только владелец для себя в /admin (`data-theme` на
+html, `shared/ui/theme.ts`). `fg-faint` — только для иконок. Шрифт Onest
+(@fontsource-variable, офлайн), иконки — свой набор `shared/ui/icons.tsx`,
+тач-цели ≥44px, focus-кольца, prefers-reduced-motion, печать белая
+(PrintSheet). Компьютер: шторки — панелью справа, общие раскладки
+(`shared/ui/layouts`), клавиатура в упражнениях 1–4 / Enter / Esc.
 Мобайл-фёрст. Один экран = одна задача.
 
 ## 9. История и статус
