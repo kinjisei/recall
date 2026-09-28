@@ -164,6 +164,8 @@ src/
   features/     папки по экранам (счёт — node scripts/arch-map.mjs)
 api/            gemini.ts · transcribe.ts · _core.ts · _geminiBody.ts · _auth.ts
                 _tasks.ts · _groq.ts · _stt.ts · _timeouts.ts (сроки — все запросы наружу)
+                notify.ts (доставка уведомлений: будит база, вход — секрет) ·
+                _channels.ts (каналы доставки; пока пусто — push Ф2.9, Telegram Ф4.3)
 scripts/        смоуки, чистые тесты (test-*), живые проверки (check-*), аудит,
                 валидаторы; checks/ — сторожа и их списки «к исправлению»
 ```
