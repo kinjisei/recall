@@ -694,6 +694,103 @@ export type Database = {
           },
         ]
       }
+      notification_prefs: {
+        Row: {
+          lesson_reminders: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          lesson_reminders?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          lesson_reminders?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_prefs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "access_overview"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      notification_rules: {
+        Row: {
+          about: string
+          enabled: boolean
+          fn: string
+          last_created: number | null
+          last_error: string | null
+          last_run_at: string | null
+          name: string
+        }
+        Insert: {
+          about: string
+          enabled?: boolean
+          fn: string
+          last_created?: number | null
+          last_error?: string | null
+          last_run_at?: string | null
+          name: string
+        }
+        Update: {
+          about?: string
+          enabled?: boolean
+          fn?: string
+          last_created?: number | null
+          last_error?: string | null
+          last_run_at?: string | null
+          name?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          data: Json
+          dedupe_key: string
+          id: string
+          kind: string
+          read_at: string | null
+          sent_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data?: Json
+          dedupe_key: string
+          id?: string
+          kind: string
+          read_at?: string | null
+          sent_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          dedupe_key?: string
+          id?: string
+          kind?: string
+          read_at?: string | null
+          sent_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "access_overview"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       placement_requests: {
         Row: {
           completed_at: string | null
@@ -1285,6 +1382,7 @@ export type Database = {
         Returns: boolean
       }
       delete_grammar_quest: { Args: { p_id: string }; Returns: undefined }
+      dispatch_notifications: { Args: never; Returns: number }
       energy_source: { Args: { uid: string }; Returns: Record<string, unknown> }
       ensure_invite_code: { Args: never; Returns: string }
       finish_material_review: {
@@ -1318,6 +1416,7 @@ export type Database = {
         Returns: undefined
       }
       mark_homework_choice: { Args: { p_item: string }; Returns: undefined }
+      mark_notifications_read: { Args: { p_ids?: string[] }; Returns: number }
       material_assigned_to: {
         Args: { m_id: string; s_id: string }
         Returns: boolean
@@ -1328,6 +1427,15 @@ export type Database = {
       }
       norm_answer: { Args: { s: string }; Returns: string }
       norm_typed: { Args: { s: string }; Returns: string }
+      notify: {
+        Args: {
+          p_data: Json
+          p_dedupe_key: string
+          p_kind: string
+          p_user_id: string
+        }
+        Returns: boolean
+      }
       quest_correct_answer: { Args: { p_id: string }; Returns: number }
       reassign_material: {
         Args: { p_id: string; p_note: string }
@@ -1354,6 +1462,7 @@ export type Database = {
         }
         Returns: string
       }
+      run_notification_rules: { Args: never; Returns: Json }
       save_material_ai_review: {
         Args: { p_id: string; p_review: Json }
         Returns: undefined
