@@ -6,7 +6,7 @@
 // (admin_find_user/admin_set_plan).
 // ============================================================================
 import { useEffect, useState } from 'react'
-
+import { DeviceTheme } from './DeviceTheme'
 import { supabase } from '../../shared/api/supabase'
 import {
   findUsers,
@@ -74,7 +74,7 @@ export function AdminPage() {
           Оплата пришла на Kaspi → найди по email из комментария перевода → включи план.
         </p>
       </header>
-
+      <DeviceTheme />
       <Funnel />
       <FeedbackList />
       <RecentErrors />

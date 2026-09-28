@@ -6,7 +6,12 @@ import App from './App'
 import { installErrorLogging } from '../lib/errorLog'
 import { track } from '../lib/analytics'
 import { onAiRequest } from '../shared/api/ai'
+import { applyTheme } from '../shared/ui/theme'
 import '../index.css'
+
+// Тема (data-theme на <html>) — до первого рендера, чтобы экран не мигнул
+// другой темой. Пока выбирает только владелец для себя — shared/ui/theme.ts.
+applyTheme()
 
 // Обезличенная аналитика посещений (Vercel Web Analytics, бесплатный тариф).
 // Только в проде; чтобы заработала, в Vercel-дашборде проекта должен быть
