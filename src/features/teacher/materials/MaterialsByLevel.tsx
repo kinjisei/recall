@@ -4,6 +4,7 @@
 // текст нужного уровня было нельзя.
 import { useState } from 'react'
 import { Card } from '../../../shared/ui/Card'
+import { Reveal } from '../../../shared/ui/Reveal'
 import type { Material } from '../../../types'
 
 export function MaterialsByLevel({
@@ -38,7 +39,7 @@ export function MaterialsByLevel({
             </span>
             <span className="text-fg-muted">{closed[level] ? '▸' : '▾'}</span>
           </button>
-          {!closed[level] && (
+          <Reveal open={!closed[level]}>
             <div className="flex flex-col gap-2">
               {items.map((m) => (
                 <button key={m.id} onClick={() => onOpen(m)} className="text-left">
@@ -55,7 +56,7 @@ export function MaterialsByLevel({
                 </button>
               ))}
             </div>
-          )}
+          </Reveal>
         </div>
       ))}
     </div>

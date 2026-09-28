@@ -14,6 +14,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BackHeader } from '../../shared/ui/BackButton'
+import { Reveal } from '../../shared/ui/Reveal'
 import { Card } from '../../shared/ui/Card'
 import { Button } from '../../shared/ui/Button'
 import { RoundResult, ScoreGlyph } from '../../components/RoundResult'
@@ -275,7 +276,7 @@ function ReviewedView({
           Пройти упражнения заново
         </Button>
       </div>
-      {showBody && (
+      <Reveal open={showBody}>
         <Card>
           {/* тот же тап по словам, что и в «Учёбе»: разобранный текст —
               лучший источник слов для колоды */}
@@ -284,7 +285,7 @@ function ReviewedView({
           </p>
           <TappableBody body={m.body} lang={m.lang} />
         </Card>
-      )}
+      </Reveal>
 
       {m.exercises.map((ex, i) => {
         const item = review.find((r) => r.index === i)

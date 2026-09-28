@@ -5,9 +5,8 @@
 // review_states) + выход из аккаунта (перенесён сюда с Главной).
 // ============================================================================
 import { useEffect, useState } from 'react'
-import { useSmartBack } from '../../shared/ui/SmartBack'
+import { BackButton } from '../../shared/ui/BackButton'
 import {
-  IconBack,
   IconMaterials,
   IconMcq,
   IconTrophy,
@@ -100,7 +99,6 @@ async function loadMetrics(lang: 'en' | 'es'): Promise<Omit<Metrics, 'best'>> {
 }
 
 export function ProgressPage() {
-  const goBack = useSmartBack('/')
   const { signOut } = useAuth()
   const { lang } = useLanguage()
   const [week, setWeek] = useState<WeekDay[]>([])
@@ -143,13 +141,7 @@ export function ProgressPage() {
   return (
     <div className="flex flex-col gap-6">
       <header className="flex items-center gap-2">
-        <button
-          onClick={goBack}
-          aria-label="Назад"
-          className="lift -ml-2 flex h-11 w-11 items-center justify-center rounded-full text-fg-secondary"
-        >
-          <IconBack size={20} />
-        </button>
+        <BackButton fallback="/" />
         <h1 className="text-2xl font-medium tracking-tight">Мой прогресс</h1>
       </header>
 

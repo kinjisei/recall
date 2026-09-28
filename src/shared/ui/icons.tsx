@@ -1,5 +1,5 @@
 // ============================================================================
-// Фирменный icon-набор Recall (57 шт.), сгенерирован из handoff/icons/*.svg
+// Фирменный icon-набор Recall (53 шт.), сгенерирован из handoff/icons/*.svg
 // (Claude Design). Единый стиль: viewBox 0 0 24 24, stroke 1.75px (2px у *-fill),
 // currentColor. Меняем весь набор здесь — приложение подхватит.
 //   НЕ РЕДАКТИРОВАТЬ ВРУЧНУЮ: перегенерировать из SVG.
@@ -114,9 +114,6 @@ export const IconMcq = icon(
 export const IconMeaning = icon(
   '<path d="M9.8 14.2l4.4-4.4"></path><path d="M9.3 7.6l1.6-1.6a3.4 3.4 0 0 1 4.8 4.8l-1.6 1.6"></path><path d="M14.7 16.4l-1.6 1.6a3.4 3.4 0 0 1-4.8-4.8l1.6-1.6"></path>',
 )
-export const IconMicFill = icon(
-  '<rect x="9" y="3.5" width="6" height="10.5" rx="3" fill="currentColor" fill-opacity=".32"></rect><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0"></path><path d="M12 18v2.5"></path>', '2',
-)
 export const IconMic = icon(
   '<rect x="9" y="3.5" width="6" height="10.5" rx="3"></rect><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0"></path><path d="M12 18v2.5"></path>',
 )
@@ -168,20 +165,11 @@ export const IconSpeakerSlow = icon(
 export const IconSpeaker = icon(
   '<path d="M4 9.5h2.8L11.5 6v12l-4.7-3.5H4Z"></path><path d="M14.5 9.3a4 4 0 0 1 0 5.4"></path><path d="M17.2 6.8a7.5 7.5 0 0 1 0 10.4"></path>',
 )
-export const IconSpeechFill = icon(
-  '<rect x="9" y="3.5" width="6" height="10.5" rx="3" fill="currentColor" fill-opacity=".32"></rect><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0"></path><path d="M12 18v2.5"></path>', '2',
-)
-export const IconSpeech = icon(
-  '<rect x="9" y="3.5" width="6" height="10.5" rx="3"></rect><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0"></path><path d="M12 18v2.5"></path>',
-)
 export const IconSpinner = icon(
   '<path d="M12 3.5a8.5 8.5 0 1 1-8.5 8.5"></path>',
 )
 export const IconStop = icon(
   '<rect x="6.5" y="6.5" width="11" height="11" rx="2"></rect>',
-)
-export const IconStudents = icon(
-  '<circle cx="9" cy="8.5" r="3"></circle><path d="M3.5 19.5a5.5 5.5 0 0 1 11 0"></path><path d="M15.3 5.9a3 3 0 0 1 .1 5.3"></path><path d="M17 14.6a5.5 5.5 0 0 1 3.5 4.9"></path>',
 )
 export const IconStudyFill = icon(
   '<rect x="4" y="4" width="14" height="4.6" rx="1.5" fill="currentColor" fill-opacity=".32"></rect><rect x="6" y="9.7" width="14" height="4.6" rx="1.5" fill="currentColor" fill-opacity=".32"></rect><rect x="4.5" y="15.4" width="13" height="4.6" rx="1.5" fill="currentColor" fill-opacity=".32"></rect>', '2',

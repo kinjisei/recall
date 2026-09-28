@@ -3,8 +3,29 @@
 // IELTS: band + 4 критерия; обычный: уровень + чек-листы целевых слов/грамматики.
 // Плюс общий блок: ошибки (было→стало), сильные стороны, что подтянуть, rewrites.
 // ============================================================================
+import { useState } from 'react'
 import { IconCheck, IconClose } from '../../shared/ui/icons'
+import { Reveal } from '../../shared/ui/Reveal'
 import type { WritingGrade, WritingMode } from '../../types'
+
+/** «Показать полный разбор» — общая раскрывашка (shared/ui/Reveal), а не
+ *  свой <details>: одна на всё приложение, разворачивается, а не прыгает. */
+function FullList({ children }: { children: React.ReactNode }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div>
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        className="-my-3 flex min-h-11 items-center text-sm font-medium text-accent-strong"
+      >
+        {open ? 'Скрыть полный разбор' : 'Показать полный разбор'}
+      </button>
+      <Reveal open={open}>{children}</Reveal>
+    </div>
+  )
+}
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -102,10 +123,7 @@ export function WritingGradeView({ grade, mode }: { grade: WritingGrade; mode: W
       {grade.errors && grade.errors.length > 0 && (
         <Section title={grade.focus?.length ? `Все правки · ${grade.errors.length}` : 'Ошибки'}>
           {grade.focus?.length ? (
-            <details className="group">
-              <summary className="cursor-pointer list-none text-sm font-medium text-accent-strong">
-                Показать полный разбор
-              </summary>
+            <FullList>
               <div className="mt-2 flex flex-col gap-1.5">
                 {grade.errors.map((e, i) => (
                   <div key={i} className="rounded-xl border border-red-500/25 px-3 py-2 text-sm">
@@ -114,7 +132,7 @@ export function WritingGradeView({ grade, mode }: { grade: WritingGrade; mode: W
                   </div>
                 ))}
               </div>
-            </details>
+            </FullList>
           ) : (
             <div className="flex flex-col gap-1.5">
               {grade.errors.map((e, i) => (

@@ -268,6 +268,22 @@ async function layouts(page, tag) {
   check(`${tag}: без раскладки экран снова колонкой ≤ 640`, (await mainW()) <= 640, `${px(await mainW())}px`)
 }
 
+// ── раскрывашка: одна на всё приложение (shared/ui/Reveal) ────────────────────
+async function reveal(page) {
+  await openShowcase(page)
+  const inPage = () => page.evaluate(() => document.body.innerText.includes('монтируется, только пока открыто'))
+  check('раскрывашка: закрыта — содержимого в странице нет', !(await inPage()))
+  await clickText(page, 'Как это работает?')
+  await sleep(500)
+  const opened = await page.evaluate(() => document.querySelector('.reveal')?.getAttribute('data-open'))
+  check('раскрывашка: открыли — содержимое есть и развёрнуто', (await inPage()) && opened === 'true', `data-open=${opened}`)
+  await clickText(page, 'Как это работает?')
+  // размонтирование — таймером 360 мс, а фоновой вкладке без окна браузер
+  // сдвигает таймеры к целой секунде
+  await sleep(1500)
+  check('раскрывашка: закрыли — содержимое убрано после анимации', !(await inPage()))
+}
+
 // ── 4. клавиатура ─────────────────────────────────────────────────────────────
 const keysLine = (page) => page.evaluate(() => document.querySelector('[data-demo="keys"]')?.textContent ?? '')
 
@@ -342,6 +358,7 @@ async function run(browser, userId) {
     await sheet(page, tag)
     await layouts(page, tag)
   }
+  await reveal(page)
   await keyboard(page)
 
   check('JS-ошибок за прогон нет', jsErrors.length === 0, jsErrors.slice(0, 2).join(' | '))

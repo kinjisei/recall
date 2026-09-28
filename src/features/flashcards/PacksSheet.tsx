@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Card } from '../../shared/ui/Card'
+import { Reveal } from '../../shared/ui/Reveal'
 import { Button } from '../../shared/ui/Button'
 import { getDefaultDeck, addCardsBulk } from '../../lib/cards'
 import type { AppLang, WordTopic } from '../../types'
@@ -150,7 +151,7 @@ export function PacksSheet({ lang, onAdded }: { lang: AppLang; onAdded: () => vo
                     <span className="text-fg-muted">{isOpen ? '▾' : '▸'}</span>
                   </button>
 
-                  {isOpen && (
+                  <Reveal open={isOpen}>
                     <div className="mt-2 flex flex-col gap-2">
                       {topics.map((t) => {
                         const count = data.wordsByTopic.get(t.id)?.length ?? 0
@@ -182,7 +183,7 @@ export function PacksSheet({ lang, onAdded }: { lang: AppLang; onAdded: () => vo
                         )
                       })}
                     </div>
-                  )}
+                  </Reveal>
                 </div>
               )
             })}

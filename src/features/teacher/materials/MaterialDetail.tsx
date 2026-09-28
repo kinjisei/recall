@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 
 import { Card } from '../../../shared/ui/Card'
+import { Reveal } from '../../../shared/ui/Reveal'
 import { Button } from '../../../shared/ui/Button'
 import { BackHeader } from '../../../shared/ui/BackButton'
 import { LoadError } from '../../../shared/ui/LoadError'
@@ -136,11 +137,11 @@ export function MaterialDetail({
         >
           {showBody ? '▾ Скрыть текст' : '▸ Показать текст'}
         </button>
-        {showBody && (
+        <Reveal open={showBody}>
           <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-fg-secondary">
             {material.body}
           </p>
-        )}
+        </Reveal>
         <div className="mt-3 flex flex-wrap gap-2">
           <Button
             variant="secondary"

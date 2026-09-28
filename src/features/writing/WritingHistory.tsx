@@ -1,3 +1,4 @@
+import { Reveal } from '../../shared/ui/Reveal'
 // ============================================================================
 // История попыток письма (Заход 5c) — общий рендер для ученика и преподавателя.
 // Показывает прогресс баллов по циклам (5.5 → 6.5) + текст каждой попытки под тапом.
@@ -28,7 +29,7 @@ export function WritingHistory({ attempts }: { attempts: WritingAttempt[] }) {
               </span>
               <span className="text-xs text-fg-muted">{when}</span>
             </button>
-            {open === i && (
+            <Reveal open={open === i}>
               <div className="border-t border-white/[0.06] px-3 py-2">
                 <p className="whitespace-pre-wrap text-sm leading-relaxed text-fg-secondary">
                   {a.essay}
@@ -39,7 +40,7 @@ export function WritingHistory({ attempts }: { attempts: WritingAttempt[] }) {
                   </p>
                 )}
               </div>
-            )}
+            </Reveal>
           </div>
         )
       })}

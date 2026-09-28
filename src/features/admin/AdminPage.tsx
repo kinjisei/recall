@@ -19,6 +19,7 @@ import {
   type FeedbackRow,
 } from '../../lib/admin'
 import { Button } from '../../shared/ui/Button'
+import { Reveal } from '../../shared/ui/Reveal'
 import { Picker } from '../../shared/ui/Picker'
 import { IconSearch } from '../../shared/ui/icons'
 import { RowsSkeleton } from '../../shared/ui/Loading'
@@ -401,7 +402,7 @@ function RecentErrors() {
                   {r.where_} · {new Date(r.last_at).toLocaleString('ru-RU')}
                   {!r.any_online && ' · офлайн'}
                 </p>
-                {open === key && (
+                <Reveal open={open === key}>
                   <div className="mt-2 border-t border-white/[0.08] pt-2">
                     <p className="text-xs text-fg-muted">
                       Экран: {r.last_path ?? '—'}
@@ -412,7 +413,7 @@ function RecentErrors() {
                       </pre>
                     )}
                   </div>
-                )}
+                </Reveal>
               </button>
             )
           })}

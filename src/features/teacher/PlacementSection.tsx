@@ -9,6 +9,7 @@
 // ============================================================================
 import { useCallback, useEffect, useState } from 'react'
 import { Button } from '../../shared/ui/Button'
+import { Reveal } from '../../shared/ui/Reveal'
 import { LoadError } from '../../shared/ui/LoadError'
 import {
   assignPlacement,
@@ -92,7 +93,7 @@ export function PlacementSection({
         <span className="text-fg-muted">{open ? '▲' : '▼'}</span>
       </button>
 
-      {open && (
+      <Reveal open={open}>
         <div className="flex flex-col gap-3 border-t border-white/[0.08] px-3 py-3">
           <p className="text-xs leading-relaxed text-fg-muted">
             Назначь тест, если не знаешь уровень {studentName}. Тест появится у
@@ -158,7 +159,7 @@ export function PlacementSection({
             </ul>
           )}
         </div>
-      )}
+      </Reveal>
     </div>
   )
 }

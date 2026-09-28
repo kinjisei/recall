@@ -5,6 +5,7 @@
 // ============================================================================
 import { useEffect, useRef, useState } from 'react'
 import { BackButton } from '../../shared/ui/BackButton'
+import { Reveal } from '../../shared/ui/Reveal'
 import { Card } from '../../shared/ui/Card'
 import { Button } from '../../shared/ui/Button'
 import { IconCheck, IconClose } from '../../shared/ui/icons'
@@ -127,13 +128,13 @@ export function ReviewScreen({
       >
         {showBody ? '▾ Скрыть текст материала' : '▸ Текст материала'}
       </button>
-      {showBody && (
+      <Reveal open={showBody}>
         <Card>
           <p className="whitespace-pre-wrap text-sm leading-relaxed text-fg-secondary">
             {material.body}
           </p>
         </Card>
-      )}
+      </Reveal>
 
       {attempts.length > 0 && (
         <Card>

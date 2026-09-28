@@ -13,7 +13,8 @@ import { useNavigate } from 'react-router-dom'
 import { Card } from '../../shared/ui/Card'
 import { Button } from '../../shared/ui/Button'
 import { useRoundKeys } from '../../shared/ui/roundKeys'
-import { IconBack, IconSparkle } from '../../shared/ui/icons'
+import { IconSparkle } from '../../shared/ui/icons'
+import { BackButton } from '../../shared/ui/BackButton'
 import { shuffle } from '../../lib/random'
 import { setEsLevel } from '../../lib/esLevel'
 import { reportPlacementResult } from '../../lib/placement'
@@ -267,13 +268,7 @@ export function PlacementTest() {
   )
 }
 
+/** «Назад» теста — на Главную (тест открывают с неё и из онбординга). */
 function TopBack({ onBack }: { onBack: () => void }) {
-  return (
-    <button
-      onClick={onBack}
-      className="flex min-h-11 w-fit items-center gap-1 text-sm font-medium text-fg-muted hover:text-fg-secondary"
-    >
-      <IconBack size={16} /> На главную
-    </button>
-  )
+  return <BackButton onClick={onBack} label="На главную" />
 }

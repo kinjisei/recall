@@ -17,8 +17,7 @@ import {
   type IconProps,
   IconCaretDown,
 } from '../../shared/ui/icons'
-import { BackHeader } from '../../shared/ui/BackButton'
-import { useSmartBack } from '../../shared/ui/SmartBack'
+import { BackHeader, useSmartBack } from '../../shared/ui/BackButton'
 import { Card } from '../../shared/ui/Card'
 import { Button } from '../../shared/ui/Button'
 import { TabPicker } from '../../shared/ui/TabPicker'

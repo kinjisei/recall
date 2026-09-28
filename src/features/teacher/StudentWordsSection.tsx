@@ -12,6 +12,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Button } from '../../shared/ui/Button'
 import { LoadError } from '../../shared/ui/LoadError'
+import { Reveal } from '../../shared/ui/Reveal'
 import {
   assignWordCheck,
   getStudentWords,
@@ -147,8 +148,8 @@ export function StudentWordsSection({
                         <span className="text-fg-muted"> · показать провалы {openCheck === c.id ? '▾' : '▸'}</span>
                       )}
                     </button>
-                    {openCheck === c.id &&
-                      wrong.map((r) => (
+                    <Reveal open={openCheck === c.id}>
+                      {wrong.map((r) => (
                         <p key={r.card_id} className="mt-1 pl-4 text-xs text-fg-muted">
                           «{r.given || '—'}» →{' '}
                           <span className="font-semibold text-fg-secondary">
@@ -157,6 +158,7 @@ export function StudentWordsSection({
                           {r.back && ` (${r.back})`}
                         </p>
                       ))}
+                    </Reveal>
                   </>
                 ) : (
                   <span className="text-fg-muted">

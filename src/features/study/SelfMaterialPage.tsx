@@ -11,11 +11,10 @@
 // ============================================================================
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useSmartBack } from '../../shared/ui/SmartBack'
+import { BackButton } from '../../shared/ui/BackButton'
 import { Button } from '../../shared/ui/Button'
 import { Picker } from '../../shared/ui/Picker'
 import { Thinking } from '../../shared/ui/Thinking'
-import { IconBack } from '../../shared/ui/icons'
 import { useLanguage } from '../../context/LanguageContext'
 import { currentUserId } from '../../shared/api/supabase'
 import { getCachedEnLevel } from '../../lib/profile'
@@ -33,7 +32,6 @@ const inputCls =
   'w-full rounded-xl border border-white/[0.10] bg-input px-3.5 py-2.5 text-sm outline-none focus:border-accent-line'
 
 export function SelfMaterialPage() {
-  const goBack = useSmartBack('/study')
   const nav = useNavigate()
   const { lang } = useLanguage()
   const cached = (getCachedEnLevel() as CEFRLevel | null) ?? null
@@ -74,13 +72,7 @@ export function SelfMaterialPage() {
   return (
     <div className="flex flex-col gap-5">
       <header className="flex items-center gap-2">
-        <button
-          onClick={goBack}
-          aria-label="Назад"
-          className="lift -ml-2 flex h-11 w-11 items-center justify-center rounded-full text-fg-secondary"
-        >
-          <IconBack size={20} />
-        </button>
+        <BackButton fallback="/study" />
         <h1 className="text-2xl font-medium tracking-tight">Материал под себя</h1>
       </header>
 

@@ -8,8 +8,8 @@ import { useEffect, useState } from 'react'
 
 import { SecuritySection } from './SecuritySection'
 import { SUPPORT_EMAIL, SUPPORT_SLA, supportMailto } from '../../shared/lib/contacts'
-import { IconBack, IconSpeaker, IconCheck, IconThumbsUp } from '../../shared/ui/icons'
-import { useSmartBack } from '../../shared/ui/SmartBack'
+import { IconSpeaker, IconCheck, IconThumbsUp } from '../../shared/ui/icons'
+import { BackButton } from '../../shared/ui/BackButton'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { supabase } from '../../shared/api/supabase'
@@ -47,7 +47,6 @@ const SIZE_LABELS: { id: ReaderSize; label: string }[] = [
 ]
 
 export function SettingsPage() {
-  const goBack = useSmartBack('/')
   const { user } = useAuth()
   const { lang } = useLanguage()
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -101,13 +100,7 @@ export function SettingsPage() {
   return (
     <div className="flex flex-col gap-6">
       <header className="flex items-center gap-2">
-        <button
-          onClick={goBack}
-          aria-label="Назад"
-          className="lift -ml-2 flex h-11 w-11 items-center justify-center rounded-full text-fg-secondary"
-        >
-          <IconBack size={20} />
-        </button>
+        <BackButton fallback="/" />
         <h1 className="text-2xl font-medium tracking-tight">Настройки</h1>
       </header>
 

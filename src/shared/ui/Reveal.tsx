@@ -15,9 +15,13 @@ export function Reveal({ open, children }: { open: boolean; children: ReactNode 
   const [mounted, setMounted] = useState(open)
   const [shown, setShown] = useState(open)
 
+  // Открыли — смонтировать, закрыли — начать сворачивать: сразу в этом же
+  // рендере (состояние выводится из пропа — так React советует вместо эффекта).
+  if (open && !mounted) setMounted(true)
+  if (!open && shown) setShown(false)
+
   useEffect(() => {
     if (open) {
-      setMounted(true)
       // Разворачиваем СЛЕДУЮЩИМ кадром: если поставить открытое состояние в том
       // же кадре, что и монтирование, браузеру не с чего анимировать.
       // Таймер-дублёр — на случай фоновой вкладки, где кадры не выдаются вовсе.
@@ -28,7 +32,6 @@ export function Reveal({ open, children }: { open: boolean; children: ReactNode 
         window.clearTimeout(fallback)
       }
     }
-    setShown(false)
     // размонтируем после анимации закрытия (0.32s в .reveal + запас)
     const t = window.setTimeout(() => setMounted(false), 360)
     return () => window.clearTimeout(t)

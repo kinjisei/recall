@@ -6,6 +6,7 @@
 // ============================================================================
 import { useCallback, useState } from 'react'
 import { Button } from '../../shared/ui/Button'
+import { Reveal } from '../../shared/ui/Reveal'
 import { LoadError } from '../../shared/ui/LoadError'
 import { Picker } from '../../shared/ui/Picker'
 import { TabPicker } from '../../shared/ui/TabPicker'
@@ -154,7 +155,7 @@ export function QuestSection({ studentId }: { studentId: string }) {
                   </Button>
                 </div>
               </div>
-              {openChat === q.id && (
+              <Reveal open={openChat === q.id}>
                 <div className="mt-2 flex max-h-64 flex-col gap-1.5 overflow-y-auto rounded-lg bg-black/20 p-2">
                   {(q.messages ?? [])
                     .filter((m) => m.content !== '/start')
@@ -172,7 +173,7 @@ export function QuestSection({ studentId }: { studentId: string }) {
                       </p>
                     ))}
                 </div>
-              )}
+              </Reveal>
             </div>
           ))}
         </div>

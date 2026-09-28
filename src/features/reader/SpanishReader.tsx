@@ -13,6 +13,7 @@ import {
 } from '../../shared/ui/icons'
 import { getSettings, READER_CLASSES } from '../../lib/settings'
 import { Card } from '../../shared/ui/Card'
+import { Reveal } from '../../shared/ui/Reveal'
 import { Button } from '../../shared/ui/Button'
 import { BackButton, BackHeader } from '../../shared/ui/BackButton'
 import { TabPicker } from '../../shared/ui/TabPicker'
@@ -167,11 +168,11 @@ function ReadingView({
               <IconTranslate size={14} />
               {openRu.has(i) ? 'Скрыть перевод' : 'Перевод'}
             </button>
-            {openRu.has(i) && (
+            <Reveal open={openRu.has(i)}>
               <p className="mt-1 rounded-lg bg-surface px-3 py-2 text-sm text-fg-faint">
                 {p.ru}
               </p>
-            )}
+            </Reveal>
           </div>
         ))}
       </Card>

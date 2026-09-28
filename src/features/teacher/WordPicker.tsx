@@ -13,6 +13,7 @@
 // ============================================================================
 import { useEffect, useMemo, useState } from 'react'
 import { Sheet } from '../../shared/ui/Sheet'
+import { Reveal } from '../../shared/ui/Reveal'
 import { Button } from '../../shared/ui/Button'
 import { IconClose, IconSearch } from '../../shared/ui/icons'
 import { Loading, RowsSkeleton } from '../../shared/ui/Loading'
@@ -267,7 +268,7 @@ function SetList({
                             {list.length} · {isOpen ? '▾' : '▸'}
                           </span>
                         </button>
-                        {isOpen && (
+                        <Reveal open={isOpen}>
                           <div className="mt-1.5 flex flex-col gap-1.5 pl-1">
                             {list.map((t) => (
                               <button
@@ -281,7 +282,7 @@ function SetList({
                               </button>
                             ))}
                           </div>
-                        )}
+                        </Reveal>
                       </div>
                     )
                   })}

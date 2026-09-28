@@ -6,7 +6,7 @@
 // ============================================================================
 import { useEffect, useState } from 'react'
 import { IconCheck, IconTeacher, IconTrophy } from '../../shared/ui/icons'
-import { SmartBack } from '../../shared/ui/SmartBack'
+import { BackButton } from '../../shared/ui/BackButton'
 import { useAuth } from '../../context/AuthContext'
 import { PLANS, KASPI, getMyPlan, type MyPlan, type PlanCard } from '../../lib/billing'
 import { energyLeft } from '../../components/EnergyBar'
@@ -128,7 +128,9 @@ export function PricingPage() {
 
   return (
     <main className="mx-auto min-h-[100dvh] max-w-screen-sm bg-page px-5 pb-16 pt-[calc(env(safe-area-inset-top)+1.5rem)] text-fg">
-      <SmartBack fallback={user ? '/' : '/login'} />
+      <div className="mb-5">
+        <BackButton fallback={user ? '/' : '/login'} />
+      </div>
 
       <h1 className="text-2xl font-medium tracking-tight">Тарифы</h1>
       <p className="mt-1 text-sm text-fg-muted">
