@@ -109,7 +109,7 @@ VS Code, где у Claude есть файлы и терминал: фичи со
 | `/teacher` | студия: ученики, материалы, письменные работы, методичка |
 | `/progress` `/settings` `/placement` `/onboarding` | профиль и настройка |
 | `/pricing` `/teachers` `/terms` `/privacy` | публичные, без входа |
-| `/admin` | владелец: тарифы, воронка, ошибки с прода |
+| `/admin` | владелец: тарифы, воронка, ошибки с прода (показ — по роли в `app/routes.ts`) |
 
 ---
 
@@ -117,8 +117,9 @@ VS Code, где у Claude есть файлы и терминал: фичи со
 
 ```
 src/
-  app/          каркас — src/app/CLAUDE.md: main.tsx (вход), App.tsx (роутер),
-                routeChunks.ts (ленивые экраны), ProtectedRoute, ErrorBoundary,
+  app/          каркас — src/app/CLAUDE.md: main.tsx (вход), routes.ts (ВСЕ
+                адреса и кто куда пускается), routeChunks.ts (ленивые экраны),
+                App.tsx (роутер), ProtectedRoute, RoleGate, ErrorBoundary,
                 shell/ (Layout: шапка + навигация)
   lib/          логика вне экранов (переезжает в domains/, PLAN.md Ф3). Ключевые:
                 profile.ts (PROFILE_COLUMNS!) · billing.ts (тарифы)

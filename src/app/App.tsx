@@ -1,269 +1,66 @@
-import { Suspense } from 'react'
-import { routeScreens } from './routeChunks'
-import { Loading } from '../components/Loading'
+// ============================================================================
+// Корень приложения: провайдеры, роутер и маршруты из таблицы app/routes.ts.
+//
+// Экраны — лениво: каждая страница (и её данные) грузится при переходе, а не
+// в стартовом бандле. Определения живут в app/routeChunks: там же лежит
+// предзагрузка, которой пользуются ссылки (components/AppLink). Уже
+// подгруженный экран показывается БЕЗ Suspense — иначе переход между
+// вкладками снимал бы кадр с «Загрузка…».
+// ============================================================================
+import { Suspense, type ReactNode } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { AuthProvider } from '../context/AuthContext'
-import { LanguageProvider } from '../context/LanguageContext'
-import { ConfettiLayer } from '../components/Confetti'
+import { Loading } from '../components/Loading'
+import { AppProviders } from './AppProviders'
 import { ScrollToTop } from './ScrollToTop'
 import { PageTracker } from './PageTracker'
-import { ErrorBoundary } from './ErrorBoundary'
 import { ProtectedRoute } from './ProtectedRoute'
+import { RoleGate } from './RoleGate'
 import { Layout } from './shell/Layout'
-import { LoginPage } from '../features/auth/LoginPage'
-import { DashboardPage } from '../features/dashboard/DashboardPage'
-
-// Роуты — лениво: каждая страница (и её данные) грузится при переходе, а не
-// в стартовом бандле. Особенно важно для «Ввода» и грамматики — они тянут
-// сотни КБ контента, который не нужен на старте.
-//
-// Определения живут в app/routeChunks: там же лежит предзагрузка, которой
-// пользуются ссылки (components/AppLink). Уже подгруженный экран показывается
-// БЕЗ Suspense — иначе переход между вкладками снимал бы кадр с «Загрузка…».
-const PracticePage = routeScreens['/practice']
-const PronunciationPage = routeScreens['/pronunciation']
-const ConversationPage = routeScreens['/conversation']
-const GrammarPage = routeScreens['/grammar']
-const StudyPage = routeScreens['/study']
-const SettingsPage = routeScreens['/settings']
-const ProgressPage = routeScreens['/progress']
-const PlacementTest = routeScreens['/placement']
-const OnboardingFlow = routeScreens['/onboarding']
-const TeacherPage = routeScreens['/teacher']
-const AssignmentsPage = routeScreens['/assignments']
-const WritingPage = routeScreens['/writing']
-const SelfMaterialPage = routeScreens['/self-material']
-const QuestsPage = routeScreens['/quests']
-const ProgramPage = routeScreens['/program']
-const ForgotPasswordPage = routeScreens['/forgot']
-const ResetPasswordPage = routeScreens['/reset-password']
-const PrivacyPage = routeScreens['/privacy']
-const TermsPage = routeScreens['/terms']
-const PricingPage = routeScreens['/pricing']
-const TeachersPage = routeScreens['/teachers']
-// Экран администратора: сам файл делает другой агент — тут только роут.
-const AdminPage = routeScreens['/admin']
+import { ROUTES, isLazyScreen, type AppRoute } from './routes'
 
 function PageFallback() {
   return <Loading label="Открываем экран" />
 }
 
+/** Элемент маршрута: экран (с заглушкой, проверкой роли и входа) или переадресация. */
+function routeElement(route: AppRoute): ReactNode {
+  if ('redirect' in route) return <Navigate to={route.redirect} replace />
+  const Screen = route.screen
+  let element: ReactNode = <Screen />
+  if (route.role) element = <RoleGate role={route.role}>{element}</RoleGate>
+  if (isLazyScreen(Screen)) element = <Suspense fallback={<PageFallback />}>{element}</Suspense>
+  // экран «на весь экран» пускается по входу сам; экраны в рамке — через рамку
+  if (route.place === 'fullscreen') element = <ProtectedRoute>{element}</ProtectedRoute>
+  return element
+}
+
+const outsideFrame = ROUTES.filter((r) => r.place !== 'app')
+const insideFrame = ROUTES.filter((r) => r.place === 'app')
+
 export default function App() {
   return (
-    <ErrorBoundary>
-      <AuthProvider>
-      <LanguageProvider>
-        {/* слой празднования: слушает celebrate() из любого экрана */}
-        <ConfettiLayer />
-        <BrowserRouter>
-          <ScrollToTop />
-          <PageTracker />
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            {/* Восстановление пароля — публичное: человек сюда и приходит
-                именно потому, что войти не может. /reset-password открывается
-                по ссылке из письма, поэтому адрес обязан быть в списке
-                Redirect URLs в панели Supabase. */}
-            <Route
-              path="/forgot"
-              element={
-                <Suspense fallback={<PageFallback />}>
-                  <ForgotPasswordPage />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/reset-password"
-              element={
-                <Suspense fallback={<PageFallback />}>
-                  <ResetPasswordPage />
-                </Suspense>
-              }
-            />
-            {/* юридические страницы — публичные (ссылки со входа) */}
-            <Route
-              path="/privacy"
-              element={
-                <Suspense fallback={<PageFallback />}>
-                  <PrivacyPage />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/terms"
-              element={
-                <Suspense fallback={<PageFallback />}>
-                  <TermsPage />
-                </Suspense>
-              }
-            />
-            {/* тарифы — публичные, работают и без входа */}
-            <Route
-              path="/pricing"
-              element={
-                <Suspense fallback={<PageFallback />}>
-                  <PricingPage />
-                </Suspense>
-              }
-            />
-            {/* лендинг для репетиторов — публичный (его шарим в TG/визитках) */}
-            <Route
-              path="/teachers"
-              element={
-                <Suspense fallback={<PageFallback />}>
-                  <TeachersPage />
-                </Suspense>
-              }
-            />
-            {/* онбординг — без Layout: свои шаги на весь экран */}
-            <Route
-              path="/onboarding"
-              element={
-                <ProtectedRoute>
-                  <Suspense fallback={<PageFallback />}>
-                    <OnboardingFlow />
-                  </Suspense>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              element={
-                <ProtectedRoute>
-                  <Layout />
-                </ProtectedRoute>
-              }
-            >
-              <Route path="/" element={<DashboardPage />} />
-              {/* хаб «Слова» вырос в «Практику» — старые ссылки не ломаем */}
-              <Route path="/flashcards" element={<Navigate to="/practice" replace />} />
-              {/* «Ввод» слился с «Учёбой»: один экран, старая ссылка ведёт туда же */}
-              <Route path="/reader" element={<Navigate to="/study" replace />} />
-              <Route
-                path="/pronunciation"
-                element={
-                  <Suspense fallback={<PageFallback />}>
-                    <PronunciationPage />
-                  </Suspense>
-                }
-              />
-              <Route
-                path="/conversation"
-                element={
-                  <Suspense fallback={<PageFallback />}>
-                    <ConversationPage />
-                  </Suspense>
-                }
-              />
-              <Route
-                path="/settings"
-                element={
-                  <Suspense fallback={<PageFallback />}>
-                    <SettingsPage />
-                  </Suspense>
-                }
-              />
-              <Route
-                path="/progress"
-                element={
-                  <Suspense fallback={<PageFallback />}>
-                    <ProgressPage />
-                  </Suspense>
-                }
-              />
-              <Route
-                path="/study"
-                element={
-                  <Suspense fallback={<PageFallback />}>
-                    <StudyPage />
-                  </Suspense>
-                }
-              />
-              <Route
-                path="/grammar"
-                element={
-                  <Suspense fallback={<PageFallback />}>
-                    <GrammarPage />
-                  </Suspense>
-                }
-              />
-              <Route
-                path="/practice"
-                element={
-                  <Suspense fallback={<PageFallback />}>
-                    <PracticePage />
-                  </Suspense>
-                }
-              />
-              <Route
-                path="/placement"
-                element={
-                  <Suspense fallback={<PageFallback />}>
-                    <PlacementTest />
-                  </Suspense>
-                }
-              />
-              <Route
-                path="/teacher"
-                element={
-                  <Suspense fallback={<PageFallback />}>
-                    <TeacherPage />
-                  </Suspense>
-                }
-              />
-              <Route
-                path="/assignments"
-                element={
-                  <Suspense fallback={<PageFallback />}>
-                    <AssignmentsPage />
-                  </Suspense>
-                }
-              />
-              <Route
-                path="/writing"
-                element={
-                  <Suspense fallback={<PageFallback />}>
-                    <WritingPage />
-                  </Suspense>
-                }
-              />
-              <Route
-                path="/self-material"
-                element={
-                  <Suspense fallback={<PageFallback />}>
-                    <SelfMaterialPage />
-                  </Suspense>
-                }
-              />
-              <Route
-                path="/quests"
-                element={
-                  <Suspense fallback={<PageFallback />}>
-                    <QuestsPage />
-                  </Suspense>
-                }
-              />
-              <Route
-                path="/program"
-                element={
-                  <Suspense fallback={<PageFallback />}>
-                    <ProgramPage />
-                  </Suspense>
-                }
-              />
-              <Route
-                path="/admin"
-                element={
-                  <Suspense fallback={<PageFallback />}>
-                    <AdminPage />
-                  </Suspense>
-                }
-              />
-            </Route>
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </BrowserRouter>
-      </LanguageProvider>
-      </AuthProvider>
-    </ErrorBoundary>
+    <AppProviders>
+      <BrowserRouter>
+        <ScrollToTop />
+        <PageTracker />
+        <Routes>
+          {outsideFrame.map((r) => (
+            <Route key={r.path} path={r.path} element={routeElement(r)} />
+          ))}
+          <Route
+            element={
+              <ProtectedRoute>
+                <Layout />
+              </ProtectedRoute>
+            }
+          >
+            {insideFrame.map((r) => (
+              <Route key={r.path} path={r.path} element={routeElement(r)} />
+            ))}
+          </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AppProviders>
   )
 }

@@ -6,6 +6,7 @@ import { isBlocked } from '../lib/access'
 import { hasPendingTeacherRole, clearPendingRole } from '../lib/pendingRole'
 import { becomeTeacher } from '../lib/teacher'
 import { BlockedScreen } from './BlockedScreen'
+import { opensBeforeOnboarding } from './routes'
 import { Loading } from '../components/Loading'
 
 /**
@@ -91,12 +92,10 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
 
   // Флаг читаем синхронно при каждом рендере: сразу после завершения
   // онбординга состояние ещё «нужен», и редирект возвращал на первый шаг.
-  // /placement исключён наравне с /onboarding: онбординг (шаг «уровень») сам
-  // уводит новичка на тест, а гвард бэунсил его обратно, не дав пройти —
-  // тест уровня становился недостижим для нового пользователя. По окончании
-  // теста PlacementTest ставит markOnboarded, поэтому цикла нет.
+  // Какие адреса открываются до онбординга (он сам и тест уровня, и почему) —
+  // в таблице маршрутов (app/routes.ts, beforeOnboarding).
   const onboarded = isOnboarded()
-  const exempt = pathname === '/onboarding' || pathname === '/placement'
+  const exempt = opensBeforeOnboarding(pathname)
   if (!onboarded && needsOnboarding && !exempt) {
     return <Navigate to="/onboarding" replace />
   }

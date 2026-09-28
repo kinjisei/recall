@@ -1,9 +1,9 @@
 // ============================================================================
 // Мини-админка владельца (роут /admin). Поиск ученика/учителя по email после
 // Kaspi-перевода → включение или продление платного плана вручную.
-// Охрана — get_my_plan().is_admin; сам доступ на сервере проверяют RPC
-// (admin_find_user/admin_set_plan), эта проверка только чтобы не показывать
-// экран не-владельцу.
+// Кому показывать экран, решает таблица маршрутов (app/routes.ts, role:
+// 'admin' → app/RoleGate). Сам доступ на сервере проверяют RPC
+// (admin_find_user/admin_set_plan).
 // ============================================================================
 import { useEffect, useState } from 'react'
 
@@ -20,8 +20,7 @@ import {
 } from '../../lib/admin'
 import { Button } from '../../components/Button'
 import { Picker } from '../../components/Picker'
-import { IconSearch, IconWarning, IconSpinner, IconHome } from '../../components/icons'
-import { AppLink } from '../../components/AppLink'
+import { IconSearch } from '../../components/icons'
 import { RowsSkeleton } from '../../components/Loading'
 
 const PLAN_LABELS: Record<PlanId, string> = {
@@ -35,8 +34,6 @@ const PLAN_LABELS: Record<PlanId, string> = {
 const PLAN_OPTIONS: PlanId[] = ['free', 'premium', 'teacher_mini', 'teacher_start', 'teacher_pro']
 const MONTH_OPTIONS = [1, 3, 6, 12]
 
-type GuardState = 'checking' | 'allowed' | 'denied'
-
 function fmtDate(iso: string | null): string {
   if (!iso) return '—'
   const d = new Date(iso)
@@ -45,59 +42,6 @@ function fmtDate(iso: string | null): string {
 }
 
 export function AdminPage() {
-  const [guard, setGuard] = useState<GuardState>('checking')
-
-  useEffect(() => {
-    let cancelled = false
-    ;(async () => {
-      try {
-        const { data, error } = await supabase.rpc('get_my_plan')
-        if (cancelled) return
-        if (error || !data || !(data as { is_admin?: boolean }).is_admin) {
-          setGuard('denied')
-        } else {
-          setGuard('allowed')
-        }
-      } catch {
-        if (!cancelled) setGuard('denied')
-      }
-    })()
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
-  if (guard === 'checking') {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center text-[var(--night-text-40)]">
-        <IconSpinner size={24} className="animate-spin" />
-      </div>
-    )
-  }
-
-  if (guard === 'denied') {
-    return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-6 text-center">
-        <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/[0.06] text-[var(--night-text-40)]">
-          <IconWarning size={26} />
-        </span>
-        <h1 className="text-xl font-medium">Доступно только владельцу</h1>
-        <p className="max-w-xs text-sm text-[var(--night-text-40)]">
-          У этого аккаунта нет прав администратора.
-        </p>
-        <AppLink to="/">
-          <Button variant="secondary" className="mt-2">
-            <IconHome size={18} /> На главную
-          </Button>
-        </AppLink>
-      </div>
-    )
-  }
-
-  return <AdminConsole />
-}
-
-function AdminConsole() {
   const [query, setQuery] = useState('')
   const [rows, setRows] = useState<AdminUserRow[]>([])
   const [searching, setSearching] = useState(false)
