@@ -18,11 +18,11 @@ export function Thinking({ label, className = '' }: { label: string; className?:
       className={`inline-flex items-center gap-1.5 text-fg-muted ${className}`}
     >
       {label}
-      <span aria-hidden className="inline-flex items-end gap-[3px] pb-[3px]">
+      <span aria-hidden className="inline-flex items-end gap-0.75 pb-0.75">
         {[0, 1, 2].map((i) => (
           <span
             key={i}
-            className="dot-bounce inline-block h-[3px] w-[3px] rounded-full bg-current"
+            className="dot-bounce inline-block size-0.75 rounded-full bg-current"
             // сдвиг фазы — иначе точки прыгают синхронно и читаются как одна
             style={{ animationDelay: `${i * 160}ms` }}
           />

@@ -46,18 +46,18 @@ export function RowCard({
         className={`flex h-10 w-10 flex-none items-center justify-center rounded-xl ${
           active
             ? 'bg-accent-soft text-accent-soft-fg'
-            : 'bg-white/[0.06] text-fg-secondary'
+            : 'bg-tint/[0.06] text-fg-secondary'
         }`}
       >
         <IconCmp size={20} />
       </span>
 
       <span className="flex min-w-0 flex-1 flex-col text-left">
-        <span className={`truncate text-[15px] font-medium ${muted ? 'line-through opacity-70' : ''}`}>
+        <span className={`truncate text-body font-medium ${muted ? 'line-through opacity-70' : ''}`}>
           {title}
         </span>
         {desc && (
-          <span className="truncate text-[13px] text-fg-muted">{desc}</span>
+          <span className="truncate text-note text-fg-muted">{desc}</span>
         )}
       </span>
 
@@ -67,8 +67,8 @@ export function RowCard({
 
   const cls =
     `lift flex w-full items-center gap-3.5 rounded-2xl px-4 py-3.5 text-fg ` +
-    `${dashed ? 'border border-dashed border-accent-line bg-transparent' : 'border border-white/[0.08] bg-surface'} ` +
-    `${muted ? 'opacity-75' : ''} hover:border-white/[0.14] ${className}`
+    `${dashed ? 'border border-dashed border-accent-line bg-transparent' : 'border border-tint/[0.08] bg-surface'} ` +
+    `${muted ? 'opacity-75' : ''} hover:border-tint/[0.14] ${className}`
 
   if (to) {
     return (

@@ -58,7 +58,7 @@ export function AvatarMenu({ opensUp = false }: { opensUp?: boolean }) {
   }, [open])
 
   const itemCls =
-    'flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-fg-secondary hover:bg-white/[0.06] hover:text-fg'
+    'flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-fg-secondary hover:bg-tint/[0.06] hover:text-fg'
 
   return (
     <div className="relative" ref={boxRef}>
@@ -67,7 +67,7 @@ export function AvatarMenu({ opensUp = false }: { opensUp?: boolean }) {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Меню профиля"
-        className="lift flex h-11 w-11 items-center justify-center rounded-full border border-white/[0.08] bg-surface text-sm font-medium text-accent-soft-fg"
+        className="lift flex h-11 w-11 items-center justify-center rounded-full border border-tint/[0.08] bg-surface text-sm font-medium text-accent-soft-fg"
       >
         {initial}
       </button>
@@ -75,7 +75,7 @@ export function AvatarMenu({ opensUp = false }: { opensUp?: boolean }) {
       {open && (
         <div
           role="menu"
-          className={`animate-fade-up absolute z-30 w-56 overflow-hidden rounded-2xl border border-white/[0.10] bg-[rgba(30,32,48,.96)] py-1 backdrop-blur-xl ${
+          className={`animate-fade-up absolute z-30 w-56 overflow-hidden rounded-2xl border border-tint/[0.10] bg-surface/96 py-1 backdrop-blur-xl ${
             opensUp ? 'bottom-full left-0 mb-2' : 'right-0 top-11'
           }`}
         >

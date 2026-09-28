@@ -21,7 +21,7 @@ export function BrandMark({ size = 28, className = '' }: { size?: number; classN
     >
       <rect
         x="12" y="14" width="26" height="22" rx="6"
-        fill="none" stroke="#38366b" strokeWidth="2"
+        fill="none" stroke="var(--color-logo-back)" strokeWidth="2"
         transform="rotate(-6 25 25)"
       />
       <rect
@@ -58,7 +58,7 @@ export function BrandLogo({ width = 200, className = '' }: { width?: number; cla
     >
       <rect
         x="14" y="12" width="112" height="38" rx="9"
-        fill="none" stroke="#38366b" strokeWidth="1.8"
+        fill="none" stroke="var(--color-logo-back)" strokeWidth="1.8"
         transform="rotate(-3 70 31)"
       />
       <rect

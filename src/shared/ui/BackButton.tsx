@@ -19,7 +19,7 @@ export function BackButton({
     <button
       onClick={onClick}
       aria-label={label}
-      className="flex h-11 w-11 flex-none items-center justify-center rounded-xl border border-white/[0.12] text-fg-secondary transition-colors hover:border-white/[0.25] hover:text-fg active:scale-95"
+      className="flex h-11 w-11 flex-none items-center justify-center rounded-xl border border-tint/[0.12] text-fg-secondary transition-colors hover:border-tint/[0.25] hover:text-fg active:scale-95"
     >
       <IconBack size={18} />
     </button>

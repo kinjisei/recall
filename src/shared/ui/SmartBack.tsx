@@ -25,7 +25,7 @@ export function SmartBack({ fallback }: { fallback: string }) {
   return (
     <button
       onClick={goBack}
-      className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl border border-white/[0.10]"
+      className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl border border-tint/[0.10]"
       aria-label="Назад"
     >
       <IconBack size={18} />

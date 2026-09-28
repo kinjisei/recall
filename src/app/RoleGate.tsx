@@ -42,7 +42,7 @@ export function RoleGate({ role, children }: { role: RouteRole; children: ReactN
   if (state === 'denied') {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-6 text-center">
-        <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/[0.06] text-fg-muted">
+        <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-tint/[0.06] text-fg-muted">
           <IconWarning size={26} />
         </span>
         <h1 className="text-xl font-medium">Доступно только владельцу</h1>

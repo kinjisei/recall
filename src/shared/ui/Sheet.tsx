@@ -89,7 +89,7 @@ export function Sheet({
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-end bg-black/40" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end bg-scrim/40" onClick={onClose}>
       <div
         role="dialog"
         aria-modal="true"
@@ -113,7 +113,7 @@ export function Sheet({
           onPointerCancel={onUp}
           aria-hidden
         >
-          <div className="h-1.5 w-10 rounded-full bg-slate-600" />
+          <div className="h-1.5 w-10 rounded-full bg-fg-faint" />
         </div>
         {children}
       </div>

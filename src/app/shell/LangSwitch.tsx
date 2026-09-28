@@ -12,7 +12,7 @@ export function LangSwitch() {
   const { lang, setLang } = useLanguage()
   return (
     <div
-      className="flex gap-0.5 rounded-full border border-white/[0.08] bg-surface p-1"
+      className="flex gap-0.5 rounded-full border border-tint/[0.08] bg-surface p-1"
       role="group"
       aria-label="Язык изучения"
     >
@@ -21,7 +21,7 @@ export function LangSwitch() {
           key={t.id}
           onClick={() => setLang(t.id)}
           aria-pressed={lang === t.id}
-          className={`min-h-[44px] min-w-[48px] rounded-full px-4 text-xs font-medium transition-colors ${
+          className={`min-h-11 min-w-12 rounded-full px-4 text-xs font-medium transition-colors ${
             lang === t.id
               ? 'bg-accent-soft text-accent-soft-fg'
               : 'text-fg-muted hover:text-fg-secondary'

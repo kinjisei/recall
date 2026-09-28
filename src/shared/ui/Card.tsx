@@ -15,7 +15,7 @@ export function Card({
 }) {
   // Тема «Nocturne»: поверхность surface + тонкая светлая рамка, без теней.
   const base =
-    'rounded-2xl border border-white/[0.08] bg-surface p-5 text-fg'
-  const press = interactive ? 'lift hover:border-white/[0.14]' : ''
+    'rounded-2xl border border-tint/[0.08] bg-surface p-5 text-fg'
+  const press = interactive ? 'lift hover:border-tint/[0.14]' : ''
   return <div className={`${base} ${press} ${className}`}>{children}</div>
 }

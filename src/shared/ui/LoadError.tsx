@@ -12,15 +12,15 @@ export function LoadError({
   onRetry: () => void
 }) {
   return (
-    <Card className="flex flex-col items-center gap-3 border-red-400/30 bg-red-500/[0.07] text-center">
-      <IconWarning size={28} className="text-red-300" />
+    <Card className="flex flex-col items-center gap-3 border-danger-strong/30 bg-danger/[0.07] text-center">
+      <IconWarning size={28} className="text-danger-strong" />
       <div>
         <p className="font-medium">{message}</p>
         <p className="mt-1 text-sm text-fg-muted">
           Проверь соединение — данные не потеряны.
         </p>
       </div>
-      <Button variant="secondary" className="min-h-[44px] px-4 text-sm" onClick={onRetry}>
+      <Button variant="secondary" className="min-h-11 px-4 text-sm" onClick={onRetry}>
         <IconRefresh size={16} /> Повторить
       </Button>
     </Card>

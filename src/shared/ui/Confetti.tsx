@@ -9,7 +9,7 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 
-const COLORS = ['#9184d9', '#b9b0e8', '#cfc8f0', '#6f63b8']
+const COLORS = ['bg-accent', 'bg-accent-strong', 'bg-accent-soft-fg', 'bg-focus']
 const COUNT = 12
 const LIFETIME = 2200
 
@@ -29,6 +29,7 @@ export function celebrate(): void {
 interface Piece {
   id: number
   left: number
+  /** класс цвета частицы — токен, а не литерал */
   color: string
   delay: number
   duration: number
@@ -78,12 +79,11 @@ export function ConfettiLayer() {
         b.pieces.map((p) => (
           <span
             key={p.id}
-            className="absolute top-0 block"
+            className={`absolute top-0 block ${p.color}`}
             style={{
               left: `${p.left}%`,
               width: p.size,
               height: p.round ? p.size : p.size * 1.6,
-              background: p.color,
               borderRadius: p.round ? '50%' : 2,
               animation: `confetti-fall ${p.duration}s cubic-bezier(.3,.7,.5,1) ${p.delay}s forwards`,
             }}

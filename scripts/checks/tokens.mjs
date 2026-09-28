@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Сторож токенов: цвет и размер — только через токены дизайн-системы
-// (архитектура §5). Вне shared/ui (и старого src/index.css, где токены живут до
-// переезда) запрещены:
+// (архитектура §5). Везде, кроме файла значений shared/ui/tokens.css (и старого
+// src/index.css до его переезда), запрещены:
 //   palette — цвета палитры Tailwind: text-white, bg-zinc-800, border-red-500/40…
 //   literal — цвет литералом: #38366b, rgb(…), hsl(…), oklch(…)
 //   px      — произвольный размер в пикселях: w-[72px], text-[13px]
@@ -20,8 +20,9 @@ import { isMain, rootPath, settle } from './_baseline.mjs'
 const ROOT = rootPath('.').pathname.replace(/^\/([A-Za-z]:)/, '$1')
 const rel = (p) => relative(ROOT, p).split(sep).join('/')
 
-// Где токены определяются — там сырые значения законны
-const EXEMPT = [/^src\/shared\/ui\//, /^src\/index\.css$/]
+// Где у токенов значения — там сырые значения законны. Сами компоненты
+// shared/ui проверяются, как все: «shared/ui без сырых цветов» (PLAN.md Ф1.4).
+const EXEMPT = [/^src\/shared\/ui\/tokens\.css$/, /^src\/index\.css$/]
 
 const COLORS =
   'slate|gray|zinc|neutral|stone|taupe|mauve|mist|olive|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose'

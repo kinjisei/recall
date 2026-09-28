@@ -44,7 +44,7 @@ export function RowsSkeleton({ count = 4, height = 74 }: { count?: number; heigh
       {Array.from({ length: count }, (_, i) => (
         <div
           key={i}
-          className="animate-pulse rounded-2xl bg-white/[0.04]"
+          className="animate-pulse rounded-2xl bg-tint/[0.04]"
           style={{ height }}
         />
       ))}

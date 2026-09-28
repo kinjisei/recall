@@ -32,13 +32,13 @@ export function TabPicker<T extends string>({
 }) {
   const segment = variant === 'segment'
   const container = segment
-    ? 'inline-flex gap-0.5 rounded-full bg-white/[0.07] p-0.5'
+    ? 'inline-flex gap-0.5 rounded-full bg-tint/[0.07] p-0.5'
     : 'flex flex-wrap gap-2'
   // неактивный: у капсулы фон даёт контейнер (кнопка прозрачная), у tabs —
   // своя подложка. hover добавлен ко всем (раньше был только у капсулы).
   const inactive = segment
     ? 'text-fg-muted hover:text-fg-secondary'
-    : 'bg-white/[0.07] text-fg-secondary hover:text-fg'
+    : 'bg-tint/[0.07] text-fg-secondary hover:text-fg'
 
   return (
     <div role="tablist" aria-label={ariaLabel} className={`${container} ${className}`}>
@@ -50,7 +50,7 @@ export function TabPicker<T extends string>({
             role="tab"
             aria-selected={active}
             onClick={() => onChange(o.id)}
-            className={`flex min-h-[44px] items-center justify-center gap-1.5 px-4 font-semibold transition-colors ${
+            className={`flex min-h-11 items-center justify-center gap-1.5 px-4 font-semibold transition-colors ${
               segment ? 'rounded-full text-xs' : 'rounded-lg text-sm'
             } ${active ? 'bg-accent-soft text-accent-soft-fg' : inactive}`}
           >

@@ -14,10 +14,10 @@ const styles: Record<Variant, string> = {
   primary:
     'bg-fg text-page hover:brightness-95 active:brightness-90',
   secondary:
-    'border border-accent-line bg-[rgba(145,132,217,.14)] text-fg hover:bg-[rgba(145,132,217,.22)]',
+    'border border-accent-line bg-accent/14 text-fg hover:bg-accent/22',
   ghost:
-    'bg-transparent text-accent-strong hover:bg-white/[0.06]',
-  danger: 'bg-red-500/90 text-white hover:bg-red-500',
+    'bg-transparent text-accent-strong hover:bg-tint/[0.06]',
+  danger: 'bg-danger/90 text-danger-fg hover:bg-danger',
 }
 
 function Spinner() {
@@ -59,7 +59,7 @@ export function Button({
 }: ButtonProps) {
   return (
     <button
-      className={`relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl px-4 py-3 text-base font-semibold transition-[transform,filter,background-color] duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100 ${styles[variant]} ${className}`}
+      className={`relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl px-4 py-3 text-base font-semibold transition-[transform,filter,background-color] duration-150 active:scale-98 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100 ${styles[variant]} ${className}`}
       disabled={disabled || loading}
       onPointerDown={(e) => {
         spawnRipple(e)

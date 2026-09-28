@@ -22,7 +22,7 @@ export interface PickerOption<T extends string> {
 }
 
 const TRIGGER =
-  'flex w-full items-center justify-between gap-2 rounded-lg border border-white/[0.10] bg-input px-3 py-2 text-left text-sm outline-none focus:border-accent-line disabled:opacity-60'
+  'flex w-full items-center justify-between gap-2 rounded-lg border border-tint/[0.10] bg-input px-3 py-2 text-left text-sm outline-none focus:border-accent-line disabled:opacity-60'
 
 export function Picker<T extends string>({
   value,
@@ -78,7 +78,7 @@ export function Picker<T extends string>({
                     className={`flex min-h-11 w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left text-sm ${
                       active
                         ? 'bg-accent-soft text-accent-soft-fg'
-                        : 'text-fg hover:bg-white/[0.04]'
+                        : 'text-fg hover:bg-tint/[0.04]'
                     }`}
                   >
                     <span className="min-w-0">
