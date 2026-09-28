@@ -1,80 +1,20 @@
 // ============================================================================
-// Нижняя навигация «Nocturne»: плавающая glass-капсула с четырьмя постоянными
-// вкладками. Активная — мягкая акцентная подсветка и залитая (fill) иконка.
-//
-// Четыре вкладки вместо пяти (2026-07-21): новичок терялся между «Слова»,
-// «Учёба» и «Речь». Теперь смысловое деление: Учёба — изучаю новое (тексты,
-// уроки грамматики, тест уровня), Практика — тренируюсь (повторение колоды,
-// все мини-игры, речь), Диалог — общаюсь с AI.
+// Нижняя навигация «Nocturne» (телефон и планшет): плавающая glass-капсула с
+// постоянными вкладками. Активная — мягкая акцентная подсветка и залитая (fill)
+// иконка. Набор вкладок и правило «какая активна» — общие с боковой панелью
+// компьютера: app/navigation.ts (там же — почему вкладок четыре).
 // ============================================================================
-import { useLocation } from 'react-router-dom'
 import { AppLink } from '../../components/AppLink'
 import { useKeyboardInset } from '../../lib/useKeyboardInset'
-import {
-  IconHome,
-  IconHomeFill,
-  IconStudy,
-  IconStudyFill,
-  IconPractice,
-  IconPracticeFill,
-  IconDialog,
-  IconDialogFill,
-  type IconProps,
-} from '../../components/icons'
-
-type IconCmp = (p: IconProps) => React.JSX.Element
-
-interface Tab {
-  to: string
-  label: string
-  Icon: IconCmp
-  /** Залитый вариант для активной вкладки. */
-  IconFill: IconCmp
-  end: boolean
-  /** Внутренние экраны вкладки: на них она тоже должна подсвечиваться. */
-  also?: string[]
-}
-
-// Без `also` заход в грамматику или задания гасил всю навигацию — пользователь
-// оказывался «нигде»: ни одна вкладка не была активной.
-const tabs: Tab[] = [
-  { to: '/', label: 'Главная', Icon: IconHome, IconFill: IconHomeFill, end: true, also: ['/progress', '/settings', '/teacher', '/admin'] },
-  {
-    to: '/study',
-    label: 'Учёба',
-    Icon: IconStudy,
-    IconFill: IconStudyFill,
-    end: false,
-    also: ['/grammar', '/placement', '/assignments', '/program', '/quests', '/writing', '/self-material'],
-  },
-  {
-    to: '/practice',
-    label: 'Практика',
-    Icon: IconPractice,
-    IconFill: IconPracticeFill,
-    end: false,
-    also: ['/pronunciation'],
-  },
-  { to: '/conversation', label: 'Диалог', Icon: IconDialog, IconFill: IconDialogFill, end: false },
-]
-
-/** Активна и на своих внутренних экранах: грамматика подсвечивает «Учёбу». */
-function isActive(tab: Tab, pathname: string): boolean {
-  if (tab.end ? pathname === tab.to : pathname.startsWith(tab.to)) return true
-  return (tab.also ?? []).some((p) => pathname.startsWith(p))
-}
+import { NAV_ICONS } from './navIcons'
+import { useNavTabs } from './useNavTabs'
 
 export function BottomNav() {
-  const { pathname } = useLocation()
+  const { tabs, activeIndex, onTabClick } = useNavTabs()
   // при открытой клавиатуре навигацию прячем: на телефонах фиксированная
   // капсула иначе «всплывает» над клавиатурой и мешает набору
   const kb = useKeyboardInset()
   if (kb > 0) return null
-
-  // Индекс активной вкладки — позиция подложки. −1 (ни одна не подходит)
-  // возможен на экранах вне вкладок; тогда подложку просто не показываем,
-  // а не оставляем её висеть на первой.
-  const activeIndex = tabs.findIndex((t) => isActive(t, pathname))
 
   return (
     // vt-nav — навигация выпадает из перехода между экранами и остаётся на
@@ -95,9 +35,9 @@ export function BottomNav() {
             opacity: activeIndex < 0 ? 0 : 1,
           }}
         />
-        {tabs.map(({ to, label, Icon, IconFill }, i) => {
+        {tabs.map(({ to, label, icon }, i) => {
           const active = i === activeIndex
-          const TabIcon = active ? IconFill : Icon
+          const TabIcon = active ? NAV_ICONS[icon].IconFill : NAV_ICONS[icon].Icon
           return (
             <AppLink
               key={to}
@@ -105,14 +45,7 @@ export function BottomNav() {
               // экран едет в ту сторону, в какую человек двигается по вкладкам:
               // вправо по ряду — контент приезжает справа, и наоборот
               direction={activeIndex >= 0 && i < activeIndex ? 'out' : 'in'}
-              onClick={() => {
-                // повторный тап по активной вкладке, когда мы уже на её роуте
-                // (напр. /study с внутренним экраном «Мои слова»): ссылка ведёт
-                // «в никуда», поэтому шлём событие — экран сам сбросится к хабу.
-                if (pathname === to) {
-                  window.dispatchEvent(new CustomEvent('recall:reset-tab', { detail: to }))
-                }
-              }}
+              onClick={() => onTabClick(to)}
               aria-current={active ? 'page' : undefined}
               className={`relative flex min-h-[44px] flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-1 py-1.5 text-[11px] font-medium transition-colors duration-300 [transition-timing-function:cubic-bezier(.22,1,.36,1)] ${
                 active
