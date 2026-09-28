@@ -7,6 +7,7 @@
 // ============================================================================
 import { useEffect, useState } from 'react'
 import { DeviceTheme } from './DeviceTheme'
+import { AiUsage } from './AiUsage'
 import { supabase } from '../../shared/api/supabase'
 import {
   findUsers,
@@ -77,6 +78,7 @@ export function AdminPage() {
       </header>
       <DeviceTheme />
       <Funnel />
+      <AiUsage />
       <FeedbackList />
       <RecentErrors />
 
