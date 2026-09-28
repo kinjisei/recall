@@ -156,6 +156,163 @@ async function theme(page, userId) {
   await page.emulateMediaFeatures([])
 }
 
+/** Прямоугольник элемента по селектору (null — нет на странице). */
+const rect = (page, sel) =>
+  page.evaluate((s) => {
+    const r = document.querySelector(s)?.getBoundingClientRect()
+    return r ? { left: r.left, right: r.right, top: r.top, bottom: r.bottom, width: r.width, height: r.height } : null
+  }, sel)
+
+/** Ширина окна (без полосы прокрутки) и высота. */
+const viewport = (page) =>
+  page.evaluate(() => ({ vw: document.documentElement.clientWidth, vh: window.innerHeight }))
+
+/** Сменить ширину и дождаться, пока раскладка её заметит (кадр — скриншотом). */
+async function resize(page, width, height) {
+  await page.setViewport({ width, height, deviceScaleFactor: 1 })
+  await page.screenshot({ encoding: 'base64' })
+  await sleep(500)
+}
+
+async function openShowcase(page, query = '') {
+  await page.goto(`${BASE}/dev/ui${query}`, { waitUntil: 'networkidle2' })
+  await waitText(page, query ? '' : 'Витрина дизайн-системы')
+  await sleep(700)
+}
+
+// ── 2. шторка ─────────────────────────────────────────────────────────────────
+async function sheet(page, tag) {
+  await openShowcase(page)
+  await clickText(page, 'Открыть шторку')
+  await sleep(600)
+  const r = await rect(page, '[role="dialog"]')
+  const { vw, vh } = await viewport(page)
+  if (tag === 'phone') {
+    check('телефон: шторка снизу во всю ширину', !!r && px(r.left) === 0 && px(r.width) === vw && Math.abs(r.bottom - vh) <= 1, JSON.stringify(r))
+    check('телефон: у шторки есть ручка', await page.evaluate(() => !!document.querySelector('[role="dialog"] .cursor-grab')))
+  } else {
+    check(
+      'компьютер: шторка — панель справа на всю высоту',
+      !!r && Math.abs(r.right - vw) <= 1 && px(r.top) === 0 && Math.abs(r.height - vh) <= 1 && r.width >= 380 && r.width <= 440,
+      JSON.stringify(r),
+    )
+    check('компьютер: ручки нет', !(await page.evaluate(() => !!document.querySelector('[role="dialog"] .cursor-grab'))))
+  }
+  await shot(page, `${tag}-sheet`)
+  await page.keyboard.press('Escape')
+  await sleep(400)
+  check(`${tag}: Escape закрывает шторку`, !(await rect(page, '[role="dialog"]')))
+}
+
+// ── 3. раскладки ──────────────────────────────────────────────────────────────
+async function layouts(page, tag) {
+  const desk = tag === 'desk'
+  const mainW = async () => (await rect(page, 'main'))?.width ?? 0
+
+  // колонка по центру
+  await openShowcase(page, '?l=center')
+  const c = await rect(page, '[data-demo="center"]')
+  const m = await rect(page, 'main')
+  check(
+    `${tag}: «колонка по центру» не шире 576 и по центру`,
+    !!c && !!m && c.width <= 577 && Math.abs(c.left - m.left - (m.right - c.right)) <= 2,
+    c && m ? `ширина ${px(c.width)}, поля ${px(c.left - m.left)}/${px(m.right - c.right)}` : 'нет',
+  )
+
+  // колонка чтения
+  await openShowcase(page, '?l=reading')
+  const textBefore = await rect(page, '[data-demo="reading"]')
+  const aside = await rect(page, 'aside[aria-label="Перевод слова"]')
+  if (desk) {
+    check('компьютер: чтению дана ширина страницы (шире 640)', (await mainW()) > 700, `${px(await mainW())}px`)
+    check('компьютер: панель перевода справа от текста, место под неё есть сразу', !!aside && !!textBefore && aside.left >= textBefore.right, JSON.stringify(aside))
+  } else {
+    check('телефон: панели сбоку нет', !aside)
+  }
+  await page.evaluate(() => document.querySelector('[data-demo="reading"] button')?.click())
+  await sleep(600)
+  const textAfter = await rect(page, '[data-demo="reading"]')
+  if (desk) {
+    const word = await page.evaluate(() => document.querySelector('aside[aria-label="Перевод слова"]')?.textContent ?? '')
+    check('компьютер: тап по слову — перевод в панели', word.includes('Every'), word.slice(0, 40))
+    check('компьютер: текст не сдвинулся', !!textAfter && !!textBefore && textAfter.left === textBefore.left && textAfter.width === textBefore.width)
+    check('компьютер: шторки поверх текста нет', !(await rect(page, '[role="dialog"]')))
+  } else {
+    const d = await page.evaluate(() => document.querySelector('[role="dialog"]')?.textContent ?? '')
+    check('телефон: тап по слову — перевод шторкой снизу', d.includes('Every'), d.slice(0, 40))
+  }
+  await shot(page, `${tag}-reading`)
+  await page.keyboard.press('Escape')
+
+  // список + подробности
+  await openShowcase(page, '?l=list')
+  const list = await rect(page, '[data-demo="list"]')
+  await page.evaluate(() =>
+    [...document.querySelectorAll('[data-demo="list"] button')].find((b) => (b.textContent || '').startsWith('Мадина'))?.click(),
+  )
+  await sleep(500)
+  const listAfter = await rect(page, '[data-demo="list"]')
+  const detail = await rect(page, '[data-demo="detail"]')
+  if (desk) {
+    check('компьютер: список слева, подробности справа', !!listAfter && !!detail && detail.left > listAfter.right, detail ? `список до ${px(listAfter?.right ?? 0)}, подробности с ${px(detail.left)}` : 'нет подробностей')
+  } else {
+    check('телефон: выбрал — подробности вместо списка', !!list && !listAfter && !!detail)
+    await page.goBack()
+    await sleep(500)
+    check('телефон: «назад» — снова список', !!(await rect(page, '[data-demo="list"]')) && !(await rect(page, '[data-demo="detail"]')))
+  }
+  await shot(page, `${tag}-list`)
+
+  // ушли с раскладки — колонка снова 640
+  await openShowcase(page)
+  check(`${tag}: без раскладки экран снова колонкой ≤ 640`, (await mainW()) <= 640, `${px(await mainW())}px`)
+}
+
+// ── 4. клавиатура ─────────────────────────────────────────────────────────────
+const keysLine = (page) => page.evaluate(() => document.querySelector('[data-demo="keys"]')?.textContent ?? '')
+
+async function keyboard(page) {
+  await openShowcase(page)
+  const hint = await page.evaluate(() => {
+    const b = document.querySelector('button[data-key="2"]')
+    return b ? { before: getComputedStyle(b, '::before').content, text: (b.textContent || '').trim() } : null
+  })
+  check(
+    'компьютер: на вариантах видны цифры-подсказки, а текст кнопки — сам ответ',
+    !!hint && hint.before.includes('2') && hint.text === 'goes',
+    JSON.stringify(hint),
+  )
+  await page.keyboard.press('2') // верный вариант — «goes»
+  await sleep(300)
+  check('«2» выбирает второй вариант (верный)', (await keysLine(page)).includes('Отвечено: 1'), await keysLine(page))
+  await page.keyboard.press('Enter')
+  await sleep(300)
+  check('Enter после ответа — «Дальше»', (await keysLine(page)).includes('вопрос 2'), await keysLine(page))
+  await page.keyboard.press('1')
+  await page.keyboard.press('3')
+  await sleep(300)
+  await page.keyboard.press('Enter')
+  await sleep(300)
+  check('две ошибки цифрами — ответ показан, Enter ведёт дальше', (await keysLine(page)).includes('вопрос 3'), await keysLine(page))
+
+  // настоящий раунд «Практики»: грамматика вперемешку не требует своих слов
+  await page.goto(`${BASE}/practice?m=gr-mcq`, { waitUntil: 'networkidle2' })
+  await waitText(page, 'Упражнение')
+  const progress = () => page.evaluate(() => (document.body.innerText.match(/Упражнение\s+(\d+)/) || [])[1] ?? '')
+  const before = await progress()
+  for (const k of ['1', '2', '3', '4']) {
+    await page.keyboard.press(k)
+    await sleep(250)
+  }
+  await page.keyboard.press('Enter')
+  await sleep(500)
+  const after = await progress()
+  check('«Практика»: цифры отвечают, Enter — следующее упражнение', before === '1' && after === '2', `${before} → ${after}`)
+  await page.keyboard.press('Escape')
+  await sleep(700)
+  check('«Практика»: Esc — выход из раунда', new URL(page.url()).search === '', page.url())
+}
+
 async function run(browser, userId) {
   const page = await browser.newPage()
   await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 })
@@ -172,6 +329,20 @@ async function run(browser, userId) {
   await page.waitForFunction(() => location.pathname === '/', { polling: 250, timeout: 20000 })
 
   await theme(page, userId)
+
+  // Геометрию меряем без анимации появления: в headless-вкладке кадры не
+  // выдаются, и шторка застывает на середине сдвига (правило «уважает
+  // prefers-reduced-motion» у нас глобальное — index.css).
+  await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }])
+  for (const [w, h, tag] of [
+    [390, 844, 'phone'],
+    [1280, 800, 'desk'],
+  ]) {
+    await resize(page, w, h)
+    await sheet(page, tag)
+    await layouts(page, tag)
+  }
+  await keyboard(page)
 
   check('JS-ошибок за прогон нет', jsErrors.length === 0, jsErrors.slice(0, 2).join(' | '))
 }

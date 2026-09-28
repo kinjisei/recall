@@ -12,6 +12,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card } from '../../shared/ui/Card'
 import { Button } from '../../shared/ui/Button'
+import { useRoundKeys } from '../../shared/ui/roundKeys'
 import { IconBack, IconSparkle } from '../../shared/ui/icons'
 import { shuffle } from '../../lib/random'
 import { setEsLevel } from '../../lib/esLevel'
@@ -100,6 +101,31 @@ export function PlacementTest() {
 
   // смена языка посреди теста — начинаем заново на новом банке
   useEffect(restart, [lang])
+
+  const choose = (optIndex: number) => {
+    const q = questions[index]
+    if (!q || optIndex >= q.options.length) return
+    const next = { ...answers, [q.id]: optIndex }
+    setAnswers(next)
+    const nextQ = questions[index + 1]
+    if (!nextQ) {
+      setDone(true)
+      return
+    }
+    // конец блока уровня: провален с треском — дальше не мучаем
+    if (nextQ.level !== q.level) {
+      const qs = questions.filter((x) => x.level === q.level)
+      const correct = qs.filter((x) => next[x.id] === x.answer).length
+      if (correct / qs.length < FAIL_EARLY) {
+        setDone(true)
+        return
+      }
+    }
+    setIndex((i) => i + 1)
+  }
+  // 1–4 — выбрать вариант (shared/ui/roundKeys). Esc здесь из теста не
+  // выводит: вопросов до 60, случайное нажатие стоило бы всех ответов.
+  useRoundKeys({ pick: choose }, !!all && started && !done)
 
   if (!all) {
     return (
@@ -203,25 +229,6 @@ export function PlacementTest() {
   // index только когда следующий вопрос существует) — подстраховка для
   // noUncheckedIndexedAccess.
   if (!q) return null
-  const choose = (optIndex: number) => {
-    const next = { ...answers, [q.id]: optIndex }
-    setAnswers(next)
-    const nextQ = questions[index + 1]
-    if (!nextQ) {
-      setDone(true)
-      return
-    }
-    // конец блока уровня: провален с треском — дальше не мучаем
-    if (nextQ.level !== q.level) {
-      const qs = questions.filter((x) => x.level === q.level)
-      const correct = qs.filter((x) => next[x.id] === x.answer).length
-      if (correct / qs.length < FAIL_EARLY) {
-        setDone(true)
-        return
-      }
-    }
-    setIndex((i) => i + 1)
-  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -247,6 +254,7 @@ export function PlacementTest() {
           {q.options.map((opt, i) => (
             <button
               key={i}
+              data-key={i + 1}
               onClick={() => choose(i)}
               className="rounded-xl border border-white/[0.10] px-4 py-2.5 text-left transition-colors hover:border-accent-line hover:bg-[rgba(145,132,217,.10)]"
             >

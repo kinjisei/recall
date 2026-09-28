@@ -14,7 +14,7 @@
 // Меню и доступ по роли учителя включаются в PLAN.md Ф2.10.
 // ============================================================================
 import type { ComponentType } from 'react'
-import { routeScreens } from './routeChunks'
+import { devShowcase, routeScreens } from './routeChunks'
 import { LoginPage } from '../features/auth/LoginPage'
 import { DashboardPage } from '../features/dashboard/DashboardPage'
 
@@ -91,6 +91,8 @@ export const ROUTES: AppRoute[] = [
   { path: '/quests', place: 'app', screen: routeScreens['/quests'] },
   { path: '/program', place: 'app', screen: routeScreens['/program'] },
   { path: '/admin', place: 'app', screen: routeScreens['/admin'], role: 'admin' },
+  // витрина дизайн-системы — только в разработке (routeChunks.devShowcase)
+  ...(devShowcase ? [{ path: '/dev/ui', place: 'app' as const, screen: devShowcase }] : []),
 ]
 
 /** Ленивый ли экран (из реестра routeChunks) — такому нужна заглушка Suspense. */

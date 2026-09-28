@@ -17,6 +17,7 @@
 import { useMemo, useState } from 'react'
 import { Card } from '../shared/ui/Card'
 import { Button } from '../shared/ui/Button'
+import { useRoundKeys } from '../shared/ui/roundKeys'
 import { answerMatches, normalizeAnswer } from '../lib/text'
 import { mcqHint, mistakeHint, orderHint, shouldReveal } from '../lib/selfCorrect'
 import type { GrammarExercise } from '../types'
@@ -107,6 +108,8 @@ export function McqExercise({
     // а угадайка по кругу
     if (shouldReveal(next.length)) setRevealed(true)
   }
+  // 1–4 — вариант, Enter — «Дальше» (shared/ui/roundKeys)
+  useRoundKeys({ pick: (i) => i < exercise.options.length && choose(i), enter: () => done && onNext() })
 
   // короткие варианты (слова) — сеткой 2×2, длинные фразы — столбиком
   const compact = exercise.options.every((o) => o.length <= 16)
@@ -132,6 +135,7 @@ export function McqExercise({
           return (
             <button
               key={i}
+              data-key={i + 1}
               onClick={() => choose(i)}
               disabled={done || isWrong}
               className={`rounded-xl border px-4 py-2.5 text-left transition-colors ${cls}${pop}`}
@@ -185,6 +189,8 @@ export function FillExercise({
     if (shouldReveal(n)) setRevealed(true)
     else setHint(mistakeHint(value, exercise.answer))
   }
+  // Enter в поле — «Проверить» (само поле); после ответа поле закрыто — «Дальше»
+  useRoundKeys({ enter: () => done && onNext() })
 
   return (
     <Card className="flex flex-col gap-3">
@@ -297,6 +303,7 @@ export function OrderExercise({
     if (shouldReveal(n)) setRevealed(true)
     else setHint(orderHint(built.map((b) => b.w), exercise.answer))
   }
+  useRoundKeys({ enter: () => (checked ? onNext() : check()) })
 
   return (
     <Card className="flex flex-col gap-3">

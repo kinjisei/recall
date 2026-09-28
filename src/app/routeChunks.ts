@@ -84,6 +84,15 @@ export const routeScreens = {
   '/admin': makeRoute(() => import('../features/admin/AdminPage'), (m) => m.AdminPage),
 } satisfies Record<string, RouteScreen>
 
+/**
+ * Витрина дизайн-системы (/dev/ui) — только в разработке. В сборке
+ * import.meta.env.DEV = false, ветка вырезается вместе с import(): экрана нет
+ * ни в бандле, ни в офлайн-кэше PWA.
+ */
+export const devShowcase: RouteScreen | null = import.meta.env.DEV
+  ? makeRoute(() => import('../features/dev/UiShowcase'), (m) => m.UiShowcase)
+  : null
+
 function screenFor(path: string): RouteScreen | null {
   let best: string | null = null
   for (const key of Object.keys(routeScreens)) {

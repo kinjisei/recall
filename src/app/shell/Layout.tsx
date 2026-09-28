@@ -4,8 +4,9 @@
 //   • телефон и планшет — шапка сверху (TopBar), плавающая нижняя навигация
 //     (BottomNav);
 //   • компьютер (от 1024 px) — меню слева (SideNav), шапки нет.
-// Экраны, которые ещё не переехали в новую структуру, на любой ширине
-// остаются колонкой 640 px; на компьютере — по центру места рядом с меню.
+// Экран на любой ширине — колонка 640 px; на компьютере — по центру места
+// рядом с меню. Общая раскладка из shared/ui («список + подробности»,
+// «колонка чтения») просит ширину страницы, до 1100 px — shared/lib/screenWidth.
 //
 // Режим раунда (игра на весь экран) прячет навигацию на любой ширине —
 // shared/lib/focusMode. Сколько места занимает каркас вокруг экрана, экраны
@@ -14,6 +15,7 @@
 import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { FocusModeContext } from '../../shared/lib/focusMode'
+import { PageWidthContext } from '../../shared/lib/screenWidth'
 import { PHONE_INSETS, ShellInsetsContext, type ShellInsets } from '../../shared/lib/shellInsets'
 import { useIsDesktop } from '../../shared/lib/useMediaQuery'
 import { BottomNav } from './BottomNav'
@@ -27,12 +29,14 @@ const FOCUS_INSETS: ShellInsets = { left: '0px', bottom: '0px', bottomPx: 0 }
 
 export function Layout() {
   const [focus, setFocus] = useState(false)
+  const [pageWidth, setPageWidth] = useState(false)
   const desktop = useIsDesktop()
   const withMenu = desktop && !focus
   const insets = focus ? FOCUS_INSETS : desktop ? DESKTOP_INSETS : PHONE_INSETS
 
   return (
     <FocusModeContext.Provider value={setFocus}>
+      <PageWidthContext.Provider value={setPageWidth}>
       <ShellInsetsContext.Provider value={insets}>
         <div className="min-h-[100dvh] bg-page text-fg">
           {!focus && (desktop ? <SideNav /> : <TopBar />)}
@@ -44,7 +48,7 @@ export function Layout() {
                 зияет пустота. В режиме раунда навигации нет — хватает
                 safe-area; на компьютере навигации снизу нет вовсе. */}
             <main
-              className={`mx-auto min-h-[60vh] max-w-screen-sm animate-fade-in px-4 ${
+              className={`mx-auto min-h-[60vh] ${desktop && pageWidth ? 'max-w-page' : 'max-w-column'} animate-fade-in px-4 ${
                 focus
                   ? 'pt-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-[calc(env(safe-area-inset-top)+0.75rem)]'
                   : desktop
@@ -58,6 +62,7 @@ export function Layout() {
           {!focus && !desktop && <BottomNav />}
         </div>
       </ShellInsetsContext.Provider>
+      </PageWidthContext.Provider>
     </FocusModeContext.Provider>
   )
 }

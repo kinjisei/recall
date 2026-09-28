@@ -6,6 +6,7 @@ import { IconSpeaker, IconTray } from '../../shared/ui/icons'
 import { BackHeader } from '../../shared/ui/BackButton'
 import { Card } from '../../shared/ui/Card'
 import { Button } from '../../shared/ui/Button'
+import { useRoundKeys } from '../../shared/ui/roundKeys'
 import { RoundResult, RoundProgress } from '../../components/RoundResult'
 import type { ReviewItem } from '../../components/RoundReview'
 import { logActivity } from '../../lib/activity'
@@ -100,6 +101,30 @@ export function QuizRunner({
     if (done) void logActivity('practice')
   }, [done])
 
+  const choose = (i: number) => {
+    if (!q || picked !== null || i >= q.options.length) return
+    setPicked(i)
+    const ok = i === q.answer
+    setResults((r) => [
+      ...r,
+      {
+        prompt: q.prompt || q.say || '',
+        given: q.options[i] ?? '',
+        correct: q.options[q.answer] ?? '',
+        ok,
+      },
+    ])
+    if (ok) setCorrect((c) => c + 1)
+    else markWrong(q.item, lang)
+  }
+  const advance = () => {
+    setIndex((i) => i + 1)
+    setPicked(null)
+  }
+  // 1–4 — вариант, Enter — «Дальше»; Esc — выход, его держит «Практика»
+  // (shared/ui/roundKeys)
+  useRoundKeys({ pick: choose, enter: () => picked !== null && advance() }, !done)
+
   if (done) {
     return (
       <div className="flex flex-col gap-4">
@@ -129,23 +154,6 @@ export function QuizRunner({
   // index < questions.length гарантирован веткой done выше — но компилятор
   // не связывает done и q, поэтому явный guard (в рантайме не сработает)
   if (!q) return null
-
-  const choose = (i: number) => {
-    if (picked !== null) return
-    setPicked(i)
-    const ok = i === q.answer
-    setResults((r) => [
-      ...r,
-      {
-        prompt: q.prompt || q.say || '',
-        given: q.options[i] ?? '',
-        correct: q.options[q.answer] ?? '',
-        ok,
-      },
-    ])
-    if (ok) setCorrect((c) => c + 1)
-    else markWrong(q.item, lang)
-  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -183,6 +191,7 @@ export function QuizRunner({
             return (
               <button
                 key={i}
+                data-key={i + 1}
                 onClick={() => choose(i)}
                 disabled={picked !== null}
                 className={`rounded-xl border px-3 py-2.5 text-left transition-[transform,background-color,border-color,color] duration-150 ${cls}${pop}`}
@@ -194,12 +203,7 @@ export function QuizRunner({
         </div>
 
         {picked !== null && (
-          <Button
-            onClick={() => {
-              setIndex((i) => i + 1)
-              setPicked(null)
-            }}
-          >
+          <Button onClick={advance}>
             {index + 1 >= questions.length ? 'Итоги' : 'Дальше →'}
           </Button>
         )}

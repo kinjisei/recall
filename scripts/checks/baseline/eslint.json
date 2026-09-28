@@ -437,10 +437,5 @@
     "react-hooks/set-state-in-effect": {
       "count": 1
     }
-  },
-  "src/shared/ui/Sheet.tsx": {
-    "react-hooks/refs": {
-      "count": 2
-    }
   }
 }

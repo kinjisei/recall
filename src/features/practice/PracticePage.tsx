@@ -40,7 +40,7 @@ import { markAutoOpened, shouldAutoOpen, skipReviewIfNoWords } from '../../lib/g
 import { getMistakes } from '../../lib/mistakes'
 import { DeckReview } from '../flashcards/DeckReview'
 import { useScrollTop } from '../../lib/useScrollTop'
-import { useFocusMode } from '../../shared/lib/focusMode'
+import { useRoundMode } from '../../shared/ui/roundKeys'
 import { Loading } from '../../shared/ui/Loading'
 import { markMorph } from '../../shared/lib/morph'
 import { withViewTransition } from '../../shared/lib/viewTransition'
@@ -185,9 +185,6 @@ export function PracticePage() {
   const mode: Mode = raw && GAME_MODES.has(raw) ? raw : 'hub'
   // смена ?m= маршрут не меняет — глобальный ScrollToTop не срабатывает
   useScrollTop(mode)
-  // на время раунда убираем шапку и нижнюю навигацию: без них игра влезает в
-  // экран целиком и перестаёт «ездить» на каждом тапе (см. shared/lib/focusMode)
-  useFocusMode(mode !== 'hub')
   // Заход в игру пушит запись в историю, выход кареткой — ЗАМЕНЯЕТ её.
   // Раньше выход тоже пушил, и свайп-назад после выхода возвращал обратно в
   // только что закрытый «Спринт» (замер ревью 1Г). Правило то же, что в общем
@@ -262,6 +259,9 @@ export function PracticePage() {
     setMode('hub')
     countDueCards(lang).then((n) => setDue(Math.min(n, 99))).catch(() => {})
   }
+  // на время раунда убираем шапку и навигацию — игра влезает в экран целиком и
+  // не «ездит» на каждом тапе; Esc — выход, как стрелка (shared/ui/roundKeys)
+  useRoundMode(mode !== 'hub', back)
 
   if (mode === 'review') return <DeckReview onBack={back} />
   if (mode !== 'hub') {
