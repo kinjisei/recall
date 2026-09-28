@@ -25,8 +25,10 @@ export interface ModelLimit {
   source: string
 }
 
-const AI_STUDIO = 'AI Studio владельца, 24.07.2026'
-const NOT_CHECKED = 'не сверено — AI Studio → Rate limits'
+// Free tier, проект «Default Gemini Project»: Rate Limit → «Rate limits by model»
+const AI_STUDIO = 'AI Studio владельца (Rate Limit, Free tier), 28.09.2026'
+const AI_STUDIO_JULY = 'AI Studio владельца, 24.07.2026'
+const NOT_CHECKED = 'не сверено — AI Studio → Rate limits → See more'
 const GROQ = 'console.groq.com/docs/rate-limits, 28.09.2026'
 
 export const MODEL_LIMITS: Record<string, ModelLimit> = {
@@ -35,9 +37,9 @@ export const MODEL_LIMITS: Record<string, ModelLimit> = {
   'gemini-3.5-flash': { rpd: 20, rpm: 5, source: AI_STUDIO },
   'gemini-2.5-flash': { rpd: 20, rpm: 5, source: AI_STUDIO },
   // lite — перевод слова и определения (после Groq)
-  'gemini-3.5-flash-lite': { rpd: null, rpm: null, source: NOT_CHECKED },
+  'gemini-3.5-flash-lite': { rpd: 500, rpm: 15, source: AI_STUDIO },
   'gemini-3.1-flash-lite': { rpd: null, rpm: null, source: NOT_CHECKED },
-  'gemma-4-31b-it': { rpd: 14_400, rpm: 30, source: AI_STUDIO },
+  'gemma-4-31b-it': { rpd: 14_400, rpm: 30, source: AI_STUDIO_JULY },
   'gemini-2.5-flash-lite': { rpd: null, rpm: null, source: NOT_CHECKED },
   // max — материалы и программы учителя
   'gemini-2.5-pro': { rpd: null, rpm: null, source: NOT_CHECKED },
