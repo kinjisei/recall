@@ -1,7 +1,9 @@
-// Шапка телефона и планшета: логотип, EN/ES, меню профиля. На компьютере
+// Шапка телефона и планшета: логотип, EN/ES, колокольчик (только когда есть
+// уведомления), меню профиля. На компьютере
 // шапки нет — то же самое живёт в боковой панели (SideNav).
 import { AppLink } from '../../shared/ui/AppLink'
 import { BrandLogo } from '../../shared/ui/Brand'
+import { NotificationBell } from '../../features/notifications'
 import { AvatarMenu } from './AvatarMenu'
 import { LangSwitch } from './LangSwitch'
 
@@ -18,6 +20,7 @@ export function TopBar() {
 
         <div className="flex items-center gap-3">
           <LangSwitch />
+          <NotificationBell />
           <AvatarMenu />
         </div>
       </div>

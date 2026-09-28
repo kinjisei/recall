@@ -31,8 +31,8 @@
 | `ErrorBoundary.tsx` | сбой отрисовки → понятный экран вместо белого |
 | `ScrollToTop.tsx`, `PageTracker.tsx` | прокрутка вверх при смене адреса; учёт посещений |
 | `shell/Layout.tsx` | общая рамка по ширине экрана: телефон — `TopBar` + `BottomNav`, компьютер — `SideNav`; колонка экрана или ширина страницы (`screenWidth`); режим раунда; геометрия каркаса для экранов (`shellInsets`) |
-| `shell/SideNav.tsx` | меню компьютера слева: логотип, вкладки со скользящей подложкой, внизу аватар и EN/ES |
-| `shell/TopBar.tsx`, `shell/AvatarMenu.tsx`, `shell/LangSwitch.tsx` | шапка телефона; меню профиля (вниз — в шапке, вверх — в панели); EN/ES |
+| `shell/SideNav.tsx` | меню компьютера слева: логотип, вкладки со скользящей подложкой, внизу аватар, колокольчик и EN/ES |
+| `shell/TopBar.tsx`, `shell/AvatarMenu.tsx`, `shell/LangSwitch.tsx` | шапка телефона (EN/ES, колокольчик уведомлений — `features/notifications`, только когда они есть, аватар); меню профиля (вниз — в шапке, вверх — в панели); EN/ES |
 | `navigation.ts` | **меню по роли**: наборы вкладок ученика и учителя, какая вкладка активна на каком адресе; выключатель `ROLE_NAV_ENABLED` |
 | `shell/BottomNav.tsx` | нижняя навигация: вкладки из `navigation.ts` и скользящая подложка |
 | `shell/useNavTabs.ts`, `shell/navIcons.ts` | вкладки текущего человека и активная; иконки вкладок по имени |

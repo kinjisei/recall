@@ -3,8 +3,8 @@
 //
 // Вкладки — те же, что у нижней панели телефона (app/navigation.ts), с той же
 // скользящей подложкой, только по вертикали. Шапки на компьютере нет: логотип
-// наверху панели, язык и меню профиля — внизу. Колокольчик уведомлений встанет
-// туда же, рядом с аватаром (PLAN.md Ф1.5), подарок-рефералка — в Ф2.10.
+// наверху панели, язык, меню профиля и колокольчик уведомлений (только когда
+// они есть, Ф1.5) — внизу; подарок-рефералка встанет туда же в Ф2.10.
 //
 // Окончательный вид — в редизайне (Ф5); здесь только цвета-токены Nocturne.
 // ⚠️ Ширина w-60 (15rem) — та же, что отступ колонки и DESKTOP_INSETS в
@@ -12,6 +12,7 @@
 // ============================================================================
 import { AppLink } from '../../shared/ui/AppLink'
 import { BrandLogo } from '../../shared/ui/Brand'
+import { NotificationBell } from '../../features/notifications'
 import { AvatarMenu } from './AvatarMenu'
 import { LangSwitch } from './LangSwitch'
 import { NAV_ICONS } from './navIcons'
@@ -67,7 +68,10 @@ export function SideNav() {
       </div>
 
       <div className="mt-auto flex items-center justify-between gap-2 border-t border-line pt-4">
-        <AvatarMenu opensUp />
+        <div className="flex items-center gap-2">
+          <AvatarMenu opensUp />
+          <NotificationBell />
+        </div>
         <LangSwitch />
       </div>
     </nav>

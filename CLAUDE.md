@@ -157,6 +157,8 @@ src/
                 (место каркаса вокруг экрана) · useMediaQuery (useIsDesktop)
                 morph (плитка «вырастает» в экран)
   types/        index.ts — общие типы (AiTask, ChatTurn — реэкспорт из shared/api)
+  domains/      предметная логика по новой архитектуре (§1): notifications —
+                первый домен (index · api — единственный вход в базу · model)
   context/      AuthContext, LanguageContext
   data/         english/ · spanish/ · writingPrompts.ts · wordOfDay.ts · teacher-guide.ts
   components/   общие куски С предметной логикой (переедут в разделы, Ф3):
@@ -721,6 +723,28 @@ FSRS, текст по покрытию, тема квеста по ошибка�
 (блок в `/admin`). Вход: меню под аватаром и «Настройки».
 Проверка: `node scripts/smoke-feedback.mjs`.
 
+### Уведомления — одно на цикл держит база
+
+`src/domains/notifications` (подробно — его `CLAUDE.md`), миграция
+`0002_notifications.sql`, сервер доставки `api/notify.ts`. Будильник
+`pg_cron` раз в 5 минут прогоняет правила из реестра `notification_rules`;
+правило зовёт `notify()` с ключом цикла, и второе уведомление с тем же ключом
+база не создаёт (`unique (user_id, dedupe_key)`). Колокольчик в шапке
+появляется у человека, только когда у него есть уведомление (решение
+владельца). Правил пока нет — они приходят с Ф2.4 / 2.8 / 2.9.
+
+- ⚠️ `notify`, `run_notification_rules`, `dispatch_notifications` и каждая
+  функция-правило закрыты и от `authenticated` (`revoke` в миграции): права по
+  умолчанию открывают вошедшим каждую новую функцию.
+- ⚠️ В базу пишем данные, текст собирает `renderNotification` по виду.
+- Доставка: `pg_net` → `api/notify.ts` по секрету (`notify_url`,
+  `notify_secret` в Vault; `NOTIFY_SECRET` в Vercel). Их нет — доставка спит,
+  лента работает. Каналов пока нет (push — Ф2.9, Telegram — Ф4.3).
+
+Проверки: `check-notifications.mjs` (живая тестовая база, 25),
+`test-notifications.mjs` и `test-notify-endpoint.mjs` (в CI),
+`smoke-notifications.mjs` (браузер, 14).
+
 ---
 
 ## Как запустить и как проверять
@@ -741,6 +765,8 @@ node scripts/smoke-shell.mjs       # каркас: доступ по роли, �
 node scripts/smoke-ui.mjs          # тема за флагом, шторка, раскладки, клавиатура (390/1280)
 node scripts/shots-compare.mjs --save <папка>   # скриншоты 9 экранов; --compare <до> <после>
 node scripts/test-tokens.mjs       # токены: обе темы полны, контраст ≥ 4,5:1 (в CI)
+node scripts/check-notifications.mjs  # уведомления на тестовой базе: одно на ключ, права, pg_net
+node scripts/smoke-notifications.mjs  # колокольчик и лента в браузере
 npm run db:migrate     # миграции → тестовая база (+ права анонима, типы)
 npm run db:migrate:prod  # миграции → живая база: ТОЛЬКО владелец, пароль руками
 node scripts/check-anon-access.mjs # что может вызвать невошедший (тестовая; --prod — живая)

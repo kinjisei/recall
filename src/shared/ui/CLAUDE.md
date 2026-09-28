@@ -105,7 +105,7 @@
   вид придёт с редизайном.
 - **Иконки — `icons.tsx`, генерируются** из `handoff/icons/*.svg`
   (`node scripts/gen-icons.mjs`), руками не правятся. Иконку убрать — удалить
-  её SVG и перегенерировать. 53 иконки; 4 неиспользуемые (`IconStudents`,
+  её SVG и перегенерировать. 54 иконки (`IconBell` — Ф1.5); 4 неиспользуемые (`IconStudents`,
   `IconSpeech`, `IconSpeechFill`, `IconMicFill`) удалены 28.09.2026.
 
 ## Как проверить
