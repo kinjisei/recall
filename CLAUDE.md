@@ -163,6 +163,7 @@ src/
                 вход в базу) · model · CLAUDE.md
   context/      AuthContext, LanguageContext
   data/         english/ · spanish/ · writingPrompts.ts · wordOfDay.ts · teacher-guide.ts
+                howItWorks.ts (тексты «Как это работает?» всех экранов, цифры сверены с кодом)
   components/   общие куски С предметной логикой (переедут в разделы, Ф3):
                 EnergyBar · WordSheet · exercises.tsx · RoundResult · шторки разбора
   features/     папки по экранам (счёт — node scripts/arch-map.mjs)

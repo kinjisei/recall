@@ -32,6 +32,7 @@ import {
 } from '../../shared/ui/icons'
 import { Card } from '../../shared/ui/Card'
 import { HowItWorks } from '../../shared/ui/HowItWorks'
+import { HOW_IT_WORKS } from '../../data/howItWorks'
 import { Button } from '../../shared/ui/Button'
 import { useLanguage } from '../../context/LanguageContext'
 import { countDueCards } from '../../lib/fsrs'
@@ -361,13 +362,7 @@ export function PracticePage() {
           где она нужна — когда слов действительно нет, и тогда это не совет,
           а кнопка. Пояснитель ниже свёрнут — это одна строка, а не абзац,
           поэтому сгиб он не воссоздаёт. */}
-      <HowItWorks>
-        Здесь ты тренируешь то, что уже собрал. Повторение возвращает карточки
-        ровно тогда, когда слово начинает забываться, — поэтому важнее заходить
-        часто, чем помногу. Ещё есть игры на перевод и значения, тренажёр
-        грамматики и речь. Новое тут не учат — за этим во «Учёбу»; а если для игр
-        не хватает слов, там же возьмёшь готовый набор.
-      </HowItWorks>
+      <HowItWorks>{HOW_IT_WORKS.practice}</HowItWorks>
       {words === 0 && (
         <Card className="flex flex-col gap-2">
           <p className="text-sm text-fg-secondary">

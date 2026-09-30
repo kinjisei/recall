@@ -24,6 +24,7 @@ import {
 } from '../../shared/ui/icons'
 import { RowCard } from '../../shared/ui/RowCard'
 import { HowItWorks } from '../../shared/ui/HowItWorks'
+import { HOW_IT_WORKS } from '../../data/howItWorks'
 import { LoadError } from '../../shared/ui/LoadError'
 import { BackHeader } from '../../shared/ui/BackButton'
 import { Button } from '../../shared/ui/Button'
@@ -200,14 +201,7 @@ export function StudyPage() {
       <p className="-mt-2 text-sm text-fg-muted">
         Тексты, грамматика и словарь — всё для изучения нового.
       </p>
-      <HowItWorks>
-        Сюда приходишь за новым. Читаешь тексты — по тапу на слове видишь перевод
-        и разбор; проходишь уроки грамматики; собираешь свой словарь из готовых
-        паков или добавляешь слова руками. Занимаешься сам — тут же попросишь AI
-        собрать материал под свою тему и проверить письменную работу по
-        критериям экзамена. Есть преподаватель — его домашка и задания появятся
-        сверху. А тренируешь и повторяешь всё это уже во вкладке «Практика».
-      </HowItWorks>
+      <HowItWorks>{HOW_IT_WORKS.study}</HowItWorks>
 
       {hub === null ? (
         // скелетоны высоты RowCard — без прыжков вёрстки, пока грузятся строки
@@ -231,7 +225,7 @@ export function StudyPage() {
             />
           )}
           {/* Разгрузка «Учёбы» (nav-structure-options.md, вариант A): строки
-              делятся на «От преподавателя» и «Сам». У самоучки преподавательского
+              делятся на «От преподавателя» и «Для себя». У самоучки преподавательского
               блока нет вовсе — тогда заголовки НЕ показываем, чтобы не городить
               рубрику над единственной группой (у большинства пришедших с улицы
               преподавателя нет). Порядок внутри — теперь по группам, а не
@@ -358,8 +352,8 @@ export function StudyPage() {
                   />
                 )}
 
-                {/* ---- Сам ---- */}
-                {hasTeacher && <SectionLabel text="Сам" />}
+                {/* ---- Для себя ---- */}
+                {hasTeacher && <SectionLabel text="Для себя" />}
                 <RowCard
                   Icon={IconGap}
                   title="Чтение"

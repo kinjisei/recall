@@ -7,6 +7,7 @@ import { useUrlState } from '../../shared/lib/useUrlState'
 import { Card } from '../../shared/ui/Card'
 import { Button } from '../../shared/ui/Button'
 import { HowItWorks } from '../../shared/ui/HowItWorks'
+import { HOW_IT_WORKS } from '../../data/howItWorks'
 import { getProfile } from '../../lib/profile'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
@@ -265,14 +266,7 @@ function TeacherDashboard() {
         )}
       </header>
 
-      <HowItWorks>
-        Здесь ты ведёшь учеников. Раздай свой код приглашения из вкладки
-        «Ученики» — кто введёт его, привяжется к тебе, и откроется его карточка:
-        домашка на неделю, слабые места, слова и программа. «Материалы» — тексты
-        с упражнениями под конкретного ученика, «Письменные работы» — эссе с
-        разбором по критериям IELTS. Где цифру посчитал сервер по занятиям, а где
-        ученик отметил сам — в карточке видно отдельно.
-      </HowItWorks>
+      <HowItWorks>{HOW_IT_WORKS.teacher}</HowItWorks>
 
       {/* Перенос строки, а не горизонтальная прокрутка. Замер ревью 1В: ряду
           из четырёх вкладок нужно 415px, а на iPhone 12 доступно 348 — четвёртая

@@ -20,6 +20,7 @@ import { getEsLevel } from '../../lib/esLevel'
 import type { AppLang, CEFRLevel, ChatTurn, LearningGoal } from '../../types'
 import { Thinking } from '../../shared/ui/Thinking'
 import { HowItWorks } from '../../shared/ui/HowItWorks'
+import { HOW_IT_WORKS } from '../../data/howItWorks'
 import { ChatBubble, ChatInputBar, ChatWindow } from '../../shared/ui/Chat'
 
 export function ConversationPage() {
@@ -68,13 +69,7 @@ export function ConversationPage() {
         </p>
       </header>
 
-      <HowItWorks>
-        Просто переписывайся с AI на изучаемом языке — он поддержит разговор и
-        мягко поправит ошибки, а переписка сохранится, чтобы продолжить позже.
-        Каждая реплика тратит немного энергии — остаток виден в шапке. Хочешь,
-        чтобы разобрали готовый текст по критериям экзамена, — это в «Учёбе →
-        Письмо».
-      </HowItWorks>
+      <HowItWorks>{HOW_IT_WORKS.conversation}</HowItWorks>
 
       {/* key={lang}: при смене языка начинаем чат заново */}
       <ChatSection key={lang} level={level} lang={lang} goal={goal} />

@@ -46,6 +46,7 @@ import { startGuidedRoute } from '../../lib/guided'
 import { speak } from '../../lib/speech'
 import { RowCard } from '../../shared/ui/RowCard'
 import { HowItWorks } from '../../shared/ui/HowItWorks'
+import { HOW_IT_WORKS } from '../../data/howItWorks'
 import {
   AssignmentsNotice,
   TeacherBlock,
@@ -260,13 +261,7 @@ export function DashboardPage() {
           {didToday ? 'сегодня уже занимался' : 'готов к практике?'}
         </p>
         <div className="mt-2">
-          <HowItWorks>
-            Это твоя стартовая. Серия наверху считает дни подряд с занятиями —
-            важна регулярность, а не объём за раз. Ниже — запас энергии на
-            разговоры с AI, план на сегодня и слово дня. «Начать занятие»
-            проведёт по короткому кругу: слова → чтение → практика. А учиться и
-            тренироваться подробно — во вкладках снизу.
-          </HowItWorks>
+          <HowItWorks>{HOW_IT_WORKS.dashboard}</HowItWorks>
         </div>
       </header>
 

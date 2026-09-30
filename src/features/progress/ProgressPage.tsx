@@ -17,6 +17,7 @@ import {
 import { AppLink } from '../../shared/ui/AppLink'
 import { Button } from '../../shared/ui/Button'
 import { HowItWorks } from '../../shared/ui/HowItWorks'
+import { HOW_IT_WORKS } from '../../data/howItWorks'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { supabase, currentUserId } from '../../shared/api/supabase'
@@ -229,13 +230,7 @@ export function ProgressPage() {
         >
           <h2 className="text-lg font-medium tracking-tight">Над чем поработать</h2>
 
-          <HowItWorks>
-            Это твоя личная карта слабых мест — её видишь только ты. Слова,
-            «которые буксуют», — те, что ты чаще всего забываешь на повторении;
-            слабые темы грамматики считаются по твоим ошибкам в уроках. Отсюда же
-            можно сразу повторить эти слова. Ничего не стоит и обновляется по
-            ходу занятий.
-          </HowItWorks>
+          <HowItWorks>{HOW_IT_WORKS.progress}</HowItWorks>
 
           {weak.struggling.length > 0 && (
             <div className="flex flex-col gap-2">

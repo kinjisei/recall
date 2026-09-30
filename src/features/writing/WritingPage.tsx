@@ -12,6 +12,7 @@ import { BackButton, BackHeader } from '../../shared/ui/BackButton'
 import { IconPencil } from '../../shared/ui/icons'
 import { LoadError } from '../../shared/ui/LoadError'
 import { HowItWorks } from '../../shared/ui/HowItWorks'
+import { HOW_IT_WORKS } from '../../data/howItWorks'
 import { useScrollTop } from '../../lib/useScrollTop'
 import { getMyWritingAssignments, startOwnWriting, submitWriting } from '../../lib/writing'
 import { useLanguage } from '../../context/LanguageContext'
@@ -78,13 +79,7 @@ export function WritingPage() {
         <h1 className="text-xl font-bold">Письменные задания</h1>
       </div>
 
-      <HowItWorks>
-        Выбираешь тему (или берёшь задание от преподавателя), пишешь текст — и AI
-        разбирает его по критериям экзамена: грамматика, словарь, связность,
-        соответствие заданию. Показывает 2–3 главные ошибки, а не заливает всё
-        красным, и подсказывает, что переписать. Разбор стоит энергию; можно
-        переписать работу и отправить снова.
-      </HowItWorks>
+      <HowItWorks>{HOW_IT_WORKS.writing}</HowItWorks>
 
       {/* Быстрая проверка свободного текста — переехала сюда из вкладки «Диалог»
           (вариант A навигации): теперь всё письмо в одном месте. Показываем в
