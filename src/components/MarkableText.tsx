@@ -34,7 +34,7 @@ export function MarkableText({
           className={`flex min-h-[40px] items-center gap-1.5 rounded-full border px-3.5 text-sm ${
             selectMode
               ? 'border-accent-line bg-[rgba(145,132,217,.14)] text-accent-soft-fg'
-              : 'border-white/[0.10] text-fg-muted'
+              : 'border-tint/[0.10] text-fg-muted'
           }`}
         >
           <IconTranslate size={14} />
@@ -42,7 +42,7 @@ export function MarkableText({
         </button>
         <button
           onClick={() => setAnalyzeAll(true)}
-          className="flex min-h-[40px] items-center gap-1.5 rounded-full border border-white/[0.10] px-3.5 text-sm text-fg-muted"
+          className="flex min-h-[40px] items-center gap-1.5 rounded-full border border-tint/[0.10] px-3.5 text-sm text-fg-muted"
         >
           <IconSearch size={14} />
           Разобрать весь текст

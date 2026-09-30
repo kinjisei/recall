@@ -117,7 +117,7 @@ export function SettingsPage() {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Имя"
-          className="mt-1.5 h-11 w-full rounded-xl border border-white/[0.10] bg-input px-3.5 text-sm outline-none focus:border-accent-line"
+          className="mt-1.5 h-11 w-full rounded-xl border border-tint/[0.10] bg-input px-3.5 text-sm outline-none focus:border-accent-line"
         />
 
         <p className="mt-4 text-sm text-fg-muted">
@@ -164,7 +164,7 @@ export function SettingsPage() {
               rate: SPEECH_RATES[local.speechRate],
             })
           }
-          className="lift mt-3 flex min-h-[44px] items-center gap-2 rounded-full border border-white/[0.10] px-4 text-sm text-fg-secondary"
+          className="lift mt-3 flex min-h-[44px] items-center gap-2 rounded-full border border-tint/[0.10] px-4 text-sm text-fg-secondary"
         >
           <IconSpeaker size={16} /> Проверить
         </button>
@@ -196,7 +196,7 @@ export function SettingsPage() {
 
       {/* Написать владельцу. До этого из приложения написать было НЕКУДА:
           адрес лежал только в юридических страницах, куда никто не заходит. */}
-      <div className="rounded-2xl border border-white/[0.08] bg-surface p-4">
+      <div className="rounded-2xl border border-tint/[0.08] bg-surface p-4">
         <p className="text-[15px] font-medium">Что-то не работает или непонятно?</p>
         <p className="mt-1 text-sm text-fg-secondary">
           Напиши мне — починю или объясню. {SUPPORT_SLA}.
@@ -213,7 +213,7 @@ export function SettingsPage() {
           </button>
           <a
             href={supportMailto()}
-            className="inline-flex min-h-11 items-center rounded-xl border border-white/[0.10] px-4 text-sm font-medium text-fg-secondary"
+            className="inline-flex min-h-11 items-center rounded-xl border border-tint/[0.10] px-4 text-sm font-medium text-fg-secondary"
           >
             Написать на {SUPPORT_EMAIL}
           </a>
@@ -252,7 +252,7 @@ function Section({
 }) {
   return (
     <section
-      className="animate-fade-up rounded-2xl border border-white/[0.08] bg-surface p-4"
+      className="animate-fade-up rounded-2xl border border-tint/[0.08] bg-surface p-4"
       style={{ animationDelay: delay }}
     >
       <h2 className="mb-3 font-medium">{title}</h2>

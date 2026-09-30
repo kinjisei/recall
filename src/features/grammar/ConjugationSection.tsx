@@ -94,7 +94,7 @@ function SubTab({
       className={`rounded-lg px-4 py-2 text-sm font-semibold ${
         active
           ? 'bg-accent-soft text-accent-soft-fg'
-          : 'bg-white/[0.07] text-fg-secondary'
+          : 'bg-tint/[0.07] text-fg-secondary'
       }`}
     >
       {children}
@@ -256,13 +256,13 @@ function ConjTable({
       <table className="min-w-full border-collapse text-sm">
         <thead>
           <tr>
-            <th className="border border-white/[0.08] bg-surface px-2 py-1 text-left font-semibold">
+            <th className="border border-tint/[0.08] bg-surface px-2 py-1 text-left font-semibold">
               {firstHeader}
             </th>
             {persons.map((p, i) => (
               <th
                 key={i}
-                className="whitespace-nowrap border border-white/[0.08] bg-surface px-2 py-1 text-left font-semibold"
+                className="whitespace-nowrap border border-tint/[0.08] bg-surface px-2 py-1 text-left font-semibold"
               >
                 {p}
               </th>
@@ -272,7 +272,7 @@ function ConjTable({
         <tbody>
           {rows.map((row, ri) => (
             <tr key={ri}>
-              <td className="whitespace-nowrap border border-white/[0.08] px-2 py-1 font-medium">
+              <td className="whitespace-nowrap border border-tint/[0.08] px-2 py-1 font-medium">
                 {row.head}
                 {row.sub && (
                   <span className="block text-xs font-normal text-fg-muted">
@@ -283,7 +283,7 @@ function ConjTable({
               {row.cells.map((c, ci) => (
                 <td
                   key={ci}
-                  className="whitespace-nowrap border border-white/[0.08] px-2 py-1"
+                  className="whitespace-nowrap border border-tint/[0.08] px-2 py-1"
                 >
                   {c}
                 </td>
@@ -332,7 +332,7 @@ function TrainerView({ exercises }: { exercises: EndingsExercise[] }) {
             className={`rounded-lg px-3 py-1.5 text-sm font-semibold ${
               level === id
                 ? 'bg-accent-soft text-accent-soft-fg'
-                : 'bg-white/[0.07] text-fg-secondary'
+                : 'bg-tint/[0.07] text-fg-secondary'
             }`}
           >
             {label}
@@ -440,11 +440,11 @@ function TrainerRunner({
           {current.options.map((opt, i) => {
             const isAnswer = i === current.answer
             const isPicked = i === picked
-            let cls = 'border-white/[0.10] hover:border-accent-line'
+            let cls = 'border-tint/[0.10] hover:border-accent-line'
             if (picked !== null) {
               if (isAnswer) cls = 'border-emerald-500 bg-emerald-950/40'
               else if (isPicked) cls = 'border-red-500 bg-red-950/40'
-              else cls = 'border-white/[0.08] opacity-60'
+              else cls = 'border-tint/[0.08] opacity-60'
             }
             // празднуем только собственный верный ответ (см. exercises.tsx)
             const pop = isPicked && isAnswer ? ' animate-answer-pop' : ''

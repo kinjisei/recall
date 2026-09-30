@@ -37,7 +37,7 @@ import { KIND_HINT, homeworkLink } from '../../lib/homeworkLinks'
 function ItemBar({ progress, target }: { progress: number; target: number }) {
   const ratio = target > 0 ? Math.min(progress / target, 1) : 0
   return (
-    <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/[0.08]">
+    <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-tint/[0.08]">
       <div
         style={{ transform: `scaleX(${ratio})` }}
         className="h-full w-full origin-left rounded-full bg-accent transition-transform duration-500 [transition-timing-function:cubic-bezier(.22,1,.36,1)]"
@@ -71,7 +71,7 @@ function Variant({
           className={`mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full text-[11px] ${
             done
               ? 'bg-accent-soft text-accent-soft-fg'
-              : 'border border-white/[0.14]'
+              : 'border border-tint/[0.14]'
           }`}
         >
           {done ? <IconCheck size={12} /> : ''}
@@ -119,7 +119,7 @@ function Variant({
                 <button
                   onClick={() => onDone(item.id)}
                   disabled={busy}
-                  className="inline-flex min-h-[40px] items-center rounded-xl border border-white/[0.14] px-3.5 text-sm text-fg-secondary disabled:opacity-50"
+                  className="inline-flex min-h-[40px] items-center rounded-xl border border-tint/[0.14] px-3.5 text-sm text-fg-secondary disabled:opacity-50"
                 >
                   Отметить, что сделал
                 </button>
@@ -215,7 +215,7 @@ export function StudentHomework({
       </div>
 
       <div className="flex items-center gap-2.5">
-        <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/[0.08]">
+        <div className="h-2 flex-1 overflow-hidden rounded-full bg-tint/[0.08]">
           <div
             style={{ transform: `scaleX(${ratio})` }}
             className="h-full w-full origin-left rounded-full bg-accent transition-transform duration-500 [transition-timing-function:cubic-bezier(.22,1,.36,1)]"
@@ -227,7 +227,7 @@ export function StudentHomework({
       </div>
 
       {hw.note && (
-        <p className="rounded-xl bg-white/[0.04] px-3 py-2 text-sm text-fg-secondary">
+        <p className="rounded-xl bg-tint/[0.04] px-3 py-2 text-sm text-fg-secondary">
           {hw.note}
         </p>
       )}

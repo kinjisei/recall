@@ -214,7 +214,7 @@ export function ReviewScreen({
                         className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors active:scale-[0.97] ${
                           item.ok
                             ? 'bg-emerald-600 text-white'
-                            : 'bg-white/[0.07] text-fg-secondary'
+                            : 'bg-tint/[0.07] text-fg-secondary'
                         }`}
                       >
                         <IconCheck size={16} /> Правильно
@@ -224,14 +224,14 @@ export function ReviewScreen({
                         className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors active:scale-[0.97] ${
                           !item.ok
                             ? 'bg-red-500 text-white'
-                            : 'bg-white/[0.07] text-fg-secondary'
+                            : 'bg-tint/[0.07] text-fg-secondary'
                         }`}
                       >
                         <IconClose size={16} /> Ошибка
                       </button>
                     </div>
                     <textarea
-                      className="min-h-[120px] w-full rounded-lg border border-white/[0.10] bg-input px-3 py-2 text-sm leading-relaxed outline-none focus:border-accent-line"
+                      className="min-h-[120px] w-full rounded-lg border border-tint/[0.10] bg-input px-3 py-2 text-sm leading-relaxed outline-none focus:border-accent-line"
                       placeholder="Комментарий для ученика: что не так и как правильно…"
                       value={item.comment}
                       onChange={(e) => setItem(i, { comment: e.target.value })}
@@ -263,7 +263,7 @@ export function ReviewScreen({
                 <>
                   <p className="text-sm font-semibold">Переназначить материал</p>
                   <textarea
-                    className="min-h-[100px] w-full rounded-lg border border-white/[0.10] bg-input px-3 py-2 text-sm leading-relaxed outline-none focus:border-accent-line"
+                    className="min-h-[100px] w-full rounded-lg border border-tint/[0.10] bg-input px-3 py-2 text-sm leading-relaxed outline-none focus:border-accent-line"
                     placeholder="Комментарий для ученика: на что обратить внимание в этот раз…"
                     value={reassignNote}
                     onChange={(e) => setReassignNote(e.target.value)}

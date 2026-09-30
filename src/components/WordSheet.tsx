@@ -263,7 +263,7 @@ export function WordSheet({
             </h3>
             <button
               onClick={playAudio}
-              className="shrink-0 rounded-full bg-white/[0.08] px-3 py-2"
+              className="shrink-0 rounded-full bg-tint/[0.08] px-3 py-2"
               aria-label="Озвучить"
             >
               <IconSpeaker size={18} />

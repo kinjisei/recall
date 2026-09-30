@@ -103,7 +103,7 @@ function Reference({ groups }: { groups: IrregularGroup[] }) {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Поиск: go, went, идти…"
-        className="rounded-xl border border-white/[0.10] bg-surface px-4 py-2.5"
+        className="rounded-xl border border-tint/[0.10] bg-surface px-4 py-2.5"
       />
 
       {filtered.map((g) => {
@@ -256,7 +256,7 @@ function Trainer({ groups }: { groups: IrregularGroup[] }) {
         value={scope}
         onChange={pickScope}
         label="Группа глаголов"
-        triggerClassName="flex min-h-11 flex-1 items-center justify-between gap-2 rounded-xl border border-white/[0.10] bg-input px-3 text-sm text-fg outline-none focus:border-accent-line"
+        triggerClassName="flex min-h-11 flex-1 items-center justify-between gap-2 rounded-xl border border-tint/[0.10] bg-input px-3 text-sm text-fg outline-none focus:border-accent-line"
         options={[
           { id: 'all', label: 'Все группы' },
           ...(mistakeCount > 0 ? [{ id: 'mistakes', label: `Мои ошибки (${mistakeCount})` }] : []),
@@ -320,7 +320,7 @@ function Trainer({ groups }: { groups: IrregularGroup[] }) {
   const inputCls = (ok: boolean) =>
     `rounded-xl border px-4 py-2.5 ${
       !checked
-        ? 'border-white/[0.10] bg-surface'
+        ? 'border-tint/[0.10] bg-surface'
         : ok
           ? 'border-emerald-500 bg-emerald-950/40'
           : 'border-red-400 bg-red-950/40'

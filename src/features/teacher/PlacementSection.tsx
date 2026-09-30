@@ -84,7 +84,7 @@ export function PlacementSection({
     (rows ?? []).some((r) => r.lang === lang && r.status === 'assigned')
 
   return (
-    <div className="rounded-xl border border-white/[0.08]">
+    <div className="rounded-xl border border-tint/[0.08]">
       <button
         onClick={() => setOpen((v) => !v)}
         className="flex min-h-[44px] w-full items-center justify-between px-3 py-2 text-left text-sm font-medium"
@@ -94,7 +94,7 @@ export function PlacementSection({
       </button>
 
       <Reveal open={open}>
-        <div className="flex flex-col gap-3 border-t border-white/[0.08] px-3 py-3">
+        <div className="flex flex-col gap-3 border-t border-tint/[0.08] px-3 py-3">
           <p className="text-xs leading-relaxed text-fg-muted">
             Назначь тест, если не знаешь уровень {studentName}. Тест появится у
             ученика в «Учёбе», а результат вернётся сюда.
@@ -128,7 +128,7 @@ export function PlacementSection({
               {rows.map((r) => (
                 <li
                   key={r.id}
-                  className="flex items-center justify-between gap-2 rounded-lg bg-white/[0.04] px-3 py-2"
+                  className="flex items-center justify-between gap-2 rounded-lg bg-tint/[0.04] px-3 py-2"
                 >
                   <div className="min-w-0">
                     <p className="text-sm">

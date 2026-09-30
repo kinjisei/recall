@@ -88,7 +88,7 @@ export function WritingReviewScreen({
         </p>
         <p className="mt-1 text-sm font-medium">{task.prompt}</p>
         {task.settings?.chart && (
-          <div className="mt-3 rounded-xl border border-white/[0.08] p-3">
+          <div className="mt-3 rounded-xl border border-tint/[0.08] p-3">
             <ChartView chart={task.settings.chart} />
           </div>
         )}
@@ -122,7 +122,7 @@ export function WritingReviewScreen({
                   key={i}
                   onClick={() => setKept((k) => k.map((v, j) => (j === i ? !v : v)))}
                   className={`flex items-start gap-2 rounded-xl border px-3 py-2 text-left text-sm ${
-                    kept[i] ? 'border-emerald-500/40' : 'border-white/[0.08] opacity-50'
+                    kept[i] ? 'border-emerald-500/40' : 'border-tint/[0.08] opacity-50'
                   }`}
                 >
                   <span className={`mt-0.5 flex-none ${kept[i] ? 'text-emerald-400' : 'text-fg-muted'}`}>
@@ -144,7 +144,7 @@ export function WritingReviewScreen({
             Итоговый {task.mode === 'ielts' ? 'band' : 'уровень'}
           </p>
           <input
-            className="w-28 rounded-lg border border-white/[0.10] bg-input px-3 py-2 outline-none focus:border-accent-line"
+            className="w-28 rounded-lg border border-tint/[0.10] bg-input px-3 py-2 outline-none focus:border-accent-line"
             value={band}
             onChange={(e) => setBand(e.target.value)}
             placeholder={task.mode === 'ielts' ? '6.5' : 'B1'}
@@ -156,7 +156,7 @@ export function WritingReviewScreen({
             Комментарий ученику
           </p>
           <textarea
-            className="min-h-[72px] w-full rounded-lg border border-white/[0.10] bg-input px-3 py-2 outline-none focus:border-accent-line"
+            className="min-h-[72px] w-full rounded-lg border border-tint/[0.10] bg-input px-3 py-2 outline-none focus:border-accent-line"
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             placeholder="Что удалось, над чем поработать…"

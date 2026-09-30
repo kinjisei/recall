@@ -276,7 +276,7 @@ export function DashboardPage() {
       ) : (
         <div
           aria-hidden
-          className="h-[196px] animate-pulse rounded-3xl border border-accent-line bg-white/[0.04]"
+          className="h-[196px] animate-pulse rounded-3xl border border-accent-line bg-tint/[0.04]"
         />
       )}
 
@@ -329,7 +329,7 @@ export function DashboardPage() {
           // скелетоны, пока грузятся входы плана (настройка/задания/квесты)
           <div className="flex flex-col gap-2.5" aria-hidden>
             {[0, 1, 2].map((i) => (
-              <div key={i} className="h-[74px] animate-pulse rounded-2xl bg-white/[0.04]" />
+              <div key={i} className="h-[74px] animate-pulse rounded-2xl bg-tint/[0.04]" />
             ))}
           </div>
         ) : (
@@ -370,7 +370,7 @@ export function DashboardPage() {
       {wordOfDay ? (
         <WordOfDay word={wordOfDay} lang={lang} />
       ) : wordPending ? (
-        <div aria-hidden className="h-[104px] animate-pulse rounded-2xl bg-white/[0.04]" />
+        <div aria-hidden className="h-[104px] animate-pulse rounded-2xl bg-tint/[0.04]" />
       ) : null}
 
       {/* 7. Сданное задание уезжает вниз + блок преподавателя */}
@@ -391,17 +391,17 @@ function HomeSkeleton() {
   return (
     <div className="flex flex-col gap-6" aria-busy="true" aria-label="Загружаем главную">
       <header>
-        <div className="h-7 w-44 animate-pulse rounded-lg bg-white/[0.06]" />
-        <div className="mt-2 h-4 w-60 animate-pulse rounded bg-white/[0.04]" />
+        <div className="h-7 w-44 animate-pulse rounded-lg bg-tint/[0.06]" />
+        <div className="mt-2 h-4 w-60 animate-pulse rounded bg-tint/[0.04]" />
       </header>
-      <div className="h-[196px] animate-pulse rounded-3xl border border-accent-line bg-white/[0.04]" />
-      <div className="h-[86px] animate-pulse rounded-2xl bg-white/[0.04]" />
-      <div className="h-[58px] animate-pulse rounded-2xl border border-accent-line bg-white/[0.04]" />
+      <div className="h-[196px] animate-pulse rounded-3xl border border-accent-line bg-tint/[0.04]" />
+      <div className="h-[86px] animate-pulse rounded-2xl bg-tint/[0.04]" />
+      <div className="h-[58px] animate-pulse rounded-2xl border border-accent-line bg-tint/[0.04]" />
       <section>
-        <div className="mb-3 h-6 w-40 animate-pulse rounded bg-white/[0.06]" />
+        <div className="mb-3 h-6 w-40 animate-pulse rounded bg-tint/[0.06]" />
         <div className="flex flex-col gap-2.5">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-[74px] animate-pulse rounded-2xl bg-white/[0.04]" />
+            <div key={i} className="h-[74px] animate-pulse rounded-2xl bg-tint/[0.04]" />
           ))}
         </div>
       </section>
@@ -468,7 +468,7 @@ function StreakHero({
           <div key={d.day} className="flex flex-1 flex-col items-center gap-1.5">
             <span
               className={`animate-grow-bar h-1.5 w-full rounded-full ${
-                d.active ? 'bg-accent' : 'bg-white/[0.09]'
+                d.active ? 'bg-accent' : 'bg-tint/[0.09]'
               } ${d.isToday && !d.active ? 'ring-1 ring-accent-line' : ''}`}
               // заметный каскад слева направо: пн → вт → ср → …
               style={{ animationDelay: `${0.2 + i * 0.12}s` }}
@@ -520,7 +520,7 @@ function WordOfDay({ word, lang }: { word: PoolItem; lang: 'en' | 'es' }) {
       {/* Вся строка — кнопка: тап открывает окно со словом (стрелка-подсказка) */}
       <button
         onClick={() => setOpen(true)}
-        className="lift animate-fade-up flex w-full items-center gap-3.5 rounded-2xl border border-white/[0.08] bg-surface px-4 py-3.5 text-left"
+        className="lift animate-fade-up flex w-full items-center gap-3.5 rounded-2xl border border-tint/[0.08] bg-surface px-4 py-3.5 text-left"
         style={{ animationDelay: '.45s' }}
       >
         <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-accent-soft text-accent-soft-fg">
@@ -545,7 +545,7 @@ function WordOfDay({ word, lang }: { word: PoolItem; lang: 'en' | 'es' }) {
             onClick={() => setOpen(false)}
           >
             <div
-              className="animate-fade-up w-full rounded-t-3xl border border-white/[0.08] bg-surface p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] sm:max-w-sm sm:rounded-3xl sm:pb-5"
+              className="animate-fade-up w-full rounded-t-3xl border border-tint/[0.08] bg-surface p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] sm:max-w-sm sm:rounded-3xl sm:pb-5"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-start justify-between">
@@ -563,7 +563,7 @@ function WordOfDay({ word, lang }: { word: PoolItem; lang: 'en' | 'es' }) {
               <p className="mt-1 text-2xl font-semibold">{word.term}</p>
               <p className="text-fg-secondary">{word.translation}</p>
               {word.example && (
-                <p className="mt-3 rounded-xl bg-white/[0.04] px-3 py-2 text-sm italic leading-relaxed text-fg-secondary">
+                <p className="mt-3 rounded-xl bg-tint/[0.04] px-3 py-2 text-sm italic leading-relaxed text-fg-secondary">
                   {word.example}
                 </p>
               )}

@@ -244,7 +244,7 @@ function QuestChat({ quest, onBack }: { quest: GrammarQuest; onBack: () => void 
             верных: {progress} / {quest.target}
           </span>
         </div>
-        <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.07]">
+        <div className="h-1.5 overflow-hidden rounded-full bg-tint/[0.07]">
           <div
             className="h-full origin-left rounded-full bg-accent transition-transform duration-300"
             style={{ transform: `scaleX(${Math.min(progress / quest.target, 1)})` }}
@@ -266,14 +266,14 @@ function QuestChat({ quest, onBack }: { quest: GrammarQuest; onBack: () => void 
               className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-[15px] leading-relaxed ${
                 m.role === 'user'
                   ? 'self-end rounded-br-md border border-accent-line bg-[rgba(145,132,217,.18)]'
-                  : 'self-start rounded-bl-md border border-white/[0.08] bg-surface'
+                  : 'self-start rounded-bl-md border border-tint/[0.08] bg-surface'
               }`}
             >
               {m.role === 'assistant' ? <QuestText content={m.content} /> : m.content}
             </div>
           ))}
         {busy && (
-          <div className="self-start rounded-2xl rounded-bl-md border border-white/[0.08] bg-surface px-4 py-2.5 text-fg-muted">
+          <div className="self-start rounded-2xl rounded-bl-md border border-tint/[0.08] bg-surface px-4 py-2.5 text-fg-muted">
             <Thinking label="печатает" />
           </div>
         )}
@@ -293,7 +293,7 @@ function QuestChat({ quest, onBack }: { quest: GrammarQuest; onBack: () => void 
           над навигацией каркаса — положение считает useChatList */}
       {!completed && (
         <div
-          className="fixed inset-x-0 z-30 mx-auto max-w-screen-sm border-t border-white/[0.06] bg-page px-4 pb-2 pt-2"
+          className="fixed inset-x-0 z-30 mx-auto max-w-screen-sm border-t border-tint/[0.06] bg-page px-4 pb-2 pt-2"
           style={barStyle}
         >
           <form onSubmit={send} className="flex items-center gap-2.5">

@@ -59,7 +59,7 @@ export function RoundResult({
       {review && review.length > 0 && lang && (
         <button
           onClick={() => setShowReview(true)}
-          className="lift w-full rounded-xl border border-white/[0.12] py-2.5 text-sm font-medium text-fg-secondary"
+          className="lift w-full rounded-xl border border-tint/[0.12] py-2.5 text-sm font-medium text-fg-secondary"
         >
           Посмотреть результаты
         </button>

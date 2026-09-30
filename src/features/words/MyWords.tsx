@@ -157,7 +157,7 @@ export function MyWords({ lang, onBack }: { lang: AppLang; onBack: () => void })
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Найти слово или перевод…"
-          className="h-11 w-full rounded-xl border border-white/[0.10] bg-input pl-10 pr-3 text-sm outline-none focus:border-accent-line"
+          className="h-11 w-full rounded-xl border border-tint/[0.10] bg-input pl-10 pr-3 text-sm outline-none focus:border-accent-line"
         />
       </div>
 
@@ -170,7 +170,7 @@ export function MyWords({ lang, onBack }: { lang: AppLang; onBack: () => void })
             className={`shrink-0 min-h-[44px] rounded-full px-4 text-xs font-medium transition-colors ${
               filter === f.id
                 ? 'bg-accent-soft text-accent-soft-fg'
-                : 'bg-white/[0.06] text-fg-muted'
+                : 'bg-tint/[0.06] text-fg-muted'
             }`}
           >
             {f.label}
@@ -183,7 +183,7 @@ export function MyWords({ lang, onBack }: { lang: AppLang; onBack: () => void })
         // скелетоны в высоту строк (как в «Учёбе»/на Главной), а не голый текст
         <div className="flex flex-col gap-2" aria-hidden>
           {[0, 1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-[64px] animate-pulse rounded-2xl bg-white/[0.04]" />
+            <div key={i} className="h-[64px] animate-pulse rounded-2xl bg-tint/[0.04]" />
           ))}
         </div>
       ) : shown.length === 0 ? (
@@ -277,7 +277,7 @@ function WordCardSheet({
             <button
               onClick={() => speak(card.front, { lang })}
               aria-label="Озвучить"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/[0.08]"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-tint/[0.08]"
             >
               <IconSpeaker size={18} />
             </button>
@@ -307,7 +307,7 @@ function WordCardSheet({
           )}
 
           {card.example && (
-            <p className="mt-3 rounded-lg bg-white/[0.06] px-3 py-2 text-sm italic leading-relaxed text-fg-muted">
+            <p className="mt-3 rounded-lg bg-tint/[0.06] px-3 py-2 text-sm italic leading-relaxed text-fg-muted">
               «{card.example}»
             </p>
           )}
@@ -366,7 +366,7 @@ function WordRow({
 
   const chip = STATUS_CHIP[status]
   const inputCls =
-    'w-full rounded-lg border border-white/[0.10] bg-input px-3 py-2 text-sm outline-none focus:border-accent-line'
+    'w-full rounded-lg border border-tint/[0.10] bg-input px-3 py-2 text-sm outline-none focus:border-accent-line'
 
   if (editing) {
     return (
@@ -407,7 +407,7 @@ function WordRow({
           <button
             onClick={onCancelDelete}
             aria-label="Отмена"
-            className="rounded-lg border border-white/[0.10] px-2 py-1.5 text-fg-secondary"
+            className="rounded-lg border border-tint/[0.10] px-2 py-1.5 text-fg-secondary"
           >
             <IconClose size={16} />
           </button>
@@ -417,7 +417,7 @@ function WordRow({
   }
 
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-white/[0.08] bg-surface px-4 py-3">
+    <div className="flex items-center gap-3 rounded-2xl border border-tint/[0.08] bg-surface px-4 py-3">
       {/* Тап по строке — карточка со ВСЕМ содержимым: в строке слово и перевод
           обрезаны, а пример не виден вовсе, и на телефоне длинный перевод было
           не прочитать (жалоба владельца 24.07). */}

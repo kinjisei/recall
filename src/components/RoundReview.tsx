@@ -78,7 +78,7 @@ export function RoundReview({
                     </p>
                     {!it.ok &&
                       (why[i] ? (
-                        <p className="mt-1 rounded-lg bg-white/[0.04] px-2.5 py-1.5 text-sm leading-relaxed text-fg-secondary">
+                        <p className="mt-1 rounded-lg bg-tint/[0.04] px-2.5 py-1.5 text-sm leading-relaxed text-fg-secondary">
                           {why[i]}
                         </p>
                       ) : loading[i] ? (

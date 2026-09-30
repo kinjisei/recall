@@ -189,7 +189,7 @@ function SetList({
             {s === 'packs' ? 'Готовые наборы' : 'Мои наборы'}
           </button>
         ))}
-        <span className="mx-1 w-px self-stretch bg-white/[0.10]" aria-hidden />
+        <span className="mx-1 w-px self-stretch bg-tint/[0.10]" aria-hidden />
         {(['en', 'es'] as const).map((l) => (
           <button key={l} onClick={() => setLang(l)} className={chip(lang === l)}>
             {l === 'en' ? 'EN' : 'ES'}
@@ -223,7 +223,7 @@ function SetList({
               <button
                 key={d.id}
                 onClick={() => onChoose({ kind: 'deck', id: d.id, title: d.title })}
-                className="lift rounded-xl border border-white/[0.08] px-3 py-2.5 text-left text-sm"
+                className="lift rounded-xl border border-tint/[0.08] px-3 py-2.5 text-left text-sm"
               >
                 {d.title}
               </button>
@@ -253,7 +253,7 @@ function SetList({
                       <div key={key}>
                         <button
                           onClick={() => setOpen(isOpen ? null : key)}
-                          className="flex min-h-[44px] w-full items-center justify-between rounded-lg bg-white/[0.06] px-3 text-left text-sm"
+                          className="flex min-h-[44px] w-full items-center justify-between rounded-lg bg-tint/[0.06] px-3 text-left text-sm"
                           aria-expanded={isOpen}
                         >
                           <span className="font-medium">
@@ -276,7 +276,7 @@ function SetList({
                                 onClick={() =>
                                   onChoose({ kind: 'topic', id: t.id, title: t.name })
                                 }
-                                className="lift rounded-xl border border-white/[0.08] px-3 py-2 text-left text-sm"
+                                className="lift rounded-xl border border-tint/[0.08] px-3 py-2 text-left text-sm"
                               >
                                 {t.name}
                               </button>
@@ -452,7 +452,7 @@ function WordList({
                       // Не прячем такие слова: учитель должен видеть, что ученик
                       // уже знает из этой темы, а не гадать, почему из ста слов
                       // показано шестьдесят.
-                      <span className="flex-none rounded-full bg-white/[0.07] px-2 py-0.5 text-[11px] text-fg-muted">
+                      <span className="flex-none rounded-full bg-tint/[0.07] px-2 py-0.5 text-[11px] text-fg-muted">
                         уже учит · {has}
                       </span>
                     )}
@@ -467,7 +467,7 @@ function WordList({
         )}
       </div>
 
-      <div className="flex-none border-t border-white/[0.08] px-5 py-3">
+      <div className="flex-none border-t border-tint/[0.08] px-5 py-3">
         <Button className="w-full" loading={busy} disabled={selected === 0} onClick={assign}>
           {selected === 0 ? 'Ничего не выбрано' : `Выдать ${selected} слов`}
         </Button>
@@ -485,6 +485,6 @@ function chip(active: boolean): string {
   return `min-h-[44px] rounded-xl px-3.5 text-sm font-medium transition-colors ${
     active
       ? 'bg-accent-soft text-accent-soft-fg'
-      : 'bg-white/[0.06] text-fg-muted'
+      : 'bg-tint/[0.06] text-fg-muted'
   }`
 }

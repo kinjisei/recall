@@ -420,9 +420,9 @@ export function PracticePage() {
             key={g.id}
             onClick={() => setGroup(g.id)}
             style={{ viewTransitionName: `pg-${g.id}` }}
-            className="lift relative flex flex-col items-center gap-1.5 rounded-2xl border border-white/[0.08] bg-surface px-2 py-3 text-center"
+            className="lift relative flex flex-col items-center gap-1.5 rounded-2xl border border-tint/[0.08] bg-surface px-2 py-3 text-center"
           >
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.06] text-fg-secondary">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-tint/[0.06] text-fg-secondary">
               <g.Icon size={20} />
             </span>
             <span className="text-[13px] font-medium leading-tight">{g.title}</span>

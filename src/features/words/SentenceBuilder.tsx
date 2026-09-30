@@ -178,7 +178,7 @@ function BuildTask({
 
       <div
         className={`min-h-[48px] rounded-lg border-2 border-dashed p-2 ${
-          checked ? (ok ? 'border-emerald-500' : 'border-red-500') : 'border-white/[0.10]'
+          checked ? (ok ? 'border-emerald-500' : 'border-red-500') : 'border-tint/[0.10]'
         }`}
       >
         <div className="flex flex-wrap gap-2">
@@ -206,8 +206,8 @@ function BuildTask({
             disabled={checked || used.has(item.i)}
             className={`rounded-lg border px-3 py-1.5 text-sm ${
               used.has(item.i)
-                ? 'border-white/[0.08] text-fg-faint'
-                : 'border-white/[0.10]'
+                ? 'border-tint/[0.08] text-fg-faint'
+                : 'border-tint/[0.10]'
             }`}
           >
             {item.w}
@@ -243,7 +243,7 @@ function BuildTask({
           )}
           <button
             onClick={() => speak(task.target, { lang })}
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-white/[0.08] text-fg-secondary"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-tint/[0.08] text-fg-secondary"
             aria-label="Озвучить"
           >
             <IconSpeaker size={18} />

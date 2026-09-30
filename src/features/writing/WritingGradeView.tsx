@@ -166,7 +166,7 @@ export function WritingGradeView({ grade, mode }: { grade: WritingGrade; mode: W
         <Section title="Повторить">
           <div className="flex flex-wrap gap-1.5">
             {[...(grade.topics ?? []), ...(grade.words ?? [])].map((t, i) => (
-              <span key={i} className="rounded-full bg-white/[0.06] px-2.5 py-1 text-xs text-fg-secondary">
+              <span key={i} className="rounded-full bg-tint/[0.06] px-2.5 py-1 text-xs text-fg-secondary">
                 {t}
               </span>
             ))}
@@ -178,7 +178,7 @@ export function WritingGradeView({ grade, mode }: { grade: WritingGrade; mode: W
         <Section title="Как сказать лучше">
           <div className="flex flex-col gap-1.5">
             {grade.rewrites.map((r, i) => (
-              <div key={i} className="rounded-xl bg-white/[0.04] px-3 py-2 text-sm">
+              <div key={i} className="rounded-xl bg-tint/[0.04] px-3 py-2 text-sm">
                 <p className="text-fg-muted">{r.was}</p>
                 <p className="text-emerald-300">→ {r.better}</p>
               </div>
@@ -194,7 +194,7 @@ function Chip({ label, ok }: { label: string; ok: boolean }) {
   return (
     <span
       className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs ${
-        ok ? 'bg-emerald-500/15 text-emerald-300' : 'bg-white/[0.06] text-fg-muted'
+        ok ? 'bg-emerald-500/15 text-emerald-300' : 'bg-tint/[0.06] text-fg-muted'
       }`}
     >
       {ok ? <IconCheck size={12} /> : <IconClose size={12} />}

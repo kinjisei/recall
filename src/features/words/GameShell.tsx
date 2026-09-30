@@ -180,12 +180,12 @@ export function QuizRunner({
             const isPicked = picked === i
             const cls =
               picked === null
-                ? 'border-white/[0.10] active:scale-[0.98]'
+                ? 'border-tint/[0.10] active:scale-[0.98]'
                 : isAnswer
                   ? 'border-emerald-500 bg-emerald-500/15 text-emerald-300'
                   : isPicked
                     ? 'border-red-500 bg-red-500/15 text-red-300'
-                    : 'border-white/[0.08] opacity-60'
+                    : 'border-tint/[0.08] opacity-60'
             // празднуем только собственный верный ответ (см. exercises.tsx)
             const pop = isPicked && isAnswer ? ' animate-answer-pop' : ''
             return (

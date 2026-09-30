@@ -88,7 +88,7 @@ export function RequestForm({
     `rounded-lg px-3 py-1.5 text-sm font-semibold ${
       active
         ? 'bg-accent-soft text-accent-soft-fg'
-        : 'bg-white/[0.07] text-fg-secondary'
+        : 'bg-tint/[0.07] text-fg-secondary'
     }`
 
   return (

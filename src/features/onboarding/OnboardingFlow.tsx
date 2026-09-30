@@ -86,7 +86,7 @@ export function OnboardingFlow() {
           <span
             key={i}
             className={`h-1 flex-1 rounded-full transition-colors duration-300 ${
-              i <= step ? 'bg-accent' : 'bg-white/[0.09]'
+              i <= step ? 'bg-accent' : 'bg-tint/[0.09]'
             }`}
           />
         ))}
@@ -147,7 +147,7 @@ function StepLanguage({ onPick }: { onPick: (l: AppLang) => void }) {
           <button
             key={o.id}
             onClick={() => onPick(o.id)}
-            className="lift animate-fade-up flex aspect-square flex-col items-center justify-center gap-3 rounded-3xl border border-white/[0.08] bg-surface"
+            className="lift animate-fade-up flex aspect-square flex-col items-center justify-center gap-3 rounded-3xl border border-tint/[0.08] bg-surface"
             style={{ animationDelay: `${0.05 + i * 0.08}s` }}
           >
             <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-accent-soft text-2xl font-medium text-accent-soft-fg">
@@ -203,7 +203,7 @@ function StepLevel({
               className={`min-h-11 rounded-full px-3.5 text-sm transition-colors ${
                 goal === g
                   ? 'bg-accent-soft text-accent-soft-fg'
-                  : 'bg-white/[0.06] text-fg-secondary'
+                  : 'bg-tint/[0.06] text-fg-secondary'
               }`}
             >
               {GOAL_LABELS[g]}
@@ -237,7 +237,7 @@ function StepLevel({
                 className={`lift animate-fade-up rounded-2xl border px-4 py-4 text-left ${
                   level === l
                     ? 'border-accent-line bg-[rgba(145,132,217,.16)]'
-                    : 'border-white/[0.08] bg-surface'
+                    : 'border-tint/[0.08] bg-surface'
                 }`}
                 style={{ animationDelay: `${0.05 + i * 0.06}s` }}
               >
@@ -275,7 +275,7 @@ function StepLevel({
         </Button>
         <button
           onClick={onSkip}
-          className="h-13 rounded-2xl border border-white/[0.12] py-3.5 font-medium text-fg-secondary transition-[filter,transform] active:scale-[0.98]"
+          className="h-13 rounded-2xl border border-tint/[0.12] py-3.5 font-medium text-fg-secondary transition-[filter,transform] active:scale-[0.98]"
         >
           Не знаю свой уровень
         </button>
@@ -346,7 +346,7 @@ function StepReady({
         {PLAN.map((p, i) => (
           <div
             key={p.title}
-            className="animate-fade-up flex items-center gap-3.5 rounded-2xl border border-white/[0.08] bg-surface px-4 py-3.5"
+            className="animate-fade-up flex items-center gap-3.5 rounded-2xl border border-tint/[0.08] bg-surface px-4 py-3.5"
             style={{ animationDelay: `${0.1 + i * 0.09}s` }}
           >
             <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-accent-soft text-accent-soft-fg">
@@ -377,7 +377,7 @@ function StepReady({
               className={`min-h-11 rounded-xl border px-3.5 py-2 text-sm ${
                 heard === h
                   ? 'border-accent-line bg-[rgba(145,132,217,.16)]'
-                  : 'border-white/[0.08] bg-surface text-fg-secondary'
+                  : 'border-tint/[0.08] bg-surface text-fg-secondary'
               }`}
             >
               {h}
@@ -394,7 +394,7 @@ function StepReady({
             </Button>
             <button
               onClick={() => setShowCode(true)}
-              className="rounded-2xl border border-white/[0.12] py-3.5 font-medium text-fg-secondary transition-[filter,transform] active:scale-[0.98]"
+              className="rounded-2xl border border-tint/[0.12] py-3.5 font-medium text-fg-secondary transition-[filter,transform] active:scale-[0.98]"
             >
               У меня есть преподаватель
             </button>
@@ -406,7 +406,7 @@ function StepReady({
               onChange={(e) => setCode(e.target.value)}
               placeholder="Код от преподавателя"
               autoFocus
-              className="h-12 rounded-2xl border border-white/[0.12] bg-input px-4 text-center text-lg tracking-widest outline-none focus:border-accent-line"
+              className="h-12 rounded-2xl border border-tint/[0.12] bg-input px-4 text-center text-lg tracking-widest outline-none focus:border-accent-line"
             />
             {joinError && <p className="text-sm text-red-400">{joinError}</p>}
             <Button type="submit" disabled={!code.trim() || joining} className={`py-4 ${ONBOARDING_CTA}`}>

@@ -106,12 +106,12 @@ export function TeachersPage() {
   return (
     <main className="min-h-[100dvh] bg-page text-fg">
       {/* шапка: логотип + вход */}
-      <header className="sticky top-0 z-20 border-b border-white/[0.06] bg-[rgba(22,24,38,.85)] pt-[env(safe-area-inset-top)] backdrop-blur-xl">
+      <header className="sticky top-0 z-20 border-b border-tint/[0.06] bg-[rgba(22,24,38,.85)] pt-[env(safe-area-inset-top)] backdrop-blur-xl">
         <div className="mx-auto flex max-w-screen-md items-center justify-between px-5 py-3">
           <BrandLogo width={92} />
           <AppLink
             to="/login?role=teacher"
-            className="flex min-h-[40px] items-center rounded-full border border-white/[0.12] px-4 text-sm text-fg-secondary"
+            className="flex min-h-[40px] items-center rounded-full border border-tint/[0.12] px-4 text-sm text-fg-secondary"
           >
             Войти
           </AppLink>
@@ -136,7 +136,7 @@ export function TeachersPage() {
           <CTA />
 
           {/* signature: живой мини-отчёт — артефакт, которого нет у конкурентов */}
-          <div className="mt-4 w-full max-w-sm rounded-2xl border border-white/[0.10] bg-white p-4 text-left text-black shadow-[0_18px_60px_rgba(0,0,0,.45)]">
+          <div className="mt-4 w-full max-w-sm rounded-2xl border border-tint/[0.10] bg-white p-4 text-left text-black shadow-[0_18px_60px_rgba(0,0,0,.45)]">
             <p className="text-[10px] uppercase tracking-widest text-neutral-500">
               Отчёт о занятиях · за месяц
             </p>
@@ -162,7 +162,7 @@ export function TeachersPage() {
         </section>
 
         {/* ---- Как это работает ---- */}
-        <section className="border-t border-white/[0.06] py-10">
+        <section className="border-t border-tint/[0.06] py-10">
           <h2 className="text-center text-xl font-semibold">Как это работает</h2>
           <div className="mt-6 flex flex-col gap-3">
             {[
@@ -170,7 +170,7 @@ export function TeachersPage() {
               ['Назначай и проверяй', 'Материалы, наборы слов, квесты и программа — из карточки ученика. Проверка приходит с готовым AI-разбором.'],
               ['Смотри, что было между уроками', 'Диагностика собирается из занятий сама. Раз в месяц — отчёт родителям на печать.'],
             ].map(([t, d], i) => (
-              <div key={t} className="flex gap-3 rounded-2xl border border-white/[0.08] bg-surface p-4">
+              <div key={t} className="flex gap-3 rounded-2xl border border-tint/[0.08] bg-surface p-4">
                 <span className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-accent-soft text-sm font-bold text-accent-soft-fg">
                   {i + 1}
                 </span>
@@ -184,11 +184,11 @@ export function TeachersPage() {
         </section>
 
         {/* ---- Инструменты ---- */}
-        <section className="border-t border-white/[0.06] py-10">
+        <section className="border-t border-tint/[0.06] py-10">
           <h2 className="text-center text-xl font-semibold">Что внутри</h2>
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
             {TOOLS.map(({ Icon, title, desc }) => (
-              <div key={title} className="rounded-2xl border border-white/[0.08] bg-surface p-4">
+              <div key={title} className="rounded-2xl border border-tint/[0.08] bg-surface p-4">
                 <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-soft text-accent-soft-fg">
                   <Icon size={18} />
                 </span>
@@ -200,7 +200,7 @@ export function TeachersPage() {
         </section>
 
         {/* ---- Между уроками ---- */}
-        <section className="border-t border-white/[0.06] py-10">
+        <section className="border-t border-tint/[0.06] py-10">
           <div className="rounded-2xl border border-accent-line-soft bg-[rgba(145,132,217,.07)] p-5">
             <h2 className="flex items-center gap-2 text-lg font-semibold">
               <IconCards size={20} className="text-accent-strong" />
@@ -219,7 +219,7 @@ export function TeachersPage() {
         </section>
 
         {/* ---- Цены ---- */}
-        <section className="border-t border-white/[0.06] py-10">
+        <section className="border-t border-tint/[0.06] py-10">
           <h2 className="text-center text-xl font-semibold">Цена — меньше часа твоей работы</h2>
           <p className="mx-auto mt-1 max-w-md text-center text-sm text-fg-muted">
             Средняя ставка репетитора — 5 000 ₸/час. Recall стоит от 3 900 ₸ в месяц,
@@ -232,7 +232,7 @@ export function TeachersPage() {
                 className={`rounded-2xl border p-4 text-center ${
                   p.hot
                     ? 'border-accent-line bg-[rgba(145,132,217,.10)]'
-                    : 'border-white/[0.08] bg-surface'
+                    : 'border-tint/[0.08] bg-surface'
                 }`}
               >
                 {/* ⚠️ Здесь стояло «Выбор большинства» — а большинства ещё нет:
@@ -274,11 +274,11 @@ export function TeachersPage() {
         </section>
 
         {/* ---- FAQ ---- */}
-        <section className="border-t border-white/[0.06] py-10">
+        <section className="border-t border-tint/[0.06] py-10">
           <h2 className="text-center text-xl font-semibold">Частые вопросы</h2>
           <div className="mt-6 flex flex-col gap-3">
             {FAQ.map((f) => (
-              <div key={f.q} className="rounded-2xl border border-white/[0.08] bg-surface p-4">
+              <div key={f.q} className="rounded-2xl border border-tint/[0.08] bg-surface p-4">
                 <p className="font-medium">{f.q}</p>
                 <p className="mt-1 text-sm leading-relaxed text-fg-tertiary">{f.a}</p>
               </div>
@@ -287,7 +287,7 @@ export function TeachersPage() {
         </section>
 
         {/* ---- Финал ---- */}
-        <section className="border-t border-white/[0.06] py-12 text-center">
+        <section className="border-t border-tint/[0.06] py-12 text-center">
           <h2 className="text-xl font-semibold">14 дней — достаточно, чтобы понять</h2>
           <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-fg-tertiary">
             Подключи одного реального ученика, назначь ему материал и посмотри на диагностику

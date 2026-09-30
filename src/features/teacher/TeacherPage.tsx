@@ -299,7 +299,7 @@ function TeacherDashboard() {
             className={`min-h-11 rounded-lg px-4 py-2 text-sm font-semibold ${
               tab === id
                 ? 'bg-accent-soft text-accent-soft-fg'
-                : 'bg-white/[0.07] text-fg-secondary'
+                : 'bg-tint/[0.07] text-fg-secondary'
             }`}
           >
             {label}
@@ -338,7 +338,7 @@ function TeacherDashboard() {
               Код-приглашение — ученик вводит его у себя на Главной:
             </p>
             <div className="mt-2 flex items-center gap-3">
-              <span className="rounded-xl bg-white/[0.08] px-4 py-2 font-mono text-2xl font-bold tracking-widest">
+              <span className="rounded-xl bg-tint/[0.08] px-4 py-2 font-mono text-2xl font-bold tracking-widest">
                 {code ?? '……'}
               </span>
               <Button variant="secondary" className="px-3 py-2 text-sm" onClick={copyCode}>
@@ -369,7 +369,7 @@ function TeacherDashboard() {
                 Показываем только когда учеников нет — с ними выключение всё
                 равно откажет, и кнопка-обманка была бы хуже её отсутствия. */}
             {students.length === 0 && (
-              <div className="mt-3 border-t border-white/[0.06] pt-3">
+              <div className="mt-3 border-t border-tint/[0.06] pt-3">
                 <Button
                   variant="ghost"
                   className="min-h-[44px] px-3 py-2 text-sm text-fg-muted"
@@ -732,7 +732,7 @@ function StudentCard({
               <button
                 onClick={() => setSection(section === s.id ? null : s.id)}
                 aria-expanded={section === s.id}
-                className="flex min-h-11 w-full items-center justify-between gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3.5 text-left text-sm"
+                className="flex min-h-11 w-full items-center justify-between gap-2 rounded-xl border border-tint/[0.08] bg-tint/[0.03] px-3.5 text-left text-sm"
               >
                 <span>{s.title}</span>
                 <span className="text-fg-muted">{section === s.id ? '▾' : '▸'}</span>
@@ -764,7 +764,7 @@ function StudentCard({
 
       {error && <p className="text-sm text-red-500">{error}</p>}
 
-      <div className="mt-1 flex flex-wrap items-center gap-2 border-t border-white/[0.06] pt-3">
+      <div className="mt-1 flex flex-wrap items-center gap-2 border-t border-tint/[0.06] pt-3">
         {seatsKnown && (
           <Button
             variant="ghost"
@@ -848,7 +848,7 @@ function Seats({ plan, used }: { plan: MyPlan | null; used: number }) {
 
   if (total === null) {
     return (
-      <div className="mt-3 border-t border-white/[0.06] pt-3">
+      <div className="mt-3 border-t border-tint/[0.06] pt-3">
         <p className="text-xs text-fg-muted">
           Учеников: <span className="text-fg-secondary">{used}</span> · приглашать
           можно сколько нужно
@@ -868,7 +868,7 @@ function Seats({ plan, used }: { plan: MyPlan | null; used: number }) {
   const full = used >= total
   const onTrialSeats = typeof plan.free_seats === 'number' && total === plan.free_seats
   return (
-    <div className="mt-3 border-t border-white/[0.06] pt-3">
+    <div className="mt-3 border-t border-tint/[0.06] pt-3">
       <p className="text-xs text-fg-muted">
         Занято мест: <span className="text-fg-secondary">{used} из {total}</span>
       </p>
@@ -894,7 +894,7 @@ function StudioEnergy({ plan }: { plan: MyPlan }) {
   const genLim = plan.gen_limit ?? 0
   const genUsed = plan.gen_used ?? 0
   const bar = (used: number, cap: number) => (
-    <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-white/[0.07]">
+    <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-tint/[0.07]">
       <div
         className="h-full rounded-full bg-accent transition-[width] duration-500"
         style={{ width: `${cap ? Math.min(100, (used / cap) * 100) : 0}%` }}

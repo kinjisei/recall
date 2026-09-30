@@ -192,7 +192,7 @@ function MatchRound({
           {wrongItems.length > 0 && (
             <button
               onClick={() => setShowReview(true)}
-              className="lift mt-4 w-full rounded-xl border border-white/[0.12] py-2.5 text-sm font-medium text-fg-secondary"
+              className="lift mt-4 w-full rounded-xl border border-tint/[0.12] py-2.5 text-sm font-medium text-fg-secondary"
             >
               Посмотреть результаты
             </button>
@@ -251,7 +251,7 @@ function MatchRound({
                     ? doneCls
                     : sel
                       ? 'border-accent-line bg-[rgba(145,132,217,.14)]'
-                      : 'border-white/[0.10]'
+                      : 'border-tint/[0.10]'
                 }`}
               >
                 <span className="break-words">{l.item.term}</span>
@@ -264,7 +264,7 @@ function MatchRound({
                     ? doneCls
                     : isWrong
                       ? 'border-red-500/70 bg-red-500/12'
-                      : 'border-white/[0.10]'
+                      : 'border-tint/[0.10]'
                 }`}
               >
                 <span>{r.meaning}</span>

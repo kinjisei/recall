@@ -191,7 +191,7 @@ function JoinTeacherBlock() {
       ) : (
         <form onSubmit={submit} className="flex gap-2">
           <input
-            className="min-w-0 flex-1 rounded-lg border border-white/[0.10] bg-input px-3 py-2 font-mono text-sm uppercase tracking-widest outline-none focus:border-accent-line"
+            className="min-w-0 flex-1 rounded-lg border border-tint/[0.10] bg-input px-3 py-2 font-mono text-sm uppercase tracking-widest outline-none focus:border-accent-line"
             placeholder="КОД (6 символов)"
             value={code}
             maxLength={6}

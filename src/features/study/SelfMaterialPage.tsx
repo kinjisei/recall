@@ -29,7 +29,7 @@ const LEN_LABEL: Record<(typeof MATERIAL_LENGTHS)[number], string> = {
 }
 
 const inputCls =
-  'w-full rounded-xl border border-white/[0.10] bg-input px-3.5 py-2.5 text-sm outline-none focus:border-accent-line'
+  'w-full rounded-xl border border-tint/[0.10] bg-input px-3.5 py-2.5 text-sm outline-none focus:border-accent-line'
 
 export function SelfMaterialPage() {
   const nav = useNavigate()

@@ -147,7 +147,7 @@ export function ProgressPage() {
 
       {/* График недели */}
       <section
-        className="animate-fade-up rounded-3xl border border-white/[0.08] bg-surface p-5"
+        className="animate-fade-up rounded-3xl border border-tint/[0.08] bg-surface p-5"
         style={{ animationDelay: '.05s' }}
       >
         <div className="flex items-baseline justify-between">
@@ -167,7 +167,7 @@ export function ProgressPage() {
                 <div className="relative w-full flex-1">
                   <div
                     className={`animate-bar-grow absolute bottom-0 w-full rounded-lg ${
-                      d.active ? 'bg-accent' : 'bg-white/[0.07]'
+                      d.active ? 'bg-accent' : 'bg-tint/[0.07]'
                     }`}
                     style={{ height: `${height}%`, animationDelay: `${0.1 + i * 0.06}s` }}
                     title={d.items ? `${d.items} упражнений` : 'нет занятий'}
@@ -223,7 +223,7 @@ export function ProgressPage() {
           блок. */}
       {weak && (weak.struggling.length > 0 || weak.weakTopics.length > 0) && (
         <section
-          className="animate-fade-up flex flex-col gap-4 rounded-3xl border border-white/[0.08] bg-surface p-5"
+          className="animate-fade-up flex flex-col gap-4 rounded-3xl border border-tint/[0.08] bg-surface p-5"
           style={{ animationDelay: '.34s' }}
         >
           <h2 className="text-lg font-medium tracking-tight">Над чем поработать</h2>
@@ -287,7 +287,7 @@ export function ProgressPage() {
 
       <button
         onClick={signOut}
-        className="lift animate-fade-up mt-2 flex items-center justify-center gap-2 rounded-2xl border border-white/[0.08] px-4 py-3.5 text-fg-secondary"
+        className="lift animate-fade-up mt-2 flex items-center justify-center gap-2 rounded-2xl border border-tint/[0.08] px-4 py-3.5 text-fg-secondary"
         style={{ animationDelay: '.36s' }}
       >
         <IconSignOut size={18} />
@@ -312,7 +312,7 @@ function Metric({
 }) {
   return (
     <div
-      className="animate-fade-up flex flex-col gap-2 rounded-2xl border border-white/[0.08] bg-surface p-4"
+      className="animate-fade-up flex flex-col gap-2 rounded-2xl border border-tint/[0.08] bg-surface p-4"
       style={{ animationDelay: delay }}
     >
       <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-soft text-accent-soft-fg">

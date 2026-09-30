@@ -49,7 +49,7 @@ export function PlanView({ weeks, currentWeek }: { weeks: PlanWeek[]; currentWee
             className={`rounded-xl border p-3 ${
               isCurrent
                 ? 'border-accent-line bg-[rgba(145,132,217,.08)]'
-                : 'border-white/[0.08]'
+                : 'border-tint/[0.08]'
             } ${isPast ? 'opacity-60' : ''}`}
           >
             <div className="flex items-baseline justify-between gap-2">
@@ -69,7 +69,7 @@ export function PlanView({ weeks, currentWeek }: { weeks: PlanWeek[]; currentWee
                 const Icon = ITEM_ICON[it.type] ?? IconSparkle
                 return (
                   <li key={j} className="flex gap-2.5">
-                    <span className="mt-0.5 flex h-7 w-7 flex-none items-center justify-center rounded-lg bg-white/[0.06] text-accent-strong">
+                    <span className="mt-0.5 flex h-7 w-7 flex-none items-center justify-center rounded-lg bg-tint/[0.06] text-accent-strong">
                       <Icon size={15} />
                     </span>
                     <div className="min-w-0">

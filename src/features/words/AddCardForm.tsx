@@ -14,7 +14,7 @@ export function AddCardForm({ lang, onAdded }: { lang: AppLang; onAdded: () => v
   const [msg, setMsg] = useState<string | null>(null)
 
   const inputClass =
-    'w-full rounded-lg border border-white/[0.10] bg-input px-3 py-2 text-sm outline-none focus:border-accent-line'
+    'w-full rounded-lg border border-tint/[0.10] bg-input px-3 py-2 text-sm outline-none focus:border-accent-line'
 
   const submit = async () => {
     if (!front.trim()) return

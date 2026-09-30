@@ -193,7 +193,7 @@ export function MaterialDetail({
             return (
               <div
                 key={s.profile.id}
-                className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.08] px-3 py-2"
+                className="flex items-center justify-between gap-2 rounded-xl border border-tint/[0.08] px-3 py-2"
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium">{name}</p>

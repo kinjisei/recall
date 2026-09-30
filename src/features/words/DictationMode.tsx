@@ -160,7 +160,7 @@ export function DictationMode({ lang, onBack }: { lang: AppLang; onBack: () => v
       className={`min-h-11 rounded-full px-4 text-sm font-medium transition-colors ${
         src === id
           ? 'bg-accent-soft text-accent-soft-fg'
-          : 'bg-white/[0.06] text-fg-muted'
+          : 'bg-tint/[0.06] text-fg-muted'
       }`}
     >
       {label}
@@ -208,7 +208,7 @@ export function DictationMode({ lang, onBack }: { lang: AppLang; onBack: () => v
               aria-label="Услышанное слово"
               className={`w-full rounded-lg border bg-input px-3 py-2 outline-none ${
                 checked === null
-                  ? 'border-white/[0.10] focus:border-accent-line'
+                  ? 'border-tint/[0.10] focus:border-accent-line'
                   : checked
                     ? 'border-emerald-500'
                     : 'border-red-500'

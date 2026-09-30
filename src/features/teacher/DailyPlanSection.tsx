@@ -67,7 +67,7 @@ export function DailyPlanSection({ studentId }: { studentId: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-white/[0.08] p-3">
+    <div className="flex flex-col gap-3 rounded-xl border border-tint/[0.08] p-3">
       <p className="text-xs text-fg-muted">
         Что ученик делает каждый день. «Слова» включены всегда — это ядро
         повторений. Выполнила весь план — получает «идеальный день» ✦ (виден в
@@ -75,14 +75,14 @@ export function DailyPlanSection({ studentId }: { studentId: string }) {
         одного занятия, как раньше.
       </p>
 
-      <label className="flex min-h-[44px] items-center gap-2.5 rounded-lg bg-white/[0.04] px-3 text-sm text-fg-muted">
+      <label className="flex min-h-[44px] items-center gap-2.5 rounded-lg bg-tint/[0.04] px-3 text-sm text-fg-muted">
         <input type="checkbox" checked disabled className="h-4 w-4 accent-accent" />
         Слова (повторение) — всегда в плане
       </label>
       {KIND_LABELS.map(({ kind, label }) => (
         <label
           key={kind}
-          className="flex min-h-[44px] cursor-pointer items-center gap-2.5 rounded-lg px-3 text-sm hover:bg-white/[0.04]"
+          className="flex min-h-[44px] cursor-pointer items-center gap-2.5 rounded-lg px-3 text-sm hover:bg-tint/[0.04]"
         >
           <input
             type="checkbox"
@@ -93,7 +93,7 @@ export function DailyPlanSection({ studentId }: { studentId: string }) {
           {label}
         </label>
       ))}
-      <label className="flex min-h-[44px] cursor-pointer items-center gap-2.5 rounded-lg border-t border-white/[0.06] px-3 pt-2 text-sm hover:bg-white/[0.04]">
+      <label className="flex min-h-[44px] cursor-pointer items-center gap-2.5 rounded-lg border-t border-tint/[0.06] px-3 pt-2 text-sm hover:bg-tint/[0.04]">
         <input
           type="checkbox"
           checked={auto}

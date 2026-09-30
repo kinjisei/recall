@@ -83,7 +83,7 @@ export function AnalyzedItemsView({
                 return (
                   <div
                     key={key}
-                    className="flex items-center gap-2 rounded-xl border border-white/[0.08] px-3 py-2"
+                    className="flex items-center gap-2 rounded-xl border border-tint/[0.08] px-3 py-2"
                   >
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-[15px] font-medium">{it.base}</p>
@@ -92,7 +92,7 @@ export function AnalyzedItemsView({
                     <button
                       onClick={() => speak(it.base, { lang })}
                       aria-label="Озвучить"
-                      className="lift flex h-9 w-9 flex-none items-center justify-center rounded-full border border-white/[0.08] text-fg-secondary"
+                      className="lift flex h-9 w-9 flex-none items-center justify-center rounded-full border border-tint/[0.08] text-fg-secondary"
                     >
                       <IconSpeaker size={16} />
                     </button>
@@ -126,7 +126,7 @@ export function AnalyzedItemsView({
             </p>
             <div className="mt-1.5 flex flex-col gap-1.5">
               {gr.map((it, i) => (
-                <div key={`${it.base}-${i}`} className="rounded-xl border border-white/[0.08] px-3 py-2">
+                <div key={`${it.base}-${i}`} className="rounded-xl border border-tint/[0.08] px-3 py-2">
                   <p className="text-[15px] font-medium">{it.base}</p>
                   <p className="mt-0.5 text-sm text-fg-muted">{it.ru}</p>
                   {it.topicId !== undefined && (

@@ -191,7 +191,7 @@ export function StudentWordsSection({
               return (
                 <label
                   key={w.card.id}
-                  className="flex cursor-pointer items-center gap-2 rounded-lg border border-white/[0.08] px-2.5 py-1.5"
+                  className="flex cursor-pointer items-center gap-2 rounded-lg border border-tint/[0.08] px-2.5 py-1.5"
                 >
                   <input
                     type="checkbox"

@@ -369,14 +369,14 @@ function ChatSection({
             className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-[15px] leading-relaxed ${
               m.role === 'user'
                 ? 'self-end rounded-br-md border border-accent-line bg-[rgba(145,132,217,.18)] text-fg'
-                : 'self-start rounded-bl-md border border-white/[0.08] bg-surface text-fg'
+                : 'self-start rounded-bl-md border border-tint/[0.08] bg-surface text-fg'
             }`}
           >
             {m.role === 'assistant' ? <AssistantText content={m.content} /> : m.content}
           </div>
         ))}
         {busy && !streaming && (
-          <div className="self-start rounded-2xl rounded-bl-md border border-white/[0.08] bg-surface px-4 py-2.5 text-fg-muted">
+          <div className="self-start rounded-2xl rounded-bl-md border border-tint/[0.08] bg-surface px-4 py-2.5 text-fg-muted">
             <Thinking label="печатает" />
           </div>
         )}
@@ -399,7 +399,7 @@ function ChatSection({
           даёт её высоту kb) — поднимаем панель над ней; иначе — над навигацией
           каркаса (положение считает useChatList). Заголовок не уезжает. */}
       <div
-        className="fixed inset-x-0 z-30 mx-auto max-w-screen-sm border-t border-white/[0.06] bg-page px-4 pb-2 pt-2"
+        className="fixed inset-x-0 z-30 mx-auto max-w-screen-sm border-t border-tint/[0.06] bg-page px-4 pb-2 pt-2"
         style={barStyle}
       >
         {/* поле без рамки + квадратная accent-кнопка отправки */}

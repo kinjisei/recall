@@ -195,7 +195,7 @@ export function SprintMode({ lang, onBack }: { lang: AppLang; onBack: () => void
       <div className="grid grid-cols-2 gap-2.5">
         <button
           onClick={() => answer(false)}
-          className="lift flex min-h-16 items-center justify-center gap-2 rounded-2xl border border-white/[0.12] font-medium text-fg-secondary"
+          className="lift flex min-h-16 items-center justify-center gap-2 rounded-2xl border border-tint/[0.12] font-medium text-fg-secondary"
         >
           <IconClose size={20} /> Неверно
         </button>

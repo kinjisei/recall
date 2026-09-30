@@ -82,7 +82,7 @@ export function PhraseSheet({
               <button
                 onClick={() => speak(text, { lang })}
                 aria-label="Озвучить"
-                className="lift flex h-9 w-9 flex-none items-center justify-center rounded-full border border-white/[0.08] text-fg-secondary"
+                className="lift flex h-9 w-9 flex-none items-center justify-center rounded-full border border-tint/[0.08] text-fg-secondary"
               >
                 <IconSpeaker size={16} />
               </button>
@@ -93,7 +93,7 @@ export function PhraseSheet({
             )}
             {failed && <p className="mt-3 text-sm text-fg-muted">{failed}</p>}
             {tr && (
-              <p className="mt-2 rounded-xl bg-white/[0.04] px-3 py-2 text-[15px] leading-relaxed text-fg">
+              <p className="mt-2 rounded-xl bg-tint/[0.04] px-3 py-2 text-[15px] leading-relaxed text-fg">
                 {tr}
               </p>
             )}

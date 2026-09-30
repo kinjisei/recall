@@ -50,7 +50,7 @@ export function FeedbackSheet({ where, onClose }: { where: string; onClose: () =
         className={`flex h-12 w-12 items-center justify-center rounded-2xl border transition-colors ${
           active
             ? 'border-accent-line bg-accent-soft text-accent-soft-fg'
-            : 'border-white/[0.10] text-fg-muted hover:text-fg-secondary'
+            : 'border-tint/[0.10] text-fg-muted hover:text-fg-secondary'
         }`}
       >
         {/* палец вниз — тот же знак, развёрнутый: отдельный SVG заводить незачем */}

@@ -25,7 +25,7 @@ function SpeakButton({ text, lang }: { text: string; lang: AppLang }) {
         speak(text, { lang })
       }}
       onPointerDown={(e) => e.stopPropagation()}
-      className="flex h-11 w-11 items-center justify-center rounded-full bg-white/[0.08] text-fg-secondary"
+      className="flex h-11 w-11 items-center justify-center rounded-full bg-tint/[0.08] text-fg-secondary"
       aria-label="Озвучить"
     >
       <IconSpeaker size={18} />
@@ -97,7 +97,7 @@ export function SwipeCard({
   const againOpacity = Math.min(1, Math.max(0, -x) / SWIPE_THRESHOLD)
 
   const faceCls =
-    'absolute inset-0 flex cursor-pointer flex-col items-center justify-center gap-3 rounded-3xl border border-white/[0.08] p-6 text-center [backface-visibility:hidden]'
+    'absolute inset-0 flex cursor-pointer flex-col items-center justify-center gap-3 rounded-3xl border border-tint/[0.08] p-6 text-center [backface-visibility:hidden]'
 
   return (
     <div
@@ -163,7 +163,7 @@ export function SwipeCard({
         Помню
       </span>
       <span
-        className="absolute right-4 top-4 z-10 rounded-xl border-2 border-white/40 px-3 py-1 text-lg font-bold text-white/70"
+        className="absolute right-4 top-4 z-10 rounded-xl border-2 border-tint/40 px-3 py-1 text-lg font-bold text-white/70"
         style={{ opacity: againOpacity, transform: 'rotate(12deg)' }}
       >
         Ещё раз

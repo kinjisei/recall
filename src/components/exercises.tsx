@@ -122,13 +122,13 @@ export function McqExercise({
         {exercise.options.map((opt, i) => {
           const isAnswer = i === exercise.answer
           const isWrong = wrong.includes(i)
-          let cls = 'border-white/[0.10] hover:border-accent-line'
+          let cls = 'border-tint/[0.10] hover:border-accent-line'
           // ⚠️ Правильный вариант подсвечиваем ТОЛЬКО когда всё кончено. Пока
           // идёт вторая попытка, зелёная рамка была бы тем же готовым ответом.
           if (isWrong) cls = 'border-red-500 bg-red-950/40 opacity-60'
           else if (done) {
             if (isAnswer) cls = 'border-emerald-500 bg-emerald-950/40'
-            else cls = 'border-white/[0.08] opacity-60'
+            else cls = 'border-tint/[0.08] opacity-60'
           }
           // «клевок» только когда человек нашёл ответ сам
           const pop = solved && isAnswer ? ' animate-answer-pop' : ''
@@ -203,7 +203,7 @@ export function FillExercise({
               : 'border-red-500'
             : hint
               ? 'border-amber-500'
-              : 'border-white/[0.10] focus:border-accent-line'
+              : 'border-tint/[0.10] focus:border-accent-line'
         }`}
         placeholder="Твой ответ…"
         value={value}
@@ -316,7 +316,7 @@ export function OrderExercise({
             ? ok
               ? 'border-emerald-500'
               : 'border-red-500'
-            : 'border-white/[0.10]'
+            : 'border-tint/[0.10]'
         }`}
       >
         <div className="flex flex-wrap gap-2">
@@ -347,8 +347,8 @@ export function OrderExercise({
             disabled={checked || usedIdx.has(item.i)}
             className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${
               usedIdx.has(item.i)
-                ? 'border-white/[0.06] text-fg-muted' // использованное слово — приглушено
-                : 'border-white/[0.10] active:scale-[0.97]'
+                ? 'border-tint/[0.06] text-fg-muted' // использованное слово — приглушено
+                : 'border-tint/[0.10] active:scale-[0.97]'
             }`}
           >
             {item.w}

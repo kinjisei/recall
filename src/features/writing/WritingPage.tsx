@@ -92,7 +92,7 @@ export function WritingPage() {
       {!picking && rows !== null && !error && (
         <button
           onClick={() => setQuick(true)}
-          className="flex items-center justify-between gap-2 rounded-xl border border-dashed border-white/[0.14] px-3 py-3 text-left transition-transform active:scale-[0.99]"
+          className="flex items-center justify-between gap-2 rounded-xl border border-dashed border-tint/[0.14] px-3 py-3 text-left transition-transform active:scale-[0.99]"
         >
           <div className="min-w-0">
             <p className="text-sm font-medium">Быстрая проверка текста</p>
@@ -161,7 +161,7 @@ export function WritingPage() {
             <button
               key={r.id}
               onClick={() => setActiveId(r.id)}
-              className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.08] px-3 py-3 text-left transition-transform active:scale-[0.99]"
+              className="flex items-center justify-between gap-2 rounded-xl border border-tint/[0.08] px-3 py-3 text-left transition-transform active:scale-[0.99]"
             >
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium">{r.task.prompt}</p>
@@ -233,7 +233,7 @@ function WritingRunner({
         </p>
         <p className="mt-2 whitespace-pre-wrap leading-relaxed">{task.prompt}</p>
         {task.settings?.chart && (
-          <div className="mt-3 rounded-xl border border-white/[0.08] p-3">
+          <div className="mt-3 rounded-xl border border-tint/[0.08] p-3">
             <ChartView chart={task.settings.chart} />
           </div>
         )}
@@ -243,7 +243,7 @@ function WritingRunner({
           </p>
         ) : null}
         {row.note && (
-          <p className="mt-2 rounded-lg bg-white/[0.05] px-3 py-2 text-sm text-fg-secondary">
+          <p className="mt-2 rounded-lg bg-tint/[0.05] px-3 py-2 text-sm text-fg-secondary">
             От преподавателя: {row.note}
           </p>
         )}
@@ -252,7 +252,7 @@ function WritingRunner({
       {editing ? (
         <>
           <textarea
-            className="min-h-[220px] w-full rounded-2xl border border-white/[0.10] bg-input px-3 py-3 leading-relaxed outline-none focus:border-accent-line"
+            className="min-h-[220px] w-full rounded-2xl border border-tint/[0.10] bg-input px-3 py-3 leading-relaxed outline-none focus:border-accent-line"
             placeholder={`Пиши на ${task.lang === 'es' ? 'испанском' : 'английском'}…`}
             value={essay}
             onChange={(e) => setEssay(e.target.value)}
@@ -287,7 +287,7 @@ function WritingRunner({
             <Card>
               <p className="mb-2 text-sm font-semibold">Разбор преподавателя</p>
               {row.teacher_review.comment && (
-                <p className="mb-3 rounded-lg bg-white/[0.05] px-3 py-2 text-sm text-fg-secondary">
+                <p className="mb-3 rounded-lg bg-tint/[0.05] px-3 py-2 text-sm text-fg-secondary">
                   {row.teacher_review.comment}
                 </p>
               )}

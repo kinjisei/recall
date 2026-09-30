@@ -42,7 +42,7 @@ const TOPIC_HINTS = [
 ]
 
 const inputCls =
-  'w-full rounded-lg border border-white/[0.10] bg-input px-3 py-2 text-sm outline-none focus:border-accent-line'
+  'w-full rounded-lg border border-tint/[0.10] bg-input px-3 py-2 text-sm outline-none focus:border-accent-line'
 
 export function QuestSection({ studentId }: { studentId: string }) {
   const load = useCallback(() => listStudentQuests(studentId), [studentId])
@@ -107,7 +107,7 @@ export function QuestSection({ studentId }: { studentId: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-white/[0.08] p-3">
+    <div className="flex flex-col gap-3 rounded-xl border border-tint/[0.08] p-3">
       {/* назначенные квесты */}
       {loading ? (
         <RowsSkeleton count={2} height={56} />
@@ -120,7 +120,7 @@ export function QuestSection({ studentId }: { studentId: string }) {
       ) : (
         <div className="flex flex-col gap-2">
           {(quests ?? []).map((q) => (
-            <div key={q.id} className="rounded-lg border border-white/[0.08] px-3 py-2">
+            <div key={q.id} className="rounded-lg border border-tint/[0.08] px-3 py-2">
               <div className="flex items-center justify-between gap-2">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium">{q.scenario}</p>
@@ -180,7 +180,7 @@ export function QuestSection({ studentId }: { studentId: string }) {
       )}
 
       {/* форма назначения */}
-      <div className="flex flex-col gap-2 border-t border-white/[0.08] pt-3">
+      <div className="flex flex-col gap-2 border-t border-tint/[0.08] pt-3">
         <div className="grid grid-cols-2 gap-2">
           <div className="flex flex-col gap-1 text-xs text-fg-muted">
             Язык

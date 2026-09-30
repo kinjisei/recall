@@ -67,11 +67,11 @@ function Price({ price }: { price: number }) {
 
 function PlanCardView({ plan }: { plan: PlanCard }) {
   return (
-    <div className="animate-fade-up rounded-2xl border border-white/[0.08] bg-surface p-4">
+    <div className="animate-fade-up rounded-2xl border border-tint/[0.08] bg-surface p-4">
       <div className="flex items-center justify-between gap-2">
         <h3 className="font-medium">{plan.title}</h3>
         {plan.studentLimit && (
-          <span className="rounded-full bg-white/[0.06] px-2.5 py-1 text-xs text-fg-muted">
+          <span className="rounded-full bg-tint/[0.06] px-2.5 py-1 text-xs text-fg-muted">
             до {plan.studentLimit} учеников
           </span>
         )}
@@ -159,7 +159,7 @@ export function PricingPage() {
         ))}
       </div>
 
-      <section className="animate-fade-up mt-8 rounded-2xl border border-white/[0.08] bg-surface p-4">
+      <section className="animate-fade-up mt-8 rounded-2xl border border-tint/[0.08] bg-surface p-4">
         <h2 className="font-medium">Как оплатить</h2>
         <p className="mt-2 text-sm leading-relaxed text-fg-secondary">
           Оплата переводом в Kaspi. Реквизиты покажем, когда решишь платить, —

@@ -107,7 +107,7 @@ export function PacksSheet({ lang, onAdded }: { lang: AppLang; onAdded: () => vo
       </p>
 
       <input
-        className="w-full rounded-lg border border-white/[0.10] bg-input px-3 py-2 text-sm outline-none focus:border-accent-line"
+        className="w-full rounded-lg border border-tint/[0.10] bg-input px-3 py-2 text-sm outline-none focus:border-accent-line"
         placeholder="Поиск темы…"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
@@ -159,7 +159,7 @@ export function PacksSheet({ lang, onAdded }: { lang: AppLang; onAdded: () => vo
                         return (
                           <div
                             key={t.id}
-                            className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.08] px-3 py-2"
+                            className="flex items-center justify-between gap-2 rounded-xl border border-tint/[0.08] px-3 py-2"
                           >
                             <div className="min-w-0">
                               <p className="truncate font-medium">{t.name}</p>

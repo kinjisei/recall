@@ -218,7 +218,7 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
               </span>
               <span>осталось: {queue.length - index}</span>
             </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.07]">
+            <div className="h-1.5 overflow-hidden rounded-full bg-tint/[0.07]">
               <div
                 className="h-full origin-left rounded-full bg-accent transition-transform duration-300"
                 style={{ transform: `scaleX(${index / Math.max(queue.length, 1)})` }}
@@ -237,7 +237,7 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
             <div className="grid grid-cols-2 gap-2.5">
               <button
                 onClick={() => onSwipe('left')}
-                className="lift rounded-2xl border border-white/[0.12] py-3.5 text-sm font-medium text-fg-secondary"
+                className="lift rounded-2xl border border-tint/[0.12] py-3.5 text-sm font-medium text-fg-secondary"
               >
                 Ещё раз
               </button>

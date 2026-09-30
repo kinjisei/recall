@@ -26,7 +26,7 @@ const LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1'] as const
 const WEEK_OPTIONS = [2, 3, 4, 6, 8] as const
 
 const inputCls =
-  'w-full rounded-lg border border-white/[0.10] bg-input px-3 py-2 text-sm outline-none focus:border-accent-line'
+  'w-full rounded-lg border border-tint/[0.10] bg-input px-3 py-2 text-sm outline-none focus:border-accent-line'
 
 export function ProgramSection({ studentId }: { studentId: string }) {
   const [lang, setLang] = useState<AppLang>('en')
@@ -41,7 +41,7 @@ export function ProgramSection({ studentId }: { studentId: string }) {
   )
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-white/[0.08] p-3">
+    <div className="flex flex-col gap-3 rounded-xl border border-tint/[0.08] p-3">
       <div className="flex gap-2">
         {(['en', 'es'] as AppLang[]).map((l) => (
           <button
@@ -53,7 +53,7 @@ export function ProgramSection({ studentId }: { studentId: string }) {
             className={`min-h-[36px] rounded-lg px-3 text-xs font-semibold ${
               lang === l
                 ? 'bg-accent-soft text-accent-soft-fg'
-                : 'bg-white/[0.07] text-fg-secondary'
+                : 'bg-tint/[0.07] text-fg-secondary'
             }`}
           >
             {l.toUpperCase()}
@@ -123,7 +123,7 @@ function ActivePlanView({
         {plan.weeks.length}
       </p>
       {plan.summary && (
-        <p className="rounded-lg bg-white/[0.05] px-3 py-2 text-xs leading-relaxed text-fg-tertiary">
+        <p className="rounded-lg bg-tint/[0.05] px-3 py-2 text-xs leading-relaxed text-fg-tertiary">
           {plan.summary}
         </p>
       )}
@@ -259,7 +259,7 @@ function PlanForm({
       ) : (
         <>
           {preview.summary && (
-            <p className="rounded-lg bg-white/[0.05] px-3 py-2 text-xs leading-relaxed text-fg-tertiary">
+            <p className="rounded-lg bg-tint/[0.05] px-3 py-2 text-xs leading-relaxed text-fg-tertiary">
               {preview.summary}
             </p>
           )}

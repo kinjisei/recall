@@ -64,7 +64,7 @@ export function MyTextsList({
                   }
                 }}
                 aria-label={`Удалить ${t.title}`}
-                className="flex h-11 w-11 flex-none items-center justify-center rounded-xl border border-white/[0.08] text-fg-muted"
+                className="flex h-11 w-11 flex-none items-center justify-center rounded-xl border border-tint/[0.08] text-fg-muted"
               >
                 <IconTrash size={16} />
               </button>
@@ -127,7 +127,7 @@ export function AddTextForm({
         onChange={(e) => setTitle(e.target.value)}
         placeholder="Название (необязательно)"
         aria-label="Название текста"
-        className="rounded-xl border border-white/[0.10] bg-input px-4 py-2.5 outline-none focus:border-accent-line"
+        className="rounded-xl border border-tint/[0.10] bg-input px-4 py-2.5 outline-none focus:border-accent-line"
       />
       <textarea
         value={body}
@@ -135,7 +135,7 @@ export function AddTextForm({
         rows={8}
         placeholder={lang === 'es' ? 'Pega el texto aquí…' : 'Paste your text here…'}
         aria-label="Текст"
-        className="rounded-xl border border-white/[0.10] bg-input px-4 py-2.5 text-[15px] leading-relaxed outline-none focus:border-accent-line"
+        className="rounded-xl border border-tint/[0.10] bg-input px-4 py-2.5 text-[15px] leading-relaxed outline-none focus:border-accent-line"
       />
       {body.length > MY_TEXT_LIMIT && (
         <p className="text-xs text-amber-300">

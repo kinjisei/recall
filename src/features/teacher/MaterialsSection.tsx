@@ -171,7 +171,7 @@ export function MaterialsSection({
                 setReview({ a: w.assignment, name: w.studentName })
                 setMatId(w.material.id)
               }}
-              className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.08] px-3 py-2 text-left transition-transform active:scale-[0.99]"
+              className="flex items-center justify-between gap-2 rounded-xl border border-tint/[0.08] px-3 py-2 text-left transition-transform active:scale-[0.99]"
             >
               <span className="min-w-0">
                 <span className="block truncate text-sm font-medium">

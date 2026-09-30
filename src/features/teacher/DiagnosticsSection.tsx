@@ -27,7 +27,7 @@ type TopicTitles = Map<string, { title: string; level: string }>
 
 function Stat({ label, value, tone }: { label: string; value: string | number; tone?: string }) {
   return (
-    <div className="rounded-xl bg-white/[0.05] px-3 py-2 text-center">
+    <div className="rounded-xl bg-tint/[0.05] px-3 py-2 text-center">
       <p className={`text-lg font-bold ${tone ?? 'text-fg'}`}>{value}</p>
       <p className="text-[11px] leading-tight text-fg-muted">{label}</p>
     </div>
@@ -150,7 +150,7 @@ export function DiagnosticsSection({
   const doneQuests = diag.quests.filter((q) => q.status === 'completed')
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-white/[0.08] p-3">
+    <div className="flex flex-col gap-3 rounded-xl border border-tint/[0.08] p-3">
       {/* динамика месяца: сейчас vs 30 дней назад */}
       <SectionTitle>Динамика за месяц</SectionTitle>
       <div className="flex flex-col gap-1">
@@ -240,7 +240,7 @@ export function DiagnosticsSection({
                     <span className="w-36 shrink-0 text-fg-secondary">
                       {KIND_LABELS[kind]}
                     </span>
-                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/[0.07]">
+                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-tint/[0.07]">
                       <div
                         className={`h-full rounded-full ${pct >= 80 ? 'bg-emerald-400' : pct >= 60 ? 'bg-amber-300' : 'bg-red-400'}`}
                         style={{ width: `${pct}%` }}

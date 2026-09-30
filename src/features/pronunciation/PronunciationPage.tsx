@@ -360,13 +360,13 @@ export function PronunciationPage() {
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => speak(current.text, { lang })}
-            className="lift flex min-h-[44px] items-center gap-2 rounded-full border border-white/[0.10] px-4 text-sm text-fg-secondary"
+            className="lift flex min-h-[44px] items-center gap-2 rounded-full border border-tint/[0.10] px-4 text-sm text-fg-secondary"
           >
             <IconSpeaker size={16} /> Прослушать
           </button>
           <button
             onClick={() => speak(current.text, { lang, rate: SLOW_RATE })}
-            className="lift flex min-h-[44px] items-center gap-2 rounded-full border border-white/[0.10] px-4 text-sm text-fg-secondary"
+            className="lift flex min-h-[44px] items-center gap-2 rounded-full border border-tint/[0.10] px-4 text-sm text-fg-secondary"
           >
             <IconSpeakerSlow size={16} /> Медленно
           </button>

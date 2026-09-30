@@ -318,7 +318,7 @@ function TopicScreen({
           className={`min-h-[44px] rounded-lg px-4 text-sm font-semibold ${
             mode === 'theory'
               ? 'bg-accent-soft text-accent-soft-fg'
-              : 'bg-white/[0.07] text-fg-secondary'
+              : 'bg-tint/[0.07] text-fg-secondary'
           }`}
         >
           Теория
@@ -329,7 +329,7 @@ function TopicScreen({
             className={`min-h-[44px] rounded-lg px-4 text-sm font-semibold ${
               mode === 'exercises'
                 ? 'bg-accent-soft text-accent-soft-fg'
-                : 'bg-white/[0.07] text-fg-secondary'
+                : 'bg-tint/[0.07] text-fg-secondary'
             }`}
           >
             Упражнения ({topic.exercises.length})
@@ -408,7 +408,7 @@ function TheoryBlock({ block, lang }: { block: GrammarTheoryBlock; lang: AppLang
           <p className="font-medium text-fg">{sample}</p>
           <button
             onClick={() => speak(sample, { lang })}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/[0.08] text-fg-secondary"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-tint/[0.08] text-fg-secondary"
             aria-label="Озвучить"
           >
             <IconSpeaker size={16} />
@@ -427,7 +427,7 @@ function TheoryBlock({ block, lang }: { block: GrammarTheoryBlock; lang: AppLang
             {block.headers.map((h, i) => (
               <th
                 key={i}
-                className="border border-white/[0.08] bg-surface px-2 py-1 text-left font-semibold"
+                className="border border-tint/[0.08] bg-surface px-2 py-1 text-left font-semibold"
               >
                 {h}
               </th>
@@ -440,7 +440,7 @@ function TheoryBlock({ block, lang }: { block: GrammarTheoryBlock; lang: AppLang
               {row.map((cell, ci) => (
                 <td
                   key={ci}
-                  className="border border-white/[0.08] px-2 py-1"
+                  className="border border-tint/[0.08] px-2 py-1"
                 >
                   {cell}
                 </td>

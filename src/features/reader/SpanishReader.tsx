@@ -232,7 +232,7 @@ function DialogueView({
               </div>
               <button
                 onClick={() => speak(line.es, { lang: 'es' })}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/[0.08] text-fg-secondary"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-tint/[0.08] text-fg-secondary"
                 aria-label="Озвучить реплику"
               >
                 <IconSpeaker size={18} />

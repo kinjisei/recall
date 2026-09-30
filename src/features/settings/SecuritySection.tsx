@@ -45,7 +45,7 @@ export function SecuritySection() {
   return (
     <section
       id="security"
-      className="animate-fade-up rounded-2xl border border-white/[0.08] bg-surface p-4"
+      className="animate-fade-up rounded-2xl border border-tint/[0.08] bg-surface p-4"
       style={{ animationDelay: '.23s' }}
     >
       <h2 className="mb-3 font-medium">Безопасность</h2>
@@ -66,7 +66,7 @@ export function SecuritySection() {
             setDone(false)
             setError(null)
           }}
-          className="mt-3 inline-flex min-h-11 items-center rounded-xl border border-white/[0.10] px-4 text-sm font-medium text-fg-secondary"
+          className="mt-3 inline-flex min-h-11 items-center rounded-xl border border-tint/[0.10] px-4 text-sm font-medium text-fg-secondary"
         >
           Сменить пароль
         </button>
@@ -117,7 +117,7 @@ export function SecuritySection() {
                 setNext('')
                 setError(null)
               }}
-              className="min-h-11 rounded-xl border border-white/[0.10] px-4 text-sm font-medium text-fg-muted"
+              className="min-h-11 rounded-xl border border-tint/[0.10] px-4 text-sm font-medium text-fg-muted"
             >
               Отмена
             </button>

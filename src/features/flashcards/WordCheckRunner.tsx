@@ -134,7 +134,7 @@ export function WordCheckRunner({
               ? ok
                 ? 'border-emerald-500'
                 : 'border-red-500'
-              : 'border-white/[0.10] focus:border-accent-line'
+              : 'border-tint/[0.10] focus:border-accent-line'
           }`}
           placeholder={lang === 'es' ? 'слово по-испански…' : 'слово по-английски…'}
           value={value}
@@ -161,7 +161,7 @@ export function WordCheckRunner({
             )}
             <button
               onClick={() => speak(current.front, { lang })}
-              className="rounded-full bg-white/[0.08] px-3 py-2"
+              className="rounded-full bg-tint/[0.08] px-3 py-2"
               aria-label="Озвучить"
             >
               <IconSpeaker size={18} />

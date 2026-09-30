@@ -99,7 +99,7 @@ function Reference({ entries }: { entries: PhrasalEntry[] }) {
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Поиск: look for, откладывать…"
         aria-label="Поиск по фразовым глаголам"
-        className="rounded-xl border border-white/[0.10] bg-surface px-4 py-2.5"
+        className="rounded-xl border border-tint/[0.10] bg-surface px-4 py-2.5"
       />
 
       {filtered.map((e) => {
@@ -108,7 +108,7 @@ function Reference({ entries }: { entries: PhrasalEntry[] }) {
           <div key={e.verb}>
             <button
               onClick={() => setOpen((cur) => (cur === e.verb ? null : e.verb))}
-              className="flex min-h-[44px] w-full items-center justify-between rounded-lg bg-white/[0.06] px-3 py-2 text-left"
+              className="flex min-h-[44px] w-full items-center justify-between rounded-lg bg-tint/[0.06] px-3 py-2 text-left"
             >
               <span className="text-sm font-bold">
                 {e.verb}{' '}
@@ -120,7 +120,7 @@ function Reference({ entries }: { entries: PhrasalEntry[] }) {
             <Reveal open={isOpen}>
               <Card className="mt-2 flex flex-col gap-3">
                 {e.items.map((i, idx) => (
-                  <div key={`${i.phrase}-${idx}`} className="border-t border-white/[0.06] pt-2.5 first:border-t-0 first:pt-0">
+                  <div key={`${i.phrase}-${idx}`} className="border-t border-tint/[0.06] pt-2.5 first:border-t-0 first:pt-0">
                     <div className="flex items-baseline justify-between gap-2">
                       <p className="min-w-0 text-sm">
                         <span className="font-semibold">{i.phrase}</span>{' '}
@@ -128,7 +128,7 @@ function Reference({ entries }: { entries: PhrasalEntry[] }) {
                       </p>
                       <span className="flex flex-none items-center gap-1.5">
                         {i.separable && (
-                          <span className="rounded bg-white/[0.07] px-1.5 py-0.5 text-[10px] text-fg-muted">
+                          <span className="rounded bg-tint/[0.07] px-1.5 py-0.5 text-[10px] text-fg-muted">
                             разделяемый
                           </span>
                         )}
@@ -297,14 +297,14 @@ function Trainer({ entries }: { entries: PhrasalEntry[] }) {
         {q.options.map((opt, i) => {
           const state =
             chosen === null
-              ? 'border-white/[0.12] text-fg-secondary'
+              ? 'border-tint/[0.12] text-fg-secondary'
               : i === q.answer
                 ? `border-emerald-400/60 bg-emerald-400/10 text-emerald-300${
                     i === chosen ? ' animate-answer-pop' : ''
                   }`
                 : i === chosen
                   ? 'border-red-400/60 bg-red-400/10 text-red-300'
-                  : 'border-white/[0.08] text-fg-muted'
+                  : 'border-tint/[0.08] text-fg-muted'
           return (
             <button
               key={opt}

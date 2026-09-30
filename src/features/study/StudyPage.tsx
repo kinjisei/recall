@@ -213,7 +213,7 @@ export function StudyPage() {
         // скелетоны высоты RowCard — без прыжков вёрстки, пока грузятся строки
         <div className="flex flex-col gap-2.5" aria-hidden>
           {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="h-[74px] animate-pulse rounded-2xl bg-white/[0.04]" />
+            <div key={i} className="h-[74px] animate-pulse rounded-2xl bg-tint/[0.04]" />
           ))}
         </div>
       ) : (

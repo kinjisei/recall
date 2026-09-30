@@ -173,11 +173,11 @@ function TableChart({ chart }: { chart: ChartSpec }) {
     <table className="w-full min-w-[360px] border-collapse text-sm">
       <thead>
         <tr>
-          <th className="border border-white/[0.10] px-3 py-1.5 text-left text-fg-muted">
+          <th className="border border-tint/[0.10] px-3 py-1.5 text-left text-fg-muted">
             {chart.xLabel || ''}
           </th>
           {chart.series.map((s, i) => (
-            <th key={i} className="border border-white/[0.10] px-3 py-1.5 text-right font-medium">
+            <th key={i} className="border border-tint/[0.10] px-3 py-1.5 text-right font-medium">
               {s.name}
             </th>
           ))}
@@ -186,9 +186,9 @@ function TableChart({ chart }: { chart: ChartSpec }) {
       <tbody>
         {rows.map((r, ri) => (
           <tr key={ri}>
-            <td className="border border-white/[0.10] px-3 py-1.5 text-fg-secondary">{r}</td>
+            <td className="border border-tint/[0.10] px-3 py-1.5 text-fg-secondary">{r}</td>
             {chart.series.map((s, si) => (
-              <td key={si} className="border border-white/[0.10] px-3 py-1.5 text-right">
+              <td key={si} className="border border-tint/[0.10] px-3 py-1.5 text-right">
                 {fmt(s.points[ri]?.value ?? 0, chart.unit)}
               </td>
             ))}

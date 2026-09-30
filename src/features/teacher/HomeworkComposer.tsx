@@ -189,7 +189,7 @@ export function HomeworkComposer({
             value={due}
             min={isoDatePlus(0)}
             onChange={(e) => setDue(e.target.value)}
-            className="mt-1.5 h-11 w-full rounded-xl border border-white/[0.10] bg-input px-3.5 text-sm outline-none focus:border-accent-line"
+            className="mt-1.5 h-11 w-full rounded-xl border border-tint/[0.10] bg-input px-3.5 text-sm outline-none focus:border-accent-line"
           />
 
           {/* Подбор — главное действие формы, поэтому стоит до списка: сперва
@@ -246,7 +246,7 @@ export function HomeworkComposer({
                   className={`flex flex-col gap-2 rounded-xl border p-3 ${
                     inGroup
                       ? 'border-accent-line/40 bg-accent-soft/30'
-                      : 'border-white/[0.08] bg-white/[0.03]'
+                      : 'border-tint/[0.08] bg-tint/[0.03]'
                   }`}
                 >
                   {firstInGroup && (
@@ -263,7 +263,7 @@ export function HomeworkComposer({
                       onChange={(kind) => patch(i, { kind, target: DEFAULT_TARGET[kind] })}
                       label="Тип задания"
                       options={KINDS.map((k) => ({ id: k, label: KIND_LABEL[k] }))}
-                      triggerClassName="flex h-11 min-w-0 flex-1 items-center justify-between gap-1 rounded-lg border border-white/[0.10] bg-input px-3 text-sm outline-none focus:border-accent-line"
+                      triggerClassName="flex h-11 min-w-0 flex-1 items-center justify-between gap-1 rounded-lg border border-tint/[0.10] bg-input px-3 text-sm outline-none focus:border-accent-line"
                     />
                     <button
                       onClick={() => remove(i)}
@@ -279,7 +279,7 @@ export function HomeworkComposer({
                     value={it.title}
                     placeholder="Что сделать"
                     onChange={(e) => patch(i, { title: e.target.value })}
-                    className="h-11 w-full rounded-lg border border-white/[0.10] bg-input px-3 text-sm outline-none focus:border-accent-line"
+                    className="h-11 w-full rounded-lg border border-tint/[0.10] bg-input px-3 text-sm outline-none focus:border-accent-line"
                   />
 
                   {/* Число — только где реальное. Единица прямо у поля: «20» без
@@ -297,7 +297,7 @@ export function HomeworkComposer({
                             target: Math.max(1, Math.min(500, Number(e.target.value) || 1)),
                           })
                         }
-                        className="h-9 w-16 rounded-lg border border-white/[0.10] bg-input px-2 text-sm text-fg"
+                        className="h-9 w-16 rounded-lg border border-tint/[0.10] bg-input px-2 text-sm text-fg"
                       />
                       {plural(it.target ?? 1, unit[0], unit[1], unit[2])}
                     </label>
@@ -324,7 +324,7 @@ export function HomeworkComposer({
           {items.length < MAX_ITEMS && (
             <button
               onClick={add}
-              className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-white/[0.14] text-sm text-fg-muted hover:text-fg-secondary"
+              className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-tint/[0.14] text-sm text-fg-muted hover:text-fg-secondary"
             >
               <IconPlus size={16} /> Добавить задание
             </button>
@@ -340,7 +340,7 @@ export function HomeworkComposer({
             placeholder="Например: сперва слова, потом текст"
             onChange={(e) => setNote(e.target.value)}
             rows={2}
-            className="mt-1.5 w-full resize-none overflow-hidden rounded-xl border border-white/[0.10] bg-input px-3.5 py-2.5 text-sm outline-none focus:border-accent-line"
+            className="mt-1.5 w-full resize-none overflow-hidden rounded-xl border border-tint/[0.10] bg-input px-3.5 py-2.5 text-sm outline-none focus:border-accent-line"
           />
 
           {error && (
@@ -350,7 +350,7 @@ export function HomeworkComposer({
           )}
         </div>
 
-        <div className="border-t border-white/[0.06] px-5 py-3">
+        <div className="border-t border-tint/[0.06] px-5 py-3">
           <Button className="w-full py-3" disabled={!ready} loading={busy} onClick={send}>
             {items.length > 0 ? `Выдать домашку · ${countable}` : 'Выдать домашку'}
           </Button>

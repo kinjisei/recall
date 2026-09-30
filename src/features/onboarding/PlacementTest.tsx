@@ -241,7 +241,7 @@ export function PlacementTest() {
           <span>Вопрос {index + 1} из {total}</span>
           <span>{q.level}</span>
         </div>
-        <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.07]">
+        <div className="h-1.5 overflow-hidden rounded-full bg-tint/[0.07]">
           <div
             className="h-full origin-left rounded-full bg-accent transition-transform duration-300"
             style={{ transform: `scaleX(${(index + 1) / total})` }}
@@ -257,7 +257,7 @@ export function PlacementTest() {
               key={i}
               data-key={i + 1}
               onClick={() => choose(i)}
-              className="rounded-xl border border-white/[0.10] px-4 py-2.5 text-left transition-colors hover:border-accent-line hover:bg-[rgba(145,132,217,.10)]"
+              className="rounded-xl border border-tint/[0.10] px-4 py-2.5 text-left transition-colors hover:border-accent-line hover:bg-[rgba(145,132,217,.10)]"
             >
               {opt}
             </button>

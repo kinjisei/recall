@@ -90,7 +90,7 @@ export function AdminPage() {
             if (e.key === 'Enter') runSearch()
           }}
           placeholder="Email или его часть"
-          className="h-11 flex-1 rounded-xl border border-white/[0.10] bg-input px-3.5 text-sm outline-none focus:border-accent-line"
+          className="h-11 flex-1 rounded-xl border border-tint/[0.10] bg-input px-3.5 text-sm outline-none focus:border-accent-line"
         />
         <Button onClick={runSearch} loading={searching} className="px-4 py-0">
           <IconSearch size={18} /> Найти
@@ -142,7 +142,7 @@ function UserRow({
   }
 
   return (
-    <div className="animate-fade-up rounded-2xl border border-white/[0.08] bg-surface p-4">
+    <div className="animate-fade-up rounded-2xl border border-tint/[0.08] bg-surface p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
         <span className="font-medium">{row.email}</span>
         {row.display_name && (
@@ -186,7 +186,7 @@ function UserRow({
           onChange={(id) => setSelPlan(id as PlanId)}
           label="Тариф"
           options={PLAN_OPTIONS.map((p) => ({ id: p, label: PLAN_LABELS[p] }))}
-          triggerClassName="flex h-11 items-center justify-between gap-2 rounded-xl border border-white/[0.10] bg-input px-3 text-sm outline-none focus:border-accent-line"
+          triggerClassName="flex h-11 items-center justify-between gap-2 rounded-xl border border-tint/[0.10] bg-input px-3 text-sm outline-none focus:border-accent-line"
         />
 
         {selPlan === 'free' ? (
@@ -197,7 +197,7 @@ function UserRow({
             onChange={(id) => setSelMonths(Number(id))}
             label="Срок"
             options={MONTH_OPTIONS.map((m) => ({ id: String(m), label: `${m} мес.` }))}
-            triggerClassName="flex h-11 items-center justify-between gap-2 rounded-xl border border-white/[0.10] bg-input px-3 text-sm outline-none focus:border-accent-line"
+            triggerClassName="flex h-11 items-center justify-between gap-2 rounded-xl border border-tint/[0.10] bg-input px-3 text-sm outline-none focus:border-accent-line"
           />
         )}
 
@@ -255,7 +255,7 @@ function Funnel() {
   const top = data?.steps?.[0]?.people ?? 0
 
   return (
-    <section className="rounded-2xl border border-white/[0.08] bg-surface p-4">
+    <section className="rounded-2xl border border-tint/[0.08] bg-surface p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="font-medium">Воронка</h2>
         <div className="flex gap-1">
@@ -284,7 +284,7 @@ function Funnel() {
             {data.steps.map((s) => (
               <div key={s.ord} className="flex items-center gap-3">
                 <span className="w-44 shrink-0 text-sm text-fg-secondary">{s.step}</span>
-                <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/[0.06]">
+                <div className="h-2 flex-1 overflow-hidden rounded-full bg-tint/[0.06]">
                   <div
                     className="h-full rounded-full bg-accent"
                     style={{ width: top > 0 ? `${Math.round((s.people / top) * 100)}%` : '0%' }}
@@ -311,7 +311,7 @@ function Funnel() {
                 </thead>
                 <tbody>
                   {data.sources.map((s) => (
-                    <tr key={s.source} className="border-t border-white/[0.06]">
+                    <tr key={s.source} className="border-t border-tint/[0.06]">
                       <td className="py-1.5 pr-3">{s.source}</td>
                       <td className="py-1.5 pr-3 tabular-nums">{s.visits}</td>
                       <td className="py-1.5 pr-3 tabular-nums">{s.signups}</td>
@@ -367,7 +367,7 @@ function RecentErrors() {
               className={`min-h-11 rounded-lg px-3 text-sm font-medium ${
                 days === d
                   ? 'bg-accent-soft text-accent-soft-fg'
-                  : 'bg-white/[0.06] text-fg-muted'
+                  : 'bg-tint/[0.06] text-fg-muted'
               }`}
             >
               {d} дн.
@@ -392,7 +392,7 @@ function RecentErrors() {
               <button
                 key={key}
                 onClick={() => setOpen(open === key ? null : key)}
-                className="rounded-xl border border-white/[0.08] p-3 text-left"
+                className="rounded-xl border border-tint/[0.08] p-3 text-left"
               >
                 <div className="flex items-start justify-between gap-3">
                   <span className="min-w-0 text-sm font-medium">{r.message ?? '(без текста)'}</span>
@@ -405,7 +405,7 @@ function RecentErrors() {
                   {!r.any_online && ' · офлайн'}
                 </p>
                 <Reveal open={open === key}>
-                  <div className="mt-2 border-t border-white/[0.08] pt-2">
+                  <div className="mt-2 border-t border-tint/[0.08] pt-2">
                     <p className="text-xs text-fg-muted">
                       Экран: {r.last_path ?? '—'}
                     </p>
@@ -462,7 +462,7 @@ function FeedbackList() {
       ) : (
         <div className="mt-3 flex flex-col gap-2">
           {rows.map((r, i) => (
-            <div key={i} className="rounded-xl border border-white/[0.08] p-3">
+            <div key={i} className="rounded-xl border border-tint/[0.08] p-3">
               <div className="flex items-start justify-between gap-3">
                 <span className="text-sm">
                   {r.rating === 'up' ? '👍 ' : r.rating === 'down' ? '👎 ' : ''}

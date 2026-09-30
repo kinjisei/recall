@@ -10,7 +10,7 @@ import { Reveal } from '../../shared/ui/Reveal'
 
 function BlockView({ block }: { block: GuideBlock }) {
   return (
-    <div className="border-t border-white/[0.06] pt-3 first:border-t-0 first:pt-0">
+    <div className="border-t border-tint/[0.06] pt-3 first:border-t-0 first:pt-0">
       <p className="text-sm font-semibold">{block.title}</p>
       <div className="mt-1.5 flex flex-col gap-1.5">
         {block.body.map((p, i) =>
@@ -64,7 +64,7 @@ export function GuideSection() {
           <div key={s.id}>
             <button
               onClick={() => setOpen((cur) => (cur === s.id ? null : s.id))}
-              className="flex min-h-[44px] w-full items-center justify-between rounded-lg bg-white/[0.06] px-3 py-2 text-left"
+              className="flex min-h-[44px] w-full items-center justify-between rounded-lg bg-tint/[0.06] px-3 py-2 text-left"
               aria-expanded={isOpen}
             >
               <span className="text-sm font-bold">{s.title}</span>

@@ -49,7 +49,7 @@ function chipCls(active: boolean) {
   return `rounded-lg px-3 py-1.5 text-sm font-semibold ${
     active
       ? 'bg-accent-soft text-accent-soft-fg'
-      : 'bg-white/[0.07] text-fg-secondary'
+      : 'bg-tint/[0.07] text-fg-secondary'
   }`
 }
 
@@ -111,7 +111,7 @@ export function WritingSection({ students }: { students: StudentInfo[] }) {
           <button
             key={t.id}
             onClick={() => setScreen({ task: t })}
-            className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.08] px-3 py-2 text-left transition-transform active:scale-[0.99]"
+            className="flex items-center justify-between gap-2 rounded-xl border border-tint/[0.08] px-3 py-2 text-left transition-transform active:scale-[0.99]"
           >
             <div className="min-w-0">
               <p className="truncate text-sm font-medium">{t.prompt}</p>
@@ -267,7 +267,7 @@ function WritingForm({
                   {busy === 'chart' ? 'AI рисует данные…' : '📊 Сгенерировать график'}
                 </Button>
                 {chart && (
-                  <div className="rounded-xl border border-white/[0.08] p-3">
+                  <div className="rounded-xl border border-tint/[0.08] p-3">
                     <ChartView chart={chart} />
                   </div>
                 )}
@@ -456,7 +456,7 @@ function WritingDetail({
         </p>
         <p className="mt-2 whitespace-pre-wrap leading-relaxed">{task.prompt}</p>
         {s?.chart && (
-          <div className="mt-3 rounded-xl border border-white/[0.08] p-3">
+          <div className="mt-3 rounded-xl border border-tint/[0.08] p-3">
             <ChartView chart={s.chart} />
           </div>
         )}
@@ -491,7 +491,7 @@ function WritingDetail({
             return (
               <div
                 key={st.profile.id}
-                className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.08] px-3 py-2"
+                className="flex items-center justify-between gap-2 rounded-xl border border-tint/[0.08] px-3 py-2"
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium">{name}</p>

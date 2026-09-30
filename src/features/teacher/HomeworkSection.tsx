@@ -47,7 +47,7 @@ function ItemRow({ row }: { row: HomeworkRow }) {
         className={`mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full text-[11px] ${
           done
             ? 'bg-accent-soft text-accent-soft-fg'
-            : 'border border-white/[0.14] text-fg-muted'
+            : 'border border-tint/[0.14] text-fg-muted'
         }`}
       >
         {done ? <IconCheck size={12} /> : ''}
@@ -105,7 +105,7 @@ export function HomeworkSection({
 
   if (loading) {
     return (
-      <div className="rounded-2xl border border-white/[0.08] bg-surface p-4">
+      <div className="rounded-2xl border border-tint/[0.08] bg-surface p-4">
         <RowsSkeleton count={3} height={28} />
       </div>
     )
@@ -116,7 +116,7 @@ export function HomeworkSection({
   const ratio = total > 0 ? done / total : 0
 
   return (
-    <div className="rounded-2xl border border-white/[0.08] bg-surface p-4">
+    <div className="rounded-2xl border border-tint/[0.08] bg-surface p-4">
       {error && <p className="mb-2 text-sm text-amber-300">{error}</p>}
 
       {!hw ? (
@@ -141,7 +141,7 @@ export function HomeworkSection({
               ширину. Так анимация идёт на transform и не вызывает пересчёт
               раскладки. */}
           <div className="flex items-center gap-2.5">
-            <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/[0.08]">
+            <div className="h-2 flex-1 overflow-hidden rounded-full bg-tint/[0.08]">
               <div
                 style={{ transform: `scaleX(${ratio})` }}
                 className="h-full w-full origin-left rounded-full bg-accent transition-transform duration-500 [transition-timing-function:cubic-bezier(.22,1,.36,1)]"
@@ -152,14 +152,14 @@ export function HomeworkSection({
             </span>
           </div>
 
-          <ul className="flex flex-col divide-y divide-white/[0.05]">
+          <ul className="flex flex-col divide-y divide-tint/[0.05]">
             {homeworkRows(hw).map((row) => (
               <ItemRow key={row.items[0]!.id} row={row} />
             ))}
           </ul>
 
           {hw.note && (
-            <p className="rounded-xl bg-white/[0.04] px-3 py-2 text-sm text-fg-secondary">
+            <p className="rounded-xl bg-tint/[0.04] px-3 py-2 text-sm text-fg-secondary">
               {hw.note}
             </p>
           )}
@@ -211,10 +211,10 @@ export function StatTiles({
       {tiles.map((t, i) => (
         <div
           key={i}
-          className="rounded-xl border border-white/[0.08] bg-surface px-2 py-3 text-center"
+          className="rounded-xl border border-tint/[0.08] bg-surface px-2 py-3 text-center"
         >
           <p className="text-xl font-bold tabular-nums">
-            {loading ? <span className="inline-block h-6 w-8 animate-pulse rounded bg-white/[0.08]" /> : t.value}
+            {loading ? <span className="inline-block h-6 w-8 animate-pulse rounded bg-tint/[0.08]" /> : t.value}
           </p>
           <p className="mt-0.5 text-[11px] leading-tight text-fg-muted">
             {t.icon && <IconFlame size={11} className="mr-0.5 inline align-text-bottom" />}

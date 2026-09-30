@@ -97,7 +97,7 @@ export function TextAnalysisSheet({
               <p className="text-sm text-fg-muted">
                 Разбираю текст… {progress.done}/{progress.total}
               </p>
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.07]">
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-tint/[0.07]">
                 <div
                   className="h-full origin-left rounded-full bg-accent transition-transform duration-300"
                   style={{
@@ -124,14 +124,14 @@ export function TextAnalysisSheet({
               <p className="mt-2 text-lg font-semibold">Уровень: {data.level || '—'}</p>
               {data.why && <p className="mt-0.5 text-sm text-fg-muted">{data.why}</p>}
               {data.takeaway && (
-                <p className="mt-3 rounded-xl bg-white/[0.04] px-3 py-2 text-sm leading-relaxed text-fg-secondary">
+                <p className="mt-3 rounded-xl bg-tint/[0.04] px-3 py-2 text-sm leading-relaxed text-fg-secondary">
                   💡 {data.takeaway}
                 </p>
               )}
               <AnalyzedItemsView items={data.items} lang={lang} onClose={onClose} />
               <button
                 onClick={redo}
-                className="lift mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl border border-white/[0.10] py-2.5 text-sm text-fg-muted"
+                className="lift mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl border border-tint/[0.10] py-2.5 text-sm text-fg-muted"
               >
                 <IconRefresh size={15} /> Разобрать заново
               </button>
