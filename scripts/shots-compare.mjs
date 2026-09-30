@@ -5,13 +5,18 @@
  * тёмную тему такой же, как была. «На глаз похоже» не проверка: разница в один
  * оттенок рамки не видна на скриншоте, но видна в счёте пикселей.
  *
- *   node scripts/shots-compare.mjs --save <папка>        снять экраны
+ *   node scripts/shots-compare.mjs --save <папка> [--theme light]   снять экраны
  *   node scripts/shots-compare.mjs --compare <до> <после> [--out <папка>]
  *
  * Снимает список экранов на телефоне (390) и компьютере (1280) целиком, с
  * выключенной анимацией (prefers-reduced-motion) — иначе кадр ловит середину
  * появления. Сравнение пишет по каждому экрану число отличающихся пикселей и
  * кладёт картинку разницы (отличия красным) в --out.
+ *
+ * --theme light — светлая тема, включённая так же, как её включает владелец в
+ * /admin («Тема на этом устройстве»): выбор устройства `recall.theme`. Без
+ * флага — тёмная (у всех она по умолчанию). Снимки двух тем кладите в разные
+ * папки: имена файлов у них одинаковые.
  *
  * Нужен `npm run dev:test` (5174, тестовая база). Аккаунт — преподаватель,
  * создаётся и удаляется сам (service_role тестовой базы).
@@ -35,7 +40,12 @@ const PASSWORD = 'ShotsCompare!2026'
 
 // Экраны приёмки. Первые пять — «выглядит как раньше»; остальные — где правка
 // меняет вид намеренно (кнопка «назад»), их сравнение показывает, ЧТО именно.
-export const SCREENS = ['/', '/study', '/practice', '/conversation', '/grammar', '/teacher', '/settings', '/progress', '/pricing']
+// Хвост с /assignments — чтобы правка цветов по всему коду сверялась не только
+// на главных вкладках (светлая тема, 30.09.2026).
+export const SCREENS = [
+  '/', '/study', '/practice', '/conversation', '/grammar', '/teacher', '/settings', '/progress', '/pricing',
+  '/assignments', '/writing', '/pronunciation', '/teachers', '/terms', '/privacy',
+]
 const SIZES = [
   [390, 844, 'phone'],
   [1280, 800, 'desk'],
@@ -46,6 +56,8 @@ const arg = (name) => {
   const i = process.argv.indexOf(name)
   return i === -1 ? null : process.argv[i + 1]
 }
+// тема устройства: как переключатель владельца в /admin (shared/ui/theme.ts)
+const THEME = arg('--theme') === 'light' ? 'light' : 'dark'
 const fileName = (tag, path) => `${tag}-${path === '/' ? 'home' : path.slice(1)}.png`
 
 async function openBrowser() {
@@ -96,7 +108,10 @@ async function save(dir) {
       () => [...document.querySelectorAll('button')].some((e) => (e.textContent || '').trim() === 'Войти'),
       { polling: 250, timeout: 20000 },
     )
-    await page.evaluate(() => localStorage.setItem('recall.onboarded', '1'))
+    await page.evaluate((theme) => {
+      localStorage.setItem('recall.onboarded', '1')
+      localStorage.setItem('recall.theme', theme)
+    }, THEME)
     await page.evaluate(() => {
       const b = [...document.querySelectorAll('button')].find((e) => (e.textContent || '').trim() === 'Войти')
       b?.click()
@@ -108,23 +123,34 @@ async function save(dir) {
     await page.waitForFunction(() => location.pathname === '/', { polling: 250, timeout: 20000 })
 
     for (const [w, h, tag] of SIZES) {
-      await page.setViewport({ width: w, height: h, deviceScaleFactor: 1 })
-      await page.screenshot({ encoding: 'base64' }) // кадр: иначе медиа-запрос ширины не переключится
       for (const p of SCREENS) {
+        // Каждый экран — в СВЕЖЕЙ вкладке. В одной вкладке после снимка очень
+        // длинной страницы (грамматика) каждый следующий полный снимок шёл
+        // ~57 с вместо 0,1 с: прогон двух тем растягивался на час (замер
+        // 30.09.2026). Вход и тема живут в профиле — новой вкладке их хватает.
+        const tab = await browser.newPage()
+        await tab.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }])
+        await tab.setViewport({ width: w, height: h, deviceScaleFactor: 1 })
+        const t0 = Date.now()
         // «тишины в сети» ждём не дольше 10 с: иначе экран с живым соединением
         // держит прогон по полминуты, а к этому моменту он давно нарисован
-        await page.goto(`${BASE}${p}`, { waitUntil: 'networkidle2', timeout: 10000 }).catch(() => {})
+        await tab.goto(`${BASE}${p}`, { waitUntil: 'networkidle2', timeout: 10000 }).catch(() => {})
+        const t1 = Date.now()
         await sleep(2500)
         // Досрочно завершить все анимации: у строк списков появление с
         // задержкой по очереди, а в headless-вкладке кадры идут рывками — без
         // этого снимок ловит разное число проявившихся строк, и «разница» —
         // это время, а не код.
-        await page.evaluate(() => document.getAnimations().forEach((a) => a.finish()))
+        await tab.evaluate(() => document.getAnimations().forEach((a) => a.finish()))
         await sleep(200)
-        await page.screenshot({ path: join(dir, fileName(tag, p)), fullPage: true })
+        const t2 = Date.now()
+        await tab.screenshot({ path: join(dir, fileName(tag, p)), fullPage: true })
+        // время по шагам: медленный прогон сразу показывает, где он стоит
+        console.log(`${tag} ${p}: загрузка ${t1 - t0} мс, снимок ${Date.now() - t2} мс`)
+        await tab.close()
       }
     }
-    console.log(`снято ${SCREENS.length * SIZES.length} экранов → ${dir}`)
+    console.log(`снято ${SCREENS.length * SIZES.length} экранов (тема: ${THEME}) → ${dir}`)
   } finally {
     await browser.close().catch(() => {})
     await admin.auth.admin.deleteUser(id).catch(() => {})
