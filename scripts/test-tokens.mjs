@@ -81,6 +81,13 @@ function parse(value, theme, depth = 0) {
   if (v === 'white') return [255, 255, 255, 1]
   if (v === 'black') return [0, 0, 0, 1]
   if (v === 'transparent') return [0, 0, 0, 0]
+  // color-mix(in oklab, <цвет> N%, transparent) — цвет долей, как у утилиты
+  // bg-tint/[0.08]: тот же цвет с прозрачностью N %
+  m = v.match(/^color-mix\(\s*in oklab,\s*(.+?)\s+([\d.]+)%,\s*transparent\s*\)$/)
+  if (m) {
+    const c = parse(m[1], theme, depth + 1)
+    return [c[0], c[1], c[2], c[3] * (+m[2] / 100)]
+  }
   throw new Error(`не разобрать цвет «${v}»`)
 }
 

@@ -106,21 +106,23 @@
        -surface, -line  фон и рамка статусной карточки (Card tone). В тёмной
                  это обычная поверхность и рамка карточки — статус там
                  говорит цветом текста, так и было; в светлой — тёплый или
-                 розовый фон с цветной рамкой. --- */
+                 розовый фон с цветной рамкой. Рамка тёмной — тем же
+                 color-mix, что у border-tint/[0.08]: у rgba() прозрачность
+                 округляется до 1/255, и рамка расходилась на единицу. --- */
   --color-danger: oklch(63.7% 0.237 25.331);
   --color-danger-strong: oklch(70.4% 0.191 22.216);
   --color-danger-fg: #fff;
   --color-danger-soft: oklch(25.8% 0.092 26.042);
   --color-danger-soft-fg: oklch(80.8% 0.114 19.571);
   --color-danger-surface: var(--color-surface);
-  --color-danger-line: rgba(255, 255, 255, 0.08);
+  --color-danger-line: color-mix(in oklab, #fff 8%, transparent);
   --color-warning: oklch(82.8% 0.189 84.429);
   --color-warning-strong: oklch(87.9% 0.169 91.605);
   --color-warning-fg: oklch(27.9% 0.077 45.635);
   --color-warning-soft: oklch(41.4% 0.112 45.904);
   --color-warning-soft-fg: oklch(92.4% 0.12 95.746);
   --color-warning-surface: var(--color-surface);
-  --color-warning-line: rgba(255, 255, 255, 0.08);
+  --color-warning-line: color-mix(in oklab, #fff 8%, transparent);
   --color-success: oklch(69.6% 0.17 162.48);
   --color-success-strong: oklch(76.5% 0.177 163.223);
   --color-success-fg: oklch(26.2% 0.051 172.552);

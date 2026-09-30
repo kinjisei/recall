@@ -817,7 +817,7 @@ npm run build          # tsc -b + сборка — обязательно пос
 npm run check          # все сторожа (~4 с с кэшем) — обязательно после правок
 npm test               # все чистые тесты scripts/test-*.mjs
 npm run check:prune    # сузить списки «к исправлению», когда исправил старое
-node scripts/ux-audit.mjs          # 15 экранов: контраст, тач-цели, подписи
+node scripts/ux-audit.mjs [--theme light]  # 16 экранов: контраст, тач-цели, подписи (светлая — свой отчёт)
 node scripts/smoke-features.mjs    # интерактивный обход фич
 node scripts/smoke-navigation.mjs  # адресуемость экранов
 node scripts/smoke-motion.mjs      # переходы, вкладки, живые ожидания и ответы
