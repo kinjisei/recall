@@ -164,7 +164,7 @@ export function ResetPasswordPage() {
           />
 
           {error && (
-            <p role="alert" className="text-sm text-red-400">
+            <p role="alert" className="text-sm text-danger-strong">
               {error}
             </p>
           )}
@@ -192,7 +192,7 @@ export function ResetPasswordPage() {
           />
 
           {error && (
-            <p role="alert" className="text-sm text-red-400">
+            <p role="alert" className="text-sm text-danger-strong">
               {error}
             </p>
           )}

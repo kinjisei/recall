@@ -110,7 +110,7 @@ export function TextAnalysisSheet({
 
           {phase === 'error' && (
             <div className="mt-4 flex flex-col gap-3">
-              <p className="text-sm text-red-400">
+              <p className="text-sm text-danger-strong">
                 {error ?? 'Не удалось разобрать. Попробуй ещё раз.'}
               </p>
               <Button className="w-full" onClick={run}>

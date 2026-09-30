@@ -322,8 +322,8 @@ function Trainer({ groups }: { groups: IrregularGroup[] }) {
       !checked
         ? 'border-tint/[0.10] bg-surface'
         : ok
-          ? 'border-emerald-500 bg-emerald-950/40'
-          : 'border-red-400 bg-red-950/40'
+          ? 'border-success bg-success-soft/40'
+          : 'border-danger-strong bg-danger-soft/40'
     }`
 
   return (
@@ -371,12 +371,12 @@ function Trainer({ groups }: { groups: IrregularGroup[] }) {
             className={inputCls(partOk)}
           />
           {checked && (!pastOk || !partOk) && (
-            <p className="text-sm font-medium text-red-500">
+            <p className="text-sm font-medium text-danger">
               Правильно: {verb.base} — {verb.past} — {verb.part}
             </p>
           )}
           {checked && pastOk && partOk && (
-            <p className="animate-answer-pop text-sm font-medium text-emerald-400">Верно!</p>
+            <p className="animate-answer-pop text-sm font-medium text-success-strong">Верно!</p>
           )}
           {!checked ? (
             <Button type="submit" disabled={!past.trim() || !part.trim()}>

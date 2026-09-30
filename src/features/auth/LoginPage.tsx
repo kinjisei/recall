@@ -202,11 +202,11 @@ export function LoginPage() {
             </div>
 
             {error && (
-              <p role="alert" className="text-sm text-red-400">
+              <p role="alert" className="text-sm text-danger-strong">
                 {error}
               </p>
             )}
-            {info && <p className="text-sm text-emerald-400">{info}</p>}
+            {info && <p className="text-sm text-success-strong">{info}</p>}
 
             <Button type="submit" disabled={busy} className="mt-2 h-14 w-full">
               {busy ? '…' : signup ? 'Создать аккаунт' : 'Войти'}
@@ -308,9 +308,9 @@ function CheckEmail({
         </p>
       </div>
 
-      {note && <p className="text-sm text-emerald-400">{note}</p>}
+      {note && <p className="text-sm text-success-strong">{note}</p>}
       {err && (
-        <p role="alert" className="text-sm text-red-400">
+        <p role="alert" className="text-sm text-danger-strong">
           {err}
         </p>
       )}

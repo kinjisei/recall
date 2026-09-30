@@ -107,10 +107,10 @@ export function WritingGradeView({ grade, mode }: { grade: WritingGrade; mode: W
                 <div className="mt-2 flex flex-col gap-1 text-sm">
                   {f.examples.map((e, j) => (
                     <p key={j}>
-                      <span className="text-red-300 line-through decoration-red-500/60">
+                      <span className="text-danger-soft-fg line-through decoration-danger/60">
                         {e.was}
                       </span>
-                      <span className="text-emerald-300"> → {e.fix}</span>
+                      <span className="text-success-soft-fg"> → {e.fix}</span>
                     </p>
                   ))}
                 </div>
@@ -126,9 +126,9 @@ export function WritingGradeView({ grade, mode }: { grade: WritingGrade; mode: W
             <FullList>
               <div className="mt-2 flex flex-col gap-1.5">
                 {grade.errors.map((e, i) => (
-                  <div key={i} className="rounded-xl border border-red-500/25 px-3 py-2 text-sm">
-                    <p className="text-red-300 line-through decoration-red-500/60">{e.was}</p>
-                    <p className="text-emerald-300">→ {e.fix}</p>
+                  <div key={i} className="rounded-xl border border-danger/25 px-3 py-2 text-sm">
+                    <p className="text-danger-soft-fg line-through decoration-danger/60">{e.was}</p>
+                    <p className="text-success-soft-fg">→ {e.fix}</p>
                   </div>
                 ))}
               </div>
@@ -136,9 +136,9 @@ export function WritingGradeView({ grade, mode }: { grade: WritingGrade; mode: W
           ) : (
             <div className="flex flex-col gap-1.5">
               {grade.errors.map((e, i) => (
-                <div key={i} className="rounded-xl border border-red-500/25 px-3 py-2 text-sm">
-                  <p className="text-red-300 line-through decoration-red-500/60">{e.was}</p>
-                  <p className="text-emerald-300">→ {e.fix}</p>
+                <div key={i} className="rounded-xl border border-danger/25 px-3 py-2 text-sm">
+                  <p className="text-danger-soft-fg line-through decoration-danger/60">{e.was}</p>
+                  <p className="text-success-soft-fg">→ {e.fix}</p>
                 </div>
               ))}
             </div>
@@ -180,7 +180,7 @@ export function WritingGradeView({ grade, mode }: { grade: WritingGrade; mode: W
             {grade.rewrites.map((r, i) => (
               <div key={i} className="rounded-xl bg-tint/[0.04] px-3 py-2 text-sm">
                 <p className="text-fg-muted">{r.was}</p>
-                <p className="text-emerald-300">→ {r.better}</p>
+                <p className="text-success-soft-fg">→ {r.better}</p>
               </div>
             ))}
           </div>
@@ -194,7 +194,7 @@ function Chip({ label, ok }: { label: string; ok: boolean }) {
   return (
     <span
       className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs ${
-        ok ? 'bg-emerald-500/15 text-emerald-300' : 'bg-tint/[0.06] text-fg-muted'
+        ok ? 'bg-success/15 text-success-soft-fg' : 'bg-tint/[0.06] text-fg-muted'
       }`}
     >
       {ok ? <IconCheck size={12} /> : <IconClose size={12} />}

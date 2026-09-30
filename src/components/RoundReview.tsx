@@ -59,22 +59,22 @@ export function RoundReview({
             {items.map((it, i) => (
               <div
                 key={i}
-                className={`rounded-xl border px-3 py-2 ${it.ok ? 'border-emerald-500/30' : 'border-red-500/30'}`}
+                className={`rounded-xl border px-3 py-2 ${it.ok ? 'border-success/30' : 'border-danger/30'}`}
               >
                 <div className="flex items-start gap-2">
-                  <span className={`mt-0.5 flex-none ${it.ok ? 'text-emerald-400' : 'text-red-400'}`}>
+                  <span className={`mt-0.5 flex-none ${it.ok ? 'text-success-strong' : 'text-danger-strong'}`}>
                     {it.ok ? <IconCheck size={16} /> : <IconClose size={16} />}
                   </span>
                   <div className="min-w-0 flex-1">
                     {it.prompt && <p className="text-sm font-medium">{it.prompt}</p>}
                     {!it.ok && (
                       <p className="text-sm text-fg-muted">
-                        Твой ответ: <span className="text-red-300">{it.given}</span>
+                        Твой ответ: <span className="text-danger-soft-fg">{it.given}</span>
                       </p>
                     )}
                     <p className="text-sm text-fg-muted">
                       {it.ok ? 'Верно: ' : 'Правильно: '}
-                      <span className="text-emerald-300">{it.correct}</span>
+                      <span className="text-success-soft-fg">{it.correct}</span>
                     </p>
                     {!it.ok &&
                       (why[i] ? (

@@ -100,7 +100,7 @@ export function PlanScreen({
         disabled={busy !== null}
       />
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
 
       <div className="flex gap-2">
         <Button variant="secondary" className="flex-1" onClick={replan} disabled={busy !== null}>

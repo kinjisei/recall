@@ -71,7 +71,7 @@ function TrendRow({
         <span className="mx-1 text-fg-faint">→</span>
         <span className="font-semibold">{d.now === null ? '—' : `${d.now}${unit}`}</span>
         {diff !== null && diff !== 0 && (
-          <span className={`ml-1.5 text-xs ${improved ? 'text-emerald-400' : 'text-red-400'}`}>
+          <span className={`ml-1.5 text-xs ${improved ? 'text-success-strong' : 'text-danger-strong'}`}>
             {diff > 0 ? '↑' : '↓'}
             {Math.abs(diff)}
           </span>
@@ -83,9 +83,9 @@ function TrendRow({
 
 /** Процент → цвет: слабое место должно бросаться в глаза. */
 function pctTone(pct: number): string {
-  if (pct >= 80) return 'text-emerald-400'
-  if (pct >= 60) return 'text-amber-300'
-  return 'text-red-400'
+  if (pct >= 80) return 'text-success-strong'
+  if (pct >= 60) return 'text-warning-strong'
+  return 'text-danger-strong'
 }
 
 export function DiagnosticsSection({
@@ -191,7 +191,7 @@ export function DiagnosticsSection({
         <Stat
           label="дней из 14 активна"
           value={diag.activeDays14}
-          tone={diag.activeDays14 >= 7 ? 'text-emerald-400' : diag.activeDays14 >= 3 ? 'text-amber-300' : 'text-red-400'}
+          tone={diag.activeDays14 >= 7 ? 'text-success-strong' : diag.activeDays14 >= 3 ? 'text-warning-strong' : 'text-danger-strong'}
         />
         <Stat label="слов в колоде" value={w.total} />
         <Stat
@@ -205,8 +205,8 @@ export function DiagnosticsSection({
       <SectionTitle>Слова</SectionTitle>
       <div className="grid grid-cols-3 gap-2">
         <Stat label="новые" value={w.fresh} />
-        <Stat label="учатся" value={w.learning} tone="text-amber-300" />
-        <Stat label="выучено" value={w.learned} tone="text-emerald-400" />
+        <Stat label="учатся" value={w.learning} tone="text-warning-strong" />
+        <Stat label="выучено" value={w.learned} tone="text-success-strong" />
       </div>
       {w.struggling.length > 0 && (
         <div>
@@ -217,7 +217,7 @@ export function DiagnosticsSection({
             {w.struggling.map((s) => (
               <span
                 key={s.front}
-                className="rounded-lg bg-red-400/10 px-2 py-1 text-xs text-red-300"
+                className="rounded-lg bg-danger-strong/10 px-2 py-1 text-xs text-danger-soft-fg"
                 title={s.back ?? undefined}
               >
                 {s.front} ×{s.lapses}
@@ -242,7 +242,7 @@ export function DiagnosticsSection({
                     </span>
                     <div className="h-2 flex-1 overflow-hidden rounded-full bg-tint/[0.07]">
                       <div
-                        className={`h-full rounded-full ${pct >= 80 ? 'bg-emerald-400' : pct >= 60 ? 'bg-amber-300' : 'bg-red-400'}`}
+                        className={`h-full rounded-full ${pct >= 80 ? 'bg-success-strong' : pct >= 60 ? 'bg-warning-strong' : 'bg-danger-strong'}`}
                         style={{ width: `${pct}%` }}
                       />
                     </div>
@@ -280,7 +280,7 @@ export function DiagnosticsSection({
       {/* грамматика */}
       <SectionTitle>Грамматика — слабые темы</SectionTitle>
       {!diag.mistakesAvailable ? (
-        <p className="text-xs text-amber-300">
+        <p className="text-xs text-warning-strong">
           Таблица ошибок ещё не создана — выполни блок «ДИАГНОСТИКА» из supabase/migrations.
         </p>
       ) : diag.mistakes.length === 0 ? (
@@ -300,7 +300,7 @@ export function DiagnosticsSection({
                 <span className="min-w-0 truncate text-fg-secondary">
                   {LANG_FLAG[m.lang]} · {t ? `${t.level} · ${t.title}` : `тема №${m.topicId}`}
                 </span>
-                <span className="shrink-0 text-xs text-red-300">
+                <span className="shrink-0 text-xs text-danger-soft-fg">
                   ошибок: {m.count}
                 </span>
               </li>

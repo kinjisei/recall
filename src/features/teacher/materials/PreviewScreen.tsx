@@ -93,16 +93,16 @@ export function PreviewScreen({
             </p>
             <p className="mt-0.5">{e.prompt}</p>
             {e.type === 'mcq' && (
-              <p className="mt-0.5 text-emerald-400">
+              <p className="mt-0.5 text-success-strong">
                 ✓ {e.options[e.answer]}
                 <span className="text-fg-muted"> (из: {e.options.join(' · ')})</span>
               </p>
             )}
             {e.type === 'fill' && (
-              <p className="mt-0.5 text-emerald-400">✓ {e.answer}</p>
+              <p className="mt-0.5 text-success-strong">✓ {e.answer}</p>
             )}
             {e.type === 'order' && (
-              <p className="mt-0.5 text-emerald-400">
+              <p className="mt-0.5 text-success-strong">
                 ✓ {correctAnswerText(e)}
                 <span className="text-fg-muted"> (слова: {e.words.join(' · ')})</span>
               </p>
@@ -119,7 +119,7 @@ export function PreviewScreen({
         disabled={busy !== null}
       />
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
 
       <div className="flex gap-2">
         <Button variant="secondary" className="flex-1" onClick={regen} disabled={busy !== null}>

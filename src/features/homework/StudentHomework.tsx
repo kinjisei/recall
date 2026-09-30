@@ -209,7 +209,7 @@ export function StudentHomework({
     <Card className="flex flex-col gap-3">
       <div className="flex items-baseline justify-between gap-2">
         <h2 className="text-[15px] font-semibold">Домашка на неделю</h2>
-        <span className={`text-sm ${overdue ? 'text-amber-300' : 'text-fg-muted'}`}>
+        <span className={`text-sm ${overdue ? 'text-warning-strong' : 'text-fg-muted'}`}>
           {dueLabel(hw.due_at)}
         </span>
       </div>
@@ -233,7 +233,7 @@ export function StudentHomework({
       )}
 
       {error && (
-        <p role="alert" className="text-sm text-red-400">
+        <p role="alert" className="text-sm text-danger-strong">
           {error}
         </p>
       )}

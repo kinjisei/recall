@@ -442,8 +442,8 @@ function TrainerRunner({
             const isPicked = i === picked
             let cls = 'border-tint/[0.10] hover:border-accent-line'
             if (picked !== null) {
-              if (isAnswer) cls = 'border-emerald-500 bg-emerald-950/40'
-              else if (isPicked) cls = 'border-red-500 bg-red-950/40'
+              if (isAnswer) cls = 'border-success bg-success-soft/40'
+              else if (isPicked) cls = 'border-danger bg-danger-soft/40'
               else cls = 'border-tint/[0.08] opacity-60'
             }
             // празднуем только собственный верный ответ (см. exercises.tsx)

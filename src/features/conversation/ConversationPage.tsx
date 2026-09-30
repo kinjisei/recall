@@ -161,7 +161,7 @@ function chatSystemPrompt(level: CEFRLevel, lang: AppLang, goal: LearningGoal | 
  */
 const MARKERS = [
   { re: /^(?:✏️|\[fix\])\s*/i, Icon: IconPencil, cls: 'text-accent-strong' },
-  { re: /^(?:✅|\[ok\])\s*/i, Icon: IconCheck, cls: 'text-emerald-400' },
+  { re: /^(?:✅|\[ok\])\s*/i, Icon: IconCheck, cls: 'text-success-strong' },
   { re: /^(?:📚|\[topic\])\s*/i, Icon: IconMaterials, cls: 'font-medium text-accent-strong' },
 ] as const
 
@@ -386,12 +386,12 @@ function ChatSection({
         // Серия серверных сбоёв: честно говорим, что это на нашей стороне, и не
         // винимо человека. Кнопка отправки остаётся — это осознанная новая
         // попытка, а не молчаливое долбление; удачный ответ снимет баннер.
-        <p className="flex-none text-sm text-amber-300">
+        <p className="flex-none text-sm text-warning-strong">
           Похоже, у AI сейчас неполадки на нашей стороне — это не из-за тебя. Попробуй позже.
           Слова, чтение, грамматика и произношение работают как обычно.
         </p>
       ) : (
-        error && <p className="flex-none text-sm text-red-500">{error}</p>
+        error && <p className="flex-none text-sm text-danger">{error}</p>
       )}
       </div>
 

@@ -97,7 +97,7 @@ export function AdminPage() {
         </Button>
       </div>
 
-      {searchError && <p className="text-sm text-red-400">{searchError}</p>}
+      {searchError && <p className="text-sm text-danger-strong">{searchError}</p>}
 
       {searched && !searching && rows.length === 0 && !searchError && (
         <p className="text-sm text-fg-muted">Никого не нашлось.</p>
@@ -174,7 +174,7 @@ function UserRow({
       {typeof row.students === 'number' &&
         row.students > 5 &&
         !row.plan.startsWith('teacher_') && (
-          <p className="mt-2 rounded-xl bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+          <p className="mt-2 rounded-xl bg-amber-500/10 px-3 py-2 text-xs text-warning-soft-fg">
             У этого аккаунта уже {row.students} учеников. После включения тарифа все они
             получат повышенные лимиты AI — проверь, что это ожидаемо.
           </p>
@@ -206,7 +206,7 @@ function UserRow({
         </Button>
       </div>
 
-      {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
+      {error && <p className="mt-2 text-sm text-danger-strong">{error}</p>}
     </div>
   )
 }
@@ -275,7 +275,7 @@ function Funnel() {
         </div>
       </div>
 
-      {err && <p className="mt-3 text-sm text-amber-300">Аналитика недоступна: {err}</p>}
+      {err && <p className="mt-3 text-sm text-warning-strong">Аналитика недоступна: {err}</p>}
       {!err && !data && <RowsSkeleton count={2} height={44} />}
 
       {data && (

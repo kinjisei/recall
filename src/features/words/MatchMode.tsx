@@ -236,7 +236,7 @@ function MatchRound({
           const isWrong = wrong === r.id
           // пара сошлась — короткий «клевок» (тот же класс, что в остальных играх)
           const doneCls =
-            'border-emerald-500/60 bg-emerald-500/12 text-emerald-300 animate-answer-pop'
+            'border-success/60 bg-success/12 text-success-soft-fg animate-answer-pop'
           return (
             <Fragment key={l.id}>
               <button
@@ -263,7 +263,7 @@ function MatchRound({
                   rDone
                     ? doneCls
                     : isWrong
-                      ? 'border-red-500/70 bg-red-500/12'
+                      ? 'border-danger/70 bg-danger/12'
                       : 'border-tint/[0.10]'
                 }`}
               >

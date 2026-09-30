@@ -182,9 +182,9 @@ export function QuizRunner({
               picked === null
                 ? 'border-tint/[0.10] active:scale-[0.98]'
                 : isAnswer
-                  ? 'border-emerald-500 bg-emerald-500/15 text-emerald-300'
+                  ? 'border-success bg-success/15 text-success-soft-fg'
                   : isPicked
-                    ? 'border-red-500 bg-red-500/15 text-red-300'
+                    ? 'border-danger bg-danger/15 text-danger-soft-fg'
                     : 'border-tint/[0.08] opacity-60'
             // празднуем только собственный верный ответ (см. exercises.tsx)
             const pop = isPicked && isAnswer ? ' animate-answer-pop' : ''

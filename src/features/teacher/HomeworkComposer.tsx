@@ -212,7 +212,7 @@ export function HomeworkComposer({
             // ⚠️ Объём набора считается ОТ СРОКА. Сдвинули дату после подбора —
             // числа в пунктах и в объяснениях относятся к прежнему сроку, и
             // молчать об этом нельзя: они выглядят как посчитанные только что.
-            <p className="mt-2 text-xs text-amber-300">
+            <p className="mt-2 text-xs text-warning-strong">
               Срок изменился — подбери заново, иначе числа останутся от прежнего.
             </p>
           )}
@@ -344,7 +344,7 @@ export function HomeworkComposer({
           />
 
           {error && (
-            <p role="alert" className="mt-3 text-sm text-red-400">
+            <p role="alert" className="mt-3 text-sm text-danger-strong">
               {error}
             </p>
           )}

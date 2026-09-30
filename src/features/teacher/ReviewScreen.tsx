@@ -161,7 +161,7 @@ export function ReviewScreen({
       )}
       {error && (
         <Card tone="danger">
-          <p className="text-sm text-red-300">{error}</p>
+          <p className="text-sm text-danger-soft-fg">{error}</p>
           {!review && (
             <Button variant="secondary" className="mt-2 px-3 py-1.5 text-sm" onClick={runAiReview}>
               Повторить разбор
@@ -192,7 +192,7 @@ export function ReviewScreen({
                 <p className="text-sm font-medium">{ex.prompt}</p>
                 <p className="text-sm">
                   Ответ ученика:{' '}
-                  <span className={item.ok ? 'font-semibold text-emerald-400' : 'font-semibold text-red-500'}>
+                  <span className={item.ok ? 'font-semibold text-success-strong' : 'font-semibold text-danger'}>
                     {given}
                   </span>
                   {!item.ok && correct && (
@@ -223,7 +223,7 @@ export function ReviewScreen({
                         onClick={() => setItem(i, { ok: false })}
                         className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors active:scale-[0.97] ${
                           !item.ok
-                            ? 'bg-red-500 text-white'
+                            ? 'bg-danger text-white'
                             : 'bg-tint/[0.07] text-fg-secondary'
                         }`}
                       >

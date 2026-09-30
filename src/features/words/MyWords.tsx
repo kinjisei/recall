@@ -143,7 +143,7 @@ export function MyWords({ lang, onBack }: { lang: AppLang; onBack: () => void })
 
       {error && (
         <Card tone="danger">
-          <p className="text-sm text-red-300">{error}</p>
+          <p className="text-sm text-danger-soft-fg">{error}</p>
         </Card>
       )}
 
@@ -400,7 +400,7 @@ function WordRow({
         <div className="flex shrink-0 gap-2">
           <button
             onClick={onDelete}
-            className="rounded-lg bg-red-500/90 px-3 py-1.5 text-sm font-medium text-white"
+            className="rounded-lg bg-danger/90 px-3 py-1.5 text-sm font-medium text-white"
           >
             Удалить
           </button>
@@ -456,7 +456,7 @@ function WordRow({
         <button
           onClick={onAskDelete}
           aria-label={`Удалить ${card.front}`}
-          className="rounded-lg p-2 text-fg-muted hover:text-red-400"
+          className="rounded-lg p-2 text-fg-muted hover:text-danger-strong"
         >
           <IconTrash size={17} />
         </button>

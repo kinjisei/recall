@@ -172,7 +172,7 @@ export function SprintMode({ lang, onBack }: { lang: AppLang; onBack: () => void
       <div className="flex items-center justify-between text-sm text-fg-muted">
         <span className="flex items-center gap-1.5">
           <IconTimer size={16} />
-          <span className={timeLeft <= 10 ? 'font-bold text-red-400' : ''}>{timeLeft} с</span>
+          <span className={timeLeft <= 10 ? 'font-bold text-danger-strong' : ''}>{timeLeft} с</span>
         </span>
         <span>верно: {correct} / {total}</span>
       </div>
@@ -180,9 +180,9 @@ export function SprintMode({ lang, onBack }: { lang: AppLang; onBack: () => void
       <Card
         className={`items-center gap-2 py-12 text-center transition-colors ${
           flash === 'ok'
-            ? 'border-emerald-500/60 animate-answer-pop'
+            ? 'border-success/60 animate-answer-pop'
             : flash === 'bad'
-              ? 'border-red-500/60'
+              ? 'border-danger/60'
               : ''
         }`}
       >

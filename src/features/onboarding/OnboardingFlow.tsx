@@ -408,7 +408,7 @@ function StepReady({
               autoFocus
               className="h-12 rounded-2xl border border-tint/[0.12] bg-input px-4 text-center text-lg tracking-widest outline-none focus:border-accent-line"
             />
-            {joinError && <p className="text-sm text-red-400">{joinError}</p>}
+            {joinError && <p className="text-sm text-danger-strong">{joinError}</p>}
             <Button type="submit" disabled={!code.trim() || joining} className={`py-4 ${ONBOARDING_CTA}`}>
               {joining ? 'Привязываю…' : 'Привязаться и начать'}
             </Button>

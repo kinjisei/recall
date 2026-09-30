@@ -229,12 +229,12 @@ export function MaterialDetail({
             )
           })
         )}
-        {error && <p className="text-sm text-red-500">{error}</p>}
+        {error && <p className="text-sm text-danger">{error}</p>}
       </Card>
 
       <Button
         variant="ghost"
-        className="self-start text-sm text-red-500"
+        className="self-start text-sm text-danger"
         onClick={remove}
         loading={deleting}
       >

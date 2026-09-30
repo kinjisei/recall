@@ -388,9 +388,9 @@ export function PronunciationPage() {
                     // допустимое исключение WCAG 2.5.5
                     'inline -my-2 py-2 align-baseline transition-colors ' +
                     (w.ok === true
-                      ? 'text-emerald-400'
+                      ? 'text-success-strong'
                       : w.ok === false
-                        ? 'text-red-400'
+                        ? 'text-danger-strong'
                         : 'hover:text-accent-strong')
                   }
                 >
@@ -425,7 +425,7 @@ export function PronunciationPage() {
         </Card>
       )}
 
-      {error && <p className="text-sm text-red-400">{error}</p>}
+      {error && <p className="text-sm text-danger-strong">{error}</p>}
 
       {/* распорка: прижимает микрофон и кнопки к низу экрана */}
       <div className="flex-1" />

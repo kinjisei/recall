@@ -161,7 +161,7 @@ export function MaterialsSection({
       {/* На проверку: кто сдал, какой материал — сразу в проверку одним тапом */}
       {pending.length > 0 && (
         <Card tone="warning" className="flex flex-col gap-2">
-          <p className="text-sm font-semibold text-amber-200">
+          <p className="text-sm font-semibold text-warning-soft-fg">
             На проверку: {pending.length}
           </p>
           {pending.map((w) => (

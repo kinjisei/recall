@@ -117,7 +117,7 @@ export function HomeworkSection({
 
   return (
     <div className="rounded-2xl border border-tint/[0.08] bg-surface p-4">
-      {error && <p className="mb-2 text-sm text-amber-300">{error}</p>}
+      {error && <p className="mb-2 text-sm text-warning-strong">{error}</p>}
 
       {!hw ? (
         <div className="flex flex-col gap-3">
@@ -132,7 +132,7 @@ export function HomeworkSection({
         <div className="flex flex-col gap-3">
           <div className="flex items-baseline justify-between gap-2">
             <p className="text-[15px] font-medium">Домашка на неделю</p>
-            <p className={`text-sm ${overdue ? 'text-amber-300' : 'text-fg-muted'}`}>
+            <p className={`text-sm ${overdue ? 'text-warning-strong' : 'text-fg-muted'}`}>
               {dueLabel(hw.due_at)}
             </p>
           </div>

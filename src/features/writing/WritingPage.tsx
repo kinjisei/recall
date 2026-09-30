@@ -259,7 +259,7 @@ function WritingRunner({
             autoCapitalize="sentences"
           />
           <div className="flex items-center justify-between text-xs text-fg-muted">
-            <span className={tooShort ? 'text-amber-400' : ''}>
+            <span className={tooShort ? 'text-warning' : ''}>
               {words} слов{minWords ? ` (минимум ${minWords})` : ''}
             </span>
             {grade && (
@@ -268,7 +268,7 @@ function WritingRunner({
               </button>
             )}
           </div>
-          {error && <p className="text-sm text-red-500">{error}</p>}
+          {error && <p className="text-sm text-danger">{error}</p>}
           <Button onClick={submit} disabled={busy || !essay.trim()} loading={busy}>
             {busy ? 'AI проверяет…' : grade ? 'Пересдать' : 'Сдать на проверку'}
           </Button>

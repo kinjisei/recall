@@ -62,7 +62,7 @@ function TeacherCard() {
           </p>
         </div>
         {pending > 0 ? (
-          <span className="rounded-full bg-amber-900/50 px-2.5 py-1 text-sm font-bold text-amber-300">
+          <span className="rounded-full bg-warning-soft/50 px-2.5 py-1 text-sm font-bold text-warning-strong">
             {pending}
           </span>
         ) : (
@@ -97,16 +97,16 @@ export function AssignmentsNotice({
       <AppLink to="/assignments">
         <Card tone="warning" className="flex items-center justify-between transition-transform active:scale-[0.99]">
           <div>
-            <p className="font-semibold text-amber-200">
+            <p className="font-semibold text-warning-soft-fg">
               Новое задание от преподавателя
             </p>
-            <p className="text-sm text-amber-300/80">
+            <p className="text-sm text-warning-strong/80">
               {counts.pending === 1
                 ? 'Тебя ждёт 1 задание'
                 : `Тебя ждут задания: ${counts.pending}`}
             </p>
           </div>
-          <span className="rounded-full bg-amber-400 px-2.5 py-1 text-sm font-bold text-amber-950">
+          <span className="rounded-full bg-warning px-2.5 py-1 text-sm font-bold text-warning-fg">
             {counts.pending}
           </span>
         </Card>
@@ -203,7 +203,7 @@ function JoinTeacherBlock() {
         </form>
       )}
       {msg && <p className="text-sm text-emerald-600">{msg}</p>}
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
     </Card>
   )
 }

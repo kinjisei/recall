@@ -122,7 +122,7 @@ export function FeedbackSheet({ where, onClose }: { where: string; onClose: () =
               className="mt-1.5 w-full rounded-xl bg-input px-3 py-2.5 text-[15px] outline-none ring-1 ring-control-line focus:ring-1 focus:ring-accent-line"
             />
 
-            {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
+            {error && <p className="mt-3 text-sm text-danger-strong">{error}</p>}
 
             <Button
               className="mt-4 w-full"

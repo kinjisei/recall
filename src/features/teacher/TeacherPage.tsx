@@ -304,12 +304,12 @@ function TeacherDashboard() {
           >
             {label}
             {id === 'materials' && pendingWorks > 0 && (
-              <span className="ml-1.5 rounded-full bg-amber-400 px-1.5 py-0.5 text-xs font-bold text-amber-950">
+              <span className="ml-1.5 rounded-full bg-warning px-1.5 py-0.5 text-xs font-bold text-warning-fg">
                 {pendingWorks}
               </span>
             )}
             {id === 'writing' && pendingWriting > 0 && (
-              <span className="ml-1.5 rounded-full bg-amber-400 px-1.5 py-0.5 text-xs font-bold text-amber-950">
+              <span className="ml-1.5 rounded-full bg-warning px-1.5 py-0.5 text-xs font-bold text-warning-fg">
                 {pendingWriting}
               </span>
             )}
@@ -384,7 +384,7 @@ function TeacherDashboard() {
 
           {error && (
             <Card tone="danger">
-              <p className="text-sm text-red-300">{error}</p>
+              <p className="text-sm text-danger-soft-fg">{error}</p>
             </Card>
           )}
 
@@ -429,7 +429,7 @@ function TeacherDashboard() {
                 <>
                   {attention > 0 && (
                     <Card tone="warning">
-                      <p className="text-sm font-semibold text-amber-200">
+                      <p className="text-sm font-semibold text-warning-soft-fg">
                         Нужно внимание: {attention}
                       </p>
                       <p className="mt-1 text-sm text-fg-secondary">
@@ -529,7 +529,7 @@ function StudentRow({
           {signal.homeworkText ? (
             <span
               className={`block truncate text-sm ${
-                signal.overdue ? 'text-amber-200' : 'text-fg-secondary'
+                signal.overdue ? 'text-warning-soft-fg' : 'text-fg-secondary'
               }`}
             >
               {signal.homeworkText} · {signal.dueText}
@@ -552,11 +552,11 @@ function StudentRow({
           <span className="mt-0.5 block text-sm text-fg-muted">
             <IconFlame size={13} className="inline align-text-bottom" /> {student.streak} ·
             занимался {signal.regularity} ·{' '}
-            <span className={signal.lost ? 'text-amber-200' : ''}>{lastSeen(student)}</span>
+            <span className={signal.lost ? 'text-warning-soft-fg' : ''}>{lastSeen(student)}</span>
           </span>
 
           {seatsKnown && !covered && (
-            <span className="mt-1 inline-block rounded-lg bg-amber-500/10 px-2 py-1 text-xs text-amber-200">
+            <span className="mt-1 inline-block rounded-lg bg-amber-500/10 px-2 py-1 text-xs text-warning-soft-fg">
               Вне мест тарифа
             </span>
           )}
@@ -669,7 +669,7 @@ function StudentCard({
             </p>
           )}
           {seatsKnown && !covered && (
-            <p className="mt-1 inline-block rounded-lg bg-amber-500/10 px-2 py-1 text-xs text-amber-200">
+            <p className="mt-1 inline-block rounded-lg bg-amber-500/10 px-2 py-1 text-xs text-warning-soft-fg">
               Вне мест тарифа — занимается на бесплатных лимитах AI
             </p>
           )}
@@ -762,7 +762,7 @@ function StudentCard({
         </div>
       </Reveal>
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
 
       <div className="mt-1 flex flex-wrap items-center gap-2 border-t border-tint/[0.06] pt-3">
         {seatsKnown && (

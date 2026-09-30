@@ -277,7 +277,7 @@ function QuestChat({ quest, onBack }: { quest: GrammarQuest; onBack: () => void 
             <Thinking label="печатает" />
           </div>
         )}
-        {error && <p className="text-sm text-red-500">{error}</p>}
+        {error && <p className="text-sm text-danger">{error}</p>}
         {completed && (
           <Card className="flex-none items-center text-center">
             <IconBadgeCheck size={40} className="animate-pop-in text-accent-strong" />

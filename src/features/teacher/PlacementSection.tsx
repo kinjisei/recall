@@ -115,7 +115,7 @@ export function PlacementSection({
             ))}
           </div>
 
-          {error && <p className="text-sm text-red-400">{error}</p>}
+          {error && <p className="text-sm text-danger-strong">{error}</p>}
 
           {loadError ? (
             <LoadError message={loadError} onRetry={load} />
@@ -134,7 +134,7 @@ export function PlacementSection({
                     <p className="text-sm">
                       {r.lang === 'es' ? 'Испанский' : 'Английский'}
                       {r.status === 'done' ? (
-                        <span className="ml-2 font-semibold text-emerald-400">
+                        <span className="ml-2 font-semibold text-success-strong">
                           {r.result_level}
                         </span>
                       ) : (

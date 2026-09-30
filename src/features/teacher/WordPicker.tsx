@@ -392,7 +392,7 @@ function WordList({
           ← к наборам
         </button>
 
-        {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
+        {error && <p className="mt-2 text-sm text-danger-strong">{error}</p>}
 
         {words === null ? (
           <RowsSkeleton count={5} height={44} />

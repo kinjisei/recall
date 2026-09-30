@@ -25,7 +25,7 @@ import type { GrammarExercise } from '../types'
 /** Подсказка о месте ошибки — одинаковая на всех типах упражнений. */
 function HintLine({ text }: { text: string }) {
   return (
-    <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+    <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-warning-soft-fg">
       {text} <span className="text-fg-muted">Попробуй ещё раз.</span>
     </p>
   )
@@ -46,7 +46,7 @@ function RevealButton({ onClick }: { onClick: () => void }) {
 /** Итог после верного ответа. Со второй попытки — так и пишем. */
 function CorrectLine({ attempts }: { attempts: number }) {
   return (
-    <p className="animate-answer-pop text-sm font-semibold text-emerald-400">
+    <p className="animate-answer-pop text-sm font-semibold text-success-strong">
       {attempts > 1 ? 'Верно — со второй попытки ✓' : 'Верно! ✓'}
     </p>
   )
@@ -125,9 +125,9 @@ export function McqExercise({
           let cls = 'border-tint/[0.10] hover:border-accent-line'
           // ⚠️ Правильный вариант подсвечиваем ТОЛЬКО когда всё кончено. Пока
           // идёт вторая попытка, зелёная рамка была бы тем же готовым ответом.
-          if (isWrong) cls = 'border-red-500 bg-red-950/40 opacity-60'
+          if (isWrong) cls = 'border-danger bg-danger-soft/40 opacity-60'
           else if (done) {
-            if (isAnswer) cls = 'border-emerald-500 bg-emerald-950/40'
+            if (isAnswer) cls = 'border-success bg-success-soft/40'
             else cls = 'border-tint/[0.08] opacity-60'
           }
           // «клевок» только когда человек нашёл ответ сам
@@ -199,8 +199,8 @@ export function FillExercise({
         className={`w-full rounded-lg border bg-input px-3 py-2 outline-none ${
           done
             ? solved
-              ? 'border-emerald-500'
-              : 'border-red-500'
+              ? 'border-success'
+              : 'border-danger'
             : hint
               ? 'border-amber-500'
               : 'border-tint/[0.10] focus:border-accent-line'
@@ -236,8 +236,8 @@ export function FillExercise({
 
       {done && !solved && (
         <p className="text-sm">
-          <span className="text-red-500">Верный ответ: </span>
-          <span className="font-semibold text-emerald-400">{exercise.answer}</span>
+          <span className="text-danger">Верный ответ: </span>
+          <span className="font-semibold text-success-strong">{exercise.answer}</span>
         </p>
       )}
       {solved && <CorrectLine attempts={attempts} />}
@@ -314,8 +314,8 @@ export function OrderExercise({
         className={`min-h-[48px] rounded-lg border-2 border-dashed p-2 ${
           checked
             ? ok
-              ? 'border-emerald-500'
-              : 'border-red-500'
+              ? 'border-success'
+              : 'border-danger'
             : 'border-tint/[0.10]'
         }`}
       >
@@ -361,8 +361,8 @@ export function OrderExercise({
 
       {revealed && !solved && (
         <p className="text-sm">
-          <span className="text-red-500">Правильно: </span>
-          <span className="font-semibold text-emerald-400">{exercise.answer.join(' ')}</span>
+          <span className="text-danger">Правильно: </span>
+          <span className="font-semibold text-success-strong">{exercise.answer.join(' ')}</span>
         </p>
       )}
       {solved && <CorrectLine attempts={attempts} />}

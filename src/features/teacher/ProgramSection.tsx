@@ -66,7 +66,7 @@ export function ProgramSection({ studentId }: { studentId: string }) {
       ) : error ? (
         // до выполнения SQL таблицы нет — подсказываем, не падаем
         error.includes('study_plans') ? (
-          <p className="text-xs text-amber-300">
+          <p className="text-xs text-warning-strong">
             Таблица программ ещё не создана — выполни блок «ПРОГРАММА ОБУЧЕНИЯ» из supabase/migrations.
           </p>
         ) : (
@@ -128,7 +128,7 @@ function ActivePlanView({
         </p>
       )}
       <PlanView weeks={plan.weeks} currentWeek={week} />
-      {err && <p className="text-sm text-red-400">{err}</p>}
+      {err && <p className="text-sm text-danger-strong">{err}</p>}
       <div className="flex gap-2">
         <Button
           variant="secondary"
@@ -240,7 +240,7 @@ function PlanForm({
             AI учтёт диагностику ученика: слабые темы грамматики, буксующие слова и баллы по
             заданиям.
           </p>
-          {err && <p className="text-sm text-red-400">{err}</p>}
+          {err && <p className="text-sm text-danger-strong">{err}</p>}
           <div className="flex gap-2">
             <Button
               className="px-4 py-2 text-sm"
@@ -274,7 +274,7 @@ function PlanForm({
               className={inputCls}
             />
           </label>
-          {err && <p className="text-sm text-red-400">{err}</p>}
+          {err && <p className="text-sm text-danger-strong">{err}</p>}
           <div className="flex flex-wrap gap-2">
             <Button className="px-4 py-2 text-sm" loading={busy === 'save'} onClick={save}>
               Сохранить и назначить

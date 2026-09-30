@@ -138,11 +138,11 @@ export function AddTextForm({
         className="rounded-xl border border-tint/[0.10] bg-input px-4 py-2.5 text-[15px] leading-relaxed outline-none focus:border-accent-line"
       />
       {body.length > MY_TEXT_LIMIT && (
-        <p className="text-xs text-amber-300">
+        <p className="text-xs text-warning-strong">
           Текст длиннее лимита — сохранятся первые {MY_TEXT_LIMIT.toLocaleString('ru-RU')} знаков.
         </p>
       )}
-      {err && <p className="text-sm text-red-400">{err}</p>}
+      {err && <p className="text-sm text-danger-strong">{err}</p>}
 
       <div className="flex flex-wrap gap-2">
         <Button className="px-4 py-2 text-sm" loading={busy} onClick={save}>
@@ -181,7 +181,7 @@ export function MyTextReader({
     <div className="flex flex-col gap-4">
       <BackHeader onBack={onBack} title={text.title} />
       {text.truncated && (
-        <p className="text-xs text-amber-300">Текст был обрезан по лимиту при добавлении.</p>
+        <p className="text-xs text-warning-strong">Текст был обрезан по лимиту при добавлении.</p>
       )}
       <Card>
         <MarkableText

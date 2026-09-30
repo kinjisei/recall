@@ -178,7 +178,7 @@ function BuildTask({
 
       <div
         className={`min-h-[48px] rounded-lg border-2 border-dashed p-2 ${
-          checked ? (ok ? 'border-emerald-500' : 'border-red-500') : 'border-tint/[0.10]'
+          checked ? (ok ? 'border-success' : 'border-danger') : 'border-tint/[0.10]'
         }`}
       >
         <div className="flex flex-wrap gap-2">
@@ -216,7 +216,7 @@ function BuildTask({
       </div>
 
       {!checked && hint && (
-        <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+        <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-warning-soft-fg">
           {hint} <span className="text-fg-muted">Попробуй ещё раз.</span>
         </p>
       )}
@@ -232,13 +232,13 @@ function BuildTask({
       {checked && (
         <div className="flex items-center gap-2 text-sm">
           {solved ? (
-            <span className="animate-answer-pop font-semibold text-emerald-400">
+            <span className="animate-answer-pop font-semibold text-success-strong">
               {attempts > 1 ? 'Верно — со второй попытки ✓' : 'Верно! ✓'}
             </span>
           ) : (
             <span>
-              <span className="text-red-500">Правильно: </span>
-              <span className="font-semibold text-emerald-400">{task.target}</span>
+              <span className="text-danger">Правильно: </span>
+              <span className="font-semibold text-success-strong">{task.target}</span>
             </span>
           )}
           <button

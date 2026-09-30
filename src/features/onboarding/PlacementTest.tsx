@@ -209,7 +209,7 @@ export function PlacementTest() {
           </p>
         </Card>
         {saveError && (
-          <p className="text-center text-sm text-red-400">
+          <p className="text-center text-sm text-danger-strong">
             Не удалось сохранить — проверь интернет и нажми ещё раз.
           </p>
         )}

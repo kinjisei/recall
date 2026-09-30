@@ -198,7 +198,7 @@ function AssignmentCard({ row, onOpen }: { row: Row; onOpen: () => void }) {
           <p className="text-xs text-fg-muted">
             {m.lang.toUpperCase()} · {m.level} · {m.format} · {m.exercises.length} упр.
             {(row.attempts?.length ?? 0) > 0 && row.status === 'assigned' && (
-              <span className="ml-1 font-semibold text-amber-400">
+              <span className="ml-1 font-semibold text-warning">
                 · повторно
               </span>
             )}
@@ -206,7 +206,7 @@ function AssignmentCard({ row, onOpen }: { row: Row; onOpen: () => void }) {
         </div>
         <span className="shrink-0 text-right text-sm">
           {row.status === 'assigned' ? (
-            <span className="rounded-full bg-amber-900/50 px-2 py-0.5 text-xs font-semibold text-amber-300">
+            <span className="rounded-full bg-warning-soft/50 px-2 py-0.5 text-xs font-semibold text-warning-strong">
               новое
             </span>
           ) : row.status === 'submitted' ? (
@@ -216,7 +216,7 @@ function AssignmentCard({ row, onOpen }: { row: Row; onOpen: () => void }) {
             </>
           ) : (
             <>
-              <span className="block font-semibold text-emerald-400">
+              <span className="block font-semibold text-success-strong">
                 ✓ {(row.teacher_review ?? []).filter((r) => r.ok).length}/{row.auto_total}
               </span>
               <span className="block text-xs text-accent-strong">тренироваться →</span>
@@ -299,7 +299,7 @@ function ReviewedView({
             <p className="text-sm font-medium">{ex.prompt}</p>
             <p className="text-sm">
               Твой ответ:{' '}
-              <span className={ok ? 'font-semibold text-emerald-400' : 'font-semibold text-red-500'}>
+              <span className={ok ? 'font-semibold text-success-strong' : 'font-semibold text-danger'}>
                 {given} {ok ? '✓' : '✗'}
               </span>
               {!ok && correct && <span className="text-fg-muted"> · правильно: {correct}</span>}
@@ -448,7 +448,7 @@ function AssignmentRunner({
 
         {row.note && row.status === 'assigned' && (
           <Card tone="warning">
-            <p className="text-sm text-amber-200">
+            <p className="text-sm text-warning-soft-fg">
               💬 Комментарий преподавателя: {row.note}
             </p>
           </Card>

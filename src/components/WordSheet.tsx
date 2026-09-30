@@ -295,7 +295,7 @@ export function WordSheet({
             «{sentence}»
           </p>
 
-          {error && <p className="mt-3 text-sm text-red-500">{error}</p>}
+          {error && <p className="mt-3 text-sm text-danger">{error}</p>}
 
           {/* Разбор всего предложения (фразовые глаголы/выражения/грамматика) */}
           <button

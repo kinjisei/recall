@@ -54,7 +54,7 @@ export function SecuritySection() {
       </p>
 
       {done && !open && (
-        <p className="mt-3 text-sm text-emerald-400">
+        <p className="mt-3 text-sm text-success-strong">
           Пароль изменён. Входы на других устройствах завершены.
         </p>
       )}
@@ -96,7 +96,7 @@ export function SecuritySection() {
           />
 
           {error && (
-            <p role="alert" className="text-sm text-red-400">
+            <p role="alert" className="text-sm text-danger-strong">
               {error}
             </p>
           )}

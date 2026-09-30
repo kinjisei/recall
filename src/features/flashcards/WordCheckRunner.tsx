@@ -89,9 +89,9 @@ export function WordCheckRunner({
             </p>
             {wrong.map((r) => (
               <p key={r.card_id} className="mt-1 text-sm">
-                <span className="font-semibold text-red-500">{r.given || '—'}</span>
+                <span className="font-semibold text-danger">{r.given || '—'}</span>
                 {' → '}
-                <span className="font-semibold text-emerald-400">
+                <span className="font-semibold text-success-strong">
                   {r.front}
                 </span>
                 {r.back && <span className="text-fg-muted"> ({r.back})</span>}
@@ -132,8 +132,8 @@ export function WordCheckRunner({
           className={`mt-2 w-full max-w-xs rounded-xl border bg-input px-4 py-3 text-center text-lg outline-none ${
             checked
               ? ok
-                ? 'border-emerald-500'
-                : 'border-red-500'
+                ? 'border-success'
+                : 'border-danger'
               : 'border-tint/[0.10] focus:border-accent-line'
           }`}
           placeholder={lang === 'es' ? 'слово по-испански…' : 'слово по-английски…'}
@@ -150,11 +150,11 @@ export function WordCheckRunner({
         {checked && (
           <div className="flex flex-col items-center gap-1">
             {ok ? (
-              <p className="animate-answer-pop font-semibold text-emerald-400">Верно! ✓</p>
+              <p className="animate-answer-pop font-semibold text-success-strong">Верно! ✓</p>
             ) : (
               <p className="text-sm">
-                <span className="text-red-500">Правильно: </span>
-                <span className="text-lg font-bold text-emerald-400">
+                <span className="text-danger">Правильно: </span>
+                <span className="text-lg font-bold text-success-strong">
                   {current.front}
                 </span>
               </p>

@@ -17,7 +17,7 @@ export type WordStatus = 'new' | 'learning' | 'learned'
 export const WORD_STATUS_CLS: Record<WordStatus, string> = {
   new: 'bg-tint/[0.08] text-fg-muted',
   learning: 'bg-accent-soft text-accent-soft-fg',
-  learned: 'bg-emerald-500/20 text-emerald-300',
+  learned: 'bg-success/20 text-success-soft-fg',
 }
 
 export interface StudentWord {

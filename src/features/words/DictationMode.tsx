@@ -210,8 +210,8 @@ export function DictationMode({ lang, onBack }: { lang: AppLang; onBack: () => v
                 checked === null
                   ? 'border-tint/[0.10] focus:border-accent-line'
                   : checked
-                    ? 'border-emerald-500'
-                    : 'border-red-500'
+                    ? 'border-success'
+                    : 'border-danger'
               }`}
               placeholder="Слово…"
               value={value}
@@ -240,7 +240,7 @@ export function DictationMode({ lang, onBack }: { lang: AppLang; onBack: () => v
             )}
 
             {checked === null && hint && (
-              <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+              <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-warning-soft-fg">
                 {hint} <span className="text-fg-muted">Попробуй ещё раз.</span>
               </p>
             )}
@@ -254,12 +254,12 @@ export function DictationMode({ lang, onBack }: { lang: AppLang; onBack: () => v
             )}
             {checked === false && current && (
               <p className="text-sm">
-                <span className="text-red-500">Правильно: </span>
-                <span className="font-semibold text-emerald-400">{current.term}</span>
+                <span className="text-danger">Правильно: </span>
+                <span className="font-semibold text-success-strong">{current.term}</span>
               </p>
             )}
             {checked === true && (
-              <p className="animate-answer-pop text-sm font-semibold text-emerald-400">
+              <p className="animate-answer-pop text-sm font-semibold text-success-strong">
                 {attempts > 1 ? 'Верно — со второй попытки!' : 'Верно!'}
               </p>
             )}

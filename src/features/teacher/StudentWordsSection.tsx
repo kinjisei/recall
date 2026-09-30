@@ -218,7 +218,7 @@ export function StudentWordsSection({
                       setToDelete(w)
                     }}
                     aria-label={`Удалить ${w.card.front}`}
-                    className="flex h-9 w-9 flex-none items-center justify-center rounded-lg text-fg-muted hover:text-red-400"
+                    className="flex h-9 w-9 flex-none items-center justify-center rounded-lg text-fg-muted hover:text-danger-strong"
                   >
                     <IconTrash size={16} />
                   </button>
@@ -236,12 +236,12 @@ export function StudentWordsSection({
         </>
       )}
       {msg && <p className="text-sm text-emerald-600">{msg}</p>}
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
 
       {/* Удаление предупреждает про ПРОГРЕСС: со словом уходит вся история
           повторений, а если слово добавил ученик — это ещё и не твоя работа. */}
       {toDelete && (
-        <div className="rounded-xl border border-red-500/40 bg-red-500/[0.07] p-3 text-sm">
+        <div className="rounded-xl border border-danger/40 bg-danger/[0.07] p-3 text-sm">
           <p>
             Удалить «{toDelete.card.front}»?{' '}
             <span className="text-fg-muted">

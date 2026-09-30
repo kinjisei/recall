@@ -186,14 +186,14 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
         >
           <Card tone="warning" className="flex items-center justify-between transition-transform active:scale-[0.99]">
             <div>
-              <p className="flex items-center gap-1.5 font-semibold text-amber-200">
+              <p className="flex items-center gap-1.5 font-semibold text-warning-soft-fg">
                 <IconRefresh size={16} /> Перепроверка от преподавателя
               </p>
-              <p className="text-sm text-amber-300/80">
+              <p className="text-sm text-warning-strong/80">
                 Напиши по памяти: слов — {cards.length}
               </p>
             </div>
-            <span className="rounded-full bg-amber-400 px-2.5 py-1 text-sm font-bold text-amber-950">
+            <span className="rounded-full bg-warning px-2.5 py-1 text-sm font-bold text-warning-fg">
               {cards.length}
             </span>
           </Card>
@@ -202,7 +202,7 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
 
       {error && (
         <Card tone="danger">
-          <p className="text-sm text-red-300">{error}</p>
+          <p className="text-sm text-danger-soft-fg">{error}</p>
         </Card>
       )}
 

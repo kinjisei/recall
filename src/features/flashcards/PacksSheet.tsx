@@ -166,7 +166,7 @@ export function PacksSheet({ lang, onAdded }: { lang: AppLang; onAdded: () => vo
                               <p className="text-xs text-fg-muted">{count} слов</p>
                             </div>
                             {note ? (
-                              <span className="shrink-0 text-sm text-emerald-400">
+                              <span className="shrink-0 text-sm text-success-strong">
                                 {note}
                               </span>
                             ) : (

@@ -127,7 +127,7 @@ export function QuestSection({ studentId }: { studentId: string }) {
                   <p className="text-xs text-fg-muted">
                     {q.topic} · {q.lang.toUpperCase()} {q.level} ·{' '}
                     {q.status === 'completed' ? (
-                      <span className="font-semibold text-emerald-400">
+                      <span className="font-semibold text-success-strong">
                         пройден ✓ {q.target}/{q.target}
                       </span>
                     ) : (
@@ -248,7 +248,7 @@ export function QuestSection({ studentId }: { studentId: string }) {
             className="accent-accent"
           />
         </label>
-        {formError && <p className="text-sm text-red-400">{formError}</p>}
+        {formError && <p className="text-sm text-danger-strong">{formError}</p>}
         <Button loading={busy} onClick={submit} className="py-2 text-sm">
           Назначить квест
         </Button>

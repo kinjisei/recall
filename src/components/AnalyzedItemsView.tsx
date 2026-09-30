@@ -102,7 +102,7 @@ export function AnalyzedItemsView({
                       aria-label={isAdded ? 'Добавлено' : 'В мои слова'}
                       className={`lift flex h-9 w-9 flex-none items-center justify-center rounded-full border ${
                         isAdded
-                          ? 'border-emerald-500/60 text-emerald-400'
+                          ? 'border-success/60 text-success-strong'
                           : 'border-accent-line bg-[rgba(145,132,217,.14)] text-accent-soft-fg'
                       }`}
                     >

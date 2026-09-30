@@ -320,7 +320,7 @@ export function DashboardPage() {
         <div className="mb-3 flex items-baseline justify-between">
           <h2 className="text-lg font-medium tracking-tight">План на сегодня</h2>
           {todayPlan && (
-            <span className={`text-sm ${perfect ? 'font-medium text-amber-300' : allDone ? 'text-accent-strong' : 'text-fg-muted'}`}>
+            <span className={`text-sm ${perfect ? 'font-medium text-warning-strong' : allDone ? 'text-accent-strong' : 'text-fg-muted'}`}>
               {perfect ? 'Идеальный день ✦' : `${doneCount} из ${todayPlan.length} готово`}
             </span>
           )}
@@ -452,7 +452,7 @@ function StreakHero({
           <p className="mt-1.5 flex items-center gap-2.5">
             <IconFlame
               size={34}
-              className={`animate-flame ${perfect ? 'text-amber-300' : 'text-accent-soft-fg'}`}
+              className={`animate-flame ${perfect ? 'text-warning-strong' : 'text-accent-soft-fg'}`}
             />
             <span className="animate-pop-in text-4xl font-medium tabular-nums">{streak}</span>
           </p>
@@ -593,7 +593,7 @@ function WordOfDay({ word, lang }: { word: PoolItem; lang: 'en' | 'es' }) {
                 </Button>
               </div>
               {state === 'error' && (
-                <p className="mt-2 text-xs text-red-400">Не удалось добавить — попробуй ещё раз</p>
+                <p className="mt-2 text-xs text-danger-strong">Не удалось добавить — попробуй ещё раз</p>
               )}
             </div>
           </div>,

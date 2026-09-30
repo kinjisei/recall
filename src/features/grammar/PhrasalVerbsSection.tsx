@@ -299,11 +299,11 @@ function Trainer({ entries }: { entries: PhrasalEntry[] }) {
             chosen === null
               ? 'border-tint/[0.12] text-fg-secondary'
               : i === q.answer
-                ? `border-emerald-400/60 bg-emerald-400/10 text-emerald-300${
+                ? `border-success-strong/60 bg-success-strong/10 text-success-soft-fg${
                     i === chosen ? ' animate-answer-pop' : ''
                   }`
                 : i === chosen
-                  ? 'border-red-400/60 bg-red-400/10 text-red-300'
+                  ? 'border-danger-strong/60 bg-danger-strong/10 text-danger-soft-fg'
                   : 'border-tint/[0.08] text-fg-muted'
           return (
             <button

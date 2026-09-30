@@ -47,7 +47,7 @@ export function AnalysisSheet({
           {!data && !error && (
             <Thinking label="Разбираю фрагмент" className="mt-4 text-sm" />
           )}
-          {error && <p className="mt-4 text-sm text-red-400">{error}</p>}
+          {error && <p className="mt-4 text-sm text-danger-strong">{error}</p>}
 
           {data && (
             <>

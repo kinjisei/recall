@@ -360,7 +360,7 @@ function WritingForm({
           </>
         )}
 
-        {error && <p className="text-sm text-red-500">{error}</p>}
+        {error && <p className="text-sm text-danger">{error}</p>}
 
         <div className="flex gap-2">
           <Button className="flex-1" onClick={save} disabled={busy !== null || !prompt.trim()}>
@@ -527,10 +527,10 @@ function WritingDetail({
             )
           })
         )}
-        {err && <p className="text-sm text-red-500">{err}</p>}
+        {err && <p className="text-sm text-danger">{err}</p>}
       </Card>
 
-      <Button variant="ghost" className="self-start text-sm text-red-500" onClick={remove} loading={deleting}>
+      <Button variant="ghost" className="self-start text-sm text-danger" onClick={remove} loading={deleting}>
         Удалить задание
       </Button>
     </div>

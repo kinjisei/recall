@@ -106,8 +106,8 @@ export function DailyPlanSection({ studentId }: { studentId: string }) {
         Задания и квесты сами попадают в план
       </label>
 
-      {err && <p className="text-sm text-red-400">{err}</p>}
-      {notice && <p className="text-sm text-emerald-400">{notice}</p>}
+      {err && <p className="text-sm text-danger-strong">{err}</p>}
+      {notice && <p className="text-sm text-success-strong">{notice}</p>}
 
       <div className="flex flex-wrap gap-2">
         <Button

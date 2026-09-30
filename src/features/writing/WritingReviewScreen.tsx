@@ -122,16 +122,16 @@ export function WritingReviewScreen({
                   key={i}
                   onClick={() => setKept((k) => k.map((v, j) => (j === i ? !v : v)))}
                   className={`flex items-start gap-2 rounded-xl border px-3 py-2 text-left text-sm ${
-                    kept[i] ? 'border-emerald-500/40' : 'border-tint/[0.08] opacity-50'
+                    kept[i] ? 'border-success/40' : 'border-tint/[0.08] opacity-50'
                   }`}
                 >
-                  <span className={`mt-0.5 flex-none ${kept[i] ? 'text-emerald-400' : 'text-fg-muted'}`}>
+                  <span className={`mt-0.5 flex-none ${kept[i] ? 'text-success-strong' : 'text-fg-muted'}`}>
                     {kept[i] ? <IconCheck size={16} /> : <IconClose size={16} />}
                   </span>
                   <span>
-                    <span className="text-red-300 line-through decoration-red-500/50">{e.was}</span>
+                    <span className="text-danger-soft-fg line-through decoration-danger/50">{e.was}</span>
                     {' → '}
-                    <span className="text-emerald-300">{e.fix}</span>
+                    <span className="text-success-soft-fg">{e.fix}</span>
                   </span>
                 </button>
               ))}
@@ -163,7 +163,7 @@ export function WritingReviewScreen({
           />
         </div>
 
-        {error && <p className="text-sm text-red-500">{error}</p>}
+        {error && <p className="text-sm text-danger">{error}</p>}
 
         <div className="flex gap-2">
           <Button className="flex-1" onClick={finish} loading={busy === 'finish'} disabled={busy !== null}>

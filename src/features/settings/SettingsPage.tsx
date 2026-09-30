@@ -131,7 +131,7 @@ export function SettingsPage() {
           className="mt-1.5"
         />
 
-        {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
+        {error && <p className="mt-3 text-sm text-danger-strong">{error}</p>}
 
         <Button className="mt-4 w-full py-2.5 text-sm" onClick={saveProfile}>
           {saved ? (
