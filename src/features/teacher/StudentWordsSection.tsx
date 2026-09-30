@@ -197,7 +197,7 @@ export function StudentWordsSection({
                     type="checkbox"
                     checked={selected.has(w.card.id)}
                     onChange={() => toggle(w.card.id)}
-                    className="h-4 w-4 accent-sky-600"
+                    className="h-4 w-4 accent-accent"
                   />
                   <span className="min-w-0 flex-1 truncate text-sm">
                     <span className="font-medium">{w.card.front}</span>
@@ -235,7 +235,7 @@ export function StudentWordsSection({
           </Button>
         </>
       )}
-      {msg && <p className="text-sm text-emerald-600">{msg}</p>}
+      {msg && <p className="text-sm text-success">{msg}</p>}
       {error && <p className="text-sm text-danger">{error}</p>}
 
       {/* Удаление предупреждает про ПРОГРЕСС: со словом уходит вся история

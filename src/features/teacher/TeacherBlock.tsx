@@ -174,7 +174,7 @@ function JoinTeacherBlock() {
             {teachers.map((t) => t.display_name ?? 'Без имени').join(', ')}
           </span>
         </p>
-        {msg && <span className="text-sm text-emerald-600">✓</span>}
+        {msg && <span className="text-sm text-success">✓</span>}
       </Card>
     )
   }
@@ -202,7 +202,7 @@ function JoinTeacherBlock() {
           </Button>
         </form>
       )}
-      {msg && <p className="text-sm text-emerald-600">{msg}</p>}
+      {msg && <p className="text-sm text-success">{msg}</p>}
       {error && <p className="text-sm text-danger">{error}</p>}
     </Card>
   )

@@ -136,7 +136,7 @@ function Reference({ groups }: { groups: IrregularGroup[] }) {
                   </thead>
                   <tbody>
                     {g.verbs.map((v) => (
-                      <tr key={v.base} className="border-t border-slate-700/60">
+                      <tr key={v.base} className="border-t border-line">
                         <td className="px-3 py-1.5 font-semibold">{v.base}</td>
                         <td className="px-3 py-1.5">{v.past}</td>
                         <td className="px-3 py-1.5">{v.part}</td>

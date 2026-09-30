@@ -268,7 +268,7 @@ export function HomeworkComposer({
                     <button
                       onClick={() => remove(i)}
                       aria-label="Убрать задание"
-                      className="flex h-11 w-11 flex-none items-center justify-center rounded-lg text-fg-muted hover:text-rose-300"
+                      className="flex h-11 w-11 flex-none items-center justify-center rounded-lg text-fg-muted hover:text-danger-soft-fg"
                     >
                       <IconTrash size={16} />
                     </button>

@@ -400,7 +400,7 @@ function WordRow({
         <div className="flex shrink-0 gap-2">
           <button
             onClick={onDelete}
-            className="rounded-lg bg-danger/90 px-3 py-1.5 text-sm font-medium text-white"
+            className="rounded-lg bg-danger/90 px-3 py-1.5 text-sm font-medium text-danger-fg"
           >
             Удалить
           </button>

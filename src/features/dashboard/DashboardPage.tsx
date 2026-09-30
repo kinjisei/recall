@@ -541,7 +541,7 @@ function WordOfDay({ word, lang }: { word: PoolItem; lang: 'en' | 'es' }) {
       {open &&
         createPortal(
           <div
-            className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 sm:items-center"
+            className="fixed inset-0 z-50 flex items-end justify-center bg-scrim/60 sm:items-center"
             onClick={() => setOpen(false)}
           >
             <div

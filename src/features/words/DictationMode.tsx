@@ -240,7 +240,7 @@ export function DictationMode({ lang, onBack }: { lang: AppLang; onBack: () => v
             )}
 
             {checked === null && hint && (
-              <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-warning-soft-fg">
+              <p className="rounded-lg bg-warning/10 px-3 py-2 text-sm text-warning-soft-fg">
                 {hint} <span className="text-fg-muted">Попробуй ещё раз.</span>
               </p>
             )}

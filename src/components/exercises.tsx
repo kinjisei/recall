@@ -25,7 +25,7 @@ import type { GrammarExercise } from '../types'
 /** Подсказка о месте ошибки — одинаковая на всех типах упражнений. */
 function HintLine({ text }: { text: string }) {
   return (
-    <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-warning-soft-fg">
+    <p className="rounded-lg bg-warning/10 px-3 py-2 text-sm text-warning-soft-fg">
       {text} <span className="text-fg-muted">Попробуй ещё раз.</span>
     </p>
   )
@@ -202,7 +202,7 @@ export function FillExercise({
               ? 'border-success'
               : 'border-danger'
             : hint
-              ? 'border-amber-500'
+              ? 'border-warning'
               : 'border-tint/[0.10] focus:border-accent-line'
         }`}
         placeholder="Твой ответ…"

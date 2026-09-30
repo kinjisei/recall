@@ -391,7 +391,7 @@ function TheoryBlock({ block, lang }: { block: GrammarTheoryBlock; lang: AppLang
       return (
         <div className="flex gap-2 rounded-xl border border-warning/25 bg-warning/[0.07] px-3 py-2">
           <IconWarning size={16} className="mt-0.5 shrink-0 text-warning" />
-          <p className="leading-relaxed text-amber-100/90">
+          <p className="leading-relaxed text-warning-soft-fg/90">
             {block.text.replace(/^⚠️?\s*/, '')}
           </p>
         </div>

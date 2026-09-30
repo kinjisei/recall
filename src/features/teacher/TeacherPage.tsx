@@ -132,7 +132,7 @@ function BecomeTeacher({ onDone, onBack }: { onDone: () => void; onBack: () => v
           ))}
         </ul>
 
-        {error && <p className="mt-4 text-sm text-rose-300">{error}</p>}
+        {error && <p className="mt-4 text-sm text-danger-soft-fg">{error}</p>}
 
         <Button className="mt-5 w-full" onClick={enable} loading={busy}>
           Включить режим преподавателя
@@ -556,7 +556,7 @@ function StudentRow({
           </span>
 
           {seatsKnown && !covered && (
-            <span className="mt-1 inline-block rounded-lg bg-amber-500/10 px-2 py-1 text-xs text-warning-soft-fg">
+            <span className="mt-1 inline-block rounded-lg bg-warning/10 px-2 py-1 text-xs text-warning-soft-fg">
               Вне мест тарифа
             </span>
           )}
@@ -669,7 +669,7 @@ function StudentCard({
             </p>
           )}
           {seatsKnown && !covered && (
-            <p className="mt-1 inline-block rounded-lg bg-amber-500/10 px-2 py-1 text-xs text-warning-soft-fg">
+            <p className="mt-1 inline-block rounded-lg bg-warning/10 px-2 py-1 text-xs text-warning-soft-fg">
               Вне мест тарифа — занимается на бесплатных лимитах AI
             </p>
           )}
@@ -788,7 +788,7 @@ function StudentCard({
         )}
         <Button
           variant="ghost"
-          className="min-h-[44px] px-3 py-2 text-sm text-rose-300"
+          className="min-h-[44px] px-3 py-2 text-sm text-danger-soft-fg"
           loading={unlinking}
           onClick={async () => {
             if (

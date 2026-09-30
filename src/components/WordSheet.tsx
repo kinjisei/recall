@@ -291,7 +291,7 @@ export function WordSheet({
             </p>
           )}
 
-          <p className="mt-3 rounded-lg bg-slate-700/60 px-3 py-2 text-sm italic text-fg-muted">
+          <p className="mt-3 rounded-lg bg-input px-3 py-2 text-sm italic text-fg-muted">
             «{sentence}»
           </p>
 

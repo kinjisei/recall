@@ -156,7 +156,7 @@ export function QuestSection({ studentId }: { studentId: string }) {
                 </div>
               </div>
               <Reveal open={openChat === q.id}>
-                <div className="mt-2 flex max-h-64 flex-col gap-1.5 overflow-y-auto rounded-lg bg-black/20 p-2">
+                <div className="mt-2 flex max-h-64 flex-col gap-1.5 overflow-y-auto rounded-lg bg-sunken p-2">
                   {(q.messages ?? [])
                     .filter((m) => m.content !== '/start')
                     .map((m, i) => (

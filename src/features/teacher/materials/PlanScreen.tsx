@@ -67,7 +67,7 @@ export function PlanScreen({
           <p className="mb-1 text-xs font-semibold text-fg-muted">Целевые слова</p>
           <div className="flex flex-wrap gap-1.5">
             {plan.vocabulary.map((w, i) => (
-              <span key={i} className="rounded-full bg-sky-950/60 px-2.5 py-0.5 text-sm text-sky-300">
+              <span key={i} className="rounded-full bg-accent-soft px-2.5 py-0.5 text-sm text-accent-soft-fg">
                 {w}
               </span>
             ))}

@@ -136,26 +136,26 @@ export function TeachersPage() {
           <CTA />
 
           {/* signature: живой мини-отчёт — артефакт, которого нет у конкурентов */}
-          <div className="mt-4 w-full max-w-sm rounded-2xl border border-tint/[0.10] bg-white p-4 text-left text-black shadow-[0_18px_60px_rgba(0,0,0,.45)]">
-            <p className="text-[10px] uppercase tracking-widest text-neutral-500">
+          <div data-theme="light" className="mt-4 w-full max-w-sm rounded-2xl border border-tint/[0.10] bg-surface p-4 text-left text-fg shadow-[0_18px_60px_rgba(0,0,0,.45)]">
+            <p className="text-[10px] uppercase tracking-widest text-fg-muted">
               Отчёт о занятиях · за месяц
             </p>
             <p className="font-serif text-lg font-bold">Айгерим</p>
             <div className="mt-2 flex flex-col gap-1 text-[13px]">
-              <p className="flex justify-between border-b border-neutral-200 pb-1">
+              <p className="flex justify-between border-b border-line pb-1">
                 <span>Дней с занятиями</span>
-                <span className="font-semibold">18 <span className="text-emerald-700">▲ 6</span></span>
+                <span className="font-semibold">18 <span className="text-success-strong">▲ 6</span></span>
               </p>
-              <p className="flex justify-between border-b border-neutral-200 pb-1">
+              <p className="flex justify-between border-b border-line pb-1">
                 <span>Средний балл заданий</span>
-                <span className="font-semibold">84% <span className="text-emerald-700">▲ 12%</span></span>
+                <span className="font-semibold">84% <span className="text-success-strong">▲ 12%</span></span>
               </p>
               <p className="flex justify-between">
                 <span>Выучено слов</span>
                 <span className="font-semibold">47</span>
               </p>
             </div>
-            <p className="mt-2 text-[11px] text-neutral-400">
+            <p className="mt-2 text-[11px] text-fg-muted">
               Такой отчёт собирается из занятий сам — родители видят, за что платят.
             </p>
           </div>

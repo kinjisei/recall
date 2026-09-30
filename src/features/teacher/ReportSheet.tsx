@@ -45,7 +45,7 @@ function DeltaRow({
   const diff = hasPrev && d.now !== null ? now - (d.prev as number) : null
   const improved = diff !== null && diff !== 0 && diff > 0 === moreIsBetter
   return (
-    <div className="flex items-baseline justify-between border-b border-neutral-200 py-2">
+    <div className="flex items-baseline justify-between border-b border-line py-2">
       <span className="text-[15px]">{label}</span>
       <span className="text-right">
         <span className="text-xl font-bold">
@@ -53,13 +53,13 @@ function DeltaRow({
         </span>
         {diff !== null && diff !== 0 && (
           <span
-            className={`ml-2 text-sm font-medium ${improved ? 'text-emerald-700' : 'text-amber-700'}`}
+            className={`ml-2 text-sm font-medium ${improved ? 'text-success-strong' : 'text-warning-strong'}`}
           >
             {diff > 0 ? '▲' : '▼'} {Math.abs(diff)}
             {unit} за месяц
           </span>
         )}
-        {diff === 0 && <span className="ml-2 text-sm text-neutral-400">без изменений</span>}
+        {diff === 0 && <span className="ml-2 text-sm text-fg-muted">без изменений</span>}
       </span>
     </div>
   )
@@ -133,35 +133,35 @@ export function ReportSheet({
   }
 
   return createPortal(
-    <div className="print-sheet fixed inset-0 z-50 overflow-auto bg-white px-8 py-6 text-black">
-      <div className="no-print mb-5 flex flex-wrap items-center gap-2 border-b border-slate-200 pb-4">
+    <div data-theme="light" className="print-sheet fixed inset-0 z-50 overflow-auto bg-surface px-8 py-6 text-fg">
+      <div className="no-print mb-5 flex flex-wrap items-center gap-2 border-b border-line pb-4">
         <Button className="px-4 py-2 text-sm" onClick={() => window.print()}>
           <IconPrinter size={16} /> Печать / Сохранить в PDF
         </Button>
         <Button variant="secondary" className="px-4 py-2 text-sm" onClick={onClose}>
           Закрыть
         </Button>
-        <span className="text-xs text-slate-400">отчёт для родителей — проверь перед отправкой</span>
+        <span className="text-xs text-fg-muted">отчёт для родителей — проверь перед отправкой</span>
       </div>
 
       {/* поле комментария — только на экране; в печать уходит текст ниже */}
       <div className="no-print mx-auto mb-5 max-w-2xl">
-        <label className="block text-sm font-medium text-slate-600">
+        <label className="block text-sm font-medium text-fg-secondary">
           Комментарий преподавателя (попадёт в отчёт)
           <textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             rows={3}
             placeholder="Пара живых фраз: что получалось на занятиях, что порадовало, на чём сосредоточимся…"
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-[15px] text-black outline-none focus:border-slate-500"
+            className="mt-1 w-full rounded-lg border border-tint/[0.2] px-3 py-2 text-[15px] text-fg outline-none focus:border-accent-line"
           />
         </label>
       </div>
 
       <div className="mx-auto max-w-2xl font-serif leading-relaxed">
         {/* шапка: тонкая линейка-подпись сверху — единственный акцент листа */}
-        <div className="border-t-4 border-black pt-3">
-          <p className="text-xs uppercase tracking-widest text-neutral-500">
+        <div className="border-t-4 border-fg pt-3">
+          <p className="text-xs uppercase tracking-widest text-fg-muted">
             Отчёт о занятиях · {fmtDate(from)} — {fmtDate(today)}
           </p>
           <h1 className="mt-1 text-3xl font-bold">{studentName}</h1>
@@ -201,13 +201,13 @@ export function ReportSheet({
         {comment.trim() && (
           <>
             <h2 className="mt-6 text-lg font-bold">От преподавателя</h2>
-            <p className="mt-1 whitespace-pre-wrap border-l-2 border-neutral-300 pl-4 text-[15px] italic">
+            <p className="mt-1 whitespace-pre-wrap border-l-2 border-line pl-4 text-[15px] italic">
               {comment.trim()}
             </p>
           </>
         )}
 
-        <p className="mt-8 border-t border-neutral-200 pt-3 text-xs text-neutral-400">
+        <p className="mt-8 border-t border-line pt-3 text-xs text-fg-muted">
           Отчёт подготовлен в приложении Recall по данным занятий ·{' '}
           {today.toLocaleDateString('ru-RU')}
         </p>

@@ -163,7 +163,7 @@ export function SwipeCard({
         Помню
       </span>
       <span
-        className="absolute right-4 top-4 z-10 rounded-xl border-2 border-tint/40 px-3 py-1 text-lg font-bold text-white/70"
+        className="absolute right-4 top-4 z-10 rounded-xl border-2 border-tint/40 px-3 py-1 text-lg font-bold text-tint/70"
         style={{ opacity: againOpacity, transform: 'rotate(12deg)' }}
       >
         Ещё раз
@@ -180,19 +180,19 @@ export function SwipeTutorial({ onDismiss }: { onDismiss: () => void }) {
   // Портал в body — fixed-оверлей не должен зависеть от предков внутри <main>.
   return createPortal(
     <div
-      className="fixed inset-0 z-40 flex flex-col items-center justify-center gap-6 bg-black/60 px-8 backdrop-blur-[2px]"
+      className="fixed inset-0 z-40 flex flex-col items-center justify-center gap-6 bg-scrim/60 px-8 backdrop-blur-[2px]"
       onClick={onDismiss}
     >
-      <IconHint size={56} className="animate-pulse text-white" />
-      <p className="text-center text-lg font-semibold text-white">
+      <IconHint size={56} className="animate-pulse text-scrim-fg" />
+      <p className="text-center text-lg font-semibold text-scrim-fg">
         Тапни по карточке — увидишь перевод
       </p>
-      <div className="flex w-full max-w-xs items-center justify-between text-white/90">
+      <div className="flex w-full max-w-xs items-center justify-between text-scrim-fg/90">
         <div className="flex flex-col items-center gap-1">
           <IconBack size={36} className="animate-pulse" />
           <span className="text-center text-sm">свайп влево
             <br />
-            <span className="font-bold text-white/80">ещё раз</span>
+            <span className="font-bold text-scrim-fg/80">ещё раз</span>
           </span>
         </div>
         <div className="flex flex-col items-center gap-1">
@@ -203,7 +203,7 @@ export function SwipeTutorial({ onDismiss }: { onDismiss: () => void }) {
           </span>
         </div>
       </div>
-      <p className="mt-2 text-sm text-white/60">
+      <p className="mt-2 text-sm text-scrim-fg/60">
         «Ещё раз» — слово скоро вернётся. Нажми, чтобы начать.
       </p>
     </div>,

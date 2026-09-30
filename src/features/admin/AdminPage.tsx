@@ -174,7 +174,7 @@ function UserRow({
       {typeof row.students === 'number' &&
         row.students > 5 &&
         !row.plan.startsWith('teacher_') && (
-          <p className="mt-2 rounded-xl bg-amber-500/10 px-3 py-2 text-xs text-warning-soft-fg">
+          <p className="mt-2 rounded-xl bg-warning/10 px-3 py-2 text-xs text-warning-soft-fg">
             У этого аккаунта уже {row.students} учеников. После включения тарифа все они
             получат повышенные лимиты AI — проверь, что это ожидаемо.
           </p>
