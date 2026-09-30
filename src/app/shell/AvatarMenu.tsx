@@ -75,7 +75,7 @@ export function AvatarMenu({ opensUp = false }: { opensUp?: boolean }) {
       {open && (
         <div
           role="menu"
-          className={`animate-fade-up absolute z-30 w-56 overflow-hidden rounded-2xl border border-tint/[0.10] bg-surface/96 py-1 backdrop-blur-xl ${
+          className={`animate-fade-up absolute z-30 w-56 overflow-hidden rounded-2xl border border-tint/[0.10] bg-surface/96 py-1 shadow-raised backdrop-blur-xl ${
             opensUp ? 'bottom-full left-0 mb-2' : 'right-0 top-11'
           }`}
         >

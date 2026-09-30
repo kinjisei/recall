@@ -32,7 +32,7 @@ export function EnergyBar({ plan, className = '' }: { plan: MyPlan; className?: 
   const low = e.left <= Math.max(1, Math.round(e.cap * 0.2))
 
   return (
-    <div className={`rounded-2xl border border-tint/[0.08] bg-surface px-4 py-3 ${className}`}>
+    <div className={`rounded-2xl border border-tint/[0.08] bg-surface px-4 py-3 ${className} shadow-card`}>
       <div className="flex items-center justify-between text-sm">
         <span className="flex items-center gap-1.5 font-medium">
           <IconSparkle size={16} className={low ? 'text-warning' : 'text-accent-strong'} />

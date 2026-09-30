@@ -170,7 +170,7 @@ export function TeachersPage() {
               ['Назначай и проверяй', 'Материалы, наборы слов, квесты и программа — из карточки ученика. Проверка приходит с готовым AI-разбором.'],
               ['Смотри, что было между уроками', 'Диагностика собирается из занятий сама. Раз в месяц — отчёт родителям на печать.'],
             ].map(([t, d], i) => (
-              <div key={t} className="flex gap-3 rounded-2xl border border-tint/[0.08] bg-surface p-4">
+              <div key={t} className="flex gap-3 rounded-2xl border border-tint/[0.08] bg-surface p-4 shadow-card">
                 <span className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-accent-soft text-sm font-bold text-accent-soft-fg">
                   {i + 1}
                 </span>
@@ -188,7 +188,7 @@ export function TeachersPage() {
           <h2 className="text-center text-xl font-semibold">Что внутри</h2>
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
             {TOOLS.map(({ Icon, title, desc }) => (
-              <div key={title} className="rounded-2xl border border-tint/[0.08] bg-surface p-4">
+              <div key={title} className="rounded-2xl border border-tint/[0.08] bg-surface p-4 shadow-card">
                 <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-soft text-accent-soft-fg">
                   <Icon size={18} />
                 </span>
@@ -278,7 +278,7 @@ export function TeachersPage() {
           <h2 className="text-center text-xl font-semibold">Частые вопросы</h2>
           <div className="mt-6 flex flex-col gap-3">
             {FAQ.map((f) => (
-              <div key={f.q} className="rounded-2xl border border-tint/[0.08] bg-surface p-4">
+              <div key={f.q} className="rounded-2xl border border-tint/[0.08] bg-surface p-4 shadow-card">
                 <p className="font-medium">{f.q}</p>
                 <p className="mt-1 text-sm leading-relaxed text-fg-tertiary">{f.a}</p>
               </div>

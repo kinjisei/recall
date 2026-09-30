@@ -147,7 +147,7 @@ function StepLanguage({ onPick }: { onPick: (l: AppLang) => void }) {
           <button
             key={o.id}
             onClick={() => onPick(o.id)}
-            className="lift animate-fade-up flex aspect-square flex-col items-center justify-center gap-3 rounded-3xl border border-tint/[0.08] bg-surface"
+            className="lift animate-fade-up flex aspect-square flex-col items-center justify-center gap-3 rounded-3xl border border-tint/[0.08] bg-surface shadow-card"
             style={{ animationDelay: `${0.05 + i * 0.08}s` }}
           >
             <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-accent-soft text-2xl font-medium text-accent-soft-fg">
@@ -346,7 +346,7 @@ function StepReady({
         {PLAN.map((p, i) => (
           <div
             key={p.title}
-            className="animate-fade-up flex items-center gap-3.5 rounded-2xl border border-tint/[0.08] bg-surface px-4 py-3.5"
+            className="animate-fade-up flex items-center gap-3.5 rounded-2xl border border-tint/[0.08] bg-surface px-4 py-3.5 shadow-card"
             style={{ animationDelay: `${0.1 + i * 0.09}s` }}
           >
             <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-accent-soft text-accent-soft-fg">

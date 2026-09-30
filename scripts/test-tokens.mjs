@@ -165,6 +165,9 @@ const PAIRS = [
   ['fg-muted', 'hero-edge', TEXT],
   ['accent-strong', 'hero-mid', TEXT],
   ['accent-strong', 'hero-edge', TEXT],
+  // «Начать занятие»: текст на подложке главного призыва
+  ['fg', 'cta', TEXT],
+  ['fg', 'cta-end', TEXT],
   // текст поверх затемнения (подсказка жестов карточки)
   ['scrim-fg', 'scrim@0.6', TEXT],
 ]
@@ -194,10 +197,18 @@ for (const [name, theme, pairs] of [
 
 // ── 2б. тёмная не меняется: тени и рамки чипов — только светлой ────────────
 // Тень и рамка управления заведены ради светлой темы (30.09.2026). В тёмной
-// их цвет обязан быть прозрачным: иначе поменяется каждая карточка Nocturne.
-for (const t of ['shadow', 'control-line', 'control-line-active']) {
+// рамка обязана быть прозрачной, а тень — НУЛЕВОЙ (0 0 #0000): прозрачную
+// тень с размытием браузер всё равно рисует, и сглаживание скруглённых углов
+// менялось на несколько пикселей (поймано сверкой скриншотов).
+for (const t of ['control-line', 'control-line-active']) {
   const v = dark[`--color-${t}`]
   check(`тёмная: --color-${t} прозрачный (тёмная тема не меняется)`, v === 'transparent', v)
+}
+const rootDark = block(/\n:root\s*\{([\s\S]*?)\n\}/) ?? {}
+for (const t of ['card', 'raised']) {
+  check(`тень shadow-${t} берёт переменную темы`, dark[`--shadow-${t}`] === `var(--elevation-${t})`, dark[`--shadow-${t}`])
+  check(`тёмная: --elevation-${t} нулевая (теней нет)`, rootDark[`--elevation-${t}`] === '0 0 #0000', rootDark[`--elevation-${t}`])
+  check(`светлая: --elevation-${t} задана`, /\d+px/.test(light[`--elevation-${t}`] ?? ''), light[`--elevation-${t}`])
 }
 
 // ── 3. точки перехода: CSS = JS ─────────────────────────────────────────────

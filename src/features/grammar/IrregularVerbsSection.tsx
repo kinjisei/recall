@@ -103,7 +103,7 @@ function Reference({ groups }: { groups: IrregularGroup[] }) {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Поиск: go, went, идти…"
-        className="rounded-xl border border-tint/[0.10] bg-surface px-4 py-2.5"
+        className="rounded-xl border border-tint/[0.10] bg-surface px-4 py-2.5 shadow-card"
       />
 
       {filtered.map((g) => {

@@ -5,7 +5,7 @@ import { ThemePicker } from '../../shared/ui/ThemePicker'
 
 export function DeviceTheme() {
   return (
-    <section className="rounded-2xl border border-tint/[0.08] bg-surface p-4">
+    <section className="rounded-2xl border border-tint/[0.08] bg-surface p-4 shadow-card">
       <h2 className="text-sm font-medium">Тема на этом устройстве</h2>
       <p className="mt-1 text-sm text-fg-muted">
         Светлая — черновик до редизайна: старые экраны местами красятся мимо токенов. Меняется

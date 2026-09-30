@@ -142,7 +142,7 @@ function UserRow({
   }
 
   return (
-    <div className="animate-fade-up rounded-2xl border border-tint/[0.08] bg-surface p-4">
+    <div className="animate-fade-up rounded-2xl border border-tint/[0.08] bg-surface p-4 shadow-card">
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
         <span className="font-medium">{row.email}</span>
         {row.display_name && (
@@ -255,7 +255,7 @@ function Funnel() {
   const top = data?.steps?.[0]?.people ?? 0
 
   return (
-    <section className="rounded-2xl border border-tint/[0.08] bg-surface p-4">
+    <section className="rounded-2xl border border-tint/[0.08] bg-surface p-4 shadow-card">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="font-medium">Воронка</h2>
         <div className="flex gap-1">

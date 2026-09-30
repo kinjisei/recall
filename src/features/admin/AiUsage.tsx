@@ -44,7 +44,7 @@ export function AiUsage() {
   const reset = quotaReset(now)
 
   return (
-    <section className="rounded-2xl border border-tint/[0.08] bg-surface p-4">
+    <section className="rounded-2xl border border-tint/[0.08] bg-surface p-4 shadow-card">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="font-medium">Расход AI</h2>
         <TabPicker options={[...RANGES]} value={range} onChange={setRange} ariaLabel="Период" />

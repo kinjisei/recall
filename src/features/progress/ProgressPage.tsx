@@ -15,6 +15,7 @@ import {
   type IconProps,
 } from '../../shared/ui/icons'
 import { AppLink } from '../../shared/ui/AppLink'
+import { Button } from '../../shared/ui/Button'
 import { HowItWorks } from '../../shared/ui/HowItWorks'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
@@ -147,7 +148,7 @@ export function ProgressPage() {
 
       {/* График недели */}
       <section
-        className="animate-fade-up rounded-3xl border border-tint/[0.08] bg-surface p-5"
+        className="animate-fade-up rounded-3xl border border-tint/[0.08] bg-surface p-5 shadow-card"
         style={{ animationDelay: '.05s' }}
       >
         <div className="flex items-baseline justify-between">
@@ -223,7 +224,7 @@ export function ProgressPage() {
           блок. */}
       {weak && (weak.struggling.length > 0 || weak.weakTopics.length > 0) && (
         <section
-          className="animate-fade-up flex flex-col gap-4 rounded-3xl border border-tint/[0.08] bg-surface p-5"
+          className="animate-fade-up flex flex-col gap-4 rounded-3xl border border-tint/[0.08] bg-surface p-5 shadow-card"
           style={{ animationDelay: '.34s' }}
         >
           <h2 className="text-lg font-medium tracking-tight">Над чем поработать</h2>
@@ -285,14 +286,17 @@ export function ProgressPage() {
         </section>
       )}
 
-      <button
+      {/* Настоящая кнопка, а не текст в рамке: в светлой теме прежняя рамка
+          на белом не читалась как кнопка (правка владельца 30.09.2026) */}
+      <Button
+        variant="danger-outline"
         onClick={signOut}
-        className="lift animate-fade-up mt-2 flex items-center justify-center gap-2 rounded-2xl border border-tint/[0.08] px-4 py-3.5 text-fg-secondary"
+        className="animate-fade-up mt-2 w-full"
         style={{ animationDelay: '.36s' }}
       >
         <IconSignOut size={18} />
         Выйти из аккаунта
-      </button>
+      </Button>
     </div>
   )
 }
@@ -312,7 +316,7 @@ function Metric({
 }) {
   return (
     <div
-      className="animate-fade-up flex flex-col gap-2 rounded-2xl border border-tint/[0.08] bg-surface p-4"
+      className="animate-fade-up flex flex-col gap-2 rounded-2xl border border-tint/[0.08] bg-surface p-4 shadow-card"
       style={{ animationDelay: delay }}
     >
       <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-soft text-accent-soft-fg">

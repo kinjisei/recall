@@ -417,7 +417,7 @@ function WordRow({
   }
 
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-tint/[0.08] bg-surface px-4 py-3">
+    <div className="flex items-center gap-3 rounded-2xl border border-tint/[0.08] bg-surface px-4 py-3 shadow-card">
       {/* Тап по строке — карточка со ВСЕМ содержимым: в строке слово и перевод
           обрезаны, а пример не виден вовсе, и на телефоне длинный перевод было
           не прочитать (жалоба владельца 24.07). */}

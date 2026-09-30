@@ -69,7 +69,7 @@ export function ReadingColumn({
       <div className="min-w-0">{children}</div>
       <aside
         aria-label={asideLabel}
-        className="sticky top-8 max-h-[calc(100dvh-4rem)] self-start overflow-y-auto rounded-2xl border border-tint/[0.08] bg-surface p-5"
+        className="sticky top-8 max-h-[calc(100dvh-4rem)] self-start overflow-y-auto rounded-2xl border border-tint/[0.08] bg-surface p-5 shadow-card"
       >
         {aside ?? <p className="text-sm text-fg-muted">{asideHint}</p>}
       </aside>

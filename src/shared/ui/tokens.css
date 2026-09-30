@@ -62,13 +62,6 @@
   --color-control-line: transparent;
   --color-control-line-active: transparent;
 
-  /* --- Тени. Форма — ниже (--shadow-*), цвет — этот токен: в тёмной теме
-     он прозрачный (Nocturne держит карточки рамкой и поверхностью, теней нет
-     и не было), в светлой — лёгкая тень цветом текста. Tailwind вшивает
-     форму тени в утилиту, а цвет оставляет переменной, поэтому тема меняет
-     именно цвет. --- */
-  --color-shadow: transparent;
-
   /* --- Главная кнопка (Button primary). В тёмной — светлая заливка с тёмным
      текстом, как было всегда; в светлой — акцентная, фиолетовая. --- */
   --color-primary: var(--color-fg);
@@ -81,6 +74,11 @@
   --color-hero-mid: #1c1d38;
   --color-hero-edge: #171830;
   --color-hero-glow: rgba(145, 132, 217, 0.45);
+  /* Подложка главного призыва «Начать занятие»: градиент cta → cta-end.
+     Именно rgba, а не accent долей: цвет из color-mix браузер пересчитывает
+     через oklab, и градиент расходился с прежним на единицу. */
+  --color-cta: rgba(145, 132, 217, 0.22);
+  --color-cta-end: rgba(145, 132, 217, 0.1);
 
   /* --- Акцент --- */
   --color-accent: #9184d9; /* линии, рамки, метки, заливка */
@@ -129,11 +127,15 @@
   --color-success-soft: oklch(26.2% 0.051 172.552);
   --color-success-soft-fg: oklch(84.5% 0.143 164.978);
 
-  /* --- Форма теней (цвет — --color-shadow выше). Шкала из двух ступеней:
-     card — карточки, строки, чипы, главная кнопка; raised — то, что должно
-     стоять над соседями: «Начать занятие». --- */
-  --shadow-card: 0 1px 3px var(--color-shadow);
-  --shadow-raised: 0 1px 3px var(--color-shadow), 0 4px 12px var(--color-shadow);
+  /* --- Тени. Шкала из двух ступеней: card — карточки, строки, чипы, главная
+     кнопка; raised — то, что стоит над соседями («Начать занятие», меню).
+     Сама тень — переменная темы --elevation-* (ниже, у :root): в тёмной её
+     НЕТ (Nocturne держит карточки рамкой и поверхностью), в светлой — лёгкая
+     тень цветом текста. Нулевая тень в тёмной, а не прозрачная: прозрачную
+     с размытием браузер всё равно рисует, и у скруглённых углов менялось
+     сглаживание (замер по пикселям 30.09.2026). --- */
+  --shadow-card: var(--elevation-card);
+  --shadow-raised: var(--elevation-raised);
 
   /* --- Шрифт --- */
   --font-sans: 'Onest Variable', 'Onest', system-ui, sans-serif;
@@ -162,6 +164,9 @@
 
 :root {
   color-scheme: dark;
+  /* тени тёмной темы — нулевые: их нет (см. --shadow-* выше) */
+  --elevation-card: 0 0 #0000;
+  --elevation-raised: 0 0 #0000;
 }
 
 /* Светлая тема — черновик до редизайна (журнал п.37: включается для всех
@@ -196,7 +201,8 @@
 
   --color-control-line: rgba(26, 28, 43, 0.16);
   --color-control-line-active: #6b5ccc;
-  --color-shadow: rgba(26, 28, 43, 0.08);
+  --elevation-card: 0 1px 3px rgba(26, 28, 43, 0.08);
+  --elevation-raised: 0 1px 3px rgba(26, 28, 43, 0.08), 0 4px 12px rgba(26, 28, 43, 0.08);
 
   --color-primary: #6b5ccc;
   --color-primary-fg: #ffffff;
@@ -205,6 +211,8 @@
   --color-hero-mid: #f8f6fe;
   --color-hero-edge: #ffffff;
   --color-hero-glow: rgba(107, 92, 204, 0.18);
+  --color-cta: rgba(107, 92, 204, 0.16);
+  --color-cta-end: rgba(107, 92, 204, 0.06);
 
   --color-accent: #6b5ccc;
   --color-accent-strong: #5241b3;

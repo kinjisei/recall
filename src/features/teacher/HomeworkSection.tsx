@@ -105,7 +105,7 @@ export function HomeworkSection({
 
   if (loading) {
     return (
-      <div className="rounded-2xl border border-tint/[0.08] bg-surface p-4">
+      <div className="rounded-2xl border border-tint/[0.08] bg-surface p-4 shadow-card">
         <RowsSkeleton count={3} height={28} />
       </div>
     )
@@ -116,7 +116,7 @@ export function HomeworkSection({
   const ratio = total > 0 ? done / total : 0
 
   return (
-    <div className="rounded-2xl border border-tint/[0.08] bg-surface p-4">
+    <div className="rounded-2xl border border-tint/[0.08] bg-surface p-4 shadow-card">
       {error && <p className="mb-2 text-sm text-warning-strong">{error}</p>}
 
       {!hw ? (
@@ -211,7 +211,7 @@ export function StatTiles({
       {tiles.map((t, i) => (
         <div
           key={i}
-          className="rounded-xl border border-tint/[0.08] bg-surface px-2 py-3 text-center"
+          className="rounded-xl border border-tint/[0.08] bg-surface px-2 py-3 text-center shadow-card"
         >
           <p className="text-xl font-bold tabular-nums">
             {loading ? <span className="inline-block h-6 w-8 animate-pulse rounded bg-tint/[0.08]" /> : t.value}

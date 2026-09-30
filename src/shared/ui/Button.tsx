@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, PointerEvent, ReactNode } from 'react'
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'danger'
+type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'danger-outline'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode
@@ -21,6 +21,10 @@ const styles: Record<Variant, string> = {
   ghost:
     'bg-transparent text-accent-strong hover:bg-tint/[0.06]',
   danger: 'bg-danger/90 text-danger-fg hover:bg-danger',
+  // спокойное опасное действие («Выйти из аккаунта»): красный текст на мягкой
+  // подложке с рамкой — заметно в обеих темах, но не кричит, как сплошной danger
+  'danger-outline':
+    'border border-danger/30 bg-danger/10 text-danger-strong hover:bg-danger/15',
 }
 
 function Spinner() {

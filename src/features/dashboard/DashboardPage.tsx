@@ -303,7 +303,7 @@ export function DashboardPage() {
           под пальцем (замер ревью 1А). */}
       <button
         onClick={() => void startGuidedRoute(lang).then((r) => navigate(r))}
-        className="lift animate-fade-up flex h-[58px] items-center justify-center gap-2.5 rounded-2xl border border-accent-line bg-[linear-gradient(135deg,rgba(145,132,217,.22),rgba(145,132,217,.10))] font-medium text-fg"
+        className="lift animate-fade-up flex h-[58px] items-center justify-center gap-2.5 rounded-2xl border border-accent-line bg-linear-[135deg] from-cta to-cta-end font-medium text-fg shadow-raised"
         style={{ animationDelay: '.12s' }}
       >
         <IconArrowRight size={22} className="text-accent-soft-fg" />
@@ -430,20 +430,16 @@ function StreakHero({
       : 'Занимайся каждый день — серия растёт'
 
   return (
+    // Фон и пятно — токены hero-* (в тёмной — прежние цвета, в светлой —
+    // бледно-лавандовая карточка с тенью); форма градиента та же, что была.
     <div
-      className="animate-fade-up relative overflow-hidden rounded-3xl border p-5"
-      style={{
-        background:
-          'radial-gradient(140% 160% at 15% 0%, #2b2c55 0%, #1c1d38 55%, #171830 100%)',
-        borderColor: 'rgba(145,132,217,.25)',
-        animationDelay: '.06s',
-      }}
+      className="animate-fade-up relative overflow-hidden rounded-3xl border border-accent/25 bg-radial-[140%_160%_at_15%_0%] from-hero via-hero-mid via-55% to-hero-edge p-5 shadow-card"
+      style={{ animationDelay: '.06s' }}
     >
       {/* размытое акцентное пятно справа-сверху */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -right-10 -top-14 h-40 w-40 rounded-full blur-3xl"
-        style={{ background: 'radial-gradient(circle, rgba(145,132,217,.45), transparent 70%)' }}
+        className="pointer-events-none absolute -right-10 -top-14 h-40 w-40 rounded-full bg-radial-[circle] from-hero-glow to-transparent to-70% blur-3xl"
       />
 
       <div className="relative flex items-start justify-between gap-3">
@@ -520,7 +516,7 @@ function WordOfDay({ word, lang }: { word: PoolItem; lang: 'en' | 'es' }) {
       {/* Вся строка — кнопка: тап открывает окно со словом (стрелка-подсказка) */}
       <button
         onClick={() => setOpen(true)}
-        className="lift animate-fade-up flex w-full items-center gap-3.5 rounded-2xl border border-tint/[0.08] bg-surface px-4 py-3.5 text-left"
+        className="lift animate-fade-up flex w-full items-center gap-3.5 rounded-2xl border border-tint/[0.08] bg-surface px-4 py-3.5 text-left shadow-card"
         style={{ animationDelay: '.45s' }}
       >
         <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-accent-soft text-accent-soft-fg">

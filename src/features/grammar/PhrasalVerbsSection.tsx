@@ -99,7 +99,7 @@ function Reference({ entries }: { entries: PhrasalEntry[] }) {
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Поиск: look for, откладывать…"
         aria-label="Поиск по фразовым глаголам"
-        className="rounded-xl border border-tint/[0.10] bg-surface px-4 py-2.5"
+        className="rounded-xl border border-tint/[0.10] bg-surface px-4 py-2.5 shadow-card"
       />
 
       {filtered.map((e) => {
