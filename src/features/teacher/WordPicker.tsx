@@ -197,7 +197,7 @@ function SetList({
         ))}
       </div>
 
-      <label className="mt-3 flex items-center gap-2 rounded-xl bg-input px-3">
+      <label className="mt-3 flex items-center gap-2 rounded-xl bg-input px-3 ring-1 ring-control-line">
         <IconSearch size={16} className="text-fg-muted" />
         <input
           value={query}
@@ -399,7 +399,7 @@ function WordList({
         ) : (
           <>
             {words.length >= SEARCH_FROM && (
-              <label className="mt-2 flex items-center gap-2 rounded-xl bg-input px-3">
+              <label className="mt-2 flex items-center gap-2 rounded-xl bg-input px-3 ring-1 ring-control-line">
                 <IconSearch size={16} className="text-fg-muted" />
                 <input
                   value={query}

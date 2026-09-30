@@ -8,7 +8,7 @@
     "src/features/flashcards/DeckReview.tsx#DeckReview": 263,
     "src/features/grammar/ConjugationSection.tsx": 477,
     "src/features/grammar/GrammarPage.tsx": 642,
-    "src/features/onboarding/OnboardingFlow.tsx": 460,
+    "src/features/onboarding/OnboardingFlow.tsx": 454,
     "src/features/practice/PracticePage.tsx": 439,
     "src/features/practice/PracticePage.tsx#PracticePage": 268,
     "src/features/pronunciation/PronunciationPage.tsx": 501,

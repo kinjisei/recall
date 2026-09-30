@@ -160,7 +160,7 @@ export function ReviewScreen({
         </Card>
       )}
       {error && (
-        <Card className="border-red-300 bg-red-950/30">
+        <Card tone="danger">
           <p className="text-sm text-red-300">{error}</p>
           {!review && (
             <Button variant="secondary" className="mt-2 px-3 py-1.5 text-sm" onClick={runAiReview}>

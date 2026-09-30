@@ -104,7 +104,7 @@ export function FeedbackSheet({ where, onClose }: { where: string; onClose: () =
               onChange={(e) => setText(e.target.value.slice(0, FEEDBACK_MAX))}
               rows={4}
               placeholder="Например: не нашёл, где смотреть свои ошибки"
-              className="mt-1.5 w-full resize-none rounded-xl bg-input px-3 py-2.5 text-[15px] outline-none focus:ring-1 focus:ring-accent-line"
+              className="mt-1.5 w-full resize-none rounded-xl bg-input px-3 py-2.5 text-[15px] outline-none ring-1 ring-control-line focus:ring-1 focus:ring-accent-line"
             />
             <p className="mt-1 text-right text-xs text-fg-muted">
               {text.length} / {FEEDBACK_MAX}
@@ -119,7 +119,7 @@ export function FeedbackSheet({ where, onClose }: { where: string; onClose: () =
               onChange={(e) => setContact(e.target.value)}
               placeholder="почта или @телеграм"
               autoComplete="off"
-              className="mt-1.5 w-full rounded-xl bg-input px-3 py-2.5 text-[15px] outline-none focus:ring-1 focus:ring-accent-line"
+              className="mt-1.5 w-full rounded-xl bg-input px-3 py-2.5 text-[15px] outline-none ring-1 ring-control-line focus:ring-1 focus:ring-accent-line"
             />
 
             {error && <p className="mt-3 text-sm text-red-400">{error}</p>}

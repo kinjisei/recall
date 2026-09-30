@@ -65,9 +65,11 @@ export function RowCard({
     </>
   )
 
+  // тень — только у сплошной строки и только в светлой теме (shadow-card в
+  // тёмной прозрачная); пунктирное «предложение» лежит без подложки
   const cls =
     `lift flex w-full items-center gap-3.5 rounded-2xl px-4 py-3.5 text-fg ` +
-    `${dashed ? 'border border-dashed border-accent-line bg-transparent' : 'border border-tint/[0.08] bg-surface'} ` +
+    `${dashed ? 'border border-dashed border-accent-line bg-transparent' : 'border border-tint/[0.08] bg-surface shadow-card'} ` +
     `${muted ? 'opacity-75' : ''} hover:border-tint/[0.14] ${className}`
 
   if (to) {

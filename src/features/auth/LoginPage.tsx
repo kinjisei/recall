@@ -7,6 +7,7 @@ import { supabase } from '../../shared/api/supabase'
 import { rememberPendingRole } from '../../lib/pendingRole'
 import { track } from '../../lib/analytics'
 import { AppLink } from '../../shared/ui/AppLink'
+import { Button } from '../../shared/ui/Button'
 import { AuroraBg, EyeIcon, InputGroup, inputClass } from './authUi'
 
 /**
@@ -207,13 +208,9 @@ export function LoginPage() {
             )}
             {info && <p className="text-sm text-emerald-400">{info}</p>}
 
-            <button
-              type="submit"
-              disabled={busy}
-              className="mt-2 h-14 w-full rounded-xl bg-fg font-semibold text-page transition-[filter,transform] hover:brightness-95 active:scale-[0.98] disabled:opacity-50"
-            >
+            <Button type="submit" disabled={busy} className="mt-2 h-14 w-full">
               {busy ? '…' : signup ? 'Создать аккаунт' : 'Войти'}
-            </button>
+            </Button>
 
             {signup && (
               <p className="text-center text-xs leading-relaxed text-fg-muted">
@@ -318,14 +315,11 @@ function CheckEmail({
         </p>
       )}
 
-      <button
-        type="button"
-        onClick={resend}
-        disabled={busy || left > 0}
-        className="h-14 w-full rounded-xl bg-fg font-semibold text-page transition-[filter,transform] hover:brightness-95 active:scale-[0.98] disabled:opacity-40"
-      >
+      {/* disabled:opacity-40! — своя прозрачность ожидания: обычный класс
+          проиграл бы базе Button (50) по порядку в CSS */}
+      <Button type="button" onClick={resend} disabled={busy || left > 0} className="h-14 w-full disabled:opacity-40!">
         {busy ? '…' : left > 0 ? `Отправить ещё раз через ${left} с` : 'Отправить письмо ещё раз'}
-      </button>
+      </Button>
 
       <div className="flex flex-col gap-2 text-center text-sm">
         <button

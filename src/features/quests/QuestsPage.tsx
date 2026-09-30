@@ -299,7 +299,7 @@ function QuestChat({ quest, onBack }: { quest: GrammarQuest; onBack: () => void 
           <form onSubmit={send} className="flex items-center gap-2.5">
             <input
               aria-label={quest.lang === 'es' ? 'Ответ по-испански' : 'Ответ по-английски'}
-              className="h-12 min-w-0 flex-1 rounded-[14px] border-none bg-input px-4 text-[15px] outline-none placeholder:text-fg-muted focus:ring-2 focus:ring-accent-line"
+              className="h-12 min-w-0 flex-1 rounded-[14px] border-none bg-input px-4 text-[15px] outline-none ring-1 ring-control-line placeholder:text-fg-muted focus:ring-2 focus:ring-accent-line"
               placeholder={quest.lang === 'es' ? 'Escribe en español…' : 'Write in English…'}
               value={input}
               onChange={(e) => setInput(e.target.value)}

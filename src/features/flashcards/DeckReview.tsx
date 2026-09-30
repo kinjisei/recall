@@ -184,7 +184,7 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
           onClick={() => setActiveCheck({ check, cards })}
           className="text-left"
         >
-          <Card className="flex items-center justify-between border-amber-700 bg-amber-950/30 transition-transform active:scale-[0.99]">
+          <Card tone="warning" className="flex items-center justify-between transition-transform active:scale-[0.99]">
             <div>
               <p className="flex items-center gap-1.5 font-semibold text-amber-200">
                 <IconRefresh size={16} /> Перепроверка от преподавателя
@@ -201,7 +201,7 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
       ))}
 
       {error && (
-        <Card className="border-red-300 bg-red-950/30">
+        <Card tone="danger">
           <p className="text-sm text-red-300">{error}</p>
         </Card>
       )}

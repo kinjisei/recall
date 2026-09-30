@@ -4,8 +4,9 @@
 // форма и hover. Два варианта формы:
 //   tabs    — строка кнопок rounded-lg (грамматика, глаголы, читалки) — дефолт;
 //   segment — капсула rounded-full с фоном-контейнером (Диалог: Чат/Письмо).
-// (Чип-переключатели в «Настройках» — отдельный паттерн: rounded-xl во всю
-//  ширину + размер шрифта в самих кнопках; сюда не сводятся.)
+// (Выбор значения — уровень, скорость, размер текста в «Настройках» — это не
+//  вкладки, а ChoiceGroup: radiogroup, rounded-xl, размер шрифта в самих
+//  кнопках.)
 // ============================================================================
 import type React from 'react'
 
@@ -31,28 +32,36 @@ export function TabPicker<T extends string>({
   className?: string
 }) {
   const segment = variant === 'segment'
+  // Обводка ring-control-line видна только в светлой теме (в тёмной она
+  // прозрачная): подложка на белом теряется. ring, а не border — рамка
+  // сдвинула бы ряд вкладок (как в ChoiceGroup).
   const container = segment
-    ? 'inline-flex gap-0.5 rounded-full bg-tint/[0.07] p-0.5'
+    ? 'inline-flex gap-0.5 rounded-full bg-tint/[0.07] p-0.5 ring-1 ring-control-line'
     : 'flex flex-wrap gap-2'
   // неактивный: у капсулы фон даёт контейнер (кнопка прозрачная), у tabs —
   // своя подложка. hover добавлен ко всем (раньше был только у капсулы).
   const inactive = segment
     ? 'text-fg-muted hover:text-fg-secondary'
-    : 'bg-tint/[0.07] text-fg-secondary hover:text-fg'
+    : 'bg-tint/[0.07] text-fg-secondary ring-1 ring-control-line hover:text-fg'
+  // выбранная вкладка в светлой теме обведена акцентом, выбранная капсула —
+  // приподнята тенью; в тёмной — как было
+  const active = segment
+    ? 'bg-accent-soft text-accent-soft-fg shadow-card'
+    : 'bg-accent-soft text-accent-soft-fg ring-2 ring-control-line-active'
 
   return (
     <div role="tablist" aria-label={ariaLabel} className={`${container} ${className}`}>
       {options.map((o) => {
-        const active = o.id === value
+        const isActive = o.id === value
         return (
           <button
             key={o.id}
             role="tab"
-            aria-selected={active}
+            aria-selected={isActive}
             onClick={() => onChange(o.id)}
             className={`flex min-h-11 items-center justify-center gap-1.5 px-4 font-semibold transition-colors ${
               segment ? 'rounded-full text-xs' : 'rounded-lg text-sm'
-            } ${active ? 'bg-accent-soft text-accent-soft-fg' : inactive}`}
+            } ${isActive ? active : inactive}`}
           >
             {o.Icon && <o.Icon size={segment ? 14 : 16} />}
             {o.label}

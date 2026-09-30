@@ -95,7 +95,7 @@ export function AssignmentsNotice({
   if (placement === 'top') {
     return (
       <AppLink to="/assignments">
-        <Card className="flex items-center justify-between border-amber-700 bg-amber-950/30 transition-transform active:scale-[0.99]">
+        <Card tone="warning" className="flex items-center justify-between transition-transform active:scale-[0.99]">
           <div>
             <p className="font-semibold text-amber-200">
               Новое задание от преподавателя

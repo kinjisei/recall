@@ -142,7 +142,7 @@ export function MyWords({ lang, onBack }: { lang: AppLang; onBack: () => void })
       <GameHeader title="Мои слова" onBack={onBack} />
 
       {error && (
-        <Card className="border-red-400/40 bg-red-500/10">
+        <Card tone="danger">
           <p className="text-sm text-red-300">{error}</p>
         </Card>
       )}
@@ -393,7 +393,7 @@ function WordRow({
 
   if (confirming) {
     return (
-      <Card className="flex items-center justify-between gap-3 border-red-400/40 bg-red-500/10 p-4">
+      <Card tone="danger" className="flex items-center justify-between gap-3 p-4">
         <p className="min-w-0 text-sm">
           Удалить «{card.front}»? <span className="text-fg-muted">Отменить нельзя.</span>
         </p>

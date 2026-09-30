@@ -12,7 +12,7 @@ export function LoadError({
   onRetry: () => void
 }) {
   return (
-    <Card className="flex flex-col items-center gap-3 border-danger-strong/30 bg-danger/[0.07] text-center">
+    <Card tone="danger" className="flex flex-col items-center gap-3 text-center">
       <IconWarning size={28} className="text-danger-strong" />
       <div>
         <p className="font-medium">{message}</p>

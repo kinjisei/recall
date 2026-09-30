@@ -25,6 +25,7 @@ import { markOnboarded } from '../../lib/onboarding'
 import { startGuidedRoute } from '../../lib/guided'
 import { track, setSelfReportedSource } from '../../lib/analytics'
 import { celebrate } from '../../shared/ui/Confetti'
+import { Button } from '../../shared/ui/Button'
 import { GOAL_LABELS, type AppLang, type CEFRLevel, type LearningGoal } from '../../types'
 
 // A1 добавлен: profiles.level и тест уровня теперь допускают его (новичок с нуля)
@@ -32,6 +33,10 @@ const EN_LEVELS: CEFRLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1']
 
 /** Варианты ответа «как узнал» — короткие, чтобы влезали в один-два ряда чипов. */
 const HOW_HEARD = ['Инстаграм', 'TikTok', 'Телеграм', 'От преподавателя', 'Друзья', 'Поиск', 'Другое']
+// Главные кнопки онбординга крупнее обычных: скругление 16 и вес 500. «!» —
+// потому что обычный класс проиграл бы базе Button (rounded-xl, font-semibold)
+// по порядку в CSS, а не по порядку в строке.
+const ONBOARDING_CTA = 'rounded-2xl! font-medium! disabled:opacity-40!'
 
 export function OnboardingFlow() {
   const navigate = useNavigate()
@@ -265,13 +270,9 @@ function StepLevel({
             Выбери уровень — или нажми «Не знаю», подберём сами.
           </p>
         )}
-        <button
-          onClick={onNext}
-          disabled={lang === 'en' && !level}
-          className="h-13 rounded-2xl bg-fg py-3.5 font-medium text-page transition-[filter,transform] active:scale-[0.98] disabled:opacity-40"
-        >
+        <Button onClick={onNext} disabled={lang === 'en' && !level} className={`h-13 py-3.5 ${ONBOARDING_CTA}`}>
           Дальше
-        </button>
+        </Button>
         <button
           onClick={onSkip}
           className="h-13 rounded-2xl border border-white/[0.12] py-3.5 font-medium text-fg-secondary transition-[filter,transform] active:scale-[0.98]"
@@ -388,12 +389,9 @@ function StepReady({
       <div className="mt-auto flex flex-col gap-3">
         {!showCode ? (
           <>
-            <button
-              onClick={onFinish}
-              className="rounded-2xl bg-fg py-4 font-medium text-page transition-[filter,transform] active:scale-[0.98]"
-            >
+            <Button onClick={onFinish} className={`py-4 ${ONBOARDING_CTA}`}>
               Занимаюсь сам — начать
-            </button>
+            </Button>
             <button
               onClick={() => setShowCode(true)}
               className="rounded-2xl border border-white/[0.12] py-3.5 font-medium text-fg-secondary transition-[filter,transform] active:scale-[0.98]"
@@ -411,13 +409,9 @@ function StepReady({
               className="h-12 rounded-2xl border border-white/[0.12] bg-input px-4 text-center text-lg tracking-widest outline-none focus:border-accent-line"
             />
             {joinError && <p className="text-sm text-red-400">{joinError}</p>}
-            <button
-              type="submit"
-              disabled={!code.trim() || joining}
-              className="rounded-2xl bg-fg py-4 font-medium text-page transition-[filter,transform] active:scale-[0.98] disabled:opacity-40"
-            >
+            <Button type="submit" disabled={!code.trim() || joining} className={`py-4 ${ONBOARDING_CTA}`}>
               {joining ? 'Привязываю…' : 'Привязаться и начать'}
-            </button>
+            </Button>
             <button
               type="button"
               onClick={() => {

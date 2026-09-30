@@ -1,5 +1,6 @@
 import { useAuth } from '../context/AuthContext'
 import { BrandMark } from '../shared/ui/Brand'
+import { Button } from '../shared/ui/Button'
 
 /**
  * Экран для заблокированного аккаунта: показывается вместо всего приложения,
@@ -23,13 +24,9 @@ export function BlockedScreen() {
         </p>
       </div>
 
-      <button
-        type="button"
-        onClick={() => void signOut()}
-        className="h-12 rounded-xl bg-fg px-8 font-semibold text-page transition-[filter,transform] hover:brightness-95 active:scale-[0.98]"
-      >
+      <Button type="button" onClick={() => void signOut()} className="h-12 px-8">
         Выйти
-      </button>
+      </Button>
     </main>
   )
 }

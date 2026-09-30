@@ -25,6 +25,7 @@ import {
 } from '../../lib/settings'
 import { getEsLevel, setEsLevel } from '../../lib/esLevel'
 import { Button } from '../../shared/ui/Button'
+import { ChoiceGroup, type ChoiceOption } from '../../shared/ui/ChoiceGroup'
 import type { CEFRLevel, Profile } from '../../types'
 import { AppLink } from '../../shared/ui/AppLink'
 import { FeedbackSheet } from '../../components/FeedbackSheet'
@@ -40,11 +41,13 @@ const SPEECH_LABELS: { id: SpeechRate; label: string }[] = [
   { id: 'fast', label: 'Быстро' },
 ]
 
-const SIZE_LABELS: { id: ReaderSize; label: string }[] = [
-  { id: 'small', label: 'Мелкий' },
-  { id: 'normal', label: 'Обычный' },
-  { id: 'large', label: 'Крупный' },
+// размер шрифта варианта — прямо в подписи, чтобы выбор был виден заранее
+const SIZE_LABELS: ChoiceOption<ReaderSize>[] = [
+  { id: 'small', label: 'Мелкий', className: 'text-sm' },
+  { id: 'normal', label: 'Обычный', className: 'text-base' },
+  { id: 'large', label: 'Крупный', className: 'text-lg' },
 ]
+const LEVEL_OPTIONS: ChoiceOption<CEFRLevel>[] = LEVELS.map((l) => ({ id: l, label: l }))
 
 export function SettingsPage() {
   const { user } = useAuth()
@@ -120,21 +123,13 @@ export function SettingsPage() {
         <p className="mt-4 text-sm text-fg-muted">
           Мой уровень {lang === 'es' ? 'испанского' : 'английского'}
         </p>
-        <div className="mt-1.5 flex flex-wrap gap-2">
-          {LEVELS.map((l) => (
-            <button
-              key={l}
-              onClick={() => setLevel(l)}
-              className={`min-h-[44px] rounded-xl px-4 text-sm font-medium transition-colors ${
-                level === l
-                  ? 'bg-accent-soft text-accent-soft-fg'
-                  : 'bg-white/[0.06] text-fg-muted'
-              }`}
-            >
-              {l}
-            </button>
-          ))}
-        </div>
+        <ChoiceGroup
+          label="Мой уровень"
+          options={LEVEL_OPTIONS}
+          value={level}
+          onChange={setLevel}
+          className="mt-1.5"
+        />
 
         {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
 
@@ -154,21 +149,14 @@ export function SettingsPage() {
         <p className="text-sm text-fg-muted">
           Скорость чтения вслух — в карточках, текстах и упражнениях.
         </p>
-        <div className="mt-2.5 flex gap-2">
-          {SPEECH_LABELS.map((s) => (
-            <button
-              key={s.id}
-              onClick={() => patchLocal({ speechRate: s.id })}
-              className={`min-h-[44px] flex-1 rounded-xl px-3 text-sm font-medium transition-colors ${
-                local.speechRate === s.id
-                  ? 'bg-accent-soft text-accent-soft-fg'
-                  : 'bg-white/[0.06] text-fg-muted'
-              }`}
-            >
-              {s.label}
-            </button>
-          ))}
-        </div>
+        <ChoiceGroup
+          label="Скорость озвучки"
+          options={SPEECH_LABELS}
+          value={local.speechRate}
+          onChange={(id) => patchLocal({ speechRate: id })}
+          stretch
+          className="mt-2.5"
+        />
         <button
           onClick={() =>
             speak(lang === 'es' ? 'Hola, ¿cómo estás?' : 'This is how it sounds.', {
@@ -187,23 +175,14 @@ export function SettingsPage() {
         <p className="text-sm text-fg-muted">
           Размер шрифта в текстах раздела «Учёба».
         </p>
-        <div className="mt-2.5 flex gap-2">
-          {SIZE_LABELS.map((s) => (
-            <button
-              key={s.id}
-              onClick={() => patchLocal({ readerSize: s.id })}
-              className={`min-h-[44px] flex-1 rounded-xl px-3 font-medium transition-colors ${
-                s.id === 'small' ? 'text-sm' : s.id === 'large' ? 'text-lg' : 'text-base'
-              } ${
-                local.readerSize === s.id
-                  ? 'bg-accent-soft text-accent-soft-fg'
-                  : 'bg-white/[0.06] text-fg-muted'
-              }`}
-            >
-              {s.label}
-            </button>
-          ))}
-        </div>
+        <ChoiceGroup
+          label="Размер текста в чтении"
+          options={SIZE_LABELS}
+          value={local.readerSize}
+          onChange={(id) => patchLocal({ readerSize: id })}
+          stretch
+          className="mt-2.5"
+        />
       </Section>
 
       {/* Безопасность — отдельным файлом: форма со своим состоянием и

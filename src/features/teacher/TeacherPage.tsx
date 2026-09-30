@@ -383,7 +383,7 @@ function TeacherDashboard() {
           </Card>
 
           {error && (
-            <Card className="border-red-300 bg-red-950/30">
+            <Card tone="danger">
               <p className="text-sm text-red-300">{error}</p>
             </Card>
           )}
@@ -428,7 +428,7 @@ function TeacherDashboard() {
               return (
                 <>
                   {attention > 0 && (
-                    <Card className="border-amber-300/40 bg-amber-400/[0.06]">
+                    <Card tone="warning">
                       <p className="text-sm font-semibold text-amber-200">
                         Нужно внимание: {attention}
                       </p>

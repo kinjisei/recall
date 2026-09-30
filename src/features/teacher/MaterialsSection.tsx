@@ -160,7 +160,7 @@ export function MaterialsSection({
     <div className="flex flex-col gap-3">
       {/* На проверку: кто сдал, какой материал — сразу в проверку одним тапом */}
       {pending.length > 0 && (
-        <Card className="flex flex-col gap-2 border-amber-300/40 bg-amber-400/[0.06]">
+        <Card tone="warning" className="flex flex-col gap-2">
           <p className="text-sm font-semibold text-amber-200">
             На проверку: {pending.length}
           </p>

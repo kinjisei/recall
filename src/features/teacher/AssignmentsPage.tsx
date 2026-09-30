@@ -447,7 +447,7 @@ function AssignmentRunner({
         <BackHeader onBack={onBack} title={m.title ?? m.topic} label="К заданиям" />
 
         {row.note && row.status === 'assigned' && (
-          <Card className="border-amber-700 bg-amber-950/30">
+          <Card tone="warning">
             <p className="text-sm text-amber-200">
               💬 Комментарий преподавателя: {row.note}
             </p>

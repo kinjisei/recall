@@ -25,7 +25,7 @@
 | `breakpoints.ts` | точки перехода для JS (`DESKTOP_QUERY` → `useIsDesktop`) |
 | `layouts.tsx` | общие раскладки: `CenterColumn` (упражнение, игра), `ReadingColumn` (текст + панель перевода сбоку), `ListDetail` (список + подробности) |
 | `roundKeys.tsx` | клавиатура в упражнениях: `useRoundKeys` (1–4, Enter, Esc), `useRoundMode` (режим раунда + Esc — выход) |
-| компоненты | `Button`, `Card`, `Sheet` (на компьютере — боковая панель), `Picker`, `TabPicker`, `RowCard`, `Reveal`, `HowItWorks`, `Loading`/`RowsSkeleton`, `LoadError`, `Thinking`, `BackButton`/`BackHeader` (одна кнопка «назад»: `onClick` или `fallback` — назад по истории), `AppLink`, `Brand`, `Confetti`, `icons` |
+| компоненты | `Button`, `Card` (`tone="warning" \| "danger"` — статусная карточка), `Sheet` (на компьютере — боковая панель), `Picker`, `TabPicker` (вкладки), `ChoiceGroup` (выбор значения: уровень, скорость, размер — radiogroup), `RowCard`, `Reveal`, `HowItWorks`, `Loading`/`RowsSkeleton`, `LoadError`, `Thinking`, `BackButton`/`BackHeader` (одна кнопка «назад»: `onClick` или `fallback` — назад по истории), `AppLink`, `Brand`, `Confetti`, `icons` |
 
 Витрина всего этого — `/dev/ui` (только `npm run dev`, в сборку не попадает):
 токены обеих тем, все компоненты, три раскладки, упражнение для клавиатуры.
@@ -128,6 +128,10 @@
   CSS не читает переменные, поэтому числа записаны дважды; сверяет тест.
 - **Слоя «токен на компонент» нет** (`--button-bg`…): компоненты собраны из
   утилит, лишний слой удвоил бы места правки при редизайне.
+- **Тень и обводка — в общих компонентах, не на экранах.** `Card`,
+  `RowCard` (сплошная), главная `Button`, `ChoiceGroup`, чип `TabPicker`
+  получают их сами. Поле без рамки (`bg-input` без `border`) получает
+  `ring-1 ring-control-line` — рамку, видимую только в светлой теме.
 - **Одна кнопка «назад» — `BackButton`/`BackHeader`** (архитектура §3). Режима
   два: `onClick` — экран сам знает, куда (подэкран в адресе); `fallback` —
   «откуда пришёл» по истории, при прямом заходе — на `fallback` (страницы,

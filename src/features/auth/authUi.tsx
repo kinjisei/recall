@@ -9,9 +9,10 @@
 import { useState, type ReactNode } from 'react'
 import { BrandMark } from '../../shared/ui/Brand'
 import { IconEye } from '../../shared/ui/icons'
+import { Button } from '../../shared/ui/Button'
 
 export const inputClass =
-  'h-11 w-full rounded-xl border-none bg-input px-4 text-sm text-fg placeholder:text-fg-muted outline-none focus:ring-2 focus:ring-accent-line'
+  'h-11 w-full rounded-xl border-none bg-input px-4 text-sm text-fg ring-1 ring-control-line placeholder:text-fg-muted outline-none focus:ring-2 focus:ring-accent-line'
 
 /** Переливающийся фон: глубокий индиго-градиент + 3 дрейфующих blur-пятна + блик. */
 export function AuroraBg() {
@@ -182,13 +183,8 @@ export function PrimaryButton({
   onClick?: () => void
 }) {
   return (
-    <button
-      type={type}
-      onClick={onClick}
-      disabled={disabled}
-      className="h-14 w-full rounded-xl bg-fg font-semibold text-page transition-[filter,transform] hover:brightness-95 active:scale-[0.98] disabled:opacity-50"
-    >
+    <Button type={type} onClick={onClick} disabled={disabled} className="h-14 w-full">
       {children}
-    </button>
+    </Button>
   )
 }

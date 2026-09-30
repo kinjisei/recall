@@ -8,11 +8,14 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean
 }
 
-// Тема «Nocturne»: главная кнопка — светлая заливка с тёмным текстом,
-// вторичная — акцентная outline, ghost — только текст акцентом.
+// Главная кнопка — токены primary: в тёмной теме светлая заливка с тёмным
+// текстом (как было), в светлой — фиолетовая с белым; тень видна только в
+// светлой. Вторичная — акцентная outline, ghost — только текст акцентом.
+// ⚠️ Своих копий главной кнопки (`bg-fg text-page` в className) не заводить:
+// они не знают про светлую тему и остаются чёрными.
 const styles: Record<Variant, string> = {
   primary:
-    'bg-fg text-page hover:brightness-95 active:brightness-90',
+    'bg-primary text-primary-fg shadow-card hover:brightness-95 active:brightness-90',
   secondary:
     'border border-accent-line bg-accent/14 text-fg hover:bg-accent/22',
   ghost:
