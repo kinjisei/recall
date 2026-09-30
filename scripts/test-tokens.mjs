@@ -80,6 +80,7 @@ function parse(value, theme, depth = 0) {
   if (m) return [...oklchToRgb(+m[1] / 100, +m[2], +m[3]), 1]
   if (v === 'white') return [255, 255, 255, 1]
   if (v === 'black') return [0, 0, 0, 1]
+  if (v === 'transparent') return [0, 0, 0, 0]
   throw new Error(`не разобрать цвет «${v}»`)
 }
 
@@ -107,6 +108,8 @@ check('светлая тема объявляет color-scheme: light', /\[data-
 
 // ── 2. контраст ────────────────────────────────────────────────────────────
 // [текст, фон, порог] — ровно те пары, в которых токены живут в интерфейсе.
+// «имя@доля» — токен долей, как в утилите: bg-danger/10 → 'danger@0.1'.
+// Полупрозрачный фон кладётся на страницу, полупрозрачный текст — на фон.
 const TEXT = 4.5
 const ICON = 3
 const PAIRS = [
@@ -125,7 +128,7 @@ const PAIRS = [
   ['accent', 'page', ICON],
   ['accent-soft-fg', 'accent-soft', TEXT],
   ['accent-fg', 'accent', TEXT],
-  ['page', 'fg', TEXT], // главная кнопка: заливка цветом текста, надпись цветом фона
+  ['primary-fg', 'primary', TEXT], // главная кнопка (Button primary)
   ['danger-strong', 'page', TEXT],
   ['danger-strong', 'surface', TEXT],
   ['warning-strong', 'page', TEXT],
@@ -137,22 +140,64 @@ const PAIRS = [
   ['danger-fg', 'danger', ICON],
   ['warning-fg', 'warning', TEXT],
   ['success-fg', 'success', ICON],
+  // текст на мягкой подложке статуса и правки «было → стало»
+  ['danger-soft-fg', 'page', TEXT],
+  ['danger-soft-fg', 'surface', TEXT],
+  ['danger-soft-fg', 'danger@0.1', TEXT],
+  ['warning-soft-fg', 'page', TEXT],
+  ['warning-soft-fg', 'surface', TEXT],
+  ['warning-soft-fg', 'warning@0.1', TEXT],
+  ['success-soft-fg', 'page', TEXT],
+  ['success-soft-fg', 'surface', TEXT],
+  ['success-soft-fg', 'success@0.15', TEXT],
+  // глубокий тон долей: выбранный ответ, счётчик на карточке
+  ['fg', 'danger-soft@0.4', TEXT],
+  ['fg', 'success-soft@0.4', TEXT],
+  ['warning-strong', 'warning-soft@0.5', TEXT],
+  // статусная карточка (Card tone): заголовок, подпись долей, счётчик
+  ['warning-soft-fg', 'warning-surface', TEXT],
+  ['warning-strong@0.8', 'warning-surface', TEXT],
+  ['danger-soft-fg', 'danger-surface', TEXT],
+  ['fg-secondary', 'warning-surface', TEXT],
+  // карточка-герой: подписи на градиенте, ссылка «Мой прогресс»
+  ['fg-tertiary', 'hero', TEXT],
+  ['fg-tertiary', 'hero-mid', TEXT],
+  ['fg-muted', 'hero-edge', TEXT],
+  ['accent-strong', 'hero-mid', TEXT],
+  ['accent-strong', 'hero-edge', TEXT],
+  // текст поверх затемнения (подсказка жестов карточки)
+  ['scrim-fg', 'scrim@0.6', TEXT],
 ]
-for (const [name, theme] of [
-  ['тёмная', dark],
-  ['светлая', { ...dark, ...light }],
+// Только светлая: в тёмной у этих токенов значения нет — рамка прозрачная
+// (так было всегда), проверяет блок «тёмная не меняется» ниже.
+const LIGHT_ONLY = [
+  ['control-line-active', 'surface', ICON], // выбранный вариант виден по рамке
+]
+for (const [name, theme, pairs] of [
+  ['тёмная', dark, PAIRS],
+  ['светлая', { ...dark, ...light }, [...PAIRS, ...LIGHT_ONLY]],
 ]) {
-  const col = (t) => {
+  const col = (spec) => {
+    const [t, share] = spec.split('@')
     const v = theme[`--color-${t}`]
     if (!v) throw new Error(`нет токена --color-${t}`)
-    return parse(v, theme)
+    const c = parse(v, theme)
+    return share === undefined ? c : [c[0], c[1], c[2], c[3] * Number(share)]
   }
   const page = col('page')
-  for (const [fg, bg, min] of PAIRS) {
+  for (const [fg, bg, min] of pairs) {
     const base = over(col(bg), page) // полупрозрачный фон — поверх страницы
     const r = ratio(over(col(fg), base), base)
     check(`${name}: ${fg} на ${bg} ≥ ${min}:1`, r >= min, r.toFixed(2))
   }
+}
+
+// ── 2б. тёмная не меняется: тени и рамки чипов — только светлой ────────────
+// Тень и рамка управления заведены ради светлой темы (30.09.2026). В тёмной
+// их цвет обязан быть прозрачным: иначе поменяется каждая карточка Nocturne.
+for (const t of ['shadow', 'control-line', 'control-line-active']) {
+  const v = dark[`--color-${t}`]
+  check(`тёмная: --color-${t} прозрачный (тёмная тема не меняется)`, v === 'transparent', v)
 }
 
 // ── 3. точки перехода: CSS = JS ─────────────────────────────────────────────
