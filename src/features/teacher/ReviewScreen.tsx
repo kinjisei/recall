@@ -213,7 +213,7 @@ export function ReviewScreen({
                         onClick={() => setItem(i, { ok: true })}
                         className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors active:scale-[0.97] ${
                           item.ok
-                            ? 'bg-emerald-600 text-white'
+                            ? 'bg-success text-success-fg'
                             : 'bg-tint/[0.07] text-fg-secondary'
                         }`}
                       >

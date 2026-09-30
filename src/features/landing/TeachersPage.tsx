@@ -31,7 +31,7 @@ function CTA({ label = 'Попробовать 14 дней бесплатно' }
     <div className="flex flex-col items-center gap-1.5">
       <AppLink
         to="/login?role=teacher"
-        className="lift inline-flex min-h-[52px] items-center justify-center rounded-2xl bg-accent px-7 font-medium text-white"
+        className="lift inline-flex min-h-[52px] items-center justify-center rounded-2xl bg-accent px-7 font-medium text-accent-fg"
       >
         {label}
       </AppLink>

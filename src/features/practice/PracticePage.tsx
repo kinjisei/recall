@@ -120,7 +120,7 @@ function TileGrid({
               <t.Icon size={22} />
             </span>
             {t.badge !== undefined && (
-              <span className="absolute right-3 top-3 rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-white">
+              <span className="absolute right-3 top-3 rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-accent-fg">
                 {t.badge}
               </span>
             )}
@@ -427,7 +427,7 @@ export function PracticePage() {
             </span>
             <span className="text-[13px] font-medium leading-tight">{g.title}</span>
             {g.badge !== undefined && (
-              <span className="absolute right-1.5 top-1.5 rounded-full bg-accent px-1.5 text-[11px] font-medium text-white">
+              <span className="absolute right-1.5 top-1.5 rounded-full bg-accent px-1.5 text-[11px] font-medium text-accent-fg">
                 {g.badge}
               </span>
             )}

@@ -187,7 +187,7 @@ function BuildTask({
               key={i}
               onClick={() => !checked && setBuilt((arr) => arr.filter((_, j) => j !== i))}
               disabled={checked}
-              className="rounded-lg bg-accent px-3 py-1.5 text-sm text-white"
+              className="rounded-lg bg-accent px-3 py-1.5 text-sm text-accent-fg"
             >
               {b.w}
             </button>

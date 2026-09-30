@@ -176,7 +176,7 @@ function ComposeButton({ onClick, label }: { onClick: () => void; label: string 
   return (
     <button
       onClick={onClick}
-      className="lift flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-[linear-gradient(135deg,rgba(145,132,217,.9),rgba(120,105,205,.9))] px-4 font-semibold text-white transition-[filter,transform] hover:brightness-105 active:scale-[0.99]"
+      className="lift flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-[linear-gradient(135deg,rgba(145,132,217,.9),rgba(120,105,205,.9))] px-4 font-semibold text-accent-fg transition-[filter,transform] hover:brightness-105 active:scale-[0.99]"
     >
       <IconSparkle size={18} /> {label}
     </button>

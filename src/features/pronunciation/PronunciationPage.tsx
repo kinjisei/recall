@@ -445,9 +445,9 @@ export function PronunciationPage() {
               aria-label={recording ? 'Остановить и оценить' : 'Записать произношение'}
               style={{
                 background:
-                  'linear-gradient(160deg, var(--color-accent) 0%, var(--color-accent-soft) 100%)',
+                  'linear-gradient(160deg, var(--color-accent) 0%, var(--color-accent-strong) 100%)',
               }}
-              className={`relative flex h-24 w-24 items-center justify-center rounded-full text-white shadow-lg disabled:opacity-70 ${
+              className={`relative flex h-24 w-24 items-center justify-center rounded-full text-accent-fg shadow-lg disabled:opacity-70 ${
                 recording ? 'animate-pulse-ring' : 'lift'
               }`}
             >
@@ -470,7 +470,7 @@ export function PronunciationPage() {
         </div>
       ) : (
         // Совсем нет микрофона — режим «слушай и повторяй» без оценки
-        <Card className="border-accent-line-soft">
+        <Card className="border-accent-line-soft!">
           <p className="text-sm text-fg-secondary">
             На этом устройстве нет доступа к микрофону. Послушай эталон (в т.ч.
             «Медленно») и повтори вслух — это главная тренировка.

@@ -276,7 +276,7 @@ export function StudyPage() {
                         active={left > 0}
                         trailing={
                           left > 0 ? (
-                            <span className="flex-none rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-white">
+                            <span className="flex-none rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-accent-fg">
                               {left}
                             </span>
                           ) : undefined
@@ -299,7 +299,7 @@ export function StudyPage() {
                     active={assignments.pending > 0}
                     trailing={
                       assignments.pending > 0 ? (
-                        <span className="flex-none rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-white">
+                        <span className="flex-none rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-accent-fg">
                           {assignments.pending}
                         </span>
                       ) : undefined
@@ -321,7 +321,7 @@ export function StudyPage() {
                     active={quests.active > 0}
                     trailing={
                       quests.active > 0 ? (
-                        <span className="flex-none rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-white">
+                        <span className="flex-none rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-accent-fg">
                           {quests.active}
                         </span>
                       ) : undefined
@@ -409,7 +409,7 @@ export function StudyPage() {
                     active={writing.pending > 0}
                     trailing={
                       writing.pending > 0 ? (
-                        <span className="flex-none rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-white">
+                        <span className="flex-none rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-accent-fg">
                           {writing.pending}
                         </span>
                       ) : undefined

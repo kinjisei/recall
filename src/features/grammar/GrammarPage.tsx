@@ -231,12 +231,12 @@ function LessonsSection({ lang }: { lang: AppLang }) {
 
       {mistakeCount > 0 && (
         <button onClick={() => setNav({ mistakes: '1' })} className="text-left">
-          <Card className="flex items-center justify-between gap-2 border-accent-line transition-transform active:scale-[0.99]">
+          <Card className="flex items-center justify-between gap-2 border-accent-line! transition-transform active:scale-[0.99]">
             <span className="flex min-w-0 items-center gap-2 font-medium">
               <IconRefresh size={18} className="shrink-0 text-accent-strong" />
               Мои ошибки
             </span>
-            <span className="flex-none rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-white">
+            <span className="flex-none rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-accent-fg">
               {mistakeCount}
             </span>
           </Card>

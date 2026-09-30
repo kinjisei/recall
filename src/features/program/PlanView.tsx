@@ -55,7 +55,7 @@ export function PlanView({ weeks, currentWeek }: { weeks: PlanWeek[]; currentWee
             <div className="flex items-baseline justify-between gap-2">
               <p className="text-sm font-semibold">{w.title || `Неделя ${n}`}</p>
               {isCurrent && (
-                <span className="flex-none rounded-full bg-accent px-2 py-0.5 text-[11px] font-medium text-white">
+                <span className="flex-none rounded-full bg-accent px-2 py-0.5 text-[11px] font-medium text-accent-fg">
                   текущая
                 </span>
               )}

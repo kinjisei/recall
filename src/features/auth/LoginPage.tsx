@@ -364,7 +364,7 @@ function StepItem({
       <span
         className={`flex h-6.5 w-6.5 flex-none items-center justify-center rounded-full text-[13px] font-semibold ${
           active
-            ? 'bg-accent text-white'
+            ? 'bg-accent text-accent-fg'
             : 'bg-line text-fg-muted'
         }`}
       >
