@@ -11,27 +11,40 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import { useShellInsets } from '../shared/lib/shellInsets'
 
-/** Высота панели ввода + отступ (h-12 поле + p-2 рамки ≈ 64px + зазор). */
+/** Высота панели, пока её не измерили (или её нет — квест пройден). */
 const INPUT_PANEL = 72
+/** Зазор между окном ленты и капсулой ввода. */
+const GAP = 12
 
 export function useChatList(kb: number, deps: unknown[]) {
   const listRef = useRef<HTMLDivElement | null>(null)
+  // панель ввода (shared/ui/Chat → ChatInputBar): её настоящая высота
+  const barRef = useRef<HTMLDivElement | null>(null)
   const [height, setHeight] = useState<number | null>(null)
   // сколько места занимает каркас: снизу навигация (телефон), слева меню
   // (компьютер) — shared/lib/shellInsets
   const insets = useShellInsets()
 
-  // высота списка: от его верха до панели ввода (страница стоит на месте)
+  // высота списка: от его верха до панели ввода (страница стоит на месте).
+  // ⚠️ Панель меряем по-настоящему, а не константой: под полем бывает строка
+  // «Новый диалог», и прежние «72 px» пускали ленту под панель — последний
+  // ответ срезался о её край.
   useLayoutEffect(() => {
     const measure = () => {
       const top = listRef.current?.getBoundingClientRect().top ?? 0
       const viewport = window.innerHeight - kb
-      const bottomSpace = INPUT_PANEL + (kb > 0 ? 0 : insets.bottomPx)
+      const bar = barRef.current ? barRef.current.offsetHeight + GAP : INPUT_PANEL
+      const bottomSpace = bar + (kb > 0 ? 0 : insets.bottomPx)
       setHeight(Math.max(160, viewport - top - bottomSpace))
     }
     measure()
     window.addEventListener('resize', measure)
-    return () => window.removeEventListener('resize', measure)
+    const observer = barRef.current ? new ResizeObserver(measure) : null
+    if (barRef.current) observer?.observe(barRef.current)
+    return () => {
+      window.removeEventListener('resize', measure)
+      observer?.disconnect()
+    }
   }, [kb, insets.bottomPx])
 
   // автоскролл к последнему сообщению (мгновенно при открытии, плавно дальше)
@@ -48,5 +61,5 @@ export function useChatList(kb: number, deps: unknown[]) {
   // над навигацией каркаса; слева — не заходит под меню компьютера.
   const barStyle: CSSProperties = { left: insets.left, bottom: kb > 0 ? kb : insets.bottom }
 
-  return { listRef, height, barStyle }
+  return { listRef, barRef, height, barStyle }
 }

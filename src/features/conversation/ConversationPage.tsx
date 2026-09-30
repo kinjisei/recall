@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useKeyboardInset } from '../../lib/useKeyboardInset'
 import { useChatList } from '../../lib/useChatList'
 import {
-  IconSend,
   IconPencil,
   IconCheck,
   IconMaterials,
@@ -21,6 +20,7 @@ import { getEsLevel } from '../../lib/esLevel'
 import type { AppLang, CEFRLevel, ChatTurn, LearningGoal } from '../../types'
 import { Thinking } from '../../shared/ui/Thinking'
 import { HowItWorks } from '../../shared/ui/HowItWorks'
+import { ChatBubble, ChatInputBar, ChatWindow } from '../../shared/ui/Chat'
 
 export function ConversationPage() {
   const { user } = useAuth()
@@ -218,7 +218,7 @@ function ChatSection({
   const kb = useKeyboardInset() // высота клавиатуры — панель ввода над ней
   // лента скроллится ВНУТРИ себя (мессенджер-паттерн): шапка всегда видна,
   // клавиатура сжимает список, новые сообщения показывают низ ленты
-  const { listRef, height, barStyle } = useChatList(kb, [msgs, busy])
+  const { listRef, barRef, height, barStyle } = useChatList(kb, [msgs, busy])
 
   // Поднимаем прошлую переписку этого языка. Раньше реплики писались в базу и
   // НИКОГДА не читались: уход за словом или уроком обнулял чат.
@@ -339,11 +339,7 @@ function ChatSection({
     // Лента — внутренний скролл фиксированной высоты, панель ввода прижата к
     // низу. Страница НЕ скроллится: шапка приложения остаётся на месте.
     <div className="flex flex-col gap-3">
-      <div
-        ref={listRef}
-        style={height ? { height } : undefined}
-        className="flex flex-col gap-3 overflow-y-auto overscroll-contain"
-      >
+      <ChatWindow ref={listRef} height={height}>
       {/* пока поднимаем прошлую переписку — не мигаем приглашением начать
           разговор, который на самом деле уже идёт */}
       {loadingHistory && msgs.length === 0 && <Loading label="Открываем диалог" />}
@@ -364,21 +360,14 @@ function ChatSection({
 
       <div className="flex flex-col gap-2">
         {msgs.map((m, i) => (
-          <div
-            key={i}
-            className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-[15px] leading-relaxed ${
-              m.role === 'user'
-                ? 'self-end rounded-br-md border border-accent-line bg-[rgba(145,132,217,.18)] text-fg'
-                : 'self-start rounded-bl-md border border-tint/[0.08] bg-surface text-fg'
-            }`}
-          >
+          <ChatBubble key={i} mine={m.role === 'user'}>
             {m.role === 'assistant' ? <AssistantText content={m.content} /> : m.content}
-          </div>
+          </ChatBubble>
         ))}
         {busy && !streaming && (
-          <div className="self-start rounded-2xl rounded-bl-md border border-tint/[0.08] bg-surface px-4 py-2.5 text-fg-muted">
+          <ChatBubble mine={false}>
             <Thinking label="печатает" />
-          </div>
+          </ChatBubble>
         )}
       </div>
 
@@ -393,44 +382,28 @@ function ChatSection({
       ) : (
         error && <p className="flex-none text-sm text-danger">{error}</p>
       )}
-      </div>
+      </ChatWindow>
 
-      {/* Панель ввода прижата к низу. Когда открыта клавиатура (visualViewport
-          даёт её высоту kb) — поднимаем панель над ней; иначе — над навигацией
-          каркаса (положение считает useChatList). Заголовок не уезжает. */}
-      <div
-        className="fixed inset-x-0 z-30 mx-auto max-w-screen-sm border-t border-tint/[0.06] bg-page px-4 pb-2 pt-2"
+      {/* Панель ввода — плавающая капсула у низа. Когда открыта клавиатура
+          (visualViewport даёт её высоту kb) — поднимаем над ней; иначе — над
+          навигацией каркаса (положение считает useChatList). */}
+      <ChatInputBar
+        ref={barRef}
         style={barStyle}
-      >
-        {/* поле без рамки + квадратная accent-кнопка отправки */}
-        <form onSubmit={send} className="flex items-center gap-2.5">
-          <input
-            aria-label={lang === 'es' ? 'Сообщение по-испански' : 'Сообщение по-английски'}
-            className="h-12 min-w-0 flex-1 rounded-[14px] border-none bg-input px-4 text-[15px] outline-none placeholder:text-fg-muted focus:ring-2 focus:ring-accent-line"
-            placeholder={lang === 'es' ? 'Escribe en español…' : 'Write in English…'}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            disabled={busy}
-          />
-          <button
-            type="submit"
-            aria-label="Отправить"
-            disabled={busy || !input.trim()}
-            className="lift flex h-12 w-12 flex-none items-center justify-center rounded-[14px] border border-accent-line bg-[rgba(145,132,217,.14)] text-accent-soft-fg transition-colors hover:bg-[rgba(145,132,217,.22)] disabled:opacity-40"
-          >
-            <IconSend size={20} />
-          </button>
-        </form>
-
-        {msgs.length > 0 && (
-          <button
-            onClick={reset}
-            className="mx-auto mt-1.5 block px-3 py-0.5 text-xs text-fg-muted"
-          >
-            Новый диалог
-          </button>
-        )}
-      </div>
+        value={input}
+        onChange={setInput}
+        onSubmit={send}
+        busy={busy}
+        label={lang === 'es' ? 'Сообщение по-испански' : 'Сообщение по-английски'}
+        placeholder={lang === 'es' ? 'Escribe en español…' : 'Write in English…'}
+        after={
+          msgs.length > 0 && (
+            <button onClick={reset} className="mx-auto mt-1.5 block px-3 py-0.5 text-xs text-fg-muted">
+              Новый диалог
+            </button>
+          )
+        }
+      />
     </div>
   )
 }

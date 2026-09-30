@@ -11,7 +11,8 @@ import { CORRECTION_RULES } from '../../lib/correctionRules'
 import { useNavigate } from 'react-router-dom'
 import { useKeyboardInset } from '../../lib/useKeyboardInset'
 import { useChatList } from '../../lib/useChatList'
-import { IconPuzzle, IconSend, IconBadgeCheck, IconPencil } from '../../shared/ui/icons'
+import { IconPuzzle, IconBadgeCheck, IconPencil } from '../../shared/ui/icons'
+import { ChatBubble, ChatInputBar, ChatWindow } from '../../shared/ui/Chat'
 import { BackHeader } from '../../shared/ui/BackButton'
 import { Card } from '../../shared/ui/Card'
 import { RowCard } from '../../shared/ui/RowCard'
@@ -158,7 +159,7 @@ function QuestChat({ quest, onBack }: { quest: GrammarQuest; onBack: () => void 
   const kb = useKeyboardInset()
   // мессенджер-паттерн (как в «Диалоге»): лента скроллится внутри себя,
   // заголовок и прогресс всегда видны, клавиатура ничего не сдвигает
-  const { listRef, height, barStyle } = useChatList(kb, [msgs, busy])
+  const { listRef, barRef, height, barStyle } = useChatList(kb, [msgs, busy])
 
   // вход в квест — всегда с верха страницы (заголовок и прогресс на виду)
   useEffect(() => {
@@ -252,30 +253,19 @@ function QuestChat({ quest, onBack }: { quest: GrammarQuest; onBack: () => void 
         </div>
       </div>
 
-      {/* лента: внутренний скролл до панели ввода */}
-      <div
-        ref={listRef}
-        style={height ? { height } : undefined}
-        className="flex flex-col gap-2 overflow-y-auto overscroll-contain"
-      >
+      {/* лента: внутренний скролл до панели ввода, вид — общий с «Диалогом» */}
+      <ChatWindow ref={listRef} height={height}>
         {msgs
           .filter((m) => m.content !== START_MARK)
           .map((m, i) => (
-            <div
-              key={i}
-              className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-[15px] leading-relaxed ${
-                m.role === 'user'
-                  ? 'self-end rounded-br-md border border-accent-line bg-[rgba(145,132,217,.18)]'
-                  : 'self-start rounded-bl-md border border-tint/[0.08] bg-surface'
-              }`}
-            >
+            <ChatBubble key={i} mine={m.role === 'user'}>
               {m.role === 'assistant' ? <QuestText content={m.content} /> : m.content}
-            </div>
+            </ChatBubble>
           ))}
         {busy && (
-          <div className="self-start rounded-2xl rounded-bl-md border border-tint/[0.08] bg-surface px-4 py-2.5 text-fg-muted">
+          <ChatBubble mine={false}>
             <Thinking label="печатает" />
-          </div>
+          </ChatBubble>
         )}
         {error && <p className="text-sm text-danger">{error}</p>}
         {completed && (
@@ -287,34 +277,21 @@ function QuestChat({ quest, onBack }: { quest: GrammarQuest; onBack: () => void 
             </p>
           </Card>
         )}
-      </div>
+      </ChatWindow>
 
-      {/* панель ввода прижата к низу (как в «Диалоге»): над клавиатурой или
+      {/* панель ввода — та же капсула, что в «Диалоге»: над клавиатурой или
           над навигацией каркаса — положение считает useChatList */}
       {!completed && (
-        <div
-          className="fixed inset-x-0 z-30 mx-auto max-w-screen-sm border-t border-tint/[0.06] bg-page px-4 pb-2 pt-2"
+        <ChatInputBar
+          ref={barRef}
           style={barStyle}
-        >
-          <form onSubmit={send} className="flex items-center gap-2.5">
-            <input
-              aria-label={quest.lang === 'es' ? 'Ответ по-испански' : 'Ответ по-английски'}
-              className="h-12 min-w-0 flex-1 rounded-[14px] border-none bg-input px-4 text-[15px] outline-none ring-1 ring-control-line placeholder:text-fg-muted focus:ring-2 focus:ring-accent-line"
-              placeholder={quest.lang === 'es' ? 'Escribe en español…' : 'Write in English…'}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              disabled={busy}
-            />
-            <button
-              type="submit"
-              aria-label="Отправить"
-              disabled={busy || !input.trim()}
-              className="lift flex h-12 w-12 flex-none items-center justify-center rounded-[14px] border border-accent-line bg-[rgba(145,132,217,.14)] text-accent-soft-fg transition-colors hover:bg-[rgba(145,132,217,.22)] disabled:opacity-40"
-            >
-              <IconSend size={20} />
-            </button>
-          </form>
-        </div>
+          value={input}
+          onChange={setInput}
+          onSubmit={send}
+          busy={busy}
+          label={quest.lang === 'es' ? 'Ответ по-испански' : 'Ответ по-английски'}
+          placeholder={quest.lang === 'es' ? 'Escribe en español…' : 'Write in English…'}
+        />
       )}
     </div>
   )
