@@ -20,11 +20,16 @@ import { DashboardPage } from '../features/dashboard/DashboardPage'
 
 /**
  * Где экран живёт в каркасе:
- *   public     — без входа, на весь экран (вход, тарифы, лендинг, оферта);
+ *   public     — без входа, на весь экран (вход, восстановление пароля);
+ *   open       — и гостю, и вошедшему: гостю — на весь экран, вошедшему — в
+ *                общей рамке с меню (тарифы, лендинг, оферта, политика).
+ *                Раньше тарифы у вошедшего открывались отдельным окном без
+ *                меню, и уйти можно было только «Назад» (правка владельца
+ *                30.09.2026);
  *   fullscreen — после входа, на весь экран со своими шагами (онбординг);
  *   app        — после входа, в общей рамке: шапка + навигация (Layout).
  */
-export type RoutePlace = 'public' | 'fullscreen' | 'app'
+export type RoutePlace = 'public' | 'open' | 'fullscreen' | 'app'
 
 /** Роль, без которой экран не показывается (видимость, защищает сервер). */
 export type RouteRole = 'admin'
@@ -56,13 +61,15 @@ export const ROUTES: AppRoute[] = [
   // поэтому адрес обязан быть в списке Redirect URLs в панели Supabase.
   { path: '/forgot', place: 'public', screen: routeScreens['/forgot'] },
   { path: '/reset-password', place: 'public', screen: routeScreens['/reset-password'] },
-  // юридические страницы — публичные (ссылки со входа)
-  { path: '/privacy', place: 'public', screen: routeScreens['/privacy'] },
-  { path: '/terms', place: 'public', screen: routeScreens['/terms'] },
+  // Открытые страницы: гостю — без рамки, вошедшему — в рамке. До
+  // онбординга тоже открываются: юридические ссылки есть на входе, тарифы —
+  // в меню аватара.
+  { path: '/privacy', place: 'open', screen: routeScreens['/privacy'], beforeOnboarding: true },
+  { path: '/terms', place: 'open', screen: routeScreens['/terms'], beforeOnboarding: true },
   // тарифы — публичные, работают и без входа
-  { path: '/pricing', place: 'public', screen: routeScreens['/pricing'] },
+  { path: '/pricing', place: 'open', screen: routeScreens['/pricing'], beforeOnboarding: true },
   // лендинг для репетиторов — публичный (его шарим в TG/визитках)
-  { path: '/teachers', place: 'public', screen: routeScreens['/teachers'] },
+  { path: '/teachers', place: 'open', screen: routeScreens['/teachers'], beforeOnboarding: true },
 
   // онбординг — без общей рамки: свои шаги на весь экран
   { path: '/onboarding', place: 'fullscreen', screen: routeScreens['/onboarding'], beforeOnboarding: true },
@@ -104,7 +111,14 @@ const BEFORE_ONBOARDING = new Set(
   ROUTES.filter((r): r is ScreenRoute => 'screen' in r && r.beforeOnboarding === true).map((r) => r.path),
 )
 
-/** Можно ли открыть адрес, не пройдя онбординг (онбординг и тест уровня). */
+/** Можно ли открыть адрес, не пройдя онбординг (онбординг, тест уровня, открытые страницы). */
 export function opensBeforeOnboarding(pathname: string): boolean {
   return BEFORE_ONBOARDING.has(pathname)
+}
+
+const OPEN = new Set(ROUTES.filter((r) => r.place === 'open').map((r) => r.path))
+
+/** Открытая страница: гость видит её без рамки, вошедший — в общей рамке. */
+export function opensForGuests(pathname: string): boolean {
+  return OPEN.has(pathname)
 }

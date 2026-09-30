@@ -8,7 +8,8 @@
 // вкладками снимал бы кадр с «Загрузка…».
 // ============================================================================
 import { Suspense, type ReactNode } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import { Loading } from '../shared/ui/Loading'
 import { AppProviders } from './AppProviders'
 import { ScrollToTop } from './ScrollToTop'
@@ -16,7 +17,7 @@ import { PageTracker } from './PageTracker'
 import { ProtectedRoute } from './ProtectedRoute'
 import { RoleGate } from './RoleGate'
 import { Layout } from './shell/Layout'
-import { ROUTES, isLazyScreen, type AppRoute } from './routes'
+import { ROUTES, isLazyScreen, opensForGuests, type AppRoute } from './routes'
 
 function PageFallback() {
   return <Loading label="Открываем экран" />
@@ -34,8 +35,28 @@ function routeElement(route: AppRoute): ReactNode {
   return element
 }
 
-const outsideFrame = ROUTES.filter((r) => r.place !== 'app')
-const insideFrame = ROUTES.filter((r) => r.place === 'app')
+/**
+ * Общая рамка. Открытая страница (тарифы, оферта, лендинг) у гостя — без
+ * рамки, на весь экран, как раньше; у вошедшего — в рамке с меню. Открытые
+ * адреса живут под этой же рамкой, а не отдельным деревом: иначе переход
+ * «Учёба → Тарифы» пересоздавал бы меню и шапку.
+ */
+function Frame() {
+  const { user, loading } = useAuth()
+  const { pathname } = useLocation()
+  if (opensForGuests(pathname)) {
+    if (loading) return <PageFallback />
+    if (!user) return <Outlet />
+  }
+  return (
+    <ProtectedRoute>
+      <Layout />
+    </ProtectedRoute>
+  )
+}
+
+const outsideFrame = ROUTES.filter((r) => r.place === 'public' || r.place === 'fullscreen')
+const insideFrame = ROUTES.filter((r) => r.place === 'app' || r.place === 'open')
 
 export default function App() {
   return (
@@ -47,13 +68,7 @@ export default function App() {
           {outsideFrame.map((r) => (
             <Route key={r.path} path={r.path} element={routeElement(r)} />
           ))}
-          <Route
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
+          <Route element={<Frame />}>
             {insideFrame.map((r) => (
               <Route key={r.path} path={r.path} element={routeElement(r)} />
             ))}

@@ -16,7 +16,7 @@ import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { FocusModeContext } from '../../shared/lib/focusMode'
 import { PageWidthContext } from '../../shared/lib/screenWidth'
-import { PHONE_INSETS, ShellInsetsContext, type ShellInsets } from '../../shared/lib/shellInsets'
+import { InShellContext, PHONE_INSETS, ShellInsetsContext, type ShellInsets } from '../../shared/lib/shellInsets'
 import { useIsDesktop } from '../../shared/lib/useMediaQuery'
 import { BottomNav } from './BottomNav'
 import { SideNav } from './SideNav'
@@ -38,6 +38,7 @@ export function Layout() {
     <FocusModeContext.Provider value={setFocus}>
       <PageWidthContext.Provider value={setPageWidth}>
       <ShellInsetsContext.Provider value={insets}>
+      <InShellContext.Provider value={true}>
         <div className="min-h-[100dvh] bg-page text-fg">
           {!focus && (desktop ? <SideNav /> : <TopBar />)}
           {/* Обёртка есть всегда (на телефоне без классов): иначе при смене
@@ -61,6 +62,7 @@ export function Layout() {
           </div>
           {!focus && !desktop && <BottomNav />}
         </div>
+      </InShellContext.Provider>
       </ShellInsetsContext.Provider>
       </PageWidthContext.Provider>
     </FocusModeContext.Provider>

@@ -11,6 +11,7 @@
 // ============================================================================
 
 import { SUPPORT_SLA, supportMailto } from '../../shared/lib/contacts'
+import { useInShell } from '../../shared/lib/shellInsets'
 import { BrandLogo } from '../../shared/ui/Brand'
 import { AppLink } from '../../shared/ui/AppLink'
 import {
@@ -103,22 +104,28 @@ const FAQ = [
 ]
 
 export function TeachersPage() {
+  // Вошедший видит лендинг внутри общей рамки приложения (меню, вкладки):
+  // своя шапка «логотип + Войти» и свои поля ему не нужны — их даёт каркас.
+  const inShell = useInShell()
+  const Frame = inShell ? 'div' : 'main'
   return (
-    <main className="min-h-[100dvh] bg-page text-fg">
-      {/* шапка: логотип + вход */}
-      <header className="sticky top-0 z-20 border-b border-tint/[0.06] bg-[rgba(22,24,38,.85)] pt-[env(safe-area-inset-top)] backdrop-blur-xl">
-        <div className="mx-auto flex max-w-screen-md items-center justify-between px-5 py-3">
-          <BrandLogo width={92} />
-          <AppLink
-            to="/login?role=teacher"
-            className="flex min-h-[40px] items-center rounded-full border border-tint/[0.12] px-4 text-sm text-fg-secondary"
-          >
-            Войти
-          </AppLink>
-        </div>
-      </header>
+    <Frame className={inShell ? undefined : 'min-h-[100dvh] bg-page text-fg'}>
+      {/* шапка: логотип + вход — только гостю */}
+      {!inShell && (
+        <header className="sticky top-0 z-20 border-b border-tint/[0.06] bg-[rgba(22,24,38,.85)] pt-[env(safe-area-inset-top)] backdrop-blur-xl">
+          <div className="mx-auto flex max-w-screen-md items-center justify-between px-5 py-3">
+            <BrandLogo width={92} />
+            <AppLink
+              to="/login?role=teacher"
+              className="flex min-h-[40px] items-center rounded-full border border-tint/[0.12] px-4 text-sm text-fg-secondary"
+            >
+              Войти
+            </AppLink>
+          </div>
+        </header>
+      )}
 
-      <div className="mx-auto max-w-screen-md px-5 pb-16">
+      <div className={inShell ? 'pb-4' : 'mx-auto max-w-screen-md px-5 pb-16'}>
         {/* ---- Hero ---- */}
         <section className="flex flex-col items-center gap-6 pb-12 pt-10 text-center">
           <p className="rounded-full border border-accent-line px-3 py-1 text-xs text-accent-strong">
@@ -312,6 +319,6 @@ export function TeachersPage() {
           </p>
         </section>
       </div>
-    </main>
+    </Frame>
   )
 }

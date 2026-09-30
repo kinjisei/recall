@@ -121,7 +121,7 @@ VS Code, где у Claude есть файлы и терминал: фичи со
 | `/quests` `/program` | от преподавателя |
 | `/teacher` | студия: ученики, материалы, письменные работы, методичка |
 | `/progress` `/settings` `/placement` `/onboarding` | профиль и настройка |
-| `/pricing` `/teachers` `/terms` `/privacy` | публичные, без входа |
+| `/pricing` `/teachers` `/terms` `/privacy` | открытые: гостю — на весь экран, без входа; вошедшему — в общей рамке с меню (`place: 'open'` в `app/routes.ts`, вид — `shared/ui/OpenPage`) |
 | `/admin` | владелец: тарифы, воронка, ошибки с прода (показ — по роли в `app/routes.ts`) |
 
 ---

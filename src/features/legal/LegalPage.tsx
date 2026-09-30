@@ -13,6 +13,7 @@
 // в день оплаты; протухшая дата проигрывает спор за нас (находка ревью 2В).
 // ============================================================================
 import { BackButton } from '../../shared/ui/BackButton'
+import { OpenPage } from '../../shared/ui/OpenPage'
 
 // адрес — из общего shared/lib/contacts: раньше он был вписан здесь и больше нигде,
 // поэтому из самого приложения написать было некуда
@@ -21,7 +22,8 @@ const UPDATED = '9 августа 2026'
 
 function Shell({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <main className="mx-auto min-h-[100dvh] max-w-screen-sm bg-page px-5 pb-16 pt-[calc(env(safe-area-inset-top)+1.5rem)] text-fg">
+    // гостю — своя рамка на весь экран, вошедшему — общая рамка с меню
+    <OpenPage>
       <div className="mb-5">
         <BackButton fallback="/login" />
       </div>
@@ -30,7 +32,7 @@ function Shell({ title, children }: { title: string; children: React.ReactNode }
       <div className="mt-6 flex flex-col gap-4 text-[15px] leading-relaxed text-fg-secondary">
         {children}
       </div>
-    </main>
+    </OpenPage>
   )
 }
 

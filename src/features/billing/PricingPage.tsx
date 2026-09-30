@@ -7,6 +7,7 @@
 import { useEffect, useState } from 'react'
 import { IconCheck, IconTeacher, IconTrophy } from '../../shared/ui/icons'
 import { BackButton } from '../../shared/ui/BackButton'
+import { OpenPage } from '../../shared/ui/OpenPage'
 import { useAuth } from '../../context/AuthContext'
 import { PLANS, KASPI, getMyPlan, type MyPlan, type PlanCard } from '../../lib/billing'
 import { energyLeft } from '../../components/EnergyBar'
@@ -127,7 +128,8 @@ export function PricingPage() {
   const soloPlans = PLANS.filter((p) => !p.id.startsWith('teacher_'))
 
   return (
-    <main className="mx-auto min-h-[100dvh] max-w-screen-sm bg-page px-5 pb-16 pt-[calc(env(safe-area-inset-top)+1.5rem)] text-fg">
+    // гостю — своя рамка на весь экран, вошедшему — общая рамка с меню
+    <OpenPage>
       <div className="mb-5">
         <BackButton fallback={user ? '/' : '/login'} />
       </div>
@@ -182,6 +184,6 @@ export function PricingPage() {
           с первым привязанным учеником их становится 3 в месяц.
         </p>
       </section>
-    </main>
+    </OpenPage>
   )
 }

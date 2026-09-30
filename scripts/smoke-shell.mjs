@@ -4,7 +4,9 @@
  * Зачем. С PLAN.md Ф1.3:
  *   1. кто куда пускается, решает таблица app/routes.ts, а не экран: админку
  *      проверяет RoleGate по флагу role: 'admin'. Не владелец видит «Доступно
- *      только владельцу», владелец — админку;
+ *      только владельцу», владелец — админку. Открытые страницы (тарифы,
+ *      оферта, политика, лендинг) гость видит без меню, вошедший — в общей
+ *      рамке с вкладками и без второй рамки страницы;
  *   2. раскладка по ширине (журнал п.45–46): телефон и планшет — как было
  *      (шапка сверху, плавающая панель снизу); компьютер (от 1024 px) — меню
  *      слева на всю высоту, EN/ES и аватар внизу панели, экраны остаются
@@ -248,11 +250,39 @@ async function screenshots(page) {
   console.log(`скриншоты: ${SHOTS}`)
 }
 
+/**
+ * Открытые страницы (place: 'open' в app/routes.ts): гость видит их на весь
+ * экран, без меню; вошедший — в общей рамке с меню и вкладками. Раньше тарифы
+ * у вошедшего открывались окном без меню, выйти — только «Назад».
+ */
+const OPEN_PAGES = ['/pricing', '/terms', '/privacy', '/teachers']
+async function openPages(page, signedIn) {
+  for (const p of OPEN_PAGES) {
+    await page.goto(`${BASE}${p}`, { waitUntil: 'networkidle2' })
+    await sleep(300)
+    const g = await geometry(page)
+    if (signedIn) {
+      const mains = await page.evaluate(() => document.querySelectorAll('main').length)
+      check(`вошедший на ${p}: меню и вкладки на месте`, !!g.nav && hasTabs(g), g.tabs.join(' · ') || 'меню нет')
+      check(`вошедший на ${p}: своя рамка страницы не задвоена`, mains === 1, `main: ${mains}`)
+    } else {
+      check(`гость на ${p}: без меню, на весь экран`, !g.nav && !g.header, g.nav ? 'меню есть' : '')
+    }
+  }
+  if (signedIn) {
+    const loginLink = await page.evaluate(() => [...document.querySelectorAll('a')].some((a) => (a.textContent || '').trim() === 'Войти'))
+    check('вошедший на /teachers: шапки лендинга с «Войти» нет', !loginLink)
+  }
+}
+
 async function run(browser, userId) {
   const page = await browser.newPage()
   await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2 })
   const jsErrors = []
   page.on('pageerror', (e) => jsErrors.push(String(e)))
+
+  // ── 0. открытые страницы глазами гостя ─────────────────────────────────
+  await openPages(page, false)
 
   // вход
   await page.goto(`${BASE}/login`, { waitUntil: 'networkidle2' })
@@ -278,6 +308,9 @@ async function run(browser, userId) {
   check('владелец на /admin видит админку', await waitText(page, 'Email или его часть') || (await heading(page)) === 'Админка', await heading(page))
   check('у владельца нет отказа', !(await seen(page, 'Доступно только владельцу')))
   await admin.from('profiles').update({ is_admin: false }).eq('id', userId)
+
+  // ── 1б. открытые страницы у вошедшего — в рамке ─────────────────────────
+  await openPages(page, true)
 
   // ── 2. раскладка по ширине экрана ───────────────────────────────────────
   await phoneLayout(page, 390, 844, 'телефон')

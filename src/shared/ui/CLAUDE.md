@@ -25,7 +25,7 @@
 | `breakpoints.ts` | точки перехода для JS (`DESKTOP_QUERY` → `useIsDesktop`) |
 | `layouts.tsx` | общие раскладки: `CenterColumn` (упражнение, игра), `ReadingColumn` (текст + панель перевода сбоку), `ListDetail` (список + подробности) |
 | `roundKeys.tsx` | клавиатура в упражнениях: `useRoundKeys` (1–4, Enter, Esc), `useRoundMode` (режим раунда + Esc — выход) |
-| компоненты | `Button`, `Card` (`tone="warning" \| "danger"` — статусная карточка), `Sheet` (на компьютере — боковая панель), `Picker`, `TabPicker` (вкладки), `ChoiceGroup` (выбор значения: уровень, скорость, размер — radiogroup), `RowCard`, `Reveal`, `HowItWorks`, `Loading`/`RowsSkeleton`, `LoadError`, `Thinking`, `BackButton`/`BackHeader` (одна кнопка «назад»: `onClick` или `fallback` — назад по истории), `AppLink`, `Brand`, `Confetti`, `icons` |
+| компоненты | `Button`, `Card` (`tone="warning" \| "danger"` — статусная карточка), `Sheet` (на компьютере — боковая панель), `Picker`, `TabPicker` (вкладки), `ChoiceGroup` (выбор значения: уровень, скорость, размер — radiogroup), `RowCard`, `Reveal`, `HowItWorks`, `Loading`/`RowsSkeleton`, `LoadError`, `Thinking`, `BackButton`/`BackHeader` (одна кнопка «назад»: `onClick` или `fallback` — назад по истории), `OpenPage` (рамка открытой страницы: гостю — своя на весь экран, вошедшему — общая), `AppLink`, `Brand`, `Confetti`, `icons` |
 
 Витрина всего этого — `/dev/ui` (только `npm run dev`, в сборку не попадает):
 токены обеих тем, все компоненты, три раскладки, упражнение для клавиатуры.

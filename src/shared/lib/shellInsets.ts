@@ -36,3 +36,12 @@ export const ShellInsetsContext = createContext<ShellInsets>(PHONE_INSETS)
 export function useShellInsets(): ShellInsets {
   return useContext(ShellInsetsContext)
 }
+
+/** Экран внутри общей рамки приложения. Открытые страницы (тарифы, оферта,
+ *  лендинг) гостю рисуют свою рамку на весь экран, а вошедшему живут внутри
+ *  общей — им нужно знать, какая сейчас (shared/ui/OpenPage). */
+export const InShellContext = createContext(false)
+
+export function useInShell(): boolean {
+  return useContext(InShellContext)
+}
