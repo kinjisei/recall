@@ -73,6 +73,15 @@ function walk(dir, out = []) {
   return out
 }
 
+// Начало комментария, а не часть строки или пути: «//» после «:» — это
+// https://…, «/*» после буквы или «/» — это 'image/*' и `words/*`.
+const LINE_COMMENT = /(^|[^:'"`\w])\/\//
+const BLOCK_COMMENT = /(^|[^\w'"`/])\/\*/
+const startOf = (line, re) => {
+  const m = line.match(re)
+  return m ? m.index + m[1].length : -1
+}
+
 /** Код без комментариев: имена классов в пояснениях нарушением не считаются. */
 function codeLines(text) {
   let inBlock = false
@@ -84,14 +93,18 @@ function codeLines(text) {
       out = out.slice(end + 2)
       inBlock = false
     }
-    out = out.replace(/\/\*.*?\*\//g, '')
-    const start = out.indexOf('/*')
-    if (start !== -1) {
-      out = out.slice(0, start)
+    out = out.replace(new RegExp(BLOCK_COMMENT.source + '.*?\\*\\/', 'g'), '$1')
+    // Что началось раньше, то и комментарий: «/*» внутри «// … words/*»
+    // блок не открывает. Раньше открывал — и код до следующего «*/» (в
+    // PracticePage — 80 строк с ленивыми импортами) сторож не видел вовсе.
+    const line_ = startOf(out, LINE_COMMENT)
+    const block = startOf(out, BLOCK_COMMENT)
+    if (line_ !== -1 && (block === -1 || line_ < block)) return out.slice(0, line_)
+    if (block !== -1) {
       inBlock = true
+      return out.slice(0, block)
     }
-    // «//» внутри строки (https://…) комментарием не считаем
-    return out.replace(/(^|[^:'"`\w])\/\/.*$/, '$1')
+    return out
   })
 }
 
@@ -112,11 +125,17 @@ function styleBlocks(code) {
   return blocks
 }
 
+/**
+ * Текст файла без комментариев. Общий для сторожа токенов и карты кода
+ * (scripts/arch-map.mjs): пример `.from('table')` в пояснении не таблица.
+ * CRLF (так git выдаёт файлы на Windows) — к LF: иначе «//» в конце строки
+ * не узнаётся как комментарий, и счёт расходится с CI.
+ */
+export const withoutComments = (text) => codeLines(text.replace(/\r\n?/g, '\n')).join('\n')
+
 /** Нарушения в тексте одного файла: { palette, literal, px, inline }. */
 export function countIn(text) {
-  // CRLF (так git выдаёт файлы на Windows) — к LF: иначе «//» в конце строки
-  // не узнаётся как комментарий, и счёт расходится с CI
-  const code = codeLines(text.replace(/\r\n?/g, '\n')).join('\n')
+  const code = withoutComments(text)
   const counts = {}
   for (const [kind, re] of Object.entries(RULES)) counts[kind] = (code.match(re) || []).length
   counts.inline = styleBlocks(code).reduce((s, b) => s + inlineColors(b), 0)

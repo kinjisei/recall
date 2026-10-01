@@ -16,6 +16,7 @@
     "check:size": "node scripts/checks/size.mjs",
     "check:tokens": "node scripts/checks/tokens.mjs",
     "check:boundaries": "node scripts/checks/boundaries.mjs",
+    "gen:docs": "node scripts/gen/module-docs.mjs",
     "lint": "eslint --suppressions-location scripts/checks/baseline/eslint.json .",
     "test": "node scripts/checks/tests.mjs"
   },

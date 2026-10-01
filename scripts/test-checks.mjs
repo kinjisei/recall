@@ -11,7 +11,7 @@
  * Запуск: node scripts/test-checks.mjs (в CI — сам, по шаблону test-*.mjs)
  */
 import { compare, plural, pruned } from './checks/_baseline.mjs'
-import { docFor, hasReason, isCode, verdict } from './checks/docs.mjs'
+import { docFor, hasReason, isCode, pointerIn, touchedByHand, verdict } from './checks/docs.mjs'
 import { parsePlan, problems } from './checks/plan.mjs'
 import { componentsIn } from './checks/size.mjs'
 import { countIn } from './checks/tokens.mjs'
@@ -55,6 +55,17 @@ both('токены: в комментариях не считается', '// te
 })
 both('токены: https:// в строке — не комментарий', "const u = 'https://x.y'; const c = 'text-white'\n", countIn, {
   palette: 1, literal: 0, px: 0, form: 0, inline: 0,
+})
+// «/*» внутри «//»-комментария открывал блок до следующего «*/», и код между
+// ними сторож не видел (в PracticePage — 80 строк, в карте кода — 6 импортов)
+both('токены: «/*» внутри «//» блок не открывает', '// игры (features/words/*)\nconst c = \'text-white\'\n/** конец */\n', countIn, {
+  palette: 1, literal: 0, px: 0, form: 0, inline: 0,
+})
+both("токены: 'image/*' в строке — не комментарий", '<input accept="image/*" className="text-white" />\nconst d = \'bg-red-500\'\n', countIn, {
+  palette: 2, literal: 0, px: 0, form: 0, inline: 0,
+})
+both('токены: блок на одной строке и в JSX', 'const a = 1 /* text-white */ + 2\n<div>{/* bg-red-500 */}</div>\n', countIn, {
+  palette: 0, literal: 0, px: 0, form: 0, inline: 0,
 })
 both('токены: style — литерал и переменная считаются, var(--…) нет',
   "<a style={{ color: '#f00', background: colors[i] }} />\n<b style={{\n  background:\n    'linear-gradient(0deg, var(--color-accent) 0%, var(--x) 100%)',\n}} />\n",
@@ -110,6 +121,34 @@ check('isCode: код модулей', ['src/lib/text.ts', 'api/gemini.ts', 'src
   check('verdict: описание в том же коммите — зелёный', verdict({ files: ['src/features/words/B.tsx', 'CLAUDE.md'], message: 'правка', docs }), [])
   check('verdict: корневое вместо своего — красный', verdict({ files: ['src/features/teacher/A.tsx', 'CLAUDE.md'], message: 'правка', docs }).length, 1)
   check('verdict: только не-код — зелёный', verdict({ files: ['scripts/x.mjs', 'docs/PLAN.md'], message: 'правка', docs }), [])
+}
+// указатель «Описание:» — модуль из lib/ привязан к описанию раздела (Ф1.7)
+both('pointerIn: строка //', '// ====\n// Домашка на неделю.\n// Описание: src/features/homework/CLAUDE.md\nimport x from "y"\n', pointerIn, 'src/features/homework/CLAUDE.md')
+both('pointerIn: JSDoc и обратные кавычки', '/**\n * Самокоррекция.\n * Описание: `src/components/CLAUDE.md`\n */\n', pointerIn, 'src/components/CLAUDE.md')
+both('pointerIn: нет указателя', '// Домашка.\n// описание — в разделе\nconst a = 1\n', pointerIn, null)
+both('pointerIn: дальше 20-й строки не ищем', `${'// …\n'.repeat(20)}// Описание: src/lib/CLAUDE.md\n`, pointerIn, null)
+both('pointerIn: в строке кода — не указатель', "const s = 'Описание: src/lib/CLAUDE.md'\n", pointerIn, null)
+{
+  const docs = new Set(['CLAUDE.md', 'src/lib/CLAUDE.md', 'src/features/homework/CLAUDE.md'])
+  const pointers = new Map([['src/lib/homework.ts', 'src/features/homework/CLAUDE.md'], ['src/lib/old.ts', 'src/features/gone/CLAUDE.md']])
+  check('docFor: указатель сильнее ближайшего', docFor('src/lib/homework.ts', docs, pointers.get('src/lib/homework.ts')), 'src/features/homework/CLAUDE.md')
+  check('docFor: указатель в никуда — ближайший', docFor('src/lib/old.ts', docs, pointers.get('src/lib/old.ts')), 'src/lib/CLAUDE.md')
+  check('verdict: lib с указателем, описание раздела не тронуто — красный',
+    verdict({ files: ['src/lib/homework.ts', 'src/lib/CLAUDE.md'], message: 'правка', docs, pointers }), [
+      'не изменён src/features/homework/CLAUDE.md, а код под ним изменён: src/lib/homework.ts',
+    ])
+  check('verdict: lib с указателем, описание раздела тронуто — зелёный',
+    verdict({ files: ['src/lib/homework.ts', 'src/features/homework/CLAUDE.md'], message: 'правка', docs, pointers }), [])
+  check('verdict: тронут только блок generated — красный',
+    verdict({ files: ['src/lib/homework.ts', 'src/features/homework/CLAUDE.md'], message: 'правка', docs, pointers, touched: new Set() }).length, 1)
+}
+{
+  const doc = (hand, gen) => `# homework\n\n${hand}\n\n<!-- generated:start -->\n${gen}\n<!-- generated:end -->\n`
+  check('touchedByHand: пересобран только блок generated', touchedByHand(doc('Правила.', '- Файлы: a.ts'), doc('Правила.', '- Файлы: a.ts, b.ts')), false)
+  check('touchedByHand: правка руками', touchedByHand(doc('Правила.', 'x'), doc('Правила, новое.', 'x')), true)
+  check('touchedByHand: CRLF и пробелы в конце строк — не правка', touchedByHand(doc('Правила.', 'x'), crlf(doc('Правила.  ', 'x'))), false)
+  check('touchedByHand: новое описание', touchedByHand(null, doc('Правила.', 'x')), true)
+  check('touchedByHand: описание удалено', touchedByHand(doc('Правила.', 'x'), null), true)
 }
 both('hasReason: причина на одной строке', 'Правка\n\nописание не меняется, потому что перенос файлов\n', hasReason, true)
 both('hasReason: причина перенесена на вторую строку', 'Правка\n\nописание не меняется, потому что только\nкомментарий\n', hasReason, true)

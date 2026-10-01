@@ -38,6 +38,9 @@ const guards = [
   ['токены', script('tokens')],
   ['размер', script('size')],
   ['план', script('plan')],
+  // блоки generated в CLAUDE.md модулей совпадают с кодом (PLAN.md Ф1.7);
+  // списка «к исправлению» у них нет — сужать нечего
+  ['блоки описаний', prune ? null : ['scripts/gen/module-docs.mjs', '--check']],
   // описаниям нужно сообщение коммита: перед коммитом их проверяет хук
   // commit-msg, при сужении списков им нечего сужать
   ['описания', staged || prune ? null : script('docs')],
