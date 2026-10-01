@@ -46,6 +46,7 @@ VS Code, где у Claude есть файлы и терминал: фичи со
 | Карта кода: кто кого импортирует, что трогает в базе | `node scripts/arch-map.mjs` → `docs/architecture/code-map.md` |
 | Схема базы, RLS, все RPC | `supabase/migrations/` (`supabase/CLAUDE.md`) |
 | Экономика и лимиты | `docs/energy-design.md`, `docs/costs.md` |
+| Дизайн: опись интерфейса, промпты Claude Design, макеты | `docs/design/` (`ui-inventory.md`, `prompts.md`), `design/mockups/` |
 | История и причины решений | `git log`, `docs/changelog.md` (до 26.07.2026) |
 | Устаревшее: старые планы, `ARCHITECTURE.md`, находки | `docs/archive/` — не правится |
 
