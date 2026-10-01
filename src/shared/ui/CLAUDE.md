@@ -15,7 +15,9 @@
 
 Темы две. Тёмная (Nocturne) — по умолчанию и у всех. Светлая — черновик до
 редизайна: выбрать её может только владелец и только на своём устройстве, в
-админке. Для всех её включат вместе с редизайном (PLAN.md Ф5.2).
+админке (блок «Тема на этом устройстве», журнал п.37). Для всех её включат
+вместе с редизайном, и переключатель переедет в Настройки (PLAN.md Ф5.2).
+Шрифт — Onest, лежит в приложении (работает офлайн).
 
 | Файл | Что там |
 |---|---|
@@ -48,6 +50,28 @@
   читает экранная читалка. Подключено: упражнения (`components/exercises`),
   викторины «Практики» (`QuizRunner`), тест уровня (там без Esc — 60
   вопросов жалко), Esc — все раунды «Практики» (`useRoundMode`).
+
+## Движение
+
+Библиотек анимации нет и не планируется (разбор и решения —
+`docs/motion-plan.md`): всё на CSS (`keyframes` в `src/index.css`) и браузерном
+View Transitions API, вся плавность продукта стоит 0,8 КБ gzip.
+
+- **Переходы между экранами** — `shared/lib/viewTransition.ts`; включены в
+  `useUrlState` (подэкраны) и в `AppLink` (между адресами и вкладками). Почему
+  переход ждёт перерисовки — `src/shared/CLAUDE.md`; ссылки только через
+  `AppLink`, шапка и навигация вне снимка, `view-transition-name` внутри
+  `<main>` запрещён — `src/app/CLAUDE.md`.
+- **Ожидание и ответ — общие классы, а не свои анимации:** ожидание AI —
+  `Thinking`, ожидание экрана — `Loading` / `RowsSkeleton`, раскрывашки —
+  `Reveal`, верный ответ — `.animate-answer-pop`. Новая игра или новое
+  ожидание подключает их же, иначе продукт разъедется.
+- **Любая анимация — только `transform`/`opacity`** и обязана попадать под
+  `prefers-reduced-motion`.
+- **Ничто не появляется без зарезервированного места:** всё, что грузится
+  позже, держит слот той же высоты (пример — Главная, `features/dashboard`).
+- Проверка — `node scripts/smoke-motion.mjs` (переходы, вкладки, живые
+  ожидания и ответы).
 
 ## Словарь токенов
 
@@ -124,7 +148,10 @@
   победитель». Нужно перебить базу компонента — модификатор `!`
   (`rounded-2xl!`), как у кнопок онбординга.
 - **Контраст:** текстовые токены ≥ 4,5:1, иконки и рамки ≥ 3:1 — в обеих
-  темах; `fg-faint` в тексте не использовать. Держит тот же тест.
+  темах; `fg-faint` (~3,3:1 на фоне `#161826`) — только иконки и разделители,
+  в тексте не использовать. Держит тот же тест.
+- **Строка списка — `RowCard`**, база всех списков; своих строк-карточек не
+  заводить.
 - **Тема для всех выключена** (`THEME_FOR_EVERYONE = false`): без выбора на
   устройстве — тёмная, даже если телефон светлый. Включать — только вместе с
   редизайном и нулём в стороже токенов (журнал п.37).
@@ -147,7 +174,8 @@
   «показать/скрыть» не пишем: было 13 самодельных мест, все переведены.
   Заголовок-переключатель у разделов пока свой (▾/▸, стрелка, текст) — общий
   вид придёт с редизайном.
-- **Иконки — `icons.tsx`, генерируются** из `handoff/icons/*.svg`
+- **Иконки — свои, `icons.tsx`** (инлайн-SVG в стиле Phosphor, без
+  библиотеки), **генерируются** из `handoff/icons/*.svg`
   (`node scripts/gen-icons.mjs`), руками не правятся. Иконку убрать — удалить
   её SVG и перегенерировать. 54 иконки (`IconBell` — Ф1.5); 4 неиспользуемые (`IconStudents`,
   `IconSpeech`, `IconSpeechFill`, `IconMicFill`) удалены 28.09.2026.
@@ -177,3 +205,12 @@
   тёмного фона до запуска скрипта у светлой темы остаётся: блокирующий
   скрипт в `<head>` стоил бы запроса на старте всем ради одного владельца
   (CSP запрещает встроенный). Решается при включении темы для всех (Ф5.2).
+
+<!-- generated:start -->
+<!-- Пишет `npm run gen:docs` (scripts/gen/module-docs.mjs) по коду — руками не править. -->
+## Из кода (сгенерировано)
+
+- **Файлы:** `AppLink.tsx`, `BackButton.tsx`, `Brand.tsx`, `breakpoints.ts`, `Button.tsx`, `Card.tsx`, `Chat.tsx`, `ChoiceGroup.tsx`, `Confetti.tsx`, `HowItWorks.tsx`, `icons.tsx`, `layouts.tsx`, `LoadError.tsx`, `Loading.tsx`, `OpenPage.tsx`, `Picker.tsx`, `Reveal.tsx`, `roundKeys.tsx`, `RowCard.tsx`, `Sheet.tsx`, `TabPicker.tsx`, `theme.ts`, `ThemePicker.tsx`, `Thinking.tsx`, `tokens.css`
+- **localStorage:** `recall.theme`
+- **Кто использует (импортом):** `app`, `components`, `features/admin`, `features/auth`, `features/billing`, `features/conversation`, `features/dashboard`, `features/dev`, `features/flashcards`, `features/grammar`, `features/homework`, `features/landing`, `features/legal`, `features/notifications`, `features/onboarding`, `features/practice`, `features/program`, `features/progress`, `features/pronunciation`, `features/quests`, `features/reader`, `features/settings`, `features/study`, `features/teacher`, `features/words`, `features/writing`, `shared`
+<!-- generated:end -->

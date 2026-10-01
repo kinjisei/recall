@@ -261,6 +261,8 @@ docs/
 <!-- generated:start -->  файлы, адреса, таблицы/RPC, кто использует  <!-- generated:end -->
 ```
 Блок `generated` пишет `scripts/gen/module-docs.mjs` (на основе `arch-map`).
+Шаблон для копирования и правила ведения (указатель «Описание:» у модулей вне
+своей папки) — `docs/architecture/module-template.md`.
 
 ## 4. Данные
 

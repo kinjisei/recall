@@ -4,7 +4,7 @@
 // lib/transcribe (запись микрофона → Groq Whisper) — оно работает везде, вкл.
 // iPhone, в отличие от браузерного Web Speech (только Chrome/Edge на десктопе).
 // Поддерживает английский (en-US) и испанский (es-ES).
-// Контракт: docs/ARCHITECTURE.md §7.
+// Контракт: сигнатуры не менять, расширять можно — их зовут разные разделы (src/lib/CLAUDE.md).
 // ============================================================================
 import { currentSpeechRate } from './settings'
 import type { AppLang } from '../types'

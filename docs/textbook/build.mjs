@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 
-// ---------- оглавление (источник правды для оболочки; статусы — в PLAN.md) ----------
+// ---------- оглавление (источник правды для оболочки; статусы — в README.md) ----------
 const PARTS = {
   I: 'До стройки',
   II: 'Стройка',

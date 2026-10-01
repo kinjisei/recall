@@ -90,8 +90,9 @@
 - **Режим раунда прячет навигацию на любой ширине**, и меню компьютера тоже:
   игра идёт колонкой по центру окна, выход — кнопкой «назад» в самой игре.
 - **Колокольчик уведомлений и подарок-рефералка — внизу панели компьютера и
-  в шапке телефона**, рядом с аватаром (журнал п.46). Их пока нет: колокольчик
-  — PLAN.md Ф1.5, подарок — Ф2.10.
+  в шапке телефона**, рядом с аватаром (журнал п.46). Колокольчик появляется,
+  только когда у человека есть уведомления (`features/notifications`);
+  подарка пока нет — PLAN.md Ф2.10.
 - **Экраны — только из `routeChunks`.** Свой `import()` с тем же путём рядом
   разъедется при первом переименовании, и греться будет не тот кусок.
   Уже подгруженный экран показывается без `Suspense` — иначе переход снимал
@@ -155,5 +156,10 @@
   реестр экранов. После переезда каркаса это стали бы импорты «снизу вверх».
 
 <!-- generated:start -->
-<!-- блок заполнит генератор описаний (PLAN.md Ф1.7): файлы, адреса, кто использует -->
+<!-- Пишет `npm run gen:docs` (scripts/gen/module-docs.mjs) по коду — руками не править. -->
+## Из кода (сгенерировано)
+
+- **Файлы:** `App.tsx`, `AppProviders.tsx`, `BlockedScreen.tsx`, `ErrorBoundary.tsx`, `main.tsx`, `navigation.ts`, `PageTracker.tsx`, `ProtectedRoute.tsx`, `RoleGate.tsx`, `routeChunks.ts`, `routes.ts`, `ScrollToTop.tsx`, `shell/AvatarMenu.tsx`, `shell/BottomNav.tsx`, `shell/LangSwitch.tsx`, `shell/Layout.tsx`, `shell/navIcons.ts`, `shell/SideNav.tsx`, `shell/TopBar.tsx`, `shell/useNavTabs.ts`
+- **localStorage:** `recall.chunk_reload_at`
+- **Кто использует (импортом):** никто
 <!-- generated:end -->

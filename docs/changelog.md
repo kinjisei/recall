@@ -11,7 +11,7 @@
 > объясняет ПРИЧИНЫ решений, которых в коммитах нет.
 >
 > Записи после 26.07.2026 в старый журнал не попали — см. `git log` и
-> `docs/repair-plan.md`, `docs/mkt/21-open-issues.md`.
+> `docs/archive/repair-plan.md`, `docs/archive/mkt/21-open-issues.md`.
 
 ---
 

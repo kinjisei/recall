@@ -30,6 +30,9 @@ AI — с человеческими текстами ошибок вместо 
   `lib/` и `context/` — правило `db-outside-data-layer`. Экран в базу не ходит.
 - **Типы базы генерируются**: после каждой миграции
   `node scripts/check-types-drift.mjs --write` и коммит вместе с миграцией.
+  Клиент `createClient<Database>` типизирован ими — расхождение «код ↔ база»
+  ловит сборка. Наши структуры в jsonb-колонки и аргументы RPC — через
+  `toJson()` (`api/supabase.ts`).
 - **`api/aiTypes.ts` без импортов.** Его читает сервер (`api/*`): любой импорт
   отсюда потянул бы в сборку функций Vercel клиентский код (клиент базы
   читает `import.meta.env`, которого там нет). Проверка —
@@ -37,9 +40,7 @@ AI — с человеческими текстами ошибок вместо 
 - **Клиент AI не зовёт аналитику сам.** Событие воронки `ai_first` подписывает
   каркас (`onAiRequest` в `main.tsx`) до первого рендера: аналитика —
   предметная область и лежит выше. Модель клиент не выбирает — только задачу
-  (`AiTask`), остальное решает сервер (`api/_tasks.ts`). Список `AiTask` и
-  карта сервера совпадают в обе стороны, и каждую задачу шлёт хотя бы один
-  экран — `test-aitasks.mjs` (мёртвая `batch` прожила так до Ф1.6).
+  (`AiTask`); модель, карман квоты и права решает сервер (`api/CLAUDE.md`).
 - **Ошибка базы — через `dbError`**: человеку — что случилось и что делать,
   подробность — в консоль. Наш русский текст из RPC не заменяется общим.
 - **Договор с каркасом — здесь, выполняет каркас.** `focusMode`,
@@ -62,7 +63,9 @@ AI — с человеческими текстами ошибок вместо 
   способ вернуться, поэтому экран без адреса выпадает из навигации.
 - **Смена экрана ждёт перерисовки** (`lib/viewTransition`, `domSettled`):
   React Router откладывает обновление через `startTransition`, и без ожидания
-  браузер снимает два одинаковых кадра — анимация играет впустую.
+  браузер снимает два одинаковых кадра — анимация играет впустую, а экран
+  меняется рывком уже после неё. По счётчику вызовов это не видно — только
+  глазами или `smoke-motion`.
 - **Загрузка экрана — `useAsyncData`**, а не ручные `useState + useEffect +
   try/catch`: он отличает «пусто» от «не удалось загрузить» и даёт повтор.
 - **Числительные — только `plural`.** «32 новых слов» выглядит почти
@@ -87,7 +90,8 @@ AI — с человеческими текстами ошибок вместо 
 
 - **Переезд из `src/lib` — `git mv` без правок поведения** (PLAN.md Ф1.3).
   Имена функций сохранены, поменялись только пути импорта.
-- **`plural` вынесен из `lib/text.ts`**: в `text.ts` осталась сверка ответов
+- **`plural` вынесен из `lib/text.ts`** (а туда — из `ReportSheet`, где был
+  приватным): в `text.ts` осталась сверка ответов
   (`answerMatches`, парная к SQL `norm_typed`) — это правило предметной
   области, оно переедет в свой домен.
 - **`contacts` — сюда, а не в домен**: адрес поддержки нужен разбору ошибок
@@ -106,5 +110,9 @@ AI — с человеческими текстами ошибок вместо 
   (§1), а не транспорт.
 
 <!-- generated:start -->
-<!-- блок заполнит генератор описаний (PLAN.md Ф1.7): файлы, кто использует -->
+<!-- Пишет `npm run gen:docs` (scripts/gen/module-docs.mjs) по коду — руками не править. -->
+## Из кода (сгенерировано)
+
+- **Файлы:** `api/ai.ts`, `api/aiTypes.ts`, `api/database.types.ts`, `api/errors.ts`, `api/supabase.ts`, `lib/contacts.ts`, `lib/focusMode.ts`, `lib/morph.ts`, `lib/plural.ts`, `lib/routePreload.ts`, `lib/screenWidth.ts`, `lib/share.ts`, `lib/shellInsets.ts`, `lib/storage.ts`, `lib/useAsyncData.ts`, `lib/useMediaQuery.ts`, `lib/useUrlState.ts`, `lib/viewTransition.ts`
+- **Кто использует (импортом):** `api`, `app`, `components`, `context`, `domains/ai`, `domains/notifications`, `features/admin`, `features/auth`, `features/billing`, `features/conversation`, `features/dev`, `features/flashcards`, `features/grammar`, `features/homework`, `features/landing`, `features/legal`, `features/notifications`, `features/onboarding`, `features/practice`, `features/program`, `features/progress`, `features/pronunciation`, `features/quests`, `features/reader`, `features/settings`, `features/study`, `features/teacher`, `features/writing`, `lib`, `shared/ui`, `types`
 <!-- generated:end -->

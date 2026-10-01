@@ -81,4 +81,14 @@
   доставки база узнаёт асинхронно. Повторы при сбое канала — вместе с первым
   каналом (push, Ф2.9).
 - Секреты доставки в git не лежат: `vault.create_secret(...)` руками на
-  каждой базе (инструкция — корневой `CLAUDE.md`, «Что ждёт владельца»).
+  каждой базе (дело владельца — `docs/PLAN.md`, «Дела владельца»).
+
+<!-- generated:start -->
+<!-- Пишет `npm run gen:docs` (scripts/gen/module-docs.mjs) по коду — руками не править. -->
+## Из кода (сгенерировано)
+
+- **Файлы:** `api.ts`, `index.ts`, `model.ts`
+- **Таблицы:** `notifications`
+- **RPC:** `mark_notifications_read`
+- **Кто использует (импортом):** `features/notifications`
+<!-- generated:end -->

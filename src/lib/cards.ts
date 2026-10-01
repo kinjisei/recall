@@ -53,7 +53,7 @@ export async function getDeckIds(lang: AppLang): Promise<string[]> {
 
 /**
  * Общий хелпер: добавить карточку (слово/фразу) в колоду.
- * Контракт (docs/ARCHITECTURE.md §7) — сигнатуру НЕ менять (расширять можно).
+ * Контракт: сигнатуру НЕ менять (расширять можно) — её зовут разные разделы (src/lib/CLAUDE.md).
  * Если deckId не передан — кладём в колоду по умолчанию языка lang (или en).
  */
 export async function addCard(input: {

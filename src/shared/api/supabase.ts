@@ -14,7 +14,7 @@ if (!url || !anonKey || anonKey.includes('ВСТАВЬ')) {
 // Клиент типизирован схемой БД (src/shared/api/database.types.ts, сгенерирован
 // `supabase gen types`): .from('table') теперь знает форму строк, и расхождение
 // «код ↔ база» ловится на сборке, а не у пользователя. ⚠️ После каждой
-// миграции: node scripts/check-types-drift.mjs --write (docs/ARCHITECTURE.md).
+// миграции: node scripts/check-types-drift.mjs --write (supabase/CLAUDE.md).
 export const supabase = createClient<Database>(url, anonKey)
 
 /**
