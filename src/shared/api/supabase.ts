@@ -2,9 +2,11 @@ import { createClient } from '@supabase/supabase-js'
 import type { Database, Json } from './database.types'
 
 const url = import.meta.env.VITE_SUPABASE_URL as string
+// Публичный ключ sb_publishable_… (Ф1.9): он и так в бандле, данные закрывает
+// RLS. Вид ключа проверяет сборка (scripts/_keys.mjs).
 const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string
 
-if (!url || !publishableKey || publishableKey.includes('ВСТАВЬ')) {
+if (!url || !publishableKey) {
   // Понятное сообщение, если забыли вставить ключ в .env.local
   console.error(
     'Supabase не настроен: проверь VITE_SUPABASE_URL и VITE_SUPABASE_PUBLISHABLE_KEY в файле .env.local',

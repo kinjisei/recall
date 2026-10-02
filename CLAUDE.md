@@ -30,7 +30,8 @@ VS Code, где у Claude есть файлы и терминал: фичи со
 
 - Vite + React 19 + TypeScript + Tailwind v4, PWA; `react-router-dom` 7,
   обычный `<BrowserRouter>` (не data-router). Повторение — `ts-fsrs`.
-- Supabase (Postgres + Auth + RLS): `https://qyvkyyjqqqirmdliddsn.supabase.co`.
+- Supabase (Postgres + Auth + RLS): `https://qyvkyyjqqqirmdliddsn.supabase.co`;
+  ключи — только новые `sb_publishable_`/`sb_secret_` (Ф1.9, `scripts/_keys.mjs`).
 - AI — свои функции на Vercel (`api/`), ключи только на сервере, модель по
   задаче выбирает сервер (Gemini, Groq). Речь — Web Speech API и Groq Whisper.
 - Vercel, автодеплой из `main`; прод — https://recall-pgkz.vercel.app

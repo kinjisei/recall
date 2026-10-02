@@ -5,6 +5,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { handle as geminiHandle } from './api/gemini'
 import { handle as transcribeHandle } from './api/transcribe'
+import { buildEnvProblems } from './scripts/_keys.mjs'
 
 /** Что серверные функции читают из окружения (process.env) — в dev берём из .env.local. */
 const SERVER_ENV = ['GEMINI_API_KEY', 'GROQ_API_KEY', 'VITE_SUPABASE_URL', 'VITE_SUPABASE_PUBLISHABLE_KEY']
@@ -82,6 +83,10 @@ export default defineConfig(({ mode }) => {
   // Читаем .env.local целиком (третий аргумент '' = без фильтра по префиксу).
   // В клиентский код всё равно попадают только переменные с префиксом VITE_.
   const env = loadEnv(mode, process.cwd(), '')
+  // Ключи Supabase (scripts/_keys.mjs): секрет в VITE_ или старый ключ — стоп
+  // всегда; на Vercel ещё и без ключа, чтобы в проде осталась прежняя версия.
+  const keyProblems = buildEnvProblems(env, { onVercel: Boolean(process.env.VERCEL) })
+  if (keyProblems.length) throw new Error(`Ключи Supabase:\n  ${keyProblems.join('\n  ')}`)
   // Серверным функциям — то, что им даёт Vercel. Уже заданное в окружении не
   // трогаем: dev:test подменяет адрес базы на тестовую именно так.
   for (const key of SERVER_ENV) if (process.env[key] === undefined && env[key]) process.env[key] = env[key]

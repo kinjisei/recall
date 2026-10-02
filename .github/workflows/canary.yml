@@ -6,9 +6,10 @@
 #
 # Секрет (Settings → Secrets and variables → Actions):
 #   CANARY_PASSWORD — пароль постоянного аккаунта canary@recall.test.
-# Адрес и anon-ключ Supabase секретами НЕ являются: они и так лежат в бандле
-# фронтенда. service_role здесь не используется намеренно — доступ к
-# репозиторию не должен означать доступ к данным учеников.
+# Адрес и публичный ключ Supabase (sb_publishable_, Ф1.9) секретами НЕ
+# являются: они и так лежат в бандле фронтенда. Секретный ключ здесь не
+# используется намеренно — доступ к репозиторию не должен означать доступ к
+# данным учеников.
 name: Сторож прода
 
 on:
@@ -40,11 +41,11 @@ jobs:
         run: sleep 120
       - name: Прогон
         env:
-          # Адрес и anon-ключ не секреты: они по замыслу публичные и лежат в
+          # Адрес и публичный ключ не секреты: они по замыслу публичные и лежат в
           # бандле фронтенда у каждого пользователя. Данные закрывает RLS, а не
           # тайна ключа. Держим здесь, чтобы не заводить лишних настроек.
           SUPABASE_URL: https://qyvkyyjqqqirmdliddsn.supabase.co
-          SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5dmt5eWpxcXFpcm1kbGlkZHNuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4NTI5MzcsImV4cCI6MjA5ODQyODkzN30.MUqKgsN_MYDDn8jxW6qnMJIExQu3mVWd7FZJmkzxCug
+          SUPABASE_PUBLISHABLE_KEY: sb_publishable_8TOLRfv9dJckrWLdYmFf8g_sQZDrDRd
           CANARY_EMAIL: canary@recall.test
           CANARY_PASSWORD: ${{ secrets.CANARY_PASSWORD }}
         run: node scripts/canary-prod.mjs

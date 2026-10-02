@@ -8,15 +8,18 @@
  * ⚠️ Что в живую базу МОЖНО, а что нет. Схему поменять отсюда нельзя: токен
  * Management API прода — только чтение (Ф0.2), пароля базы прода в .env.local
  * нет (журнал п.47 — миграции на проде запускает владелец, пароль руками).
- * А вот ДАННЫЕ — можно: служебный ключ прода (SUPABASE_SECRET_KEY) лежит в
- * .env.local, и скрипт с --prod создаёт и удаляет через него аккаунты на
- * живой базе, как все смоуки до Ф1.2. Защита тут одна — явный --prod.
+ * Секретного ключа прода (SUPABASE_SECRET_KEY) в .env.local тоже нет —
+ * решение владельца, Ф1.9: утёкший файл не должен открывать данные учеников.
+ * Скрипт с --prod, которому нужен этот ключ (создать и удалить аккаунт на
+ * живой базе), получит отказ с подсказкой: владелец заводит в панели
+ * временный секретный ключ, после прогона — удаляет.
  *
  * Секреты не печатаются: supabaseCli прячет пароль и токены в выводе.
  */
 import { spawnSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
+import { keyProblem } from './_keys.mjs'
 
 /** Версия Supabase CLI — закреплена: поведение db push проверено на ней (Ф1.2). */
 export const SUPABASE_CLI = 'supabase@2.118.0'
@@ -66,31 +69,53 @@ export function dbTarget(argv = process.argv.slice(2)) {
 }
 
 /**
- * Окружение для скриптов: ТЕ ЖЕ имена, что они всегда читали из .env.local
- * (VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY, SUPABASE_SECRET_KEY,
- * SUPABASE_ACCESS_TOKEN), но значения — ВЫБРАННОЙ базы: тестовой по
- * умолчанию, живой только с --prod. Так перевод полусотни проверок на
- * тестовую базу — одна строка в каждой, а их тела не меняются.
+ * Окружение для скриптов: ТЕ ЖЕ имена, что у приложения (VITE_SUPABASE_URL,
+ * VITE_SUPABASE_PUBLISHABLE_KEY, SUPABASE_SECRET_KEY, SUPABASE_ACCESS_TOKEN),
+ * но значения — ВЫБРАННОЙ базы: тестовой по умолчанию, живой только с --prod.
+ * Так перевод полусотни проверок на тестовую базу — одна строка в каждой, а
+ * их тела не меняются.
  *
  * ⚠️ Имя VITE_SUPABASE_URL здесь значит «адрес выбранной базы», а не прода.
- * Тестовая база — на новых ключах (sb_publishable_/sb_secret_, Ф0.1).
+ * Только новые ключи sb_publishable_/sb_secret_ (Ф1.9): старый JWT-ключ —
+ * отказ сразу, а не 401 посреди смоука.
  */
 export function scriptEnv(argv = process.argv.slice(2)) {
   const env = readEnv()
   const target = dbTarget(argv)
   assertSiteMatchesDb(process.env.AUDIT_BASE_URL)
   console.log(`▸ база: ${target.label}${target.name === 'test' ? '' : ' — --prod'}`)
-  if (target.name === 'prod') return env
-  const first = (...keys) => keys.map((k) => env[k]).find(Boolean)
-  const mapped = {
-    VITE_SUPABASE_URL: target.url,
-    VITE_SUPABASE_PUBLISHABLE_KEY: first('TEST_SUPABASE_PUBLISHABLE_KEY', 'TEST_SUPABASE_ANON_KEY'),
-    SUPABASE_SECRET_KEY: first('TEST_SUPABASE_SECRET_KEY', 'TEST_SUPABASE_SERVICE_KEY'),
-    SUPABASE_ACCESS_TOKEN: target.accessToken,
+  const prod = target.name === 'prod'
+  const out = prod
+    ? { ...env }
+    : {
+        ...env,
+        VITE_SUPABASE_URL: target.url,
+        VITE_SUPABASE_PUBLISHABLE_KEY: env.TEST_SUPABASE_PUBLISHABLE_KEY,
+        SUPABASE_SECRET_KEY: env.TEST_SUPABASE_SECRET_KEY,
+        SUPABASE_ACCESS_TOKEN: target.accessToken,
+      }
+  // в ошибке — имя строки в .env.local, которую надо поправить
+  const [pubName, secName] = prod
+    ? ['VITE_SUPABASE_PUBLISHABLE_KEY', 'SUPABASE_SECRET_KEY']
+    : ['TEST_SUPABASE_PUBLISHABLE_KEY', 'TEST_SUPABASE_SECRET_KEY']
+  const problems = [keyProblem(pubName, out.VITE_SUPABASE_PUBLISHABLE_KEY, 'publishable')]
+  if (!prod || out.SUPABASE_SECRET_KEY) problems.push(keyProblem(secName, out.SUPABASE_SECRET_KEY, 'secret'))
+  else {
+    // нет намеренно (см. шапку): отказ — только скрипту, которому ключ нужен
+    Object.defineProperty(out, 'SUPABASE_SECRET_KEY', {
+      enumerable: false,
+      get() {
+        throw new Error(
+          'Секретного ключа живой базы в .env.local нет намеренно (Ф1.9). Нужен для --prod — ' +
+            'владелец создаёт в Supabase → Settings → API Keys временный секретный ключ, ' +
+            'кладёт SUPABASE_SECRET_KEY=… в .env.local, после прогона удаляет и ключ, и строку.',
+        )
+      },
+    })
   }
-  const missing = Object.entries(mapped).filter(([, v]) => !v).map(([k]) => k)
-  if (missing.length) throw new Error(`Для тестовой базы нет ключей в .env.local: ${missing.join(', ')}`)
-  return { ...env, ...mapped }
+  const bad = problems.filter(Boolean)
+  if (bad.length) throw new Error(`Ключи в .env.local (${target.label}):\n  ${bad.join('\n  ')}`)
+  return out
 }
 
 /**

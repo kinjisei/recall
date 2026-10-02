@@ -6,16 +6,16 @@
  * обычно он не пишет, а уходит. Сбор ошибок тут не помогает: он ждёт первого
  * пострадавшего. Сторож находит поломку сам, даже когда в приложении никого нет.
  *
- * ⚠️ БЕЗ service_role. Ключ от всей базы в настройках репозитория — плохой
+ * ⚠️ БЕЗ секретного ключа. Ключ от всей базы в настройках репозитория — плохой
  * размен: доступ к репозиторию превратился бы в доступ ко всем данным
  * учеников. Сторож работает под ОБЫЧНЫМ аккаунтом-канарейкой с публичным
- * anon-ключом (он и так лежит в бандле фронтенда), то есть видит ровно то же,
- * что настоящий пользователь.
+ * ключом sb_publishable_ (он и так лежит в бандле фронтенда), то есть видит
+ * ровно то же, что настоящий пользователь.
  *
  * Переменные окружения:
  *   RECALL_URL       — адрес прода (по умолчанию боевой)
  *   SUPABASE_URL     — публичный, не секрет
- *   SUPABASE_ANON_KEY— публичный, лежит в бандле
+ *   SUPABASE_PUBLISHABLE_KEY — публичный, лежит в бандле
  *   CANARY_EMAIL / CANARY_PASSWORD — постоянный тестовый аккаунт (единственный
  *                      настоящий секрет). Заводится один раз руками.
  *
@@ -23,6 +23,7 @@
  */
 import { createClient } from '@supabase/supabase-js'
 import { appendFileSync, existsSync, readFileSync } from 'node:fs'
+import { keyProblem } from './_keys.mjs'
 
 const localEnv = (() => {
   const p = new URL('../.env.local', import.meta.url)
@@ -38,7 +39,7 @@ const cfg = { ...localEnv, ...process.env }
 
 const SITE = cfg.RECALL_URL || 'https://recall-pgkz.vercel.app'
 const SUPA_URL = cfg.SUPABASE_URL || cfg.VITE_SUPABASE_URL
-const SUPA_ANON = cfg.SUPABASE_ANON_KEY || cfg.VITE_SUPABASE_ANON_KEY
+const SUPA_KEY = cfg.SUPABASE_PUBLISHABLE_KEY || cfg.VITE_SUPABASE_PUBLISHABLE_KEY
 const EMAIL = cfg.CANARY_EMAIL
 const PASSWORD = cfg.CANARY_PASSWORD
 
@@ -49,7 +50,10 @@ const check = (name, ok, extra = '') => {
 }
 
 async function main() {
-  if (!SUPA_URL || !SUPA_ANON) throw new Error('нет SUPABASE_URL / SUPABASE_ANON_KEY')
+  if (!SUPA_URL) throw new Error('нет SUPABASE_URL')
+  // старый ключ после выключения дал бы 401 на всём — пусть сторож скажет прямо
+  const keyBad = keyProblem('SUPABASE_PUBLISHABLE_KEY', SUPA_KEY, 'publishable')
+  if (keyBad) throw new Error(keyBad)
   if (!EMAIL || !PASSWORD) throw new Error('нет CANARY_EMAIL / CANARY_PASSWORD')
 
   // --- 1. Сайт отдаётся и внутри действительно приложение --------------------
@@ -73,7 +77,7 @@ async function main() {
   }
 
   // --- 2. Вход работает ------------------------------------------------------
-  const sb = createClient(SUPA_URL, SUPA_ANON, { auth: { persistSession: false } })
+  const sb = createClient(SUPA_URL, SUPA_KEY, { auth: { persistSession: false } })
   const { data: auth, error: authErr } = await sb.auth.signInWithPassword({
     email: EMAIL,
     password: PASSWORD,
