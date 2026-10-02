@@ -6,6 +6,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { handle as geminiHandle } from './api/gemini'
 import { handle as transcribeHandle } from './api/transcribe'
 import { buildEnvProblems } from './scripts/_keys.mjs'
+import { startupPrecache } from './scripts/_precache.mjs'
 
 /** Что серверные функции читают из окружения (process.env) — в dev берём из .env.local. */
 const SERVER_ENV = ['GEMINI_API_KEY', 'GROQ_API_KEY', 'VITE_SUPABASE_URL', 'VITE_SUPABASE_PUBLISHABLE_KEY']
@@ -90,6 +91,7 @@ export default defineConfig(({ mode }) => {
   // Серверным функциям — то, что им даёт Vercel. Уже заданное в окружении не
   // трогаем: dev:test подменяет адрес базы на тестовую именно так.
   for (const key of SERVER_ENV) if (process.env[key] === undefined && env[key]) process.env[key] = env[key]
+  const precache = startupPrecache()
 
   return {
     plugins: [
@@ -97,37 +99,29 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       vercelRoute('/api/gemini', geminiHandle, 'GEMINI_API_KEY'),
       vercelRoute('/api/transcribe', transcribeHandle, 'GROQ_API_KEY'),
+      precache.collect,
       VitePWA({
         registerType: 'autoUpdate',
         // регистрируем SW сами в main.tsx (проверка обновлений при возврате в приложение)
         injectRegister: false,
-        // не отдавать /api/* из офлайн-кэша SPA (иначе прокси ломается офлайн)
         workbox: {
           // не отдавать /api/* из офлайн-кэша SPA (иначе прокси ломается офлайн)
           navigateFallbackDenylist: [/^\/api\//],
-          // По умолчанию в precache попадали ВСЕ чанки — 2.39 МБ, включая
-          // ~1.3 МБ испанских данных, которые не нужны учащему английский.
-          // Шрифты при этом не попадали вовсе, и офлайн интерфейс падал на
-          // системный. Кладём каркас и шрифты; языковые данные докачиваются
-          // по факту обращения (runtime-кэш ниже).
-          // Каркас в текущей сборке (Vite 8/Rolldown) — три чанка:
-          //   index-*.js          — стартовый бандл приложения;
-          //   icons-*.js          — общий чанк (иконки + КЛИЕНТ SUPABASE —
-          //                         без него auth-гейт не пройти, офлайн-старт
-          //                         зависал бы на пустом экране);
-          //   workbox-window*.js  — регистрация SW из main.tsx.
-          // Прежние glob'ы jsx-runtime-*.js / supabase-*.js были мёртвыми:
-          // Rolldown такие чанки больше не выделяет (2 warning'а при сборке).
-          globPatterns: [
-            '**/*.{css,html,ico,svg,png,webmanifest,woff2}',
-            'assets/index-*.js',
-            'assets/icons-*.js',
-            'assets/workbox-window*.js',
-          ],
+          // Офлайн-кэш (precache) = стили, шрифты, картинки и СТАРТОВЫЙ ГРАФ:
+          // стартовый файл и всё, что он импортирует статически, рекурсивно
+          // (+ workbox-window для регистрации SW) — scripts/_precache.mjs.
+          // Граф берётся из метаданных сборки, а не масками имён: маски
+          // отставали от того, как Rolldown режет чанки, и 12 стартовых файлов
+          // (react-dom, клиент базы, роутер…) не попадали в кэш — новая версия,
+          // скачанная в фоне, открывалась без сети белым экраном (Ф1.11).
+          // Остальные чанки (испанский словарь ~1.3 МБ, грамматика, экраны) —
+          // не нужны каждому, докачиваются при первом открытии (runtime ниже).
+          // Сборка падает, если хоть один файл графа не в precache (verify).
+          globPatterns: ['**/*.{css,html,ico,svg,png,webmanifest,woff2}', 'assets/*.js'],
+          manifestTransforms: [precache.transform],
           runtimeCaching: [
             {
-              // остальные чанки (испанский словарь, грамматика, игры) —
-              // кэшируются после первого реального открытия раздела
+              // остальные чанки — кэшируются после первого открытия раздела
               urlPattern: /\/assets\/.*\.js$/,
               handler: 'StaleWhileRevalidate',
               options: { cacheName: 'recall-chunks' },
@@ -156,6 +150,7 @@ export default defineConfig(({ mode }) => {
           ],
         },
       }),
+      precache.verify,
     ],
   }
 })
