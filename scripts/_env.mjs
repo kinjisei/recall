@@ -8,7 +8,7 @@
  * ⚠️ Что в живую базу МОЖНО, а что нет. Схему поменять отсюда нельзя: токен
  * Management API прода — только чтение (Ф0.2), пароля базы прода в .env.local
  * нет (журнал п.47 — миграции на проде запускает владелец, пароль руками).
- * А вот ДАННЫЕ — можно: служебный ключ прода (SUPABASE_SERVICE_KEY) лежит в
+ * А вот ДАННЫЕ — можно: служебный ключ прода (SUPABASE_SECRET_KEY) лежит в
  * .env.local, и скрипт с --prod создаёт и удаляет через него аккаунты на
  * живой базе, как все смоуки до Ф1.2. Защита тут одна — явный --prod.
  *
@@ -67,7 +67,7 @@ export function dbTarget(argv = process.argv.slice(2)) {
 
 /**
  * Окружение для скриптов: ТЕ ЖЕ имена, что они всегда читали из .env.local
- * (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, SUPABASE_SERVICE_KEY,
+ * (VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY, SUPABASE_SECRET_KEY,
  * SUPABASE_ACCESS_TOKEN), но значения — ВЫБРАННОЙ базы: тестовой по
  * умолчанию, живой только с --prod. Так перевод полусотни проверок на
  * тестовую базу — одна строка в каждой, а их тела не меняются.
@@ -84,8 +84,8 @@ export function scriptEnv(argv = process.argv.slice(2)) {
   const first = (...keys) => keys.map((k) => env[k]).find(Boolean)
   const mapped = {
     VITE_SUPABASE_URL: target.url,
-    VITE_SUPABASE_ANON_KEY: first('TEST_SUPABASE_PUBLISHABLE_KEY', 'TEST_SUPABASE_ANON_KEY'),
-    SUPABASE_SERVICE_KEY: first('TEST_SUPABASE_SECRET_KEY', 'TEST_SUPABASE_SERVICE_KEY'),
+    VITE_SUPABASE_PUBLISHABLE_KEY: first('TEST_SUPABASE_PUBLISHABLE_KEY', 'TEST_SUPABASE_ANON_KEY'),
+    SUPABASE_SECRET_KEY: first('TEST_SUPABASE_SECRET_KEY', 'TEST_SUPABASE_SERVICE_KEY'),
     SUPABASE_ACCESS_TOKEN: target.accessToken,
   }
   const missing = Object.entries(mapped).filter(([, v]) => !v).map(([k]) => k)

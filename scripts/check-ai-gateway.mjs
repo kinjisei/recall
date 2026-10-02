@@ -27,13 +27,13 @@ if (process.argv.includes('--prod')) {
 const env = scriptEnv()
 const target = dbTarget([])
 const sql = (q) => runSql(target, q)
-const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SERVICE_KEY, {
+const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SECRET_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 })
 
 // серверным функциям — адрес ТЕСТОВОЙ базы; ключи моделей — подставные
 process.env.VITE_SUPABASE_URL = env.VITE_SUPABASE_URL
-process.env.VITE_SUPABASE_ANON_KEY = env.VITE_SUPABASE_ANON_KEY
+process.env.VITE_SUPABASE_PUBLISHABLE_KEY = env.VITE_SUPABASE_PUBLISHABLE_KEY
 process.env.GEMINI_API_KEY = 'fake-gemini'
 process.env.GROQ_API_KEY = 'fake-groq'
 delete process.env.RECALL_CHEAP_MODELS
@@ -117,7 +117,7 @@ try {
   const { data: made, error } = await admin.auth.admin.createUser({ email: EMAIL, password: PASSWORD, email_confirm: true })
   if (error && !/already/i.test(error.message)) throw new Error(error.message)
   uid = made?.user?.id ?? (await admin.auth.admin.listUsers({ perPage: 1000 })).data.users.find((u) => u.email === EMAIL)?.id
-  const client = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY, {
+  const client = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_PUBLISHABLE_KEY, {
     auth: { autoRefreshToken: false, persistSession: false },
   })
   const { data: session, error: e2 } = await client.auth.signInWithPassword({ email: EMAIL, password: PASSWORD })

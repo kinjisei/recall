@@ -18,7 +18,7 @@ const EMAIL = 'queries-measure@recall.test'
 const PASSWORD = 'Queries!2026'
 
 const env = scriptEnv()
-const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SERVICE_KEY, { auth: { persistSession: false } })
+const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SECRET_KEY, { auth: { persistSession: false } })
 const REF = new URL(env.VITE_SUPABASE_URL).hostname.split('.')[0]
 const SUPA = env.VITE_SUPABASE_URL
 
@@ -43,7 +43,7 @@ async function ensureUser() {
   return id
 }
 async function session() {
-  const c = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY, { auth: { persistSession: false } })
+  const c = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_PUBLISHABLE_KEY, { auth: { persistSession: false } })
   const { data, error } = await c.auth.signInWithPassword({ email: EMAIL, password: PASSWORD })
   if (error) throw new Error(error.message)
   return data.session

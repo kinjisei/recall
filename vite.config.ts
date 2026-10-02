@@ -7,7 +7,7 @@ import { handle as geminiHandle } from './api/gemini'
 import { handle as transcribeHandle } from './api/transcribe'
 
 /** Что серверные функции читают из окружения (process.env) — в dev берём из .env.local. */
-const SERVER_ENV = ['GEMINI_API_KEY', 'GROQ_API_KEY', 'VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY']
+const SERVER_ENV = ['GEMINI_API_KEY', 'GROQ_API_KEY', 'VITE_SUPABASE_URL', 'VITE_SUPABASE_PUBLISHABLE_KEY']
 
 type ApiHandler = (req: VercelRequest, res: VercelResponse) => unknown
 

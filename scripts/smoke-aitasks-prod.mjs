@@ -21,7 +21,7 @@ assertSiteMatchesDb(BASE)
 
 const env = scriptEnv()
 const URL_ = env.VITE_SUPABASE_URL
-const admin = createClient(URL_, env.SUPABASE_SERVICE_KEY, {
+const admin = createClient(URL_, env.SUPABASE_SECRET_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 })
 
@@ -52,7 +52,7 @@ async function mk(email, role) {
   return id
 }
 async function token(email) {
-  const c = createClient(URL_, env.VITE_SUPABASE_ANON_KEY, {
+  const c = createClient(URL_, env.VITE_SUPABASE_PUBLISHABLE_KEY, {
     auth: { autoRefreshToken: false, persistSession: false },
   })
   const { data, error } = await c.auth.signInWithPassword({ email, password: PASS })

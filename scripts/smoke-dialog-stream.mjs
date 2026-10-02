@@ -23,7 +23,7 @@ import { APP_URL, scriptEnv } from './_env.mjs'
 
 const BASE = process.env.AUDIT_BASE_URL || APP_URL
 const env = scriptEnv()
-const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SERVICE_KEY, {
+const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SECRET_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 })
 const EMAIL = 'dialog-stream-smoke@recall.test'
@@ -41,7 +41,7 @@ try {
   const { data: made, error } = await admin.auth.admin.createUser({ email: EMAIL, password: PASSWORD, email_confirm: true })
   if (error && !/already/i.test(error.message)) throw new Error(error.message)
   uid = made?.user?.id ?? (await admin.auth.admin.listUsers({ perPage: 1000 })).data.users.find((u) => u.email === EMAIL)?.id
-  const client = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY, {
+  const client = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_PUBLISHABLE_KEY, {
     auth: { autoRefreshToken: false, persistSession: false },
   })
   const { data: session, error: e2 } = await client.auth.signInWithPassword({ email: EMAIL, password: PASSWORD })

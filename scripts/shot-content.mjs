@@ -16,7 +16,7 @@ const PASSWORD = 'ShotSmoke!2026'
 const OUT = 'C:\\Users\\77762\\AppData\\Local\\Temp\\claude\\d--projects-recall-app\\184b1f89-6960-471c-8fae-2cfaf0a9097b\\scratchpad'
 
 const env = scriptEnv()
-const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SERVICE_KEY, {
+const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SECRET_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 })
 

@@ -63,10 +63,14 @@ export const UNAVAILABLE: AuthDenied = {
   error: 'Сервис AI временно недоступен. Попробуй через минуту.',
 }
 
-/** Чем войти в базу от имени пользователя: его токен и адрес проекта. */
+/**
+ * Чем войти в базу от имени пользователя: его токен, адрес проекта и
+ * публичный ключ sb_publishable_ — тот же, что в бандле (Ф1.9). Новый ключ
+ * идёт только в заголовок apikey, в Authorization — токен пользователя.
+ */
 interface Credentials {
   url: string
-  anon: string
+  apikey: string
   jwt: string
 }
 
@@ -74,8 +78,8 @@ function credentials(req: VercelRequest): Credentials | null {
   const auth = req.headers.authorization
   const jwt = auth?.startsWith('Bearer ') ? auth.slice(7) : null
   const url = process.env.VITE_SUPABASE_URL
-  const anon = process.env.VITE_SUPABASE_ANON_KEY
-  return jwt && url && anon ? { url, anon, jwt } : null
+  const apikey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY
+  return jwt && url && apikey ? { url, apikey, jwt } : null
 }
 
 export interface RpcReply {
@@ -90,7 +94,7 @@ function rpcAs(c: Credentials, fn: string, args: object, ms: number): Promise<Rp
     `${c.url}/rest/v1/rpc/${fn}`,
     {
       method: 'POST',
-      headers: { Authorization: `Bearer ${c.jwt}`, apikey: c.anon, 'Content-Type': 'application/json' },
+      headers: { Authorization: `Bearer ${c.jwt}`, apikey: c.apikey, 'Content-Type': 'application/json' },
       body: JSON.stringify(args),
     },
     ms,
@@ -135,7 +139,7 @@ export async function isTeacher(
   const c = credentials(req)
   if (!c) return false
 
-  const headers = { Authorization: `Bearer ${c.jwt}`, apikey: c.anon }
+  const headers = { Authorization: `Bearer ${c.jwt}`, apikey: c.apikey }
   const readJson = async (r: Response) => (r.ok ? ((await r.json()) as unknown) : null)
   try {
     const me = (await timedFetch(`${c.url}/auth/v1/user`, { headers }, ms, readJson)) as {

@@ -33,7 +33,7 @@ const shotsAt = process.argv.indexOf('--shots')
 const SHOTS = shotsAt !== -1 ? process.argv[shotsAt + 1] : null
 
 const env = scriptEnv()
-const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SERVICE_KEY, {
+const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SECRET_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 })
 

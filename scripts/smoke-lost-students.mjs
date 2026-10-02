@@ -21,7 +21,7 @@ import { APP_URL, scriptEnv } from './_env.mjs'
 
 const EDGE = 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'
 const env = scriptEnv()
-const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SERVICE_KEY, { auth: { persistSession: false } })
+const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SECRET_KEY, { auth: { persistSession: false } })
 const T = { email: 'lost-t@recall.test', pass: 'Lost!2026teach' }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 const day = (back) => {
@@ -92,7 +92,7 @@ for (const [nm, key, back] of plan) {
 // ⚠️ Выдаём через RPC от лица преподавателя, а не вставкой в таблицу: прямая
 // запись в homework отозвана у всех, и смоук обязан ходить тем же путём, что
 // живой экран.
-const asTeacher = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY)
+const asTeacher = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_PUBLISHABLE_KEY)
 await asTeacher.auth.signInWithPassword({ email: T.email, password: T.pass })
 
 const overdueHw = await asTeacher.rpc('create_homework', {
@@ -123,7 +123,7 @@ if (overdueHw.error || freshHw.error) {
 }
 
 // Один пункт из двух ученик отметил сам — строка должна показать «1 из 2».
-const asAigerim = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY)
+const asAigerim = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_PUBLISHABLE_KEY)
 await asAigerim.auth.signInWithPassword({ email: 'lost-aigerim@recall.test', password: T.pass })
 const { data: myHw } = await asAigerim.rpc('get_homework', { p_student: undefined })
 await asAigerim.rpc('complete_homework_item', { p_item: myHw.items[0].id })

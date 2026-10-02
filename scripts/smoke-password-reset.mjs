@@ -36,8 +36,8 @@ const PASS_SETTINGS = 'Settings!Password2026'
 
 const env = scriptEnv()
 const URL_ = env.VITE_SUPABASE_URL
-const ANON = env.VITE_SUPABASE_ANON_KEY
-const admin = createClient(URL_, env.SUPABASE_SERVICE_KEY, {
+const ANON = env.VITE_SUPABASE_PUBLISHABLE_KEY
+const admin = createClient(URL_, env.SUPABASE_SECRET_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 })
 const anon = () => createClient(URL_, ANON, { auth: { autoRefreshToken: false, persistSession: false } })

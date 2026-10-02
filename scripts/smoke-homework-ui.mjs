@@ -22,7 +22,7 @@ const PASSWORD = 'HwUi!Smoke2026'
 const STUDENT_NAME = 'Ерболат Смоуков'
 
 const env = scriptEnv()
-const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SERVICE_KEY, {
+const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SECRET_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 })
 
@@ -314,7 +314,7 @@ try {
   // давал ни один. Проверяем ровно это: один список, прогресс ВНУТРИ пункта
   // (незакрытое должно тянуть закончить), выбор из пары и галочка только там,
   // где измерить нечем.
-  const teacherApi = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY)
+  const teacherApi = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_PUBLISHABLE_KEY)
   await teacherApi.auth.signInWithPassword({ email: T_EMAIL, password: PASSWORD })
   const { error: hw2err } = await teacherApi.rpc('create_homework', {
     p_student_id: sId,

@@ -23,7 +23,7 @@ if (process.argv.includes('--prod')) {
 }
 const env = scriptEnv()
 process.env.VITE_SUPABASE_URL = env.VITE_SUPABASE_URL
-process.env.VITE_SUPABASE_ANON_KEY = env.VITE_SUPABASE_ANON_KEY
+process.env.VITE_SUPABASE_PUBLISHABLE_KEY = env.VITE_SUPABASE_PUBLISHABLE_KEY
 
 const server = await createServer({
   root: new URL('.', ROOT).pathname.replace(/^\/([A-Za-z]:)/, '$1'),

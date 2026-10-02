@@ -11,15 +11,15 @@
  *   4. С появлением ученика действует обычный лимит студии.
  *
  * Запуск: node scripts/smoke-refund.mjs  (dev-сервер не нужен — только БД)
- * Требует SUPABASE_SERVICE_KEY в .env.local. Аккаунты создаёт и удаляет сам.
+ * Требует SUPABASE_SECRET_KEY в .env.local. Аккаунты создаёт и удаляет сам.
  */
 import { createClient } from '@supabase/supabase-js'
 import { scriptEnv } from './_env.mjs'
 
 const env = scriptEnv()
 const URL_ = env.VITE_SUPABASE_URL
-const ANON = env.VITE_SUPABASE_ANON_KEY
-const admin = createClient(URL_, env.SUPABASE_SERVICE_KEY, {
+const ANON = env.VITE_SUPABASE_PUBLISHABLE_KEY
+const admin = createClient(URL_, env.SUPABASE_SECRET_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 })
 

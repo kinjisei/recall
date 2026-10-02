@@ -283,7 +283,7 @@ email (`lib/account.deleteMyAccount`). Разнобой: сегмент-пере
 Все проверки моей области — **вне CI** (`.github/workflows/checks.yml` гоняет
 только `npm run build`, `check-api-vercel.mjs`, список чистых `test-*.mjs` (в
 котором НЕТ ни одного теста из платформенного слоя) и `validate-exercises.mjs`/`check-schema.mjs`).
-Браузерные смоуки моей области требуют dev-сервера, `SUPABASE_SERVICE_KEY` и
+Браузерные смоуки моей области требуют dev-сервера, `SUPABASE_SECRET_KEY` и
 запускаются вручную:
 
 - `scripts/smoke-navigation.mjs` — «назад»/F5 на внутренних экранах (правило `useUrlState`).

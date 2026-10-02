@@ -11,11 +11,11 @@ import { scriptEnv } from './_env.mjs'
 
 const env = scriptEnv()
 const URL_ = env.VITE_SUPABASE_URL
-const admin = createClient(URL_, env.SUPABASE_SERVICE_KEY, {
+const admin = createClient(URL_, env.SUPABASE_SECRET_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 })
 const anon = () =>
-  createClient(URL_, env.VITE_SUPABASE_ANON_KEY, {
+  createClient(URL_, env.VITE_SUPABASE_PUBLISHABLE_KEY, {
     auth: { autoRefreshToken: false, persistSession: false },
   })
 

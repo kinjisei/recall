@@ -34,7 +34,7 @@ const MISTAKE_TOPIC = 0
 const OVERDUE = 12
 
 const env = scriptEnv()
-const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SERVICE_KEY, {
+const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SECRET_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 })
 
@@ -305,7 +305,7 @@ try {
   )
 
   // ---- 5. ученик выбирает ---------------------------------------------------
-  const asStudent = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY)
+  const asStudent = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_PUBLISHABLE_KEY)
   await asStudent.auth.signInWithPassword({ email: S_EMAIL, password: PASSWORD })
   const { error: chooseErr } = await asStudent.rpc('choose_homework_item', { p_item: group[0].id })
   check('ученик выбрал вариант', !chooseErr, chooseErr?.message ?? '')

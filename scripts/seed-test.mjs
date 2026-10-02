@@ -43,7 +43,7 @@ const [setting] = await runSql(target, "select value from public.app_settings wh
 console.log(`✓ регистрация открыта: ${JSON.stringify(setting?.value)}`)
 
 // --- 2. аккаунты ---------------------------------------------------------------------
-const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SERVICE_KEY, {
+const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SECRET_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 })
 const PEOPLE = [
@@ -68,7 +68,7 @@ async function ensureUser(email) {
 
 /** Клиент от имени человека: всё дальше идёт через его права, как в приложении. */
 async function signIn(email) {
-  const c = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY, {
+  const c = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_PUBLISHABLE_KEY, {
     auth: { autoRefreshToken: false, persistSession: false },
   })
   const { error } = await c.auth.signInWithPassword({ email, password })

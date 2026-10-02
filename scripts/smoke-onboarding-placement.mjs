@@ -21,7 +21,7 @@ const BASE = process.env.AUDIT_BASE_URL || APP_URL
 const PASSWORD = 'Onb!2026'
 
 const env = scriptEnv()
-const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SERVICE_KEY, {
+const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SECRET_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 })
 // ref проекта из URL — под ключом sb-<ref>-auth-token supabase-js хранит сессию
@@ -54,7 +54,7 @@ async function freshUser(email) {
  * headless Edge и не зависит от вёрстки экрана входа.
  */
 async function authSession(email) {
-  const c = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY, {
+  const c = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_PUBLISHABLE_KEY, {
     auth: { autoRefreshToken: false, persistSession: false },
   })
   const { data, error } = await c.auth.signInWithPassword({ email, password: PASSWORD })

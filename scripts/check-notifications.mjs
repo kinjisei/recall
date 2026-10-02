@@ -30,7 +30,7 @@ if (process.argv.includes('--prod')) {
 const env = scriptEnv()
 const target = dbTarget([])
 const sql = (q) => runSql(target, q)
-const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SERVICE_KEY, {
+const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SECRET_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 })
 
@@ -54,7 +54,7 @@ async function makeUser(email) {
     const { data: list } = await admin.auth.admin.listUsers({ perPage: 1000 })
     id = list.users.find((u) => (u.email ?? '').toLowerCase() === email)?.id
   }
-  const client = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY, {
+  const client = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_PUBLISHABLE_KEY, {
     auth: { autoRefreshToken: false, persistSession: false },
   })
   const { error: e2 } = await client.auth.signInWithPassword({ email, password: PASSWORD })
@@ -132,7 +132,7 @@ async function run(a, b) {
   const mineB = await b.client.from('notifications').select('id')
   check('владелец видит своё уведомление', (mineA.data ?? []).length === 1 && mineA.data[0].data?.title === 'Проверка ядра')
   check('другой человек чужого не видит', (mineB.data ?? []).length === 0)
-  const anon = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY, { auth: { persistSession: false } })
+  const anon = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_PUBLISHABLE_KEY, { auth: { persistSession: false } })
   const an = await anon.from('notifications').select('id')
   check('без входа не видно ничего', denied(an) || (an.data ?? []).length === 0)
   check('без входа «прочитано» не работает', denied(await anon.rpc('mark_notifications_read')))

@@ -29,7 +29,7 @@ const PASSWORD = 'TeachWords!2026'
 const STUDENT_NAME = 'Аружан Тестовая'
 
 const env = scriptEnv()
-const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SERVICE_KEY, {
+const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SECRET_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 })
 
@@ -342,7 +342,7 @@ async function main() {
   check('слово удалено из колоды ученика', !left.some((w) => w.front === del), String(del))
 
   // ---- чужого ученика трогать нельзя --------------------------------------
-  const asTeacher = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY, {
+  const asTeacher = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_PUBLISHABLE_KEY, {
     auth: { autoRefreshToken: false, persistSession: false },
   })
   await asTeacher.auth.signInWithPassword({ email: T_EMAIL, password: PASSWORD })

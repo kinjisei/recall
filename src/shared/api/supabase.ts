@@ -2,12 +2,12 @@ import { createClient } from '@supabase/supabase-js'
 import type { Database, Json } from './database.types'
 
 const url = import.meta.env.VITE_SUPABASE_URL as string
-const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string
+const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string
 
-if (!url || !anonKey || anonKey.includes('ВСТАВЬ')) {
+if (!url || !publishableKey || publishableKey.includes('ВСТАВЬ')) {
   // Понятное сообщение, если забыли вставить ключ в .env.local
   console.error(
-    'Supabase не настроен: проверь VITE_SUPABASE_URL и VITE_SUPABASE_ANON_KEY в файле .env.local',
+    'Supabase не настроен: проверь VITE_SUPABASE_URL и VITE_SUPABASE_PUBLISHABLE_KEY в файле .env.local',
   )
 }
 
@@ -15,7 +15,7 @@ if (!url || !anonKey || anonKey.includes('ВСТАВЬ')) {
 // `supabase gen types`): .from('table') теперь знает форму строк, и расхождение
 // «код ↔ база» ловится на сборке, а не у пользователя. ⚠️ После каждой
 // миграции: node scripts/check-types-drift.mjs --write (supabase/CLAUDE.md).
-export const supabase = createClient<Database>(url, anonKey)
+export const supabase = createClient<Database>(url, publishableKey)
 
 /**
  * id текущего пользователя из локальной сессии (getSession не ходит в сеть).

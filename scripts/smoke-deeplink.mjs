@@ -18,7 +18,7 @@ import { APP_URL, scriptEnv } from './_env.mjs'
 
 const EDGE = 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'
 const env = scriptEnv()
-const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SERVICE_KEY, { auth: { persistSession: false } })
+const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SECRET_KEY, { auth: { persistSession: false } })
 const EMAIL = 'deeplink@recall.test', PASS = 'Deep!2026link'
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 

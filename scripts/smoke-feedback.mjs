@@ -24,7 +24,7 @@ const PASSWORD = 'FbSmoke!2026'
 const MARK = 'проба смоука ' + Date.now()
 
 const env = scriptEnv()
-const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SERVICE_KEY, {
+const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SECRET_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 })
 
@@ -200,7 +200,7 @@ async function main() {
     // is_admin ставится ТОЛЬКО так: колонка закрыта грантами от пользователя
     await admin.from('profiles').update({ is_admin: true }).eq('id', adminId)
 
-    const asAdmin = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY, {
+    const asAdmin = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_PUBLISHABLE_KEY, {
       auth: { autoRefreshToken: false, persistSession: false },
     })
     await asAdmin.auth.signInWithPassword({ email: adminEmail, password: PASSWORD })

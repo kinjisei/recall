@@ -25,7 +25,7 @@ import { readdirSync, readFileSync } from 'node:fs'
 
 const SB = 'https://sb.test'
 process.env.VITE_SUPABASE_URL = SB
-process.env.VITE_SUPABASE_ANON_KEY = 'anon'
+process.env.VITE_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_test'
 process.env.GEMINI_API_KEY = 'gemini-key'
 process.env.GROQ_API_KEY = 'groq-key'
 delete process.env.RECALL_CHEAP_MODELS

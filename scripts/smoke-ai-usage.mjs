@@ -35,7 +35,7 @@ const BOSS = 'aiusage-boss@recall.test'
 const PUPIL = 'aiusage-pupil@recall.test'
 
 const env = scriptEnv()
-const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SERVICE_KEY, {
+const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SECRET_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 })
 
@@ -73,7 +73,7 @@ try {
   ids.push(bossId, pupilId)
   await admin.from('profiles').update({ is_admin: true }).eq('id', bossId)
 
-  const pupil = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY, {
+  const pupil = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_PUBLISHABLE_KEY, {
     auth: { autoRefreshToken: false, persistSession: false },
   })
   const { error: loginErr } = await pupil.auth.signInWithPassword({ email: PUPIL, password: PASSWORD })

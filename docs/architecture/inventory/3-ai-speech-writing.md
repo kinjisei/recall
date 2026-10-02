@@ -342,7 +342,7 @@ light/speech: 100–900 / 50–400 в сутки по классу доступ�
 | `smoke-writing.mjs`, `smoke-own-writing.mjs` | Путь письма (назначенное/своё) | нет |
 | `smoke-quests.mjs` | Вердикт → прогресс → завершение | нет |
 
-Браузерные смоуки требуют dev-сервера и `SUPABASE_SERVICE_KEY` — по
+Браузерные смоуки требуют dev-сервера и `SUPABASE_SECRET_KEY` — по
 `checks.yml` они НЕ в CI (там сборка, `check-api-vercel`, чистые тесты,
 валидаторы); запускаются руками. «Сторож прода» (`canary.yml` →
 `scripts/canary-prod.mjs`) ходит по живому проду после каждого пуша в

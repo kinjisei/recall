@@ -18,7 +18,7 @@ import { scriptEnv } from './_env.mjs'
 
 const env = scriptEnv()
 const URL_ = env.VITE_SUPABASE_URL
-const admin = createClient(URL_, env.SUPABASE_SERVICE_KEY, {
+const admin = createClient(URL_, env.SUPABASE_SECRET_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 })
 const results = []
@@ -35,7 +35,7 @@ let userId = null
 try {
   // 0. подтверждение почты — проверяем ДО всего: без него открывать нельзя
   const settings = await fetch(`${URL_}/auth/v1/settings`, {
-    headers: { apikey: env.VITE_SUPABASE_ANON_KEY },
+    headers: { apikey: env.VITE_SUPABASE_PUBLISHABLE_KEY },
   }).then((r) => r.json())
   check(
     'подтверждение почты включено (mailer_autoconfirm: false)',
@@ -61,7 +61,7 @@ try {
   // настоящего сбоя через клиент невозможно — а в сыром ответе виден код.
   const res = await fetch(`${URL_}/auth/v1/signup`, {
     method: 'POST',
-    headers: { apikey: env.VITE_SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+    headers: { apikey: env.VITE_SUPABASE_PUBLISHABLE_KEY, 'Content-Type': 'application/json' },
     body: JSON.stringify({ email: EMAIL, password: PASSWORD }),
   })
   const raw = await res.text()

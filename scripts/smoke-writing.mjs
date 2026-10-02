@@ -8,8 +8,8 @@ import { createClient } from '@supabase/supabase-js'
 import { scriptEnv } from './_env.mjs'
 
 const env = scriptEnv()
-const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SERVICE_KEY, { auth: { persistSession: false } })
-const mk = () => createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY, { auth: { persistSession: false } })
+const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SECRET_KEY, { auth: { persistSession: false } })
+const mk = () => createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_PUBLISHABLE_KEY, { auth: { persistSession: false } })
 let pass = 0, fail = 0
 const ok = (n, c) => { console.log(`${c ? '✓' : '✗'} ${n}`); c ? pass++ : fail++ }
 

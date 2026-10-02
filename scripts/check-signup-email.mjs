@@ -14,10 +14,10 @@ const TO = process.argv[2] || 'k.yerbolat.2004+test@gmail.com'
 const PASS = 'MailCheck!2026'
 
 const env = scriptEnv()
-const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SERVICE_KEY, {
+const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SECRET_KEY, {
   auth: { persistSession: false },
 })
-const anon = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY, {
+const anon = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false },
 })
 

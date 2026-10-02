@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 import { scriptEnv } from './_env.mjs'
 
 const env = scriptEnv()
-const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SERVICE_KEY, {
+const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SECRET_KEY, {
   auth: { persistSession: false },
 })
 const E = 'dialog-check@recall.test'
@@ -17,7 +17,7 @@ if (!id) {
   const { data: l } = await admin.auth.admin.listUsers({ perPage: 1000 })
   id = l.users.find((u) => u.email === E)?.id
 }
-const c = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY, {
+const c = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false },
 })
 const { data: s } = await c.auth.signInWithPassword({ email: E, password: P })
