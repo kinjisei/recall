@@ -5,7 +5,8 @@
  *      живой проект; старого JWT и секретного ключа нет.
  *   2. Старые ключи anon/service_role выключены в обоих проектах (Management
  *      API, без раскрытия ключей).
- *   3. С --since=ГГГГ-ММ-ДД (день выкатки нового бандла): сколько учеников
+ *   3. С --since=ГГГГ-ММ-ДДTЧЧ:ММ (выкатка нового бандла, UTC; можно и только
+ *      дату): сколько учеников
  *      заходили за 60 дней до выкатки и ни разу — после. У них в телефоне
  *      может жить старая сборка, и после выключения старых ключей при первом
  *      запуске их выкинет из аккаунта (проверено на тестовой базе: истёкший
@@ -13,7 +14,7 @@
  *      имён и почт.
  *
  * Зелёная — когда переход закончен: бандл новый, старые ключи выключены.
- * Запуск: node scripts/check-keys.mjs --prod [--since=2026-10-03]
+ * Запуск: node scripts/check-keys.mjs --prod [--since=2026-10-02T13:21]
  */
 import { PROD_SITE, dbTarget, runSql } from './_env.mjs'
 
@@ -54,17 +55,18 @@ for (const t of [test, prod]) {
 // --- 3. кто может быть на старой сборке ------------------------------------------------
 const since = process.argv.find((a) => a.startsWith('--since='))?.slice(8)
 if (since) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(since)) throw new Error('--since=ГГГГ-ММ-ДД')
+  if (!/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2})?$/.test(since)) throw new Error('--since=ГГГГ-ММ-ДД[TЧЧ:ММ], UTC')
+  const at = `timestamptz '${since.replace('T', ' ')}+00'`
   const [row] = await runSql(
     prod,
     `with seen as (
        select user_id, max(created_at) as last_at from events
         where name = 'page_view' and user_id is not null
-          and created_at > date '${since}' - interval '60 days'
+          and created_at > ${at} - interval '60 days'
         group by user_id)
-     select count(*) filter (where last_at >= date '${since}') as updated,
-            count(*) filter (where last_at < date '${since}') as stale,
-            count(*) filter (where last_at < date '${since}' and last_at >= date '${since}' - interval '7 days') as stale_7d
+     select count(*) filter (where last_at >= ${at}) as updated,
+            count(*) filter (where last_at < ${at}) as stale,
+            count(*) filter (where last_at < ${at} and last_at >= ${at} - interval '7 days') as stale_7d
        from seen`,
   )
   console.log(
@@ -74,7 +76,7 @@ if (since) {
       `\n  → при выключении старых ключей эти ${row.stale} при первом запуске заново введут пароль.`,
   )
 } else {
-  console.log('\n(счёт учеников на старой сборке — с --since=ДАТА_ВЫКАТКИ)')
+  console.log('\n(счёт учеников на старой сборке — с --since=ВЫКАТКА, UTC)')
 }
 
 console.log(failed ? `\n✗ ${failed} — переход не закончен` : '\n✓ прод на новых ключах, старые выключены')
