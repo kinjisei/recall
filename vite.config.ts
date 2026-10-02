@@ -6,7 +6,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { handle as geminiHandle } from './api/gemini'
 import { handle as transcribeHandle } from './api/transcribe'
 import { buildEnvProblems } from './scripts/_keys.mjs'
-import { startupPrecache } from './scripts/_precache.mjs'
+import { RUNTIME_CHUNKS_MAX, startupPrecache } from './scripts/_precache.mjs'
 
 /** Что серверные функции читают из окружения (process.env) — в dev берём из .env.local. */
 const SERVER_ENV = ['GEMINI_API_KEY', 'GROQ_API_KEY', 'VITE_SUPABASE_URL', 'VITE_SUPABASE_PUBLISHABLE_KEY']
@@ -105,6 +105,14 @@ export default defineConfig(({ mode }) => {
         // регистрируем SW сами в main.tsx (проверка обновлений при возврате в приложение)
         injectRegister: false,
         workbox: {
+          // Новая версия включается сразу, а не после закрытия всех окон
+          // (решение владельца, журнал п.58, Ф1.12): скачалась — включилась,
+          // и registerSW (main.tsx) перезагружает страницу. Плагин ставит эти
+          // флаги сам только при injectRegister 'auto' — у нас false, поэтому
+          // явно; без них свёрнутое приложение сутками жило на старом коде.
+          // Цена: перезагрузка стирает набранный, но не отправленный текст.
+          skipWaiting: true,
+          clientsClaim: true,
           // не отдавать /api/* из офлайн-кэша SPA (иначе прокси ломается офлайн)
           navigateFallbackDenylist: [/^\/api\//],
           // Офлайн-кэш (precache) = стили, шрифты, картинки и СТАРТОВЫЙ ГРАФ:
@@ -121,10 +129,14 @@ export default defineConfig(({ mode }) => {
           manifestTransforms: [precache.transform],
           runtimeCaching: [
             {
-              // остальные чанки — кэшируются после первого открытия раздела
+              // остальные чанки — кэшируются после первого открытия раздела;
+              // предел — чтобы файлы прошлых сборок не копились (Ф1.12)
               urlPattern: /\/assets\/.*\.js$/,
               handler: 'StaleWhileRevalidate',
-              options: { cacheName: 'recall-chunks' },
+              options: {
+                cacheName: 'recall-chunks',
+                expiration: { maxEntries: RUNTIME_CHUNKS_MAX, purgeOnQuotaError: true },
+              },
             },
           ],
         },

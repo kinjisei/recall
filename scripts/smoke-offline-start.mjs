@@ -1,6 +1,8 @@
 /**
  * Смоук офлайн-старта PWA (PLAN.md Ф1.11): приложение открывается без сети —
- * и сразу после установки, и после выкладки новой сборки.
+ * и сразу после установки, и после выкладки новой сборки. И обновление
+ * (Ф1.12): новая сборка включается сама, не дожидаясь закрытия окон, а кэш
+ * докачанных чанков не растёт сверх предела и хранит всю текущую сборку.
  *
  * Зачем. Офлайн-кэш (precache) брал стартовые файлы по маскам имён, и больше
  * десятка файлов стартового графа (react-dom, клиент базы, роутер…) в него не
@@ -15,7 +17,8 @@
  * Перед каждой офлайн-перезагрузкой стираем всё, кроме precache: HTTP-кэш и
  * кэш докачанных чанков. Так проверяется ровно обещание precache — «для
  * старта хватит меня одного» — и тот худший случай, когда новая сборка
- * скачана в фоне, а её файлы страница ещё ни разу не запрашивала.
+ * скачана в фоне, а её файлы страница ещё ни разу не запрашивала (HTTP-кэш
+ * на iOS вытесняется быстро).
  *
  * Вторая сборка — с другими именами у ВСЕХ файлов (суффикс -v2): худший
  * случай выкладки.
@@ -32,6 +35,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import puppeteer from 'puppeteer-core'
 import { build, preview } from 'vite'
+import { chunksOutsidePrecache, RUNTIME_CHUNKS_MAX, startupGraph } from './_precache.mjs'
 import { profileDir } from './_profile.mjs'
 import { ROOT, scriptEnv } from './_env.mjs'
 
@@ -119,10 +123,22 @@ async function openApp(path, { offlineMode = false } = {}) {
   await page.goto(`${URL_}${path}`, { waitUntil: offlineMode ? 'domcontentloaded' : 'networkidle2' }).catch(() => {})
 }
 const screen = () => page.evaluate(() => document.body.innerText)
-const tabsShown = (timeout) =>
-  page.waitForFunction((tabs) => tabs.every((t) => document.body.innerText.includes(t)), { polling: 250, timeout }, TABS)
+/** Дождаться меню (и, если задан, текста экрана). */
+const tabsShown = (timeout, also = '') =>
+  page.waitForFunction((need) => need.every((t) => document.body.innerText.includes(t)), { polling: 250, timeout },
+    also ? [...TABS, also] : TABS)
     .then(() => true, () => false)
 const entryName = () => page.evaluate(() => document.querySelector('script[type="module"]')?.getAttribute('src') ?? '')
+
+/** Как будто открыли все разделы: каждый чанк сборки вне precache — через service worker. */
+async function openAllChunks() {
+  const urls = chunksOutsidePrecache(OUT).map((f) => `/${f}`)
+  const ok = await page.evaluate(
+    async (list) => (await Promise.all(list.map((u) => fetch(u).then((r) => r.ok, () => false)))).filter(Boolean).length,
+    urls,
+  )
+  return { urls, ok }
+}
 
 /**
  * Закрыть приложение, стереть всё, кроме precache, и открыть его без сети.
@@ -147,7 +163,14 @@ async function offlineStart(label, expectEntry = '') {
   check(`${label}: экран есть, меню на месте`, shown, shown ? '' : `на экране: «${txt.trim().slice(0, 80)}»`)
   check(`${label}: главная нарисовалась, а не только каркас`, txt.includes(HOME))
   if (process.argv.includes('--shots')) await page.screenshot({ path: join(tmpdir(), `offline-start-${label.replace(/\s+/g, '-')}.png`) })
-  check(`${label}: ни один файл сайта не потерялся`, failed.length === 0, failed.slice(0, 12).join(', '))
+  // Стартовые файлы обязаны быть; ленивые куски (слово дня тянет словарь на
+  // 750–850 КБ) в precache не входят по замыслу — без сети в стёртом кэше они
+  // не грузятся, и экран обходится без них (проверки выше и ниже).
+  const graph = startupGraph(OUT).graph
+  const lostStart = failed.filter((f) => graph.has(f))
+  const lostLazy = failed.filter((f) => !graph.has(f))
+  check(`${label}: все ${graph.size} стартовых файлов загрузились`, lostStart.length === 0, lostStart.slice(0, 12).join(', '))
+  if (lostLazy.length) console.log(`  · ленивые куски без сети не загрузились (так задумано): ${lostLazy.join(', ')}`)
   check(`${label}: не экран ошибки`, !/пошло не так/i.test(txt))
   offline = false
   await page.setOfflineMode(false)
@@ -179,37 +202,48 @@ try {
   await page.waitForFunction(() => location.pathname === '/', wait).catch(async () => {
     throw new Error(`после входа не на главной: ${await page.evaluate(() => location.href + ' | ' + document.body.innerText.slice(0, 200))}`)
   })
-  // clientsClaim не включён: первый заход service worker только ставит, а
-  // страницу берёт со следующего открытия — как у человека.
-  await page.evaluate(() => navigator.serviceWorker.ready)
-  await page.reload({ waitUntil: 'networkidle2' })
-  await page.waitForFunction(() => navigator.serviceWorker.controller !== null, wait).catch(() => {
-    throw new Error('service worker не взял страницу')
-  })
+  // clientsClaim: service worker берёт страницу в первый же заход, без перезагрузки
+  const claimed = await page.waitForFunction(() => navigator.serviceWorker.controller !== null, wait).then(() => true, () => false)
+  check('первый заход: service worker взял страницу без перезагрузки', claimed)
+  if (!claimed) await page.reload({ waitUntil: 'networkidle2' }) // чтобы остальное всё-таки проверить
 
   // Контроль: онлайн экран с меню есть. Без него «офлайн — экран есть» ничего
   // не значил бы: искомого текста могло не быть и в сети.
-  check('онлайн: главная с меню на месте', (await tabsShown(60000)) && (await screen()).includes(HOME))
+  check('онлайн: главная с меню на месте', await tabsShown(60000, HOME))
 
   await offlineStart('после установки')
+  const opened1 = await openAllChunks()
 
   // --- выкладка новой сборки -------------------------------------------------------
   console.log('Сборка 2 (новые имена у всех файлов)…')
   await server.close()
   await buildApp('v2')
   server = await serve()
-  // Приложение проверяет новую версию при открытии и возвращении (main.tsx).
-  // Новый service worker ставится в фоне и ЖДЁТ, пока закроют все окна
-  // приложения (skipWaiting не включён) — потому и открытие без сети после
-  // выкладки получает именно новую сборку.
-  await page.reload({ waitUntil: 'networkidle2' })
-  await page.evaluate(() => navigator.serviceWorker.getRegistration().then((r) => r?.update()))
-  const fetched = await page.waitForFunction(
-    async () => Boolean((await navigator.serviceWorker.getRegistration())?.waiting) ||
-      Boolean(document.querySelector('script[type="module"]')?.getAttribute('src')?.includes('-v2.js')),
-    wait,
+  // Человек вернулся в приложение — main.tsx проверяет новую версию; она
+  // скачивается, включается сразу (skipWaiting) и перезагружает страницу.
+  // Окно не закрываем и не перезагружаем сами: на прежнем поведении новая
+  // версия ждала бы закрытия всех окон, и проверка краснеет.
+  await page.bringToFront()
+  await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')))
+  const switched = await page.waitForFunction(
+    () => document.querySelector('script[type="module"]')?.getAttribute('src')?.includes('-v2.js'), wait,
   ).then(() => true, () => false)
-  check('новая сборка скачана в фоне', fetched)
+  check('новая сборка включилась сама — окно не закрывали', switched, await entryName())
+  if (!(await tabsShown(60000))) throw new Error('после включения новой сборки главная не открылась')
+
+  // Человек открыл все разделы и в старой, и в новой версии: файлов больше,
+  // чем вмещает кэш. Предел обязан выкинуть старые и сохранить всю новую.
+  const opened2 = await openAllChunks()
+  check(`проверка кэша имеет смысл: открыто ${opened1.ok} + ${opened2.ok} чанков > предела ${RUNTIME_CHUNKS_MAX}`,
+    opened1.ok + opened2.ok > RUNTIME_CHUNKS_MAX && opened2.ok === opened2.urls.length)
+  const kept = await page.waitForFunction(async (max) => {
+    const keys = await (await caches.open('recall-chunks')).keys()
+    return keys.length <= max ? keys.map((r) => new URL(r.url).pathname) : false
+  }, { polling: 500, timeout: 20000 }, RUNTIME_CHUNKS_MAX).then((h) => h.jsonValue(), () => null)
+  const count = kept?.length ?? await page.evaluate(async () => (await (await caches.open('recall-chunks')).keys()).length)
+  check(`кэш докачанных чанков не больше предела (${RUNTIME_CHUNKS_MAX})`, Boolean(kept), `в кэше ${count}`)
+  const lost = opened2.urls.filter((u) => !kept?.includes(u))
+  check('в кэше — все чанки новой сборки', Boolean(kept) && lost.length === 0, lost.slice(0, 5).join(', '))
 
   await offlineStart('после выкладки', '-v2.js')
 } finally {

@@ -16,3 +16,5 @@ export declare function startupPrecache(): {
 export declare function startupGraph(distDir: string): { refs: string[]; graph: Map<string, string> }
 export declare function readPrecache(distDir: string): Set<string> | null
 export declare function precacheProblems(distDir: string, precache?: Set<string> | null): string[]
+export declare const RUNTIME_CHUNKS_MAX: number
+export declare function chunksOutsidePrecache(distDir: string, precache?: Set<string> | null): string[]

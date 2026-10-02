@@ -6,7 +6,8 @@
  * открывается белым экраном. Проверка обязана краснеть: на сборке-образце и
  * на настоящей dist/ из списка по очереди убирается КАЖДЫЙ файл графа, и
  * сверка должна назвать именно его. Ленивые экраны (import()) в precache не
- * обязаны — их докачивают при первом открытии.
+ * обязаны — их докачивают при первом открытии; но предел кэша докачанных
+ * (recall-chunks) обязан вмещать их все.
  *
  * Запуск: node scripts/test-precache.mjs (настоящая dist/ — после npm run build;
  * в CI её отсутствие — ошибка, локально — пропуск этой части).
@@ -15,7 +16,14 @@ import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { precacheProblems, readPrecache, startupFiles, startupGraph } from './_precache.mjs'
+import {
+  chunksOutsidePrecache,
+  precacheProblems,
+  readPrecache,
+  RUNTIME_CHUNKS_MAX,
+  startupFiles,
+  startupGraph,
+} from './_precache.mjs'
 
 let ok = 0
 let failed = 0
@@ -91,6 +99,10 @@ try {
   }
   check('образец: ленивый экран вне precache — не проблема', precacheProblems(fixture).length === 0)
   {
+    const out = chunksOutsidePrecache(fixture).sort().join(', ')
+    check('образец: вне precache — ровно ленивые чанки (их докачивает recall-chunks)', out === 'assets/Page-E.js, assets/words-G.js', out)
+  }
+  {
     const p = precacheProblems(fixture, new Set([...pre, 'assets/old-Z.js']))
     check('образец: запись precache на несуществующий файл — проблема', p.some((x) => x.includes('old-Z.js')))
   }
@@ -115,6 +127,11 @@ if (!existsSync(join(dist, 'sw.js'))) {
   check(`dist/: все ${graph.size} файлов стартового графа в precache`, graph.size > 1 && problems.length === 0, problems.join('; '))
   const silent = [...graph.keys()].filter((f) => !precacheProblems(dist, without(pre, f)).some((x) => x.includes(f)))
   check(`dist/: убрать любой из ${graph.size} файлов — сверка краснеет`, silent.length === 0, silent.join(', '))
+  // предел recall-chunks вытесняет давно не открытое — он обязан вмещать всю
+  // сборку, иначе у того, кто открывает всё, кэш выкидывал бы нужное (Ф1.12)
+  const outside = chunksOutsidePrecache(dist, pre).length
+  check(`dist/: чанков вне precache (${outside}) не больше предела recall-chunks (${RUNTIME_CHUNKS_MAX})`,
+    outside > 0 && outside <= RUNTIME_CHUNKS_MAX, outside > RUNTIME_CHUNKS_MAX ? 'подними RUNTIME_CHUNKS_MAX в scripts/_precache.mjs' : '')
 }
 
 console.log(`\nИтог: ${ok}/${ok + failed}`)

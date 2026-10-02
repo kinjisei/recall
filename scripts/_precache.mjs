@@ -15,9 +15,11 @@
  *     если хоть один файл стартового графа не в precache.
  * Если метаданные когда-нибудь разойдутся с файлами, сверка это поймает.
  *
+ * Здесь же предел кэша докачанных чанков (RUNTIME_CHUNKS_MAX, Ф1.12).
+ *
  * Тест: node scripts/test-precache.mjs. Смоук: node scripts/smoke-offline-start.mjs.
  */
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join, posix, resolve } from 'node:path'
 import { parseAst } from 'vite'
 
@@ -27,6 +29,22 @@ import { parseAst } from 'vite'
  * (virtual:pwa-register подтягивает его через import()).
  */
 const ALWAYS = [/[\\/]node_modules[\\/]workbox-window[\\/]/]
+
+/**
+ * Предел кэша докачанных чанков `recall-chunks` (PLAN.md Ф1.12). Имена чанков
+ * с хэшем: после выкладки старые больше не нужны, но без предела копились бы
+ * навсегда. Вытесняются давно не открытые — значит, предел обязан вмещать ВСЕ
+ * чанки одной сборки вне precache (на 03.10.2026 — 75, 3,7 МБ), иначе у того,
+ * кто открывает всё, кэш выкидывал бы нужное. Это держит test-precache.mjs.
+ */
+export const RUNTIME_CHUNKS_MAX = 100
+
+/** JS-файлы сборки, которых нет в precache, — их докачивает recall-chunks. */
+export function chunksOutsidePrecache(distDir, precache = readPrecache(distDir)) {
+  const assets = join(distDir, 'assets')
+  if (!existsSync(assets) || !precache) return []
+  return readdirSync(assets).filter((f) => f.endsWith('.js')).map((f) => `assets/${f}`).filter((f) => !precache.has(f))
+}
 
 /**
  * Файлы стартового графа по метаданным сборки: входные чанки и всё, что они
