@@ -127,9 +127,9 @@
   `NOTIFY_SECRET` в Vercel и такие же `notify_url` / `notify_secret` в Vault
   живой базы (`vault.create_secret(...)` в SQL Editor). Пока их нет, доставка
   спит, лента работает.
-- **Ключи Supabase (Ф1.9):** перед выкаткой — `VITE_SUPABASE_PUBLISHABLE_KEY`
-  на Vercel (Production и Preview); после выкатки — удалить там
-  `VITE_SUPABASE_ANON_KEY`; через ~2 недели — выключить старые ключи в панели
+- **Ключи Supabase (Ф1.9):** удалить на Vercel `VITE_SUPABASE_ANON_KEY`
+  (после зелёного сторожа прода); не раньше ~16.10 — с Claude посмотреть
+  `check-keys.mjs --prod --since=2026-10-03` и выключить старые ключи в панели
   Supabase. Шаги — в пункте Ф1.9.
 - **Три старых смоук-аккаунта на проде** (`pg@`, `z1a@`,
   `dbg-newbie@recall.test`, июль–август) — удалить в Supabase →
@@ -835,8 +835,15 @@
   ```
 
 ### Ф1.9 — Переход прода на новые ключи Supabase
-- **Статус:** 🔄 02.10.2026 — **этап 1 (код + тестовая база) готов**, ждут
-  этап 2 (выкатка) и этап 3 (выключение старых на проде).
+- **Статус:** 🔄 02.10.2026 — **этапы 1 (код + тестовая база) и 2 (выкатка)
+  готовы**, ждёт этап 3 (выключение старых на проде, не раньше ~16.10).
+  **Выкатка — 02.10.2026, 13:21 UTC** (пуш `0bd94c6` вместе с Ф1.7, Ф1.8,
+  Ф5.1): на Vercel добавлен `VITE_SUPABASE_PUBLISHABLE_KEY` (Config,
+  Production + Preview); через ~1 мин на сайте новый бандл —
+  `check-keys.mjs --prod`: один ключ `sb_publishable_`, живой проект его
+  принимает, старого и секретного в бандле нет. GitHub → Secrets: только
+  `BACKUP_PASSPHRASE`, `CANARY_PASSWORD`, `SUPABASE_DB_URL` — старых ключей
+  нет. Для этапа 3: `--since=2026-10-03`.
   **Опись:** новые ключи в живом проекте уже были (Supabase завёл сам
   30.06.2026) — создавать не пришлось. Старые жили в: клиенте
   (`shared/api/supabase.ts`), `api/_auth.ts`, `vite.config.ts`,
@@ -868,13 +875,9 @@
 - **Что сделать:** перевести клиент, серверные функции Vercel, скрипты и
   сторож прода на новые ключи и проверить на тестовой базе — ✅ (создавать
   ключи не пришлось). Осталось:
-  - **этап 2 (вместе, по «да» владельца):** Vercel → Settings → Environment
-    Variables → добавить `VITE_SUPABASE_PUBLISHABLE_KEY` (значение — Supabase →
-    Settings → API Keys → Publishable key) для Production **и** Preview; пуш;
-    сторож прода зелёный, `check-keys.mjs --prod` — бандл новый; затем удалить
-    на Vercel `VITE_SUPABASE_ANON_KEY` (и любые другие старые ключи, если
-    найдутся); в GitHub → Secrets старых ключей нет (ждём только
-    `CANARY_PASSWORD`, `SUPABASE_DB_URL`, `BACKUP_PASSPHRASE`);
+  - **этап 2:** переменная на Vercel, пуш, бандл новый, GitHub без старых
+    ключей — ✅ 02.10; хвост — сторож прода после выкатки зелёный и удалить на
+    Vercel `VITE_SUPABASE_ANON_KEY` (код её больше не читает);
   - **этап 3 (через ~2 недели после выкатки):** `check-keys.mjs --prod
     --since=<день выкатки>` — число учеников на старой сборке; владелец
     решает и выключает в панели: Settings → API Keys → Legacy API keys →
