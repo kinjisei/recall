@@ -1,2 +1,5 @@
 # Хуки git выполняет sh: с переводом строки CRLF (Windows) они не запускаются
 .githooks/* text eol=lf
+
+# Экспорт Claude Design — упакованные приложения: переводы строк не трогать
+design/mockups/*.html -text
