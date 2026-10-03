@@ -19,6 +19,8 @@ import { shuffle } from '../../lib/wordPool'
 import { GameHeader } from '../words/GameShell'
 import type { AppLang, GrammarExercise, GrammarTopic } from '../../types'
 import { Loading } from '../../shared/ui/Loading'
+import { useAsyncData } from '../../shared/lib/useAsyncData'
+import { LoadError } from '../../shared/ui/LoadError'
 
 const ROUND = 8
 const CEFR = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
@@ -72,7 +74,12 @@ export function GrammarMixMode({
   onBack: () => void
 }) {
   const title = TITLES[kind ?? 'mix']
-  const [topics, setTopics] = useState<GrammarTopic[] | null>(null)
+  // ленивый кусок данных: без сети и не скачан — плашка, а не вечная заглушка (Ф1.13)
+  const { data: topics, error: topicsError, reload: reloadTopics } = useAsyncData<GrammarTopic[]>(
+    () => (lang === 'es' ? import('../../data/spanish/grammar') : import('../../data/english/grammar')).then((m) => m.grammarTopics),
+    [lang],
+    'Упражнения не загрузились',
+  )
   const [level, setLevel] = useState<string | null | undefined>(undefined)
   const [items, setItems] = useState<Item[] | null>(null)
   const [index, setIndex] = useState(0)
@@ -82,9 +89,6 @@ export function GrammarMixMode({
 
   useEffect(() => {
     let alive = true
-    const mod =
-      lang === 'es' ? import('../../data/spanish/grammar') : import('../../data/english/grammar')
-    mod.then((m) => alive && setTopics(m.grammarTopics))
     getUserLevel(lang).then((l) => alive && setLevel(l))
     return () => {
       alive = false
@@ -103,7 +107,7 @@ export function GrammarMixMode({
     return (
       <div className="flex flex-col gap-4">
         <GameHeader title={title} onBack={onBack} />
-        <Loading label="Готовим раунд" />
+        {topicsError ? <LoadError message={topicsError} onRetry={reloadTopics} /> : <Loading label="Готовим раунд" />}
       </div>
     )
   }

@@ -18,7 +18,9 @@ export async function getMyDailyPlanConfig(): Promise<DailyPlanConfig | null> {
     .not('daily_plan', 'is', null)
     .limit(1)
     .maybeSingle()
-  if (error || !data?.daily_plan) return null
+  // сбой — исключение: «учитель план не задавал» и «не знаем» — разное (Ф1.13)
+  if (error) throw error
+  if (!data?.daily_plan) return null
   const raw = data.daily_plan as { kinds?: unknown; auto?: unknown }
   const valid: PlanKind[] = ['reader', 'grammar', 'pronunciation', 'conversation']
   const kinds = Array.isArray(raw.kinds)

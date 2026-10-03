@@ -53,29 +53,47 @@ export async function selectProfiles<T>(
   return missingColumn ? await run(PROFILE_COLUMNS_BASE) : first
 }
 
+/** null — ряда нет (PGRST116 у .single()); сбой связи или базы — бросает. */
 async function fetchProfile(userId: string): Promise<Profile | null> {
   const { data, error } = await selectProfiles<Profile>((cols) =>
     supabase.from('profiles').select(cols).eq('id', userId).single() as never,
   )
-  if (error || !data) return null
+  if (error?.code === 'PGRST116' || (!error && !data)) return null
+  if (error) throw error
   const profile = data as Profile
   writeRaw(LEVEL_CACHE_KEY, profile.level ?? '')
   return profile
 }
 
-/** Профиль пользователя (кэш в памяти на сессию — повторные вызовы без запроса). */
-export function getProfile(userId: string): Promise<Profile | null> {
+/**
+ * Профиль, который ОТЛИЧАЕТ «нет связи» от «профиля нет» (PLAN.md Ф1.13):
+ * сбой — исключение, null — ряда действительно нет. Нужен там, где ошибку
+ * нельзя принять за пустоту: без сети студия показывала учителю «Включи
+ * режим преподавателя». Кэш общий с getProfile.
+ */
+export function loadProfile(userId: string): Promise<Profile | null> {
   if (cache?.userId === userId) return cache.promise
   const entry = {
     userId,
-    promise: fetchProfile(userId).then((p) => {
-      // null = ошибка или нет ряда — не кэшируем, следующий вызов повторит запрос
-      if (p === null && cache === entry) cache = null
-      return p
-    }),
+    promise: fetchProfile(userId).then(
+      (p) => {
+        // ряда нет — не кэшируем, следующий вызов повторит запрос
+        if (p === null && cache === entry) cache = null
+        return p
+      },
+      (e: unknown) => {
+        if (cache === entry) cache = null
+        throw e
+      },
+    ),
   }
   cache = entry
   return entry.promise
+}
+
+/** Профиль пользователя (кэш в памяти на сессию); сбой связи — тоже null. */
+export function getProfile(userId: string): Promise<Profile | null> {
+  return loadProfile(userId).catch(() => null)
 }
 
 /** Сбросить кэш — после сохранения настроек профиля или смены пользователя. */

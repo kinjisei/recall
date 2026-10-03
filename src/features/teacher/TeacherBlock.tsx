@@ -15,14 +15,11 @@ export interface AssignmentCounts {
 
 /** Загрузка счётчиков для Главной (см. AssignmentsNotice — она их только рисует). */
 export async function loadAssignmentCounts(): Promise<AssignmentCounts> {
-  try {
-    const rows = await getMyAssignments()
-    return {
-      total: rows.length,
-      pending: rows.filter((r) => r.status === 'assigned').length,
-    }
-  } catch {
-    return { total: 0, pending: 0 }
+  // сбой связи — исключение, а не «0 заданий»: Главная скажет о связи (Ф1.13)
+  const rows = await getMyAssignments()
+  return {
+    total: rows.length,
+    pending: rows.filter((r) => r.status === 'assigned').length,
   }
 }
 

@@ -22,6 +22,8 @@ import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { supabase, currentUserId } from '../../shared/api/supabase'
 import { getBestStreak, getStreak, getWeek, type WeekDay } from '../../lib/activity'
+import { settleAll } from '../../shared/lib/settleAll'
+import { LoadError } from '../../shared/ui/LoadError'
 import { getDeckIds } from '../../lib/cards'
 import { countDueCards } from '../../lib/fsrs'
 import { statusOf, type StatusInput } from '../../lib/wordChecks'
@@ -68,11 +70,13 @@ async function loadMetrics(lang: 'en' | 'es'): Promise<Omit<Metrics, 'best'>> {
   const deckIds = await getDeckIds(lang)
   if (deckIds.length === 0) return { learned: 0, accuracy: null, tomorrow: 0 }
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('review_states')
     .select('state, reps, lapses, due, last_review, cards!inner(deck_id)')
     .eq('user_id', userId)
     .in('cards.deck_id', deckIds)
+  // сбой — исключение, а не «выучено 0» (Ф1.13)
+  if (error) throw error
 
   const rows = (data ?? []) as unknown as MetricRow[]
 
@@ -100,40 +104,43 @@ async function loadMetrics(lang: 'en' | 'es'): Promise<Omit<Metrics, 'best'>> {
   return { learned, accuracy, tomorrow }
 }
 
+/**
+ * Все данные экрана разом. Без сети раньше рисовалось «0 дня · 0 упр.», будто
+ * ученик не занимался (PLAN.md Ф1.13): теперь не пришедшее — null, а экран
+ * говорит о связи. Результат помнит свою загрузку (язык + попытка).
+ */
+function useProgressData(lang: 'en' | 'es') {
+  const [attempt, setAttempt] = useState(0)
+  const key = `${lang}#${attempt}`
+  const [result, setResult] = useState<{
+    key: string
+    data: { week: WeekDay[] | null; streak: number | null; metrics: Metrics | null; weak: WeakSpots | null }
+    failed: number
+  } | null>(null)
+  useEffect(() => {
+    let alive = true
+    void settleAll({
+      week: () => getWeek(),
+      streak: () => getStreak(),
+      metrics: async (): Promise<Metrics> => {
+        const [m, best] = await Promise.all([loadMetrics(lang), getBestStreak()])
+        return { ...m, best }
+      },
+      weak: () => loadWeakSpots(lang),
+    }).then(({ values, failed }) => alive && setResult({ key, data: values, failed: failed.length }))
+    return () => {
+      alive = false
+    }
+  }, [key, lang])
+  const current = result?.key === key ? result : null
+  return { ...current?.data, failed: current?.failed ?? 0, reload: () => setAttempt((n) => n + 1) }
+}
+
 export function ProgressPage() {
   const { signOut } = useAuth()
   const { lang } = useLanguage()
-  const [week, setWeek] = useState<WeekDay[]>([])
-  const [streak, setStreak] = useState(0)
-  const [metrics, setMetrics] = useState<Metrics | null>(null)
-  const [weak, setWeak] = useState<WeakSpots | null>(null)
-
-  useEffect(() => {
-    getWeek().then(setWeek).catch(() => {})
-    getStreak().then(setStreak).catch(() => {})
-  }, [])
-
-  useEffect(() => {
-    let alive = true
-    setWeak(null)
-    loadWeakSpots(lang)
-      .then((w) => alive && setWeak(w))
-      .catch(() => alive && setWeak(null))
-    return () => {
-      alive = false
-    }
-  }, [lang])
-
-  useEffect(() => {
-    let alive = true
-    setMetrics(null)
-    Promise.all([loadMetrics(lang), getBestStreak()])
-      .then(([m, best]) => alive && setMetrics({ ...m, best }))
-      .catch(() => alive && setMetrics(null))
-    return () => {
-      alive = false
-    }
-  }, [lang])
+  const { week: weekOrNull, streak, metrics, weak, failed, reload } = useProgressData(lang)
+  const week = weekOrNull ?? []
 
   const activeDays = week.filter((d) => d.active).length
   const totalItems = week.reduce((n, d) => n + d.items, 0)
@@ -147,6 +154,10 @@ export function ProgressPage() {
         <h1 className="text-2xl font-medium tracking-tight">Мой прогресс</h1>
       </header>
 
+      {failed > 0 && (
+        <LoadError message="Часть прогресса не загрузилась — похоже, пропала связь." onRetry={reload} />
+      )}
+
       {/* График недели */}
       <section
         className="animate-fade-up rounded-3xl border border-tint/[0.08] bg-surface p-5 shadow-card"
@@ -154,9 +165,11 @@ export function ProgressPage() {
       >
         <div className="flex items-baseline justify-between">
           <h2 className="text-lg font-medium tracking-tight">Эта неделя</h2>
+          {/* неделю не знаем — прочерк, а не «0 дней» */}
           <span className="text-sm text-fg-muted">
-            {activeDays} {activeDays === 1 ? 'день' : activeDays < 5 ? 'дня' : 'дней'} ·{' '}
-            {totalMinutes > 0 ? `${totalMinutes} мин` : `${totalItems} упр.`}
+            {weekOrNull
+              ? `${activeDays} ${activeDays === 1 ? 'день' : activeDays < 5 ? 'дня' : 'дней'} · ${totalMinutes > 0 ? `${totalMinutes} мин` : `${totalItems} упр.`}`
+              : '—'}
           </span>
         </div>
 
@@ -208,7 +221,7 @@ export function ProgressPage() {
           Icon={IconTrophy}
           label="Лучшая серия"
           value={metrics ? `${metrics.best}` : '—'}
-          hint={streak > 0 ? `сейчас — ${streak}` : 'дней подряд'}
+          hint={streak ? `сейчас — ${streak}` : 'дней подряд'}
           delay=".24s"
         />
         <Metric

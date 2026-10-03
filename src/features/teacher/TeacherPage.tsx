@@ -8,7 +8,9 @@ import { Card } from '../../shared/ui/Card'
 import { Button } from '../../shared/ui/Button'
 import { HowItWorks } from '../../shared/ui/HowItWorks'
 import { HOW_IT_WORKS } from '../../data/howItWorks'
-import { getProfile } from '../../lib/profile'
+import { loadProfile } from '../../lib/profile'
+import { useAsyncData } from '../../shared/lib/useAsyncData'
+import { LoadError } from '../../shared/ui/LoadError'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import {
@@ -45,27 +47,21 @@ import { countSubmittedWorks } from '../../lib/materials'
 import { countSubmittedWriting } from '../../lib/writing'
 import { getMyPlan, type MyPlan } from '../../lib/billing'
 import { IconSparkle } from '../../shared/ui/icons'
-import type { Profile } from '../../types'
 import { AppLink } from '../../shared/ui/AppLink'
 import { Loading, RowsSkeleton } from '../../shared/ui/Loading'
 
 export function TeacherPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const [profile, setProfile] = useState<Profile | null>(null)
-  const [loading, setLoading] = useState(true)
+  // Кэш профиля — Главная и меню аватара уже запрашивали тот же ряд. Сбой связи —
+  // плашка, а не «Включи режим преподавателя» настоящему учителю (Ф1.13).
+  const { data: profile, error, loading, reload } = useAsyncData(
+    () => (user ? loadProfile(user.id) : Promise.resolve(null)),
+    [user],
+    'Не удалось открыть студию',
+  )
 
-  const reload = useCallback(() => {
-    if (!user) return
-    // кэш профиля — Главная и меню аватара уже запрашивали тот же ряд
-    getProfile(user.id).then((p) => {
-      setProfile(p)
-      setLoading(false)
-    })
-  }, [user])
-
-  useEffect(reload, [reload])
-
+  if (error) return <LoadError message={error} onRetry={reload} />
   if (loading) return <Loading label="Открываем студию" />
 
   if (profile?.role !== 'teacher') {

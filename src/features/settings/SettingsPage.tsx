@@ -29,6 +29,7 @@ import { ChoiceGroup, type ChoiceOption } from '../../shared/ui/ChoiceGroup'
 import type { CEFRLevel, Profile } from '../../types'
 import { AppLink } from '../../shared/ui/AppLink'
 import { FeedbackSheet } from '../../components/FeedbackSheet'
+import { LoadError } from '../../shared/ui/LoadError'
 
 // A1 включён: тест уровня может дать A1, и без кнопки его нельзя было выбрать —
 // у пользователя с уровнем A1 не подсвечивалась ни одна кнопка, а сохранение
@@ -59,19 +60,27 @@ export function SettingsPage() {
   const [error, setError] = useState<string | null>(null)
   const [local, setLocal] = useState(getSettings)
   const [feedback, setFeedback] = useState(false)
+  // Профиль не загрузился (нет связи) — формы нет: пустые имя и уровень,
+  // сохранённые после возврата связи, затёрли бы настоящие (PLAN.md Ф1.13).
+  const [loadFailed, setLoadFailed] = useState(false)
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
     if (!user) return
     void selectProfiles<Profile>((cols) =>
       supabase.from('profiles').select(cols).eq('id', user.id).single() as never,
     )
-      .then(({ data }) => {
+      .then(({ data, error: e }) => {
+        // PGRST116 — ряда нет: это не сбой связи, форма остаётся
+        const failed = Boolean(e) && e?.code !== 'PGRST116'
+        setLoadFailed(failed)
+        if (failed) return
         const p = data as Profile | null
         setProfile(p)
         setName(p?.display_name ?? '')
         setLevel(lang === 'es' ? (getEsLevel() as CEFRLevel | null) : ((p?.level as CEFRLevel) ?? null))
       })
-  }, [user, lang])
+  }, [user, lang, attempt])
 
   const saveProfile = async () => {
     if (!user) return
@@ -108,6 +117,12 @@ export function SettingsPage() {
       </header>
 
       {/* Профиль */}
+      {loadFailed ? (
+        <LoadError
+          message="Профиль не загрузился — похоже, пропала связь."
+          onRetry={() => setAttempt((n) => n + 1)}
+        />
+      ) : (
       <Section title="Профиль" delay=".05s">
         <label htmlFor="settings-name" className="block text-sm text-fg-muted">
           Как тебя зовут
@@ -143,6 +158,7 @@ export function SettingsPage() {
           )}
         </Button>
       </Section>
+      )}
 
       {/* Озвучка */}
       <Section title="Озвучка" delay=".11s">

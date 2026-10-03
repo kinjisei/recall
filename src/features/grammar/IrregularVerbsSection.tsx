@@ -18,6 +18,8 @@ import { getVerbMistakes, addVerbMistake, removeVerbMistake } from '../../lib/ve
 import { answerMatches } from '../../lib/text'
 import { useUrlState } from '../../shared/lib/useUrlState'
 import { RowsSkeleton } from '../../shared/ui/Loading'
+import { useAsyncData } from '../../shared/lib/useAsyncData'
+import { LoadError } from '../../shared/ui/LoadError'
 import { Reveal } from '../../shared/ui/Reveal'
 import type {
   IrregularGroup,
@@ -29,7 +31,12 @@ const ROUND_SIZE = 10
 type Mode = 'reference' | 'trainer'
 
 export function IrregularVerbsSection() {
-  const [groups, setGroups] = useState<IrregularGroup[] | null>(null)
+  // ленивый кусок данных: без сети и не скачан — плашка, а не вечная заглушка (Ф1.13)
+  const { data: groups, error, reload } = useAsyncData<IrregularGroup[]>(
+    () => import('../../data/english/irregular').then((m) => m.irregularGroups),
+    [],
+    'Неправильные глаголы не загрузились',
+  )
   // Режим — в адресе (?vm=trainer): «назад» из тренажёра должен возвращать в
   // справочник, а не выбрасывать из «Грамматики» (см. shared/lib/useUrlState). Ход
   // самого раунда в адрес НЕ выносим — после F5 раунд честно начинается заново.
@@ -37,16 +44,7 @@ export function IrregularVerbsSection() {
   const mode: Mode = vm === 'trainer' ? 'trainer' : 'reference'
   const setMode = (m: Mode) => setVm(m === 'trainer' ? 'trainer' : null)
 
-  useEffect(() => {
-    let alive = true
-    import('../../data/english/irregular').then((m) => {
-      if (alive) setGroups(m.irregularGroups)
-    })
-    return () => {
-      alive = false
-    }
-  }, [])
-
+  if (error) return <LoadError message={error} onRetry={reload} />
   if (!groups) return <RowsSkeleton count={5} />
 
   return (

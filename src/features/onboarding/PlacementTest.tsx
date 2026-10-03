@@ -25,6 +25,8 @@ import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import type { AppLang, CEFRLevel, PlacementQuestion } from '../../types'
 import { Loading } from '../../shared/ui/Loading'
+import { useAsyncData } from '../../shared/lib/useAsyncData'
+import { LoadError } from '../../shared/ui/LoadError'
 
 const LEVELS_BY_LANG: Record<AppLang, CEFRLevel[]> = {
   es: ['A1', 'A2', 'B1', 'B2'],
@@ -56,23 +58,13 @@ export function PlacementTest() {
   const { user } = useAuth()
   const { lang } = useLanguage()
   const levels = LEVELS_BY_LANG[lang]
-  const [all, setAll] = useState<PlacementQuestion[] | null>(null)
+  // ленивый кусок данных: без сети и не скачан — плашка, а не вечная заглушка (Ф1.13)
+  const { data: all, error: bankError, reload: reloadBank } = useAsyncData<PlacementQuestion[]>(
+    () => (lang === 'es' ? import('../../data/spanish/placement') : import('../../data/english/placement')).then((m) => m.placementQuestions),
+    [lang],
+    'Тест не загрузился',
+  )
   const [started, setStarted] = useState(false)
-
-  useEffect(() => {
-    let alive = true
-    setAll(null)
-    const bank =
-      lang === 'es'
-        ? import('../../data/spanish/placement')
-        : import('../../data/english/placement')
-    bank.then((m) => {
-      if (alive) setAll(m.placementQuestions)
-    })
-    return () => {
-      alive = false
-    }
-  }, [lang])
 
   // По 10 случайных вопросов на уровень, от простого к сложному.
   const questions = useMemo(() => {
@@ -132,7 +124,7 @@ export function PlacementTest() {
     return (
       <div className="flex flex-col gap-4">
         <TopBack onBack={back} />
-        <Loading label="Готовим тест" />
+        {bankError ? <LoadError message={bankError} onRetry={reloadBank} /> : <Loading label="Готовим тест" />}
       </div>
     )
   }

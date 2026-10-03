@@ -5,7 +5,7 @@
 // Данные берём из уже существующих источников: activity_log (стрик, неделя,
 // сделанное сегодня) и FSRS (карточки к повторению, слово дня).
 // ============================================================================
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -26,34 +26,22 @@ import {
 import { Button } from '../../shared/ui/Button'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
-import { getProfile } from '../../lib/profile'
-import { loadHomeActivity, logActivity, type WeekDay } from '../../lib/activity'
-import {
-  buildTodayPlan,
-  getMyDailyPlanConfig,
-  isPerfectDay,
-  type DailyPlanConfig,
-} from '../../lib/dailyPlan'
-import { listMyQuests } from '../../lib/quests'
+import { logActivity, type WeekDay } from '../../lib/activity'
+import { buildTodayPlan, isPerfectDay } from '../../lib/dailyPlan'
 import { countDueCards } from '../../lib/fsrs'
 import { cachedWordOfDay, newWordOfDay, type PoolItem } from '../../lib/wordPool'
 import { addCard, countMyWords } from '../../lib/cards'
 import { getEsLevel } from '../../lib/esLevel'
-import { getMyPlans, isProgramSeen } from '../../lib/studyPlan'
-import { getMyPlan, type MyPlan } from '../../lib/billing'
 import { EnergyBar } from '../../components/EnergyBar'
 import { startGuidedRoute } from '../../lib/guided'
 import { speak } from '../../lib/speech'
 import { RowCard } from '../../shared/ui/RowCard'
 import { HowItWorks } from '../../shared/ui/HowItWorks'
 import { HOW_IT_WORKS } from '../../data/howItWorks'
-import {
-  AssignmentsNotice,
-  TeacherBlock,
-  loadAssignmentCounts,
-  type AssignmentCounts,
-} from '../teacher/TeacherBlock'
-import type { ActivityType, Profile, StudyPlan } from '../../types'
+import { AssignmentsNotice, TeacherBlock } from '../teacher'
+import { LoadError } from '../../shared/ui/LoadError'
+import { useHomeData } from './useHomeData'
+import type { ActivityType } from '../../types'
 import { AppLink } from '../../shared/ui/AppLink'
 
 /** Иконки пунктов плана дня (сами пункты строит lib/dailyPlan). */
@@ -71,90 +59,24 @@ export function DashboardPage() {
   const { user } = useAuth()
   const { lang } = useLanguage()
   const navigate = useNavigate()
-  const [profile, setProfile] = useState<Profile | null>(null)
-  const [streak, setStreak] = useState(0)
-  const [week, setWeek] = useState<WeekDay[]>([])
-  // пока activity_log не пришёл — не показываем «0 серия» с анимацией пламени
-  // (первый экран приложения мигал нулём и пустой неделей до сети)
-  const [homeLoaded, setHomeLoaded] = useState(false)
-  /** Все входы первого кадра пришли — экран рисуется целиком, а не по кускам. */
-  const [ready, setReady] = useState(false)
+  // первый кадр: все входы разом, без выдуманных нулей при сбое связи (useHomeData)
+  const { data: home, ready, failed, reload } = useHomeData(user?.id)
+  const profile = home?.profile ?? null
+  const assignments = home?.assignments ?? null
+  const planInputs = home?.planInputs ?? null
   /** Слово дня ещё считается: место под него держим, чтобы низ не прыгал. */
   const [wordPending, setWordPending] = useState(true)
-  const [doneToday, setDoneToday] = useState<Set<ActivityType>>(new Set())
+  // сделанное сегодня — из activity_log, плюс «идеальный день», отмеченный здесь
+  const [markedPerfect, setMarkedPerfect] = useState(false)
+  const doneToday = useMemo(() => {
+    const done = new Set<ActivityType>(home?.activity?.todayTypes ?? [])
+    if (markedPerfect) done.add('perfect')
+    return done
+  }, [home, markedPerfect])
   const [dueCount, setDueCount] = useState<number | null>(null)
   // сколько всего своих слов: 0 — колода пуста, новичка не путаем «Всё повторено»
   const [wordCount, setWordCount] = useState<number | null>(null)
   const [wordOfDay, setWordOfDay] = useState<PoolItem | null>(null)
-  // один запрос на обе плашки заданий (top и bottom)
-  const [assignments, setAssignments] = useState<AssignmentCounts | null>(null)
-  // программа, которую ученик ещё не открывал (флаг recall.program_seen.<id>)
-  const [newProgram, setNewProgram] = useState<StudyPlan | null>(null)
-  const [myPlan, setMyPlan] = useState<MyPlan | null>(null)
-  // план дня: ВСЕ его входы (настройка учителя, задания, квесты) грузятся
-  // одним пакетом с флагом готовности — иначе «идеальный день» успевал
-  // залогиниться по неполному дефолтному плану до прихода данных о задании
-  // (находка ревью 2026-07-24)
-  const [planInputs, setPlanInputs] = useState<{
-    dailyCfg: DailyPlanConfig | null
-    activeQuests: number
-  } | null>(null)
-
-  // ⚠️ ОДИН согласованный первый кадр, а не шесть независимых.
-  // Было: шесть запросов, каждый рисовал свой кусок по мере прихода — стрик,
-  // потом полоска энергии в середине (двигая всё вниз), потом план, потом
-  // карточка программы. Экран собирался на глазах рывками, и это первое, что
-  // человек видит при каждом запуске. Теперь ждём все входы разом и рисуем
-  // целиком; пока ждём — скелетон той же раскладки, поэтому ничего не прыгает.
-  // Страховка по времени: если сеть висит, через 4 с показываем что есть.
-  useEffect(() => {
-    if (!user) return
-    let alive = true
-    const guard = window.setTimeout(() => alive && setReady(true), 4000)
-
-    Promise.all([
-      getProfile(user.id).catch(() => null),
-      // стрик + неделя + сделанное сегодня — одним запросом к activity_log
-      loadHomeActivity().catch(() => null),
-      loadAssignmentCounts().catch(() => ({ total: 0, pending: 0 })),
-      getMyDailyPlanConfig().catch(() => null),
-      listMyQuests()
-        .then((qs) => qs.filter((q) => q.status === 'assigned').length)
-        .catch(() => 0),
-      getMyPlan().catch(() => null),
-      // таблицы может не быть — карточка просто не покажется
-      getMyPlans().catch(() => []),
-    ]).then(([prof, activity, counts, dailyCfg, activeQuests, plan, programs]) => {
-      if (!alive) return
-      if (prof) setProfile(prof)
-      if (activity) {
-        setStreak(activity.streak)
-        setWeek(activity.week)
-        setDoneToday(activity.todayTypes)
-      }
-      setHomeLoaded(true)
-      setAssignments(counts)
-      setPlanInputs({ dailyCfg, activeQuests })
-      if (plan) setMyPlan(plan)
-      setNewProgram(
-        programs.find((p) => {
-          try {
-            return !isProgramSeen(p.id)
-          } catch {
-            return false
-          }
-        }) ?? null,
-      )
-      window.clearTimeout(guard)
-      setReady(true)
-    })
-
-    return () => {
-      alive = false
-      window.clearTimeout(guard)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id])
 
   useEffect(() => {
     if (!user) return
@@ -232,7 +154,7 @@ export function DashboardPage() {
   useEffect(() => {
     if (perfect && !doneToday.has('perfect')) {
       void logActivity('perfect', 0)
-      setDoneToday((prev) => new Set(prev).add('perfect'))
+      setMarkedPerfect(true)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [perfect])
@@ -265,28 +187,37 @@ export function DashboardPage() {
         </div>
       </header>
 
-      {/* 2. Стрик-герой (скелетон, пока не пришёл activity_log — чтобы не мигать «0») */}
-      {homeLoaded ? (
-        <StreakHero streak={streak} week={week} didToday={didToday} perfect={perfect} />
-      ) : (
+      {/* 1б. Не всё пришло — говорим о связи, а не рисуем «0» (Ф1.13) */}
+      {failed > 0 && (
+        <LoadError
+          message="Часть главной не загрузилась — похоже, пропала связь. Слова, тексты и грамматика работают и без интернета."
+          onRetry={reload}
+        />
+      )}
+
+      {/* 2. Стрик-герой (скелетон, пока не пришёл activity_log — чтобы не мигать «0»;
+          не пришёл совсем — героя нет: серию мы не знаем) */}
+      {!home ? (
         <div
           aria-hidden
           className="h-[196px] animate-pulse rounded-3xl border border-accent-line bg-tint/[0.04]"
         />
+      ) : home.activity && (
+        <StreakHero streak={home.activity.streak} week={home.activity.week} didToday={didToday} perfect={perfect} />
       )}
 
       {/* 2б. Энергия AI (E3): дневной запас на разговоры с ИИ */}
-      {myPlan && <EnergyBar plan={myPlan} className="animate-fade-up" />}
+      {home?.myPlan && <EnergyBar plan={home.myPlan} className="animate-fade-up" />}
 
       {/* 3. Новое задание от преподавателя */}
       <AssignmentsNotice placement="top" counts={assignments} />
 
       {/* 3б. Новая программа обучения (гаснет после открытия /program) */}
-      {newProgram && (
+      {home?.newProgram && (
         <RowCard
           Icon={IconRows}
           title="Тебе назначили программу обучения"
-          desc={`${newProgram.lang.toUpperCase()} · ${newProgram.weeks.length} нед. — посмотри план на эту неделю`}
+          desc={`${home.newProgram.lang.toUpperCase()} · ${home.newProgram.weeks.length} нед. — посмотри план на эту неделю`}
           to="/program"
           active
           className="animate-fade-up"
@@ -310,8 +241,9 @@ export function DashboardPage() {
         </span>
       </button>
 
-      {/* 5. План на сегодня: пункты от учителя или умный дефолт (lib/dailyPlan) */}
-      <section className="animate-fade-up" style={{ animationDelay: '.18s' }}>
+      {/* 5. План на сегодня: пункты от учителя или умный дефолт (lib/dailyPlan).
+          Входы не пришли — плана не показываем: дефолт мог бы разойтись с учительским. */}
+      {(!home || planInputs) && <section className="animate-fade-up" style={{ animationDelay: '.18s' }}>
         <div className="mb-3 flex items-baseline justify-between">
           <h2 className="text-lg font-medium tracking-tight">План на сегодня</h2>
           {todayPlan && (
@@ -356,7 +288,7 @@ export function DashboardPage() {
           })}
         </div>
         )}
-      </section>
+      </section>}
 
       {/* 6. Слово дня — новое слово уровня, можно сразу добавить в колоду.
           Считается отдельно: тянет ленивый чанк словаря (в ES ~836 КБ), поэтому

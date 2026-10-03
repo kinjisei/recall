@@ -13,7 +13,9 @@ import { chatStream, isNetworkError } from '../../shared/api/ai'
 import { aiOverloaded, clearAiFailures, recordAiServerFailure } from '../../lib/aiHealth'
 import { logActivity } from '../../lib/activity'
 import { useAuth } from '../../context/AuthContext'
-import { loadLastChat, startNewChat } from '../../lib/chatHistory'
+import { startNewChat } from '../../lib/chatHistory'
+import { LoadError } from '../../shared/ui/LoadError'
+import { useLastChat } from './useLastChat'
 import { Loading } from '../../shared/ui/Loading'
 import { useLanguage } from '../../context/LanguageContext'
 import { getEsLevel } from '../../lib/esLevel'
@@ -206,34 +208,25 @@ function ChatSection({
   // Серия серверных сбоёв AI (3 за час): показываем честное «это на нашей
   // стороне», а не даём молча биться дальше. Сетевые сбои сюда не идут.
   const [overloaded, setOverloaded] = useState(aiOverloaded())
-  // пока история поднимается — не показываем «пустой чат», иначе на секунду
-  // мигает приглашение начать разговор, который на самом деле уже идёт
-  const [loadingHistory, setLoadingHistory] = useState(true)
   const convIdRef = useRef<string | null>(null)
   const kb = useKeyboardInset() // высота клавиатуры — панель ввода над ней
   // лента скроллится ВНУТРИ себя (мессенджер-паттерн): шапка всегда видна,
   // клавиатура сжимает список, новые сообщения показывают низ ленты
   const { listRef, barRef, height, barStyle } = useChatList(kb, [msgs, busy])
 
-  // Поднимаем прошлую переписку этого языка. Раньше реплики писались в базу и
-  // НИКОГДА не читались: уход за словом или уроком обнулял чат.
-  useEffect(() => {
-    if (!user) return
-    let alive = true
-    setLoadingHistory(true)
-    setMsgs([])
-    convIdRef.current = null
-    loadLastChat(user.id, lang)
-      .then((prev) => {
-        if (!alive || !prev) return
-        convIdRef.current = prev.id
-        setMsgs(prev.turns)
-      })
-      .finally(() => alive && setLoadingHistory(false))
-    return () => {
-      alive = false
-    }
-  }, [user?.id, lang])
+  // Прошлая переписка этого языка (useLastChat); не поднялась — так и говорим.
+  const history = useLastChat(
+    user?.id,
+    lang,
+    () => {
+      convIdRef.current = null
+      setMsgs([])
+    },
+    (prev) => {
+      convIdRef.current = prev.id
+      setMsgs(prev.turns)
+    },
+  )
 
   // Сохраняем реплики в БД; сбой сохранения не должен ломать сам чат.
   //
@@ -337,8 +330,11 @@ function ChatSection({
       <ChatWindow ref={listRef} height={height}>
       {/* пока поднимаем прошлую переписку — не мигаем приглашением начать
           разговор, который на самом деле уже идёт */}
-      {loadingHistory && msgs.length === 0 && <Loading label="Открываем диалог" />}
-      {!loadingHistory && msgs.length === 0 && (
+      {history.loading && msgs.length === 0 && <Loading label="Открываем диалог" />}
+      {history.failed && msgs.length === 0 && (
+        <LoadError message="Прошлая переписка не загрузилась — похоже, пропала связь." onRetry={history.retry} />
+      )}
+      {!history.loading && !history.failed && msgs.length === 0 && (
         <Card className="flex-none">
           <p className="text-fg-secondary">
             {lang === 'es'

@@ -14,9 +14,9 @@ AI — с человеческими текстами ошибок вместо 
 
 | Папка | Что там |
 |---|---|
-| `api/` | `supabase` — единственный клиент базы; `database.types` — типы базы (генерируются, руками не правятся); `errors` — ошибка базы → текст для человека (`dbError`, `describeDbError`) и `AppError` с кодом причины; `ai` — клиент `/api/gemini` (`chat`, `chatStream`, `onAiRequest`); `aiTypes` — протокол AI (`AiTask`, `ChatTurn`), общий с сервером |
+| `api/` | `supabase` — единственный клиент базы; `database.types` — типы базы (генерируются, руками не правятся); `errors` — ошибка базы → текст для человека (`dbError`, `describeDbError`) и `AppError` с кодом причины; `connection` — «это связь?»: `isConnectionError` (нет сети, сервер не ответил вовремя, вход не обновился без сети, раздел не скачан), `isChunkLoadError` и текст «раздел ещё не скачан»; `ai` — клиент `/api/gemini` (`chat`, `chatStream`, `onAiRequest`); `aiTypes` — протокол AI (`AiTask`, `ChatTurn`), общий с сервером |
 | `ui/` | дизайн-система: общие компоненты без предметной логики — `Button`, `Card`, `Sheet`, `Picker`, `TabPicker`, `RowCard`, `Reveal`, `HowItWorks`, `Loading`/`RowsSkeleton`, `LoadError`, `Thinking`, `BackButton`/`BackHeader` (одна кнопка «назад»: `onClick` или `fallback` — назад по истории), `AppLink`, `Brand`, `Confetti`, `icons` |
-| `lib/` | утилиты: `morph` (плитка «вырастает» в экран), `storage` (localStorage без падений), `useUrlState` (адрес = «где я»), `viewTransition` (плавная смена экрана), `useAsyncData` (загрузка: «пусто» ≠ «ошибка»), `plural` (числительные), `contacts` (адрес поддержки), `focusMode` (режим раунда: экран включает, каркас прячет шапку и навигацию), `routePreload` (прогрев экранов для `AppLink`: реестр регистрирует каркас), `shellInsets` (сколько места занимает каркас: меню слева, навигация снизу — для закреплённых элементов экранов; `useInShell` — экран внутри общей рамки, для открытых страниц), `screenWidth` (раскладке нужна ширина страницы — каркас раздвигает колонку), `share` («поделиться»: ссылки WhatsApp / Telegram с готовым текстом и системное окно — сообщение уходит со своего номера человека, Ф1.5), `useMediaQuery` (`useIsDesktop` — компьютер от 1024 px; числа — `ui/breakpoints`) |
+| `lib/` | утилиты: `morph` (плитка «вырастает» в экран), `storage` (localStorage без падений), `useUrlState` (адрес = «где я»), `viewTransition` (плавная смена экрана), `useAsyncData` (загрузка: «пусто» ≠ «ошибка», предел ожидания 12 с), `settleAll` (несколько источников экрана разом: что пришло, а что нет; `withTimeout`, `LOAD_TIMEOUT_MS`), `plural` (числительные), `contacts` (адрес поддержки), `focusMode` (режим раунда: экран включает, каркас прячет шапку и навигацию), `routePreload` (прогрев экранов для `AppLink`: реестр регистрирует каркас), `shellInsets` (сколько места занимает каркас: меню слева, навигация снизу — для закреплённых элементов экранов; `useInShell` — экран внутри общей рамки, для открытых страниц), `screenWidth` (раскладке нужна ширина страницы — каркас раздвигает колонку), `share` («поделиться»: ссылки WhatsApp / Telegram с готовым текстом и системное окно — сообщение уходит со своего номера человека, Ф1.5), `useMediaQuery` (`useIsDesktop` — компьютер от 1024 px; числа — `ui/breakpoints`) |
 
 ## Правила, которые нельзя нарушить
 
@@ -72,6 +72,16 @@ AI — с человеческими текстами ошибок вместо 
   глазами или `smoke-motion`.
 - **Загрузка экрана — `useAsyncData`**, а не ручные `useState + useEffect +
   try/catch`: он отличает «пусто» от «не удалось загрузить» и даёт повтор.
+  Экран из нескольких источников — `settleAll`. ⚠️ **Без связи экран говорит
+  о связи, а не выдумывает** (PLAN.md Ф1.13): сбой — не «0», не «пусто», не
+  «ты не учитель». Функция загрузки при сбое БРОСАЕТ, а не возвращает
+  `null`/`[]`/`0` — иначе экрану не отличить «нет данных» от «нет связи».
+  Ждём не вечно: клиент Supabase сам повторяет чтение 1 + 2 + 4 с, а
+  зависший запрос не падает вовсе — предел `LOAD_TIMEOUT_MS` (12 с), после
+  которого плашка с «Повторить»; опоздавший ответ всё равно принимается.
+- **«Это связь?» решает только `api/connection`.** Голое «Failed to fetch» —
+  сеть, а не нескачанный раздел (раньше `ErrorBoundary` путал одно с другим).
+  `connection` и `settleAll` — без импортов, их проверяет чистый тест.
 - **Числительные — только `plural`.** «32 новых слов» выглядит почти
   правильно и поэтому живёт в интерфейсе годами.
 - **Адрес поддержки — только `contacts`.** Второй экземпляр разойдётся.
@@ -83,6 +93,12 @@ AI — с человеческими текстами ошибок вместо 
   (`useUrlState`), нужен `npm run dev:test`.
 - `node scripts/smoke-motion.mjs` — переходы между экранами (`viewTransition`).
 - `node scripts/test-homework-suggest.mjs` — формы `plural` на 1/2/5/11/21/112.
+- `node scripts/test-connection.mjs` (чистый, в CI) — что считается сбоем
+  связи, а что нет (отказ прав, истёкший вход, наш русский текст); нескачанный
+  раздел ≠ голое «Failed to fetch»; `settleAll` считает сбоем упавшее,
+  зависшее и бросившее сразу, а «пусто» — нет.
+- `node scripts/smoke-offline.mjs` — экраны без связи с базой (`npm run
+  dev:test`): слова о связи, «Повторить», ни заглушек, ни выдуманных нулей.
 - `node scripts/check-api-vercel.mjs` — сервер собирается без клиентского кода.
 - `node scripts/check-types-drift.mjs` — типы базы совпадают со схемой
   тестовой базы.
@@ -117,6 +133,6 @@ AI — с человеческими текстами ошибок вместо 
 <!-- Пишет `npm run gen:docs` (scripts/gen/module-docs.mjs) по коду — руками не править. -->
 ## Из кода (сгенерировано)
 
-- **Файлы:** `api/ai.ts`, `api/aiTypes.ts`, `api/database.types.ts`, `api/errors.ts`, `api/supabase.ts`, `lib/contacts.ts`, `lib/focusMode.ts`, `lib/morph.ts`, `lib/plural.ts`, `lib/routePreload.ts`, `lib/screenWidth.ts`, `lib/share.ts`, `lib/shellInsets.ts`, `lib/storage.ts`, `lib/useAsyncData.ts`, `lib/useMediaQuery.ts`, `lib/useUrlState.ts`, `lib/viewTransition.ts`
-- **Кто использует (импортом):** `api`, `app`, `components`, `context`, `domains/ai`, `domains/notifications`, `features/admin`, `features/auth`, `features/billing`, `features/conversation`, `features/dev`, `features/flashcards`, `features/grammar`, `features/homework`, `features/landing`, `features/legal`, `features/notifications`, `features/onboarding`, `features/practice`, `features/program`, `features/progress`, `features/pronunciation`, `features/quests`, `features/reader`, `features/settings`, `features/study`, `features/teacher`, `features/writing`, `lib`, `shared/ui`, `types`
+- **Файлы:** `api/ai.ts`, `api/aiTypes.ts`, `api/connection.ts`, `api/database.types.ts`, `api/errors.ts`, `api/supabase.ts`, `lib/contacts.ts`, `lib/focusMode.ts`, `lib/morph.ts`, `lib/plural.ts`, `lib/routePreload.ts`, `lib/screenWidth.ts`, `lib/settleAll.ts`, `lib/share.ts`, `lib/shellInsets.ts`, `lib/storage.ts`, `lib/useAsyncData.ts`, `lib/useMediaQuery.ts`, `lib/useUrlState.ts`, `lib/viewTransition.ts`
+- **Кто использует (импортом):** `api`, `app`, `components`, `context`, `domains/ai`, `domains/notifications`, `features/admin`, `features/auth`, `features/billing`, `features/conversation`, `features/dashboard`, `features/dev`, `features/flashcards`, `features/grammar`, `features/homework`, `features/landing`, `features/legal`, `features/notifications`, `features/onboarding`, `features/practice`, `features/program`, `features/progress`, `features/pronunciation`, `features/quests`, `features/reader`, `features/settings`, `features/study`, `features/teacher`, `features/writing`, `lib`, `shared/ui`, `types`
 <!-- generated:end -->

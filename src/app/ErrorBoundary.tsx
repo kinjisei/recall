@@ -4,10 +4,13 @@
 // («Failed to fetch dynamically imported module») — раньше это давало белый
 // экран. Теперь один раз автоматически перезагружаемся на свежую версию,
 // а на прочие ошибки показываем понятный экран с кнопкой.
+// Без сети тот же сбой — не поломка: раздел просто ещё не скачан, и
+// перезагрузка его не достанет. Говорим это прямо (PLAN.md Ф1.13).
 // ============================================================================
 import { Component, type ReactNode } from 'react'
 import { supportMailto } from '../shared/lib/contacts'
 import { IconWarning } from '../shared/ui/icons'
+import { CHUNK_OFFLINE_TEXT, isChunkLoadError } from '../shared/api/connection'
 import { logError } from '../lib/errorLog'
 
 const RELOAD_AT = 'recall.chunk_reload_at'
@@ -16,22 +19,17 @@ const RELOAD_AT = 'recall.chunk_reload_at'
 // чанк (другая мини-игра, спустя время) снова чинится перезагрузкой.
 const RELOAD_COOLDOWN_MS = 12_000
 
-function isChunkLoadError(err: unknown): boolean {
-  const msg = err instanceof Error ? err.message : String(err)
-  return /dynamically imported module|Importing a module script failed|ChunkLoadError|Loading chunk|Failed to fetch/i.test(
-    msg,
-  )
-}
-
 interface State {
   hasError: boolean
+  /** Раздел не скачан, а сети нет — не поломка. */
+  offline: boolean
 }
 
 export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
-  state: State = { hasError: false }
+  state: State = { hasError: false, offline: false }
 
-  static getDerivedStateFromError(): State {
-    return { hasError: true }
+  static getDerivedStateFromError(error: unknown): State {
+    return { hasError: true, offline: isChunkLoadError(error) && !navigator.onLine }
   }
 
   componentDidCatch(error: unknown) {
@@ -42,7 +40,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
     // Устаревший ленивый чанк после деплоя (частая причина «ошибки» в мини-играх
     // и placement на установленном PWA). Перезагружаемся на свежую версию, но не
     // чаще раза в COOLDOWN — иначе при реальной ошибке был бы вечный reload.
-    if (isChunkLoadError(error)) {
+    if (isChunkLoadError(error) && navigator.onLine) {
       const last = Number(sessionStorage.getItem(RELOAD_AT) || 0)
       if (Date.now() - last > RELOAD_COOLDOWN_MS) {
         sessionStorage.setItem(RELOAD_AT, String(Date.now()))
@@ -57,14 +55,14 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
         <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-page px-6 text-center">
           <IconWarning size={40} className="text-accent-strong" />
           <p className="font-semibold text-fg-secondary">
-            Что-то пошло не так
+            {this.state.offline ? 'Нет интернета' : 'Что-то пошло не так'}
           </p>
           <p className="max-w-sm text-sm text-fg-muted">
-            Попробуй обновить страницу — обычно это помогает.
+            {this.state.offline ? CHUNK_OFFLINE_TEXT : 'Попробуй обновить страницу — обычно это помогает.'}
           </p>
           {/* Экран поломки — самое место для контакта: если обновление не
               спасло, человеку больше некуда идти */}
-          <p className="max-w-sm text-sm text-fg-muted">
+          {!this.state.offline && <p className="max-w-sm text-sm text-fg-muted">
             Не помогло?{' '}
             <a
               href={supportMailto('Recall — ошибка в приложении')}
@@ -73,7 +71,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
               Напиши мне
             </a>
             , починю.
-          </p>
+          </p>}
           {/* ⚠️ Раньше здесь была только «Обновить», а она перезагружает ТОТ ЖЕ
               адрес — то есть возвращает ровно в ту поломку, из которой человек
               пытается выбраться. Экран ошибок стоит снаружи роутера, уйти с

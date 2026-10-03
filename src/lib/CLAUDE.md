@@ -16,7 +16,7 @@
 |---|---|
 | `cards.ts`, `fsrs.ts` | слова ученика и расписание повторений (FSRS); общие сигнатуры — их зовут многие разделы |
 | `wordPool.ts`, `distractors.ts`, `recentWords.ts`, `pickRound.ts` | материал для игр: пул слов, обманки, «не повторять только что бывшее» |
-| `profile.ts` | профиль с кэшем; колонки — только списком `PROFILE_COLUMNS` (`supabase/CLAUDE.md`) |
+| `profile.ts` | профиль с кэшем; колонки — только списком `PROFILE_COLUMNS` (`supabase/CLAUDE.md`); `loadProfile` отличает «нет связи» (бросает) от «профиля нет» (`null`), `getProfile` — прежний, сбой = `null` |
 | `level.ts`, `esLevel.ts` | уровень: английский — из профиля, испанский — пока на устройстве (перенос — PLAN.md Ф3.3) |
 | `activity.ts` | занятия и серия дней: `logActivity` (не бросает), `getStreak` |
 | `text.ts` | `answerMatches` — сверка ответов, парная к SQL `norm_typed` |
@@ -38,6 +38,12 @@
   `node scripts/arch-map.mjs`.
 - **`text.ts` парный к SQL `norm_typed`** — урок «Сверка ответа
   продублирована» в корневом `CLAUDE.md`.
+- **Сбой при чтении — исключение, а не «пусто»** (PLAN.md Ф1.13). Функция,
+  которая при ошибке отдаёт `null`/`[]`/`0`, лишает экран возможности
+  сказать «нет связи» — так Главная рисовала «серию 0», «Квесты» — «пока
+  нет», «Диалог» — пустой чат. Переделаны `loadProfile`, `getMyDailyPlanConfig`,
+  `loadLastChat`; `listMyQuests` берёт пользователя из сессии на устройстве
+  (`currentUserId`), а не `auth.getUser()` — тот ходит в сеть. Новое так же.
 - **В базу из `lib/` ходят через единственный клиент** `shared/api/supabase`;
   ошибки — через `dbError` (`src/shared/CLAUDE.md`). Новые модули с базой
   пишутся сразу в `domains/<имя>/api.ts` (архитектура §1–2), не сюда.

@@ -18,6 +18,7 @@
 // («открой консоль и покажи») осталась возможной.
 // ============================================================================
 import { SUPPORT_EMAIL } from '../lib/contacts'
+import { NETWORK_MESSAGE } from './connection'
 
 /**
  * Форма ошибки supabase-js. PostgrestError — обычный объект (не Error!) с
@@ -96,13 +97,7 @@ export function describeDbError(error: unknown, action: string): string {
   // 3. Нет сети. postgrest-js в этом случае отдаёт message вида
   // «TypeError: Failed to fetch» (Chrome), «NetworkError…» (Firefox),
   // «Load failed» (Safari) — именно это и видел ученик.
-  if (
-    lower.includes('failed to fetch') ||
-    lower.includes('networkerror') ||
-    lower.includes('network request failed') ||
-    lower.includes('load failed') ||
-    lower.includes('fetcherror')
-  ) {
+  if (NETWORK_MESSAGE.test(message)) {
     return `Похоже, пропал интернет — не получилось ${action}. Проверь связь и попробуй ещё раз.`
   }
 

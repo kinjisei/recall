@@ -59,6 +59,16 @@
   ответа строит тот же `homework_json`, что и `get_homework`. Свой «лёгкий»
   подсчёт для списка разошёлся бы с карточкой на первом же пункте «на выбор».
 
+**Без связи — плашка, а не чужое состояние** (PLAN.md Ф1.13)
+
+- Студия решает «учитель или нет» по `loadProfile`: сбой связи — плашка с
+  «Повторить». Раньше `getProfile` отдавал при сбое `null`, и настоящий
+  учитель видел «Ведёшь учеников? Включи режим преподавателя».
+- Блок домашки при сбое — плашка, а не «Домашки нет» с кнопкой «Собрать»:
+  учитель собрал бы новую поверх существующей. Остальные разделы карточки
+  уже показывают `LoadError`; `loadAssignmentCounts` (для Главной ученика)
+  при сбое бросает, а не отдаёт «0 заданий».
+
 **Карточка ученика**
 
 - **Построена вокруг домашки** (`TeacherPage` + `HomeworkSection`,
@@ -116,6 +126,8 @@
 - `node scripts/test-material-exercises.mjs` (чистый, в CI) — отсев
   несобираемых.
 - Карточка и сборка домашки — `smoke-homework-ui` (`features/homework/CLAUDE.md`).
+- `node scripts/smoke-offline.mjs` — студия и карточка ученика без связи:
+  «Повторить», а не «Включи режим преподавателя» и не «Домашки нет».
 
 Смоукам нужен `npm run dev:test` (`scripts/CLAUDE.md`).
 
@@ -131,7 +143,7 @@
 <!-- Пишет `npm run gen:docs` (scripts/gen/module-docs.mjs) по коду — руками не править. -->
 ## Из кода (сгенерировано)
 
-- **Файлы:** `AssignmentsPage.tsx`, `DailyPlanSection.tsx`, `DiagnosticsSection.tsx`, `GuideSection.tsx`, `HomeworkComposer.tsx`, `HomeworkSection.tsx`, `materials/MaterialDetail.tsx`, `materials/MaterialsByLevel.tsx`, `materials/PlanScreen.tsx`, `materials/PreviewScreen.tsx`, `materials/RequestForm.tsx`, `materials/shared.ts`, `MaterialsSection.tsx`, `PlacementSection.tsx`, `PrintSheet.tsx`, `ProgramSection.tsx`, `QuestSection.tsx`, `ReportSheet.tsx`, `ReviewScreen.tsx`, `StudentWordsSection.tsx`, `TeacherBlock.tsx`, `TeacherPage.tsx`, `WordPicker.tsx`, `WritingSection.tsx`
+- **Файлы:** `AssignmentsPage.tsx`, `DailyPlanSection.tsx`, `DiagnosticsSection.tsx`, `GuideSection.tsx`, `HomeworkComposer.tsx`, `HomeworkSection.tsx`, `index.ts`, `materials/MaterialDetail.tsx`, `materials/MaterialsByLevel.tsx`, `materials/PlanScreen.tsx`, `materials/PreviewScreen.tsx`, `materials/RequestForm.tsx`, `materials/shared.ts`, `MaterialsSection.tsx`, `PlacementSection.tsx`, `PrintSheet.tsx`, `ProgramSection.tsx`, `QuestSection.tsx`, `ReportSheet.tsx`, `ReviewScreen.tsx`, `StudentWordsSection.tsx`, `TeacherBlock.tsx`, `TeacherPage.tsx`, `WordPicker.tsx`, `WritingSection.tsx`
 - **Вне папки (указатель «Описание:» в начале файла):** `src/lib/activityDays.ts`, `src/lib/diagnosticsBrief.ts`, `src/lib/materialExercises.ts`, `src/lib/studentSignals.ts`, `src/lib/wordChecks.ts`
 - **Адреса:** `/teacher`, `/assignments`
 - **Таблицы:** `cards`, `decks`, `review_states`, `word_checks`

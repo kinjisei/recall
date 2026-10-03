@@ -8,14 +8,28 @@
 //
 // Внутри есть alive-флаг: ответ отменённой загрузки (например, после смены
 // языка) не перетирает актуальные данные.
+//
+// Ждём не вечно (PLAN.md Ф1.13): на зависшей связи запрос не падает, а висит,
+// и экран стоял на заглушках без единого слова. Через LOAD_TIMEOUT_MS — ошибка
+// с «Повторить»; опоздавший ответ всё равно принимается и убирает её.
+// Ленивый раздел, не скачанный без сети (import() данных), — свой текст.
 // ============================================================================
 import { useCallback, useEffect, useState } from 'react'
+import { CHUNK_OFFLINE_TEXT, isChunkLoadError, isConnectionError } from '../api/connection'
+import { LOAD_TIMEOUT_MS } from './settleAll'
 
 export interface AsyncData<T> {
   data: T | null
   error: string | null
   loading: boolean
   reload: () => void
+}
+
+/** Текст ошибки для плашки: своё сообщение модуля — как есть, сырое сетевое — общий текст экрана. */
+function errorText(e: unknown, fallbackMessage: string): string {
+  if (isChunkLoadError(e)) return CHUNK_OFFLINE_TEXT
+  if (isConnectionError(e)) return fallbackMessage
+  return e instanceof Error ? e.message : fallbackMessage
 }
 
 export function useAsyncData<T>(
@@ -37,19 +51,27 @@ export function useAsyncData<T>(
     let alive = true
     setLoading(true)
     setError(null)
+    const timer = setTimeout(() => {
+      if (!alive) return
+      setError(fallbackMessage)
+      setLoading(false)
+    }, LOAD_TIMEOUT_MS)
     run()
       .then((res) => {
         if (!alive) return
         setData(res)
+        setError(null)
         setLoading(false)
       })
-      .catch((e) => {
+      .catch((e: unknown) => {
         if (!alive) return
-        setError(e instanceof Error ? e.message : fallbackMessage)
+        setError(errorText(e, fallbackMessage))
         setLoading(false)
       })
+      .finally(() => clearTimeout(timer))
     return () => {
       alive = false
+      clearTimeout(timer)
     }
   }, [run, attempt, fallbackMessage])
 

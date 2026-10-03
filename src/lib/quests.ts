@@ -3,17 +3,21 @@
 // Запись — только через security-definer RPC: назначает учитель, прогресс
 // и переписку пишет ученик. Чтение — по RLS (обе стороны).
 // ============================================================================
-import { supabase, toJson } from '../shared/api/supabase'
+import { currentUserId, supabase, toJson } from '../shared/api/supabase'
 import type { AppLang, ChatTurn, GrammarQuest } from '../types'
 
-/** Квесты текущего ученика (новые сверху). */
+/**
+ * Квесты текущего ученика (новые сверху). Кто вошёл — из сессии на
+ * устройстве, а не auth.getUser(): тот ходит в сеть и без связи отвечал
+ * «никого», и экран писал «Квестов пока нет» (PLAN.md Ф1.13).
+ */
 export async function listMyQuests(): Promise<GrammarQuest[]> {
-  const { data: auth } = await supabase.auth.getUser()
-  if (!auth.user) return []
+  const userId = await currentUserId()
+  if (!userId) return []
   const { data, error } = await supabase
     .from('grammar_quests')
     .select('*')
-    .eq('student_id', auth.user.id)
+    .eq('student_id', userId)
     .order('created_at', { ascending: false })
   if (error) throw error
   return (data ?? []) as GrammarQuest[]

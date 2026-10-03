@@ -4,7 +4,7 @@
 //   • Тренажёр — 110 упражнений на выбор правильной формы, с объяснением.
 // Данные грузятся лениво (../../data/spanish/conjugation).
 // ============================================================================
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { IconSpeaker } from '../../shared/ui/icons'
 import { BackButton } from '../../shared/ui/BackButton'
 import { Card } from '../../shared/ui/Card'
@@ -16,6 +16,8 @@ import { logActivity } from '../../lib/activity'
 import { useUrlState, useUrlStates } from '../../shared/lib/useUrlState'
 import { getVerbMistakes, addVerbMistake, removeVerbMistake } from '../../lib/verbMistakes'
 import { RowsSkeleton } from '../../shared/ui/Loading'
+import { useAsyncData } from '../../shared/lib/useAsyncData'
+import { LoadError } from '../../shared/ui/LoadError'
 import { Reveal } from '../../shared/ui/Reveal'
 import type {
   ConjugationReference,
@@ -39,24 +41,19 @@ interface Data {
 const TAB_KEYS = ['vm', 'tense']
 
 export function ConjugationSection() {
-  const [data, setData] = useState<Data | null>(null)
+  // ленивый кусок данных: без сети и не скачан — плашка, а не вечная заглушка (Ф1.13)
+  const { data, error, reload } = useAsyncData<Data>(
+    () => import('../../data/spanish/conjugation').then((m) => ({ reference: m.conjugationReference, exercises: m.endingsExercises })),
+    [],
+    'Спряжения не загрузились',
+  )
   // Вкладка — в адресе: без этого «назад» из тренажёра выбрасывал из
   // «Грамматики» целиком, а F5 возвращал в справочник (см. shared/lib/useUrlState).
   const [nav, setNav] = useUrlStates(TAB_KEYS)
   const tab: Tab = nav.vm === 'trainer' ? 'trainer' : 'reference'
   const setTab = (t: Tab) => setNav({ vm: t === 'trainer' ? 'trainer' : null, tense: null })
 
-  useEffect(() => {
-    let alive = true
-    import('../../data/spanish/conjugation').then((m) => {
-      if (alive)
-        setData({ reference: m.conjugationReference, exercises: m.endingsExercises })
-    })
-    return () => {
-      alive = false
-    }
-  }, [])
-
+  if (error) return <LoadError message={error} onRetry={reload} />
   if (!data) return <RowsSkeleton count={5} />
 
   return (

@@ -8,12 +8,15 @@ import {
 } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
 import { supabase } from '../shared/api/supabase'
+import { isConnectionError } from '../shared/api/connection'
 import { clearUserLocalData } from '../lib/profile'
 
 interface AuthContextValue {
   user: User | null
   session: Session | null
   loading: boolean
+  /** Вход не проверить: нет связи, а сохранённый вход истёк (не путать с «не вошёл»). */
+  offline: boolean
   signIn: (email: string, password: string) => Promise<{ error?: string }>
   signUp: (
     email: string,
@@ -28,10 +31,15 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const [offline, setOffline] = useState(false)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(({ data, error }) => {
       setSession(data.session)
+      // Истёкший вход без сети не обновить: клиент ~30 с повторяет попытки и
+      // отдаёт «сессии нет», а сам вход хранит. Раньше это вело на форму
+      // регистрации — человек решал, что его выкинуло (PLAN.md Ф1.13).
+      setOffline(!data.session && isConnectionError(error))
       setLoading(false)
     })
 
@@ -39,6 +47,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession)
+      // связь вернулась и вход обновился сам — приложение открывается без «Повторить»
+      if (newSession) setOffline(false)
     })
 
     return () => subscription.unsubscribe()
@@ -82,6 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         session,
         loading,
+        offline,
         signIn,
         signUp,
         signOut,

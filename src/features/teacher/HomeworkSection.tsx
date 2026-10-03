@@ -12,9 +12,10 @@
 // занятиям», а не «проверено»: расписание повторений пишет клиент, и обещать
 // больше мы не имеем права (см. lib/homework.ts).
 // ============================================================================
-import { useEffect, useState } from 'react'
 import { REGULARITY_WINDOW } from '../../lib/activityDays'
 import { RowsSkeleton } from '../../shared/ui/Loading'
+import { LoadError } from '../../shared/ui/LoadError'
+import { useAsyncData } from '../../shared/lib/useAsyncData'
 import { IconCheck, IconFlame, IconSparkle } from '../../shared/ui/icons'
 import {
   KIND_LABEL,
@@ -23,7 +24,6 @@ import {
   homeworkProgress,
   homeworkRows,
   isOverdue,
-  type Homework,
   type HomeworkRow,
 } from '../../lib/homework'
 
@@ -87,21 +87,17 @@ export function HomeworkSection({
   /** Меняется после выдачи — перечитываем, не перезагружая карточку целиком. */
   reloadKey?: number
 }) {
-  const [hw, setHw] = useState<Homework | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  // Сбой — плашка с «Повторить», а не «Домашки нет» с кнопкой «Собрать»:
+  // учитель собрал бы новую поверх существующей (PLAN.md Ф1.13).
+  const { data: hw, error, loading, reload } = useAsyncData(
+    () => getHomework(studentId),
+    [studentId, reloadKey],
+    'Не удалось прочитать домашку',
+  )
 
-  useEffect(() => {
-    let alive = true
-    setLoading(true)
-    getHomework(studentId)
-      .then((h) => alive && setHw(h))
-      .catch((e) => alive && setError(e instanceof Error ? e.message : 'Не удалось прочитать домашку'))
-      .finally(() => alive && setLoading(false))
-    return () => {
-      alive = false
-    }
-  }, [studentId, reloadKey])
+  if (error) {
+    return <LoadError message={error} onRetry={reload} />
+  }
 
   if (loading) {
     return (
@@ -117,8 +113,6 @@ export function HomeworkSection({
 
   return (
     <div className="rounded-2xl border border-tint/[0.08] bg-surface p-4 shadow-card">
-      {error && <p className="mb-2 text-sm text-warning-strong">{error}</p>}
-
       {!hw ? (
         <div className="flex flex-col gap-3">
           <p className="text-[15px] font-medium">Домашки нет</p>

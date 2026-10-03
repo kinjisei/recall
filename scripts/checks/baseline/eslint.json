@@ -147,11 +147,6 @@
       "count": 1
     }
   },
-  "scripts/smoke-offline.mjs": {
-    "no-unused-vars": {
-      "count": 2
-    }
-  },
   "scripts/smoke-onboarding-placement.mjs": {
     "no-empty": {
       "count": 1
@@ -266,14 +261,6 @@
       "count": 1
     }
   },
-  "src/features/conversation/ConversationPage.tsx": {
-    "react-hooks/exhaustive-deps": {
-      "count": 1
-    },
-    "react-hooks/set-state-in-effect": {
-      "count": 1
-    }
-  },
   "src/features/dashboard/DashboardPage.tsx": {
     "react-hooks/set-state-in-effect": {
       "count": 2
@@ -301,17 +288,12 @@
   },
   "src/features/onboarding/PlacementTest.tsx": {
     "react-hooks/set-state-in-effect": {
-      "count": 2
+      "count": 1
     }
   },
   "src/features/practice/GrammarMixMode.tsx": {
     "react-hooks/set-state-in-effect": {
       "count": 1
-    }
-  },
-  "src/features/progress/ProgressPage.tsx": {
-    "react-hooks/set-state-in-effect": {
-      "count": 2
     }
   },
   "src/features/pronunciation/PronunciationPage.tsx": {
@@ -336,11 +318,6 @@
     }
   },
   "src/features/teacher/DiagnosticsSection.tsx": {
-    "react-hooks/set-state-in-effect": {
-      "count": 1
-    }
-  },
-  "src/features/teacher/HomeworkSection.tsx": {
     "react-hooks/set-state-in-effect": {
       "count": 1
     }

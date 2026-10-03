@@ -7,7 +7,7 @@ import { hasPendingTeacherRole, clearPendingRole } from '../lib/pendingRole'
 import { becomeTeacher } from '../lib/teacher'
 import { BlockedScreen } from './BlockedScreen'
 import { opensBeforeOnboarding } from './routes'
-import { Loading } from '../shared/ui/Loading'
+import { CheckingLogin, OfflineGate } from './AuthWait'
 
 /**
  * Пускает дальше только авторизованных; иначе — на страницу входа.
@@ -16,7 +16,7 @@ import { Loading } from '../shared/ui/Loading'
  * отправляет на /onboarding — существующих не трогает.
  */
 export function ProtectedRoute({ children }: { children: ReactNode }) {
-  const { user, loading } = useAuth()
+  const { user, loading, offline } = useAuth()
   const { pathname, search } = useLocation()
   const [blocked, setBlocked] = useState<boolean | null>(null)
   // флаг «уже прошёл» читаем синхронно: иначе после завершения онбординга
@@ -73,13 +73,10 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
     }
   }, [user?.id])
 
-  if (loading || (user && (needsOnboarding === null || blocked === null))) {
-    return (
-      <div className="flex min-h-[100dvh] items-center justify-center bg-page">
-        <Loading label="Проверяем вход" />
-      </div>
-    )
-  }
+  if (loading || (user && (needsOnboarding === null || blocked === null))) return <CheckingLogin />
+
+  // вход истёк, а сети нет — это не «вышел из аккаунта» (AuthWait.tsx)
+  if (!user && offline) return <OfflineGate />
 
   // Куда человек шёл, туда и вернём после входа. Раньше ссылка, открытая без
   // входа (например, «прочитай вот этот текст» от преподавателя), после логина

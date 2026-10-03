@@ -40,6 +40,8 @@ import { ConjugationSection } from './ConjugationSection'
 import { IrregularVerbsSection } from './IrregularVerbsSection'
 import { PhrasalVerbsSection } from './PhrasalVerbsSection'
 import { RowsSkeleton } from '../../shared/ui/Loading'
+import { useAsyncData } from '../../shared/lib/useAsyncData'
+import { LoadError } from '../../shared/ui/LoadError'
 import { Reveal } from '../../shared/ui/Reveal'
 import type {
   AppLang,
@@ -155,7 +157,12 @@ function EnglishVerbs() {
 }
 
 function LessonsSection({ lang }: { lang: AppLang }) {
-  const [topics, setTopics] = useState<GrammarTopic[] | null>(null)
+  // ленивый кусок данных: без сети и не скачан — плашка, а не вечная заглушка (Ф1.13)
+  const { data: topics, error: topicsError, reload: reloadTopics } = useAsyncData<GrammarTopic[]>(
+    () => (lang === 'es' ? import('../../data/spanish/grammar') : import('../../data/english/grammar')).then((m) => m.grammarTopics),
+    [lang],
+    'Уроки не загрузились',
+  )
   // ничего не раскрыто по умолчанию — уровни разворачиваются по тапу
   const [openLevel, setOpenLevel] = useState<string | null>(null)
   const [nav, setNav] = useUrlStates(LESSON_KEYS)
@@ -185,19 +192,6 @@ function LessonsSection({ lang }: { lang: AppLang }) {
     [lang, topics, selected, reviewMistakes],
   )
 
-  useEffect(() => {
-    let alive = true
-    const mod =
-      lang === 'es'
-        ? import('../../data/spanish/grammar')
-        : import('../../data/english/grammar')
-    mod.then((m) => {
-      if (alive) setTopics(m.grammarTopics)
-    })
-    return () => {
-      alive = false
-    }
-  }, [lang])
 
   const byLevel = useMemo(() => {
     const groups: Record<string, GrammarTopic[]> = {}
@@ -243,7 +237,9 @@ function LessonsSection({ lang }: { lang: AppLang }) {
         </button>
       )}
 
-      {!topics ? (
+      {topicsError ? (
+        <LoadError message={topicsError} onRetry={reloadTopics} />
+      ) : !topics ? (
         <RowsSkeleton count={5} />
       ) : (
         LEVELS.map((level) => {

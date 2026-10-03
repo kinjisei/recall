@@ -12,7 +12,6 @@
     "db-outside-data-layer | src/features/settings/SettingsPage.tsx → src/shared/api/supabase.ts": 1,
     "db-outside-data-layer | src/features/study/SelfMaterialPage.tsx → src/shared/api/supabase.ts": 1,
     "db-outside-data-layer | src/features/writing/QuickWriteCheck.tsx → src/shared/api/supabase.ts": 1,
-    "feature-deep-import | src/features/dashboard/DashboardPage.tsx → src/features/teacher/TeacherBlock.tsx": 1,
     "feature-deep-import | src/features/practice/GrammarMixMode.tsx → src/features/words/GameShell.tsx": 1,
     "feature-deep-import | src/features/practice/PracticePage.tsx → src/features/flashcards/DeckReview.tsx": 1,
     "feature-deep-import | src/features/practice/PracticePage.tsx → src/features/words/DictationMode.tsx": 1,

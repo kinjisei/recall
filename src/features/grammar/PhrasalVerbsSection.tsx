@@ -20,6 +20,8 @@ import { shuffle, sample } from '../../lib/random'
 import { useUrlState } from '../../shared/lib/useUrlState'
 import type { PhrasalEntry, PhrasalItem } from '../../data/english/phrasal'
 import { RowsSkeleton } from '../../shared/ui/Loading'
+import { useAsyncData } from '../../shared/lib/useAsyncData'
+import { LoadError } from '../../shared/ui/LoadError'
 import { Reveal } from '../../shared/ui/Reveal'
 
 const ROUND_SIZE = 10
@@ -27,7 +29,12 @@ const ROUND_SIZE = 10
 type Mode = 'reference' | 'trainer'
 
 export function PhrasalVerbsSection() {
-  const [entries, setEntries] = useState<PhrasalEntry[] | null>(null)
+  // ленивый кусок данных: без сети и не скачан — плашка, а не вечная заглушка (Ф1.13)
+  const { data: entries, error, reload } = useAsyncData<PhrasalEntry[]>(
+    () => import('../../data/english/phrasal').then((m) => m.phrasalVerbs),
+    [],
+    'Фразовые глаголы не загрузились',
+  )
   // Режим — в адресе (?vm=trainer), как и у неправильных глаголов: «назад» из
   // тренажёра возвращает в справочник. Ход раунда адресуемым не делаем — после
   // F5 раунд начинается заново (правило в shared/lib/useUrlState).
@@ -35,16 +42,7 @@ export function PhrasalVerbsSection() {
   const mode: Mode = vm === 'trainer' ? 'trainer' : 'reference'
   const setMode = (m: Mode) => setVm(m === 'trainer' ? 'trainer' : null)
 
-  useEffect(() => {
-    let alive = true
-    import('../../data/english/phrasal').then((m) => {
-      if (alive) setEntries(m.phrasalVerbs)
-    })
-    return () => {
-      alive = false
-    }
-  }, [])
-
+  if (error) return <LoadError message={error} onRetry={reload} />
   if (!entries) return <RowsSkeleton count={5} />
 
   return (

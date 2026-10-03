@@ -26,6 +26,7 @@ import { RowCard } from '../../shared/ui/RowCard'
 import { HowItWorks } from '../../shared/ui/HowItWorks'
 import { HOW_IT_WORKS } from '../../data/howItWorks'
 import { LoadError } from '../../shared/ui/LoadError'
+import { settleAll } from '../../shared/lib/settleAll'
 import { BackHeader } from '../../shared/ui/BackButton'
 import { Button } from '../../shared/ui/Button'
 import { useAuth } from '../../context/AuthContext'
@@ -111,64 +112,38 @@ export function StudyPage() {
     getProfile(user.id).then((p) => setEnLevel(p?.level ?? null))
   }, [lang, user])
 
-  // Сколько входов не ответило: если не ответил НИ ОДИН, это почти наверняка
-  // потеря связи, а не «у тебя ничего не назначено». Раньше строки заданий,
-  // квестов и программы в офлайне просто исчезали — человек думал, что учитель
-  // ничего не давал (находка ревью 1Г).
+  // Сколько входов не ответило. Раньше строки заданий, квестов и программы в
+  // офлайне просто исчезали — человек думал, что учитель ничего не давал
+  // (находка ревью 1Г). Ждём не вечно: при недоступном сервере запросы не
+  // отвечают ВООБЩЕ (клиент Supabase уходит в свои повторы), и хаб застывал на
+  // скелетонах. settleAll (shared/lib): не ответившее за 12 с — тоже сбой.
   const [failed, setFailed] = useState(0)
 
   const loadHub = useCallback(() => {
     setHub(null)
     setFailed(0)
-    let failures = 0
-    const miss = () => {
-      failures++
-      return null
-    }
-    // ⚠️ Ждём не бесконечно. Живая проба с заблокированной базой показала, что
-    // при недоступном сервере запросы не отвечают ВООБЩЕ (клиент Supabase
-    // уходит в свои повторы), и хаб навсегда застывал на скелетонах — человек
-    // смотрел на серые прямоугольники, не понимая, чего ждёт. Через 12 секунд
-    // показываем что есть и честно говорим про связь.
-    const withTimeout = <T,>(p: Promise<T>): Promise<T | null> =>
-      Promise.race([
-        p,
-        new Promise<null>((resolve) =>
-          setTimeout(() => {
-            failures++
-            resolve(null)
-          }, 12_000),
-        ),
-      ])
-
-    return Promise.all([
-      withTimeout(
-        getMyAssignments()
-          .then((rows) => ({
-            total: rows.length,
-            pending: rows.filter((r) => r.status === 'assigned').length,
-          }))
-          .catch(miss),
-      ),
-      withTimeout(countMyWritingTasks().catch(miss)),
-      withTimeout(
-        listMyQuests()
-          .then((rows) => ({
-            total: rows.length,
-            active: rows.filter((r) => r.status === 'assigned').length,
-          }))
-          .catch(miss),
-      ),
-      withTimeout(getMyPlans().catch(miss)),
+    return settleAll({
+      assignments: () =>
+        getMyAssignments().then((rows) => ({
+          total: rows.length,
+          pending: rows.filter((r) => r.status === 'assigned').length,
+        })),
+      writing: () => countMyWritingTasks(),
+      quests: () =>
+        listMyQuests().then((rows) => ({
+          total: rows.length,
+          active: rows.filter((r) => r.status === 'assigned').length,
+        })),
+      plans: () => getMyPlans(),
       // назначил ли преподаватель тест уровня по текущему языку
-      withTimeout(myPendingPlacement(lang).catch(miss)),
+      placement: () => myPendingPlacement(lang),
       // ⚠️ Домашка НЕ считается сбоем, если её нет: getHomework вернёт null у
-      // любого, кто занимается сам. Ошибку глотаем отдельно от miss(), иначе
-      // плашка «часть разделов не загрузилась» висела бы у половины людей.
-      withTimeout(getHomework().catch(() => null)),
-    ]).then(([assignments, writing, quests, plans, placement, homework]) => {
-      setHub({ assignments, writing, quests, plans, placement, homework })
-      setFailed(failures)
+      // любого, кто занимается сам. Её ошибку глотаем отдельно, иначе плашка
+      // «часть разделов не загрузилась» висела бы у половины людей.
+      homework: () => getHomework().catch(() => null),
+    }).then(({ values, failed: lost }) => {
+      setHub(values)
+      setFailed(lost.length)
     })
   }, [lang])
 

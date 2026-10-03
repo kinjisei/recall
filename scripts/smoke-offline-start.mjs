@@ -172,6 +172,14 @@ async function offlineStart(label, expectEntry = '') {
   check(`${label}: все ${graph.size} стартовых файлов загрузились`, lostStart.length === 0, lostStart.slice(0, 12).join(', '))
   if (lostLazy.length) console.log(`  · ленивые куски без сети не загрузились (так задумано): ${lostLazy.join(', ')}`)
   check(`${label}: не экран ошибки`, !/пошло не так/i.test(txt))
+  // Раздел, который в этой версии ещё не открывали (кэш докачанного стёрт):
+  // без сети — «нет интернета», а не «что-то пошло не так» (Ф1.13)
+  await page.goto(`${URL_}/grammar`, { waitUntil: 'domcontentloaded' }).catch(() => {})
+  await page.waitForFunction(() => /Нет интернета|пошло не так/i.test(document.body.innerText), { polling: 250, timeout: 15000 })
+    .catch(() => {})
+  const lazy = await screen()
+  check(`${label}: нескачанный раздел — «нет интернета», а не поломка`, /Нет интернета/.test(lazy) && !/пошло не так/i.test(lazy),
+    lazy.trim().slice(0, 80))
   offline = false
   await page.setOfflineMode(false)
   await page.reload({ waitUntil: 'networkidle2' })
