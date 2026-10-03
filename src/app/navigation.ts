@@ -89,3 +89,19 @@ export function isTabActive(tab: NavTab, pathname: string): boolean {
 export function activeTabIndex(tabs: NavTab[], pathname: string): number {
   return tabs.findIndex((t) => isTabActive(t, pathname))
 }
+
+/**
+ * Где каркас показывает плашку «Тариф закончился — продлить» (PLAN.md Ф2.4,
+ * решение владельца 03.10.2026): на стартовом экране — первой вкладке меню —
+ * и у репетитора ещё в студии. С меню учителя (Ф2.10) старт — расписание, как
+ * в макете t9-3, а «Моя учёба» остаётся без плашки. Есть ли что сказать,
+ * решает сама плашка (features/billing).
+ */
+export function showsAccessBanner(
+  pathname: string,
+  role: string | null | undefined,
+  enabled: boolean = ROLE_NAV_ENABLED,
+): boolean {
+  if (!role) return false
+  return pathname === tabsFor(role, enabled)[0]?.to || (role === 'teacher' && pathname === '/teacher')
+}

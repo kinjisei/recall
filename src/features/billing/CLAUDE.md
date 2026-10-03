@@ -29,8 +29,9 @@
 |---|---|
 | `PricingPage.tsx` | страница тарифов; вошедшему — плашка с его тарифом и «Оплатить» у платных тарифов (`/pay?plan=…`), гостю — «Войти, чтобы оплатить» |
 | `PayPage.tsx`, `KaspiTransfer.tsx` | «Как оплатить тариф» по макету t9-4: тарифы карточками (репетитору — свои три, ученику — Premium, `?plan=` выбирает сразу), перевод на Kaspi Gold с «Номер» и «Код», «Оплата отправлена» → «Спасибо», пока заявку не подтвердят |
+| `AccessEndedBanner.tsx`, `index.ts` | плашка «Тариф закончился · Всё сохранено · Продлить» / «Пробный период закончился · Выбрать тариф» (макет t9-3, PLAN.md Ф2.4). Ставит каркас над стартовым экраном и студией (`app/navigation.ts` `showsAccessBanner`); текст и «кончился ли» — `accessEndedNotice` (`domains/billing`). Тариф перечитывает при каждом показе и при возврате в приложение; конец наступил при открытом экране — появляется в тот же момент. Дверь `index.ts` отдаёт только плашку: экраны грузятся лениво |
 | `src/domains/billing` | каталог тарифов (цены и тексты), реквизиты Kaspi — `domains/billing/CLAUDE.md` |
-| `src/lib/billing.ts` | свой тариф: `getMyPlan()`, тип `MyPlan` |
+| `src/lib/billing.ts` | свой тариф: `getMyPlan()` (одновременные вызовы делят один запрос, кэша нет — энергия всегда свежая), тип `MyPlan` |
 | `src/components/EnergyBar.tsx` | полоска ⚡ |
 | база | `energy_source` (откуда энергия и сколько), `spend_energy` / `refund_ai_call` (списание и возврат — их зовёт сервер, `api/CLAUDE.md`), `get_my_plan`, `teacher_seats_effective`, `covering_teacher`, `become_teacher`, `stop_teaching`, `admin_set_plan` |
 
@@ -73,6 +74,8 @@
 - `node scripts/smoke-billing.mjs` — оплата целиком: «Как оплатить», заявка,
   подтверждение в `/admin`, страница тарифов (подробнее —
   `domains/billing/CLAUDE.md`).
+- `node scripts/smoke-access-ending.mjs` — плашка «Тариф закончился» и
+  «Тариф закончится завтра» в ленте (там же).
 
 Смоукам нужен `npm run dev:test` (`scripts/CLAUDE.md`).
 
@@ -90,7 +93,7 @@
 <!-- Пишет `npm run gen:docs` (scripts/gen/module-docs.mjs) по коду — руками не править. -->
 ## Из кода (сгенерировано)
 
-- **Файлы:** `KaspiTransfer.tsx`, `PayPage.tsx`, `PricingPage.tsx`
+- **Файлы:** `AccessEndedBanner.tsx`, `index.ts`, `KaspiTransfer.tsx`, `PayPage.tsx`, `PricingPage.tsx`
 - **Вне папки (указатель «Описание:» в начале файла):** `src/components/EnergyBar.tsx`, `src/lib/billing.ts`
 - **Адреса:** `/pricing`, `/pay`
 - **RPC:** `get_my_plan`

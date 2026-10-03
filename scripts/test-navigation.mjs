@@ -9,7 +9,10 @@
  *      экран подсвечивает свою вкладку (без `also` грамматика гасила бы всю
  *      навигацию);
  *   3. включённый выключатель (параметр, константу не трогаем) даёт учителю
- *      его меню из архитектуры §16, а ученику — прежнее.
+ *      его меню из архитектуры §16, а ученику — прежнее;
+ *   4. плашка «Тариф закончился» (PLAN.md Ф2.4) — на стартовом экране и у
+ *      репетитора в студии; с меню учителя — над расписанием, а не в
+ *      «Моей учёбе».
  *
  * ⚠️ Ожидания — литералами, а не из того же конфига: сверка конфига с самим
  * собой зелёная при любой поломке.
@@ -21,6 +24,7 @@ import {
   STUDENT_TABS,
   TEACHER_TABS,
   activeTabIndex,
+  showsAccessBanner,
   tabsFor,
 } from '../src/app/navigation.ts'
 
@@ -85,6 +89,21 @@ check('учитель: студия — вкладка «Ученики»', teac
 for (const path of ['/', '/study', '/grammar', '/practice', '/pronunciation', '/conversation', '/settings']) {
   check(`учитель: ${path} — «Моя учёба» (экраны ученика те же)`, teacherActive(path) === 'Моя учёба', teacherActive(path))
 }
+
+// ── плашка «Тариф закончился» (Ф2.4) ─────────────────────────────────────────
+const banner = (path, role, enabled) => showsAccessBanner(path, role, enabled)
+check('сейчас: репетитору — на Главной', banner('/', 'teacher', false))
+check('сейчас: репетитору — в студии', banner('/teacher', 'teacher', false))
+check('сейчас: самоучке — на Главной', banner('/', 'learner', false))
+check('ученику в «Преподавателе» (приглашение) — нет', !banner('/teacher', 'learner', false))
+for (const path of ['/study', '/practice', '/conversation', '/settings', '/pay', '/progress']) {
+  check(`на ${path} — нет`, !banner(path, 'teacher', false))
+}
+check('роль ещё не пришла — нет', !banner('/', null, false))
+check('с меню учителя (Ф2.10): над расписанием', banner('/schedule', 'teacher', true))
+check('с меню учителя: в студии — да', banner('/teacher', 'teacher', true))
+check('с меню учителя: «Моя учёба» — без плашки', !banner('/', 'teacher', true))
+check('с меню учителя ученику — по-прежнему Главная', banner('/', 'learner', true))
 
 console.log(`\nИтог: ${pass}/${pass + fail}`)
 process.exitCode = fail === 0 ? 0 : 1

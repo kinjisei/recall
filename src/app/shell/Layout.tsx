@@ -11,16 +11,22 @@
 // Режим раунда (игра на весь экран) прячет навигацию на любой ширине —
 // shared/lib/focusMode. Сколько места занимает каркас вокруг экрана, экраны
 // с закреплёнными элементами узнают из shared/lib/shellInsets.
+//
+// Над стартовым экраном и студией — плашка «Тариф закончился — продлить»
+// (PLAN.md Ф2.4; где — navigation.ts, что сказать — features/billing).
 // ============================================================================
 import { useState } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
+import { AccessEndedBanner } from '../../features/billing'
 import { FocusModeContext } from '../../shared/lib/focusMode'
 import { PageWidthContext } from '../../shared/lib/screenWidth'
 import { InShellContext, PHONE_INSETS, ShellInsetsContext, type ShellInsets } from '../../shared/lib/shellInsets'
 import { useIsDesktop } from '../../shared/lib/useMediaQuery'
+import { showsAccessBanner } from '../navigation'
 import { BottomNav } from './BottomNav'
 import { SideNav } from './SideNav'
 import { TopBar } from './TopBar'
+import { useMyRole } from './useMyRole'
 
 /** Меню компьютера — 15rem (w-60 в SideNav, pl-60 ниже) слева; снизу ничего нет. */
 const DESKTOP_INSETS: ShellInsets = { left: '15rem', bottom: '0px', bottomPx: 0 }
@@ -33,6 +39,9 @@ export function Layout() {
   const desktop = useIsDesktop()
   const withMenu = desktop && !focus
   const insets = focus ? FOCUS_INSETS : desktop ? DESKTOP_INSETS : PHONE_INSETS
+  const role = useMyRole()
+  const { pathname } = useLocation()
+  const banner = !focus && role && showsAccessBanner(pathname, role) ? role : null
 
   return (
     <FocusModeContext.Provider value={setFocus}>
@@ -57,6 +66,7 @@ export function Layout() {
                     : 'pt-5 pb-[calc(5.5rem+env(safe-area-inset-bottom))]'
               }`}
             >
+              {banner && <AccessEndedBanner role={banner} />}
               <Outlet />
             </main>
           </div>

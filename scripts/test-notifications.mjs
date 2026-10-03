@@ -6,11 +6,15 @@
  *   • ссылка из данных — ТОЛЬКО внутренняя: «//evil», «https://…»,
  *     «javascript:…» и обратная косая не проходят (иначе лента — готовый
  *     фишинг: данные могут прийти от человека);
+ *   • «тариф / пробный закончится завтра» (Ф2.4): имя тарифа, дата по
+ *     Алматы, кнопка-действие только со своей ссылкой; копия имён тарифов
+ *     совпадает с каталогом domains/billing;
  *   • счёт непрочитанных и «когда» — от заданного «сейчас».
  * Чистый: без сети и базы.
  * Запуск: node scripts/test-notifications.mjs
  */
-import { renderNotification, safeHref, unreadCount, whenLabel } from '../src/domains/notifications/model.ts'
+import { PLAN_NAMES, renderNotification, safeHref, unreadCount, whenLabel } from '../src/domains/notifications/model.ts'
+import { PAID_PLANS, planName } from '../src/domains/billing/model.ts'
 
 let fail = 0
 let total = 0
@@ -80,6 +84,37 @@ check('«javascript:…» — нет', safeHref('javascript:alert(1)'), undefine
 check('обратная косая — нет', safeHref('/\\evil.site'), undefined)
 check('не строка — нет', safeHref({ href: '/x' }), undefined)
 check('чужая ссылка в manual не попадает в ленту', renderNotification({ kind: 'manual', data: { title: 't', href: 'https://evil' } }).href, undefined)
+
+// ── конец тарифа и пробного (Ф2.4, макет t9-2) ──────────────────────────────────
+const until = '2026-10-16T05:00:00Z' // 16 октября, 10:00 по Алматы
+check(
+  'тариф кончается завтра: имя тарифа, дата, «Как оплатить»',
+  renderNotification({ kind: 'plan_ending', data: { plan: 'teacher_mini', until, href: '/pay' } }),
+  { title: 'Тариф закончится завтра', body: 'Репетитор Mini действует до 16 октября', href: '/pay', action: 'Как оплатить' },
+)
+check(
+  'пробный кончается завтра: «Выбрать тариф»',
+  renderNotification({ kind: 'trial_ending', data: { until, href: '/pay' } }),
+  { title: 'Пробный период закончится завтра', body: 'Действует до 16 октября', href: '/pay', action: 'Выбрать тариф' },
+)
+check('самоучке — про Premium', renderNotification({ kind: 'plan_ending', data: { plan: 'premium', until, href: '/pay' } }).body, 'Premium действует до 16 октября')
+check(
+  'дата — по Алматы: 15-е 20:00 UTC — это уже 16-е',
+  renderNotification({ kind: 'trial_ending', data: { until: '2026-10-15T20:00:00Z' } }).body,
+  'Действует до 16 октября',
+)
+check('незнакомый тариф — «Тариф», а не undefined', renderNotification({ kind: 'plan_ending', data: { plan: 'gold', until } }).body, 'Тариф действует до 16 октября')
+check('«__proto__» вместо тарифа — не ломает текст', renderNotification({ kind: 'plan_ending', data: { plan: '__proto__', until } }).body, 'Тариф действует до 16 октября')
+check('кривая дата — без текста, заголовок на месте', renderNotification({ kind: 'plan_ending', data: { until: 'вчера' } }), { title: 'Тариф закончится завтра' })
+check('без ссылки — без кнопки-действия', renderNotification({ kind: 'trial_ending', data: { until } }).action, undefined)
+check('чужая ссылка — ни ссылки, ни кнопки', renderNotification({ kind: 'plan_ending', data: { until, href: '//evil.site' } }), {
+  title: 'Тариф закончится завтра',
+  body: 'Тариф действует до 16 октября',
+})
+// копия имён тарифов = каталог domains/billing (planName): переименовали тариф
+// там — красное здесь, а не старое имя в уведомлениях
+for (const plan of PAID_PLANS) check(`имя тарифа ${plan} — как в каталоге`, PLAN_NAMES[plan], planName(plan))
+check('лишних имён в копии нет', Object.keys(PLAN_NAMES).sort(), [...PAID_PLANS].sort())
 
 // ── счёт и время ─────────────────────────────────────────────────────────────
 check('непрочитанные', unreadCount([{ read_at: null }, { read_at: '2026-09-28T10:00:00Z' }, { read_at: null }]), 2)

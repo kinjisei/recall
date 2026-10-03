@@ -104,6 +104,11 @@ export function planShortTitle(id: Plan): string {
   return planCard(id).title.split(' · ').pop() ?? id
 }
 
+/** «Репетитор · Mini» → «Репетитор Mini»: имя тарифа внутри фразы (макет t9). */
+export function planName(id: Plan): string {
+  return planCard(id).title.replace(' · ', ' ')
+}
+
 /** Сколько перевести за тариф на N месяцев, ₸. */
 export function amountFor(plan: PaidPlan, months: number): number {
   return planCard(plan).price * months
@@ -277,4 +282,57 @@ export function teacherTrialStatus(s: TrialState, now: Date = new Date()): Trial
   const days = s.trial_days ?? 14
   if (s.trial_started === false && end - at > days * DAY_MS) return { kind: 'before_first', days }
   return { kind: 'left', days: almatyDay(end) - almatyDay(at) }
+}
+
+// ---- конец доступа: напоминание и плашка (Ф2.4) ------------------------------------
+
+/**
+ * До какого момента у человека доступ и чем он держится — ПАРА к access_end
+ * (миграция 0007), сверяет check-access-ending.mjs. Репетитору — тариф
+ * репетитора или пробный, что позже (Premium расписание не открывает);
+ * остальным — свой оплаченный тариф, пробный ученика не в счёт. null —
+ * доступа нет и не было.
+ */
+export type AccessEnd = { source: 'plan'; plan: PaidPlan; until: Date } | { source: 'trial'; until: Date }
+
+export function accessEnd(role: string | null | undefined, s: PlanState): AccessEnd | null {
+  const teacher = role === 'teacher'
+  const paid = (teacher ? s.plan.startsWith('teacher_') : s.plan !== 'free') ? time(s.plan_expires_at) : NaN
+  const end = teacher ? Math.max(...[paid, time(s.trial_until)].filter(Number.isFinite)) : paid
+  if (!Number.isFinite(end)) return null
+  return end === paid ? { source: 'plan', plan: s.plan as PaidPlan, until: new Date(end) } : { source: 'trial', until: new Date(end) }
+}
+
+/** Что сказать на плашке «закончился» (макет t9-3). */
+export interface AccessEndedNotice {
+  source: AccessEnd['source']
+  title: string
+  body: string
+  action: string
+}
+
+/**
+ * Плашка, когда доступ был и кончился (журнал п.36): «Тариф закончился —
+ * продлить», у пробного — «выбрать тариф». Раньше конца — ничего: тариф ещё
+ * действует, и «закончился» было бы неправдой. Ученику, которого покрывает
+ * тариф репетитора (`in_studio`), — ничего: свой тариф ему не нужен.
+ */
+export function accessEndedNotice(
+  role: string | null | undefined,
+  s: PlanState & { in_studio?: boolean },
+  now: Date = new Date(),
+): AccessEndedNotice | null {
+  if (role !== 'teacher' && s.in_studio) return null
+  const a = accessEnd(role, s)
+  if (!a || a.until.getTime() > now.getTime()) return null
+  // в другом году дата кончается на «г.» — вторая точка не нужна
+  const day = dayLabel(a.until, now)
+  return a.source === 'plan'
+    ? {
+        source: 'plan',
+        title: 'Тариф закончился',
+        body: `${planName(a.plan)} · до ${day}${day.endsWith('.') ? '' : '.'} Всё сохранено`,
+        action: 'Продлить',
+      }
+    : { source: 'trial', title: 'Пробный период закончился', body: 'Всё сохранено', action: 'Выбрать тариф' }
 }

@@ -25,6 +25,20 @@ export interface NotificationView {
   title: string
   body?: string
   href?: string
+  /** Подпись кнопки-действия («Как оплатить», макет t9-2) — только вместе с href. */
+  action?: string
+}
+
+/**
+ * Имена тарифов внутри фразы — копия `planName` из domains/billing: этот файл
+ * читают чистый тест и сервер доставки, а дверь billing тянет клиент базы.
+ * Расхождение с каталогом ловит test-notifications.
+ */
+export const PLAN_NAMES: Record<string, string> = {
+  premium: 'Premium',
+  teacher_mini: 'Репетитор Mini',
+  teacher_start: 'Репетитор Start',
+  teacher_pro: 'Репетитор Pro',
 }
 
 const text = (v: unknown): string | undefined => (typeof v === 'string' && v.trim() ? v.trim() : undefined)
@@ -69,7 +83,9 @@ function giftLabel(months: unknown, days: unknown): string | undefined {
  *   referral_rewarded — пригласившему: подарок за коллегу (months, days,
  *     until) — PLAN.md Ф2.3;
  *   referral_paid — пригласившему: коллега оплатил, а своего тарифа нет —
- *     подарок ждёт его первой оплаты.
+ *     подарок ждёт его первой оплаты;
+ *   plan_ending / trial_ending — тариф (plan, until) или пробный (until)
+ *     кончается завтра — одно на дату окончания, PLAN.md Ф2.4.
  * Неизвестный вид (правило новее клиента) — не пустая строка, а заголовок из
  * данных или нейтральное «Новое уведомление».
  */
@@ -107,6 +123,19 @@ export function renderNotification(n: Pick<AppNotification, 'kind' | 'data'>): N
         body: 'Подарок добавим, когда оплатишь свой тариф',
         href: safeHref(d.href),
       }
+    case 'plan_ending':
+    case 'trial_ending': {
+      const until = dayFromData(d.until)
+      const plan = typeof d.plan === 'string' && Object.prototype.hasOwnProperty.call(PLAN_NAMES, d.plan) ? PLAN_NAMES[d.plan] : undefined
+      const href = safeHref(d.href)
+      const trial = n.kind === 'trial_ending'
+      return {
+        title: trial ? 'Пробный период закончится завтра' : 'Тариф закончится завтра',
+        body: until && `${trial ? 'Действует' : `${plan ?? 'Тариф'} действует`} до ${until}`,
+        href,
+        action: href && (trial ? 'Выбрать тариф' : 'Как оплатить'),
+      }
+    }
     default:
       return { title: text(d.title) ?? 'Новое уведомление', body: text(d.body), href: safeHref(d.href) }
   }

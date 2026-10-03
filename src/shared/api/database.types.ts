@@ -1558,6 +1558,18 @@ export type Database = {
       }
     }
     Functions: {
+      access_end: {
+        Args: {
+          p_expires: string
+          p_plan: string
+          p_role: string
+          p_trial: string
+        }
+        Returns: {
+          ends_at: string
+          source: string
+        }[]
+      }
       activity_total: {
         Args: { p_types: string[]; p_user: string }
         Returns: number
@@ -1835,6 +1847,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      notify_access_ending: { Args: { p_now: string }; Returns: number }
       plan_price: { Args: { p_plan: string }; Returns: number }
       quest_correct_answer: { Args: { p_id: string }; Returns: number }
       reassign_material: {
@@ -1880,6 +1893,7 @@ export type Database = {
           plan: string
         }[]
       }
+      rule_access_ending: { Args: never; Returns: number }
       run_notification_rules: { Args: never; Returns: Json }
       save_material_ai_review: {
         Args: { p_id: string; p_review: Json }

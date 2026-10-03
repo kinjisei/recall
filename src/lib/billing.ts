@@ -60,12 +60,24 @@ export interface MyPlan {
   can_write?: boolean
 }
 
+let inflight: Promise<MyPlan | null> | null = null
+
 /**
  * Свой тариф из БД. RPC get_my_plan может быть ещё не создана (миграция не
  * выполнена) или пользователь не авторизован — в обоих случаях просто null,
  * экран тарифов должен работать и без неё (публичная страница).
  */
-export async function getMyPlan(): Promise<MyPlan | null> {
+export function getMyPlan(): Promise<MyPlan | null> {
+  // одновременные вызовы делят один запрос: на Главной план разом просят
+  // меню профиля, сама Главная и плашка «Тариф закончился» (Ф2.4). Кэша нет —
+  // следующий вызов после ответа идёт в базу заново (энергия должна быть свежей)
+  inflight ??= readMyPlan().finally(() => {
+    inflight = null
+  })
+  return inflight
+}
+
+async function readMyPlan(): Promise<MyPlan | null> {
   try {
     const { data, error } = await supabase.rpc('get_my_plan')
     if (error || !data) return null

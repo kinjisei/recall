@@ -101,6 +101,14 @@
   `referral_reward` закрыты и от `authenticated`. `plan_price` — копия цен
   каталога клиента: меняешь цену — новая миграция (`test-referral.mjs`).
   Правила — `src/domains/billing/CLAUDE.md`, проверка — `check-referral.mjs`.
+- **Конец доступа — одно правило `access_end`** (миграция 0007): репетитору —
+  тариф репетитора или пробный, что позже; остальным — свой оплаченный
+  тариф. На нём `teacher_can_write` и правило будильника `access_ending`
+  (накануне конца, с 10:00 по Алматы, ключ — дата окончания).
+  `notify_access_ending(p_now)` берёт «сейчас» параметром — для проверки;
+  `access_end`, `notify_access_ending`, `rule_access_ending` закрыты и от
+  `authenticated`. Правила — `src/domains/billing/CLAUDE.md`, проверка —
+  `check-access-ending.mjs`.
 - **Ответ RPC — таблицей (`returns table`), а не `json`**, если его читает
   клиент: тогда `database.types.ts` даёт точный тип строки, и приведение
   `as unknown as` не нужно (архитектура §8). В `plpgsql` с `returns table`
@@ -130,6 +138,9 @@
   (миграция 0005) — там же.
 - `node scripts/check-referral.mjs` — рефералка (миграция 0006): весь путь,
   обходы, права — там же.
+- `node scripts/check-access-ending.mjs` — напоминание о конце тарифа
+  (миграция 0007): одно на дату, повтор — ноль, кому да и кому нет, клиент =
+  сервер — там же.
 - `node scripts/check-answermatches-sql.mjs` (вне CI, живая база) — сверка
   ответов в SQL (`norm_typed`) совпадает с клиентом (`lib/text.ts`).
 

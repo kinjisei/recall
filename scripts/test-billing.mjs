@@ -7,11 +7,16 @@
  *     сверка с сервером — check-billing.mjs;
  *   • что показать на «Как оплатить»: тарифы по роли и по ссылке, выбор сразу;
  *   • строка «Сейчас: …» и предупреждения владельцу перед «Подтвердить»;
- *   • сумма = цена × месяцы, а цена — та, что на странице тарифов.
+ *   • сумма = цена × месяцы, а цена — та, что на странице тарифов;
+ *   • конец доступа (Ф2.4): репетитору — тариф репетитора или пробный, что
+ *     позже, остальным — свой тариф; плашка «закончился» — только после
+ *     конца, ученику в студии — нет (сверка с базой — check-access-ending).
  * Чистый: без сети и базы.
  * Запуск: node scripts/test-billing.mjs
  */
 import {
+  accessEnd,
+  accessEndedNotice,
   addMonthsAlmaty,
   amountFor,
   confirmWarnings,
@@ -21,6 +26,7 @@ import {
   planNowLabel,
   PLANS,
   plansToPay,
+  planName,
   planShortTitle,
   teacherTrialStatus,
   termAfterPayment,
@@ -152,6 +158,87 @@ check(
   { kind: 'left', days: 5 },
 )
 check('старая база без полей пробного — как «отсчёт пошёл»', teacherTrialStatus(state('free', null, '2026-10-08T09:00:00+05:00'), now), { kind: 'left', days: 5 })
+
+// ── конец доступа: напоминание и плашка (Ф2.4) ─────────────────────────────────
+const at = (s) => (s ? iso(s) : null)
+const st = (plan, expires, trial, extra = {}) => ({ plan, plan_expires_at: at(expires), trial_until: at(trial), ...extra })
+const end = (a) => a && { ...a, until: a.until.toISOString() }
+check('имя тарифа во фразе — без точки', [planName('teacher_mini'), planName('premium')], ['Репетитор Mini', 'Premium'])
+check(
+  'репетитор на пробном — конец пробного',
+  end(accessEnd('teacher', st('free', null, '2026-10-16T10:00:00+05:00'))),
+  { source: 'trial', until: iso('2026-10-16T10:00:00+05:00') },
+)
+check(
+  'репетитор оплатил на пробном — тариф позже, держит он',
+  end(accessEnd('teacher', st('teacher_mini', '2026-11-16T10:00:00+05:00', '2026-10-16T10:00:00+05:00'))),
+  { source: 'plan', plan: 'teacher_mini', until: iso('2026-11-16T10:00:00+05:00') },
+)
+check(
+  'тариф репетитора кончился раньше пробного — держит пробный',
+  end(accessEnd('teacher', st('teacher_start', '2026-10-05T10:00:00+05:00', '2026-10-16T10:00:00+05:00'))),
+  { source: 'trial', until: iso('2026-10-16T10:00:00+05:00') },
+)
+check(
+  'репетитору Premium не в счёт (расписание он не открывает)',
+  end(accessEnd('teacher', st('premium', '2026-12-01T10:00:00+05:00', '2026-10-16T10:00:00+05:00'))),
+  { source: 'trial', until: iso('2026-10-16T10:00:00+05:00') },
+)
+check(
+  'самоучка с Premium — конец Premium, пробный не в счёт',
+  end(accessEnd('learner', st('premium', '2026-10-16T10:00:00+05:00', '2026-10-20T10:00:00+05:00'))),
+  { source: 'plan', plan: 'premium', until: iso('2026-10-16T10:00:00+05:00') },
+)
+check('ученик на пробном — не в счёт', accessEnd('learner', st('free', null, '2026-10-16T10:00:00+05:00')), null)
+check('репетитор без пробного и тарифа — ничего', accessEnd('teacher', st('free', null, null)), null)
+
+const later = new Date('2026-10-20T12:00:00+05:00')
+check(
+  'тариф репетитора кончился — «Тариф закончился», имя и дата',
+  accessEndedNotice('teacher', st('teacher_mini', '2026-10-16T10:00:00+05:00', '2026-09-01T10:00:00+05:00'), later),
+  { source: 'plan', title: 'Тариф закончился', body: 'Репетитор Mini · до 16 октября. Всё сохранено', action: 'Продлить' },
+)
+check(
+  'пробный кончился — «Пробный период закончился», «Выбрать тариф»',
+  accessEndedNotice('teacher', st('free', null, '2026-10-16T10:00:00+05:00'), later),
+  { source: 'trial', title: 'Пробный период закончился', body: 'Всё сохранено', action: 'Выбрать тариф' },
+)
+check(
+  'в день окончания до самого момента — тариф ещё действует, плашки нет',
+  accessEndedNotice('teacher', st('teacher_mini', '2026-10-16T14:30:00+05:00', null), new Date('2026-10-16T09:00:00+05:00')),
+  null,
+)
+check(
+  'в тот же день после момента — плашка',
+  accessEndedNotice('teacher', st('teacher_mini', '2026-10-16T14:30:00+05:00', null), new Date('2026-10-16T14:31:00+05:00'))?.title,
+  'Тариф закончился',
+)
+check(
+  'продлили — плашки нет',
+  accessEndedNotice('teacher', st('teacher_mini', '2026-11-16T10:00:00+05:00', '2026-09-01T10:00:00+05:00'), later),
+  null,
+)
+check(
+  'самоучке — про его Premium',
+  accessEndedNotice('learner', st('premium', '2026-10-16T10:00:00+05:00', null, { in_studio: false }), later)?.body,
+  'Premium · до 16 октября. Всё сохранено',
+)
+check(
+  'ученику в студии репетитора — ничего: его держит студия',
+  accessEndedNotice('learner', st('premium', '2026-10-16T10:00:00+05:00', null, { in_studio: true }), later),
+  null,
+)
+check('ученику без тарифа после пробного — ничего', accessEndedNotice('learner', st('free', null, '2026-10-01T10:00:00+05:00'), later), null)
+check(
+  'репетитору «в студии» (свой пул) плашка всё равно положена',
+  accessEndedNotice('teacher', st('free', null, '2026-10-16T10:00:00+05:00', { in_studio: true }), later)?.source,
+  'trial',
+)
+check(
+  'в другом году — с годом и без второй точки после «г.»',
+  accessEndedNotice('teacher', st('teacher_pro', '2026-12-20T10:00:00+05:00', null), new Date('2027-01-05T10:00:00+05:00'))?.body,
+  'Репетитор Pro · до 20 декабря 2026 г. Всё сохранено',
+)
 
 console.log(`\nИтог: ${total - fail}/${total}`)
 process.exitCode = fail ? 1 : 0
