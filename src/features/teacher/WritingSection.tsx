@@ -21,20 +21,15 @@ import {
   generateChartTask,
 } from '../../lib/writing'
 import type { StudentInfo } from '../../lib/teacher'
-import type {
-  AppLang,
-  CEFRLevel,
-  ChartSpec,
-  WritingMode,
-  WritingSettings,
-  WritingTask,
-  WritingTaskAssignment,
-} from '../../types'
+import type { ChartSpec, WritingSettings, WritingTask, WritingTaskAssignment } from '../../types'
 import { LEVELS, inputClass } from './materials/shared'
 import { ChartView } from '../../components/ChartView'
 import { WritingReviewScreen } from '../writing/WritingReviewScreen'
 import { AppLink } from '../../shared/ui/AppLink'
 import { RowsSkeleton } from '../../shared/ui/Loading'
+import { readDraft } from '../../shared/lib/drafts'
+import { DraftRestored } from '../../shared/ui/DraftRestored'
+import { WRITING_TASK_DRAFT, useWritingTaskDraft } from './useWritingTaskDraft'
 
 const CHART_KINDS: { id: ChartSpec['kind']; label: string }[] = [
   { id: 'bar', label: 'Столбцы' },
@@ -54,7 +49,10 @@ function chipCls(active: boolean) {
 }
 
 export function WritingSection({ students }: { students: StudentInfo[] }) {
-  const [screen, setScreen] = useState<'list' | 'form' | { task: WritingTask }>('list')
+  // есть черновик нового задания — сразу форма, иначе его не увидеть (Ф1.14)
+  const [screen, setScreen] = useState<'list' | 'form' | { task: WritingTask }>(() =>
+    readDraft(WRITING_TASK_DRAFT) ? 'form' : 'list',
+  )
   const { data: tasks, error, loading, reload } = useAsyncData<WritingTask[]>(
     () => listMyWritingTasks(),
     [],
@@ -141,18 +139,16 @@ function WritingForm({
   onCancel: () => void
   onCreated: (task: WritingTask) => void
 }) {
-  const [mode, setMode] = useState<WritingMode>('ielts')
-  const [lang, setLang] = useState<AppLang>('en')
-  const [level, setLevel] = useState<CEFRLevel>('B1')
-  const [ieltsTask, setIeltsTask] = useState<'task2' | 'gt1' | 'academic1'>('task2')
-  const [targetBand, setTargetBand] = useState('6.5')
-  const [chartKind, setChartKind] = useState<ChartSpec['kind']>('bar')
-  const [chartTopic, setChartTopic] = useState('')
-  const [chart, setChart] = useState<ChartSpec | null>(null)
-  const [prompt, setPrompt] = useState('')
-  const [targetWords, setTargetWords] = useState('')
-  const [targetGrammar, setTargetGrammar] = useState('')
-  const [minWords, setMinWords] = useState('150')
+  // форма — черновик до создания задания (Ф1.14, useWritingTaskDraft)
+  const w = useWritingTaskDraft()
+  const { mode, setMode, lang, setLang, level, setLevel, ieltsTask, setIeltsTask, targetBand, setTargetBand } = w
+  const { chartKind, setChartKind, chartTopic, setChartTopic, chart, setChart, prompt, setPrompt } = w
+  const { targetWords, setTargetWords, targetGrammar, setTargetGrammar, minWords, setMinWords, draft } = w
+  // «Отмена» — выбросить черновик; стрелка «К списку» его оставляет
+  const cancel = () => {
+    draft.clear()
+    onCancel()
+  }
   const [busy, setBusy] = useState<'gen' | 'chart' | 'save' | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -206,6 +202,7 @@ function WritingForm({
         prompt: prompt.trim(),
         settings,
       })
+      draft.forget()
       onCreated(task)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Не удалось создать')
@@ -216,6 +213,7 @@ function WritingForm({
   return (
     <div className="flex flex-col gap-3">
       <BackHeader onBack={onCancel} title="Новое письмо" label="К списку" />
+      {draft.restored && <DraftRestored onClear={draft.clear} />}
 
       <Card className="flex flex-col gap-3">
         <div>
@@ -366,7 +364,7 @@ function WritingForm({
           <Button className="flex-1" onClick={save} disabled={busy !== null || !prompt.trim()}>
             {busy === 'save' ? 'Создаю…' : 'Создать →'}
           </Button>
-          <Button variant="ghost" onClick={onCancel} disabled={busy !== null}>
+          <Button variant="ghost" onClick={cancel} disabled={busy !== null}>
             Отмена
           </Button>
         </div>

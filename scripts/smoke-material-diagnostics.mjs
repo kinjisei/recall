@@ -48,6 +48,12 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
  * вкладки «Ученики», и первый же поиск уводил со всей формы. Проверка при
  * этом честно краснела — но на другом шаге, и причина была неочевидна.
  */
+/** Ученик выбран в заявке: его кнопка подсвечена (класс выбранного чипа). */
+const studentChosen = (page) =>
+  page.evaluate(
+    (n) => [...document.querySelectorAll('button')].some((b) => b.textContent.includes(n) && b.className.includes('bg-accent-soft')),
+    STUDENT_NAME,
+  )
 const tap = async (page, text, sel = 'button, a, [role=button]', exact = false) => {
   const ok = await page.evaluate(
     (s, t, ex) => {
@@ -195,7 +201,7 @@ async function main() {
 
   // выбираем ученика и заполняем тему
   const picked = await tap(page, STUDENT_NAME, 'button, a, [role=button]', true)
-  check('ученик выбран', picked)
+  check('ученик выбран', picked && (await studentChosen(page)))
   const hint = await page.evaluate(() =>
     (document.body.innerText || '').includes('где этот ученик ошибается'),
   )
@@ -225,7 +231,13 @@ async function main() {
   await clearCalls()
   await page.goto(`${BASE}/teacher?tab=materials`, { waitUntil: 'networkidle2' })
   await sleep(2000)
+  // Мастер материала — черновик (Ф1.14): переход на вкладку возвращает к
+  // составленному плану. С чистого листа — «Очистить»; заодно уходит и
+  // выбранный ученик, он не должен перетечь в новую заявку.
+  check('вернулся на вкладку — составленный план на месте', await tap(page, 'Очистить'))
+  await sleep(500)
   await tap(page, 'Создать')
+  check('новая заявка — без прошлого ученика', !(await studentChosen(page)))
   await page.type('input[placeholder*="Путешествие"]', 'Поход в горы')
   await sleep(300)
   await tap(page, 'Составить план')

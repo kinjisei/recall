@@ -21,6 +21,9 @@ import {
 import { PlanView } from '../program/PlanView'
 import type { AppLang, StudyPlan } from '../../types'
 import { RowsSkeleton } from '../../shared/ui/Loading'
+import { useDraftForm } from '../../shared/lib/useDraft'
+import { readDraft } from '../../shared/lib/drafts'
+import { DraftRestored } from '../../shared/ui/DraftRestored'
 
 const LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1'] as const
 const WEEK_OPTIONS = [2, 3, 4, 6, 8] as const
@@ -28,9 +31,14 @@ const WEEK_OPTIONS = [2, 3, 4, 6, 8] as const
 const inputCls =
   'w-full rounded-lg border border-tint/[0.10] bg-input px-3 py-2 text-sm outline-none focus:border-accent-line'
 
+/** Черновик новой программы ученика по языку (PlanForm). */
+const programDraft = (studentId: string, lang: AppLang) => `program:${studentId}:${lang}`
+
 export function ProgramSection({ studentId }: { studentId: string }) {
   const [lang, setLang] = useState<AppLang>('en')
-  const [mode, setMode] = useState<'view' | 'form'>('view')
+  // есть черновик новой программы — сразу форма, иначе его не увидеть
+  const modeFor = (l: AppLang) => (readDraft(programDraft(studentId, l)) ? 'form' : 'view')
+  const [mode, setMode] = useState<'view' | 'form'>(() => modeFor('en'))
 
   // активная программа выбранного языка
   const load = useCallback(() => getActivePlan(studentId, lang), [studentId, lang])
@@ -48,7 +56,7 @@ export function ProgramSection({ studentId }: { studentId: string }) {
             key={l}
             onClick={() => {
               setLang(l)
-              setMode('view')
+              setMode(modeFor(l))
             }}
             className={`min-h-[36px] rounded-lg px-3 text-xs font-semibold ${
               lang === l
@@ -164,11 +172,22 @@ function PlanForm({
   onCancel?: () => void
   onSaved: () => void
 }) {
-  const [level, setLevel] = useState<string>('B1')
-  const [weeks, setWeeks] = useState<number>(4)
-  const [goal, setGoal] = useState('')
-  const [feedback, setFeedback] = useState('')
-  const [preview, setPreview] = useState<GeneratedPlan | null>(null)
+  // Форма и составленная AI программа — черновик (Ф1.14): перезагрузка не
+  // выбрасывает ни набранное, ни уже потраченную генерацию.
+  const [form, field, draft] = useDraftForm(programDraft(studentId, lang), {
+    level: 'B1',
+    weeks: 4,
+    goal: '',
+    feedback: '',
+    preview: null as GeneratedPlan | null,
+  })
+  const { level, weeks, goal, feedback, preview } = form
+  const [setLevel, setWeeks, setGoal] = [field('level'), field('weeks'), field('goal')]
+  const [setFeedback, setPreview] = [field('feedback'), field('preview')]
+  const cancel = () => {
+    draft.clear()
+    onCancel?.()
+  }
   const [busy, setBusy] = useState<'gen' | 'save' | null>(null)
   const [err, setErr] = useState<string | null>(null)
 
@@ -194,6 +213,7 @@ function PlanForm({
     setErr(null)
     try {
       await saveStudyPlan(req, preview)
+      draft.forget()
       onSaved()
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Не удалось сохранить')
@@ -204,6 +224,7 @@ function PlanForm({
 
   return (
     <div className="flex flex-col gap-3">
+      {draft.restored && <DraftRestored onClear={draft.clear} />}
       {!preview ? (
         <>
           <div className="grid grid-cols-2 gap-2">
@@ -250,7 +271,7 @@ function PlanForm({
               {busy === 'gen' ? 'Составляю (до минуты)…' : 'Составить программу (AI)'}
             </Button>
             {onCancel && (
-              <Button variant="ghost" className="px-3 py-2 text-sm" onClick={onCancel}>
+              <Button variant="ghost" className="px-3 py-2 text-sm" onClick={cancel}>
                 Отмена
               </Button>
             )}

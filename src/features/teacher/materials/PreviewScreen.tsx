@@ -12,6 +12,8 @@ import {
 } from '../../../lib/materials'
 import type { Material, MaterialPlan } from '../../../types'
 import { inputClass } from './shared'
+import { useDraft } from '../../../shared/lib/useDraft'
+import { DraftRestored } from '../../../shared/ui/DraftRestored'
 import { correctAnswerText } from '../../../lib/text'
 
 export function PreviewScreen({
@@ -32,7 +34,12 @@ export function PreviewScreen({
   onSaved: (material: Material) => void
   onBack: () => void
 }) {
-  const [feedback, setFeedback] = useState('')
+  // правки переживают перезагрузку; ушёл с экрана — стираются (Ф1.14)
+  const [feedback, setFeedback, draft] = useDraft('material-preview-feedback', '')
+  const back = () => {
+    draft.forget()
+    onBack()
+  }
   const [busy, setBusy] = useState<'regen' | 'save' | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -62,6 +69,7 @@ export function PreviewScreen({
     setError(null)
     try {
       onSaved(await saveMaterial(req, plan, content))
+      draft.forget()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Не удалось сохранить')
       setBusy(null)
@@ -72,7 +80,7 @@ export function PreviewScreen({
 
   return (
     <div className="flex flex-col gap-3">
-      <BackHeader onBack={onBack} title="Предпросмотр" label={own ? 'К форме' : 'К плану'} />
+      <BackHeader onBack={back} title="Предпросмотр" label={own ? 'К форме' : 'К плану'} />
 
       <Card>
         <p className="text-lg font-bold">{content.title}</p>
@@ -118,6 +126,7 @@ export function PreviewScreen({
         onChange={(e) => setFeedback(e.target.value)}
         disabled={busy !== null}
       />
+      {draft.restored && <DraftRestored onClear={draft.clear} />}
 
       {error && <p className="text-sm text-danger">{error}</p>}
 

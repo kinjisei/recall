@@ -29,6 +29,7 @@
 | `WritingSection.tsx`, `ReviewScreen.tsx` | письменные работы и проверка |
 | `ReportSheet.tsx`, `PrintSheet.tsx` | отчёт родителям и печать |
 | `AssignmentsPage.tsx` | экран ученика `/assignments` |
+| `useAnswerDraft.ts`, `useComposerDraft.ts`, `useReviewDraft.ts`, `useWritingTaskDraft.ts` | черновики: ответы домашки, сборка домашки, правки к разбору, письменное задание (Ф1.14) |
 | `src/lib/studentSignals.ts` | подписи и порядок строк списка учеников |
 | `src/lib/activityDays.ts` | дни с занятиями за окно (`activeDaysIn`) |
 | `src/lib/wordChecks.ts` | слова ученика со статусом (`getStudentWords`), перепроверка |
@@ -68,6 +69,20 @@
   учитель собрал бы новую поверх существующей. Остальные разделы карточки
   уже показывают `LoadError`; `loadAssignmentCounts` (для Главной ученика)
   при сбое бросает, а не отдаёт «0 заданий».
+
+**Набранное переживает перезагрузку** (PLAN.md Ф1.14)
+
+- Черновики (`shared/lib/useDraft`) до отправки: ответы домашки ученика,
+  сборка домашки (срок, пункты, записка), отчёт родителям, правки к разбору
+  работы (только ПРАВКИ — разбор AI и так на сервере), разбор сочинения,
+  письменное задание, форма и составленная AI программа, заявка на материал,
+  правки к плану и к тексту.
+- **Мастер материала — черновик целиком** (`material-flow`): план и текст
+  уже стоили генерации, перезагрузка не выбрасывает их. Стирается, когда
+  материал сохранён или «Очистить»; «Отмена» в форме тоже стирает.
+- Черновик, спрятанный за кнопкой, должен быть виден: есть черновик
+  программы или письменного задания — раздел сразу открывает форму; есть
+  черновик сборки — кнопка «Продолжить сборку».
 
 **Карточка ученика**
 
@@ -126,6 +141,8 @@
 - `node scripts/test-material-exercises.mjs` (чистый, в CI) — отсев
   несобираемых.
 - Карточка и сборка домашки — `smoke-homework-ui` (`features/homework/CLAUDE.md`).
+- `node scripts/smoke-drafts.mjs` — каждое поле учителя и ответы домашки
+  переживают перезагрузку; «Очистить» в мастере возвращает к списку.
 - `node scripts/smoke-offline.mjs` — студия и карточка ученика без связи:
   «Повторить», а не «Включи режим преподавателя» и не «Домашки нет».
 
@@ -143,7 +160,7 @@
 <!-- Пишет `npm run gen:docs` (scripts/gen/module-docs.mjs) по коду — руками не править. -->
 ## Из кода (сгенерировано)
 
-- **Файлы:** `AssignmentsPage.tsx`, `DailyPlanSection.tsx`, `DiagnosticsSection.tsx`, `GuideSection.tsx`, `HomeworkComposer.tsx`, `HomeworkSection.tsx`, `index.ts`, `materials/MaterialDetail.tsx`, `materials/MaterialsByLevel.tsx`, `materials/PlanScreen.tsx`, `materials/PreviewScreen.tsx`, `materials/RequestForm.tsx`, `materials/shared.ts`, `MaterialsSection.tsx`, `PlacementSection.tsx`, `PrintSheet.tsx`, `ProgramSection.tsx`, `QuestSection.tsx`, `ReportSheet.tsx`, `ReviewScreen.tsx`, `StudentWordsSection.tsx`, `TeacherBlock.tsx`, `TeacherPage.tsx`, `WordPicker.tsx`, `WritingSection.tsx`
+- **Файлы:** `AssignmentsPage.tsx`, `DailyPlanSection.tsx`, `DiagnosticsSection.tsx`, `GuideSection.tsx`, `HomeworkComposer.tsx`, `HomeworkSection.tsx`, `index.ts`, `materials/MaterialDetail.tsx`, `materials/MaterialsByLevel.tsx`, `materials/PlanScreen.tsx`, `materials/PreviewScreen.tsx`, `materials/RequestForm.tsx`, `materials/shared.ts`, `MaterialsSection.tsx`, `PlacementSection.tsx`, `PrintSheet.tsx`, `ProgramSection.tsx`, `QuestSection.tsx`, `ReportSheet.tsx`, `ReviewScreen.tsx`, `StudentWordsSection.tsx`, `TeacherBlock.tsx`, `TeacherPage.tsx`, `useAnswerDraft.ts`, `useComposerDraft.ts`, `useReviewDraft.ts`, `useWritingTaskDraft.ts`, `WordPicker.tsx`, `WritingSection.tsx`
 - **Вне папки (указатель «Описание:» в начале файла):** `src/lib/activityDays.ts`, `src/lib/diagnosticsBrief.ts`, `src/lib/materialExercises.ts`, `src/lib/studentSignals.ts`, `src/lib/wordChecks.ts`
 - **Адреса:** `/teacher`, `/assignments`
 - **Таблицы:** `cards`, `decks`, `review_states`, `word_checks`

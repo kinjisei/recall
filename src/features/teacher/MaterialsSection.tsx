@@ -22,7 +22,10 @@ import { useScrollTop } from '../../lib/useScrollTop'
 import { useUrlState } from '../../shared/lib/useUrlState'
 import type { Material, MaterialAssignment, MaterialPlan } from '../../types'
 import { MaterialsByLevel } from './materials/MaterialsByLevel'
-import { RequestForm } from './materials/RequestForm'
+import { REQUEST_DRAFT, RequestForm } from './materials/RequestForm'
+import { useDraft } from '../../shared/lib/useDraft'
+import { clearDraft } from '../../shared/lib/drafts'
+import { DraftRestored } from '../../shared/ui/DraftRestored'
 import { PlanScreen } from './materials/PlanScreen'
 import { PreviewScreen } from './materials/PreviewScreen'
 import { MaterialDetail } from './materials/MaterialDetail'
@@ -43,7 +46,17 @@ export function MaterialsSection({
   /** Позвать, когда число работ «на проверку» могло измениться (для бейджа вкладки). */
   onWorksChanged?: () => void
 }) {
-  const [mode, setMode] = useState<Mode>({ name: 'list' })
+  // Шаги мастера — черновик (Ф1.14): план и текст уже стоили генерации AI, и
+  // перезагрузка (новая версия включается сразу) не должна их выбрасывать.
+  // null — список; стирается, когда материал сохранён или работу выбросили.
+  const [flow, setFlow, flowDraft] = useDraft<Mode | null>('material-flow', null)
+  const mode: Mode = flow ?? { name: 'list' }
+  const setMode = (m: Mode) => setFlow(m.name === 'list' ? null : m)
+  const discard = () => {
+    flowDraft.clear()
+    clearDraft(REQUEST_DRAFT)
+  }
+  const restoredNote = flowDraft.restored && <DraftRestored onClear={discard} className="mb-3" />
   // список → форма → предпросмотр → материал: каждый шаг с верха экрана
   useScrollTop(mode.name)
 
@@ -51,9 +64,9 @@ export function MaterialsSection({
   // материалов, а не выбрасывает из студии, и на материал можно дать ссылку.
   //
   // ⚠️ Шаги мастера генерации (plan, preview) в адрес НЕ выносим сознательно:
-  // они держат в памяти уже сгенерированный AI-ответ, восстановить его по
-  // ссылке нельзя. Адресуемая ссылка открывала бы пустой мастер и выглядела
-  // как поломка — честнее, чтобы этих шагов в истории не было.
+  // они держат уже сгенерированный AI-ответ (на этом устройстве — в черновике),
+  // восстановить его по ссылке нельзя. Адресуемая ссылка открывала бы пустой
+  // мастер и выглядела как поломка — честнее, чтобы этих шагов в истории не было.
   const [matId, setMatId] = useUrlState('mat')
   // какую именно работу открыть на проверке (вход из блока «На проверку»);
   // в адрес не выносим — это указание «открой сразу проверку», а не место
@@ -126,33 +139,41 @@ export function MaterialsSection({
   }
   if (mode.name === 'plan') {
     return (
-      <PlanScreen
-        req={mode.req}
-        plan={mode.plan}
-        onBack={() => setMode({ name: 'form' })}
-        onReplanned={(plan) => setMode({ ...mode, plan })}
-        onGenerated={(content) => setMode({ name: 'preview', req: mode.req, plan: mode.plan, content })}
-      />
+      <>
+        {restoredNote}
+        <PlanScreen
+          req={mode.req}
+          plan={mode.plan}
+          onBack={() => setMode({ name: 'form' })}
+          onReplanned={(plan) => setMode({ ...mode, plan })}
+          onGenerated={(content) => setMode({ name: 'preview', req: mode.req, plan: mode.plan, content })}
+        />
+      </>
     )
   }
   if (mode.name === 'preview') {
     return (
-      <PreviewScreen
-        req={mode.req}
-        plan={mode.plan}
-        content={mode.content}
-        own={mode.own}
-        onRegenerated={(content) => setMode({ ...mode, content })}
-        onSaved={(material) => {
-          reload()
-          setMatId(material.id)
-        }}
-        onBack={() =>
-          mode.own
-            ? setMode({ name: 'form' })
-            : setMode({ name: 'plan', req: mode.req, plan: mode.plan })
-        }
-      />
+      <>
+        {restoredNote}
+        <PreviewScreen
+          req={mode.req}
+          plan={mode.plan}
+          content={mode.content}
+          own={mode.own}
+          onRegenerated={(content) => setMode({ ...mode, content })}
+          onSaved={(material) => {
+            flowDraft.forget()
+            clearDraft(REQUEST_DRAFT)
+            reload()
+            setMatId(material.id)
+          }}
+          onBack={() =>
+            mode.own
+              ? setMode({ name: 'form' })
+              : setMode({ name: 'plan', req: mode.req, plan: mode.plan })
+          }
+        />
+      </>
     )
   }
   const pending = works ?? []

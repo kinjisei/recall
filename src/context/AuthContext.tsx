@@ -9,6 +9,7 @@ import {
 import type { Session, User } from '@supabase/supabase-js'
 import { supabase } from '../shared/api/supabase'
 import { isConnectionError } from '../shared/api/connection'
+import { purgeOldDrafts, setDraftOwner } from '../shared/lib/drafts'
 import { clearUserLocalData } from '../lib/profile'
 
 interface AuthContextValue {
@@ -35,6 +36,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data, error }) => {
+      // Черновики набранного — свои у каждого, кто вошёл (PLAN.md Ф1.14).
+      // Владельца ставим ДО отрисовки экранов, чтобы они сразу нашли свой.
+      setDraftOwner(data.session?.user.id ?? null)
+      purgeOldDrafts()
       setSession(data.session)
       // Истёкший вход без сети не обновить: клиент ~30 с повторяет попытки и
       // отдаёт «сессии нет», а сам вход хранит. Раньше это вело на форму
@@ -46,6 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setDraftOwner(newSession?.user.id ?? null)
       setSession(newSession)
       // связь вернулась и вход обновился сам — приложение открывается без «Повторить»
       if (newSession) setOffline(false)

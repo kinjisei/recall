@@ -16,6 +16,8 @@ import { REGULARITY_WINDOW } from '../../lib/activityDays'
 import { RowsSkeleton } from '../../shared/ui/Loading'
 import { LoadError } from '../../shared/ui/LoadError'
 import { useAsyncData } from '../../shared/lib/useAsyncData'
+import { readDraft } from '../../shared/lib/drafts'
+import { composerDraft } from './useComposerDraft'
 import { IconCheck, IconFlame, IconSparkle } from '../../shared/ui/icons'
 import {
   KIND_LABEL,
@@ -98,6 +100,8 @@ export function HomeworkSection({
   if (error) {
     return <LoadError message={error} onRetry={reload} />
   }
+  // сборка не выдана, а черновик жив — кнопка зовёт его продолжить (Ф1.14)
+  const composing = readDraft(composerDraft(studentId)) !== null
 
   if (loading) {
     return (
@@ -120,7 +124,7 @@ export function HomeworkSection({
             Между уроками ученик занимается сам — или не занимается. Домашка на неделю решает,
             что именно он откроет.
           </p>
-          <ComposeButton onClick={onCompose} label="Собрать домашку" />
+          <ComposeButton onClick={onCompose} label={composing ? 'Продолжить сборку' : 'Собрать домашку'} />
         </div>
       ) : (
         <div className="flex flex-col gap-3">
@@ -158,7 +162,7 @@ export function HomeworkSection({
             </p>
           )}
 
-          <ComposeButton onClick={onCompose} label="Собрать новую домашку" />
+          <ComposeButton onClick={onCompose} label={composing ? 'Продолжить сборку' : 'Собрать новую домашку'} />
         </div>
       )}
     </div>

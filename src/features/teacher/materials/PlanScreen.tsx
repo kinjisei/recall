@@ -11,6 +11,8 @@ import {
 } from '../../../lib/materials'
 import type { MaterialPlan } from '../../../types'
 import { inputClass } from './shared'
+import { useDraft } from '../../../shared/lib/useDraft'
+import { DraftRestored } from '../../../shared/ui/DraftRestored'
 
 export function PlanScreen({
   req,
@@ -25,7 +27,12 @@ export function PlanScreen({
   onReplanned: (plan: MaterialPlan) => void
   onGenerated: (content: MaterialContent) => void
 }) {
-  const [feedback, setFeedback] = useState('')
+  // правки переживают перезагрузку; ушёл с экрана — стираются (Ф1.14)
+  const [feedback, setFeedback, draft] = useDraft('material-plan-feedback', '')
+  const back = () => {
+    draft.forget()
+    onBack()
+  }
   const [busy, setBusy] = useState<'replan' | 'generate' | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -47,6 +54,7 @@ export function PlanScreen({
     setError(null)
     try {
       onGenerated(await generateMaterialContent(req, plan, feedback.trim() || undefined))
+      draft.forget()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Ошибка')
     } finally {
@@ -56,7 +64,7 @@ export function PlanScreen({
 
   return (
     <div className="flex flex-col gap-3">
-      <BackHeader onBack={onBack} title="План материала от AI" label="К форме" />
+      <BackHeader onBack={back} title="План материала от AI" label="К форме" />
 
       <Card className="flex flex-col gap-3">
         <p className="whitespace-pre-wrap text-sm text-fg-secondary">
@@ -99,6 +107,7 @@ export function PlanScreen({
         onChange={(e) => setFeedback(e.target.value)}
         disabled={busy !== null}
       />
+      {draft.restored && <DraftRestored onClear={draft.clear} />}
 
       {error && <p className="text-sm text-danger">{error}</p>}
 

@@ -24,6 +24,8 @@ import { IconClose, IconPlus, IconSparkle, IconTrash } from '../../shared/ui/ico
 import { KIND_LABEL, createHomework, type HomeworkKind } from '../../lib/homework'
 import { countableItems, MAX_ITEMS } from '../../lib/homeworkRules'
 import { suggestHomework, type SuggestedItem } from '../../lib/homeworkSuggest'
+import { DraftRestored } from '../../shared/ui/DraftRestored'
+import { useComposerDraft } from './useComposerDraft'
 import { plural } from '../../shared/lib/plural'
 import type { AppLang } from '../../types'
 
@@ -93,9 +95,7 @@ export function HomeworkComposer({
   onClose: () => void
   onCreated: () => void
 }) {
-  const [due, setDue] = useState(isoDatePlus(DEFAULT_DAYS))
-  const [note, setNote] = useState('')
-  const [items, setItems] = useState<SuggestedItem[]>(STARTER)
+  const { due, setDue, note, setNote, items, setItems, draft } = useComposerDraft(studentId, isoDatePlus(DEFAULT_DAYS), STARTER)
   const [busy, setBusy] = useState(false)
   const [picking, setPicking] = useState(false)
   const [picked, setPicked] = useState<null | { fromAi: boolean; days: number }>(null)
@@ -151,6 +151,7 @@ export function HomeworkComposer({
         })),
         note: note.trim() || undefined,
       })
+      draft.forget()
       onCreated()
       onClose()
     } catch (e) {
@@ -180,6 +181,7 @@ export function HomeworkComposer({
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 py-4">
+          {draft.restored && <DraftRestored onClear={draft.clear} className="mb-3" />}
           <label htmlFor="hw-due" className="block text-sm font-medium">
             Сдать до
           </label>

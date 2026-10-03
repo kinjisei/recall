@@ -21,6 +21,7 @@ import { celebrate } from '../../shared/ui/Confetti'
 import { chat } from '../../shared/api/ai'
 import { logActivity } from '../../lib/activity'
 import { useAsyncData } from '../../shared/lib/useAsyncData'
+import { useDraft } from '../../shared/lib/useDraft'
 import { useUrlState } from '../../shared/lib/useUrlState'
 import {
   listMyQuests,
@@ -152,7 +153,8 @@ function QuestChat({ quest, onBack }: { quest: GrammarQuest; onBack: () => void 
   const [msgs, setMsgs] = useState<ChatTurn[]>(quest.messages ?? [])
   const [progress, setProgress] = useState(quest.progress)
   const [completed, setCompleted] = useState(quest.status === 'completed')
-  const [input, setInput] = useState('')
+  // реплика переживает перезагрузку, пока не отправлена (Ф1.14)
+  const [input, setInput, inputDraft] = useDraft(`quest:${quest.id}`, '')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const startedRef = useRef(false)
@@ -287,6 +289,7 @@ function QuestChat({ quest, onBack }: { quest: GrammarQuest; onBack: () => void 
           style={barStyle}
           value={input}
           onChange={setInput}
+          draft={inputDraft}
           onSubmit={send}
           busy={busy}
           label={quest.lang === 'es' ? 'Ответ по-испански' : 'Ответ по-английски'}

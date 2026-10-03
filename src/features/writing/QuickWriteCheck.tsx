@@ -15,6 +15,8 @@ import { Card } from '../../shared/ui/Card'
 import { Button } from '../../shared/ui/Button'
 import { BackHeader } from '../../shared/ui/BackButton'
 import { useAuth } from '../../context/AuthContext'
+import { useDraft } from '../../shared/lib/useDraft'
+import { DraftRestored } from '../../shared/ui/DraftRestored'
 import { chat } from '../../shared/api/ai'
 import { supabase } from '../../shared/api/supabase'
 import { logActivity } from '../../lib/activity'
@@ -64,7 +66,8 @@ export function QuickWriteCheck({
   onBack: () => void
 }) {
   const { user } = useAuth()
-  const [text, setText] = useState('')
+  // черновик переживает перезагрузку до проверки (Ф1.14)
+  const [text, setText, draft] = useDraft(`quickcheck:${lang}`, '')
   const [feedback, setFeedback] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -81,6 +84,7 @@ export function QuickWriteCheck({
         task: 'writing',
       })
       setFeedback(fb)
+      draft.forget()
       void logActivity('writing')
       if (user) {
         // сохраняем в фоне: кнопка не должна ждать записи в базу
@@ -121,6 +125,7 @@ export function QuickWriteCheck({
         onChange={(e) => setText(e.target.value)}
         disabled={busy}
       />
+      {draft.restored && <DraftRestored onClear={draft.clear} />}
 
       <Button onClick={check} disabled={busy || !text.trim()}>
         {busy ? 'Проверяю…' : 'Проверить'}

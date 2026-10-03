@@ -307,12 +307,6 @@
     }
   },
   "src/features/teacher/AssignmentsPage.tsx": {
-    "react-hooks/immutability": {
-      "count": 2
-    },
-    "react-hooks/refs": {
-      "count": 1
-    },
     "react-hooks/set-state-in-effect": {
       "count": 1
     }

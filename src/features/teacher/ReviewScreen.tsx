@@ -4,6 +4,8 @@
 // с комментарием, затем завершает проверку (статус reviewed).
 // ============================================================================
 import { useEffect, useRef, useState } from 'react'
+import { DraftRestored } from '../../shared/ui/DraftRestored'
+import { useReviewDraft } from './useReviewDraft'
 import { BackButton } from '../../shared/ui/BackButton'
 import { Reveal } from '../../shared/ui/Reveal'
 import { Card } from '../../shared/ui/Card'
@@ -37,15 +39,16 @@ export function ReviewScreen({
   onBack: () => void
 }) {
   const alreadyReviewed = assignment.status === 'reviewed'
-  const [review, setReview] = useState<ReviewItem[] | null>(
+  const [base, setReview] = useState<ReviewItem[] | null>(
     alreadyReviewed ? assignment.teacher_review : assignment.ai_review,
   )
+  // правки учителя и записка переживают перезагрузку до сохранения (Ф1.14)
+  const { review, setItem, note: reassignNote, setNote: setReassignNote, draft } = useReviewDraft(assignment.id, base)
   const [aiBusy, setAiBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [showBody, setShowBody] = useState(false)
   const [reassignOpen, setReassignOpen] = useState(false)
-  const [reassignNote, setReassignNote] = useState('')
   const [reassignBusy, setReassignBusy] = useState(false)
 
   // Первичный AI-разбор (один раз). requestedRef защищает от двойного вызова
@@ -74,18 +77,13 @@ export function ReviewScreen({
   const answers = assignment.answers ?? []
   const okCount = (review ?? []).filter((r) => r.ok).length
 
-  const setItem = (index: number, patch: Partial<ReviewItem>) => {
-    setReview((arr) =>
-      (arr ?? []).map((r) => (r.index === index ? { ...r, ...patch } : r)),
-    )
-  }
-
   const finish = async () => {
     if (!review) return
     setSaving(true)
     setError(null)
     try {
       await finishReview(assignment.id, review)
+      draft.forget()
       onDone()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Не удалось сохранить проверку')
@@ -98,6 +96,7 @@ export function ReviewScreen({
     setError(null)
     try {
       await reassignAssignment(assignment, reassignNote)
+      draft.forget()
       onDone()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Не удалось переназначить')
@@ -121,6 +120,7 @@ export function ReviewScreen({
           </p>
         </div>
       </div>
+      {draft.restored && <DraftRestored onClear={draft.clear} />}
 
       <button
         onClick={() => setShowBody((s) => !s)}

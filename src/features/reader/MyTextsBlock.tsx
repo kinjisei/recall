@@ -5,6 +5,8 @@
 // Хранение и парсинг файлов — lib/myTexts (локально, лимит 15 000 знаков).
 // ============================================================================
 import { useRef, useState } from 'react'
+import { useDraft } from '../../shared/lib/useDraft'
+import { DraftRestored } from '../../shared/ui/DraftRestored'
 import { Card } from '../../shared/ui/Card'
 import { Button } from '../../shared/ui/Button'
 import { BackHeader } from '../../shared/ui/BackButton'
@@ -83,8 +85,11 @@ export function AddTextForm({
   lang: AppLang
   onDone: (opened: MyText | null) => void
 }) {
-  const [title, setTitle] = useState('')
-  const [body, setBody] = useState('')
+  // черновик переживает перезагрузку, пока текст не сохранён (Ф1.14)
+  const [form, setForm, draft] = useDraft(`mytext:${lang}`, { title: '', body: '' })
+  const { title, body } = form
+  const setTitle = (v: string) => setForm((f) => ({ ...f, title: v }))
+  const setBody = (v: string) => setForm((f) => ({ ...f, body: v }))
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -95,8 +100,7 @@ export function AddTextForm({
     setErr(null)
     try {
       const text = await extractFileText(file)
-      setBody(text)
-      if (!title) setTitle(file.name.replace(/\.(pdf|docx|txt)$/i, ''))
+      setForm((f) => ({ body: text, title: f.title || file.name.replace(/\.(pdf|docx|txt)$/i, '') }))
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Не удалось прочитать файл')
     } finally {
@@ -110,6 +114,7 @@ export function AddTextForm({
       return
     }
     const t = addMyText(lang, title, body)
+    draft.forget()
     onDone(t)
   }
 
@@ -137,6 +142,7 @@ export function AddTextForm({
         aria-label="Текст"
         className="rounded-xl border border-tint/[0.10] bg-input px-4 py-2.5 text-[15px] leading-relaxed outline-none focus:border-accent-line"
       />
+      {draft.restored && <DraftRestored onClear={draft.clear} />}
       {body.length > MY_TEXT_LIMIT && (
         <p className="text-xs text-warning-strong">
           Текст длиннее лимита — сохранятся первые {MY_TEXT_LIMIT.toLocaleString('ru-RU')} знаков.

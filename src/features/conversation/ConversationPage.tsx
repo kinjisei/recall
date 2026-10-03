@@ -16,6 +16,7 @@ import { useAuth } from '../../context/AuthContext'
 import { startNewChat } from '../../lib/chatHistory'
 import { LoadError } from '../../shared/ui/LoadError'
 import { useLastChat } from './useLastChat'
+import { useDraft } from '../../shared/lib/useDraft'
 import { Loading } from '../../shared/ui/Loading'
 import { useLanguage } from '../../context/LanguageContext'
 import { getEsLevel } from '../../lib/esLevel'
@@ -199,7 +200,7 @@ function ChatSection({
 }) {
   const { user } = useAuth()
   const [msgs, setMsgs] = useState<ChatTurn[]>([])
-  const [input, setInput] = useState('')
+  const [input, setInput, inputDraft] = useDraft(`chat:${lang}`, '') // переживает перезагрузку (Ф1.14)
   const [busy, setBusy] = useState(false)
   // Пошёл поток ответа: «печатает» сменяется растущей репликой. busy при этом
   // остаётся true — второе сообщение отправить нельзя, пока ответ не дописан.
@@ -215,18 +216,7 @@ function ChatSection({
   const { listRef, barRef, height, barStyle } = useChatList(kb, [msgs, busy])
 
   // Прошлая переписка этого языка (useLastChat); не поднялась — так и говорим.
-  const history = useLastChat(
-    user?.id,
-    lang,
-    () => {
-      convIdRef.current = null
-      setMsgs([])
-    },
-    (prev) => {
-      convIdRef.current = prev.id
-      setMsgs(prev.turns)
-    },
-  )
+  const history = useLastChat(user?.id, lang, setMsgs, convIdRef)
 
   // Сохраняем реплики в БД; сбой сохранения не должен ломать сам чат.
   //
@@ -383,6 +373,7 @@ function ChatSection({
         style={barStyle}
         value={input}
         onChange={setInput}
+        draft={inputDraft}
         onSubmit={send}
         busy={busy}
         label={lang === 'es' ? 'Сообщение по-испански' : 'Сообщение по-английски'}

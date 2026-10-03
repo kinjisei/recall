@@ -15,6 +15,8 @@
 // ============================================================================
 import { forwardRef, type CSSProperties, type FormEvent, type ReactNode } from 'react'
 import { IconSend } from './icons'
+import { DraftRestored } from './DraftRestored'
+import type { DraftControls } from '../lib/useDraft'
 
 /** Скруглённое окно ленты: сам список скроллится внутри (ref — на него). */
 export const ChatWindow = forwardRef<HTMLDivElement, { height: number | null; children: ReactNode }>(
@@ -65,8 +67,10 @@ export const ChatInputBar = forwardRef<
     placeholder: string
     label: string
     after?: ReactNode
+    /** Черновик поля (useDraft): вернулся после перезагрузки — строка «Черновик восстановлен». */
+    draft?: DraftControls
   }
->(function ChatInputBar({ style, value, onChange, onSubmit, busy, placeholder, label, after }, ref) {
+>(function ChatInputBar({ style, value, onChange, onSubmit, busy, placeholder, label, after, draft }, ref) {
   return (
     <div ref={ref} className="fixed inset-x-0 z-30 mx-auto max-w-screen-sm px-4 pb-2 pt-2" style={style}>
       <form
@@ -90,6 +94,7 @@ export const ChatInputBar = forwardRef<
           <IconSend size={18} />
         </button>
       </form>
+      {draft?.restored && <DraftRestored onClear={draft.clear} className="mt-1.5 justify-center" />}
       {after}
     </div>
   )

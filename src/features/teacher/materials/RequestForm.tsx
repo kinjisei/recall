@@ -17,6 +17,11 @@ import { MY_TEXT_LIMIT } from '../../../lib/myTexts'
 import type { AppLang, CEFRLevel, MaterialPlan } from '../../../types'
 import type { StudentInfo } from '../../../lib/teacher'
 import { LEVELS, inputClass } from './shared'
+import { useDraftForm } from '../../../shared/lib/useDraft'
+import { DraftRestored } from '../../../shared/ui/DraftRestored'
+
+/** Черновик заявки — его стирает и MaterialsSection, когда материал сохранён. */
+export const REQUEST_DRAFT = 'material-request'
 
 export function RequestForm({
   students,
@@ -31,17 +36,29 @@ export function RequestForm({
   /** «Мой текст»: упражнения готовы, сразу в предпросмотр (плана нет). */
   onOwnGenerated: (req: MaterialRequest, plan: MaterialPlan, content: MaterialContent) => void
 }) {
-  const [source, setSource] = useState<'generate' | 'own'>('generate')
-  const [lang, setLang] = useState<AppLang>('en')
-  const [level, setLevel] = useState<CEFRLevel>('A2')
-  const [topic, setTopic] = useState('')
-  const [format, setFormat] = useState<string>(MATERIAL_FORMATS[0])
-  const [lengthRange, setLengthRange] = useState<MaterialRequest['lengthRange']>('100-250')
-  const [vocabulary, setVocabulary] = useState('')
-  const [grammar, setGrammar] = useState('')
-  const [body, setBody] = useState('')
-  // Кому адресован материал. null — «всем»: старое поведение, материал общий.
-  const [studentId, setStudentId] = useState<string | null>(null)
+  // Заявка — черновик (Ф1.14): переживает перезагрузку и «назад» из плана;
+  // стирается при отмене и когда материал сохранён (MaterialsSection).
+  const [form, field, draft] = useDraftForm(REQUEST_DRAFT, {
+    source: 'generate' as 'generate' | 'own',
+    lang: 'en' as AppLang,
+    level: 'A2' as CEFRLevel,
+    topic: '',
+    format: MATERIAL_FORMATS[0] as string,
+    lengthRange: '100-250' as MaterialRequest['lengthRange'],
+    vocabulary: '',
+    grammar: '',
+    body: '',
+    // Кому адресован материал. null — «всем»: старое поведение, материал общий.
+    studentId: null as string | null,
+  })
+  const { source, lang, level, topic, format, lengthRange, vocabulary, grammar, body, studentId } = form
+  const [setSource, setLang, setLevel, setTopic] = [field('source'), field('lang'), field('level'), field('topic')]
+  const [setFormat, setLengthRange, setVocabulary] = [field('format'), field('lengthRange'), field('vocabulary')]
+  const [setGrammar, setBody, setStudentId] = [field('grammar'), field('body'), field('studentId')]
+  const cancel = () => {
+    draft.clear()
+    onCancel()
+  }
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -94,6 +111,7 @@ export function RequestForm({
   return (
     <Card className="flex flex-col gap-3">
       <p className="font-semibold">Новый материал</p>
+      {draft.restored && <DraftRestored onClear={draft.clear} />}
 
       <div>
         <p className="mb-1 text-xs font-semibold text-fg-muted">Источник текста</p>
@@ -233,7 +251,7 @@ export function RequestForm({
           <Button className="flex-1" onClick={submit} disabled={busy || !topic.trim()}>
             {busy ? 'AI составляет план…' : 'Составить план →'}
           </Button>
-          <Button variant="ghost" onClick={onCancel} disabled={busy}>
+          <Button variant="ghost" onClick={cancel} disabled={busy}>
             Отмена
           </Button>
         </div>
@@ -242,7 +260,7 @@ export function RequestForm({
           <Button className="flex-1" onClick={submitOwn} disabled={busy || body.trim().length < 40}>
             {busy ? 'AI собирает упражнения…' : 'Составить упражнения →'}
           </Button>
-          <Button variant="ghost" onClick={onCancel} disabled={busy}>
+          <Button variant="ghost" onClick={cancel} disabled={busy}>
             Отмена
           </Button>
         </div>

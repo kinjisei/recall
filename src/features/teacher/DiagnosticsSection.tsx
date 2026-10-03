@@ -179,6 +179,7 @@ export function DiagnosticsSection({
       </Button>
       {showReport && (
         <ReportSheet
+          studentId={studentId}
           diag={diag}
           studentName={studentName}
           topicTitle={(lng, id) => titles.get(`${lng}:${id}`)?.title ?? `тема №${id}`}

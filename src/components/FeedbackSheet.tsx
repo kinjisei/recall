@@ -15,10 +15,13 @@ import { Button } from '../shared/ui/Button'
 import { IconCheck, IconClose, IconThumbsUp } from '../shared/ui/icons'
 import { FEEDBACK_MAX, sendFeedback } from '../lib/feedback'
 import { describeDbError } from '../shared/api/errors'
+import { useDraft } from '../shared/lib/useDraft'
+import { DraftRestored } from '../shared/ui/DraftRestored'
 
 export function FeedbackSheet({ where, onClose }: { where: string; onClose: () => void }) {
   const [rating, setRating] = useState<'up' | 'down' | null>(null)
-  const [text, setText] = useState('')
+  // текст переживает перезагрузку, пока отзыв не отправлен (Ф1.14)
+  const [text, setText, draft] = useDraft(`feedback:${where}`, '')
   const [contact, setContact] = useState('')
   const [state, setState] = useState<'idle' | 'busy' | 'sent'>('idle')
   const [error, setError] = useState<string | null>(null)
@@ -30,6 +33,7 @@ export function FeedbackSheet({ where, onClose }: { where: string; onClose: () =
     try {
       await sendFeedback({ rating, text, contact, where })
       setState('sent')
+      draft.forget()
       // Закрываем сами: держать шторку после «спасибо» незачем, но и захлопывать
       // мгновенно нельзя — человек должен успеть увидеть, что дошло.
       setTimeout(onClose, 1400)
@@ -106,9 +110,12 @@ export function FeedbackSheet({ where, onClose }: { where: string; onClose: () =
               placeholder="Например: не нашёл, где смотреть свои ошибки"
               className="mt-1.5 w-full resize-none rounded-xl bg-input px-3 py-2.5 text-[15px] outline-none ring-1 ring-control-line focus:ring-1 focus:ring-accent-line"
             />
-            <p className="mt-1 text-right text-xs text-fg-muted">
-              {text.length} / {FEEDBACK_MAX}
-            </p>
+            <div className="mt-1 flex items-center justify-between gap-2">
+              {draft.restored ? <DraftRestored onClear={draft.clear} /> : <span />}
+              <p className="text-xs text-fg-muted">
+                {text.length} / {FEEDBACK_MAX}
+              </p>
+            </div>
 
             <label htmlFor="fb-contact" className="mt-2 block text-sm text-fg-secondary">
               Куда ответить <span className="text-fg-muted">— если нужен ответ</span>

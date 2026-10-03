@@ -25,6 +25,8 @@ import { MarkableText } from '../../components/MarkableText'
 import { logActivity } from '../../lib/activity'
 import { useAsyncData } from '../../shared/lib/useAsyncData'
 import { LoadError } from '../../shared/ui/LoadError'
+import { DraftRestored } from '../../shared/ui/DraftRestored'
+import { useAnswerDraft } from './useAnswerDraft'
 import { IconTray } from '../../shared/ui/icons'
 import {
   getMyAssignments,
@@ -37,7 +39,6 @@ import { useUrlStates } from '../../shared/lib/useUrlState'
 import { RowsSkeleton } from '../../shared/ui/Loading'
 import type {
   AppLang,
-  AssignmentAnswer,
   Material,
   MaterialAssignment,
 } from '../../types'
@@ -56,8 +57,6 @@ const STAGES: string[] = ['read', 'exercises', 'review']
 const URL_KEYS = ['a', 'stage']
 
 /** Черновик прохождения: что уже отвечено и на каком упражнении человек стоит. */
-type Draft = { answers: Record<number, AssignmentAnswer>; index: number }
-
 export function AssignmentsPage() {
   const navigate = useNavigate()
   // Открытое задание и стадия — в адресе (?a=<id>&stage=read), а не в useState.
@@ -97,12 +96,6 @@ export function AssignmentsPage() {
 
   useScrollTop(activeId)
 
-  // Ответы переживают уход из задания: вышел кареткой в список, вернулся —
-  // набранное на месте (раньше любой выход обнулял работу — главная жалоба
-  // ревью навигации). ref, а не state: список от черновика не зависит,
-  // перерисовывать его из-за каждой буквы незачем.
-  const draftsRef = useRef<Record<string, Draft>>({})
-
   const open = (row: Row) =>
     setUrl({ a: row.id, stage: row.status === 'reviewed' ? 'review' : 'read' })
   const close = () => setUrl({ a: null, stage: null })
@@ -129,7 +122,6 @@ export function AssignmentsPage() {
         row={active}
         stage={stage}
         onStage={setStage}
-        drafts={draftsRef.current}
         onDone={() => {
           close()
           reload()
@@ -324,37 +316,27 @@ function AssignmentRunner({
   row,
   stage,
   onStage,
-  drafts,
   onDone,
   onBack,
 }: {
   row: Row
   stage: Stage
   onStage: (s: Stage) => void
-  /** Общий на всю страницу склад черновиков — переживает размонтирование раннера. */
-  drafts: Record<string, Draft>
   onDone: () => void
   onBack: () => void
 }) {
   const m = row.material
   useScrollTop(stage)
-  // стартуем с того места, где человек остановился в прошлый заход
-  const [index, setIndex] = useState(() => drafts[row.id]?.index ?? 0)
-  // ответы по индексу упражнения (а не push) — повторный ответ на то же
-  // упражнение перезаписывает запись, не задваивая балл и не плодя дубли.
-  const [answerMap, setAnswerMap] = useState<Record<number, AssignmentAnswer>>(
-    () => drafts[row.id]?.answers ?? {},
-  )
+  // Ответы переживают и выход в список (раньше любой выход обнулял работу —
+  // главная жалоба ревью навигации), и перезагрузку (Ф1.14): useAnswerDraft.
+  const draft = useAnswerDraft(row.id)
+  const { index, setIndex, answerMap, setAnswerMap } = draft
   // Итог раунда в адрес не пишем (см. Stage), но и залипать на нём нельзя:
   // системная кнопка «назад» меняет стадию — значит, итог надо снять.
   const [finished, setFinished] = useState(false)
   useEffect(() => {
     setFinished(false)
   }, [stage])
-  // черновик наружу — чтобы выход в список не стирал набранное
-  useEffect(() => {
-    drafts[row.id] = { answers: answerMap, index }
-  }, [drafts, row.id, answerMap, index])
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
@@ -387,9 +369,7 @@ function AssignmentRunner({
 
   const finish = async () => {
     setFinished(true)
-    // раунд закончен — черновик больше не нужен: следующий заход («тренироваться
-    // ещё раз») должен начинаться с чистого листа, а не с прошлых ответов
-    delete drafts[row.id]
+    draft.forget()
     if (alreadyDone) return
     setSaving(true)
     try {
@@ -494,6 +474,7 @@ function AssignmentRunner({
           {index + 1} / {total} · верно: {correct}
         </span>
       </div>
+      {draft.restored && <DraftRestored onClear={draft.clear} />}
       <ExerciseView
         key={index}
         exercise={current}

@@ -8,7 +8,8 @@
 // Механика печати — как PrintSheet: портал в body, @media print прячет #root.
 // Лист всегда белый (печать), независимо от тёмной темы приложения.
 // ============================================================================
-import { useState } from 'react'
+import { useDraft } from '../../shared/lib/useDraft'
+import { DraftRestored } from '../../shared/ui/DraftRestored'
 import { createPortal } from 'react-dom'
 import { Button } from '../../shared/ui/Button'
 import { IconPrinter } from '../../shared/ui/icons'
@@ -66,18 +67,21 @@ function DeltaRow({
 }
 
 export function ReportSheet({
+  studentId,
   diag,
   studentName,
   topicTitle,
   onClose,
 }: {
+  studentId: string
   diag: StudentDiagnostics
   studentName: string
   /** Название темы грамматики по (lang, topicId) — из данных уроков. */
   topicTitle: (lang: string, topicId: number) => string
   onClose: () => void
 }) {
-  const [comment, setComment] = useState('')
+  // комментарий переживает перезагрузку; «Очистить» — начать заново (Ф1.14)
+  const [comment, setComment, draft] = useDraft(`report:${studentId}`, '')
   const dyn = diag.dynamics
   const today = new Date()
   const from = new Date(today.getTime() - 30 * 86_400_000)
@@ -156,6 +160,7 @@ export function ReportSheet({
             className="mt-1 w-full rounded-lg border border-tint/[0.2] px-3 py-2 text-[15px] text-fg outline-none focus:border-accent-line"
           />
         </label>
+        {draft.restored && <DraftRestored onClear={draft.clear} className="mt-1" />}
       </div>
 
       <div className="mx-auto max-w-2xl font-serif leading-relaxed">

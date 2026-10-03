@@ -7,9 +7,9 @@
 // Результат помнит свою загрузку (пользователь + язык + попытка), поэтому
 // смена языка сама даёт «ещё поднимаем».
 // ============================================================================
-import { useEffect, useState } from 'react'
-import { loadLastChat, type LoadedChat } from '../../lib/chatHistory'
-import type { AppLang } from '../../types'
+import { useEffect, useState, type RefObject } from 'react'
+import { loadLastChat } from '../../lib/chatHistory'
+import type { AppLang, ChatTurn } from '../../types'
 
 export interface LastChat {
   /** Ещё поднимаем — не мигаем приглашением начать разговор, который уже идёт. */
@@ -20,14 +20,15 @@ export interface LastChat {
 }
 
 /**
- * @param onStart  началась новая загрузка (другой язык, «Повторить») — экран очищает ленту
- * @param onLoaded переписка нашлась
+ * @param setMsgs   лента экрана: новая загрузка (другой язык, «Повторить») её
+ *                  очищает, найденная переписка — заполняет
+ * @param convIdRef номер переписки, в которую экран дописывает реплики
  */
 export function useLastChat(
   userId: string | undefined,
   lang: AppLang,
-  onStart: () => void,
-  onLoaded: (chat: LoadedChat) => void,
+  setMsgs: (turns: ChatTurn[]) => void,
+  convIdRef: RefObject<string | null>,
 ): LastChat {
   const [attempt, setAttempt] = useState(0)
   const key = `${userId ?? ''}#${lang}#${attempt}`
@@ -36,11 +37,15 @@ export function useLastChat(
   useEffect(() => {
     if (!userId) return
     let alive = true
-    onStart()
+    convIdRef.current = null
+    setMsgs([])
     loadLastChat(userId, lang).then(
       (prev) => {
         if (!alive) return
-        if (prev) onLoaded(prev)
+        if (prev) {
+          convIdRef.current = prev.id
+          setMsgs(prev.turns)
+        }
         setDone({ key, failed: false })
       },
       () => alive && setDone({ key, failed: true }),
@@ -48,7 +53,7 @@ export function useLastChat(
     return () => {
       alive = false
     }
-    // колбэки экрана пересоздаются на каждый рендер — загрузку задаёт key
+    // setMsgs и convIdRef у экрана постоянные — загрузку задаёт key
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key])
 

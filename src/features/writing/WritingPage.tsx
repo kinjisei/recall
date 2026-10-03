@@ -25,18 +25,25 @@ import { WritingHistory } from './WritingHistory'
 import { QuickWriteCheck } from './QuickWriteCheck'
 import { ChartView } from '../../components/ChartView'
 import { RowsSkeleton } from '../../shared/ui/Loading'
+import { useDraft } from '../../shared/lib/useDraft'
+import { useUrlState } from '../../shared/lib/useUrlState'
+import { DraftRestored } from '../../shared/ui/DraftRestored'
 
 type Row = WritingTaskAssignment & { task: WritingTask }
 
 export function WritingPage() {
   const [rows, setRows] = useState<Row[] | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [activeId, setActiveId] = useState<string | null>(null)
+  // Открытое задание и быстрая проверка — в адресе: перезагрузка (новая
+  // версия включается сразу) возвращает прямо к сочинению и его черновику (Ф1.14)
+  const [activeId, setActiveId] = useUrlState('w')
   // выбор темы для самостоятельной работы
   const [picking, setPicking] = useState(false)
   const [starting, setStarting] = useState<string | null>(null)
   // быстрая проверка свободного текста (переехала из вкладки «Диалог»)
-  const [quick, setQuick] = useState(false)
+  const [quickRaw, setQuickRaw] = useUrlState('quick', (v) => v === '1')
+  const quick = quickRaw !== null
+  const setQuick = (on: boolean) => setQuickRaw(on ? '1' : null)
   const [level, setLevel] = useState<CEFRLevel | null>(null)
   const { lang } = useLanguage()
 
@@ -186,7 +193,8 @@ function WritingRunner({
 }) {
   const task = row.task
   const reviewed = row.status === 'reviewed'
-  const [essay, setEssay] = useState(row.essay ?? '')
+  // черновик переживает перезагрузку; нет его — уже сданный текст (Ф1.14)
+  const [essay, setEssay, draft] = useDraft(`writing:${row.id}`, row.essay ?? '')
   const [grade, setGrade] = useState<WritingGrade | null>(row.ai_review ?? null)
   const [editing, setEditing] = useState(row.status === 'assigned')
   const [busy, setBusy] = useState(false)
@@ -206,6 +214,7 @@ function WritingRunner({
       await submitWriting(row.id, body, g, bandLabel(task.mode, g))
       setGrade(g)
       setEditing(false)
+      draft.forget()
       onChanged()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Не удалось оценить работу')
@@ -253,6 +262,7 @@ function WritingRunner({
             onChange={(e) => setEssay(e.target.value)}
             autoCapitalize="sentences"
           />
+          {draft.restored && <DraftRestored onClear={draft.clear} />}
           <div className="flex items-center justify-between text-xs text-fg-muted">
             <span className={tooShort ? 'text-warning' : ''}>
               {words} слов{minWords ? ` (минимум ${minWords})` : ''}

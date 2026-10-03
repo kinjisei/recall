@@ -5,6 +5,8 @@
 // (текущий цикл уходит в историю attempts, ученик правит поверх прошлого текста).
 // ============================================================================
 import { useState } from 'react'
+import { useDraftForm } from '../../shared/lib/useDraft'
+import { DraftRestored } from '../../shared/ui/DraftRestored'
 import { Card } from '../../shared/ui/Card'
 import { Button } from '../../shared/ui/Button'
 import { BackHeader } from '../../shared/ui/BackButton'
@@ -32,13 +34,17 @@ export function WritingReviewScreen({
   const reviewed = assignment.status === 'reviewed'
   const prev = assignment.teacher_review
   const aiErrors = ai?.errors ?? []
-  // какие правки AI учитель оставляет (по умолчанию — все)
-  const [kept, setKept] = useState<boolean[]>(aiErrors.map(() => true))
-  const [band, setBand] = useState(
-    (reviewed ? prev?.band ?? prev?.level : undefined)?.toString() ??
+  // Проверка — черновик до сохранения (Ф1.14): какие правки AI учитель
+  // оставляет (по умолчанию — все), оценка и комментарий ученику.
+  const [form, field, draft] = useDraftForm(`writing-review:${assignment.id}`, {
+    kept: aiErrors.map(() => true),
+    band:
+      (reviewed ? prev?.band ?? prev?.level : undefined)?.toString() ??
       (task.mode === 'ielts' ? ai?.band?.toString() ?? '' : ai?.level ?? ''),
-  )
-  const [comment, setComment] = useState(prev?.comment ?? '')
+    comment: prev?.comment ?? '',
+  })
+  const { kept, band, comment } = form
+  const [setKept, setBand, setComment] = [field('kept'), field('band'), field('comment')]
   const [busy, setBusy] = useState<'finish' | 'reassign' | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -54,6 +60,7 @@ export function WritingReviewScreen({
     setError(null)
     try {
       await finishWritingReview(assignment.id, buildReview(), band)
+      draft.forget()
       onDone()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Не удалось сохранить проверку')
@@ -69,6 +76,7 @@ export function WritingReviewScreen({
       // сначала фиксируем текущий вердикт, чтобы он ушёл в историю попытки
       await finishWritingReview(assignment.id, buildReview(), band).catch(() => {})
       await reassignWriting(assignment.id, note)
+      draft.forget()
       onDone()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Не удалось переназначить')
@@ -161,6 +169,7 @@ export function WritingReviewScreen({
             onChange={(e) => setComment(e.target.value)}
             placeholder="Что удалось, над чем поработать…"
           />
+          {draft.restored && <DraftRestored onClear={draft.clear} className="mt-1" />}
         </div>
 
         {error && <p className="text-sm text-danger">{error}</p>}
