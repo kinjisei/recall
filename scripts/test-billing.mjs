@@ -1,0 +1,123 @@
+/**
+ * Правила оплаты src/domains/billing/model.ts (PLAN.md Ф2.1).
+ *
+ *   • продление: истёкший — от сейчас, действующий — от даты окончания, на
+ *     пробном — от конца пробного; «free» с датой окончания не считается
+ *     действующим; месяцы по Алматы с концом месяца (31.01 → 28.02);
+ *     сверка с сервером — check-billing.mjs;
+ *   • что показать на «Как оплатить»: тарифы по роли и по ссылке, выбор сразу;
+ *   • строка «Сейчас: …» и предупреждения владельцу перед «Подтвердить»;
+ *   • сумма = цена × месяцы, а цена — та, что на странице тарифов.
+ * Чистый: без сети и базы.
+ * Запуск: node scripts/test-billing.mjs
+ */
+import {
+  addMonthsAlmaty,
+  amountFor,
+  confirmWarnings,
+  dayLabel,
+  initialPlanToPay,
+  planNow,
+  planNowLabel,
+  PLANS,
+  plansToPay,
+  planShortTitle,
+  termAfterPayment,
+  termStart,
+} from '../src/domains/billing/model.ts'
+
+let fail = 0
+let total = 0
+const check = (name, got, want) => {
+  total++
+  const ok = JSON.stringify(got) === JSON.stringify(want)
+  if (!ok) fail++
+  console.log(`${ok ? '✓' : '✗'} ${name}${ok ? '' : ` — ждали ${JSON.stringify(want)}, получили ${JSON.stringify(got)}`}`)
+}
+
+const now = new Date('2026-10-03T10:00:00+05:00')
+const iso = (s) => new Date(s).toISOString()
+const state = (plan, expires, trial) => ({ plan, plan_expires_at: expires && iso(expires), trial_until: trial && iso(trial) })
+
+// ── продление ────────────────────────────────────────────────────────────────
+check('истёкший тариф — от сейчас', termStart(state('teacher_mini', '2026-09-20T00:00:00+05:00', null), now).toISOString(), now.toISOString())
+check('не было тарифа и пробного — от сейчас', termStart(state('free', null, null), now).toISOString(), now.toISOString())
+check(
+  'действующий — от даты окончания',
+  termStart(state('teacher_mini', '2026-10-16T12:00:00+05:00', null), now).toISOString(),
+  iso('2026-10-16T12:00:00+05:00'),
+)
+check(
+  'на пробном — от конца пробного (дни пробного не сгорают)',
+  termStart(state('free', null, '2026-10-10T09:00:00+05:00'), now).toISOString(),
+  iso('2026-10-10T09:00:00+05:00'),
+)
+check(
+  'действующий и пробный — от более поздней даты',
+  termStart(state('premium', '2026-10-20T00:00:00+05:00', '2026-10-10T00:00:00+05:00'), now).toISOString(),
+  iso('2026-10-20T00:00:00+05:00'),
+)
+check(
+  '«free» со старой датой окончания не продлевает от неё',
+  termStart(state('free', '2026-12-01T00:00:00+05:00', null), now).toISOString(),
+  now.toISOString(),
+)
+check('+1 месяц: 16 октября → 16 ноября', addMonthsAlmaty(new Date('2026-10-16T12:00:00+05:00'), 1).toISOString(), iso('2026-11-16T12:00:00+05:00'))
+check('31 января → 28 февраля (дня нет — последний)', addMonthsAlmaty(new Date('2027-01-31T23:30:00+05:00'), 1).toISOString(), iso('2027-02-28T23:30:00+05:00'))
+check('ночь 1 марта по Алматы → 1 апреля', addMonthsAlmaty(new Date('2027-03-01T02:00:00+05:00'), 1).toISOString(), iso('2027-04-01T02:00:00+05:00'))
+check('+12 месяцев через високосный февраль', addMonthsAlmaty(new Date('2028-02-29T10:00:00+05:00'), 12).toISOString(), iso('2029-02-28T10:00:00+05:00'))
+check(
+  'срок оплаты на пробном: начало и конец',
+  (({ start, end }) => [start.toISOString(), end.toISOString()])(termAfterPayment(state('free', null, '2026-10-10T09:00:00+05:00'), 2, now)),
+  [iso('2026-10-10T09:00:00+05:00'), iso('2026-12-10T09:00:00+05:00')],
+)
+
+// ── что показать на «Как оплатить» ───────────────────────────────────────────
+check('репетитору — три тарифа репетитора', plansToPay('teacher'), ['teacher_mini', 'teacher_start', 'teacher_pro'])
+check('ученику — Premium', plansToPay('learner'), ['premium'])
+check('роль неизвестна — Premium', plansToPay(null), ['premium'])
+check('ученик со ссылкой на тариф репетитора — тарифы репетитора', plansToPay('learner', 'teacher_start'), ['teacher_mini', 'teacher_start', 'teacher_pro'])
+check('репетитор со ссылкой на Premium — Premium', plansToPay('teacher', 'premium'), ['premium'])
+check('мусор в ссылке — по роли', plansToPay('teacher', 'gold'), ['teacher_mini', 'teacher_start', 'teacher_pro'])
+const teacherOptions = plansToPay('teacher')
+check('выбран тариф из ссылки', initialPlanToPay(teacherOptions, 'teacher_mini', 'teacher_pro'), 'teacher_pro')
+check('без ссылки — нынешний', initialPlanToPay(teacherOptions, 'teacher_start', null), 'teacher_start')
+check('нынешний не из списка — первый', initialPlanToPay(teacherOptions, 'free', null), 'teacher_mini')
+check('«Репетитор · Mini» → «Mini»', planShortTitle('teacher_mini'), 'Mini')
+check('Premium без приставки — как есть', planShortTitle('premium'), 'Premium')
+
+// ── суммы ────────────────────────────────────────────────────────────────────
+check('сумма = цена × месяцы', amountFor('teacher_start', 3), 19500)
+check('цены тарифов — как на странице тарифов', PLANS.filter((p) => p.price > 0).map((p) => [p.id, p.price]), [
+  ['premium', 1990],
+  ['teacher_mini', 3900],
+  ['teacher_start', 6500],
+  ['teacher_pro', 14990],
+])
+
+// ── «Сейчас: …» ──────────────────────────────────────────────────────────────
+check('оплачен', planNowLabel(state('teacher_mini', '2026-10-16T12:00:00+05:00', null), now), 'Репетитор · Mini, действует до 16 октября')
+check('пробный', planNowLabel(state('free', null, '2026-10-10T09:00:00+05:00'), now), 'пробный период до 10 октября')
+check('закончился', planNowLabel(state('teacher_mini', '2026-09-16T12:00:00+05:00', null), now), 'Репетитор · Mini, закончился 16 сентября')
+check('ничего не было', planNowLabel(state('free', null, '2026-09-01T00:00:00+05:00'), now), 'бесплатный тариф')
+check('оплаченный важнее пробного', planNow(state('premium', '2026-11-01T00:00:00+05:00', '2026-10-10T00:00:00+05:00'), now).kind, 'paid')
+check('другой год — с годом', /2027/.test(dayLabel(new Date('2027-01-05T12:00:00+05:00'), now)), true)
+check('день — по Алматы, а не по часам устройства', dayLabel(new Date('2026-10-15T20:30:00Z'), now), '16 октября')
+
+// ── предупреждения владельцу ──────────────────────────────────────────────────
+check(
+  'понижение при действующем — предупредить',
+  confirmWarnings(state('teacher_pro', '2026-10-16T12:00:00+05:00', null), 'teacher_mini', 3, now),
+  ['Сейчас Репетитор · Pro до 16 октября — после подтверждения сразу станет Репетитор · Mini.'],
+)
+check('повышение — без предупреждения', confirmWarnings(state('teacher_mini', '2026-10-16T12:00:00+05:00', null), 'teacher_pro', 3, now), [])
+check('понижение после окончания — без предупреждения', confirmWarnings(state('teacher_pro', '2026-09-16T12:00:00+05:00', null), 'teacher_mini', 3, now), [])
+check(
+  'учеников больше, чем мест',
+  confirmWarnings(state('free', null, null), 'teacher_mini', 7, now),
+  ['Учеников 7, а мест в тарифе 5: 2 останутся без повышенных лимитов AI.'],
+)
+check('Premium мест не считает', confirmWarnings(state('free', null, null), 'premium', 7, now), [])
+
+console.log(`\nИтог: ${total - fail}/${total}`)
+process.exitCode = fail ? 1 : 0

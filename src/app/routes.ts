@@ -97,6 +97,8 @@ export const ROUTES: AppRoute[] = [
   { path: '/self-material', place: 'app', screen: routeScreens['/self-material'] },
   { path: '/quests', place: 'app', screen: routeScreens['/quests'] },
   { path: '/program', place: 'app', screen: routeScreens['/program'] },
+  // «Как оплатить тариф»: тариф включается на аккаунт — только после входа
+  { path: '/pay', place: 'app', screen: routeScreens['/pay'] },
   { path: '/admin', place: 'app', screen: routeScreens['/admin'], role: 'admin' },
   // витрина дизайн-системы — только в разработке (routeChunks.devShowcase)
   ...(devShowcase ? [{ path: '/dev/ui', place: 'app' as const, screen: devShowcase }] : []),

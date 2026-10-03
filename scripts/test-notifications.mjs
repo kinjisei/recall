@@ -37,6 +37,20 @@ check('неизвестный вид без данных — нейтральн�
 })
 check('не строка в заголовке не ломает', renderNotification({ kind: 'manual', data: { title: 42 } }).title, 'Сообщение от Recall')
 
+// оплата тарифа (Ф2.1): данные пишет confirm_payment / report_payment_sent
+check('payment_reported: владельцу — кто и куда идти', renderNotification({ kind: 'payment_reported', data: { name: 'Мадина', href: '/admin' } }), {
+  title: 'Оплата отправлена',
+  body: 'Мадина — проверь перевод в Kaspi и подтверди в админке',
+  href: '/admin',
+})
+check('payment_reported без имени — «Без имени», а не «undefined»', renderNotification({ kind: 'payment_reported', data: {} }).body, 'Без имени — проверь перевод в Kaspi и подтверди в админке')
+check(
+  'plan_paid: срок — день по Алматы (ночь 16-го по Алматы — ещё 15-е по UTC)',
+  renderNotification({ kind: 'plan_paid', data: { until: '2026-11-15T20:30:00Z', href: '/pricing' } }),
+  { title: 'Оплата получена', body: 'Тариф действует до 16 ноября', href: '/pricing' },
+)
+check('plan_paid с кривой датой — без даты, а не «Invalid Date»', renderNotification({ kind: 'plan_paid', data: { until: 'завтра' } }).body, 'Тариф включён')
+
 // ── ссылки ───────────────────────────────────────────────────────────────────
 check('внутренний адрес проходит', safeHref('/study?view=reader'), '/study?view=reader')
 check('«//evil.site» — нет', safeHref('//evil.site/x'), undefined)

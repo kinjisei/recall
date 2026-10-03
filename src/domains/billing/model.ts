@@ -76,3 +76,172 @@ export const KASPI = {
   phone: '+7 776 210 02 21',
   name: 'Ерболат',
 }
+
+// ---- оплата -------------------------------------------------------------------
+
+export type PayMethod = 'kaspi_gold' | 'kaspi_pay' | 'card'
+
+/** Способы оплаты — данные, а не код (журнал п.13): новый — строка здесь и в check базы. */
+export const PAY_METHODS: { id: PayMethod; label: string }[] = [
+  { id: 'kaspi_gold', label: 'Kaspi Gold, перевод' },
+  { id: 'kaspi_pay', label: 'Kaspi Pay' },
+  { id: 'card', label: 'Карта' },
+]
+
+export const PAID_PLANS: PaidPlan[] = ['premium', 'teacher_mini', 'teacher_start', 'teacher_pro']
+export const TEACHER_PLANS: PaidPlan[] = ['teacher_mini', 'teacher_start', 'teacher_pro']
+
+export function isPaidPlan(v: unknown): v is PaidPlan {
+  return typeof v === 'string' && (PAID_PLANS as string[]).includes(v)
+}
+
+export function planCard(id: Plan): PlanCard {
+  return PLANS.find((p) => p.id === id) ?? { id, title: id, price: 0, tagline: '', features: [] }
+}
+
+/** «Репетитор · Mini» → «Mini»: в списке тарифов репетитора приставка лишняя. */
+export function planShortTitle(id: Plan): string {
+  return planCard(id).title.split(' · ').pop() ?? id
+}
+
+/** Сколько перевести за тариф на N месяцев, ₸. */
+export function amountFor(plan: PaidPlan, months: number): number {
+  return planCard(plan).price * months
+}
+
+/**
+ * Какие тарифы показать на «Как оплатить»: репетитору — свои три, ученику —
+ * Premium. Ссылка с тарифом (`?plan=`) важнее роли: ученик, который только
+ * собирается вести учеников, пришёл с карточки «Репетитор · Mini».
+ */
+export function plansToPay(role: string | null | undefined, requested?: string | null): PaidPlan[] {
+  if (requested === 'premium') return ['premium']
+  if (requested && TEACHER_PLANS.includes(requested as PaidPlan)) return TEACHER_PLANS
+  return role === 'teacher' ? TEACHER_PLANS : ['premium']
+}
+
+/** Какой тариф выбран сразу: из ссылки → `current` (тариф заявки или нынешний) → первый. */
+export function initialPlanToPay(options: PaidPlan[], current: string | null, requested?: string | null): PaidPlan {
+  if (requested && options.includes(requested as PaidPlan)) return requested as PaidPlan
+  if (current && options.includes(current as PaidPlan)) return current as PaidPlan
+  return options[0] ?? 'premium'
+}
+
+/** Что у человека с тарифом — как отдаёт база (profiles через RPC). */
+export interface PlanState {
+  plan: string
+  plan_expires_at: string | null
+  trial_until: string | null
+}
+
+const time = (iso: string | null): number => (iso ? Date.parse(iso) : NaN)
+
+/**
+ * С какого момента начнётся оплаченный срок — ПАРА к confirm_payment
+ * (миграция 0004): самая поздняя из дат «сейчас», «конец действующего
+ * тарифа», «конец пробного». Действующий продлевается от даты окончания,
+ * истёкший — от сегодня, оплата на пробном не съедает его дни.
+ */
+export function termStart(s: PlanState, now: Date = new Date()): Date {
+  const candidates = [now.getTime(), s.plan !== 'free' ? time(s.plan_expires_at) : NaN, time(s.trial_until)]
+  return new Date(Math.max(...candidates.filter(Number.isFinite)))
+}
+
+/** Казахстан — UTC+5 круглый год (с 01.03.2024, без летнего времени). */
+const ALMATY_OFFSET_MS = 5 * 3600_000
+
+/**
+ * +N месяцев по календарю Алматы, как `+ make_interval(months => N)` в базе:
+ * 16 октября → 16 ноября; 31 января → 28 февраля (дня нет — последний).
+ */
+export function addMonthsAlmaty(d: Date, months: number): Date {
+  const local = new Date(d.getTime() + ALMATY_OFFSET_MS)
+  const y = local.getUTCFullYear()
+  const m = local.getUTCMonth() + months
+  const lastDay = new Date(Date.UTC(y, m + 1, 0)).getUTCDate()
+  const shifted = Date.UTC(
+    y,
+    m,
+    Math.min(local.getUTCDate(), lastDay),
+    local.getUTCHours(),
+    local.getUTCMinutes(),
+    local.getUTCSeconds(),
+    local.getUTCMilliseconds(),
+  )
+  return new Date(shifted - ALMATY_OFFSET_MS)
+}
+
+/** Какой срок купит оплата на N месяцев, если подтвердить её сейчас. */
+export function termAfterPayment(s: PlanState, months: number, now: Date = new Date()): { start: Date; end: Date } {
+  const start = termStart(s, now)
+  return { start, end: addMonthsAlmaty(start, months) }
+}
+
+/** Что с тарифом сейчас: оплачен, пробный, закончился или не было. */
+export type PlanNow =
+  | { kind: 'paid'; plan: PaidPlan; until: Date }
+  | { kind: 'trial'; until: Date }
+  | { kind: 'ended'; plan: PaidPlan; at: Date }
+  | { kind: 'none' }
+
+export function planNow(s: PlanState, now: Date = new Date()): PlanNow {
+  const expires = time(s.plan_expires_at)
+  const trial = time(s.trial_until)
+  if (isPaidPlan(s.plan) && expires > now.getTime()) return { kind: 'paid', plan: s.plan, until: new Date(expires) }
+  if (trial > now.getTime()) return { kind: 'trial', until: new Date(trial) }
+  if (isPaidPlan(s.plan) && Number.isFinite(expires)) return { kind: 'ended', plan: s.plan, at: new Date(expires) }
+  return { kind: 'none' }
+}
+
+const yearAlmaty = (d: Date): string =>
+  d.toLocaleDateString('en', { timeZone: 'Asia/Almaty', year: 'numeric' })
+
+/**
+ * «16 октября», в другом году — «16 октября 2027». День — по Алматы, как
+ * дневные границы и месяцы тарифа в базе, а не по часам устройства.
+ */
+export function dayLabel(d: Date, now: Date = new Date()): string {
+  const sameYear = yearAlmaty(d) === yearAlmaty(now)
+  return d.toLocaleDateString('ru-RU', {
+    timeZone: 'Asia/Almaty',
+    day: 'numeric',
+    month: 'long',
+    ...(sameYear ? {} : { year: 'numeric' }),
+  })
+}
+
+/** Строка «Сейчас: …» на «Как оплатить» и в админке. */
+export function planNowLabel(s: PlanState, now: Date = new Date()): string {
+  const p = planNow(s, now)
+  switch (p.kind) {
+    case 'paid':
+      return `${planCard(p.plan).title}, действует до ${dayLabel(p.until, now)}`
+    case 'trial':
+      return `пробный период до ${dayLabel(p.until, now)}`
+    case 'ended':
+      return `${planCard(p.plan).title}, закончился ${dayLabel(p.at, now)}`
+    default:
+      return 'бесплатный тариф'
+  }
+}
+
+/**
+ * Предупреждения владельцу перед «Подтвердить»: тариф понижается при
+ * действующем (новый включается сразу) и учеников больше, чем мест.
+ */
+export function confirmWarnings(s: PlanState, plan: PaidPlan, students: number, now: Date = new Date()): string[] {
+  const out: string[] = []
+  const p = planNow(s, now)
+  if (p.kind === 'paid' && p.plan !== plan && planCard(plan).price < planCard(p.plan).price) {
+    out.push(
+      `Сейчас ${planCard(p.plan).title} до ${dayLabel(p.until, now)} — после подтверждения сразу станет ${planCard(plan).title}.`,
+    )
+  }
+  const seats = planCard(plan).studentLimit
+  if (seats !== undefined && students > seats) {
+    // кого покрывать, решает база (covering_teacher): отмеченных учителем, иначе
+    // первых по дате привязки — здесь только сколько останется без покрытия
+    out.push(`Учеников ${students}, а мест в тарифе ${seats}: ${students - seats} останутся без повышенных лимитов AI.`)
+  }
+  return out
+}

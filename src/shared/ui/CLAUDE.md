@@ -27,7 +27,7 @@
 | `breakpoints.ts` | точки перехода для JS (`DESKTOP_QUERY` → `useIsDesktop`) |
 | `layouts.tsx` | общие раскладки: `CenterColumn` (упражнение, игра), `ReadingColumn` (текст + панель перевода сбоку), `ListDetail` (список + подробности) |
 | `roundKeys.tsx` | клавиатура в упражнениях: `useRoundKeys` (1–4, Enter, Esc), `useRoundMode` (режим раунда + Esc — выход) |
-| компоненты | `Button`, `Card` (`tone="warning" \| "danger"` — статусная карточка), `Sheet` (на компьютере — боковая панель), `Picker`, `TabPicker` (вкладки), `ChoiceGroup` (выбор значения: уровень, скорость, размер — radiogroup), `Chat` (`ChatWindow` — скруглённое окно ленты с гаснущими краями, `ChatBubble`, `ChatInputBar` — плавающая капсула ввода, `draft` — строка «Черновик восстановлен»; общий вид «Диалога» и AI-квестов), `RowCard`, `Reveal`, `HowItWorks`, `Loading`/`RowsSkeleton`, `LoadError`, `DraftRestored` («Черновик восстановлен · Очистить» под полем, Ф1.14), `Thinking`, `BackButton`/`BackHeader` (одна кнопка «назад»: `onClick` или `fallback` — назад по истории), `OpenPage` (рамка открытой страницы: гостю — своя на весь экран, вошедшему — общая), `AppLink`, `Brand`, `Confetti`, `icons` |
+| компоненты | `Button`, `Card` (`tone="warning" \| "danger"` — статусная карточка), `Sheet` (на компьютере — боковая панель), `Picker`, `TabPicker` (вкладки), `ChoiceGroup` (выбор значения, radiogroup: `chips` — уровень, скорость, размер; `cards` — карточки с пояснением и ценой справа, тариф на «Как оплатить», макет t9), `Chat` (`ChatWindow` — скруглённое окно ленты с гаснущими краями, `ChatBubble`, `ChatInputBar` — плавающая капсула ввода, `draft` — строка «Черновик восстановлен»; общий вид «Диалога» и AI-квестов), `RowCard`, `Reveal`, `HowItWorks`, `Loading`/`RowsSkeleton`, `LoadError`, `DraftRestored` («Черновик восстановлен · Очистить» под полем, Ф1.14), `Thinking`, `BackButton`/`BackHeader` (одна кнопка «назад»: `onClick` или `fallback` — назад по истории), `OpenPage` (рамка открытой страницы: гостю — своя на весь экран, вошедшему — общая), `AppLink`, `Brand`, `Confetti`, `icons` |
 
 Витрина всего этого — `/dev/ui` (только `npm run dev`, в сборку не попадает):
 токены обеих тем, все компоненты, три раскладки, упражнение для клавиатуры.
@@ -177,7 +177,7 @@ View Transitions API, вся плавность продукта стоит 0,8 
 - **Иконки — свои, `icons.tsx`** (инлайн-SVG в стиле Phosphor, без
   библиотеки), **генерируются** из `handoff/icons/*.svg`
   (`node scripts/gen-icons.mjs`), руками не правятся. Иконку убрать — удалить
-  её SVG и перегенерировать. 54 иконки (`IconBell` — Ф1.5); 4 неиспользуемые (`IconStudents`,
+  её SVG и перегенерировать. 55 иконок (`IconBell` — Ф1.5, `IconCopy` — Ф2.1); 4 неиспользуемые (`IconStudents`,
   `IconSpeech`, `IconSpeechFill`, `IconMicFill`) удалены 28.09.2026.
 - **Чего не хватает новым экранам** (иконки, компоненты, состояния) — список
   в `docs/design/ui-inventory.md` §6. Добавил оттуда — отметь там же: по описи

@@ -305,7 +305,7 @@ async function run(browser, userId) {
 
   await admin.from('profiles').update({ is_admin: true }).eq('id', userId)
   await page.goto(`${BASE}/admin`, { waitUntil: 'networkidle2' })
-  check('владелец на /admin видит админку', await waitText(page, 'Email или его часть') || (await heading(page)) === 'Админка', await heading(page))
+  check('владелец на /admin видит админку', await waitText(page, 'Ждут подтверждения') || (await heading(page)) === 'Админка', await heading(page))
   check('у владельца нет отказа', !(await seen(page, 'Доступно только владельцу')))
   await admin.from('profiles').update({ is_admin: false }).eq('id', userId)
 

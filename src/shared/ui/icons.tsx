@@ -1,5 +1,5 @@
 // ============================================================================
-// Фирменный icon-набор Recall (54 шт.), сгенерирован из handoff/icons/*.svg
+// Фирменный icon-набор Recall (55 шт.), сгенерирован из handoff/icons/*.svg
 // (Claude Design). Единый стиль: viewBox 0 0 24 24, stroke 1.75px (2px у *-fill),
 // currentColor. Меняем весь набор здесь — приложение подхватит.
 //   НЕ РЕДАКТИРОВАТЬ ВРУЧНУЮ: перегенерировать из SVG.
@@ -71,6 +71,9 @@ export const IconCheck = icon(
 )
 export const IconClose = icon(
   '<path d="M6 6l12 12"></path><path d="M18 6 6 18"></path>',
+)
+export const IconCopy = icon(
+  '<rect x="8.5" y="8.5" width="11.5" height="11.5" rx="2.2"></rect><path d="M15.5 8.5V6.2A2.2 2.2 0 0 0 13.3 4H6.2A2.2 2.2 0 0 0 4 6.2v7.1a2.2 2.2 0 0 0 2.2 2.2h2.3"></path>',
 )
 export const IconDialogFill = icon(
   '<path d="M7.5 4.5h9A3.5 3.5 0 0 1 20 8v4.5a3.5 3.5 0 0 1-3.5 3.5h-6.3l-3.9 3.2a.8.8 0 0 1-1.3-.6V8a3.5 3.5 0 0 1 3.5-3.5Z" fill="currentColor" fill-opacity=".32"></path>', '2',

@@ -397,12 +397,20 @@ interface LangPack {
 
 ## 9. Оплата, пробный период, рефералка
 
-Модель данных (детали — в пункте плана «минимум для продаж»):
+Модель данных (сделано в Ф2.1, миграция `0004_billing.sql`; как работает —
+`src/domains/billing/CLAUDE.md`):
 - `payments` — `user_id, plan, months, amount, method ('kaspi_gold' |
-  'kaspi_pay' | 'card'), confirmed_by, confirmed_at, note`.
-- `confirm_payment(user, plan, months, amount, method)` — security definer,
-  только админ; в ОДНОЙ транзакции: запись оплаты → продление тарифа →
-  начисление рефералки (п.16). Единственное место правила.
+  'kaspi_pay' | 'card'), note, starts_at, ends_at, confirmed_by,
+  confirmed_at, request_id` (повтор нажатия не продлевает дважды).
+- `payment_claims` — «Оплата отправлена»: одна открытая заявка на человека;
+  `personal_codes` — личный код для сообщения к переводу.
+- `confirm_payment(user, plan, months, amount, method, note?, claim?,
+  request?)` — security definer, только админ; в ОДНОЙ транзакции: запись
+  оплаты → продление тарифа → закрытие заявки → начисление рефералки (п.16,
+  крючок `after_payment_confirmed`, наполняет Ф2.3) → уведомление человеку →
+  событие воронки. Единственное место правила. Срок — от самой поздней из
+  дат «сейчас», «конец действующего тарифа», «конец пробного» (решение
+  владельца 03.10.2026, журнал п.60), месяцы — по Алматы.
 - `referrals` — `referrer_id, referee_id, code, status ('registered' | 'paid' |
   'rewarded'), rewarded_at`. Код — у каждого репетитора; ссылка
   `/login?role=teacher&ref=<код>` (механизм `pendingRole` уже есть).

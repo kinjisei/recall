@@ -2,34 +2,34 @@
 
 > Генерирует `node scripts/arch-map.mjs`. Руками не править — перезапустить.
 
-Файлов: 249, строк кода: 40798 (без `src/data`).
+Файлов: 271, строк кода: 42849 (без `src/data`).
 
 ## Разделы (features/)
 
 | Раздел | Файлов | Строк | Таблицы | RPC | Развилки языка | Зависит от |
 |---|---|---|---|---|---|---|
-| teacher | 24 | 6545 | — | 0 | 9 | components, context, features/homework, features/program, features/writing, lib/activity, lib/activityDays, lib/billing, lib/dailyPlan, lib/diagnostics, lib/dynamics, lib/homework, lib/homeworkRules, lib/homeworkSuggest, lib/materials, lib/myTexts, lib/placement, lib/profile, lib/quests, lib/studentSignals, lib/studyPlan, lib/teacher, lib/text, lib/useScrollTop, lib/wordChecks, lib/wordPacks, lib/writing, shared/api, shared/lib, shared/ui, src-root |
+| teacher | 29 | 6733 | — | 0 | 9 | components, context, features/homework, features/program, features/writing, lib/activity, lib/activityDays, lib/billing, lib/dailyPlan, lib/diagnostics, lib/dynamics, lib/homework, lib/homeworkRules, lib/homeworkSuggest, lib/materials, lib/myTexts, lib/placement, lib/profile, lib/quests, lib/studentSignals, lib/studyPlan, lib/teacher, lib/text, lib/useScrollTop, lib/wordChecks, lib/wordPacks, lib/writing, shared/api, shared/lib, shared/ui, src-root |
 | words | 9 | 2102 | — | 0 | 5 | components, lib/activity, lib/cards, lib/definitions, lib/fsrs, lib/gameMisses, lib/level, lib/selfCorrect, lib/speech, lib/text, lib/wordChecks, lib/wordPool, shared/ui, src-root |
-| grammar | 4 | 1850 | — | 0 | 3 | components, context, lib/activity, lib/mistakes, lib/random, lib/speech, lib/text, lib/useScrollTop, lib/verbMistakes, shared/lib, shared/ui, src-root |
-| writing | 5 | 982 | writing_submissions | 0 | 7 | components, context, lib/activity, lib/level, lib/useScrollTop, lib/writing, lib/writingGrade, shared/api, shared/ui, src-root |
+| grammar | 4 | 1839 | — | 0 | 3 | components, context, lib/activity, lib/mistakes, lib/random, lib/speech, lib/text, lib/useScrollTop, lib/verbMistakes, shared/lib, shared/ui, src-root |
+| writing | 5 | 1006 | writing_submissions | 0 | 7 | components, context, lib/activity, lib/level, lib/useScrollTop, lib/writing, lib/writingGrade, shared/api, shared/lib, shared/ui, src-root |
+| admin | 6 | 973 | — | 1 | — | domains/ai, domains/billing, lib/admin, shared/api, shared/lib, shared/ui |
 | auth | 4 | 935 | — | 0 | — | context, lib/access, lib/analytics, lib/passwordReset, lib/pendingRole, shared/api, shared/lib, shared/ui |
 | flashcards | 4 | 885 | — | 0 | 2 | components, context, lib/activity, lib/cards, lib/fsrs, lib/gameMisses, lib/speech, lib/text, lib/wordChecks, lib/wordPacks, shared/lib, shared/ui |
-| reader | 4 | 824 | — | 0 | 2 | components, context, lib/level, lib/myTexts, lib/settings, lib/speech, lib/useScrollTop, shared/lib, shared/ui, src-root |
-| onboarding | 2 | 730 | profiles | 0 | 10 | context, lib/analytics, lib/esLevel, lib/guided, lib/onboarding, lib/placement, lib/profile, lib/random, lib/teacher, shared/api, shared/ui, src-root |
-| study | 2 | 703 | — | 0 | 6 | context, features/flashcards, features/reader, features/words, lib/esLevel, lib/guided, lib/homework, lib/materials, lib/placement, lib/profile, lib/quests, lib/studyPlan, lib/useScrollTop, lib/writing, shared/api, shared/lib, shared/ui, src-root |
-| admin | 3 | 670 | — | 1 | — | domains/ai, lib/admin, shared/api, shared/lib, shared/ui |
-| practice | 2 | 627 | — | 0 | 2 | components, context, features/flashcards, features/words, lib/activity, lib/cards, lib/fsrs, lib/guided, lib/level, lib/mistakes, lib/useScrollTop, lib/wordPool, shared/lib, shared/ui, src-root |
-| dashboard | 1 | 596 | — | 0 | 3 | components, context, features/teacher, lib/activity, lib/billing, lib/cards, lib/dailyPlan, lib/esLevel, lib/fsrs, lib/guided, lib/profile, lib/quests, lib/speech, lib/studyPlan, lib/wordPool, shared/ui, src-root |
+| reader | 4 | 830 | — | 0 | 2 | components, context, lib/level, lib/myTexts, lib/settings, lib/speech, lib/useScrollTop, shared/lib, shared/ui, src-root |
+| onboarding | 2 | 722 | profiles | 0 | 10 | context, lib/analytics, lib/esLevel, lib/guided, lib/onboarding, lib/placement, lib/profile, lib/random, lib/teacher, shared/api, shared/lib, shared/ui, src-root |
+| study | 2 | 678 | — | 0 | 6 | context, features/flashcards, features/reader, features/words, lib/esLevel, lib/guided, lib/homework, lib/materials, lib/placement, lib/profile, lib/quests, lib/studyPlan, lib/useScrollTop, lib/writing, shared/api, shared/lib, shared/ui, src-root |
+| dashboard | 2 | 647 | — | 0 | 3 | components, context, features/teacher, lib/activity, lib/billing, lib/cards, lib/dailyPlan, lib/esLevel, lib/fsrs, lib/guided, lib/profile, lib/quests, lib/speech, lib/studyPlan, lib/wordPool, shared/lib, shared/ui, src-root |
+| practice | 2 | 631 | — | 0 | 2 | components, context, features/flashcards, features/words, lib/activity, lib/cards, lib/fsrs, lib/guided, lib/level, lib/mistakes, lib/useScrollTop, lib/wordPool, shared/lib, shared/ui, src-root |
 | pronunciation | 1 | 498 | cards, review_states | 0 | 1 | components, context, lib/activity, lib/cards, lib/level, lib/random, lib/speech, lib/transcribe, shared/api, shared/ui, src-root |
-| conversation | 1 | 405 | messages | 0 | 10 | context, lib/activity, lib/aiHealth, lib/chatHistory, lib/esLevel, lib/profile, lib/useChatList, lib/useKeyboardInset, shared/api, shared/ui, src-root |
-| settings | 2 | 394 | profiles | 0 | 4 | components, context, features/auth, lib/esLevel, lib/passwordReset, lib/profile, lib/settings, lib/speech, shared/api, shared/lib, shared/ui |
-| progress | 1 | 328 | review_states | 0 | — | context, lib/activity, lib/cards, lib/diagnostics, lib/diagnosticsBrief, lib/fsrs, lib/wordChecks, shared/api, shared/ui, src-root |
+| conversation | 2 | 455 | messages | 0 | 10 | context, lib/activity, lib/aiHealth, lib/chatHistory, lib/esLevel, lib/profile, lib/useChatList, lib/useKeyboardInset, shared/api, shared/lib, shared/ui, src-root |
+| billing | 3 | 414 | — | 0 | — | components, context, domains/billing, lib/billing, shared/lib, shared/ui |
+| settings | 2 | 410 | profiles | 0 | 4 | components, context, features/auth, lib/esLevel, lib/passwordReset, lib/profile, lib/settings, lib/speech, shared/api, shared/lib, shared/ui |
+| progress | 1 | 341 | review_states | 0 | — | context, lib/activity, lib/cards, lib/diagnostics, lib/diagnosticsBrief, lib/fsrs, lib/wordChecks, shared/api, shared/lib, shared/ui, src-root |
+| quests | 1 | 327 | — | 0 | 3 | lib/activity, lib/correctionRules, lib/quests, lib/useChatList, lib/useKeyboardInset, shared/api, shared/lib, shared/ui |
 | landing | 1 | 325 | — | 0 | — | shared/lib, shared/ui |
-| quests | 1 | 324 | — | 0 | 3 | lib/activity, lib/correctionRules, lib/quests, lib/useChatList, lib/useKeyboardInset, shared/api, shared/lib, shared/ui |
 | dev | 2 | 308 | — | 0 | — | components, shared/lib, shared/ui |
 | homework | 1 | 271 | — | 0 | — | lib/homework, lib/homeworkLinks, shared/ui |
 | legal | 1 | 231 | — | 0 | — | shared/lib, shared/ui |
-| billing | 1 | 189 | — | 0 | — | components, context, lib/billing, shared/ui |
 | notifications | 3 | 176 | — | 0 | — | context, domains/notifications, shared/lib, shared/ui |
 | program | 2 | 165 | — | 0 | — | lib/studyPlan, shared/lib, shared/ui |
 
@@ -37,12 +37,13 @@
 
 | Слой | Файлов | Строк | Таблицы / RPC | Кем используется |
 |---|---|---|---|---|
-| app | 20 | 1358 | — | — |
+| app | 21 | 1410 | — | — |
 | domains/ai | 4 | 250 | admin_ai_tasks(), admin_ai_usage() | f:admin |
-| domains/notifications | 3 | 138 | notifications, mark_notifications_read() | f:notifications |
-| shared/api | 5 | 2213 | — | app, components, context, domains/ai, domains/notifications, f:admin, f:auth, f:conversation, f:onboarding, f:progress, f:pronunciation, f:quests, f:settings, f:study, f:teacher, f:writing, lib/access, lib/activity, lib/admin, lib/analytics, lib/analyze, lib/billing, lib/cards, lib/chatHistory, lib/contextDict, lib/dailyPlan, lib/definitions, lib/diagnostics, lib/explain, lib/feedback, lib/fsrs, lib/homework, lib/homeworkSuggest, lib/level, lib/materials, lib/mistakes, lib/onboarding, lib/passwordReset, lib/phrase, lib/placement, lib/profile, lib/quests, lib/studyPlan, lib/teacher, lib/textAnalysis, lib/transcribe, lib/wordChecks, lib/wordPool, lib/writing, lib/writingGrade, types, api |
-| shared/lib | 13 | 666 | — | app, context, f:admin, f:auth, f:dev, f:flashcards, f:grammar, f:landing, f:legal, f:notifications, f:practice, f:program, f:quests, f:reader, f:settings, f:study, f:teacher, lib/definitions, lib/esLevel, lib/gameMisses, lib/homeworkRules, lib/homeworkSuggest, lib/mistakes, lib/myTexts, lib/onboarding, lib/profile, lib/recentWords, lib/settings, lib/studyPlan, lib/teacher, lib/useChatList, lib/verbMistakes, lib/wordPool, shared/api, shared/ui |
-| shared/ui | 24 | 1836 | — | app, components, f:admin, f:auth, f:billing, f:conversation, f:dashboard, f:dev, f:flashcards, f:grammar, f:homework, f:landing, f:legal, f:notifications, f:onboarding, f:practice, f:program, f:progress, f:pronunciation, f:quests, f:reader, f:settings, f:study, f:teacher, f:words, f:writing, shared/lib |
+| domains/billing | 3 | 453 | admin_dismiss_payment_claim(), admin_payment_claims(), admin_recent_payments(), confirm_payment(), get_pay_info(), report_payment_sent() | f:admin, f:billing, lib/billing |
+| domains/notifications | 3 | 163 | notifications, mark_notifications_read() | f:notifications |
+| shared/api | 6 | 2486 | — | app, components, context, domains/ai, domains/billing, domains/notifications, f:admin, f:auth, f:conversation, f:onboarding, f:progress, f:pronunciation, f:quests, f:settings, f:study, f:teacher, f:writing, lib/access, lib/activity, lib/admin, lib/analytics, lib/analyze, lib/billing, lib/cards, lib/chatHistory, lib/contextDict, lib/dailyPlan, lib/definitions, lib/diagnostics, lib/explain, lib/feedback, lib/fsrs, lib/homework, lib/homeworkSuggest, lib/level, lib/materials, lib/mistakes, lib/onboarding, lib/passwordReset, lib/phrase, lib/placement, lib/profile, lib/quests, lib/studyPlan, lib/teacher, lib/textAnalysis, lib/transcribe, lib/wordChecks, lib/wordPool, lib/writing, lib/writingGrade, shared/lib, types, api |
+| shared/lib | 17 | 1016 | — | app, components, context, f:admin, f:auth, f:billing, f:conversation, f:dashboard, f:dev, f:flashcards, f:grammar, f:landing, f:legal, f:notifications, f:onboarding, f:practice, f:program, f:progress, f:quests, f:reader, f:settings, f:study, f:teacher, f:writing, lib/definitions, lib/esLevel, lib/gameMisses, lib/homeworkRules, lib/homeworkSuggest, lib/mistakes, lib/myTexts, lib/onboarding, lib/profile, lib/recentWords, lib/settings, lib/studyPlan, lib/teacher, lib/useChatList, lib/verbMistakes, lib/wordPool, shared/api, shared/ui |
+| shared/ui | 25 | 1908 | — | app, components, f:admin, f:auth, f:billing, f:conversation, f:dashboard, f:dev, f:flashcards, f:grammar, f:homework, f:landing, f:legal, f:notifications, f:onboarding, f:practice, f:program, f:progress, f:pronunciation, f:quests, f:reader, f:settings, f:study, f:teacher, f:words, f:writing, shared/lib |
 
 ## Модули lib/
 
@@ -67,19 +68,18 @@
 | wordChecks | 189 | f:flashcards, f:progress, f:teacher, f:words, lib/cards, lib/diagnostics, lib/homeworkSuggest | cards, decks, review_states, word_checks, assign_word_check(), submit_word_check() |
 | guided | 163 | components, f:dashboard, f:onboarding, f:practice, f:study | — |
 | textAnalysis | 148 | components, lib/textAnalysisCache | — |
-| billing | 137 | app, components, f:billing, f:dashboard, f:teacher | get_my_plan() |
+| profile | 134 | app, context, f:conversation, f:dashboard, f:onboarding, f:settings, f:study, f:teacher, lib/level, lib/teacher, lib/wordPool | profiles |
 | transcribe | 132 | f:pronunciation | — |
-| chatHistory | 120 | f:conversation | conversations, messages |
+| chatHistory | 119 | f:conversation | conversations, messages |
 | studentSignals | 117 | f:teacher | — |
-| profile | 116 | app, context, f:conversation, f:dashboard, f:onboarding, f:settings, f:study, f:teacher, lib/level, lib/teacher, lib/wordPool | profiles |
+| admin | 113 | f:admin | admin_feedback(), admin_find_user(), admin_recent_errors(), admin_set_plan() |
 | dynamics | 113 | f:teacher, lib/diagnostics | — |
 | analyze | 111 | components, lib/textAnalysis | — |
 | selfCorrect | 111 | components, f:words | — |
-| admin | 110 | f:admin | admin_feedback(), admin_find_user(), admin_recent_errors(), admin_set_plan() |
 | dailyPlanCore | 110 | lib/dailyPlan | — |
 | access | 104 | app, f:auth | profiles |
 | myTexts | 101 | f:reader, f:teacher | — |
-| analytics | 100 | app, f:auth, f:onboarding, lib/admin, lib/cards, lib/errorLog, lib/materials, lib/teacher | track_event() |
+| analytics | 100 | app, f:auth, f:onboarding, lib/cards, lib/errorLog, lib/materials, lib/teacher | track_event() |
 | speech | 100 | components, f:dashboard, f:flashcards, f:grammar, f:pronunciation, f:reader, f:settings, f:words | — |
 | diagnosticsBrief | 98 | f:progress, lib/homeworkSuggest, lib/materials, lib/studyPlan | — |
 | homework | 98 | f:homework, f:study, f:teacher, lib/homeworkLinks, lib/homeworkRules | choose_homework_item(), complete_homework_item(), create_homework(), get_homework(), get_homework_many() |
@@ -92,15 +92,16 @@
 | text | 85 | components, f:flashcards, f:grammar, f:teacher, f:words, lib/materials, lib/selfCorrect | — |
 | errorLog | 82 | app | — |
 | pickRound | 80 | lib/wordPool | — |
-| quests | 71 | f:dashboard, f:quests, f:study, f:teacher, lib/diagnostics | grammar_quests, assign_grammar_quest(), delete_grammar_quest(), quest_correct_answer(), save_quest_messages() |
+| quests | 75 | f:dashboard, f:quests, f:study, f:teacher, lib/diagnostics | grammar_quests, assign_grammar_quest(), delete_grammar_quest(), quest_correct_answer(), save_quest_messages() |
+| billing | 70 | app, components, f:billing, f:dashboard, f:teacher | get_my_plan() |
 | cefr | 68 | lib/textAnalysis | — |
 | homeworkLinks | 68 | f:homework | — |
 | useChatList | 66 | f:conversation, f:quests | — |
 | activityDays | 62 | f:teacher, lib/diagnostics, lib/studentSignals, lib/teacher | — |
 | gameMisses | 61 | f:flashcards, f:words | — |
 | settings | 59 | f:reader, f:settings, lib/speech | — |
+| dailyPlan | 57 | f:dashboard, f:teacher | teacher_students, set_daily_plan() |
 | aiHealth | 55 | f:conversation | — |
-| dailyPlan | 55 | f:dashboard, f:teacher | teacher_students, set_daily_plan() |
 | onboarding | 55 | app, f:onboarding | activity_log |
 | correctionRules | 54 | f:quests, lib/writingGrade | — |
 | materialExercises | 53 | lib/materials | — |
@@ -119,9 +120,10 @@
 | random | 21 | f:grammar, f:onboarding, f:pronunciation, lib/wordPool | — |
 | useScrollTop | 14 | f:grammar, f:practice, f:reader, f:study, f:teacher, f:writing | — |
 
-## Прямые импорты между разделами (17)
+## Прямые импорты между разделами (18)
 
-- `src/features/dashboard/DashboardPage.tsx` → `src/features/teacher/TeacherBlock.tsx`
+- `src/features/dashboard/DashboardPage.tsx` → `src/features/teacher/index.ts`
+- `src/features/dashboard/useHomeData.ts` → `src/features/teacher/index.ts`
 - `src/features/practice/GrammarMixMode.tsx` → `src/features/words/GameShell.tsx`
 - `src/features/practice/PracticePage.tsx` → `src/features/flashcards/DeckReview.tsx`
 - `src/features/practice/PracticePage.tsx` → `src/features/words/DictationMode.tsx`
@@ -220,14 +222,17 @@
 - **writing_task_assignments** — 1 файл(ов): `lib/writing.ts`
 - **writing_tasks** — 1 файл(ов): `lib/writing.ts`
 
-## RPC: кто их зовёт (51)
+## RPC: кто их зовёт (57)
 
 - **admin_ai_tasks()** — `domains/ai/api.ts`
 - **admin_ai_usage()** — `domains/ai/api.ts`
+- **admin_dismiss_payment_claim()** — `domains/billing/api.ts`
 - **admin_feedback()** — `lib/admin.ts`
 - **admin_find_user()** — `lib/admin.ts`
 - **admin_funnel()** — `features/admin/AdminPage.tsx`
+- **admin_payment_claims()** — `domains/billing/api.ts`
 - **admin_recent_errors()** — `lib/admin.ts`
+- **admin_recent_payments()** — `domains/billing/api.ts`
 - **admin_set_plan()** — `lib/admin.ts`
 - **assign_grammar_quest()** — `lib/quests.ts`
 - **assign_material()** — `lib/materials.ts`
@@ -239,6 +244,7 @@
 - **cancel_placement()** — `lib/placement.ts`
 - **choose_homework_item()** — `lib/homework.ts`
 - **complete_homework_item()** — `lib/homework.ts`
+- **confirm_payment()** — `domains/billing/api.ts`
 - **create_homework()** — `lib/homework.ts`
 - **delete_grammar_quest()** — `lib/quests.ts`
 - **ensure_invite_code()** — `lib/teacher.ts`
@@ -247,6 +253,7 @@
 - **get_homework()** — `lib/homework.ts`
 - **get_homework_many()** — `lib/homework.ts`
 - **get_my_plan()** — `lib/billing.ts`
+- **get_pay_info()** — `domains/billing/api.ts`
 - **join_teacher()** — `lib/teacher.ts`
 - **log_activity()** — `lib/activity.ts`
 - **log_ai_call()** — `api/_usage.ts`
@@ -257,6 +264,7 @@
 - **refund_ai_call()** — `api/_auth.ts`
 - **regenerate_invite_code()** — `lib/teacher.ts`
 - **replace_study_plan()** — `lib/studyPlan.ts`
+- **report_payment_sent()** — `domains/billing/api.ts`
 - **save_material_ai_review()** — `lib/materials.ts`
 - **save_quest_messages()** — `lib/quests.ts`
 - **self_assign_material()** — `lib/materials.ts`

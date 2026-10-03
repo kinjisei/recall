@@ -838,6 +838,143 @@ export type Database = {
           },
         ]
       }
+      payment_claims: {
+        Row: {
+          created_at: string
+          id: string
+          months: number
+          outcome: string | null
+          payment_id: string | null
+          plan: string
+          resolved_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          months?: number
+          outcome?: string | null
+          payment_id?: string | null
+          plan: string
+          resolved_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          months?: number
+          outcome?: string | null
+          payment_id?: string | null
+          plan?: string
+          resolved_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_claims_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_claims_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "access_overview"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount: number
+          confirmed_at: string
+          confirmed_by: string | null
+          ends_at: string
+          id: string
+          method: string
+          months: number
+          note: string | null
+          plan: string
+          request_id: string | null
+          starts_at: string
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          confirmed_at?: string
+          confirmed_by?: string | null
+          ends_at: string
+          id?: string
+          method: string
+          months: number
+          note?: string | null
+          plan: string
+          request_id?: string | null
+          starts_at: string
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          confirmed_at?: string
+          confirmed_by?: string | null
+          ends_at?: string
+          id?: string
+          method?: string
+          months?: number
+          note?: string | null
+          plan?: string
+          request_id?: string | null
+          starts_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_confirmed_by_fkey"
+            columns: ["confirmed_by"]
+            isOneToOne: false
+            referencedRelation: "access_overview"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "payments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "access_overview"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      personal_codes: {
+        Row: {
+          code: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_codes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "access_overview"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       placement_requests: {
         Row: {
           completed_at: string | null
@@ -1373,19 +1510,63 @@ export type Database = {
           requests: number
         }[]
       }
+      admin_dismiss_payment_claim: {
+        Args: { p_claim: string }
+        Returns: undefined
+      }
       admin_feedback: {
         Args: { p_days?: number; p_limit?: number }
         Returns: Json
       }
       admin_find_user: { Args: { q: string }; Returns: Json }
       admin_funnel: { Args: { p_days?: number }; Returns: Json }
+      admin_payment_claims: {
+        Args: never
+        Returns: {
+          claim_plan: string
+          code: string
+          created_at: string
+          display_name: string
+          email: string
+          id: string
+          months: number
+          plan: string
+          plan_expires_at: string
+          role: string
+          students: number
+          trial_until: string
+          updated_at: string
+          user_id: string
+        }[]
+      }
       admin_recent_errors: {
         Args: { p_days?: number; p_limit?: number }
         Returns: Json
       }
+      admin_recent_payments: {
+        Args: { p_limit?: number }
+        Returns: {
+          amount: number
+          confirmed_at: string
+          display_name: string
+          email: string
+          ends_at: string
+          id: string
+          method: string
+          months: number
+          note: string
+          plan: string
+          starts_at: string
+          user_id: string
+        }[]
+      }
       admin_set_plan: {
         Args: { months: number; new_plan: string; target: string }
         Returns: Json
+      }
+      after_payment_confirmed: {
+        Args: { p_payment: string }
+        Returns: undefined
       }
       assign_grammar_quest: {
         Args: {
@@ -1431,6 +1612,25 @@ export type Database = {
       cancel_placement: { Args: { p_id: string }; Returns: undefined }
       choose_homework_item: { Args: { p_item: string }; Returns: undefined }
       complete_homework_item: { Args: { p_item: string }; Returns: undefined }
+      confirm_payment: {
+        Args: {
+          p_amount: number
+          p_claim?: string
+          p_method?: string
+          p_months: number
+          p_note?: string
+          p_plan: string
+          p_request?: string
+          p_user: string
+        }
+        Returns: {
+          ends_at: string
+          id: string
+          plan: string
+          repeated: boolean
+          starts_at: string
+        }[]
+      }
       covering_teacher: {
         Args: { p_paid_only?: boolean; p_student: string }
         Returns: string
@@ -1458,6 +1658,7 @@ export type Database = {
       dispatch_notifications: { Args: never; Returns: number }
       energy_source: { Args: { uid: string }; Returns: Record<string, unknown> }
       ensure_invite_code: { Args: never; Returns: string }
+      ensure_personal_code: { Args: { p_user: string }; Returns: string }
       finish_material_review: {
         Args: { p_id: string; p_review: Json }
         Returns: undefined
@@ -1470,6 +1671,20 @@ export type Database = {
       get_homework: { Args: { p_student?: string }; Returns: Json }
       get_homework_many: { Args: never; Returns: Json }
       get_my_plan: { Args: never; Returns: Json }
+      get_pay_info: {
+        Args: never
+        Returns: {
+          claim_created_at: string
+          claim_id: string
+          claim_months: number
+          claim_plan: string
+          code: string
+          plan: string
+          plan_expires_at: string
+          role: string
+          trial_until: string
+        }[]
+      }
       has_paid_access: { Args: { uid: string }; Returns: boolean }
       has_premium_access: { Args: { uid: string }; Returns: boolean }
       homework_item_progress: { Args: { p_item: string }; Returns: number }
@@ -1479,6 +1694,7 @@ export type Database = {
       }
       is_student_of: { Args: { s_id: string; t_id: string }; Returns: boolean }
       join_teacher: { Args: { code: string }; Returns: string }
+      latin_letters: { Args: { p: string }; Returns: string }
       log_activity: {
         Args: {
           p_day: string
@@ -1547,6 +1763,15 @@ export type Database = {
           p_weeks: Json
         }
         Returns: string
+      }
+      report_payment_sent: {
+        Args: { p_months?: number; p_plan: string }
+        Returns: {
+          created_at: string
+          id: string
+          months: number
+          plan: string
+        }[]
       }
       run_notification_rules: { Args: never; Returns: Json }
       save_material_ai_review: {

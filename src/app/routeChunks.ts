@@ -81,6 +81,7 @@ export const routeScreens = {
   '/privacy': makeRoute(() => import('../features/legal/LegalPage'), (m) => m.PrivacyPage),
   '/terms': makeRoute(() => import('../features/legal/LegalPage'), (m) => m.TermsPage),
   '/pricing': makeRoute(() => import('../features/billing/PricingPage'), (m) => m.PricingPage),
+  '/pay': makeRoute(() => import('../features/billing/PayPage'), (m) => m.PayPage),
   '/admin': makeRoute(() => import('../features/admin/AdminPage'), (m) => m.AdminPage),
 } satisfies Record<string, RouteScreen>
 
@@ -93,7 +94,10 @@ export const devShowcase: RouteScreen | null = import.meta.env.DEV
   ? makeRoute(() => import('../features/dev/UiShowcase'), (m) => m.UiShowcase)
   : null
 
-function screenFor(path: string): RouteScreen | null {
+function screenFor(to: string): RouteScreen | null {
+  // «/practice?m=review» — экран «/practice»: без этого ссылки с параметрами
+  // (прогресс → практика, лендинг → вход, тарифы → оплата) экран не грели
+  const path = to.split(/[?#]/)[0] ?? to
   let best: string | null = null
   for (const key of Object.keys(routeScreens)) {
     if ((path === key || path.startsWith(key + '/')) && (!best || key.length > best.length)) {

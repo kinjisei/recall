@@ -1,14 +1,18 @@
 // ============================================================================
-// Поиск пользователя по email и ручная правка тарифа (включить, продлить,
-// снять). Вынесено из AdminPage.tsx без изменений: страница админки выросла
-// за предел размера файла. Доступ проверяют RPC (admin_find_user,
-// admin_set_plan).
+// Поиск пользователя по email или личному коду из сообщения к переводу.
+// У найденного — «Подтвердить оплату» (перевёл, а «Оплата отправлена» не
+// нажал; правило — confirm_payment, PLAN.md Ф2.1) и ручная правка тарифа БЕЗ
+// оплаты: подарок, исправление, выключить. Ручная правка оплатой не
+// считается — ни в журнале оплат, ни в воронке. Доступ проверяют RPC
+// (admin_find_user, admin_set_plan, confirm_payment).
 // ============================================================================
 import { useState } from 'react'
 import { findUsers, setPlan, type AdminUserRow, type PlanId } from '../../lib/admin'
 import { Button } from '../../shared/ui/Button'
 import { Picker } from '../../shared/ui/Picker'
 import { IconSearch } from '../../shared/ui/icons'
+import { confirmWarnings, isPaidPlan } from '../../domains/billing'
+import { ConfirmPayment } from './payments/ConfirmPayment'
 
 const PLAN_LABELS: Record<PlanId, string> = {
   free: 'Free',
@@ -28,7 +32,7 @@ function fmtDate(iso: string | null): string {
   return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
-export function UserSearch() {
+export function UserSearch({ onPaid }: { onPaid: () => void }) {
   const [query, setQuery] = useState('')
   const [rows, setRows] = useState<AdminUserRow[]>([])
   const [searching, setSearching] = useState(false)
@@ -62,7 +66,7 @@ export function UserSearch() {
           onKeyDown={(e) => {
             if (e.key === 'Enter') runSearch()
           }}
-          placeholder="Email или его часть"
+          placeholder="Email, его часть или код из перевода"
           className="h-11 flex-1 rounded-xl border border-tint/[0.10] bg-input px-3.5 text-sm outline-none focus:border-accent-line"
         />
         <Button onClick={runSearch} loading={searching} className="px-4 py-0">
@@ -78,7 +82,7 @@ export function UserSearch() {
 
       <div className="flex flex-col gap-3">
         {rows.map((row) => (
-          <UserRow key={row.id} row={row} onUpdated={(patch) => patchRow(row.id, patch)} />
+          <UserRow key={row.id} row={row} onUpdated={(patch) => patchRow(row.id, patch)} onPaid={onPaid} />
         ))}
       </div>
     </div>
@@ -88,10 +92,13 @@ export function UserSearch() {
 function UserRow({
   row,
   onUpdated,
+  onPaid,
 }: {
   row: AdminUserRow
   onUpdated: (patch: Partial<AdminUserRow>) => void
+  onPaid: () => void
 }) {
+  const [paying, setPaying] = useState(false)
   const [selPlan, setSelPlan] = useState<PlanId>(row.plan)
   const [selMonths, setSelMonths] = useState(3)
   const [busy, setBusy] = useState(false)
@@ -121,6 +128,7 @@ function UserRow({
         {row.display_name && (
           <span className="text-sm text-fg-muted">{row.display_name}</span>
         )}
+        {row.code && <span className="text-sm text-fg-muted">код {row.code}</span>}
       </div>
 
       <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm text-fg-muted">
@@ -140,20 +148,32 @@ function UserRow({
         )}
       </div>
 
-      {/* У преподавателя без тарифа мест не ограничено, и при покупке МЛАДШЕГО
-          тарифа все набранные ученики разом получают платные лимиты AI.
-          Проверка мест стоит только при привязке, при активации не пересчитывается —
-          поэтому предупреждаем глазами. */}
-      {typeof row.students === 'number' &&
-        row.students > 5 &&
-        !row.plan.startsWith('teacher_') && (
-          <p className="mt-2 rounded-xl bg-warning/10 px-3 py-2 text-xs text-warning-soft-fg">
-            У этого аккаунта уже {row.students} учеников. После включения тарифа все они
-            получат повышенные лимиты AI — проверь, что это ожидаемо.
-          </p>
-        )}
+      {paying ? (
+        <ConfirmPayment
+          payer={{ id: row.id, name: row.display_name || row.email, state: row, students: row.students ?? 0 }}
+          onDone={() => {
+            setPaying(false)
+            onPaid()
+          }}
+          onCancel={() => setPaying(false)}
+        />
+      ) : (
+        <Button onClick={() => setPaying(true)} className="mt-3 min-h-11 px-4 text-sm">
+          Подтвердить оплату
+        </Button>
+      )}
 
-      <div className="mt-3 flex flex-wrap items-center gap-2">
+      <p className="mt-4 text-note text-fg-muted">Ручная правка без оплаты — подарок, исправление, выключить:</p>
+      {/* кого из учеников покрывать, решает база (covering_teacher); здесь —
+          сколько останется без покрытия и не понижается ли действующий тариф */}
+      {isPaidPlan(selPlan) &&
+        confirmWarnings(row, selPlan, row.students ?? 0).map((w) => (
+          <p key={w} className="mt-2 rounded-xl bg-warning/10 px-3 py-2 text-xs text-warning-soft-fg">
+            {w}
+          </p>
+        ))}
+
+      <div className="mt-2 flex flex-wrap items-center gap-2">
         <Picker
           value={selPlan}
           onChange={(id) => setSelPlan(id as PlanId)}

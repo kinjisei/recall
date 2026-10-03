@@ -79,6 +79,18 @@
   Start 10 / Pro 30, в пробный период — `free_teacher_seats()`); привязка
   ученика (`join_teacher`) — под advisory-локом, чтобы двое не заняли одно
   место.
+- **Тариф после оплаты меняет только `confirm_payment`** (миграция 0004,
+  только владелец, одна транзакция: оплата → продление → заявка → крючок
+  рефералки → уведомление → воронка). `payments`, `payment_claims`,
+  `personal_codes` закрыты для чтения и записи всем — только RPC; функции с
+  чужим uid (`ensure_personal_code`, `after_payment_confirmed`) закрыты и от
+  `authenticated`. `admin_set_plan` — ручная правка без оплаты. Правила —
+  `src/domains/billing/CLAUDE.md`, проверка — `check-billing.mjs`.
+- **Ответ RPC — таблицей (`returns table`), а не `json`**, если его читает
+  клиент: тогда `database.types.ts` даёт точный тип строки, и приведение
+  `as unknown as` не нужно (архитектура §8). В `plpgsql` с `returns table`
+  первой строкой тела — `#variable_conflict use_column`: имена колонок ответа
+  (`id`, `plan`) иначе спорят с колонками таблиц в запросах.
 - **`content_items` — устаревшая таблица**, приложение её не читает; на ней
   не строить (удаление — PLAN.md Ф3.13).
 
@@ -97,6 +109,8 @@
   схемы трижды поймал ошибки, а при переходе на миграции показал, что прежний
   слепок не видел колоночных грантов.
 - `node scripts/check-types-drift.mjs` — типы = схема тестовой базы.
+- `node scripts/check-billing.mjs` — оплата тарифа (миграция 0004): продление,
+  права, повторы, заявки — `src/domains/billing/CLAUDE.md`.
 - `node scripts/check-answermatches-sql.mjs` (вне CI, живая база) — сверка
   ответов в SQL (`norm_typed`) совпадает с клиентом (`lib/text.ts`).
 

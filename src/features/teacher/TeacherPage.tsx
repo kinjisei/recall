@@ -4,6 +4,7 @@ import { IconGraduation, IconFlame, IconBadgeCheck } from '../../shared/ui/icons
 import { BackHeader } from '../../shared/ui/BackButton'
 import { GOAL_LABELS } from '../../types'
 import { useUrlState } from '../../shared/lib/useUrlState'
+import { useCopy } from '../../shared/lib/useCopy'
 import { Card } from '../../shared/ui/Card'
 import { Button } from '../../shared/ui/Button'
 import { HowItWorks } from '../../shared/ui/HowItWorks'
@@ -162,7 +163,7 @@ function TeacherDashboard() {
   const tab = (rawTab as TeacherTab | null) ?? 'students'
   const setTab = (t: TeacherTab) => setRawTab(t === 'students' ? null : t)
   const [code, setCode] = useState<string | null>(null)
-  const [copied, setCopied] = useState(false)
+  const { copied, copy } = useCopy()
   const [regenerating, setRegenerating] = useState(false)
   const [stopping, setStopping] = useState(false)
   const [students, setStudents] = useState<StudentInfo[]>([])
@@ -204,15 +205,9 @@ function TeacherDashboard() {
     void load()
   }, [load])
 
-  const copyCode = async () => {
-    if (!code) return
-    try {
-      await navigator.clipboard.writeText(code)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch {
-      /* нет доступа к буферу — код виден на экране */
-    }
+  // нет доступа к буферу — код виден на экране, скопируют руками
+  const copyCode = () => {
+    if (code) void copy('invite', code)
   }
 
   // Перевыпуск кода: старый сразу перестаёт работать, уже привязанные ученики
@@ -243,7 +238,6 @@ function TeacherDashboard() {
     setError(null)
     try {
       setCode(await regenerateInviteCode())
-      setCopied(false)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Не удалось сменить код')
     } finally {

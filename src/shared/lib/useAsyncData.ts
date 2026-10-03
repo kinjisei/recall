@@ -43,9 +43,12 @@ export function useAsyncData<T>(
   const [attempt, setAttempt] = useState(0)
 
   // load пересоздаётся на каждый рендер у вызывающего, поэтому зависим от deps
-  // самого экрана, а не от функции
+  // самого экрана, а не от функции. Обёртка, а не сам load: функция модуля
+  // (`useAsyncData(loadPaymentClaims, [version])`) — один и тот же объект, и
+  // useCallback(load, deps) при смене deps вернул бы его же — экран молча не
+  // перечитывался (нашлось на списке заявок в /admin, PLAN.md Ф2.1)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const run = useCallback(load, deps)
+  const run = useCallback(() => load(), deps)
 
   useEffect(() => {
     let alive = true

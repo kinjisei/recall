@@ -1,15 +1,17 @@
 // ============================================================================
 // «Тарифы» (роут /pricing) — публичная страница, работает и без входа
 // (ссылка со страницы входа/настроек). Показывает статичные карточки тарифов
-// из lib/billing.ts и, если пользователь вошёл и RPC get_my_plan уже есть в
-// БД, плашку с его текущим тарифом.
+// из domains/billing и, если пользователь вошёл, плашку с его текущим
+// тарифом. Оплата — на «Как оплатить» (/pay): реквизиты и «Оплата
+// отправлена» только вошедшему — тариф включается на аккаунт.
 // ============================================================================
 import { useEffect, useState } from 'react'
 import { IconCheck, IconTeacher, IconTrophy } from '../../shared/ui/icons'
 import { BackButton } from '../../shared/ui/BackButton'
+import { AppLink } from '../../shared/ui/AppLink'
 import { OpenPage } from '../../shared/ui/OpenPage'
 import { useAuth } from '../../context/AuthContext'
-import { PLANS, KASPI, getMyPlan, type MyPlan, type PlanCard } from '../../lib/billing'
+import { PLANS, getMyPlan, type MyPlan, type PlanCard } from '../../lib/billing'
 import { energyLeft } from '../../components/EnergyBar'
 
 function formatDate(iso: string): string {
@@ -66,7 +68,11 @@ function Price({ price }: { price: number }) {
   )
 }
 
-function PlanCardView({ plan }: { plan: PlanCard }) {
+/** Ссылка-кнопка в духе Button secondary: ведёт по адресу, а не жмёт действие. */
+const LINK_BUTTON =
+  'lift inline-flex min-h-11 items-center justify-center rounded-xl border border-accent-line bg-accent-soft px-4 text-sm font-medium text-accent-soft-fg'
+
+function PlanCardView({ plan, canPay }: { plan: PlanCard; canPay: boolean }) {
   return (
     <div className="animate-fade-up rounded-2xl border border-tint/[0.08] bg-surface p-4 shadow-card">
       <div className="flex items-center justify-between gap-2">
@@ -86,31 +92,11 @@ function PlanCardView({ plan }: { plan: PlanCard }) {
           <Feature key={f}>{f}</Feature>
         ))}
       </ul>
-    </div>
-  )
-}
-
-/**
- * Реквизиты Kaspi — под кнопкой «Хочу оплатить». Номер не показываем на
- * публичной странице сразу (решение владельца): он раскрывается только тому,
- * кто уже собрался платить.
- */
-function PayDetails() {
-  const [open, setOpen] = useState(false)
-  if (!open) {
-    return (
-      <button
-        onClick={() => setOpen(true)}
-        className="lift mt-3 inline-flex min-h-[44px] items-center rounded-xl border border-accent-line bg-accent-soft px-4 text-sm font-medium text-accent-soft-fg"
-      >
-        Показать реквизиты для оплаты
-      </button>
-    )
-  }
-  return (
-    <div className="mt-3 rounded-xl border border-accent-line bg-accent-soft/40 p-3 text-sm leading-relaxed text-fg-secondary">
-      Kaspi: <span className="font-medium text-fg">{KASPI.phone}</span> ({KASPI.name}).
-      <br />В комментарии к переводу укажи email своего аккаунта — так мы поймём, кому включить тариф.
+      {canPay && plan.price > 0 && (
+        <AppLink to={`/pay?plan=${plan.id}`} className={`mt-4 ${LINK_BUTTON}`}>
+          Оплатить
+        </AppLink>
+      )}
     </div>
   )
 }
@@ -147,7 +133,7 @@ export function PricingPage() {
 
       <div className="mt-6 flex flex-col gap-3">
         {soloPlans.map((p) => (
-          <PlanCardView key={p.id} plan={p} />
+          <PlanCardView key={p.id} plan={p} canPay={!!user} />
         ))}
       </div>
 
@@ -157,19 +143,24 @@ export function PricingPage() {
       </div>
       <div className="mt-3 flex flex-col gap-3">
         {teacherPlans.map((p) => (
-          <PlanCardView key={p.id} plan={p} />
+          <PlanCardView key={p.id} plan={p} canPay={!!user} />
         ))}
       </div>
 
       <section className="animate-fade-up mt-8 rounded-2xl border border-tint/[0.08] bg-surface p-4 shadow-card">
         <h2 className="font-medium">Как оплатить</h2>
         <p className="mt-2 text-sm leading-relaxed text-fg-secondary">
-          Платишь переводом в Kaspi, реквизиты — под кнопкой ниже. Тариф
-          включаем вручную, обычно в тот же день. Если переведёшь ночью, включим
-          утром. Карту мы не привязываем и сами ничего не списываем: чтобы
-          продлить тариф, переведи ещё раз.
+          Платишь переводом на Kaspi Gold: выбираешь тариф, переводишь и
+          нажимаешь «Оплата отправлена». Мы сверяем перевод и включаем тариф,
+          обычно в тот же день; если переведёшь ночью — утром. Карту мы не
+          привязываем и сами ничего не списываем: чтобы продлить тариф, переведи
+          ещё раз. Платишь до конца пробного периода или текущего тарифа — новый
+          срок начнётся, когда они закончатся, ни один день не сгорит.
         </p>
-        <PayDetails />
+        {/* тариф включается на аккаунт: реквизиты — тому, кто вошёл */}
+        <AppLink to={user ? '/pay' : '/login'} className={`mt-3 ${LINK_BUTTON}`}>
+          {user ? 'Как оплатить' : 'Войти, чтобы оплатить'}
+        </AppLink>
         <p className="mt-3 text-sm leading-relaxed text-fg-secondary">
           Первые 14 дней после регистрации — пробный период, открыто всё, карта
           не нужна. Энергии первые три дня столько же, сколько на Premium, —

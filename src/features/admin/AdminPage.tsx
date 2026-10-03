@@ -1,7 +1,8 @@
 // ============================================================================
-// Мини-админка владельца (роут /admin). Поиск ученика/учителя по email после
-// Kaspi-перевода → включение или продление платного плана вручную
-// (UserSearch.tsx), воронка, расход AI, отзывы, ошибки с прода.
+// Мини-админка владельца (роут /admin): оплаты — заявки «Оплата отправлена»,
+// подтверждение и последние оплаты (payments/, PLAN.md Ф2.1); поиск человека
+// по email или коду из перевода (UserSearch.tsx); воронка, расход AI,
+// отзывы, ошибки с прода.
 // Кому показывать экран, решает таблица маршрутов (app/routes.ts, role:
 // 'admin' → app/RoleGate). Сам доступ на сервере проверяют RPC (admin_*).
 // ============================================================================
@@ -10,25 +11,27 @@ import { DeviceTheme } from './DeviceTheme'
 import { AiUsage } from './AiUsage'
 import { supabase } from '../../shared/api/supabase'
 import { UserSearch } from './UserSearch'
+import { Payments } from './payments/Payments'
 import { listRecentErrors, type ClientErrorRow, listFeedback, type FeedbackRow } from '../../lib/admin'
 import { Reveal } from '../../shared/ui/Reveal'
 import { RowsSkeleton } from '../../shared/ui/Loading'
 
 export function AdminPage() {
+  // подтвердили оплату из поиска — блок оплат перечитывает заявки и список
+  const [paidVersion, setPaidVersion] = useState(0)
+  const bump = () => setPaidVersion((v) => v + 1)
   return (
     <div className="flex flex-col gap-6">
       <header>
         <h1 className="text-2xl font-medium tracking-tight">Админка</h1>
-        <p className="mt-1 text-sm text-fg-muted">
-          Оплата пришла на Kaspi → найди по email из комментария перевода → включи план.
-        </p>
       </header>
+      <Payments version={paidVersion} onChanged={bump} />
+      <UserSearch onPaid={bump} />
       <DeviceTheme />
       <Funnel />
       <AiUsage />
       <FeedbackList />
       <RecentErrors />
-      <UserSearch />
     </div>
   )
 }

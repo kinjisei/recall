@@ -38,9 +38,20 @@ export function safeHref(v: unknown): string | undefined {
   return s && s.startsWith('/') && !s.startsWith('//') && !s.includes('\\') ? s : undefined
 }
 
+/** Дата из данных → «16 ноября» по Алматы (как месяцы тарифа в базе); мусор — undefined. */
+function dayFromData(v: unknown): string | undefined {
+  const s = text(v)
+  const t = s ? Date.parse(s) : NaN
+  return Number.isNaN(t)
+    ? undefined
+    : new Date(t).toLocaleDateString('ru-RU', { timeZone: 'Asia/Almaty', day: 'numeric', month: 'long' })
+}
+
 /**
  * Текст уведомления по виду. Виды появляются вместе с правилами (Ф2):
- *   manual — сообщение от Recall (владелец пишет вручную): title, body, href.
+ *   manual — сообщение от Recall (владелец пишет вручную): title, body, href;
+ *   payment_reported — владельцу: человек нажал «Оплата отправлена» (name);
+ *   plan_paid — человеку: владелец подтвердил оплату, тариф до until.
  * Неизвестный вид (правило новее клиента) — не пустая строка, а заголовок из
  * данных или нейтральное «Новое уведомление».
  */
@@ -49,6 +60,20 @@ export function renderNotification(n: Pick<AppNotification, 'kind' | 'data'>): N
   switch (n.kind) {
     case 'manual':
       return { title: text(d.title) ?? 'Сообщение от Recall', body: text(d.body), href: safeHref(d.href) }
+    case 'payment_reported':
+      return {
+        title: 'Оплата отправлена',
+        body: `${text(d.name) ?? 'Без имени'} — проверь перевод в Kaspi и подтверди в админке`,
+        href: safeHref(d.href),
+      }
+    case 'plan_paid': {
+      const until = dayFromData(d.until)
+      return {
+        title: 'Оплата получена',
+        body: until ? `Тариф действует до ${until}` : 'Тариф включён',
+        href: safeHref(d.href),
+      }
+    }
     default:
       return { title: text(d.title) ?? 'Новое уведомление', body: text(d.body), href: safeHref(d.href) }
   }

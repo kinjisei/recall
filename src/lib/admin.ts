@@ -1,12 +1,13 @@
 // ============================================================================
-// Мини-админка владельца: поиск пользователя по email + включение/продление
-// платного плана вручную (после Kaspi-перевода). Обёртка над двумя RPC
+// Описание: src/features/admin/CLAUDE.md
+// Мини-админка владельца: поиск пользователя по email или коду + ручная
+// правка тарифа без оплаты (подарок, исправление; оплату подтверждает
+// domains/billing → confirm_payment). Обёртка над RPC
 // (supabase/migrations, блок «Админ-RPC (только is_admin)») — вся защита на
 // сервере, здесь только вызовы и человеко-читаемые ошибки.
 // ============================================================================
 import { supabase } from '../shared/api/supabase'
 import { dbError } from '../shared/api/errors'
-import { track } from './analytics'
 
 export type PlanId = 'free' | 'premium' | 'teacher_mini' | 'teacher_start' | 'teacher_pro'
 
@@ -24,6 +25,8 @@ export interface AdminUserRow {
   students?: number
   /** Мест по текущему тарифу; null — без ограничения. */
   seats?: number | null
+  /** Личный код из сообщения к переводу (PLAN.md Ф2.1); null — человек ещё не открывал «Как оплатить». */
+  code?: string | null
 }
 
 /** Ответ admin_set_plan — свежие plan/plan_expires_at для обновления строки. */
@@ -50,9 +53,9 @@ export async function setPlan(
   plan: PlanId,
   months: number,
 ): Promise<AdminSetPlanResult> {
-  // конец воронки: событие пишется от имени владельца, но по user_id клиента
-  // его можно связать с источником, из которого этот человек пришёл
-  void track('payment_activated', { plan, months, target })
+  // Ручная правка — не оплата: событие воронки «Оплата включена» пишет
+  // confirm_payment от имени плательщика. Раньше его писал этот вызов от имени
+  // владельца, и все оплаты в воронке считались оплатами владельца.
   const { data, error } = await supabase.rpc('admin_set_plan', {
     target,
     new_plan: plan,
