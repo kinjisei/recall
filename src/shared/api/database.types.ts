@@ -1212,6 +1212,60 @@ export type Database = {
           },
         ]
       }
+      student_cards: {
+        Row: {
+          contact: string | null
+          created_at: string
+          id: string
+          invite_code: string | null
+          name: string
+          note: string | null
+          status: string
+          teacher_id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          contact?: string | null
+          created_at?: string
+          id?: string
+          invite_code?: string | null
+          name: string
+          note?: string | null
+          status?: string
+          teacher_id: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          contact?: string | null
+          created_at?: string
+          id?: string
+          invite_code?: string | null
+          name?: string
+          note?: string | null
+          status?: string
+          teacher_id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_cards_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_cards_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       study_plans: {
         Row: {
           created_at: string
@@ -1707,6 +1761,8 @@ export type Database = {
       }
       become_teacher: { Args: { p_ref?: string }; Returns: undefined }
       cancel_placement: { Args: { p_id: string }; Returns: undefined }
+      card_takes_seat: { Args: { p_status: string }; Returns: boolean }
+      card_text: { Args: { p: string; p_max: number }; Returns: string }
       choose_homework_item: { Args: { p_item: string }; Returns: undefined }
       complete_homework_item: { Args: { p_item: string }; Returns: undefined }
       confirm_payment: {
@@ -1739,6 +1795,15 @@ export type Database = {
           p_lang: string
           p_note?: string
           p_student_id: string
+        }
+        Returns: string
+      }
+      create_student_card: {
+        Args: {
+          p_contact?: string
+          p_name: string
+          p_note?: string
+          p_status?: string
         }
         Returns: string
       }
@@ -1780,6 +1845,23 @@ export type Database = {
           reward_months: number
         }[]
       }
+      get_my_student_cards: {
+        Args: never
+        Returns: {
+          contact: string
+          created_at: string
+          holds_seat: boolean
+          id: string
+          in_app: boolean
+          linked_at: string
+          name: string
+          note: string
+          seat: boolean
+          status: string
+          updated_at: string
+          user_id: string
+        }[]
+      }
       get_pay_info: {
         Args: never
         Returns: {
@@ -1796,6 +1878,10 @@ export type Database = {
       }
       has_paid_access: { Args: { uid: string }; Returns: boolean }
       has_premium_access: { Args: { uid: string }; Returns: boolean }
+      holds_seat: {
+        Args: { p_student: string; p_teacher: string }
+        Returns: boolean
+      }
       homework_item_progress: { Args: { p_item: string }; Returns: number }
       homework_json: {
         Args: { p_student: string; p_teacher?: string }
@@ -1804,6 +1890,7 @@ export type Database = {
       is_student_of: { Args: { s_id: string; t_id: string }; Returns: boolean }
       join_teacher: { Args: { code: string }; Returns: string }
       latin_letters: { Args: { p: string }; Returns: string }
+      lock_teacher_seats: { Args: { p_teacher: string }; Returns: undefined }
       log_activity: {
         Args: {
           p_day: string
@@ -1836,6 +1923,7 @@ export type Database = {
         Args: { m_id: string; u_id: string }
         Returns: boolean
       }
+      new_invite_code: { Args: never; Returns: string }
       norm_answer: { Args: { s: string }; Returns: string }
       norm_typed: { Args: { s: string }; Returns: string }
       notify: {
@@ -1848,6 +1936,7 @@ export type Database = {
         Returns: boolean
       }
       notify_access_ending: { Args: { p_now: string }; Returns: number }
+      pin_default_seats: { Args: { p_teacher: string }; Returns: undefined }
       plan_price: { Args: { p_plan: string }; Returns: number }
       quest_correct_answer: { Args: { p_id: string }; Returns: number }
       reassign_material: {
@@ -1903,12 +1992,33 @@ export type Database = {
         Args: { p_id: string; p_messages: Json }
         Returns: undefined
       }
+      seat_links: {
+        Args: { p_teacher: string }
+        Returns: {
+          created_at: string | null
+          daily_plan: Json | null
+          id: string
+          seat: boolean
+          student_id: string
+          teacher_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "teacher_students"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       self_assign_material: {
         Args: { p_material_id: string }
         Returns: undefined
       }
       set_daily_plan: {
         Args: { p_plan: Json; p_student_id: string }
+        Returns: undefined
+      }
+      set_student_card_status: {
+        Args: { p_card: string; p_status: string }
         Returns: undefined
       }
       set_student_seat: {
@@ -1935,6 +2045,7 @@ export type Database = {
         Returns: string
       }
       stop_teaching: { Args: never; Returns: undefined }
+      student_card_invite: { Args: { p_card: string }; Returns: string }
       submit_material: {
         Args: {
           p_answers: Json
@@ -1984,6 +2095,15 @@ export type Database = {
       }
       unassign_writing_task: {
         Args: { p_student_id: string; p_task_id: string }
+        Returns: undefined
+      }
+      update_student_card: {
+        Args: {
+          p_card: string
+          p_contact?: string
+          p_name: string
+          p_note?: string
+        }
         Returns: undefined
       }
       writing_assigned_to: {
