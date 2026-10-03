@@ -24,7 +24,8 @@
 | Файл | Что там |
 |---|---|
 | `PricingPage.tsx` | страница тарифов; вошедшему — плашка с его тарифом |
-| `src/lib/billing.ts` | карточки тарифов (цены и тексты), `getMyPlan()` |
+| `src/domains/billing` | каталог тарифов (цены и тексты), реквизиты Kaspi — `domains/billing/CLAUDE.md` |
+| `src/lib/billing.ts` | свой тариф: `getMyPlan()`, тип `MyPlan` |
 | `src/components/EnergyBar.tsx` | полоска ⚡ |
 | база | `energy_source` (откуда энергия и сколько), `spend_energy` / `refund_ai_call` (списание и возврат — их зовёт сервер, `api/CLAUDE.md`), `get_my_plan`, `teacher_seats_effective`, `covering_teacher`, `become_teacher`, `stop_teaching`, `admin_set_plan` |
 
@@ -44,7 +45,7 @@
     лимит, не энергия.
 - **Источник энергии:** пул студии (учитель + покрытые тарифом ученики) →
   свой premium → free. Суммы — в `supabase/migrations`, функция
-  `energy_source`; цены и тексты карточек — `lib/billing.ts`. Меняешь одно —
+  `energy_source`; цены и тексты карточек — `domains/billing/model.ts`. Меняешь одно —
   сверь другое.
 - **Тариф покрывает первых N учеников по дате привязки** — иначе можно было
   набрать сотню и купить младший тариф. Список учеников считает покрытие так
