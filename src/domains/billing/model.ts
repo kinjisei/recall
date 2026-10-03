@@ -245,3 +245,36 @@ export function confirmWarnings(s: PlanState, plan: PaidPlan, students: number, 
   }
   return out
 }
+
+// ---- пробный период репетитора (Ф2.2) --------------------------------------------
+
+/** Пробный репетитора — как отдаёт get_my_plan (миграция 0005). */
+export interface TrialState extends PlanState {
+  /** Пошёл ли отсчёт от первого ученика в приложении. */
+  trial_started?: boolean
+  /** Сколько дней пробный длится с первого ученика: 14, по рефералке 21. */
+  trial_days?: number
+}
+
+/**
+ * Что сказать в метке пробного: до первого ученика — «N дней с первого
+ * ученика», если столько ещё влезает до потолка (решение владельца
+ * 03.10.2026, журнал п.61); иначе — сколько календарных дней по Алматы
+ * осталось (0 — сегодня последний). null — пробного нет: кончился или
+ * оплачен тариф репетитора. Склоняет экран (`shared/lib/plural`).
+ * Сам конец пробного считает база (`teacher_trial_end`), здесь — только показ.
+ */
+export type TrialStatus = { kind: 'before_first'; days: number } | { kind: 'left'; days: number }
+
+const DAY_MS = 86400_000
+const almatyDay = (t: number): number => Math.floor((t + ALMATY_OFFSET_MS) / DAY_MS)
+
+export function teacherTrialStatus(s: TrialState, now: Date = new Date()): TrialStatus | null {
+  const end = time(s.trial_until)
+  const at = now.getTime()
+  if (!(end > at)) return null
+  if (s.plan.startsWith('teacher_') && time(s.plan_expires_at) > at) return null
+  const days = s.trial_days ?? 14
+  if (s.trial_started === false && end - at > days * DAY_MS) return { kind: 'before_first', days }
+  return { kind: 'left', days: almatyDay(end) - almatyDay(at) }
+}

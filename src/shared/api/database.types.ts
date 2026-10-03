@@ -1028,6 +1028,7 @@ export type Database = {
           blocked: boolean
           created_at: string | null
           display_name: string | null
+          first_student_at: string | null
           goal: string | null
           id: string
           invite_code: string | null
@@ -1037,12 +1038,14 @@ export type Database = {
           plan: string
           plan_expires_at: string | null
           role: string | null
+          trial_bonus_days: number
           trial_until: string
         }
         Insert: {
           blocked?: boolean
           created_at?: string | null
           display_name?: string | null
+          first_student_at?: string | null
           goal?: string | null
           id: string
           invite_code?: string | null
@@ -1052,12 +1055,14 @@ export type Database = {
           plan?: string
           plan_expires_at?: string | null
           role?: string | null
+          trial_bonus_days?: number
           trial_until?: string
         }
         Update: {
           blocked?: boolean
           created_at?: string | null
           display_name?: string | null
+          first_student_at?: string | null
           goal?: string | null
           id?: string
           invite_code?: string | null
@@ -1067,6 +1072,7 @@ export type Database = {
           plan?: string
           plan_expires_at?: string | null
           role?: string | null
+          trial_bonus_days?: number
           trial_until?: string
         }
         Relationships: [
@@ -1568,6 +1574,7 @@ export type Database = {
         Args: { p_payment: string }
         Returns: undefined
       }
+      assert_teacher_can_write: { Args: never; Returns: undefined }
       assign_grammar_quest: {
         Args: {
           p_lang: string
@@ -1749,6 +1756,7 @@ export type Database = {
       }
       recall_day_start: { Args: never; Returns: string }
       recall_month_start: { Args: never; Returns: string }
+      recompute_teacher_trial: { Args: { p_uid: string }; Returns: string }
       refresh_homework_for: { Args: { p_student: string }; Returns: undefined }
       refund_ai_call: { Args: { p_nonce: string }; Returns: boolean }
       regenerate_invite_code: { Args: never; Returns: string }
@@ -1835,6 +1843,7 @@ export type Database = {
         Args: { p_band: string; p_essay: string; p_grade: Json; p_id: string }
         Returns: undefined
       }
+      teacher_can_write: { Args: { p_uid: string }; Returns: boolean }
       teacher_delete_student_cards: {
         Args: { p_card_ids: Json; p_student_id: string }
         Returns: number
@@ -1843,6 +1852,10 @@ export type Database = {
       teacher_gen_limit: { Args: { p_plan: string }; Returns: number }
       teacher_seat_limit: { Args: { p_plan: string }; Returns: number }
       teacher_seats_effective: { Args: { p_uid: string }; Returns: number }
+      teacher_trial_end: {
+        Args: { p_bonus: number; p_first: string; p_since: string }
+        Returns: string
+      }
       track_event: {
         Args: {
           p_anon?: string

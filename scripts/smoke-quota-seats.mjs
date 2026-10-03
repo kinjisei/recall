@@ -43,7 +43,11 @@ async function mk(email, role) {
     const { data: list } = await admin.auth.admin.listUsers({ perPage: 1000 })
     id = list.users.find((u) => u.email === email)?.id
   } else if (error) throw new Error(error.message)
-  await admin.from('profiles').update({ role, trial_until: past }).eq('id', id)
+  // пробный кончился ПО ПРАВИЛУ, а не одной датой: конец пробного репетитора
+  // база пересчитывает от регистрации и первого ученика (PLAN.md Ф2.2), и
+  // свежий аккаунт с «прошлым» trial_until получил бы пробный заново
+  const monthAgo = new Date(Date.now() - 30 * 86400000).toISOString()
+  await admin.from('profiles').update({ role, trial_until: past, created_at: monthAgo }).eq('id', id)
   return id
 }
 async function signIn(email) {

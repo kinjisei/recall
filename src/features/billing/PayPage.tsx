@@ -12,6 +12,7 @@
 // ============================================================================
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { AppLink } from '../../shared/ui/AppLink'
 import { BackButton } from '../../shared/ui/BackButton'
 import { Button } from '../../shared/ui/Button'
 import { Card } from '../../shared/ui/Card'
@@ -115,6 +116,10 @@ function PayForm({ info, requested }: { info: PayInfo; requested: string | null 
             }
           })}
         />
+        {/* репетитор приходит сюда из меню профиля, минуя страницу тарифов */}
+        <AppLink to="/pricing" className="mt-2 inline-block text-note text-accent-strong">
+          Что входит в каждый тариф
+        </AppLink>
       </section>
 
       <KaspiTransfer amount={amountFor(plan, 1)} code={info.code} />

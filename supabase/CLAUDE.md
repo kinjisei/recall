@@ -86,6 +86,13 @@
   чужим uid (`ensure_personal_code`, `after_payment_confirmed`) закрыты и от
   `authenticated`. `admin_set_plan` — ручная правка без оплаты. Правила —
   `src/domains/billing/CLAUDE.md`, проверка — `check-billing.mjs`.
+- **Пробный период репетитора — производная, а не ввод** (миграция 0005):
+  `profiles.trial_until` репетитору пересчитывают триггеры (включение роли,
+  первый ученик, `trial_bonus_days`) по `teacher_trial_end`. Руками её не
+  ставить — первый ученик перепишет; подарок — `trial_bonus_days`. Смоук,
+  которому нужен «кончившийся пробный», сдвигает регистрацию или включение
+  режима, а не одну дату (`smoke-quota-seats`). Правила —
+  `src/domains/billing/CLAUDE.md`, проверка — `check-trial.mjs`.
 - **Ответ RPC — таблицей (`returns table`), а не `json`**, если его читает
   клиент: тогда `database.types.ts` даёт точный тип строки, и приведение
   `as unknown as` не нужно (архитектура §8). В `plpgsql` с `returns table`
@@ -111,6 +118,8 @@
 - `node scripts/check-types-drift.mjs` — типы = схема тестовой базы.
 - `node scripts/check-billing.mjs` — оплата тарифа (миграция 0004): продление,
   права, повторы, заявки — `src/domains/billing/CLAUDE.md`.
+- `node scripts/check-trial.mjs` — пробный репетитора и запись без тарифа
+  (миграция 0005) — там же.
 - `node scripts/check-answermatches-sql.mjs` (вне CI, живая база) — сверка
   ответов в SQL (`norm_typed`) совпадает с клиентом (`lib/text.ts`).
 

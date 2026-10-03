@@ -22,6 +22,7 @@ import {
   PLANS,
   plansToPay,
   planShortTitle,
+  teacherTrialStatus,
   termAfterPayment,
   termStart,
 } from '../src/domains/billing/model.ts'
@@ -118,6 +119,39 @@ check(
   ['Учеников 7, а мест в тарифе 5: 2 останутся без повышенных лимитов AI.'],
 )
 check('Premium мест не считает', confirmWarnings(state('free', null, null), 'premium', 7, now), [])
+
+// ── метка пробного репетитора (Ф2.2) ─────────────────────────────────────────
+const trial = (until, started, extra = {}) => ({ ...state('free', null, until), trial_started: started, trial_days: 14, ...extra })
+check(
+  'до первого ученика, до потолка 20 дней — «14 дней с первого ученика»',
+  teacherTrialStatus(trial('2026-10-23T10:00:00+05:00', false), now),
+  { kind: 'before_first', days: 14 },
+)
+check(
+  'до первого ученика, но до потолка 5 дней — честно «осталось 5»',
+  teacherTrialStatus(trial('2026-10-08T12:00:00+05:00', false), now),
+  { kind: 'left', days: 5 },
+)
+check(
+  'по рефералке — «21 день с первого ученика»',
+  teacherTrialStatus(trial('2026-10-30T10:00:00+05:00', false, { trial_days: 21 }), now),
+  { kind: 'before_first', days: 21 },
+)
+check('отсчёт пошёл — сколько дней осталось', teacherTrialStatus(trial('2026-10-08T09:00:00+05:00', true), now), { kind: 'left', days: 5 })
+check('кончается сегодня вечером — 0 (последний день)', teacherTrialStatus(trial('2026-10-03T23:00:00+05:00', true), now), { kind: 'left', days: 0 })
+check('дни — по Алматы: завтра в 00:30 по Алматы — это 1 день', teacherTrialStatus(trial('2026-10-03T19:30:00Z', true), now), { kind: 'left', days: 1 })
+check('пробный кончился — метки нет', teacherTrialStatus(trial('2026-10-01T10:00:00+05:00', true), now), null)
+check(
+  'оплачен тариф репетитора — метки нет',
+  teacherTrialStatus({ ...trial('2026-10-20T10:00:00+05:00', true), plan: 'teacher_mini', plan_expires_at: iso('2026-11-03T10:00:00+05:00') }, now),
+  null,
+)
+check(
+  'Premium пробный репетитора не отменяет',
+  teacherTrialStatus({ ...trial('2026-10-08T09:00:00+05:00', true), plan: 'premium', plan_expires_at: iso('2026-11-03T10:00:00+05:00') }, now),
+  { kind: 'left', days: 5 },
+)
+check('старая база без полей пробного — как «отсчёт пошёл»', teacherTrialStatus(state('free', null, '2026-10-08T09:00:00+05:00'), now), { kind: 'left', days: 5 })
 
 console.log(`\nИтог: ${total - fail}/${total}`)
 process.exitCode = fail ? 1 : 0

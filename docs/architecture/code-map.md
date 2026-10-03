@@ -2,7 +2,7 @@
 
 > Генерирует `node scripts/arch-map.mjs`. Руками не править — перезапустить.
 
-Файлов: 271, строк кода: 42849 (без `src/data`).
+Файлов: 271, строк кода: 42951 (без `src/data`).
 
 ## Разделы (features/)
 
@@ -22,7 +22,7 @@
 | practice | 2 | 631 | — | 0 | 2 | components, context, features/flashcards, features/words, lib/activity, lib/cards, lib/fsrs, lib/guided, lib/level, lib/mistakes, lib/useScrollTop, lib/wordPool, shared/lib, shared/ui, src-root |
 | pronunciation | 1 | 498 | cards, review_states | 0 | 1 | components, context, lib/activity, lib/cards, lib/level, lib/random, lib/speech, lib/transcribe, shared/api, shared/ui, src-root |
 | conversation | 2 | 455 | messages | 0 | 10 | context, lib/activity, lib/aiHealth, lib/chatHistory, lib/esLevel, lib/profile, lib/useChatList, lib/useKeyboardInset, shared/api, shared/lib, shared/ui, src-root |
-| billing | 3 | 414 | — | 0 | — | components, context, domains/billing, lib/billing, shared/lib, shared/ui |
+| billing | 3 | 422 | — | 0 | — | components, context, domains/billing, lib/billing, shared/lib, shared/ui |
 | settings | 2 | 410 | profiles | 0 | 4 | components, context, features/auth, lib/esLevel, lib/passwordReset, lib/profile, lib/settings, lib/speech, shared/api, shared/lib, shared/ui |
 | progress | 1 | 341 | review_states | 0 | — | context, lib/activity, lib/cards, lib/diagnostics, lib/diagnosticsBrief, lib/fsrs, lib/wordChecks, shared/api, shared/lib, shared/ui, src-root |
 | quests | 1 | 327 | — | 0 | 3 | lib/activity, lib/correctionRules, lib/quests, lib/useChatList, lib/useKeyboardInset, shared/api, shared/lib, shared/ui |
@@ -37,11 +37,11 @@
 
 | Слой | Файлов | Строк | Таблицы / RPC | Кем используется |
 |---|---|---|---|---|
-| app | 21 | 1410 | — | — |
+| app | 21 | 1445 | — | — |
 | domains/ai | 4 | 250 | admin_ai_tasks(), admin_ai_usage() | f:admin |
-| domains/billing | 3 | 453 | admin_dismiss_payment_claim(), admin_payment_claims(), admin_recent_payments(), confirm_payment(), get_pay_info(), report_payment_sent() | f:admin, f:billing, lib/billing |
+| domains/billing | 3 | 489 | admin_dismiss_payment_claim(), admin_payment_claims(), admin_recent_payments(), confirm_payment(), get_pay_info(), report_payment_sent() | app, f:admin, f:billing, lib/billing |
 | domains/notifications | 3 | 163 | notifications, mark_notifications_read() | f:notifications |
-| shared/api | 6 | 2486 | — | app, components, context, domains/ai, domains/billing, domains/notifications, f:admin, f:auth, f:conversation, f:onboarding, f:progress, f:pronunciation, f:quests, f:settings, f:study, f:teacher, f:writing, lib/access, lib/activity, lib/admin, lib/analytics, lib/analyze, lib/billing, lib/cards, lib/chatHistory, lib/contextDict, lib/dailyPlan, lib/definitions, lib/diagnostics, lib/explain, lib/feedback, lib/fsrs, lib/homework, lib/homeworkSuggest, lib/level, lib/materials, lib/mistakes, lib/onboarding, lib/passwordReset, lib/phrase, lib/placement, lib/profile, lib/quests, lib/studyPlan, lib/teacher, lib/textAnalysis, lib/transcribe, lib/wordChecks, lib/wordPool, lib/writing, lib/writingGrade, shared/lib, types, api |
+| shared/api | 6 | 2502 | — | app, components, context, domains/ai, domains/billing, domains/notifications, f:admin, f:auth, f:conversation, f:onboarding, f:progress, f:pronunciation, f:quests, f:settings, f:study, f:teacher, f:writing, lib/access, lib/activity, lib/admin, lib/analytics, lib/analyze, lib/billing, lib/cards, lib/chatHistory, lib/contextDict, lib/dailyPlan, lib/definitions, lib/diagnostics, lib/explain, lib/feedback, lib/fsrs, lib/homework, lib/homeworkSuggest, lib/level, lib/materials, lib/mistakes, lib/onboarding, lib/passwordReset, lib/phrase, lib/placement, lib/profile, lib/quests, lib/studyPlan, lib/teacher, lib/textAnalysis, lib/transcribe, lib/wordChecks, lib/wordPool, lib/writing, lib/writingGrade, shared/lib, types, api |
 | shared/lib | 17 | 1016 | — | app, components, context, f:admin, f:auth, f:billing, f:conversation, f:dashboard, f:dev, f:flashcards, f:grammar, f:landing, f:legal, f:notifications, f:onboarding, f:practice, f:program, f:progress, f:quests, f:reader, f:settings, f:study, f:teacher, f:writing, lib/definitions, lib/esLevel, lib/gameMisses, lib/homeworkRules, lib/homeworkSuggest, lib/mistakes, lib/myTexts, lib/onboarding, lib/profile, lib/recentWords, lib/settings, lib/studyPlan, lib/teacher, lib/useChatList, lib/verbMistakes, lib/wordPool, shared/api, shared/ui |
 | shared/ui | 25 | 1908 | — | app, components, f:admin, f:auth, f:billing, f:conversation, f:dashboard, f:dev, f:flashcards, f:grammar, f:homework, f:landing, f:legal, f:notifications, f:onboarding, f:practice, f:program, f:progress, f:pronunciation, f:quests, f:reader, f:settings, f:study, f:teacher, f:words, f:writing, shared/lib |
 
@@ -92,8 +92,8 @@
 | text | 85 | components, f:flashcards, f:grammar, f:teacher, f:words, lib/materials, lib/selfCorrect | — |
 | errorLog | 82 | app | — |
 | pickRound | 80 | lib/wordPool | — |
+| billing | 77 | app, components, f:billing, f:dashboard, f:teacher | get_my_plan() |
 | quests | 75 | f:dashboard, f:quests, f:study, f:teacher, lib/diagnostics | grammar_quests, assign_grammar_quest(), delete_grammar_quest(), quest_correct_answer(), save_quest_messages() |
-| billing | 70 | app, components, f:billing, f:dashboard, f:teacher | get_my_plan() |
 | cefr | 68 | lib/textAnalysis | — |
 | homeworkLinks | 68 | f:homework | — |
 | useChatList | 66 | f:conversation, f:quests | — |

@@ -1,5 +1,7 @@
 // ============================================================================
 // Кружок с инициалом → меню: прогресс, ученики (у преподавателя), выход.
+// У репетитора на пробном под именем — «Пробный · осталось N дней» (макет
+// t9-1, PLAN.md Ф2.2), а «Тариф» ведёт сразу на «Как оплатить».
 // Раньше вёл только на прогресс, а вход в режим преподавателя был лишь
 // карточкой внизу Главной — теперь всё «служебное» собрано в одном месте.
 //
@@ -11,7 +13,10 @@ import { IconChart, IconTeacher, IconGear, IconSignOut, IconCards, IconBadgeChec
 import { FeedbackSheet } from '../../components/FeedbackSheet'
 import { AppLink } from '../../shared/ui/AppLink'
 import { getProfile } from '../../lib/profile'
-import { getMyPlan } from '../../lib/billing'
+import { getMyPlan, type MyPlan } from '../../lib/billing'
+import { teacherTrialStatus } from '../../domains/billing'
+import { plural } from '../../shared/lib/plural'
+import { IconTimer } from '../../shared/ui/icons'
 import { useAuth } from '../../context/AuthContext'
 
 export function AvatarMenu({ opensUp = false }: { opensUp?: boolean }) {
@@ -20,6 +25,7 @@ export function AvatarMenu({ opensUp = false }: { opensUp?: boolean }) {
   const [feedback, setFeedback] = useState(false)
   const [isTeacher, setIsTeacher] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [plan, setPlan] = useState<MyPlan | null>(null)
   const boxRef = useRef<HTMLDivElement>(null)
 
   const name = (user?.user_metadata?.display_name as string | undefined) ?? user?.email ?? '?'
@@ -31,14 +37,20 @@ export function AvatarMenu({ opensUp = false }: { opensUp?: boolean }) {
     getProfile(user.id).then((p) => setIsTeacher(p?.role === 'teacher'))
     // пункт «Админка» — только владельцу; это лишь видимость ссылки,
     // настоящая защита в БД (is_admin проверяют сами RPC)
-    getMyPlan().then((p) => setIsAdmin(!!p?.is_admin))
+    getMyPlan().then((p) => {
+      setIsAdmin(!!p?.is_admin)
+      setPlan(p)
+    })
   }, [user])
 
   // при открытии меню перепроверяем план: если запрос при старте не прошёл
   // (сеть моргнула), «Админка» иначе не появится до перезагрузки
   useEffect(() => {
     if (!open || isAdmin) return
-    getMyPlan().then((p) => setIsAdmin(!!p?.is_admin))
+    getMyPlan().then((p) => {
+      setIsAdmin(!!p?.is_admin)
+      if (p) setPlan(p)
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
@@ -56,6 +68,16 @@ export function AvatarMenu({ opensUp = false }: { opensUp?: boolean }) {
       document.removeEventListener('keydown', onKey)
     }
   }, [open])
+
+  const trial = isTeacher && plan ? teacherTrialStatus(plan) : null
+  const trialText = !trial
+    ? null
+    : trial.kind === 'before_first'
+      ? `Пробный · ${trial.days} ${plural(trial.days, 'день', 'дня', 'дней')} с первого ученика`
+      : trial.days === 0
+        ? 'Пробный · последний день'
+        : `Пробный · осталось ${trial.days} ${plural(trial.days, 'день', 'дня', 'дней')}`
+  const paidTeacher = !!plan?.plan.startsWith('teacher_') && !!plan.plan_expires_at && new Date(plan.plan_expires_at) > new Date()
 
   const itemCls =
     'flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-fg-secondary hover:bg-tint/[0.06] hover:text-fg'
@@ -80,6 +102,11 @@ export function AvatarMenu({ opensUp = false }: { opensUp?: boolean }) {
           }`}
         >
           <p className="truncate px-4 pb-2 pt-1.5 text-xs text-fg-muted">{name}</p>
+          {trialText && (
+            <p className="mx-4 mb-2 flex items-start gap-1.5 rounded-lg bg-tint/[0.06] px-2.5 py-1.5 text-caption leading-snug text-fg-secondary" data-trial>
+              <IconTimer size={13} className="mt-px flex-none" /> <span>{trialText}</span>
+            </p>
+          )}
           <AppLink to="/progress" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
             <IconChart size={17} /> Мой прогресс
           </AppLink>
@@ -92,9 +119,17 @@ export function AvatarMenu({ opensUp = false }: { opensUp?: boolean }) {
                 преподавателя это по-прежнему приглашение, а не название. */}
             <IconTeacher size={17} /> {isTeacher ? 'Преподаватель' : 'Я веду учеников'}
           </AppLink>
-          <AppLink to="/pricing" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
-            <IconCards size={17} /> Тарифы
-          </AppLink>
+          {/* репетитору — сразу «Как оплатить» (макет t9-1), остальным — тарифы */}
+          {isTeacher ? (
+            <AppLink to="/pay" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
+              <IconCards size={17} /> Тариф
+              {!paidTeacher && <span className="ml-auto text-xs font-medium text-accent-strong">Выбрать</span>}
+            </AppLink>
+          ) : (
+            <AppLink to="/pricing" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
+              <IconCards size={17} /> Тарифы
+            </AppLink>
+          )}
           <AppLink to="/settings" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
             <IconGear size={17} /> Настройки
           </AppLink>

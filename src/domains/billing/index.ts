@@ -29,6 +29,7 @@ export {
   plansToPay,
   planShortTitle,
   TEACHER_PLANS,
+  teacherTrialStatus,
   termAfterPayment,
   type PaidPlan,
   type PayMethod,
@@ -36,4 +37,6 @@ export {
   type PlanCard,
   type PlanNow,
   type PlanState,
+  type TrialState,
+  type TrialStatus,
 } from './model'
