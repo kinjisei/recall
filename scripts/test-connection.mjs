@@ -7,12 +7,14 @@
  * отказ прав, истёкший вход, наш русский текст), что ленивый кусок не
  * скачался (и что голое «Failed to fetch» — это сеть, а не кусок), и что
  * settleAll не падает сам, считает сбоем и упавшее, и не ответившее вовремя,
- * и бросившее сразу.
+ * и бросившее сразу. Ошибка базы, уже переведённая dbError, — тоже связь,
+ * если запрос не дошёл (код NETWORK).
  *
  * Запуск: node scripts/test-connection.mjs
  */
 import { CHUNK_OFFLINE_TEXT, isChunkLoadError, isConnectionError } from '../src/shared/api/connection.ts'
 import { LoadTimeoutError, settleAll, withTimeout } from '../src/shared/lib/settleAll.ts'
+import { dbError } from '../src/shared/api/errors.ts'
 
 let ok = 0
 let failed = 0
@@ -30,6 +32,22 @@ check('ошибка supabase-js объектом, не Error — связь', is
 check('вход не обновился без сети (AuthRetryableFetchError) — связь', isConnectionError(named('AuthRetryableFetchError', 'fetch failed')))
 check('не ответил вовремя (LoadTimeoutError) — связь', isConnectionError(new LoadTimeoutError()))
 check('ленивый кусок не скачался — связь', isConnectionError(new TypeError('Failed to fetch dynamically imported module: /assets/x.js')))
+
+// dbError переводит текст («Похоже, пропал интернет…»), и по тексту сбой
+// связи уже не узнать — его несёт код NETWORK (PLAN.md Ф2.3: приглашение
+// коллеги не должно теряться из-за плохой сети)
+const quiet = (f) => {
+  const log = console.error
+  console.error = () => {}
+  try {
+    return f()
+  } finally {
+    console.error = log
+  }
+}
+check('ошибка базы после dbError, нет сети — связь', isConnectionError(quiet(() => dbError({ message: 'TypeError: Failed to fetch', code: '' }, 'включить режим'))))
+check('ошибка базы после dbError, отказ прав — НЕ связь', !isConnectionError(quiet(() => dbError({ message: 'permission denied for table referrals', code: '42501' }, 'загрузить'))))
+check('ошибка базы после dbError, наш код RECALL_BLOCKED — НЕ связь', !isConnectionError(quiet(() => dbError({ message: 'RECALL_BLOCKED', code: 'P0001' }, 'включить режим'))))
 
 check('отказ прав RLS — НЕ связь', !isConnectionError({ message: 'new row violates row-level security policy', code: '42501' }))
 check('истёкший вход (JWT expired) — НЕ связь', !isConnectionError({ message: 'JWT expired', code: 'PGRST301' }))

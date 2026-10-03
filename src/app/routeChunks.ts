@@ -82,6 +82,7 @@ export const routeScreens = {
   '/terms': makeRoute(() => import('../features/legal/LegalPage'), (m) => m.TermsPage),
   '/pricing': makeRoute(() => import('../features/billing/PricingPage'), (m) => m.PricingPage),
   '/pay': makeRoute(() => import('../features/billing/PayPage'), (m) => m.PayPage),
+  '/invite': makeRoute(() => import('../features/referral/InvitePage'), (m) => m.InvitePage),
   '/admin': makeRoute(() => import('../features/admin/AdminPage'), (m) => m.AdminPage),
 } satisfies Record<string, RouteScreen>
 

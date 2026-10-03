@@ -9,6 +9,7 @@ import { dbError } from '../shared/api/errors'
 import { SUPPORT_EMAIL } from '../shared/lib/contacts'
 import { selectProfiles, invalidateProfile } from './profile'
 import { track } from './analytics'
+import { clearPendingRole, pendingRef } from './pendingRole'
 import {
   REGULARITY_WINDOW,
   activeDaysIn,
@@ -80,9 +81,15 @@ export async function regenerateInviteCode(): Promise<string> {
  * Включить себе роль преподавателя (A1). Раньше роль выдавалась только вручную
  * SQL-ом, и попасть в студию самостоятельно было нельзя вообще.
  * Идемпотентно: повторный вызов ничего не ломает.
+ *
+ * Код коллеги из ссылки-приглашения (PLAN.md Ф2.3) уходит сюда же — и при
+ * включении сразу после входа, и по кнопке «Я веду учеников»: не включилось
+ * само (сеть) — приглашение не теряется. База засчитывает его только при
+ * первом включении режима; после успеха метка из ссылки больше не нужна.
  */
 export async function becomeTeacher(): Promise<void> {
-  const { error } = await supabase.rpc('become_teacher')
+  const ref = pendingRef()
+  const { error } = await supabase.rpc('become_teacher', ref ? { p_ref: ref } : {})
   if (error) {
     // RPC ещё не залита в базу (деплой раньше миграции). Общий текст dbError
     // тут хуже: человеку важно знать, что путь всё-таки есть — роль включат
@@ -95,8 +102,9 @@ export async function becomeTeacher(): Promise<void> {
     }
     throw dbError(error, 'включить режим преподавателя')
   }
+  clearPendingRole()
   invalidateProfile()
-  void track('teacher_enabled')
+  void track('teacher_enabled', ref ? { ref: true } : undefined)
 }
 
 /**

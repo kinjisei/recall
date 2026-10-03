@@ -15,7 +15,7 @@
 // Ленивый раздел, не скачанный без сети (import() данных), — свой текст.
 // ============================================================================
 import { useCallback, useEffect, useState } from 'react'
-import { CHUNK_OFFLINE_TEXT, isChunkLoadError, isConnectionError } from '../api/connection'
+import { CHUNK_OFFLINE_TEXT, isChunkLoadError, isConnectionError, NETWORK_CODE } from '../api/connection'
 import { LOAD_TIMEOUT_MS } from './settleAll'
 
 export interface AsyncData<T> {
@@ -25,10 +25,15 @@ export interface AsyncData<T> {
   reload: () => void
 }
 
-/** Текст ошибки для плашки: своё сообщение модуля — как есть, сырое сетевое — общий текст экрана. */
+/**
+ * Текст ошибки для плашки: своё сообщение модуля — как есть, сырое сетевое —
+ * общий текст экрана. Сбой связи, уже переведённый dbError («Похоже, пропал
+ * интернет…», код NETWORK), — тоже как есть: он точнее общего.
+ */
 function errorText(e: unknown, fallbackMessage: string): string {
   if (isChunkLoadError(e)) return CHUNK_OFFLINE_TEXT
-  if (isConnectionError(e)) return fallbackMessage
+  const translated = (e as { code?: unknown } | null)?.code === NETWORK_CODE
+  if (isConnectionError(e) && !translated) return fallbackMessage
   return e instanceof Error ? e.message : fallbackMessage
 }
 

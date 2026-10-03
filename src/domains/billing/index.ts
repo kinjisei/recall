@@ -2,9 +2,12 @@
 export {
   confirmPayment,
   dismissPaymentClaim,
+  dismissReferralHint,
+  loadMyReferral,
   loadPayInfo,
   loadPaymentClaims,
   loadRecentPayments,
+  loadReferralHint,
   reportPaymentSent,
   type ClaimRow,
   type ConfirmInput,
@@ -40,3 +43,17 @@ export {
   type TrialState,
   type TrialStatus,
 } from './model'
+export {
+  cheaperNote,
+  inviteMessage,
+  INVITE_TEXT,
+  parseRefCode,
+  REFERRAL_BONUS_DAYS,
+  referralLink,
+  referralReward,
+  rewardLabel,
+  rewardShort,
+  type ReferralStats,
+  type Reward,
+  type TeacherPlanId,
+} from './referral'

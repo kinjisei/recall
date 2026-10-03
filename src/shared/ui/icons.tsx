@@ -1,5 +1,5 @@
 // ============================================================================
-// Фирменный icon-набор Recall (55 шт.), сгенерирован из handoff/icons/*.svg
+// Фирменный icon-набор Recall (59 шт.), сгенерирован из handoff/icons/*.svg
 // (Claude Design). Единый стиль: viewBox 0 0 24 24, stroke 1.75px (2px у *-fill),
 // currentColor. Меняем весь набор здесь — приложение подхватит.
 //   НЕ РЕДАКТИРОВАТЬ ВРУЧНУЮ: перегенерировать из SVG.
@@ -93,11 +93,17 @@ export const IconGap = icon(
 export const IconGear = icon(
   '<circle cx="12" cy="12" r="3.25"></circle><path d="M12 3.5v2.4M12 18.1v2.4M20.5 12h-2.4M5.9 12H3.5M18 6l-1.7 1.7M7.7 16.3 6 18M18 18l-1.7-1.7M7.7 7.7 6 6"></path>',
 )
+export const IconGift = icon(
+  '<rect x="3.5" y="8.5" width="17" height="4" rx="1.2"></rect><path d="M5 12.5V19a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 19v-6.5M12 8.5v12"></path><path d="M12 8.5c-1.5-3-5-3.6-5-1.3 0 1.6 2.6 1.3 5 1.3zM12 8.5c1.5-3 5-3.6 5-1.3 0 1.6-2.6 1.3-5 1.3z"></path>',
+)
 export const IconGraduation = icon(
   '<path d="M3 9.5 12 5l9 4.5-9 4.5Z"></path><path d="M6.5 11.6v4.2c0 1.5 2.5 2.9 5.5 2.9s5.5-1.4 5.5-2.9v-4.2"></path><path d="M21 9.5v4.5"></path>',
 )
 export const IconHeadphones = icon(
   '<path d="M4.5 17.5v-4a7.5 7.5 0 0 1 15 0v4"></path><rect x="3.5" y="14" width="4.2" height="6" rx="1.9"></rect><rect x="16.3" y="14" width="4.2" height="6" rx="1.9"></rect>',
+)
+export const IconHeart = icon(
+  '<path d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.6-7 10-7 10z"></path>',
 )
 export const IconHint = icon(
   '<path d="M12 3.5a6 6 0 0 0-3.6 10.8c.9.7 1.6 1.7 1.6 2.7h4c0-1 .7-2 1.6-2.7A6 6 0 0 0 12 3.5Z"></path><path d="M10 20.5h4"></path>',
@@ -107,6 +113,9 @@ export const IconHomeFill = icon(
 )
 export const IconHome = icon(
   '<path d="M4 10.8 12 4.5l8 6.3"></path><path d="M6 9.5V18a1.5 1.5 0 0 0 1.5 1.5h9A1.5 1.5 0 0 0 18 18V9.5"></path><path d="M10 19.5v-4.5h4v4.5"></path>',
+)
+export const IconInfinity = icon(
+  '<path d="M7 9a3 3 0 1 0 0 6c2.5 0 3.5-2 5-3s2.5-3 5-3a3 3 0 1 1 0 6c-2.5 0-3.5-2-5-3s-2.5-3-5-3z"></path>',
 )
 export const IconKeyboard = icon(
   '<rect x="3" y="7" width="18" height="11" rx="2"></rect><path d="M6.5 10.4h.2M9.8 10.4h.2M13.1 10.4h.2M16.4 10.4h.2M6.5 13h.2M16.9 13h.2"></path><path d="M8.5 15.3h7"></path>',
@@ -155,6 +164,9 @@ export const IconSearch = icon(
 )
 export const IconSend = icon(
   '<path d="M20.5 3.5 3.5 9.8l6.2 2.5 2.5 6.2Z"></path><path d="M20.5 3.5 9.7 12.3"></path>',
+)
+export const IconShare = icon(
+  '<path d="M12 4v11M8 8l4-4 4 4"></path><path d="M5 13v5.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V13"></path>',
 )
 export const IconShuffle = icon(
   '<path d="M3.5 7H7l10 10h2.5"></path><path d="M17 14.5 19.5 17 17 19.5"></path><path d="M3.5 17H7l3.2-3.2"></path><path d="M13.8 10.2 17 7h2.5"></path><path d="M17 4.5 19.5 7 17 9.5"></path>',

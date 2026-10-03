@@ -51,6 +51,27 @@ check(
 )
 check('plan_paid с кривой датой — без даты, а не «Invalid Date»', renderNotification({ kind: 'plan_paid', data: { until: 'завтра' } }).body, 'Тариф включён')
 
+// рефералка (Ф2.3): данные пишет apply_referral_rewards / after_payment_confirmed
+check(
+  'referral_rewarded: месяц и дата по Алматы',
+  renderNotification({ kind: 'referral_rewarded', data: { months: 1, days: 0, until: '2026-11-15T20:30:00Z', href: '/invite' } }),
+  { title: 'Подарок за коллегу', body: '+1 месяц к тарифу, теперь он действует до 16 ноября', href: '/invite' },
+)
+check(
+  'referral_rewarded: дни, если коллега выбрал тариф дешевле (18 дней, 7 дней)',
+  [
+    renderNotification({ kind: 'referral_rewarded', data: { months: 0, days: 18, until: '2026-11-15T20:30:00Z' } }).body,
+    renderNotification({ kind: 'referral_rewarded', data: { months: 0, days: 7 } }).body,
+  ],
+  ['+18 дней к тарифу, теперь он действует до 16 ноября', '+7 дней к тарифу'],
+)
+check('referral_rewarded с мусором — без «+undefined»', renderNotification({ kind: 'referral_rewarded', data: { months: 'x' } }).body, 'Тариф продлён')
+check('referral_paid: подарок ждёт своей оплаты, ссылка — «Как оплатить»', renderNotification({ kind: 'referral_paid', data: { href: '/pay' } }), {
+  title: 'По твоей ссылке оплатили тариф',
+  body: 'Подарок добавим, когда оплатишь свой тариф',
+  href: '/pay',
+})
+
 // ── ссылки ───────────────────────────────────────────────────────────────────
 check('внутренний адрес проходит', safeHref('/study?view=reader'), '/study?view=reader')
 check('«//evil.site» — нет', safeHref('//evil.site/x'), undefined)

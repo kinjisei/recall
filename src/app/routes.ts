@@ -99,6 +99,9 @@ export const ROUTES: AppRoute[] = [
   { path: '/program', place: 'app', screen: routeScreens['/program'] },
   // «Как оплатить тариф»: тариф включается на аккаунт — только после входа
   { path: '/pay', place: 'app', screen: routeScreens['/pay'] },
+  // «Пригласи коллегу» (Ф2.3): роли в таблице нет, как у /teacher —
+  // не-репетитору экран сам объясняет, что приглашают репетиторы
+  { path: '/invite', place: 'app', screen: routeScreens['/invite'] },
   { path: '/admin', place: 'app', screen: routeScreens['/admin'], role: 'admin' },
   // витрина дизайн-системы — только в разработке (routeChunks.devShowcase)
   ...(devShowcase ? [{ path: '/dev/ui', place: 'app' as const, screen: devShowcase }] : []),

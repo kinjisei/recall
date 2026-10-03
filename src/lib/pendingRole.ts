@@ -6,14 +6,24 @@
 // режима. Теперь ссылка несёт ?role=teacher, метка кладётся в localStorage и
 // переживает подтверждение почты (оно открывается новой загрузкой страницы,
 // состояние React к тому моменту потеряно).
+//
+// Приглашение коллеги (PLAN.md Ф2.3) — та же ссылка с &ref=<личный код>:
+// код живёт рядом с меткой и уходит в become_teacher при первом включении
+// режима (база даёт +7 дней пробного). ref без role=teacher тоже значит
+// «репетитор»: приглашают только репетиторов.
 // ============================================================================
-const KEY = 'recall.pending_role'
+import { parseRefCode } from '../domains/billing'
 
-/** Запомнить метку из ссылки вида /login?role=teacher. */
+const KEY = 'recall.pending_role'
+const REF_KEY = 'recall.pending_ref'
+
+/** Запомнить метку из ссылки вида /login?role=teacher[&ref=MADINA7]. */
 export function rememberPendingRole(search: string): void {
   try {
-    const role = new URLSearchParams(search).get('role')
-    if (role === 'teacher') localStorage.setItem(KEY, 'teacher')
+    const params = new URLSearchParams(search)
+    const ref = parseRefCode(params.get('ref'))
+    if (params.get('role') === 'teacher' || ref) localStorage.setItem(KEY, 'teacher')
+    if (ref) localStorage.setItem(REF_KEY, ref)
   } catch {
     /* приватный режим — просто не запомним, путь через меню остаётся */
   }
@@ -27,9 +37,28 @@ export function hasPendingTeacherRole(): boolean {
   }
 }
 
+/** Код пригласившего из ссылки; нет — null. */
+export function pendingRef(): string | null {
+  try {
+    return parseRefCode(localStorage.getItem(REF_KEY))
+  } catch {
+    return null
+  }
+}
+
+/** Есть ли в адресе приглашение коллеги — экрану входа, чтобы сказать о бонусе. */
+export function refInSearch(search: string): boolean {
+  try {
+    return parseRefCode(new URLSearchParams(search).get('ref')) !== null
+  } catch {
+    return false
+  }
+}
+
 export function clearPendingRole(): void {
   try {
     localStorage.removeItem(KEY)
+    localStorage.removeItem(REF_KEY)
   } catch {
     /* не страшно: повторное включение роли идемпотентно */
   }

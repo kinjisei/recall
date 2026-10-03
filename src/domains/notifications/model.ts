@@ -1,6 +1,7 @@
 // ============================================================================
-// Уведомления: форма и текст (архитектура §17). Без импортов и без базы —
-// файл проверяется чистым тестом (scripts/test-notifications.mjs), а позже
+// Уведомления: форма и текст (архитектура §17). Без базы, из импортов —
+// только общее склонение (с расширением .ts, чтобы его читал Node): файл
+// проверяется чистым тестом (scripts/test-notifications.mjs), а позже
 // его прочитает и сервер доставки (push — Ф2.9, Telegram — Ф4.3): текст у
 // ленты и у каналов должен быть один.
 //
@@ -8,6 +9,7 @@
 // здесь, по виду: поменять формулировку — выкатка клиента, а не миграция, и
 // старые уведомления в ленте заговорят новыми словами.
 // ============================================================================
+import { plural } from '../../shared/lib/plural.ts'
 
 /** Уведомление, как его отдаёт база (таблица notifications, только свои). */
 export interface AppNotification {
@@ -47,11 +49,27 @@ function dayFromData(v: unknown): string | undefined {
     : new Date(t).toLocaleDateString('ru-RU', { timeZone: 'Asia/Almaty', day: 'numeric', month: 'long' })
 }
 
+/** Подарок рефералки из данных: «1 месяц», «18 дней»; мусор — undefined. */
+function giftLabel(months: unknown, days: unknown): string | undefined {
+  const m = typeof months === 'number' && months > 0 ? months : 0
+  const dd = typeof days === 'number' && days > 0 ? days : 0
+  const parts = [
+    m ? `${m} ${plural(m, 'месяц', 'месяца', 'месяцев')}` : '',
+    dd ? `${dd} ${plural(dd, 'день', 'дня', 'дней')}` : '',
+  ].filter(Boolean)
+  return parts.length ? parts.join(' и ') : undefined
+}
+
 /**
  * Текст уведомления по виду. Виды появляются вместе с правилами (Ф2):
  *   manual — сообщение от Recall (владелец пишет вручную): title, body, href;
  *   payment_reported — владельцу: человек нажал «Оплата отправлена» (name);
- *   plan_paid — человеку: владелец подтвердил оплату, тариф до until.
+ *   plan_paid — человеку: владелец подтвердил оплату, тариф до until (с
+ *     подарками за коллег, если они ждали этой оплаты);
+ *   referral_rewarded — пригласившему: подарок за коллегу (months, days,
+ *     until) — PLAN.md Ф2.3;
+ *   referral_paid — пригласившему: коллега оплатил, а своего тарифа нет —
+ *     подарок ждёт его первой оплаты.
  * Неизвестный вид (правило новее клиента) — не пустая строка, а заголовок из
  * данных или нейтральное «Новое уведомление».
  */
@@ -74,6 +92,21 @@ export function renderNotification(n: Pick<AppNotification, 'kind' | 'data'>): N
         href: safeHref(d.href),
       }
     }
+    case 'referral_rewarded': {
+      const gift = giftLabel(d.months, d.days)
+      const until = dayFromData(d.until)
+      return {
+        title: 'Подарок за коллегу',
+        body: [gift ? `+${gift} к тарифу` : 'Тариф продлён', until && `теперь он действует до ${until}`].filter(Boolean).join(', '),
+        href: safeHref(d.href),
+      }
+    }
+    case 'referral_paid':
+      return {
+        title: 'По твоей ссылке оплатили тариф',
+        body: 'Подарок добавим, когда оплатишь свой тариф',
+        href: safeHref(d.href),
+      }
     default:
       return { title: text(d.title) ?? 'Новое уведомление', body: text(d.body), href: safeHref(d.href) }
   }

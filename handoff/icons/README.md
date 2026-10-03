@@ -1,4 +1,4 @@
-# Иконки Recall (57 шт.)
+# Иконки Recall (59 шт.)
 
 Единый набор: viewBox 0 0 24 24, поле 20x20, stroke 1.75px, round caps/joins,
 stroke="currentColor", fill только в *-fill вариантах (currentColor, opacity .32, stroke 2px — активная вкладка)
@@ -8,4 +8,4 @@ stroke="currentColor", fill только в *-fill вариантах (currentCo
 (имя файла -> PascalCase, например speaker-slow.svg -> IconSpeakerSlow),
 затем заменить Phosphor по всему приложению правкой одного файла.
 
-Список: trash, close, cards, caret-down, package, tray, eye, home, home-fill, practice, practice-fill, study, study-fill, speech, speech-fill, dialog, dialog-fill, speaker, speaker-slow, mic, mic-fill, stop, spinner, check, arrow-right, arrow-up, refresh, search, plus, hint, send, back, gear, sign-out, chart, flame, sparkle, trophy, thumbs-up, badge-check, warning, meaning, gap, translate, headphones, timer, keyboard, puzzle, mcq, pencil, rows, shuffle, teacher, students, materials, graduation, printer
+Список: trash, close, cards, caret-down, package, tray, eye, home, home-fill, practice, practice-fill, study, study-fill, speech, speech-fill, dialog, dialog-fill, speaker, speaker-slow, mic, mic-fill, stop, spinner, check, arrow-right, arrow-up, refresh, search, plus, hint, send, back, gear, sign-out, chart, flame, sparkle, trophy, thumbs-up, badge-check, warning, meaning, gap, translate, headphones, timer, keyboard, puzzle, mcq, pencil, rows, shuffle, teacher, students, materials, graduation, printer, gift, share, infinity, heart (последние четыре — из макета t8, PLAN.md Ф2.3)

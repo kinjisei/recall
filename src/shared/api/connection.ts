@@ -14,6 +14,13 @@
 /** Что пишет fetch без сети: Chrome, Firefox, Safari, node-fetch. */
 export const NETWORK_MESSAGE = /failed to fetch|networkerror|network request failed|load failed|fetcherror/i
 
+/**
+ * Код причины у ошибки приложения (AppError из shared/api/errors), когда
+ * запрос не дошёл из-за сети. Текст такой ошибки уже человеческий («Похоже,
+ * пропал интернет…»), и по тексту сбой связи не узнать.
+ */
+export const NETWORK_CODE = 'NETWORK'
+
 /** Ленивый кусок приложения не скачался: Chrome, Firefox, Safari, старый текст webpack. */
 const CHUNK_MESSAGE = /dynamically imported module|importing a module script failed|chunkloaderror|loading chunk/i
 
@@ -25,6 +32,11 @@ function readMessage(err: unknown): string {
   if (typeof err === 'string') return err
   const m = (err as { message?: unknown } | null)?.message
   return typeof m === 'string' ? m : ''
+}
+
+function readCode(err: unknown): string {
+  const c = (err as { code?: unknown } | null)?.code
+  return typeof c === 'string' ? c : ''
 }
 
 function readName(err: unknown): string {
@@ -41,10 +53,12 @@ export function isChunkLoadError(err: unknown): boolean {
  * Сбой из-за связи: нет сети, сервер не ответил вовремя (LoadTimeoutError из
  * shared/lib/settleAll — сверяем по имени, чтобы модуль остался без импортов),
  * вход не обновился без сети (AuthRetryableFetchError клиента Supabase),
+ * запрос к базе не дошёл (AppError с кодом NETWORK — её текст уже переведён),
  * раздел не скачан.
  */
 export function isConnectionError(err: unknown): boolean {
   const name = readName(err)
   if (name === 'LoadTimeoutError' || name === 'AuthRetryableFetchError') return true
+  if (readCode(err) === NETWORK_CODE) return true
   return NETWORK_MESSAGE.test(readMessage(err)) || isChunkLoadError(err)
 }

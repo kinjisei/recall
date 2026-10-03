@@ -96,9 +96,23 @@ export function getProfile(userId: string): Promise<Profile | null> {
   return loadProfile(userId).catch(() => null)
 }
 
-/** Сбросить кэш — после сохранения настроек профиля или смены пользователя. */
+const PROFILE_CHANGED = 'recall:profile-changed'
+
+/**
+ * Сбросить кэш — после сохранения настроек профиля или смены роли. Каркас
+ * (меню профиля, подарок-рефералка, вкладки по роли) при переходах не
+ * пересоздаётся и без сигнала показывал бы прежнюю роль до перезагрузки:
+ * стал репетитором по ссылке-приглашению — а подарка в шапке нет.
+ */
 export function invalidateProfile(): void {
   cache = null
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event(PROFILE_CHANGED))
+}
+
+/** Подписка на invalidateProfile; возвращает отписку. */
+export function onProfileChanged(listener: () => void): () => void {
+  window.addEventListener(PROFILE_CHANGED, listener)
+  return () => window.removeEventListener(PROFILE_CHANGED, listener)
 }
 
 // Ключи localStorage, которые ОСТАЮТСЯ при выходе — это настройки устройства,

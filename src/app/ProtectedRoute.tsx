@@ -5,6 +5,7 @@ import { isOnboarded, shouldOnboard } from '../lib/onboarding'
 import { isBlocked } from '../lib/access'
 import { hasPendingTeacherRole, clearPendingRole } from '../lib/pendingRole'
 import { becomeTeacher } from '../lib/teacher'
+import { isConnectionError } from '../shared/api/connection'
 import { BlockedScreen } from './BlockedScreen'
 import { opensBeforeOnboarding } from './routes'
 import { CheckingLogin, OfflineGate } from './AuthWait'
@@ -49,12 +50,16 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
   // потому что подтверждение открывает страницу заново.
   // Ошибку глотаем намеренно: не пустить человека в приложение из-за того, что
   // не включился режим, — хуже, чем один раз нажать переключатель вручную.
+  // Метку (и код коллеги из приглашения, PLAN.md Ф2.3) снимает сам
+  // becomeTeacher после успеха. Сбой связи метку не снимает — повторим при
+  // следующем открытии, иначе приглашение пропало бы из-за плохой сети;
+  // любой другой отказ (заблокирован, нет RPC) — снимает, чтобы не биться в
+  // него при каждом входе.
   useEffect(() => {
     if (!user || !hasPendingTeacherRole()) return
-    let alive = true
-    becomeTeacher()
-      .then(() => alive && clearPendingRole())
-      .catch(() => alive && clearPendingRole())
+    becomeTeacher().catch((e) => {
+      if (!isConnectionError(e)) clearPendingRole()
+    })
   }, [user?.id])
 
   // Флаг блокировки перечитываем только при смене пользователя: зависимость на

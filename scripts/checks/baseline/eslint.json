@@ -195,9 +195,6 @@
     }
   },
   "src/app/ProtectedRoute.tsx": {
-    "prefer-const": {
-      "count": 1
-    },
     "react-hooks/exhaustive-deps": {
       "count": 2
     },

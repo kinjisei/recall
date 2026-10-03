@@ -93,6 +93,14 @@
   которому нужен «кончившийся пробный», сдвигает регистрацию или включение
   режима, а не одну дату (`smoke-quota-seats`). Правила —
   `src/domains/billing/CLAUDE.md`, проверка — `check-trial.mjs`.
+- **Рефералка начисляется только подтверждённой оплатой** (миграция 0006):
+  приглашение пишет `become_teacher(p_ref)` при первом включении режима,
+  подарок — крючок `after_payment_confirmed` внутри `confirm_payment`.
+  `referrals` закрыта для чтения и записи всем, счётчик — `get_my_referral`;
+  `attach_referral`, `apply_referral_rewards`, `plan_price`,
+  `referral_reward` закрыты и от `authenticated`. `plan_price` — копия цен
+  каталога клиента: меняешь цену — новая миграция (`test-referral.mjs`).
+  Правила — `src/domains/billing/CLAUDE.md`, проверка — `check-referral.mjs`.
 - **Ответ RPC — таблицей (`returns table`), а не `json`**, если его читает
   клиент: тогда `database.types.ts` даёт точный тип строки, и приведение
   `as unknown as` не нужно (архитектура §8). В `plpgsql` с `returns table`
@@ -120,6 +128,8 @@
   права, повторы, заявки — `src/domains/billing/CLAUDE.md`.
 - `node scripts/check-trial.mjs` — пробный репетитора и запись без тарифа
   (миграция 0005) — там же.
+- `node scripts/check-referral.mjs` — рефералка (миграция 0006): весь путь,
+  обходы, права — там же.
 - `node scripts/check-answermatches-sql.mjs` (вне CI, живая база) — сверка
   ответов в SQL (`norm_typed`) совпадает с клиентом (`lib/text.ts`).
 

@@ -1,12 +1,13 @@
 // ============================================================================
 // Оплата — единственное место, где домен ходит в базу (архитектура §2, §4).
-// Таблицы оплат, заявок и личных кодов закрыты для чтения и записи всем;
-// всё — через RPC миграции 0004 (supabase/migrations/0004_billing.sql).
+// Таблицы оплат, заявок, личных кодов и приглашений закрыты для чтения и
+// записи всем; всё — через RPC миграций 0004 (оплата) и 0006 (рефералка).
 // Права проверяет база: admin_* и confirm_payment отказывают не-владельцу.
 // ============================================================================
 import { supabase } from '../../shared/api/supabase'
 import { dbError } from '../../shared/api/errors'
 import type { PaidPlan, PayMethod, PlanState } from './model'
+import type { ReferralStats } from './referral'
 
 /** Заявка «Оплата отправлена», ещё не подтверждённая владельцем. */
 export interface PaymentClaim {
@@ -161,4 +162,36 @@ export async function loadRecentPayments(limit = 20): Promise<PaymentRow[]> {
     display_name: r.display_name ?? null,
     note: r.note ?? null,
   }))
+}
+
+// ---- рефералка (PLAN.md Ф2.3, миграция 0006) ----------------------------------------
+
+/** Экрану «Пригласи коллегу»: свой код и честный счётчик. Только репетитору. */
+export async function loadMyReferral(): Promise<ReferralStats> {
+  const { data, error } = await supabase.rpc('get_my_referral')
+  if (error) throw dbError(error, 'загрузить приглашения')
+  const r = data?.[0]
+  if (!r) throw new Error('Не удалось загрузить приглашения — обнови страницу.')
+  return {
+    code: r.code,
+    invited: r.invited,
+    paid: r.paid,
+    pending: r.pending,
+    reward: { months: r.reward_months, days: r.reward_days },
+  }
+}
+
+/**
+ * Показать ли разовую подсветку подарка (после первой оплаты тарифа). Сбой —
+ * просто «нет»: подсветка — приятное, а не нужное, и ломать шапку ей нельзя.
+ */
+export async function loadReferralHint(): Promise<boolean> {
+  const { data, error } = await supabase.rpc('referral_hint')
+  return !error && data === true
+}
+
+/** Подсветку закрыли или нажали подарок — больше не показывать нигде. */
+export async function dismissReferralHint(): Promise<void> {
+  const { error } = await supabase.rpc('dismiss_referral_hint')
+  if (error) throw dbError(error, 'закрыть подсказку')
 }

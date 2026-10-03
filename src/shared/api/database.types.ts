@@ -1037,6 +1037,7 @@ export type Database = {
           native_lang: string | null
           plan: string
           plan_expires_at: string | null
+          referral_hint_seen_at: string | null
           role: string | null
           trial_bonus_days: number
           trial_until: string
@@ -1054,6 +1055,7 @@ export type Database = {
           native_lang?: string | null
           plan?: string
           plan_expires_at?: string | null
+          referral_hint_seen_at?: string | null
           role?: string | null
           trial_bonus_days?: number
           trial_until?: string
@@ -1071,6 +1073,7 @@ export type Database = {
           native_lang?: string | null
           plan?: string
           plan_expires_at?: string | null
+          referral_hint_seen_at?: string | null
           role?: string | null
           trial_bonus_days?: number
           trial_until?: string
@@ -1080,6 +1083,76 @@ export type Database = {
             foreignKeyName: "profiles_id_fkey"
             columns: ["id"]
             isOneToOne: true
+            referencedRelation: "access_overview"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      referrals: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          paid_at: string | null
+          payment_id: string | null
+          referee_id: string | null
+          referee_plan: string | null
+          referrer_id: string
+          reward_days: number
+          reward_months: number
+          reward_plan: string | null
+          rewarded_at: string | null
+          status: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          payment_id?: string | null
+          referee_id?: string | null
+          referee_plan?: string | null
+          referrer_id: string
+          reward_days?: number
+          reward_months?: number
+          reward_plan?: string | null
+          rewarded_at?: string | null
+          status?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          payment_id?: string | null
+          referee_id?: string | null
+          referee_plan?: string | null
+          referrer_id?: string
+          reward_days?: number
+          reward_months?: number
+          reward_plan?: string | null
+          rewarded_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_referee_id_fkey"
+            columns: ["referee_id"]
+            isOneToOne: true
+            referencedRelation: "access_overview"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "referrals_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
             referencedRelation: "access_overview"
             referencedColumns: ["user_id"]
           },
@@ -1574,6 +1647,7 @@ export type Database = {
         Args: { p_payment: string }
         Returns: undefined
       }
+      apply_referral_rewards: { Args: { p_referrer: string }; Returns: number }
       assert_teacher_can_write: { Args: never; Returns: undefined }
       assign_grammar_quest: {
         Args: {
@@ -1615,7 +1689,11 @@ export type Database = {
         Args: { p_student_id: string; p_task_id: string }
         Returns: undefined
       }
-      become_teacher: { Args: never; Returns: undefined }
+      attach_referral: {
+        Args: { p_code: string; p_uid: string }
+        Returns: boolean
+      }
+      become_teacher: { Args: { p_ref?: string }; Returns: undefined }
       cancel_placement: { Args: { p_id: string }; Returns: undefined }
       choose_homework_item: { Args: { p_item: string }; Returns: undefined }
       complete_homework_item: { Args: { p_item: string }; Returns: undefined }
@@ -1662,6 +1740,7 @@ export type Database = {
         Returns: boolean
       }
       delete_grammar_quest: { Args: { p_id: string }; Returns: undefined }
+      dismiss_referral_hint: { Args: never; Returns: undefined }
       dispatch_notifications: { Args: never; Returns: number }
       energy_source: { Args: { uid: string }; Returns: Record<string, unknown> }
       ensure_invite_code: { Args: never; Returns: string }
@@ -1678,6 +1757,17 @@ export type Database = {
       get_homework: { Args: { p_student?: string }; Returns: Json }
       get_homework_many: { Args: never; Returns: Json }
       get_my_plan: { Args: never; Returns: Json }
+      get_my_referral: {
+        Args: never
+        Returns: {
+          code: string
+          invited: number
+          paid: number
+          pending: number
+          reward_days: number
+          reward_months: number
+        }[]
+      }
       get_pay_info: {
         Args: never
         Returns: {
@@ -1745,6 +1835,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      plan_price: { Args: { p_plan: string }; Returns: number }
       quest_correct_answer: { Args: { p_id: string }; Returns: number }
       reassign_material: {
         Args: { p_id: string; p_note: string }
@@ -1757,6 +1848,14 @@ export type Database = {
       recall_day_start: { Args: never; Returns: string }
       recall_month_start: { Args: never; Returns: string }
       recompute_teacher_trial: { Args: { p_uid: string }; Returns: string }
+      referral_hint: { Args: never; Returns: boolean }
+      referral_reward: {
+        Args: { p_referee_plan: string; p_referrer_plan: string }
+        Returns: {
+          days: number
+          months: number
+        }[]
+      }
       refresh_homework_for: { Args: { p_student: string }; Returns: undefined }
       refund_ai_call: { Args: { p_nonce: string }; Returns: boolean }
       regenerate_invite_code: { Args: never; Returns: string }

@@ -17,8 +17,8 @@
 // подробность НЕ проглатывается, а уходит в console.error, чтобы диагностика
 // («открой консоль и покажи») осталась возможной.
 // ============================================================================
-import { SUPPORT_EMAIL } from '../lib/contacts'
-import { NETWORK_MESSAGE } from './connection'
+import { SUPPORT_EMAIL } from '../lib/contacts.ts'
+import { NETWORK_CODE, NETWORK_MESSAGE } from './connection.ts'
 
 /**
  * Форма ошибки supabase-js. PostgrestError — обычный объект (не Error!) с
@@ -166,9 +166,15 @@ export class AppError extends Error {
   }
 }
 
-/** Код причины: наш маркер RECALL_* точнее кода библиотеки. */
+/**
+ * Код причины: наш маркер RECALL_* точнее кода библиотеки. Нет сети — NETWORK:
+ * текст ошибки уже переведён, и isConnectionError узнаёт сбой связи по коду
+ * (раньше AppError из-за сети для него была «не связью»).
+ */
 function errorCode(error: unknown): string | undefined {
   const message = readMessage(error)
   const ours = Object.keys(RECALL_TEXTS).find((marker) => message.includes(marker))
-  return ours ?? (readCode(error) || undefined)
+  if (ours) return ours
+  if (NETWORK_MESSAGE.test(message)) return NETWORK_CODE
+  return readCode(error) || undefined
 }

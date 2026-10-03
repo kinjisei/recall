@@ -4,7 +4,8 @@
 // Вкладки — те же, что у нижней панели телефона (app/navigation.ts), с той же
 // скользящей подложкой, только по вертикали. Шапки на компьютере нет: логотип
 // наверху панели, язык, меню профиля и колокольчик уведомлений (только когда
-// они есть, Ф1.5) — внизу; подарок-рефералка встанет туда же в Ф2.10.
+// они есть, Ф1.5) — внизу; над ними у репетитора — строка подарка-рефералки
+// (Ф2.3).
 //
 // Окончательный вид — в редизайне (Ф5); здесь только цвета-токены Nocturne.
 // ⚠️ Ширина w-60 (15rem) — та же, что отступ колонки и DESKTOP_INSETS в
@@ -13,13 +14,16 @@
 import { AppLink } from '../../shared/ui/AppLink'
 import { BrandLogo } from '../../shared/ui/Brand'
 import { NotificationBell } from '../../features/notifications'
+import { GiftButton } from '../../features/referral'
 import { AvatarMenu } from './AvatarMenu'
 import { LangSwitch } from './LangSwitch'
 import { NAV_ICONS } from './navIcons'
+import { useMyRole } from './useMyRole'
 import { useNavTabs } from './useNavTabs'
 
 export function SideNav() {
   const { tabs, activeIndex, onTabClick } = useNavTabs()
+  const teacher = useMyRole() === 'teacher'
 
   return (
     // vt-nav — как у нижней панели: меню выпадает из перехода между экранами
@@ -67,12 +71,21 @@ export function SideNav() {
         })}
       </div>
 
-      <div className="mt-auto flex items-center justify-between gap-2 border-t border-line pt-4">
-        <div className="flex items-center gap-2">
-          <AvatarMenu opensUp />
-          <NotificationBell />
+      <div className="mt-auto">
+        {/* подарок-рефералка (Ф2.3) — строкой: четвёртая круглая кнопка в
+            нижней полосе рядом с EN/ES в 15rem не влезает */}
+        {teacher && (
+          <div className="mb-2">
+            <GiftButton variant="row" />
+          </div>
+        )}
+        <div className="flex items-center justify-between gap-2 border-t border-line pt-4">
+          <div className="flex items-center gap-2">
+            <AvatarMenu opensUp />
+            <NotificationBell />
+          </div>
+          <LangSwitch />
         </div>
-        <LangSwitch />
       </div>
     </nav>
   )

@@ -12,18 +12,17 @@ import { useEffect, useRef, useState } from 'react'
 import { IconChart, IconTeacher, IconGear, IconSignOut, IconCards, IconBadgeCheck, IconThumbsUp } from '../../shared/ui/icons'
 import { FeedbackSheet } from '../../components/FeedbackSheet'
 import { AppLink } from '../../shared/ui/AppLink'
-import { getProfile } from '../../lib/profile'
 import { getMyPlan, type MyPlan } from '../../lib/billing'
 import { teacherTrialStatus } from '../../domains/billing'
 import { plural } from '../../shared/lib/plural'
 import { IconTimer } from '../../shared/ui/icons'
 import { useAuth } from '../../context/AuthContext'
+import { useMyRole } from './useMyRole'
 
 export function AvatarMenu({ opensUp = false }: { opensUp?: boolean }) {
   const { user, signOut } = useAuth()
   const [open, setOpen] = useState(false)
   const [feedback, setFeedback] = useState(false)
-  const [isTeacher, setIsTeacher] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const [plan, setPlan] = useState<MyPlan | null>(null)
   const boxRef = useRef<HTMLDivElement>(null)
@@ -31,10 +30,12 @@ export function AvatarMenu({ opensUp = false }: { opensUp?: boolean }) {
   const name = (user?.user_metadata?.display_name as string | undefined) ?? user?.email ?? '?'
   const initial = name.trim().charAt(0).toUpperCase() || '?'
 
+  // роль — общим хуком каркаса: перечитывается после смены роли (стал
+  // репетитором — «Преподаватель» и «Тариф» без перезагрузки)
+  const isTeacher = useMyRole() === 'teacher'
+
   useEffect(() => {
     if (!user) return
-    // профиль — из общего кэша (lib/profile): Главная запрашивает тот же ряд
-    getProfile(user.id).then((p) => setIsTeacher(p?.role === 'teacher'))
     // пункт «Админка» — только владельцу; это лишь видимость ссылки,
     // настоящая защита в БД (is_admin проверяют сами RPC)
     getMyPlan().then((p) => {

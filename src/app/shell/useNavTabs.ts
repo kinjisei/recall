@@ -1,11 +1,9 @@
 // Вкладки текущего человека и активная из них — одно место для нижней и
 // боковой панели. Роль читается, только когда меню по роли включено
 // (ROLE_NAV_ENABLED): пока выключено, лишнего запроса профиля нет.
-import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
-import { getProfile } from '../../lib/profile'
 import { ROLE_NAV_ENABLED, activeTabIndex, tabsFor, type NavTab } from '../navigation'
+import { useMyRole } from './useMyRole'
 
 export interface NavTabsState {
   tabs: NavTab[]
@@ -17,18 +15,9 @@ export interface NavTabsState {
 
 export function useNavTabs(): NavTabsState {
   const { pathname } = useLocation()
-  const { user } = useAuth()
-  const [role, setRole] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!ROLE_NAV_ENABLED || !user) return
-    let alive = true
-    // профиль — из общего кэша (lib/profile): меню аватара запрашивает тот же ряд
-    getProfile(user.id).then((p) => alive && setRole(p?.role ?? null))
-    return () => {
-      alive = false
-    }
-  }, [user])
+  // роль — общим хуком каркаса (useMyRole): тот же ряд профиля, что у меню
+  // аватара, и перечитывается после смены роли
+  const role = useMyRole(ROLE_NAV_ENABLED)
 
   const tabs = tabsFor(role)
   return {

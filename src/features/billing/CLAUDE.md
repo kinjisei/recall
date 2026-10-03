@@ -94,5 +94,5 @@
 - **Вне папки (указатель «Описание:» в начале файла):** `src/components/EnergyBar.tsx`, `src/lib/billing.ts`
 - **Адреса:** `/pricing`, `/pay`
 - **RPC:** `get_my_plan`
-- **Кто использует (импортом):** `app`, `features/dashboard`, `features/teacher`
+- **Кто использует (импортом):** `app`, `features/dashboard`, `features/referral`, `features/teacher`
 <!-- generated:end -->

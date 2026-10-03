@@ -4,7 +4,8 @@ import { useAuth } from '../../context/AuthContext'
 import { BrandLogo, BrandMark } from '../../shared/ui/Brand'
 import { describeAuthError, describeSignUpError } from '../../lib/access'
 import { supabase } from '../../shared/api/supabase'
-import { rememberPendingRole } from '../../lib/pendingRole'
+import { refInSearch, rememberPendingRole } from '../../lib/pendingRole'
+import { IconGift } from '../../shared/ui/icons'
 import { track } from '../../lib/analytics'
 import { AppLink } from '../../shared/ui/AppLink'
 import { Button } from '../../shared/ui/Button'
@@ -40,6 +41,7 @@ export function LoginPage() {
   useEffect(() => {
     rememberPendingRole(search)
   }, [search])
+  const invited = refInSearch(search)
 
   // ⚠️ state берём из useLocation, а не из глобального location: у window
   // такого поля нет, и адрес молча оказывался бы undefined.
@@ -127,6 +129,13 @@ export function LoginPage() {
                   ? 'Займёт минуту. На почту придёт письмо — подтверди адрес, и можно заниматься.'
                   : 'Войди, чтобы продолжить занятия.'}
             </p>
+            {/* по ссылке-приглашению коллеги (Ф2.3): видно, что она сработала */}
+            {invited && !sentTo && (
+              <p className="flex items-start gap-2 text-sm text-accent-strong" data-referral-note>
+                <IconGift size={18} className="mt-px flex-none" />
+                <span>По приглашению коллеги пробный период у тебя на неделю дольше.</span>
+              </p>
+            )}
           </div>
 
           {sentTo ? (

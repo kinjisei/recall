@@ -177,7 +177,7 @@ View Transitions API, вся плавность продукта стоит 0,8 
 - **Иконки — свои, `icons.tsx`** (инлайн-SVG в стиле Phosphor, без
   библиотеки), **генерируются** из `handoff/icons/*.svg`
   (`node scripts/gen-icons.mjs`), руками не правятся. Иконку убрать — удалить
-  её SVG и перегенерировать. 55 иконок (`IconBell` — Ф1.5, `IconCopy` — Ф2.1); 4 неиспользуемые (`IconStudents`,
+  её SVG и перегенерировать. 59 иконок (`IconBell` — Ф1.5, `IconCopy` — Ф2.1, `IconGift`, `IconShare`, `IconInfinity`, `IconHeart` — Ф2.3, из макета t8); 4 неиспользуемые (`IconStudents`,
   `IconSpeech`, `IconSpeechFill`, `IconMicFill`) удалены 28.09.2026.
 - **Чего не хватает новым экранам** (иконки, компоненты, состояния) — список
   в `docs/design/ui-inventory.md` §6. Добавил оттуда — отметь там же: по описи
@@ -215,5 +215,5 @@ View Transitions API, вся плавность продукта стоит 0,8 
 
 - **Файлы:** `AppLink.tsx`, `BackButton.tsx`, `Brand.tsx`, `breakpoints.ts`, `Button.tsx`, `Card.tsx`, `Chat.tsx`, `ChoiceGroup.tsx`, `Confetti.tsx`, `DraftRestored.tsx`, `HowItWorks.tsx`, `icons.tsx`, `layouts.tsx`, `LoadError.tsx`, `Loading.tsx`, `OpenPage.tsx`, `Picker.tsx`, `Reveal.tsx`, `roundKeys.tsx`, `RowCard.tsx`, `Sheet.tsx`, `TabPicker.tsx`, `theme.ts`, `ThemePicker.tsx`, `Thinking.tsx`, `tokens.css`
 - **localStorage:** `recall.theme`
-- **Кто использует (импортом):** `app`, `components`, `features/admin`, `features/auth`, `features/billing`, `features/conversation`, `features/dashboard`, `features/dev`, `features/flashcards`, `features/grammar`, `features/homework`, `features/landing`, `features/legal`, `features/notifications`, `features/onboarding`, `features/practice`, `features/program`, `features/progress`, `features/pronunciation`, `features/quests`, `features/reader`, `features/settings`, `features/study`, `features/teacher`, `features/words`, `features/writing`, `shared`
+- **Кто использует (импортом):** `app`, `components`, `features/admin`, `features/auth`, `features/billing`, `features/conversation`, `features/dashboard`, `features/dev`, `features/flashcards`, `features/grammar`, `features/homework`, `features/landing`, `features/legal`, `features/notifications`, `features/onboarding`, `features/practice`, `features/program`, `features/progress`, `features/pronunciation`, `features/quests`, `features/reader`, `features/referral`, `features/settings`, `features/study`, `features/teacher`, `features/words`, `features/writing`, `shared`
 <!-- generated:end -->

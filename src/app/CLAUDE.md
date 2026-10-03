@@ -27,16 +27,17 @@
 | `AppProviders.tsx` | провайдеры в одном месте: ErrorBoundary → вход → язык → конфетти |
 | `RoleGate.tsx` | проверка роли для маршрута (сейчас — админка) |
 | `routeChunks.ts` | реестр ленивых экранов: грузит экран при переходе, греет его для ссылок; `devShowcase` — витрина дизайн-системы `/dev/ui`, только в разработке (в сборке ветка вырезается) |
-| `ProtectedRoute.tsx` | пускает только вошедших; заблокированному — `BlockedScreen`; новичка — на онбординг; вход не проверить без сети — `AuthWait` |
+| `ProtectedRoute.tsx` | пускает только вошедших; заблокированному — `BlockedScreen`; новичка — на онбординг; вход не проверить без сети — `AuthWait`; пришёл по ссылке `?role=teacher[&ref=код]` — включает режим репетитора (с кодом коллеги, Ф2.3), сбой связи метку не снимает — повторит при следующем открытии |
 | `AuthWait.tsx` | «Проверяем вход» с подсказкой про плохую связь через 6 с; `OfflineGate` — «нет связи» вместо формы входа, когда вход истёк, а сети нет |
 | `ErrorBoundary.tsx` | сбой отрисовки → понятный экран вместо белого; без сети не скачанный раздел — «Нет интернета», а не «Что-то пошло не так» |
 | `ScrollToTop.tsx`, `PageTracker.tsx` | прокрутка вверх при смене адреса; учёт посещений |
 | `shell/Layout.tsx` | общая рамка по ширине экрана: телефон — `TopBar` + `BottomNav`, компьютер — `SideNav`; колонка экрана или ширина страницы (`screenWidth`); режим раунда; геометрия каркаса для экранов (`shellInsets`) |
 | `shell/SideNav.tsx` | меню компьютера слева: логотип, вкладки со скользящей подложкой, внизу аватар, колокольчик и EN/ES |
-| `shell/TopBar.tsx`, `shell/AvatarMenu.tsx`, `shell/LangSwitch.tsx` | шапка телефона (EN/ES, колокольчик уведомлений — `features/notifications`, только когда они есть, аватар); меню профиля (вниз — в шапке, вверх — в панели; у репетитора — метка пробного и «Тариф · Выбрать» на «Как оплатить», макет t9-1); EN/ES |
+| `shell/TopBar.tsx`, `shell/AvatarMenu.tsx`, `shell/LangSwitch.tsx` | шапка телефона (EN/ES, колокольчик уведомлений — `features/notifications`, только когда они есть, подарок-рефералка у репетитора — `features/referral`, аватар); меню профиля (вниз — в шапке, вверх — в панели; у репетитора — метка пробного и «Тариф · Выбрать» на «Как оплатить», макет t9-1); EN/ES |
 | `navigation.ts` | **меню по роли**: наборы вкладок ученика и учителя, какая вкладка активна на каком адресе; выключатель `ROLE_NAV_ENABLED` |
 | `shell/BottomNav.tsx` | нижняя навигация: вкладки из `navigation.ts` и скользящая подложка |
 | `shell/useNavTabs.ts`, `shell/navIcons.ts` | вкладки текущего человека и активная; иконки вкладок по имени |
+| `shell/useMyRole.ts` | роль вошедшего для каркаса (меню профиля, подарок, вкладки по роли): один запрос профиля на всех, перечитывается после смены роли |
 
 ## Правила, которые нельзя нарушить
 
@@ -92,8 +93,18 @@
   игра идёт колонкой по центру окна, выход — кнопкой «назад» в самой игре.
 - **Колокольчик уведомлений и подарок-рефералка — внизу панели компьютера и
   в шапке телефона**, рядом с аватаром (журнал п.46). Колокольчик появляется,
-  только когда у человека есть уведомления (`features/notifications`);
-  подарка пока нет — PLAN.md Ф2.10.
+  только когда у человека есть уведомления (`features/notifications`).
+  Подарок — только у репетитора (PLAN.md Ф2.3, `features/referral`): в
+  шапке — круглая кнопка, а логотип у репетитора на телефоне сжимается до
+  знака (с колокольчиком и подарком слово Recall выталкивало аватар за край
+  на 390 px); в панели компьютера — строка над нижней полосой (четвёртая
+  кнопка в 15rem не влезает).
+- **Роль для каркаса — только `shell/useMyRole`.** Каркас при переходах не
+  пересоздаётся, а роль меняется на лету (включил режим репетитора, пришёл
+  по ссылке-приглашению): хук перечитывает профиль по сигналу
+  `invalidateProfile` (`lib/profile`). Своё `getProfile(...).then(setRole)`
+  в каркасе показывало бы прежнюю роль до перезагрузки — так было у меню
+  профиля.
 - **Экраны — только из `routeChunks`.** Свой `import()` с тем же путём рядом
   разъедется при первом переименовании, и греться будет не тот кусок.
   Уже подгруженный экран показывается без `Suspense` — иначе переход снимал
@@ -209,7 +220,7 @@
 <!-- Пишет `npm run gen:docs` (scripts/gen/module-docs.mjs) по коду — руками не править. -->
 ## Из кода (сгенерировано)
 
-- **Файлы:** `App.tsx`, `AppProviders.tsx`, `AuthWait.tsx`, `BlockedScreen.tsx`, `ErrorBoundary.tsx`, `main.tsx`, `navigation.ts`, `PageTracker.tsx`, `ProtectedRoute.tsx`, `RoleGate.tsx`, `routeChunks.ts`, `routes.ts`, `ScrollToTop.tsx`, `shell/AvatarMenu.tsx`, `shell/BottomNav.tsx`, `shell/LangSwitch.tsx`, `shell/Layout.tsx`, `shell/navIcons.ts`, `shell/SideNav.tsx`, `shell/TopBar.tsx`, `shell/useNavTabs.ts`
+- **Файлы:** `App.tsx`, `AppProviders.tsx`, `AuthWait.tsx`, `BlockedScreen.tsx`, `ErrorBoundary.tsx`, `main.tsx`, `navigation.ts`, `PageTracker.tsx`, `ProtectedRoute.tsx`, `RoleGate.tsx`, `routeChunks.ts`, `routes.ts`, `ScrollToTop.tsx`, `shell/AvatarMenu.tsx`, `shell/BottomNav.tsx`, `shell/LangSwitch.tsx`, `shell/Layout.tsx`, `shell/navIcons.ts`, `shell/SideNav.tsx`, `shell/TopBar.tsx`, `shell/useMyRole.ts`, `shell/useNavTabs.ts`
 - **localStorage:** `recall.chunk_reload_at`
 - **Кто использует (импортом):** никто
 <!-- generated:end -->
