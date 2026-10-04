@@ -16,6 +16,8 @@ npm-debug.log*
 # отчёты UX-аудитов (генерируются scripts/ux-audit.mjs и ux-audit-schedule.mjs при каждом прогоне; -light — светлая тема)
 ux-audit-report*.md
 ux-audit-schedule-report*.md
+# снимки смоуков (--shots <папка>), если папку положили в корень проекта
+shots-*/
 
 # прототипы Omelette (референсы дизайна, не исходники)
 *.dc.html
