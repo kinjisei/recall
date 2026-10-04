@@ -35,14 +35,19 @@ check('мусор — беда', /не похоже/.test(keyProblem('K', 'ВС�
 check('значение ключа в текст не попадает', !(keyProblem('K', SEC, 'publishable') ?? '').includes('ZyXwVu'))
 
 // --- окружение сборки -------------------------------------------------------------
-const good = { VITE_SUPABASE_URL: URL_, VITE_SUPABASE_PUBLISHABLE_KEY: PUB, SUPABASE_SECRET_KEY: SEC }
+// ключи push (Ф2.9): публичный — 65 байт с 0x04 в начале, приватный — 32 байта
+const VAPID_PUB = Buffer.concat([Buffer.from([4]), Buffer.alloc(64, 7)]).toString('base64url')
+const VAPID_PRIV = Buffer.alloc(32, 9).toString('base64url')
+/** Копия окружения без одного ключа. */
+const without = (env, key) => Object.fromEntries(Object.entries(env).filter(([k]) => k !== key))
+const good = { VITE_SUPABASE_URL: URL_, VITE_SUPABASE_PUBLISHABLE_KEY: PUB, SUPABASE_SECRET_KEY: SEC, VITE_VAPID_PUBLIC_KEY: VAPID_PUB, VAPID_PRIVATE_KEY: VAPID_PRIV }
 check('правильное окружение на Vercel — ок', buildEnvProblems(good, { onVercel: true }).length === 0)
 check('CI без .env — ок', buildEnvProblems({}, { onVercel: false }).length === 0)
 {
-  const p = buildEnvProblems({ VITE_SUPABASE_URL: URL_ }, { onVercel: true })
+  const p = buildEnvProblems(without(good, 'VITE_SUPABASE_PUBLISHABLE_KEY'), { onVercel: true })
   check('Vercel без ключа — сборка падает', p.length === 1 && /не задан/.test(p[0]), p.join('; '))
 }
-check('Vercel без адреса — сборка падает', buildEnvProblems({ VITE_SUPABASE_PUBLISHABLE_KEY: PUB }, { onVercel: true }).length === 1)
+check('Vercel без адреса — сборка падает', buildEnvProblems(without(good, 'VITE_SUPABASE_URL'), { onVercel: true }).length === 1)
 check(
   'старый anon в VITE_SUPABASE_PUBLISHABLE_KEY — падает и локально',
   buildEnvProblems({ ...good, VITE_SUPABASE_PUBLISHABLE_KEY: jwt('anon') }, { onVercel: false }).length === 1,
@@ -60,6 +65,14 @@ check(
   buildEnvProblems({ ...good, VITE_OLD: jwt('service_role') }, { onVercel: false }).some((x) => x.startsWith('VITE_OLD')),
 )
 check('secret без VITE_ — не беда', buildEnvProblems({ ...good, SUPABASE_SECRET_KEY: SEC }, { onVercel: false }).length === 0)
+check('Vercel без ключей push — сборка падает (оба названы)', (() => {
+  const p = buildEnvProblems(without(without(good, 'VITE_VAPID_PUBLIC_KEY'), 'VAPID_PRIVATE_KEY'), { onVercel: true })
+  return p.length === 2 && p.some((x) => x.startsWith('VITE_VAPID_PUBLIC_KEY')) && p.some((x) => x.startsWith('VAPID_PRIVATE_KEY'))
+})())
+check('приватный ключ push в VITE_ — беда, даже без значения-ключа Supabase',
+  buildEnvProblems({ ...good, VITE_VAPID_PRIVATE_KEY: VAPID_PRIV }, { onVercel: false }).some((x) => x.startsWith('VITE_VAPID_PRIVATE_KEY')))
+check('публичный ключ push не того размера — беда',
+  buildEnvProblems({ ...good, VITE_VAPID_PUBLIC_KEY: VAPID_PRIV }, { onVercel: false }).some((x) => x.startsWith('VITE_VAPID_PUBLIC_KEY')))
 
 console.log(`\n${ok} ✓, ${failed} ✗`)
 process.exit(failed ? 1 : 0)

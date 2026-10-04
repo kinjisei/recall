@@ -930,6 +930,24 @@ export type Database = {
           },
         ]
       }
+      notification_dispatches: {
+        Row: {
+          created_at: string
+          ids: string[]
+          request_id: number
+        }
+        Insert: {
+          created_at?: string
+          ids: string[]
+          request_id: number
+        }
+        Update: {
+          created_at?: string
+          ids?: string[]
+          request_id?: number
+        }
+        Relationships: []
+      }
       notification_prefs: {
         Row: {
           lesson_reminders: boolean
@@ -988,6 +1006,7 @@ export type Database = {
       }
       notifications: {
         Row: {
+          attempts: number
           created_at: string
           data: Json
           dedupe_key: string
@@ -998,6 +1017,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          attempts?: number
           created_at?: string
           data?: Json
           dedupe_key: string
@@ -1008,6 +1028,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          attempts?: number
           created_at?: string
           data?: Json
           dedupe_key?: string
@@ -1320,6 +1341,41 @@ export type Database = {
             foreignKeyName: "profiles_id_fkey"
             columns: ["id"]
             isOneToOne: true
+            referencedRelation: "access_overview"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          p256dh: string
+          seen_at: string
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          p256dh: string
+          seen_at?: string
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          p256dh?: string
+          seen_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "access_overview"
             referencedColumns: ["user_id"]
           },
@@ -2169,8 +2225,17 @@ export type Database = {
         Returns: boolean
       }
       delete_grammar_quest: { Args: { p_id: string }; Returns: undefined }
+      delete_push_subscription: {
+        Args: { p_endpoint: string }
+        Returns: undefined
+      }
       dismiss_referral_hint: { Args: never; Returns: undefined }
       dispatch_notifications: { Args: never; Returns: number }
+      dispatch_payload: { Args: { p_ids: string[] }; Returns: Json }
+      drop_stale_lesson_notices: {
+        Args: { p_series: string; p_user: string }
+        Returns: undefined
+      }
       energy_source: { Args: { uid: string }; Returns: Record<string, unknown> }
       ensure_invite_code: { Args: never; Returns: string }
       ensure_personal_code: { Args: { p_user: string }; Returns: string }
@@ -2329,6 +2394,13 @@ export type Database = {
           default_link: string
         }[]
       }
+      get_students_push: {
+        Args: never
+        Returns: {
+          card_id: string
+          push: boolean
+        }[]
+      }
       has_paid_access: { Args: { uid: string }; Returns: boolean }
       has_premium_access: { Args: { uid: string }; Returns: boolean }
       holds_seat: {
@@ -2343,6 +2415,13 @@ export type Database = {
       is_student_of: { Args: { s_id: string; t_id: string }; Returns: boolean }
       join_teacher: { Args: { code: string }; Returns: string }
       latin_letters: { Args: { p: string }; Returns: string }
+      lesson_app_students: {
+        Args: { p_lesson: string }
+        Returns: {
+          card_id: string
+          user_id: string
+        }[]
+      }
       lesson_cancel: {
         Args: { p_charge: boolean; p_lesson: string }
         Returns: number
@@ -2406,9 +2485,35 @@ export type Database = {
         Returns: boolean
       }
       notify_access_ending: { Args: { p_now: string }; Returns: number }
+      notify_lesson_change: {
+        Args: {
+          p_lesson: string
+          p_teacher: string
+          p_version: number
+          p_was_at: string
+          p_was_status: string
+        }
+        Returns: number
+      }
       notify_lessons_low: { Args: { p_card: string }; Returns: boolean }
+      notify_lessons_soon: { Args: { p_now: string }; Returns: number }
+      notify_series_cancel: {
+        Args: { p_series: string; p_since: string; p_teacher: string }
+        Returns: number
+      }
+      notify_series_change: {
+        Args: {
+          p_new: string
+          p_old: string
+          p_since: string
+          p_teacher: string
+        }
+        Returns: number
+      }
       pin_default_seats: { Args: { p_teacher: string }; Returns: undefined }
       plan_price: { Args: { p_plan: string }; Returns: number }
+      push_endpoint_ok: { Args: { p_endpoint: string }; Returns: boolean }
+      push_kinds: { Args: never; Returns: string[] }
       quest_correct_answer: { Args: { p_id: string }; Returns: number }
       reassign_material: {
         Args: { p_id: string; p_note: string }
@@ -2455,9 +2560,14 @@ export type Database = {
       }
       restore_lesson: { Args: { p_lesson: string }; Returns: undefined }
       rule_access_ending: { Args: never; Returns: number }
+      rule_lessons_soon: { Args: never; Returns: number }
       run_notification_rules: { Args: never; Returns: Json }
       save_material_ai_review: {
         Args: { p_id: string; p_review: Json }
+        Returns: undefined
+      }
+      save_push_subscription: {
+        Args: { p_auth: string; p_endpoint: string; p_p256dh: string }
         Returns: undefined
       }
       save_quest_messages: {
@@ -2496,6 +2606,13 @@ export type Database = {
         Args: { p_card: string; p_text: string }
         Returns: string
       }
+      series_app_students: {
+        Args: { p_series: string }
+        Returns: {
+          card_id: string
+          user_id: string
+        }[]
+      }
       series_days: { Args: { p_weekdays: number[] }; Returns: number[] }
       series_fill: {
         Args: { p_from: string; p_now: string; p_series: string }
@@ -2520,6 +2637,7 @@ export type Database = {
         Returns: undefined
       }
       set_default_lesson_link: { Args: { p_link: string }; Returns: undefined }
+      set_lesson_reminders: { Args: { p_on: boolean }; Returns: undefined }
       set_student_card_status: {
         Args: { p_card: string; p_status: string }
         Returns: undefined
@@ -2528,6 +2646,7 @@ export type Database = {
         Args: { p_on: boolean; p_student: string }
         Returns: undefined
       }
+      settle_dispatches: { Args: never; Returns: number }
       spend_energy: {
         Args: {
           p_cost?: number
@@ -2577,6 +2696,7 @@ export type Database = {
       }
       teacher_energy_pool: { Args: { p_plan: string }; Returns: number }
       teacher_gen_limit: { Args: { p_plan: string }; Returns: number }
+      teacher_public_name: { Args: { p_teacher: string }; Returns: string }
       teacher_seat_limit: { Args: { p_plan: string }; Returns: number }
       teacher_seats_effective: { Args: { p_uid: string }; Returns: number }
       teacher_trial_end: {

@@ -13,8 +13,12 @@
  * Чистый: без сети и базы.
  * Запуск: node scripts/test-notifications.mjs
  */
-import { PLAN_NAMES, renderNotification, safeHref, unreadCount, whenLabel } from '../src/domains/notifications/model.ts'
+import './_api-loader.mjs'
 import { PAID_PLANS, planName } from '../src/domains/billing/model.ts'
+
+// модель импортирует соседей с .js (её читает и сервер доставки, Vercel) —
+// динамически, после загрузчика (_api-loader.mjs)
+const { PLAN_NAMES, renderNotification, safeHref, unreadCount, whenLabel } = await import('../src/domains/notifications/model.ts')
 
 let fail = 0
 let total = 0
@@ -33,8 +37,8 @@ check('manual: заголовок, текст, ссылка', renderNotification
 })
 check('manual без заголовка — «Сообщение от Recall»', renderNotification({ kind: 'manual', data: {} }).title, 'Сообщение от Recall')
 check('пробелы вместо заголовка — как без него', renderNotification({ kind: 'manual', data: { title: '   ' } }).title, 'Сообщение от Recall')
-check('неизвестный вид — заголовок из данных', renderNotification({ kind: 'lesson_soon', data: { title: 'Урок через час' } }).title, 'Урок через час')
-check('неизвестный вид без данных — нейтрально', renderNotification({ kind: 'lesson_soon', data: {} }), {
+check('неизвестный вид — заголовок из данных', renderNotification({ kind: 'future_kind', data: { title: 'Что-то новое' } }).title, 'Что-то новое')
+check('неизвестный вид без данных — нейтрально', renderNotification({ kind: 'future_kind', data: {} }), {
   title: 'Новое уведомление',
   body: undefined,
   href: undefined,

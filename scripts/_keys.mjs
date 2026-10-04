@@ -10,6 +10,10 @@
  * ⚠️ Всё, что начинается с VITE_, Vite вшивает в бандл. Секретный ключ в такой
  * переменной — данные всех учеников в открытом доступе. Поэтому сборка
  * проверяет КАЖДУЮ VITE_-переменную, а не только ту, где ключ ждём.
+ *
+ * Ключи push (VAPID, PLAN.md Ф2.9): публичный VITE_VAPID_PUBLIC_KEY — в бандл
+ * (браузер подписывается им) и он же у сервера; приватный VAPID_PRIVATE_KEY —
+ * только сервер. На Vercel без них сборка падает: иначе push молча не работает.
  */
 
 export const PUBLISHABLE = 'sb_publishable_'
@@ -39,6 +43,13 @@ export function keyProblem(name, value, kind) {
   return `${name}: не похоже на ключ Supabase — ждём ${prefix}…`
 }
 
+/** Публичный ключ VAPID: base64url точки P-256 без сжатия (65 байт, первый — 4). */
+export function vapidPublicProblem(value) {
+  if (!/^[A-Za-z0-9_-]+$/.test(value)) return 'не base64url'
+  const raw = Buffer.from(value, 'base64url')
+  return raw.length === 65 && raw[0] === 4 ? null : 'не похоже на публичный ключ VAPID (65 байт)'
+}
+
 /**
  * Проверка окружения сборки. Список бед; пустой — можно собирать.
  * onVercel — сборка для пользователей: без адреса и ключа приложение белое,
@@ -52,8 +63,18 @@ export function buildEnvProblems(env, { onVercel }) {
     if (!name.startsWith('VITE_') || !value) continue
     if (value.startsWith(SECRET) || legacyRole(value) === 'service_role') {
       problems.push(`${name}: секретный ключ в VITE_-переменной — уйдёт в бандл каждому`)
+    } else if (/PRIVATE|SECRET/.test(name)) {
+      problems.push(`${name}: приватное в VITE_-переменной — уйдёт в бандл каждому (убери VITE_ из имени)`)
     }
   }
+  const vapid = env.VITE_VAPID_PUBLIC_KEY
+  if (vapid) {
+    const p = vapidPublicProblem(vapid)
+    if (p) problems.push(`VITE_VAPID_PUBLIC_KEY: ${p}`)
+  } else if (onVercel) {
+    problems.push('VITE_VAPID_PUBLIC_KEY не задан в Vercel — уведомления на телефоны не включатся (node scripts/vapid-keys.mjs)')
+  }
+  if (onVercel && !env.VAPID_PRIVATE_KEY) problems.push('VAPID_PRIVATE_KEY не задан в Vercel — сервер не сможет отправлять уведомления')
   const key = env.VITE_SUPABASE_PUBLISHABLE_KEY
   if (key) {
     const p = keyProblem('VITE_SUPABASE_PUBLISHABLE_KEY', key, 'publishable')

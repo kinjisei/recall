@@ -21,13 +21,14 @@ Vercel (504), запасные модели остались не спрошен
 
 | Файл | Что там |
 |---|---|
-| `gemini.ts`, `transcribe.ts`, `notify.ts` | функции Vercel (`maxDuration` 60 / 30 с; `notify` — вход по секрету, `src/domains/notifications/CLAUDE.md`) |
+| `gemini.ts`, `transcribe.ts`, `notify.ts` | функции Vercel (`maxDuration` 60 / 30 / 60 с; `notify` — вход по секрету, `src/domains/notifications/CLAUDE.md`) |
 | `_tasks.ts` | карта «задача → модель, карман квоты, требуемые права» |
 | `_core.ts`, `_geminiBody.ts`, `_groq.ts`, `_stt.ts` | вызовы Gemini (обычный и поток), Groq, Whisper |
 | `_auth.ts` | вход, проверка роли, списание и возврат ⚡ (`spend_energy`, `refund_ai_call`) |
 | `_timeouts.ts` | все сроки ожидания и запрос со сроком (`timedFetch`, `openStream`) |
 | `_usage.ts` | журнал вызовов AI (`log_ai_call`) |
-| `_channels.ts` | каналы доставки уведомлений (пока пусто: push — Ф2.9, Telegram — Ф4.3) |
+| `_channels.ts` | каналы доставки уведомлений: форма уведомления от базы (с подписками push), итог канала (`gone`, `retry`); Telegram — Ф4.3 |
+| `_push.ts` | канал push (Ф2.9): шифрование и подпись — `web-push` (`generateRequestDetails`), запрос — `timedFetch` 8 с; ответ службы → «ушло / подписки нет / повтор / наша ошибка»; ключи `VITE_VAPID_PUBLIC_KEY` + `VAPID_PRIVATE_KEY` читаются при каждой доставке |
 
 Файл с `_` в начале Vercel не превращает в отдельную функцию.
 
@@ -106,8 +107,25 @@ Vercel (504), запасные модели остались не спрошен
   (`authDenied` в `_auth.ts`), а не приведением типа. В корневом tsconfig
   теперь строгие настройки, и `check-api-vercel.mjs` проверяет `api/` в самом
   слабом режиме — оба конца закрыты.
-- Из клиентского кода `api/` берёт только `src/shared/api/aiTypes.ts` —
-  правило и почему: `src/shared/CLAUDE.md`.
+- Из клиентского кода `api/` берёт только файлы без клиента базы и без
+  `import.meta.env`: протокол AI `src/shared/api/aiTypes.ts` (правило и
+  почему — `src/shared/CLAUDE.md`) и тексты уведомлений
+  `src/domains/notifications/model.ts` + `lessonText.ts` (Ф2.9: текст у ленты
+  и у push один). У этих файлов импорты — с расширением `.js`, как у самих
+  `api/`. Проверка — `check-api-vercel.mjs` (тянет и их).
+
+**Доставка уведомлений (`notify.ts`)**
+
+- **Ошибка наших ключей VAPID не удаляет подписки учеников.** «Подписки
+  больше нет» — только ответ службы 404/410 или негодные ключи самой
+  подписки (`/subscription/` в тексте ошибки `web-push`); «Vapid key…» —
+  наша настройка: без повтора, без удаления, в лог.
+- **Ответ базе — `gone` и `retry`**: сервер в базу не ходит, мёртвые подписки
+  и повтор разбирает она (`settle_dispatches`, миграция 0011). Каналы
+  доставляют по 10 уведомлений одновременно: 100 по очереди не уложились бы в
+  минуту.
+- В dev `/api/notify` отвечает тот же обработчик — до него достучится база
+  тестового проекта через туннель (`scripts/push-tunnel.mjs`).
 
 ## Как проверить
 
@@ -117,6 +135,10 @@ Vercel (504), запасные модели остались не спрошен
   поставщика, бюджет, поток, обычное поведение при 429/503.
 - `node scripts/check-api-vercel.mjs` (в CI) — `api/` так, как их собирает
   Vercel.
+- `node scripts/test-push.mjs` (чистый, в CI) — канал push: расшифровка
+  отправленного, подпись VAPID, ответы службы, `gone`/`retry` в ответе базе.
+- `node scripts/test-notify-endpoint.mjs` (чистый, в CI) — вход по секрету,
+  формат, сбой канала не рвёт ответ.
 - `node scripts/check-ai-models.mjs [--call]` — каждая модель цепочек есть у
   поставщика (список моделей квоту не тратит; `--call` — запросом к Groq).
 - `node scripts/smoke-ai-dev.mjs [--call] [--expect-cheap]` — dev отказывает
@@ -134,12 +156,16 @@ Vercel (504), запасные модели остались не спрошен
 - **Ключа от базы у сервера нет** — корневой `CLAUDE.md`, «Безопасность»,
   правило 3 (отсюда возврат ⚡ по номеру списания). Исключение — `notify.ts`:
   его будит база, вход — секрет.
+- **Push — `web-push` только для шифрования**, а запрос — наш: у библиотеки
+  своя отправка без нашего срока ожидания (`https.request`), а голый запрос
+  в `api/` запрещён. Шифрование своими руками не писали — тест всё равно
+  расшифровывает результат по RFC 8291.
 
 <!-- generated:start -->
 <!-- Пишет `npm run gen:docs` (scripts/gen/module-docs.mjs) по коду — руками не править. -->
 ## Из кода (сгенерировано)
 
-- **Файлы:** `_auth.ts`, `_channels.ts`, `_core.ts`, `_geminiBody.ts`, `_groq.ts`, `_stt.ts`, `_tasks.ts`, `_timeouts.ts`, `_usage.ts`, `gemini.ts`, `notify.ts`, `transcribe.ts`
+- **Файлы:** `_auth.ts`, `_channels.ts`, `_core.ts`, `_geminiBody.ts`, `_groq.ts`, `_push.ts`, `_stt.ts`, `_tasks.ts`, `_timeouts.ts`, `_usage.ts`, `gemini.ts`, `notify.ts`, `transcribe.ts`
 - **Адреса сервера:** `/api/gemini`, `/api/notify`, `/api/transcribe`
 - **Таблицы:** `profiles`
 - **RPC:** `log_ai_call`, `refund_ai_call`, `spend_energy`

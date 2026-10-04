@@ -24,10 +24,21 @@ if (process.argv.includes('--prod')) {
 const env = scriptEnv()
 process.env.VITE_SUPABASE_URL = env.VITE_SUPABASE_URL
 process.env.VITE_SUPABASE_PUBLISHABLE_KEY = env.VITE_SUPABASE_PUBLISHABLE_KEY
+// push (Ф2.9): у тестовой базы свои ключи и секрет доставки — подписка,
+// сделанная здесь, не смешивается с живой (node scripts/vapid-keys.mjs --test)
+for (const [to, from] of [
+  ['VITE_VAPID_PUBLIC_KEY', 'TEST_VAPID_PUBLIC_KEY'],
+  ['VAPID_PRIVATE_KEY', 'TEST_VAPID_PRIVATE_KEY'],
+  ['NOTIFY_SECRET', 'TEST_NOTIFY_SECRET'],
+]) {
+  if (env[from]) process.env[to] = env[from]
+  else delete process.env[to]
+}
 
 const server = await createServer({
   root: new URL('.', ROOT).pathname.replace(/^\/([A-Za-z]:)/, '$1'),
-  server: { port: 5174, strictPort: true },
+  // туннель к телефону (scripts/push-tunnel.mjs) приходит с чужим именем хоста
+  server: { port: 5174, strictPort: true, allowedHosts: ['.trycloudflare.com'] },
 })
 await server.listen()
 server.printUrls()

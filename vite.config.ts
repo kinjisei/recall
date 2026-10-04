@@ -5,11 +5,16 @@ import { VitePWA } from 'vite-plugin-pwa'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { handle as geminiHandle } from './api/gemini'
 import { handle as transcribeHandle } from './api/transcribe'
+import { handle as notifyHandle } from './api/notify'
 import { buildEnvProblems } from './scripts/_keys.mjs'
 import { RUNTIME_CHUNKS_MAX, startupPrecache } from './scripts/_precache.mjs'
 
 /** Что серверные функции читают из окружения (process.env) — в dev берём из .env.local. */
-const SERVER_ENV = ['GEMINI_API_KEY', 'GROQ_API_KEY', 'VITE_SUPABASE_URL', 'VITE_SUPABASE_PUBLISHABLE_KEY']
+const SERVER_ENV = [
+  'GEMINI_API_KEY', 'GROQ_API_KEY', 'VITE_SUPABASE_URL', 'VITE_SUPABASE_PUBLISHABLE_KEY',
+  // доставка уведомлений (Ф2.9): секрет входа и ключи push
+  'NOTIFY_SECRET', 'VITE_VAPID_PUBLIC_KEY', 'VAPID_PRIVATE_KEY', 'VAPID_SUBJECT',
+]
 
 type ApiHandler = (req: VercelRequest, res: VercelResponse) => unknown
 
@@ -26,7 +31,7 @@ type ApiHandler = (req: VercelRequest, res: VercelResponse) => unknown
  * ⚠️ Раз код тот же, то и база та же, что у клиента: `npm run dev` списывает
  * энергию на ЖИВОЙ базе, `npm run dev:test` — на тестовой.
  */
-function vercelRoute(path: string, handler: ApiHandler, needs: string): Plugin {
+function vercelRoute(path: string, handler: ApiHandler, needs?: string): Plugin {
   return {
     name: `vercel-route:${path}`,
     configureServer(server) {
@@ -74,7 +79,7 @@ function vercelRoute(path: string, handler: ApiHandler, needs: string): Plugin {
           })
         })
       })
-      if (!process.env[needs]) server.config.logger.warn(`${needs} нет в .env.local — ${path} в dev не ответит`)
+      if (needs && !process.env[needs]) server.config.logger.warn(`${needs} нет в .env.local — ${path} в dev не ответит`)
     },
   }
 }
@@ -99,6 +104,9 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       vercelRoute('/api/gemini', geminiHandle, 'GEMINI_API_KEY'),
       vercelRoute('/api/transcribe', transcribeHandle, 'GROQ_API_KEY'),
+      // доставку будит база через туннель к dev:test (scripts/push-tunnel.mjs);
+      // без NOTIFY_SECRET отвечает 503, как прод, — предупреждать незачем
+      vercelRoute('/api/notify', notifyHandle),
       precache.collect,
       VitePWA({
         registerType: 'autoUpdate',

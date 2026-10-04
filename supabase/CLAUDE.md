@@ -142,6 +142,18 @@
   `schedule_tick`, `series_fill`, `schedule_cards`, `lesson_join_cards`,
   `lesson_cancel`, `after_lessons_changed` закрыты и от `authenticated`.
   Правила — `src/domains/schedule/CLAUDE.md`, проверка — `check-schedule.mjs`.
+- **Уведомления ученику об уроках и push** (миграция 0011):
+  `push_subscriptions` и `notification_dispatches` закрыты всем — только
+  RPC (`save_/delete_push_subscription`, `set_lesson_reminders`, учителю —
+  `get_students_push`: одно «включены ли»). Крючок `after_lessons_changed`
+  наполнен (перенос, отмена, возврат, серия — одно сообщение на действие,
+  склейка неотправленного; сбой пишет в `events` и не мешает учителю),
+  правило будильника `lessons_soon`, доставка с подписками
+  (`dispatch_payload`) и разбор ответов сервера из `net._http_response`
+  (`settle_dispatches`: мёртвые подписки, до 3 попыток). Миграция падает,
+  если у базы нет права читать `net._http_response`. Служебные функции
+  закрыты и от `authenticated`. Правила — `src/domains/notifications/CLAUDE.md`,
+  проверка — `check-lesson-notify.mjs`.
 - **Ответ RPC — таблицей (`returns table`), а не `json`**, если его читает
   клиент: тогда `database.types.ts` даёт точный тип строки, и приведение
   `as unknown as` не нужно (архитектура §8). В `plpgsql` с `returns table`
@@ -181,6 +193,10 @@
   0009): серии, «только этот» и «этот и все следующие», автосписание,
   пробный, поздняя отмена, задним числом, кто что видит, пауза, без тарифа —
   `src/domains/schedule/CLAUDE.md`.
+- `node scripts/check-lesson-notify.mjs` — уведомления об уроках и push
+  (миграция 0011): одно «урок через час», выключение, без тарифа, перенос,
+  «Вернуть», серия, без приложения, подписки, разбор ответов доставки —
+  `src/domains/notifications/CLAUDE.md`.
 - `node scripts/check-answermatches-sql.mjs` (вне CI, живая база) — сверка
   ответов в SQL (`norm_typed`) совпадает с клиентом (`lib/text.ts`).
 

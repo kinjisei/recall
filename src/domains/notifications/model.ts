@@ -1,16 +1,15 @@
 // ============================================================================
-// Уведомления: форма и текст (архитектура §17). Без базы, из импортов —
-// только общее склонение (с расширением .ts, чтобы его читал Node): файл
-// проверяется чистым тестом (scripts/test-notifications.mjs), а позже
-// его прочитает и сервер доставки (push — Ф2.9, Telegram — Ф4.3): текст у
-// ленты и у каналов должен быть один.
+// Уведомления: форма и текст (архитектура §17). Без базы: файл читает и
+// клиент, и сервер доставки (api/_push.ts — push, позже Telegram, Ф4.3) —
+// текст у ленты и у каналов один. Импорты — с расширением .js: так их
+// собирает Vercel (Node ESM); чистый тест подключает _api-loader.mjs.
 //
 // Правила пишут в базу не текст, а ДАННЫЕ (вид + data). Текст собирается
 // здесь, по виду: поменять формулировку — выкатка клиента, а не миграция, и
 // старые уведомления в ленте заговорят новыми словами.
 // ============================================================================
-import { MONTH_SHORT, WEEKDAY_SHORT, isoWeekday } from '../../shared/lib/days.ts'
-import { plural } from '../../shared/lib/plural.ts'
+import { plural } from '../../shared/lib/plural.js'
+import { lessonWhen, renderLessonNotice } from './lessonText.js'
 
 /** Уведомление, как его отдаёт база (таблица notifications, только свои). */
 export interface AppNotification {
@@ -64,20 +63,6 @@ function dayFromData(v: unknown): string | undefined {
     : new Date(t).toLocaleDateString('ru-RU', { timeZone: 'Asia/Almaty', day: 'numeric', month: 'long' })
 }
 
-/** Время урока из данных → «вт, 20 окт, 10:00» по Алматы (как расписание); мусор — undefined. */
-function lessonWhen(v: unknown): string | undefined {
-  const s = text(v)
-  const t = s ? Date.parse(s) : NaN
-  if (Number.isNaN(t)) return undefined
-  const p = Object.fromEntries(
-    new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Almaty', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
-      .formatToParts(new Date(t))
-      .map((x) => [x.type, x.value]),
-  )
-  const day = `${p.year}-${p.month}-${p.day}`
-  return `${WEEKDAY_SHORT[isoWeekday(day) - 1]}, ${Number(p.day)} ${MONTH_SHORT[Number(p.month) - 1]}, ${p.hour}:${p.minute}`
-}
-
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 
 /** Подарок рефералки из данных: «1 месяц», «18 дней»; мусор — undefined. */
@@ -106,12 +91,20 @@ function giftLabel(months: unknown, days: unknown): string | undefined {
  *   lessons_low — учителю: у ученика (card, name) остаток стал 1 или меньше
  *     (left), следующий урок next — одно на цикл оплаты, PLAN.md Ф2.8;
  *   teacher_message — ученику: сообщение учителя (teacher_name, text) по его
- *     нажатию «Напомнить → В приложении».
+ *     нажатию «Напомнить → В приложении»;
+ *   lesson_soon, lesson_moved, lesson_cancelled, lesson_restored,
+ *     lessons_rescheduled, lessons_cancelled — ученику об уроке и его
+ *     изменении, PLAN.md Ф2.9 (тексты — lessonText.ts; «через сколько» у
+ *     lesson_soon считается от created_at).
  * Неизвестный вид (правило новее клиента) — не пустая строка, а заголовок из
  * данных или нейтральное «Новое уведомление».
  */
-export function renderNotification(n: Pick<AppNotification, 'kind' | 'data'>): NotificationView {
+export function renderNotification(
+  n: Pick<AppNotification, 'kind' | 'data'> & { created_at?: string },
+): NotificationView {
   const d = n.data ?? {}
+  const lesson = renderLessonNotice(n.kind, d, n.created_at, safeHref(d.href))
+  if (lesson) return lesson
   switch (n.kind) {
     case 'manual':
       return { title: text(d.title) ?? 'Сообщение от Recall', body: text(d.body), href: safeHref(d.href) }
@@ -177,6 +170,65 @@ export function renderNotification(n: Pick<AppNotification, 'kind' | 'data'>): N
       return { title: `${text(d.teacher_name) ?? 'Преподаватель'} пишет`, body: text(d.text) }
     default:
       return { title: text(d.title) ?? 'Новое уведомление', body: text(d.body), href: safeHref(d.href) }
+  }
+}
+
+// ---- push (PLAN.md Ф2.9) ------------------------------------------------------------
+
+/**
+ * Какие виды уходят в push. Копия push_kinds() из миграции 0011 — пару
+ * сверяет test-notifications.mjs. Ученику — только об уроках: экран
+ * разрешения обещает «Больше ничего присылать не будем» (макет u3-3).
+ */
+export const PUSH_KINDS = [
+  'lesson_soon',
+  'lesson_moved',
+  'lesson_cancelled',
+  'lesson_restored',
+  'lessons_rescheduled',
+  'lessons_cancelled',
+] as const
+
+/** Что показать на экране телефона и как долго службе push держать сообщение. */
+export interface PushView {
+  title: string
+  body: string
+  href: string
+  /** Одно уведомление на урок или серию: новое о том же заменяет прежнее на экране. */
+  tag: string
+  /** Секунд, пока служба push пытается доставить (телефон выключен — потом уже не нужно). */
+  ttl: number
+  urgency: 'high' | 'normal'
+}
+
+const DAY_S = 24 * 60 * 60
+
+/**
+ * Push по уведомлению — или null: вид не для push, или уже поздно («урок
+ * через час», когда урок начался). now — параметром, для теста.
+ */
+export function pushView(
+  n: Pick<AppNotification, 'id' | 'kind' | 'data' | 'created_at'>,
+  now: Date = new Date(),
+): PushView | null {
+  if (!(PUSH_KINDS as readonly string[]).includes(n.kind)) return null
+  const d = n.data ?? {}
+  let ttl = DAY_S
+  if (n.kind === 'lesson_soon') {
+    const start = Date.parse(text(d.at) ?? '')
+    if (Number.isNaN(start) || start <= now.getTime()) return null
+    ttl = Math.max(60, Math.round((start - now.getTime()) / 1000))
+  }
+  const view = renderNotification(n)
+  const lesson = text(d.lesson)
+  const series = text(d.series)
+  return {
+    title: view.title,
+    body: view.body ?? '',
+    href: view.href ?? '/lessons',
+    tag: lesson && UUID.test(lesson) ? `lesson-${lesson}` : series && UUID.test(series) ? `series-${series}` : `n-${n.id}`,
+    ttl,
+    urgency: 'high',
   }
 }
 

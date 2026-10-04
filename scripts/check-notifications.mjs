@@ -11,6 +11,8 @@
  *      невошедший не видит ничего;
  *   4. доставка спит, пока в Vault нет адреса и секрета; с ними — запрос
  *      через pg_net действительно уходит, уведомление помечается отданным;
+ *      пока ответа нет, повторно не отдаётся, а ответ не 200 возвращает его
+ *      в очередь — вторая попытка (повтор при сбое, Ф2.9);
  *   5. будильник pg_cron заведён и включён.
  *
  * Правило для проверки создаётся на время прогона и удаляется: в миграциях
@@ -21,6 +23,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { randomBytes } from 'node:crypto'
 import { dbTarget, runSql, scriptEnv } from './_env.mjs'
+import { deliverySecrets } from './_vault.mjs'
 
 if (process.argv.includes('--prod')) {
   console.error('Проверка заводит временные правила и секреты — только тестовая база.')
@@ -62,18 +65,19 @@ async function makeUser(email) {
   return { id, client }
 }
 
-async function cleanup(ids) {
+async function cleanup(ids, vault) {
   await sql(`
     delete from public.notification_rules where name in ('selftest', 'selftest_broken');
     drop function if exists public.notification_rule_selftest();
     drop function if exists public.notification_rule_selftest_broken();
-    delete from vault.secrets where name in ('notify_url', 'notify_secret');
   `).catch((e) => console.log('уборка SQL:', e.message))
+  // прежние секреты доставки — на место (туннель для живого телефона, _vault.mjs)
+  await vault?.restore().catch((e) => console.log('секреты доставки:', e.message))
   for (const id of ids) if (id) await admin.auth.admin.deleteUser(id).catch(() => {})
   await admin.from('allowed_emails').delete().in('email', Object.values(USERS))
 }
 
-async function run(a, b) {
+async function run(a, b, vault) {
   // ── 1. одно уведомление на ключ ────────────────────────────────────────────
   await sql(`
     create or replace function public.notification_rule_selftest() returns int
@@ -147,6 +151,7 @@ async function run(a, b) {
   check('повторная отметка — ноль (уже прочитано)', again.data === 0)
 
   // ── 4. доставка ─────────────────────────────────────────────────────────────
+  await vault.clear()
   await sql(`select public.notify('${a.id}'::uuid, 'manual', '{}'::jsonb, '${KEY}:send')`)
   const [d0] = await sql('select public.dispatch_notifications() as n')
   const [s0] = await sql(`select sent_at from public.notifications where dedupe_key = '${KEY}:send'`)
@@ -155,10 +160,7 @@ async function run(a, b) {
   // Адрес — корень REST самой тестовой базы: он отвечает 401 без ключа. Нам
   // важен факт ухода запроса, а не ответ; секрет — одноразовый, чужим не уходит.
   const url = `${env.VITE_SUPABASE_URL}/rest/v1/`
-  await sql(`
-    select vault.create_secret('${url}', 'notify_url');
-    select vault.create_secret('${randomBytes(24).toString('hex')}', 'notify_secret');
-  `)
+  await vault.set(url, randomBytes(24).toString('hex'))
   const [{ before }] = await sql('select coalesce(max(id), 0)::bigint as before from net._http_response')
   const [d1] = await sql('select public.dispatch_notifications() as n')
   const [s1] = await sql(`select sent_at from public.notifications where dedupe_key = '${KEY}:send'`)
@@ -170,8 +172,22 @@ async function run(a, b) {
     resp = rows[0] ?? null
   }
   check('запрос через pg_net действительно ушёл и вернулся ответ', !!resp && (resp.status_code > 0 || !!resp.error_msg), JSON.stringify(resp))
-  const [d2] = await sql('select public.dispatch_notifications() as n')
-  check('отданное повторно не отдаётся', d2.n === 0)
+  // Корень REST отвечает 401 — для доставки это «не дошло»: уведомление уходит
+  // ещё раз, всего не больше 3 попыток. «Пока ответа нет — не повторять»
+  // без гонки с pg_net проверяет check-lesson-notify (подменённый ответ).
+  const attemptsAfterAnswer = []
+  for (let round = 0; round < 3; round++) {
+    const [{ last }] = await sql('select coalesce(max(id), 0)::bigint as last from net._http_response')
+    for (let i = 0; i < 20; i++) {
+      await sleep(1000)
+      const [r] = await sql(`select count(*)::int as n from net._http_response where id > ${round === 0 ? before : last}`)
+      if (round === 0 || r.n > 0) break
+    }
+    await sql('select public.dispatch_notifications()')
+    const [s3] = await sql(`select attempts, sent_at is not null as sent from public.notifications where dedupe_key = '${KEY}:send'`)
+    attemptsAfterAnswer.push(s3.attempts)
+  }
+  check('ответ не 200 — ещё попытка, всего не больше трёх', attemptsAfterAnswer.join() === '2,3,3', attemptsAfterAnswer.join())
 
   // ── 5. будильник ────────────────────────────────────────────────────────────
   const [job] = await sql("select schedule, active, command from cron.job where jobname = 'recall-notifications'")
@@ -180,16 +196,17 @@ async function run(a, b) {
 
 async function main() {
   const made = []
+  const vault = await deliverySecrets(sql)
   try {
     const a = await makeUser(USERS.a)
     made.push(a.id)
     const b = await makeUser(USERS.b)
     made.push(b.id)
-    await run(a, b)
+    await run(a, b, vault)
   } catch (e) {
     check('проверка дошла до конца', false, String(e?.message ?? e).split('\n')[0])
   } finally {
-    await cleanup(made)
+    await cleanup(made, vault)
     console.log('Временные правила, секреты и аккаунты удалены.')
   }
   const ok = results.filter(Boolean).length
