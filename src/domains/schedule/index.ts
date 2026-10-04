@@ -48,6 +48,7 @@ export {
   type TrialQuestion,
 } from './calendar'
 export {
+  APP_TELLS_STUDENTS,
   balanceAfter,
   canEdit,
   canFollowing,
@@ -60,6 +61,7 @@ export {
   draftSummary,
   endTime,
   firstSeriesDay,
+  leavingLessons,
   lessonName,
   moveSeriesInput,
   movedMessage,
@@ -72,6 +74,7 @@ export {
   seriesChangedMessage,
   toLessonInput,
   toSeriesInput,
+  whoToTell,
   type LessonDraft,
 } from './editor'
 export {

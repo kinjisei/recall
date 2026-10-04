@@ -25,8 +25,9 @@
 
 | Файл | Что там |
 |---|---|
-| `TeacherPage.tsx` | студия: вкладки, загрузка, энергия студии, общий код-приглашение и места тарифа |
-| `StudentsTab.tsx` | вкладка «Ученики»: строки «кем заняться», сводка «Нужно внимание», выбранная карточка (в адресе `?student=`), смена статуса с тостом «Вернуть» |
+| `TeacherPage.tsx` | студия: загрузка, энергия студии, общий код-приглашение и места тарифа |
+| `StudioTabs.tsx` | ряд вкладок студии; первая — «Расписание» (ведёт на /schedule, Ф2.7; до меню учителя Ф2.10 — единственный вход) |
+| `StudentsTab.tsx` | вкладка «Ученики»: строки «кем заняться», сводка «Нужно внимание», выбранная карточка (в адресе `?student=`), смена статуса с тостом «Вернуть»; перед паузой и архивом — сколько уроков уйдёт (`useLeavingLessons`, Ф2.7) |
 | `StudentStudio.tsx` | ученик в приложении под шапкой карточки: домашка, три плашки, «Ещё», место тарифа, отвязка; раскрытый раздел — в адресе |
 | `HomeworkSection.tsx`, `HomeworkComposer.tsx` | домашка в карточке и её сборка (правила — `features/homework/CLAUDE.md`) |
 | `StudentWordsSection.tsx`, `WordPicker.tsx` | раздел «Слова» карточки: статус, выдача паков и своих наборов, удаление, перепроверка |
@@ -174,7 +175,7 @@
 <!-- Пишет `npm run gen:docs` (scripts/gen/module-docs.mjs) по коду — руками не править. -->
 ## Из кода (сгенерировано)
 
-- **Файлы:** `AssignmentsPage.tsx`, `DailyPlanSection.tsx`, `DiagnosticsSection.tsx`, `GuideSection.tsx`, `HomeworkComposer.tsx`, `HomeworkSection.tsx`, `index.ts`, `materials/MaterialDetail.tsx`, `materials/MaterialsByLevel.tsx`, `materials/PlanScreen.tsx`, `materials/PreviewScreen.tsx`, `materials/RequestForm.tsx`, `materials/shared.ts`, `MaterialsSection.tsx`, `PlacementSection.tsx`, `PrintSheet.tsx`, `ProgramSection.tsx`, `QuestSection.tsx`, `ReportSheet.tsx`, `ReviewScreen.tsx`, `StudentsTab.tsx`, `StudentStudio.tsx`, `StudentWordsSection.tsx`, `TeacherBlock.tsx`, `TeacherPage.tsx`, `useAnswerDraft.ts`, `useComposerDraft.ts`, `useReviewDraft.ts`, `useWritingTaskDraft.ts`, `WordPicker.tsx`, `WritingSection.tsx`
+- **Файлы:** `AssignmentsPage.tsx`, `DailyPlanSection.tsx`, `DiagnosticsSection.tsx`, `GuideSection.tsx`, `HomeworkComposer.tsx`, `HomeworkSection.tsx`, `index.ts`, `materials/MaterialDetail.tsx`, `materials/MaterialsByLevel.tsx`, `materials/PlanScreen.tsx`, `materials/PreviewScreen.tsx`, `materials/RequestForm.tsx`, `materials/shared.ts`, `MaterialsSection.tsx`, `PlacementSection.tsx`, `PrintSheet.tsx`, `ProgramSection.tsx`, `QuestSection.tsx`, `ReportSheet.tsx`, `ReviewScreen.tsx`, `StudentsTab.tsx`, `StudentStudio.tsx`, `StudentWordsSection.tsx`, `StudioTabs.tsx`, `TeacherBlock.tsx`, `TeacherPage.tsx`, `useAnswerDraft.ts`, `useComposerDraft.ts`, `useReviewDraft.ts`, `useWritingTaskDraft.ts`, `WordPicker.tsx`, `WritingSection.tsx`
 - **Вне папки (указатель «Описание:» в начале файла):** `src/lib/activityDays.ts`, `src/lib/diagnosticsBrief.ts`, `src/lib/materialExercises.ts`, `src/lib/studentSignals.ts`, `src/lib/wordChecks.ts`
 - **Адреса:** `/teacher`, `/assignments`
 - **Таблицы:** `cards`, `decks`, `review_states`, `word_checks`

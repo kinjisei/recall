@@ -18,8 +18,9 @@ export function TopBar() {
       <div className="mx-auto flex max-w-screen-sm items-center justify-between gap-2 px-4 py-3">
         {/* полный логотип из макета (слово на флеш-карточке) вместо знака+текста.
             У репетитора справа на кнопку больше (подарок): на телефоне уже
-            640 px — знак, иначе с колокольчиком шапка не влезала в 390 px */}
-        <AppLink to="/" className="flex min-h-11 flex-none items-center" aria-label="На главную">
+            640 px — знак, иначе с колокольчиком шапка не влезала в 390 px.
+            min-w-11: знак 30 px, а нажимать — 44 (ux-audit-schedule, Ф2.7) */}
+        <AppLink to="/" className="flex min-h-11 min-w-11 flex-none items-center" aria-label="На главную">
           {teacher ? (
             <>
               <BrandMark size={30} className="sm:hidden" />

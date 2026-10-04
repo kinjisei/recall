@@ -30,7 +30,7 @@
 |---|---|
 | `model.ts` | типы, сборка ответа базы в уроки (`groupSchedule`), отметка ↔ (был, списание) (`outcomeOf`), какие отметки можно сейчас (`allowedOutcomes`), фаза урока (`lessonPhase`), дни серии (`isSeriesSlot` — копия `series_slot`, `seriesDays` для превью), день по Алматы. Без базы — чистый тест |
 | `calendar.ts` | время по Алматы (момент ↔ день и «19:00»), подписи из макетов («чт, 15 октября», «12–18 октября», «1,5 ч», «через 50 мин», «Каждый вт и чт»), раскладка дня по часам (`placeLessons` — пересекающиеся рядом), вопрос после пробного (`trialQuestions`) |
-| `editor.ts` | шторки: черновик урока (`LessonDraft`) → вход `createLesson`/`createSeries`, почему «Создать» нельзя (`draftProblem` — копии проверок базы), сводка «… · 20 уроков», пересечения, «Изменить» (`draftFromLesson`), перенос «этот и все следующие» (`moveSeriesInput`, `rebuildCount`), «Останется / Станет N», тексты ученику |
+| `editor.ts` | шторки: черновик урока (`LessonDraft`) → вход `createLesson`/`createSeries`, почему «Создать» нельзя (`draftProblem` — копии проверок базы), сводка «… · 20 уроков», пересечения, «Изменить» (`draftFromLesson`), перенос «этот и все следующие» (`moveSeriesInput`, `rebuildCount`), что уйдёт при паузе и архиве (`leavingLessons` — копия `trg_card_lessons`), «Останется / Станет N», тексты ученику и кому писать самому (`whoToTell`, `APP_TELLS_STUDENTS`) |
 | `status.ts` | метка урока одним правилом для дня, недели и списка: автосписание, поздняя отмена, пробный, перенесён, не отмечен; строка под именем |
 | `api.ts` | единственное место, где домен ходит в базу: чтение расписания, серий, остатков, «мои уроки»; создать, изменить, перенести, отменить, вернуть, отметить, оплата «+N», ссылка по умолчанию |
 | `index.ts` | парадная дверь — экраны берут только отсюда |
@@ -77,7 +77,9 @@
   названия (триггер), но не от отметок и будильника. Каждое действие учителя
   один раз зовёт крючок `after_lessons_changed` — сейчас пустой. Ф2.9
   наполнит его уведомлениями «перенесён / отменён»: отмена серии — одно
-  сообщение.
+  сообщение — и переключит `APP_TELLS_STUDENTS` (`editor.ts`): до этого
+  экран предлагает учителю написать самому всем ученикам урока, после —
+  только тем, кто без приложения.
 - **Копии правил базы на клиенте** (`HORIZON_DAYS`, типы, статусы,
   списания, отметки, дни серии) сверяет `test-schedule.mjs` с текстом
   миграции, а дни серии ещё и `check-schedule.mjs` с самой базой. Ссылку
@@ -129,5 +131,5 @@
 
 - **Файлы:** `api.ts`, `calendar.ts`, `editor.ts`, `index.ts`, `model.ts`, `status.ts`
 - **RPC:** `add_paid_lessons`, `cancel_lesson`, `cancel_series_from`, `create_lesson`, `create_series`, `get_lesson_balances`, `get_my_lesson_balances`, `get_my_lessons`, `get_my_series`, `get_schedule`, `get_schedule_settings`, `mark_lesson_participant`, `restore_lesson`, `set_default_lesson_link`, `update_lesson`, `update_series_from`
-- **Кто использует (импортом):** никто
+- **Кто использует (импортом):** `features/schedule`, `features/students`
 <!-- generated:end -->

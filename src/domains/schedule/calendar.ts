@@ -95,11 +95,15 @@ export function dayTitle(day: string, today: string): string {
   return near ? `${near}, ${long.replace(',', '')}` : long
 }
 
-/** «12–18 октября» · «28 сентября – 4 октября» (шапка недели). */
-export function weekTitle(monday: string): string {
+/**
+ * «12–18 октября» · «28 сентября – 4 октября» (шапка недели); short — на
+ * стыке месяцев «28 сен – 4 окт» (узкая шапка телефона).
+ */
+export function weekTitle(monday: string, short = false): string {
   const sunday = addDays(monday, 6)
   if (mm(monday) === mm(sunday)) return `${dd(monday)}–${dd(sunday)} ${MONTHS_GEN[mm(sunday)]}`
-  return `${dd(monday)} ${MONTHS_GEN[mm(monday)]} – ${dd(sunday)} ${MONTHS_GEN[mm(sunday)]}`
+  const names = short ? MONTHS_SHORT : MONTHS_GEN
+  return `${dd(monday)} ${names[mm(monday)]} – ${dd(sunday)} ${names[mm(sunday)]}`
 }
 
 /** «1 ч» · «1,5 ч» · «45 мин» · «1 ч 15 мин» — длительность урока. */

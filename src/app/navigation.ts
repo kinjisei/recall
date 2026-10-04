@@ -36,7 +36,7 @@ export const ROLE_NAV_ENABLED = false
 // Без `also` заход в грамматику или задания гасил всю навигацию — человек
 // оказывался «нигде»: ни одна вкладка не была активной.
 export const STUDENT_TABS: NavTab[] = [
-  { to: '/', label: 'Главная', icon: 'home', end: true, also: ['/progress', '/settings', '/teacher', '/admin'] },
+  { to: '/', label: 'Главная', icon: 'home', end: true, also: ['/progress', '/settings', '/teacher', '/schedule', '/admin'] },
   {
     to: '/study',
     label: 'Учёба',
@@ -90,12 +90,16 @@ export function activeTabIndex(tabs: NavTab[], pathname: string): number {
   return tabs.findIndex((t) => isTabActive(t, pathname))
 }
 
+/** Экраны студии репетитора: студия и расписание (Ф2.7). */
+const STUDIO_PATHS = ['/teacher', '/schedule']
+
 /**
  * Где каркас показывает плашку «Тариф закончился — продлить» (PLAN.md Ф2.4,
  * решение владельца 03.10.2026): на стартовом экране — первой вкладке меню —
- * и у репетитора ещё в студии. С меню учителя (Ф2.10) старт — расписание, как
- * в макете t9-3, а «Моя учёба» остаётся без плашки. Есть ли что сказать,
- * решает сама плашка (features/billing).
+ * и у репетитора ещё в студии и над расписанием (макет t9-3: под плашкой —
+ * «только для просмотра»). С меню учителя (Ф2.10) старт — расписание, а «Моя
+ * учёба» остаётся без плашки. Есть ли что сказать, решает сама плашка
+ * (features/billing).
  */
 export function showsAccessBanner(
   pathname: string,
@@ -103,5 +107,5 @@ export function showsAccessBanner(
   enabled: boolean = ROLE_NAV_ENABLED,
 ): boolean {
   if (!role) return false
-  return pathname === tabsFor(role, enabled)[0]?.to || (role === 'teacher' && pathname === '/teacher')
+  return pathname === tabsFor(role, enabled)[0]?.to || (role === 'teacher' && STUDIO_PATHS.includes(pathname))
 }

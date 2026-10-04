@@ -25,6 +25,7 @@ import { MaterialsSection } from './MaterialsSection'
 import { WritingSection } from './WritingSection'
 import { GuideSection } from './GuideSection'
 import { StudentsTab } from './StudentsTab'
+import { StudioTabs, type TeacherTab } from './StudioTabs'
 import { getHomeworkMany, type Homework } from '../../lib/homework'
 import { countSubmittedWorks } from '../../lib/materials'
 import { countSubmittedWriting } from '../../lib/writing'
@@ -127,8 +128,6 @@ function BecomeTeacher({ onDone, onBack }: { onDone: () => void; onBack: () => v
     </div>
   )
 }
-
-type TeacherTab = 'students' | 'materials' | 'writing' | 'guide'
 
 function TeacherDashboard() {
   // вкладка — в адресе: «назад» из «Методички» уводил на Главную, а не на
@@ -238,48 +237,7 @@ function TeacherDashboard() {
 
       <HowItWorks>{HOW_IT_WORKS.teacher}</HowItWorks>
 
-      {/* Перенос строки, а не горизонтальная прокрутка. Замер ревью 1В: ряду
-          из четырёх вкладок нужно 415px, а на iPhone 12 доступно 348 — четвёртая
-          («Методичка») уезжала за край, прокрутки у контейнера не было, и
-          добраться до неё можно было только сдвигая вбок всю страницу. Скрытая
-          прокрутка лечила бы обрезку, но не саму проблему: человек по-прежнему
-          не знает, что там есть ещё вкладка. Перенос показывает все четыре. */}
-      <div className="flex flex-wrap gap-2">
-        {(
-          [
-            ['students', 'Ученики'],
-            ['materials', 'Материалы'],
-            // «Письмо» читалось как «сообщение ученику», хотя это задания-эссе
-            // с проверкой по критериям IELTS — то есть самый сильный довод
-            // студии прятался за названием (находка ревью 1В). У ученика этот
-            // же раздел уже называется «Письменные задания» — теперь совпадает.
-            ['writing', 'Письменные работы'],
-            ['guide', 'Методичка'],
-          ] as [TeacherTab, string][]
-        ).map(([id, label]) => (
-          <button
-            key={id}
-            onClick={() => setTab(id)}
-            className={`min-h-11 rounded-lg px-4 py-2 text-sm font-semibold ${
-              tab === id
-                ? 'bg-accent-soft text-accent-soft-fg'
-                : 'bg-tint/[0.07] text-fg-secondary'
-            }`}
-          >
-            {label}
-            {id === 'materials' && pendingWorks > 0 && (
-              <span className="ml-1.5 rounded-full bg-warning px-1.5 py-0.5 text-xs font-bold text-warning-fg">
-                {pendingWorks}
-              </span>
-            )}
-            {id === 'writing' && pendingWriting > 0 && (
-              <span className="ml-1.5 rounded-full bg-warning px-1.5 py-0.5 text-xs font-bold text-warning-fg">
-                {pendingWriting}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
+      <StudioTabs tab={tab} onTab={setTab} pendingWorks={pendingWorks} pendingWriting={pendingWriting} />
 
       {tab === 'guide' ? (
         <GuideSection />

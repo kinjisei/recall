@@ -115,6 +115,7 @@ check('каждый пункт меню ведёт в существующий �
 const link = cardInviteLink('https://recall-pgkz.vercel.app/', 'K7M2PX')
 check('ссылка несёт код', link, 'https://recall-pgkz.vercel.app/login?join=K7M2PX')
 check('текст — по имени и с кодом, без ссылки', [cardInviteText('Тимур Ким', 'K7M2PX').startsWith('Тимур, '), cardInviteText('Тимур Ким', 'K7M2PX').includes('K7M2PX'), cardInviteText('Тимур Ким', 'K7M2PX').includes('http')], [true, true, false])
+check('текст называет расписание (Ф2.7, решение владельца 04.10.2026)', /расписание уроков/.test(cardInviteText('Тимур Ким', 'K7M2PX')), true)
 check('сообщение целиком — текст и ссылка', cardInviteMessage('Тимур Ким', 'K7M2PX', link).endsWith(` ${link}`), true)
 check('код для диктовки', spacedCode('K7M2PX'), 'K7M 2PX')
 check('код из ссылки: туда и обратно', parseJoinCode(new URL(link).searchParams.get('join')), 'K7M2PX')

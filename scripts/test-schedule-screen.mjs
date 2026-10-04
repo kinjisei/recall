@@ -45,6 +45,7 @@ import {
   draftProblem,
   draftSummary,
   endTime,
+  leavingLessons,
   movedMessage,
   movedWeekdays,
   newDraft,
@@ -235,6 +236,18 @@ const seriesLessons = [
   S('plain', '2026-11-10'),
 ]
 check('перестроится 1 отдельно перенесённый урок', rebuildCount(seriesLessons, seriesLessons[0], new Date('2026-10-15T11:00:00Z')), 1)
+
+// ── пауза и архив (журнал п.65, 1) ───────────────────────────────────────────────────
+const nowLeave = new Date('2026-10-15T11:00:00Z')
+const leave = [
+  S('series-ahead', '2026-10-20'),
+  { ...S('one-off', '2026-10-21'), seriesId: null, seriesDate: null },
+  S('cancelled', '2026-10-22', { status: 'cancelled' }),
+  S('past', '2026-10-13'),
+  S('late-marked', '2026-10-27', { participants: [P('x', { trial: false, charge: 'late_cancel' })] }),
+  S('someone-else', '2026-10-29', { participants: [P('y', { trial: false })] }),
+]
+check('уйдут будущие уроки ученика: 2, из них разовый — 1', leavingLessons(leave, 'x', nowLeave), { total: 2, oneOff: 1 })
 
 // ── остаток и тексты ученику ─────────────────────────────────────────────────────────
 check('Останется / Станет', [

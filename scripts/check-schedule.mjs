@@ -27,6 +27,7 @@
  */
 import { createClient } from '@supabase/supabase-js'
 import { dbTarget, runSql, scriptEnv } from './_env.mjs'
+import { deleteTestUser } from './_users.mjs'
 import { addDays, HORIZON_DAYS, isoWeekday, isSeriesSlot, seriesDays } from '../src/domains/schedule/model.ts'
 
 if (process.argv.includes('--prod')) {
@@ -446,7 +447,7 @@ async function main() {
   } catch (e) {
     check('проверка дошла до конца', false, String(e?.stack ?? e).split('\n').slice(0, 3).join(' | '))
   } finally {
-    for (const m of made) await admin.auth.admin.deleteUser(m.id).catch(() => {})
+    for (const m of made) await deleteTestUser(admin, sql, m.id).catch((e) => console.log(`  ⚠ ${e.message}`))
     await admin.from('allowed_emails').delete().in('email', made.map((m) => m.email))
     console.log('Временные аккаунты удалены.')
   }

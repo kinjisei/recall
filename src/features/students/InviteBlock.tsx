@@ -22,12 +22,10 @@ import {
 import { telegramLink, whatsappLink } from '../../shared/lib/share'
 import { useAsyncData } from '../../shared/lib/useAsyncData'
 import { useCopy } from '../../shared/lib/useCopy'
-import { IconCheck, IconCopy, IconDialog, IconSend, IconShare } from '../../shared/ui/icons'
+import { IconCheck, IconCopy, IconShare } from '../../shared/ui/icons'
+import { SHARE_BUTTON, ShareLink } from '../../shared/ui/ShareLink'
 import { LoadError } from '../../shared/ui/LoadError'
 import { track } from '../../lib/analytics'
-
-const shareCls =
-  'lift flex min-h-12 flex-1 items-center justify-center gap-1.5 rounded-xl bg-accent-soft px-2 text-sm font-semibold text-accent-soft-fg'
 
 export function InviteBlock({ card, seats }: { card: StudentCard; seats: SeatsState | null }) {
   const { data: code, error, loading, reload } = useAsyncData(
@@ -89,25 +87,17 @@ function Ready({ card, code }: { card: StudentCard; code: string }) {
         Код для ученика: <span className="font-mono text-base font-bold tracking-widest text-fg" data-invite-code={code}>{spacedCode(code)}</span>
       </p>
       <div className="flex gap-2">
-        <a
+        <ShareLink
+          channel="whatsapp"
           href={whatsappLink(message, phone)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={shareCls}
           onClick={() => void track('card_invite_share', { via: 'whatsapp' })}
-        >
-          <IconDialog size={18} /> WhatsApp
-        </a>
-        <a
+        />
+        <ShareLink
+          channel="telegram"
           href={telegramLink(cardInviteText(card.name, code), link)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={shareCls}
           onClick={() => void track('card_invite_share', { via: 'telegram' })}
-        >
-          <IconSend size={18} /> Telegram
-        </a>
-        <button type="button" className={shareCls} onClick={copyLink}>
+        />
+        <button type="button" className={SHARE_BUTTON} onClick={copyLink}>
           {copied === 'link' ? <IconCheck size={18} /> : <IconCopy size={18} />}
           {copied === 'link' ? 'Готово' : 'Ссылка'}
         </button>

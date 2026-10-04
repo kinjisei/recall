@@ -208,8 +208,8 @@
 ## Решения и почему
 
 - **Конец тарифа — решения владельца 03.10.2026 (журнал п.63).** (1)
-  Плашка — на стартовом экране и в студии (с Ф2.10 — над расписанием, макет
-  t9-3), а не на всех экранах: на каждом экране «спокойная» плашка стала бы
+  Плашка — на стартовом экране, в студии и над расписанием (/schedule с
+  Ф2.7, макет t9-3), а не на всех экранах: на каждом экране «спокойная» плашка стала бы
   упрёком. (2) Самоучке с Premium — то же правило: и у него доступ пропадал
   молча. Ученик в студии репетитора — не самоучка: его Premium перекрыт
   студией, звать его платить нечестно. По умолчанию: будим с 10:00 (push
@@ -265,5 +265,5 @@
 
 - **Файлы:** `api.ts`, `index.ts`, `model.ts`, `referral.ts`
 - **RPC:** `admin_dismiss_payment_claim`, `admin_payment_claims`, `admin_recent_payments`, `confirm_payment`, `dismiss_referral_hint`, `get_my_referral`, `get_pay_info`, `referral_hint`, `report_payment_sent`
-- **Кто использует (импортом):** `app`, `features/admin`, `features/billing`, `features/referral`, `lib`
+- **Кто использует (импортом):** `app`, `features/admin`, `features/billing`, `features/referral`, `features/schedule`, `lib`
 <!-- generated:end -->

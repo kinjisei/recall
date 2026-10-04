@@ -92,6 +92,9 @@ export const ROUTES: AppRoute[] = [
   // ставит markOnboarded, поэтому цикла нет.
   { path: '/placement', place: 'app', screen: routeScreens['/placement'], beforeOnboarding: true },
   { path: '/teacher', place: 'app', screen: routeScreens['/teacher'] },
+  // расписание репетитора (Ф2.7): роли в таблице нет, как у /teacher —
+  // не-репетитору экран сам объясняет и ведёт в студию
+  { path: '/schedule', place: 'app', screen: routeScreens['/schedule'] },
   { path: '/assignments', place: 'app', screen: routeScreens['/assignments'] },
   { path: '/writing', place: 'app', screen: routeScreens['/writing'] },
   { path: '/self-material', place: 'app', screen: routeScreens['/self-material'] },

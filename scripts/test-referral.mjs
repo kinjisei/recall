@@ -61,7 +61,7 @@ const message = inviteMessage(link)
 check('сообщение: текст, а в конце — ссылка', message.startsWith(INVITE_TEXT) && message.endsWith(` ${link}`), true)
 check('сообщение: про бонус коллеге сказано («неделю» = +7 дней)', REFERRAL_BONUS_DAYS === 7 && /на неделю дольше/.test(INVITE_TEXT), true)
 // расписания в Recall пока нет (PLAN.md Ф2.7) — не обещать то, чего нет
-check('сообщение: не обещает расписание, которого ещё нет', /расписан/i.test(INVITE_TEXT), false)
+check('сообщение: называет расписание (есть с Ф2.7), но не учёт оплат (Ф2.8)', [/расписан/i.test(INVITE_TEXT), /оплат/i.test(INVITE_TEXT)], [true, false])
 check('текст без ссылки внутри (Telegram и «Поделиться» приклеивают её сами)', INVITE_TEXT.includes('http'), false)
 
 const wa = new URL(whatsappLink(message))

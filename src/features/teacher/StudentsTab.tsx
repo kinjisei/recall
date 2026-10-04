@@ -17,9 +17,10 @@ import {
   setCardStatus,
   STATUS_LABEL,
   type CardAction,
+  type CardStatus,
   type StudentCard,
 } from '../../domains/students'
-import { CardForm, CardHead, InviteBlock, StudentsList } from '../students'
+import { CardForm, CardHead, InviteBlock, StudentsList, useLeavingLessons } from '../students'
 import { useUrlState } from '../../shared/lib/useUrlState'
 import { useIsDesktop } from '../../shared/lib/useMediaQuery'
 import { ListDetail } from '../../shared/ui/layouts'
@@ -77,6 +78,7 @@ export function StudentsTab({
   const [busy, setBusy] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
   const [toast, setToast] = useState<{ id: number; text: string; undo?: () => void } | null>(null)
+  const leaving = useLeavingLessons()
 
   const seatsLimited = typeof plan?.seats === 'number' && !plan.is_admin
   const canWrite = plan?.can_write !== false
@@ -101,10 +103,13 @@ export function StudentsTab({
   const selected =
     rows.find((r) => r.card.id === openId) ?? rows.find((r) => openId && r.card.userId === openId) ?? null
 
-  const act = async (card: StudentCard, action: CardAction) => {
+  // пауза и архив убирают будущие уроки (журнал п.65, 1) — сперва сказать сколько
+  const act = (card: StudentCard, action: CardAction) => {
     if (action === 'edit') return setForm(card)
+    void leaving.check(card, ACTION_STATUS[action], () => void apply(card, ACTION_STATUS[action]))
+  }
+  const apply = async (card: StudentCard, next: CardStatus) => {
     const prev = card.status
-    const next = ACTION_STATUS[action]
     setBusy(true)
     setActionError(null)
     try {
@@ -235,6 +240,7 @@ export function StudentsTab({
         />
       )}
       {toast && <UndoToast key={toast.id} text={toast.text} onAction={toast.undo} onClose={() => setToast(null)} />}
+      {leaving.sheet}
     </>
   )
 }

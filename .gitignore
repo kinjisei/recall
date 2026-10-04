@@ -13,8 +13,9 @@ npm-debug.log*
 # архивы (не исходники — и ломают файловый watcher Vite, если открыты)
 *.zip
 
-# отчёт UX-аудита (генерируется scripts/ux-audit.mjs при каждом прогоне; -light — светлая тема)
+# отчёты UX-аудитов (генерируются scripts/ux-audit.mjs и ux-audit-schedule.mjs при каждом прогоне; -light — светлая тема)
 ux-audit-report*.md
+ux-audit-schedule-report*.md
 
 # прототипы Omelette (референсы дизайна, не исходники)
 *.dc.html

@@ -32,6 +32,8 @@ export interface RowCardProps {
   flat?: boolean
   /** Выбранная строка (список рядом с подробностями, ListDetail). */
   current?: boolean
+  /** Действие недоступно (без тарифа — расписание только для просмотра): видно, но не нажимается. */
+  disabled?: boolean
   className?: string
   style?: React.CSSProperties
 }
@@ -49,6 +51,7 @@ export function RowCard({
   muted = false,
   flat = false,
   current = false,
+  disabled = false,
   className = '',
   style,
 }: RowCardProps) {
@@ -85,7 +88,7 @@ export function RowCard({
   const look = flat
     ? `${current ? 'bg-accent-soft/60' : 'hover:bg-tint/[0.04]'} transition-colors`
     : `lift rounded-2xl ${dashed ? 'border border-dashed border-accent-line bg-transparent' : 'border border-tint/[0.08] bg-surface shadow-card'} hover:border-tint/[0.14]`
-  const cls = `flex w-full items-center gap-3.5 px-4 py-3.5 text-fg ${look} ${muted ? 'opacity-75' : ''} ${className}`
+  const cls = `flex w-full items-center gap-3.5 px-4 py-3.5 text-fg disabled:cursor-not-allowed disabled:opacity-50 ${look} ${muted ? 'opacity-75' : ''} ${className}`
 
   if (to) {
     return (
@@ -95,7 +98,7 @@ export function RowCard({
     )
   }
   return (
-    <button type="button" onClick={onClick} aria-current={current || undefined} className={cls} style={style}>
+    <button type="button" onClick={onClick} disabled={disabled} aria-current={current || undefined} className={cls} style={style}>
       {inner}
     </button>
   )

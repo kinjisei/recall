@@ -23,9 +23,12 @@ export function DatePicker({
   min,
   max,
   label = 'Дата',
+  onDone,
 }: {
   value: string
   onChange: (day: string) => void
+  /** Выбрали нажатием (не стрелками) — можно закрыть календарь. */
+  onDone?: () => void
   /** Сегодня — обводка. */
   today: string
   /** Дни раньше — бледные, но выбрать можно. */
@@ -106,7 +109,10 @@ export function DatePicker({
               disabled={off}
               // в Tab — один день: выбранный, а в чужом месяце — первое число
               tabIndex={on || (monthStart(value) !== month && d === month) ? 0 : -1}
-              onClick={() => pick(d)}
+              onClick={() => {
+                pick(d)
+                onDone?.()
+              }}
               className={`mx-auto flex size-11 items-center justify-center rounded-full text-sm font-medium transition-colors disabled:opacity-30 ${
                 on
                   ? 'bg-accent text-accent-fg'

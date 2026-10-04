@@ -275,6 +275,23 @@ export function rebuildCount(lessons: Lesson[], l: Pick<Lesson, 'id' | 'seriesId
 }
 
 /**
+ * Что уйдёт из расписания, если ученика из «пробный / занимается» поставить на
+ * паузу или в архив (журнал п.65, 1; копия trg_card_lessons): его будущие
+ * запланированные уроки. Уроки серий вернутся вместе с ним, разовые — нет:
+ * правила, по которому их создать заново, у базы нет.
+ */
+export function leavingLessons(lessons: Lesson[], cardId: string, now: Date): { total: number; oneOff: number } {
+  const mine = lessons.filter(
+    (l) =>
+      l.status === 'planned' &&
+      new Date(l.startsAt).getTime() > now.getTime() &&
+      // отмеченная заранее поздняя отмена остаётся (триггер её не трогает)
+      l.participants.some((p) => p.cardId === cardId && p.charge !== 'late_cancel'),
+  )
+  return { total: mine.length, oneOff: mine.filter((l) => l.seriesId === null).length }
+}
+
+/**
  * Остаток после выбора «списать / не списывать» (макеты t4-2, t5-2):
  * «Останется 3 урока» — не меняется, «Станет 2 урока» — меняется.
  */
@@ -285,6 +302,19 @@ export function balanceAfter(balance: number, wasCharged: boolean, willCharge: b
 }
 
 // ---- что написать ученику (макет t5-4; журнал п.38, 42) ------------------------------------
+
+/**
+ * Пишет ли Recall сам ученику в приложении о переносе, отмене и скором уроке.
+ * До Ф2.9 — нет (крючок after_lessons_changed пуст), поэтому «Сообщи ученику»
+ * предлагает написать всем (решение владельца 04.10.2026). Ф2.9 включит —
+ * останутся только ученики без приложения: им Recall не пишет никогда.
+ */
+export const APP_TELLS_STUDENTS = false
+
+/** Кому учителю написать самому. */
+export function whoToTell<P extends { cardId: string }>(participants: P[], inApp: (cardId: string) => boolean): P[] {
+  return APP_TELLS_STUDENTS ? participants.filter((p) => !inApp(p.cardId)) : participants
+}
 
 /** «в ср» · «во вт» */
 const onDay = (day: string): string => `${isoWeekday(day) === 2 ? 'во' : 'в'} ${dayShort(day)}`

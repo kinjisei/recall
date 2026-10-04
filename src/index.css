@@ -326,9 +326,13 @@ html[data-vt='out']::view-transition-new(root) { animation-name: vt-in-left; }
   }
 }
 
-/* Тонкий скроллбар, не перетягивающий внимание. */
-* {
-  scrollbar-width: thin;
+/* Тонкий скроллбар, не перетягивающий внимание. В слое base: правило вне
+   слоя побеждает любую утилиту, и scrollbar-none у колёс времени не
+   срабатывал бы. */
+@layer base {
+  * {
+    scrollbar-width: thin;
+  }
 }
 
 /* Без полосы прокрутки: колёса времени (shared/ui/TimeWheel) — у колеса её

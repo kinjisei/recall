@@ -70,6 +70,7 @@ export const routeScreens = {
   '/onboarding': makeRoute(() => import('../features/onboarding/OnboardingFlow'), (m) => m.OnboardingFlow),
   '/teachers': makeRoute(() => import('../features/landing/TeachersPage'), (m) => m.TeachersPage),
   '/teacher': makeRoute(() => import('../features/teacher/TeacherPage'), (m) => m.TeacherPage),
+  '/schedule': makeRoute(() => import('../features/schedule/SchedulePage'), (m) => m.SchedulePage),
   '/assignments': makeRoute(() => import('../features/teacher/AssignmentsPage'), (m) => m.AssignmentsPage),
   '/writing': makeRoute(() => import('../features/writing/WritingPage'), (m) => m.WritingPage),
   '/self-material': makeRoute(

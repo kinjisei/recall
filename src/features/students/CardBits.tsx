@@ -5,9 +5,12 @@
 import { initials, STATUS_LABEL, type CardStatus } from '../../domains/students'
 import { IconSmartphone } from '../../shared/ui/icons'
 
-/** Аватар: у ученика в приложении — заливка, без приложения — пунктир (макет t6-1). */
-export function Avatar({ name, inApp, large = false }: { name: string; inApp: boolean; large?: boolean }) {
-  const size = large ? 'size-16 text-xl' : 'size-10 text-sm'
+/**
+ * Аватар: у ученика в приложении — заливка, без приложения — пунктир (макет
+ * t6-1). Маленький — в сетке недели расписания (Ф2.7).
+ */
+export function Avatar({ name, inApp, large = false, small = false }: { name: string; inApp: boolean; large?: boolean; small?: boolean }) {
+  const size = large ? 'size-16 text-xl' : small ? 'size-7 text-caption' : 'size-10 text-sm'
   const look = inApp
     ? 'bg-accent-soft text-accent-soft-fg'
     : 'border border-dashed border-tint/[0.28] text-fg-secondary'

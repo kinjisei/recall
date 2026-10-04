@@ -86,6 +86,7 @@ check('ученику при включённом — прежнее меню', 
 check('неизвестная роль — меню ученика', labels(tabsFor('admin', true)) === STUDENT)
 const teacherActive = (path) => labels([TEACHER_TABS[activeTabIndex(TEACHER_TABS, path)] ?? { label: '—' }])
 check('учитель: студия — вкладка «Ученики»', teacherActive('/teacher') === 'Ученики', teacherActive('/teacher'))
+check('учитель: расписание — вкладка «Расписание», а не «Моя учёба»', teacherActive('/schedule') === 'Расписание', teacherActive('/schedule'))
 for (const path of ['/', '/study', '/grammar', '/practice', '/pronunciation', '/conversation', '/settings']) {
   check(`учитель: ${path} — «Моя учёба» (экраны ученика те же)`, teacherActive(path) === 'Моя учёба', teacherActive(path))
 }
@@ -94,6 +95,8 @@ for (const path of ['/', '/study', '/grammar', '/practice', '/pronunciation', '/
 const banner = (path, role, enabled) => showsAccessBanner(path, role, enabled)
 check('сейчас: репетитору — на Главной', banner('/', 'teacher', false))
 check('сейчас: репетитору — в студии', banner('/teacher', 'teacher', false))
+check('сейчас: репетитору — над расписанием (Ф2.7, макет t9-3)', banner('/schedule', 'teacher', false))
+check('ученику на /schedule — нет', !banner('/schedule', 'learner', false))
 check('сейчас: самоучке — на Главной', banner('/', 'learner', false))
 check('ученику в «Преподавателе» (приглашение) — нет', !banner('/teacher', 'learner', false))
 for (const path of ['/study', '/practice', '/conversation', '/settings', '/pay', '/progress']) {

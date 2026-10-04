@@ -10,16 +10,14 @@
 // ============================================================================
 import { useState } from 'react'
 import { Button } from '../../shared/ui/Button'
-import { IconCheck, IconCopy, IconDialog, IconSend, IconShare } from '../../shared/ui/icons'
+import { IconCheck, IconCopy, IconShare } from '../../shared/ui/icons'
+import { SHARE_BUTTON, ShareLink } from '../../shared/ui/ShareLink'
 import { useCopy } from '../../shared/lib/useCopy'
 import { shareNative, telegramLink, whatsappLink } from '../../shared/lib/share'
 import { INVITE_TEXT, inviteMessage, referralLink } from '../../domains/billing'
 import { track } from '../../lib/analytics'
 
 const canShareNative = typeof navigator !== 'undefined' && typeof navigator.share === 'function'
-
-const shareCls =
-  'lift flex min-h-12 items-center justify-center gap-2 rounded-xl bg-accent-soft px-2 text-sm font-medium text-accent-soft-fg'
 
 export function InviteShare({ code }: { code: string }) {
   const link = referralLink(window.location.origin, code)
@@ -58,28 +56,18 @@ export function InviteShare({ code }: { code: string }) {
         {copied === 'message' && <p className="mt-2 text-note text-fg-muted">Сообщение скопировано — вставь его, куда удобно.</p>}
 
         <div className={`mt-3 grid gap-2 ${canShareNative ? 'grid-cols-3' : 'grid-cols-2'}`}>
-          <a
+          <ShareLink
+            channel="whatsapp"
             href={whatsappLink(message)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={shareCls}
-            data-share="whatsapp"
             onClick={() => void track('referral_share', { via: 'whatsapp' })}
-          >
-            <IconDialog size={18} /> WhatsApp
-          </a>
-          <a
+          />
+          <ShareLink
+            channel="telegram"
             href={telegramLink(INVITE_TEXT, link)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={shareCls}
-            data-share="telegram"
             onClick={() => void track('referral_share', { via: 'telegram' })}
-          >
-            <IconSend size={18} /> Telegram
-          </a>
+          />
           {canShareNative && (
-            <button type="button" className={shareCls} onClick={shareMore}>
+            <button type="button" className={SHARE_BUTTON} onClick={shareMore}>
               <IconShare size={18} /> Ещё…
             </button>
           )}
