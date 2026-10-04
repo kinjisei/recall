@@ -10,7 +10,8 @@
  *   • «вне мест тарифа» — только ученику в приложении, которому место
  *     полагается; меню карточки по статусу;
  *   • подписи мест и приглашения: «будет 4 из 5», мест нет, пробный не займёт;
- *   • ссылка-приглашение несёт код, текст — без ссылки (её добавляет «поделиться»).
+ *   • ссылка-приглашение несёт код и разбирается обратно (мусор — нет), текст —
+ *     без ссылки (её добавляет «поделиться»).
  * Чистый: без сети и базы.
  * Запуск: node scripts/test-student-cards.mjs
  */
@@ -32,6 +33,7 @@ import {
   matchesFilter,
   matchesQuery,
   outsideSeats,
+  parseJoinCode,
   seatsLine,
   spacedCode,
 } from '../src/domains/students/model.ts'
@@ -115,6 +117,9 @@ check('ссылка несёт код', link, 'https://recall-pgkz.vercel.app/lo
 check('текст — по имени и с кодом, без ссылки', [cardInviteText('Тимур Ким', 'K7M2PX').startsWith('Тимур, '), cardInviteText('Тимур Ким', 'K7M2PX').includes('K7M2PX'), cardInviteText('Тимур Ким', 'K7M2PX').includes('http')], [true, true, false])
 check('сообщение целиком — текст и ссылка', cardInviteMessage('Тимур Ким', 'K7M2PX', link).endsWith(` ${link}`), true)
 check('код для диктовки', spacedCode('K7M2PX'), 'K7M 2PX')
+check('код из ссылки: туда и обратно', parseJoinCode(new URL(link).searchParams.get('join')), 'K7M2PX')
+check('код из ссылки: регистр и пробелы', parseJoinCode('  k7m2px '), 'K7M2PX')
+check('код из ссылки: мусор, 0/1/O/I/L и длина — нет', ['K7M2P', 'K7M2PXX', 'K7M2P0', 'K7M2PO', 'K7M2PI', 'K7M2PL', '<b>', null].map(parseJoinCode), [null, null, null, null, null, null, null, null])
 
 console.log(`\n${ok}/${ok + failed}`)
 process.exitCode = failed ? 1 : 0

@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { IconGraduation, IconFlame, IconBadgeCheck } from '../../shared/ui/icons'
+import { IconGraduation, IconBadgeCheck } from '../../shared/ui/icons'
 import { BackHeader } from '../../shared/ui/BackButton'
-import { GOAL_LABELS } from '../../types'
 import { useUrlState } from '../../shared/lib/useUrlState'
 import { useCopy } from '../../shared/lib/useCopy'
 import { Card } from '../../shared/ui/Card'
@@ -13,43 +12,26 @@ import { loadProfile } from '../../lib/profile'
 import { useAsyncData } from '../../shared/lib/useAsyncData'
 import { LoadError } from '../../shared/ui/LoadError'
 import { useAuth } from '../../context/AuthContext'
-import { useLanguage } from '../../context/LanguageContext'
 import {
   getOrCreateInviteCode,
   regenerateInviteCode,
   becomeTeacher,
   stopTeaching,
-  setStudentSeat,
-  unlinkStudent,
   getMyStudents,
   type StudentInfo,
 } from '../../lib/teacher'
+import { loadStudentCards, type StudentCard } from '../../domains/students'
 import { MaterialsSection } from './MaterialsSection'
 import { WritingSection } from './WritingSection'
-import { StudentWordsSection } from './StudentWordsSection'
-import { QuestSection } from './QuestSection'
-import { DiagnosticsSection } from './DiagnosticsSection'
-import { PlacementSection } from './PlacementSection'
-import { ProgramSection } from './ProgramSection'
 import { GuideSection } from './GuideSection'
-import { DailyPlanSection } from './DailyPlanSection'
-import { HomeworkSection, StatTiles } from './HomeworkSection'
-import { HomeworkComposer } from './HomeworkComposer'
+import { StudentsTab } from './StudentsTab'
 import { getHomeworkMany, type Homework } from '../../lib/homework'
-import {
-  byAttention,
-  needAttention,
-  studentSignal,
-  type StudentSignal,
-} from '../../lib/studentSignals'
-import { Reveal } from '../../shared/ui/Reveal'
-import { getStudentDiagnostics, type StudentDiagnostics } from '../../lib/diagnostics'
 import { countSubmittedWorks } from '../../lib/materials'
 import { countSubmittedWriting } from '../../lib/writing'
 import { getMyPlan, type MyPlan } from '../../lib/billing'
 import { IconSparkle } from '../../shared/ui/icons'
 import { AppLink } from '../../shared/ui/AppLink'
-import { Loading, RowsSkeleton } from '../../shared/ui/Loading'
+import { Loading } from '../../shared/ui/Loading'
 
 export function TeacherPage() {
   const { user } = useAuth()
@@ -154,12 +136,6 @@ function TeacherDashboard() {
   const [rawTab, setRawTab] = useUrlState('tab', (v) =>
     ['materials', 'writing', 'guide'].includes(v),
   )
-  // Открытый ученик — в адресе. Замер 09.08: карточка со всеми разделами
-  // занимает ~700px, и пятеро учеников превращали список в 3.9 экрана и
-  // ТРИДЦАТЬ раскрывашек; на тарифе с десятью было бы семь экранов и
-  // шестьдесят. Список должен оставаться списком, а разделы — открываться
-  // отдельным экраном (заодно на ученика можно дать ссылку).
-  const [openStudent, setOpenStudent] = useUrlState('student')
   const tab = (rawTab as TeacherTab | null) ?? 'students'
   const setTab = (t: TeacherTab) => setRawTab(t === 'students' ? null : t)
   const [code, setCode] = useState<string | null>(null)
@@ -167,6 +143,8 @@ function TeacherDashboard() {
   const [regenerating, setRegenerating] = useState(false)
   const [stopping, setStopping] = useState(false)
   const [students, setStudents] = useState<StudentInfo[]>([])
+  // Карточки учеников (Ф2.5): все — и в приложении, и без него
+  const [cards, setCards] = useState<StudentCard[]>([])
   // Домашки всех учеников одним запросом. Пустая карта — либо их нет, либо
   // запрос не прошёл: список обязан работать и без домашки, как раньше.
   const [homeworks, setHomeworks] = useState<Map<string, Homework | null>>(new Map())
@@ -181,15 +159,17 @@ function TeacherDashboard() {
   const load = useCallback(async () => {
     setError(null)
     try {
-      const [c, s, pending, pendingW, hw] = await Promise.all([
+      const [c, s, sc, pending, pendingW, hw] = await Promise.all([
         getOrCreateInviteCode(),
         getMyStudents(),
+        loadStudentCards(),
         countSubmittedWorks().catch(() => 0), // был отдельным шагом ПОСЛЕ Promise.all
         countSubmittedWriting().catch(() => 0),
         getHomeworkMany().catch(() => new Map<string, Homework | null>()),
       ])
       setCode(c)
       setStudents(s)
+      setCards(sc)
       setHomeworks(hw)
       setPendingWorks(pending)
       setPendingWriting(pendingW)
@@ -313,519 +293,84 @@ function TeacherDashboard() {
           onWorksChanged={() => countSubmittedWorks().then(setPendingWorks)}
         />
       ) : (
-        <>
-          {myPlan && typeof myPlan.energy_max === 'number' && !myPlan.is_admin && myPlan.in_studio && (
-            <StudioEnergy plan={myPlan} />
-          )}
-          <Card>
-            <p className="text-sm text-fg-muted">
-              Код-приглашение — ученик вводит его у себя на Главной:
-            </p>
-            <div className="mt-2 flex items-center gap-3">
-              <span className="rounded-xl bg-tint/[0.08] px-4 py-2 font-mono text-2xl font-bold tracking-widest">
-                {code ?? '……'}
-              </span>
-              <Button variant="secondary" className="px-3 py-2 text-sm" onClick={copyCode}>
-                {/* подтверждение «клюёт» — иначе подмена текста на секунду
-                    проходит мимо глаза, и человек жмёт второй раз */}
-                <span key={copied ? 'yes' : 'no'} className={copied ? 'animate-pop-in' : ''}>
-                  {copied ? 'Скопирован ✓' : 'Скопировать'}
-                </span>
-              </Button>
-            </div>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <Button
-                variant="ghost"
-                className="min-h-[44px] px-3 py-2 text-sm"
-                loading={regenerating}
-                onClick={changeCode}
-              >
-                Сменить код
-              </Button>
-              <span className="text-xs text-fg-muted">
-                если код попал не тем — старый перестанет работать
-              </span>
-            </div>
-            <Seats plan={myPlan} used={students.length} />
-
-            {/* Включить режим можно было одним нажатием, а выключить — никак:
-                нажавший из любопытства оставался с чужой ролью навсегда.
-                Показываем только когда учеников нет — с ними выключение всё
-                равно откажет, и кнопка-обманка была бы хуже её отсутствия. */}
-            {students.length === 0 && (
-              <div className="mt-3 border-t border-tint/[0.06] pt-3">
-                <Button
-                  variant="ghost"
-                  className="min-h-[44px] px-3 py-2 text-sm text-fg-muted"
-                  loading={stopping}
-                  onClick={stopTeach}
-                >
-                  Выключить режим преподавателя
-                </Button>
-              </div>
-            )}
-          </Card>
-
-          {error && (
-            <Card tone="danger">
-              <p className="text-sm text-danger-soft-fg">{error}</p>
-            </Card>
-          )}
-
-          {loading ? (
-            <RowsSkeleton count={3} />
-          ) : students.length === 0 ? (
-            <Card className="text-center">
-              <IconGraduation size={40} className="mx-auto block text-fg-muted" />
-              <p className="mt-2 font-semibold">Пока ни одного ученика</p>
-              <p className="mt-1 text-sm text-fg-muted">
-                Отправь код-приглашение — после ввода кода ученик появится здесь.
-                Тогда же включатся общий запас AI для студии и генерация материалов.
-              </p>
-            </Card>
-          ) : (
+        <StudentsTab
+          cards={cards}
+          students={students}
+          homeworks={homeworks}
+          plan={myPlan}
+          loading={loading}
+          onChanged={load}
+          notice={error && <Card tone="danger"><p className="text-sm text-danger-soft-fg">{error}</p></Card>}
+          extras={
             <>
-            {/* Сводка вверху списка: без неё пропавшего надо было ВЫСМАТРИВАТЬ
-                среди всех — при пяти учениках упражнение на внимательность,
-                при десяти лотерея. Порядок списка НЕ трогаем: по нему считается,
-                кто попадает в места тарифа (первые N по дате привязки). */}
-            {(() => {
-              // ⚠️ Покрытие тарифом считаем ДО сортировки и по ИСХОДНОМУ
-              // порядку привязки: пока мест никто не выбирал, их держат первые N
-              // по дате (так же считает covering_teacher в БД). Отсортируй
-              // сначала — и значок «вне мест тарифа» уедет не на тех людей.
-              const rows = students.map((s, i) => ({
-                student: s,
-                signal: studentSignal(s, homeworks.get(s.profile.id) ?? null),
-                covered:
-                  typeof myPlan?.seats !== 'number'
-                    ? true
-                    : students.some((x) => x.seat)
-                      ? s.seat
-                      : i < myPlan.seats,
-              }))
-              const attention = needAttention(rows.map((r) => r.signal))
-              // Сортируем ПОКАЗ, а не данные: сперва те, к кому надо вернуться.
-              const shown = byAttention(rows, (r) => r.signal)
-              const lostRows = rows.filter((r) => r.signal.lost)
+              {myPlan && typeof myPlan.energy_max === 'number' && !myPlan.is_admin && myPlan.in_studio && (
+                <StudioEnergy plan={myPlan} />
+              )}
+              <Card>
+                <p className="text-sm text-fg-muted">
+                  Общий код — ученик вводит его у себя на Главной и появляется в списке.
+                  Пригласить того, кто уже есть в списке, — из его карточки.
+                </p>
+                <div className="mt-2 flex items-center gap-3">
+                  <span className="rounded-xl bg-tint/[0.08] px-4 py-2 font-mono text-2xl font-bold tracking-widest">
+                    {code ?? '……'}
+                  </span>
+                  <Button variant="secondary" className="px-3 py-2 text-sm" onClick={copyCode}>
+                    {/* подтверждение «клюёт» — иначе подмена текста на секунду
+                        проходит мимо глаза, и человек жмёт второй раз */}
+                    <span key={copied ? 'yes' : 'no'} className={copied ? 'animate-pop-in' : ''}>
+                      {copied ? 'Скопирован ✓' : 'Скопировать'}
+                    </span>
+                  </Button>
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    className="min-h-[44px] px-3 py-2 text-sm"
+                    loading={regenerating}
+                    onClick={changeCode}
+                  >
+                    Сменить код
+                  </Button>
+                  <span className="text-xs text-fg-muted">
+                    если код попал не тем — старый перестанет работать
+                  </span>
+                </div>
+                <Seats plan={myPlan} inApp={students.length} />
 
-              return (
-                <>
-                  {attention > 0 && (
-                    <Card tone="warning">
-                      <p className="text-sm font-semibold text-warning-soft-fg">
-                        Нужно внимание: {attention}
-                      </p>
-                      <p className="mt-1 text-sm text-fg-secondary">
-                        {shown
-                          .filter(
-                            (r) =>
-                              r.signal.attention === 'overdue' || r.signal.attention === 'lost',
-                          )
-                          .map(
-                            (r) =>
-                              `${r.student.profile.display_name ?? 'Без имени'} — ${
-                                r.signal.overdue ? 'домашка просрочена' : lastSeen(r.student)
-                              }`,
-                          )
-                          .join(' · ')}
-                      </p>
-                      <p className="mt-2 text-xs text-fg-muted">
-                        {lostRows.length > 0
-                          ? 'Неделя без занятий — обычно момент, когда стоит написать самому.'
-                          : 'Срок домашки прошёл, а сделано не всё.'}
-                      </p>
-                    </Card>
-                  )}
-                  {shown.map((r) =>
-                    openStudent === r.student.profile.id ? (
-                      <StudentCard
-                        key={r.student.profile.id}
-                        student={r.student}
-                        onChanged={load}
-                        covered={r.covered}
-                        seatsKnown={typeof myPlan?.seats === 'number'}
-                        onBack={() => setOpenStudent(null)}
-                      />
-                    ) : openStudent ? null : (
-                      <StudentRow
-                        key={r.student.profile.id}
-                        student={r.student}
-                        signal={r.signal}
-                        covered={r.covered}
-                        seatsKnown={typeof myPlan?.seats === 'number'}
-                        onOpen={() => setOpenStudent(r.student.profile.id)}
-                      />
-                    ),
-                  )}
-                </>
-              )
-            })()}
+                {/* Включить режим можно было одним нажатием, а выключить — никак:
+                    нажавший из любопытства оставался с чужой ролью навсегда.
+                    Показываем только когда учеников нет — с ними выключение всё
+                    равно откажет, и кнопка-обманка была бы хуже её отсутствия;
+                    с карточками — студией явно пользуются. */}
+                {students.length === 0 && cards.length === 0 && (
+                  <div className="mt-3 border-t border-tint/[0.06] pt-3">
+                    <Button
+                      variant="ghost"
+                      className="min-h-[44px] px-3 py-2 text-sm text-fg-muted"
+                      loading={stopping}
+                      onClick={stopTeach}
+                    >
+                      Выключить режим преподавателя
+                    </Button>
+                  </div>
+                )}
+              </Card>
             </>
-          )}
-        </>
+          }
+        />
       )}
     </div>
   )
 }
 
-/** Человеческий срок последнего занятия. */
-function lastSeen(s: StudentInfo): string {
-  const d = s.daysSinceActive
-  if (d === null) return 'ещё не начинал'
-  if (d === 0) return 'занимался сегодня'
-  if (d === 1) return 'был вчера'
-  return `не заходил ${d} ${d < 5 ? 'дня' : 'дней'}`
-}
-
 /**
- * Строка ученика в списке. Показывает ровно то, что нужно, чтобы выбрать, кем
- * заняться: имя, уровень, цель и серия. Всё остальное — за тапом.
- *
- * Раньше каждый ученик разворачивался в карточку с шестью раскрывашками прямо
- * в списке: пятеро давали 3.9 экрана прокрутки и тридцать одинаковых строк-
- * переключателей, и выбрать взглядом было невозможно (замер 09.08).
+ * Места тарифа под кодом-приглашением: что значит «без ограничения» и что
+ * делать, когда места кончились. Сколько занято — тихой строкой над списком
+ * (features/students), счёт — база (get_my_plan.seats_used: только ученики в
+ * приложении «занимается» и «пауза»). Молчит у админа и у не-преподавателя.
  */
-function StudentRow({
-  student,
-  signal,
-  covered,
-  seatsKnown,
-  onOpen,
-}: {
-  student: StudentInfo
-  /** Числа строки — те же, что в карточке (см. lib/studentSignals). */
-  signal: StudentSignal
-  covered: boolean
-  seatsKnown: boolean
-  onOpen: () => void
-}) {
-  const p = student.profile
-  return (
-    <button onClick={onOpen} className="text-left">
-      <Card interactive className="flex items-center justify-between gap-3">
-        <span className="min-w-0">
-          <span className="block truncate font-semibold">{p.display_name ?? 'Без имени'}</span>
-
-          {/* Домашка — первое, что нужно перед уроком: «3 из 5 · до вторника».
-              Раньше её тут не было вовсе, и ответ на главный вопрос требовал
-              открыть карточку каждого. */}
-          {signal.homeworkText ? (
-            <span
-              className={`block truncate text-sm ${
-                signal.overdue ? 'text-warning-soft-fg' : 'text-fg-secondary'
-              }`}
-            >
-              {signal.homeworkText} · {signal.dueText}
-            </span>
-          ) : (
-            <span className="block truncate text-sm text-fg-muted">
-              Домашка не выдана
-            </span>
-          )}
-
-          <span className="block truncate text-sm text-fg-muted">
-            {p.level ? `Уровень ${p.level}` : 'Уровень не определён'}
-            {p.goal ? ` · ${GOAL_LABELS[p.goal]}` : ''}
-          </span>
-
-          {/* ⚠️ Регулярность, а не объём. «120 карточек» — это один просиженный
-              вечер, «занимался 5 дней из 7» — привычка; для прогресса частота
-              значит больше суммы. Стрик оставляем рядом: он про то же, но
-              обнуляется от одного пропуска и в одиночку молчит о пропавшем. */}
-          <span className="mt-0.5 block text-sm text-fg-muted">
-            <IconFlame size={13} className="inline align-text-bottom" /> {student.streak} ·
-            занимался {signal.regularity} ·{' '}
-            <span className={signal.lost ? 'text-warning-soft-fg' : ''}>{lastSeen(student)}</span>
-          </span>
-
-          {seatsKnown && !covered && (
-            <span className="mt-1 inline-block rounded-lg bg-warning/10 px-2 py-1 text-xs text-warning-soft-fg">
-              Вне мест тарифа
-            </span>
-          )}
-        </span>
-        <span className="shrink-0 text-sm font-medium text-accent-strong">›</span>
-      </Card>
-    </button>
-  )
-}
-
-/**
- * Разделы под «Ещё» — то, что нужно раз в месяц. Порядок значим: тест уровня
- * первым, потому что с нового ученика начинают именно с него (это и в
- * методичке, и в комментариях кода стояло всегда, а на экране — нет).
- */
-const SECTIONS = [
-  { id: 'placement', title: 'Тест уровня' },
-  { id: 'diag', title: 'Диагностическая карта' },
-  { id: 'plan', title: 'План дня' },
-  { id: 'program', title: 'Программа обучения' },
-  { id: 'words', title: 'Слова и перепроверка' },
-  { id: 'quests', title: 'AI-квесты по грамматике' },
-] as const
-
-type StudentSection = (typeof SECTIONS)[number]['id']
-
-function StudentCard({
-  student,
-  onChanged,
-  covered = true,
-  seatsKnown = false,
-  onBack,
-}: {
-  student: StudentInfo
-  onChanged: () => void
-  /** Возврат к списку учеников (карточка теперь отдельный экран). */
-  onBack?: () => void
-  /** Покрыт ли ученик тарифом: сверх мест AI-возможности у него обычные, бесплатные. */
-  covered?: boolean
-  /** Есть ли вообще ограничение мест (на тарифе без лимита переключать нечего). */
-  seatsKnown?: boolean
-}) {
-  const { lang: appLang } = useLanguage()
-  const [seatBusy, setSeatBusy] = useState(false)
-  const [unlinking, setUnlinking] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const p = student.profile
-
-  // ⚠️ Раскрытый раздел живёт в АДРЕСЕ, как на остальных 12 экранах: в PWA
-  // свайп-назад — единственный способ вернуться, и без этого он выбрасывал бы
-  // из карточки целиком вместо закрытия раздела. Пять отдельных булевых
-  // состояний заменены одним: открыт максимум один раздел, и это же чинит
-  // старую беду — раскрытые подряд диагностика с программой давали экран,
-  // который невозможно пролистать.
-  const [rawSection, setRawSection] = useUrlState('sec', (v) =>
-    SECTIONS.some((s) => s.id === v),
-  )
-  const section = rawSection as StudentSection | null
-  const setSection = (v: StudentSection | null) => setRawSection(v)
-  const [more, setMore] = useState(!!section)
-  const [composing, setComposing] = useState(false)
-  /** Растёт после выдачи домашки — блок перечитывает себя, карточка не мигает. */
-  const [hwVersion, setHwVersion] = useState(0)
-
-  // Числа для плашек берём из ОБЩЕЙ диагностики (lib/diagnostics), а не считаем
-  // рядом: второй счёт разошёлся бы с картой молча, и учитель увидел бы в
-  // карточке одно, а в разделе — другое.
-  const [diag, setDiag] = useState<StudentDiagnostics | null>(null)
-  const [diagLoading, setDiagLoading] = useState(true)
-  useEffect(() => {
-    let alive = true
-    setDiag(null)
-    setDiagLoading(true)
-    getStudentDiagnostics(p.id)
-      .then((d) => alive && setDiag(d))
-      .catch(() => {
-        /* карточка из-за плашек падать не должна: покажем «—» вместо чисел */
-      })
-      .finally(() => alive && setDiagLoading(false))
-    return () => {
-      alive = false
-    }
-  }, [p.id])
-
-
-  return (
-    <div className="flex flex-col gap-3">
-      {/* Карточка ученика стала отдельным экраном — значит нужен возврат
-          к списку (общий BackHeader, как на всех внутренних экранах). */}
-      {onBack && <BackHeader onBack={onBack} title={p.display_name ?? 'Ученик'} label="К списку" />}
-    <Card className="flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="font-semibold">{p.display_name ?? 'Без имени'}</p>
-          <p className="text-sm text-fg-muted">
-            {/* Уровня может НЕ БЫТЬ: пока ученик не прошёл тест, мы его не
-                знаем. Раньше здесь стояло «Уровень B1» (умолчание колонки), и
-                карточка противоречила строке ниже — «тестов пока не было». */}
-            {p.level ? `Уровень ${p.level}` : 'Уровень не определён'} ·{' '}
-            <IconFlame size={13} className="inline align-text-bottom" />{' '}
-            {student.streak} ·{' '}
-            {student.doneToday ? 'сегодня ✓' : 'сегодня —'}
-          </p>
-          {/* Цель ученика — то, ради чего он вообще пришёл. Преподавателю она
-              нужна раньше любых цифр: у готовящегося к IELTS и у школьника
-              занятия строятся по-разному. */}
-          {p.goal && (
-            <p className="mt-0.5 text-sm text-accent-strong">
-              Цель: {GOAL_LABELS[p.goal]}
-            </p>
-          )}
-          {seatsKnown && !covered && (
-            <p className="mt-1 inline-block rounded-lg bg-warning/10 px-2 py-1 text-xs text-warning-soft-fg">
-              Вне мест тарифа — занимается на бесплатных лимитах AI
-            </p>
-          )}
-        </div>
-        <p className="text-right text-sm text-fg-muted">
-          за 7 дней:
-          <br />
-          <span className="text-lg font-bold text-fg-secondary">
-            {student.weekItems}
-          </span>{' '}
-          заданий
-        </p>
-      </div>
-
-      {/* 1. Домашка — первой: это единственное, что нужно и до урока, и после.
-             Раздел «Наборы слов» убран (2026-08-10), выдача слов живёт в
-             «Словах» — там виден весь словарь ученика со статусами. */}
-      <HomeworkSection
-        studentId={p.id}
-        reloadKey={hwVersion}
-        onCompose={() => setComposing(true)}
-      />
-
-      {/* 2. Три числа, за которыми преподаватель и приходит. */}
-      <StatTiles
-        diag={
-          diag
-            ? {
-                struggling: diag.words.struggling.length,
-                weakTopics: diag.mistakes.length,
-                // ⚠️ Ровно то же число, что в строке списка (activeDays7):
-                // две цифры про одно и то же на соседних экранах обесценивают
-                // друг друга. activeDays14 остаётся для промптов AI.
-                activeDays: diag.activeDays7,
-              }
-            : null
-        }
-        loading={diagLoading}
-      />
-
-      {/* 3. Всё остальное — под «Ещё». Оно нужно раз в месяц, а занимало весь
-             экран каждый раз. Тест уровня остаётся первым в списке: методичка
-             и код всегда говорили начинать нового ученика с него. */}
-      <button
-        onClick={() => {
-          const next = !more
-          setMore(next)
-          if (!next) setSection(null)
-        }}
-        aria-expanded={more}
-        className="mt-1 flex min-h-11 items-center gap-1.5 self-start text-sm font-medium text-accent-strong"
-      >
-        {more ? '▾' : '▸'} Ещё: тест уровня, диагностика, программа, слова
-      </button>
-
-      <Reveal open={more}>
-        <div className="flex flex-col gap-2 pt-1">
-          {SECTIONS.map((s) => (
-            <div key={s.id}>
-              <button
-                onClick={() => setSection(section === s.id ? null : s.id)}
-                aria-expanded={section === s.id}
-                className="flex min-h-11 w-full items-center justify-between gap-2 rounded-xl border border-tint/[0.08] bg-tint/[0.03] px-3.5 text-left text-sm"
-              >
-                <span>{s.title}</span>
-                <span className="text-fg-muted">{section === s.id ? '▾' : '▸'}</span>
-              </button>
-              <Reveal open={section === s.id}>
-                <div className="pt-2">
-                  {s.id === 'placement' && (
-                    <PlacementSection studentId={p.id} studentName={p.display_name ?? 'ученик'} />
-                  )}
-                  {s.id === 'diag' && (
-                    <DiagnosticsSection
-                      studentId={p.id}
-                      studentName={p.display_name ?? 'Ученик'}
-                      preloaded={diag}
-                    />
-                  )}
-                  {s.id === 'plan' && <DailyPlanSection studentId={p.id} />}
-                  {s.id === 'program' && <ProgramSection studentId={p.id} />}
-                  {s.id === 'words' && (
-                    <StudentWordsSection studentId={p.id} studentLevel={p.level ?? null} />
-                  )}
-                  {s.id === 'quests' && <QuestSection studentId={p.id} />}
-                </div>
-              </Reveal>
-            </div>
-          ))}
-        </div>
-      </Reveal>
-
-      {error && <p className="text-sm text-danger">{error}</p>}
-
-      <div className="mt-1 flex flex-wrap items-center gap-2 border-t border-tint/[0.06] pt-3">
-        {seatsKnown && (
-          <Button
-            variant="ghost"
-            className="min-h-[44px] px-3 py-2 text-sm"
-            loading={seatBusy}
-            onClick={async () => {
-              setSeatBusy(true)
-              setError(null)
-              try {
-                await setStudentSeat(p.id, !covered)
-                onChanged()
-              } catch (e) {
-                setError(e instanceof Error ? e.message : 'Не удалось изменить место')
-              } finally {
-                setSeatBusy(false)
-              }
-            }}
-          >
-            {covered ? 'Освободить место тарифа' : 'Дать место тарифа'}
-          </Button>
-        )}
-        <Button
-          variant="ghost"
-          className="min-h-[44px] px-3 py-2 text-sm text-danger-soft-fg"
-          loading={unlinking}
-          onClick={async () => {
-            if (
-              !window.confirm(
-                `Отвязать ${p.display_name ?? 'ученика'}? Его аккаунт и прогресс останутся при нём, но ты перестанешь видеть его занятия и не сможешь назначать задания.`,
-              )
-            )
-              return
-            setUnlinking(true)
-            setError(null)
-            try {
-              await unlinkStudent(p.id)
-              onChanged()
-            } catch (e) {
-              setError(e instanceof Error ? e.message : 'Не удалось отвязать')
-              setUnlinking(false)
-            }
-          }}
-        >
-          Отвязать
-        </Button>
-      </div>
-    </Card>
-
-    {composing && (
-      <HomeworkComposer
-        studentId={p.id}
-        studentName={p.display_name ?? 'ученика'}
-        // ⚠️ Язык берём из переключателя EN/ES в шапке, как весь остальной
-        // раздел преподавателя (см. WordPicker). Сначала здесь стоял
-        // profile.native_lang — а это РОДНОЙ язык ученика (русский), не
-        // изучаемый: у преподавателя по испанскому домашка уходила бы с
-        // lang='en', и пункт «слова» считал бы английскую колоду, то есть не
-        // закрывался бы никогда.
-        lang={appLang}
-        // Уровень нужен подбору текста: читать выше своего уровня — это уже не
-        // чтение. null (тест не проходили) подбор понимает и не завышает.
-        level={p.level ?? null}
-        onClose={() => setComposing(false)}
-        onCreated={() => setHwVersion((v) => v + 1)}
-      />
-    )}
-    </div>
-  )
-}
-
-// Панель энергии студии (E3): общий дневной пул на всех учеников + месячные
-// генерации материалов/программ. Показывается на вкладке «Ученики».
-/**
- * Занятые места. Молчит, если миграция «САМОСТОЯТЕЛЬНАЯ РОЛЬ» ещё не залита
- * (seats тогда не приходит) или если аккаунт админский — у владельца лимитов нет.
- */
-function Seats({ plan, used }: { plan: MyPlan | null; used: number }) {
+function Seats({ plan, inApp }: { plan: MyPlan | null; inApp: number }) {
   // seats нет в ответе — миграция не залита; 0 — не преподаватель; админ без лимитов
   if (!plan || plan.seats === undefined || plan.seats === 0 || plan.is_admin) return null
   const total = plan.seats // null = без ограничения
@@ -834,7 +379,7 @@ function Seats({ plan, used }: { plan: MyPlan | null; used: number }) {
     return (
       <div className="mt-3 border-t border-tint/[0.06] pt-3">
         <p className="text-xs text-fg-muted">
-          Учеников: <span className="text-fg-secondary">{used}</span> · приглашать
+          В приложении учеников: <span className="text-fg-secondary">{inApp}</span> · приглашать
           можно сколько нужно
         </p>
         <p className="mt-1.5 text-xs text-fg-muted">
@@ -849,28 +394,23 @@ function Seats({ plan, used }: { plan: MyPlan | null; used: number }) {
     )
   }
 
-  const full = used >= total
+  if ((plan.seats_used ?? 0) < total) return null
   const onTrialSeats = typeof plan.free_seats === 'number' && total === plan.free_seats
   return (
-    <div className="mt-3 border-t border-tint/[0.06] pt-3">
-      <p className="text-xs text-fg-muted">
-        Занято мест: <span className="text-fg-secondary">{used} из {total}</span>
-      </p>
-      {full && (
-        <p className="mt-1.5 text-xs text-fg-secondary">
-          {onTrialSeats
-            ? `Пока идёт пробный период, учеников можно вести до ${total} — зато у каждого повышенный запас AI. Чтобы взять больше — `
-            : 'Места тарифа заняты. Чтобы взять больше учеников — '}
-          <AppLink to="/pricing" className="text-accent underline underline-offset-2">
-            подключи тариф
-          </AppLink>
-          . Уже привязанные ученики останутся в любом случае.
-        </p>
-      )}
-    </div>
+    <p className="mt-3 border-t border-tint/[0.06] pt-3 text-xs text-fg-secondary">
+      {onTrialSeats
+        ? `Пока идёт пробный период, в приложении можно вести до ${total} учеников — зато у каждого повышенный запас AI. Чтобы взять больше — `
+        : 'Места тарифа заняты. Чтобы пригласить в приложение ещё — '}
+      <AppLink to="/pricing" className="text-accent underline underline-offset-2">
+        подключи тариф
+      </AppLink>
+      . Пробные ученики и карточки без приложения мест не занимают.
+    </p>
   )
 }
 
+// Панель энергии студии (E3): общий дневной пул на всех учеников + месячные
+// генерации материалов/программ. Показывается на вкладке «Ученики».
 function StudioEnergy({ plan }: { plan: MyPlan }) {
   const max = plan.energy_max ?? 0
   const spent = plan.energy_spent ?? 0

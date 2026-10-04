@@ -1,8 +1,9 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 
 import { Card } from '../../shared/ui/Card'
 import { Button } from '../../shared/ui/Button'
 import { joinTeacher, getMyTeachers } from '../../lib/teacher'
+import { pendingJoin } from '../../lib/pendingRole'
 import { countSubmittedWorks, getMyAssignments } from '../../lib/materials'
 import type { Profile } from '../../types'
 import { AppLink } from '../../shared/ui/AppLink'
@@ -128,8 +129,10 @@ export function AssignmentsNotice({
 
 function JoinTeacherBlock() {
   const [teachers, setTeachers] = useState<Profile[] | null>(null)
-  const [open, setOpen] = useState(false)
-  const [code, setCode] = useState('')
+  // пришёл по ссылке-приглашению (Ф2.5) — код уже в поле, остаётся нажать
+  const [invited] = useState(() => pendingJoin())
+  const [open, setOpen] = useState(invited !== null)
+  const [code, setCode] = useState(invited ?? '')
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -139,6 +142,15 @@ function JoinTeacherBlock() {
       .then(setTeachers)
       .catch(() => setTeachers([]))
   }, [])
+
+  // По приглашению блок внизу Главной — показать его сразу, один раз
+  const box = useRef<HTMLDivElement>(null)
+  const scrolled = useRef(false)
+  useEffect(() => {
+    if (!invited || teachers === null || scrolled.current) return
+    scrolled.current = true
+    box.current?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  }, [invited, teachers])
 
   const submit = async (e: FormEvent) => {
     e.preventDefault()
@@ -177,30 +189,38 @@ function JoinTeacherBlock() {
   }
 
   return (
-    <Card className="flex flex-col gap-2">
-      {!open ? (
-        <button
-          onClick={() => setOpen(true)}
-          className="flex min-h-[44px] items-center text-left text-sm text-accent-strong hover:underline"
-        >
-          У меня есть код преподавателя →
-        </button>
-      ) : (
-        <form onSubmit={submit} className="flex gap-2">
-          <input
-            className="min-w-0 flex-1 rounded-lg border border-tint/[0.10] bg-input px-3 py-2 font-mono text-sm uppercase tracking-widest outline-none focus:border-accent-line"
-            placeholder="КОД (6 символов)"
-            value={code}
-            maxLength={6}
-            onChange={(e) => setCode(e.target.value.toUpperCase())}
-          />
-          <Button type="submit" className="px-3 py-2 text-sm" disabled={busy || !code.trim()}>
-            {busy ? '…' : 'Привязать'}
-          </Button>
-        </form>
-      )}
-      {msg && <p className="text-sm text-success">{msg}</p>}
-      {error && <p className="text-sm text-danger">{error}</p>}
-    </Card>
+    <div ref={box}>
+      <Card className="flex flex-col gap-2">
+        {open && invited && <p className="font-semibold">Тебя пригласил преподаватель</p>}
+        {!open ? (
+          <button
+            onClick={() => setOpen(true)}
+            className="flex min-h-[44px] items-center text-left text-sm text-accent-strong hover:underline"
+          >
+            У меня есть код преподавателя →
+          </button>
+        ) : (
+          <form onSubmit={submit} className="flex gap-2">
+            <input
+              className="min-w-0 flex-1 rounded-lg border border-tint/[0.10] bg-input px-3 py-2 font-mono text-sm uppercase tracking-widest outline-none focus:border-accent-line"
+              placeholder="КОД (6 символов)"
+              value={code}
+              maxLength={6}
+              onChange={(e) => setCode(e.target.value.toUpperCase())}
+            />
+            <Button type="submit" className="px-3 py-2 text-sm" disabled={busy || !code.trim()}>
+              {busy ? '…' : 'Привязать'}
+            </Button>
+          </form>
+        )}
+        {open && invited && code === invited && !error && (
+          <p className="text-sm text-fg-muted" data-join-prefilled>
+            Код из приглашения преподавателя — нажми «Привязать».
+          </p>
+        )}
+        {msg && <p className="text-sm text-success">{msg}</p>}
+        {error && <p className="text-sm text-danger">{error}</p>}
+      </Card>
+    </div>
   )
 }

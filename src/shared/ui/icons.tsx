@@ -1,5 +1,5 @@
 // ============================================================================
-// Фирменный icon-набор Recall (59 шт.), сгенерирован из handoff/icons/*.svg
+// Фирменный icon-набор Recall (61 шт.), сгенерирован из handoff/icons/*.svg
 // (Claude Design). Единый стиль: viewBox 0 0 24 24, stroke 1.75px (2px у *-fill),
 // currentColor. Меняем весь набор здесь — приложение подхватит.
 //   НЕ РЕДАКТИРОВАТЬ ВРУЧНУЮ: перегенерировать из SVG.
@@ -138,6 +138,9 @@ export const IconPackage = icon(
 export const IconPencil = icon(
   '<path d="M4.5 19.5l3.9-.9L18.7 8.3a2.05 2.05 0 0 0-2.9-2.9L5.4 15.6l-.9 3.9Z"></path><path d="M13.9 7.3l2.9 2.9"></path>',
 )
+export const IconPhone = icon(
+  '<path d="M5.5 4h3l1.5 4-2 1.3a10 10 0 0 0 6.7 6.7l1.3-2 4 1.5v3a1.5 1.5 0 0 1-1.6 1.5A15.5 15.5 0 0 1 4 5.6 1.5 1.5 0 0 1 5.5 4Z"></path>',
+)
 export const IconPlus = icon(
   '<path d="M12 5v14"></path><path d="M5 12h14"></path>',
 )
@@ -173,6 +176,9 @@ export const IconShuffle = icon(
 )
 export const IconSignOut = icon(
   '<path d="M13.5 4.5H7.5a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h6"></path><path d="M10.5 12h10"></path><path d="M17 8.5 20.5 12 17 15.5"></path>',
+)
+export const IconSmartphone = icon(
+  '<rect x="7" y="3" width="10" height="18" rx="2.5"></rect><path d="M11 17.5h2"></path>',
 )
 export const IconSparkle = icon(
   '<path d="M11 4.5l1.6 4.2 4.2 1.6-4.2 1.6L11 16.1l-1.6-4.2-4.2-1.6 4.2-1.6Z"></path><path d="M17.8 14.5l.9 2.3 2.3.9-2.3.9-.9 2.3-.9-2.3-2.3-.9 2.3-.9Z"></path>',

@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import { BrandLogo, BrandMark } from '../../shared/ui/Brand'
 import { describeAuthError, describeSignUpError } from '../../lib/access'
 import { supabase } from '../../shared/api/supabase'
-import { refInSearch, rememberPendingRole } from '../../lib/pendingRole'
+import { joinInSearch, refInSearch, rememberPendingRole } from '../../lib/pendingRole'
 import { IconGift } from '../../shared/ui/icons'
 import { track } from '../../lib/analytics'
 import { AppLink } from '../../shared/ui/AppLink'
@@ -42,6 +42,7 @@ export function LoginPage() {
     rememberPendingRole(search)
   }, [search])
   const invited = refInSearch(search)
+  const joining = joinInSearch(search)
 
   // ⚠️ state берём из useLocation, а не из глобального location: у window
   // такого поля нет, и адрес молча оказывался бы undefined.
@@ -134,6 +135,12 @@ export function LoginPage() {
               <p className="flex items-start gap-2 text-sm text-accent-strong" data-referral-note>
                 <IconGift size={18} className="mt-px flex-none" />
                 <span>По приглашению коллеги пробный период у тебя на неделю дольше.</span>
+              </p>
+            )}
+            {/* по приглашению преподавателя (Ф2.5): код подставится после входа */}
+            {joining && !sentTo && (
+              <p className="text-sm text-accent-strong" data-join-note>
+                Тебя пригласил преподаватель. Войди или зарегистрируйся — код подставится сам.
               </p>
             )}
           </div>

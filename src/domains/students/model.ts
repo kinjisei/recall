@@ -150,8 +150,8 @@ export const ACTION_LABEL: Record<CardAction, string> = {
 
 /** Сколько мест и сколько занято — из get_my_plan. seats: null — без ограничения. */
 export interface SeatsState {
-  seats: number | null | undefined
-  seats_used: number | null | undefined
+  seats?: number | null
+  seats_used?: number | null
 }
 
 /** Тихая строка над списком: «В приложении 3 из 5 мест тарифа». */
@@ -175,6 +175,15 @@ export function inviteSeatHint(card: Pick<StudentCard, 'status'>, s: SeatsState 
 }
 
 // ---- приглашение ---------------------------------------------------------------------
+
+/**
+ * Код из ссылки-приглашения (?join=): 6 знаков алфавита кодов базы
+ * (new_invite_code — без 0, 1, I, L, O). Мусор — null.
+ */
+export function parseJoinCode(raw: string | null | undefined): string | null {
+  const code = (raw ?? '').trim().toUpperCase()
+  return /^[A-HJKMNP-Z2-9]{6}$/.test(code) ? code : null
+}
 
 /** Ссылка: вход или регистрация, код подставится в поле «Код преподавателя». */
 export function cardInviteLink(origin: string, code: string): string {

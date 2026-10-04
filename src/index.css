@@ -196,6 +196,11 @@ a,
   from { transform: scaleX(0); }
   to { transform: scaleX(1); }
 }
+/* Сколько осталось до ухода тоста «Вернуть» (shared/ui/UndoToast) */
+@keyframes shrink-x {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
 @keyframes pulse-ring {
   0%, 100% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--color-accent) 12%, transparent); }
   50% { box-shadow: 0 0 0 18px color-mix(in srgb, var(--color-accent) 5%, transparent); }

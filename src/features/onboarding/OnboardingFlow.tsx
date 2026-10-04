@@ -19,6 +19,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { supabase } from '../../shared/api/supabase'
 import { joinTeacher } from '../../lib/teacher'
+import { pendingJoin } from '../../lib/pendingRole'
 import { invalidateProfile } from '../../lib/profile'
 import { setEsLevel } from '../../lib/esLevel'
 import { markOnboarded } from '../../lib/onboarding'
@@ -304,11 +305,10 @@ function StepReady({
   onTeacher: () => void
 }) {
   const [heard, setHeard] = useState<string | null>(null)
-  // Развилка «сам / с преподавателем». Самоучка идёт сразу учиться (свои
-  // инструменты уже открыты), у кого есть преподаватель — вводит код и
-  // привязывается тут же, чтобы не искать, куда его вводить потом.
-  const [showCode, setShowCode] = useState(false)
-  const [code, setCode] = useState('')
+  // Развилка «сам / с преподавателем»: у кого есть преподаватель — вводит код тут же,
+  // чтобы не искать, куда его вводить потом; по ссылке-приглашению (Ф2.5) код уже в поле.
+  const [showCode, setShowCode] = useState(() => pendingJoin() !== null)
+  const [code, setCode] = useState(() => pendingJoin() ?? '')
   const [joining, setJoining] = useState(false)
   const [joinError, setJoinError] = useState<string | null>(null)
 

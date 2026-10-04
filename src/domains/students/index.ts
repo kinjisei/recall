@@ -24,6 +24,7 @@ export {
   matchesFilter,
   matchesQuery,
   outsideSeats,
+  parseJoinCode,
   seatsLine,
   spacedCode,
   STATUS_LABEL,

@@ -9,7 +9,8 @@ import { dbError } from '../shared/api/errors'
 import { SUPPORT_EMAIL } from '../shared/lib/contacts'
 import { selectProfiles, invalidateProfile } from './profile'
 import { track } from './analytics'
-import { clearPendingRole, pendingRef } from './pendingRole'
+import { clearPendingJoin, clearPendingRole, pendingJoin, pendingRef } from './pendingRole'
+import { isConnectionError } from '../shared/api/connection'
 import {
   REGULARITY_WINDOW,
   activeDaysIn,
@@ -148,11 +149,17 @@ export async function unlinkStudent(studentId: string): Promise<void> {
   if (error) throw dbError(error, 'отвязать ученика')
 }
 
-/** Ученик вводит код → привязка. Возвращает имя преподавателя. */
+/**
+ * Ученик вводит код → привязка. Возвращает имя преподавателя. Код — общий
+ * учителя или код карточки (PLAN.md Ф2.5): база сама решает, в какую карточку.
+ * Код из ссылки-приглашения, раз попробованный, больше не подставляется —
+ * кроме сбоя связи: тогда ученик просто нажмёт ещё раз.
+ */
 export async function joinTeacher(code: string): Promise<string> {
   const { data, error } = await supabase.rpc('join_teacher', {
     code: code.trim(),
   })
+  if (pendingJoin() === code.trim().toUpperCase() && !(error && isConnectionError(error))) clearPendingJoin()
   if (error) {
     // Места кончились. Текст адресован УЧЕНИКУ и намеренно не говорит, какой у
     // преподавателя тариф: чужой тариф — не его дело (тот же принцип, что и

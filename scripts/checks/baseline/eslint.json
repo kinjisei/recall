@@ -325,7 +325,7 @@
   },
   "src/features/teacher/TeacherPage.tsx": {
     "react-hooks/set-state-in-effect": {
-      "count": 2
+      "count": 1
     }
   },
   "src/features/teacher/WordPicker.tsx": {

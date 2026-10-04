@@ -62,7 +62,7 @@ create table public.student_cards (
   note text check (char_length(note) <= 1000),
   status text not null default 'active'
     check (status in ('trial', 'active', 'paused', 'archived')),
-  -- код приглашения карточки без приложения; гаснет при привязке и в архиве
+  -- код приглашения карточки без приложения; гаснет при привязке
   invite_code text unique,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -475,10 +475,9 @@ begin
     if taken >= seats then perform public.pin_default_seats(uid); end if;
   end if;
 
-  update student_cards
-     set status = p_status, updated_at = now(),
-         invite_code = case when p_status = 'archived' then null else invite_code end
-   where id = p_card;
+  -- код приглашения не трогаем: «Вернуть» после архива — настоящий откат, и
+  -- уже отправленное ученику приглашение продолжает работать
+  update student_cards set status = p_status, updated_at = now() where id = p_card;
 
   if linked then
     if not public.card_takes_seat(p_status) then

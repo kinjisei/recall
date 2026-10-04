@@ -3,7 +3,11 @@
 ## Простыми словами
 
 Здесь работает преподаватель (`/teacher`). Сверху — список учеников: по
-строке видно, кем заняться сегодня, не открывая карточку. В карточке ученика
+строке видно, кем заняться сегодня, не открывая карточку. Ученики — карточки
+(PLAN.md Ф2.5, `domains/students`): и в приложении, и без него; на
+компьютере список и карточка рядом. Карточка без приложения — с
+приглашением в Recall, список, шапка карточки и шторка «Новый ученик» —
+`features/students/CLAUDE.md`. В карточке ученика
 главное — домашка на неделю: срок, счёт «3 из 5» и кнопка «Собрать домашку».
 Под ней три плашки — буксующие слова, слабые темы, сколько дней ученик
 занимался. Всё, что нужно раз в месяц (диагностика, программа по неделям,
@@ -21,7 +25,9 @@
 
 | Файл | Что там |
 |---|---|
-| `TeacherPage.tsx` | студия: список учеников, карточка ученика, вкладки; раскрытый раздел — в адресе |
+| `TeacherPage.tsx` | студия: вкладки, загрузка, энергия студии, общий код-приглашение и места тарифа |
+| `StudentsTab.tsx` | вкладка «Ученики»: строки «кем заняться», сводка «Нужно внимание», выбранная карточка (в адресе `?student=`), смена статуса с тостом «Вернуть» |
+| `StudentStudio.tsx` | ученик в приложении под шапкой карточки: домашка, три плашки, «Ещё», место тарифа, отвязка; раскрытый раздел — в адресе |
 | `HomeworkSection.tsx`, `HomeworkComposer.tsx` | домашка в карточке и её сборка (правила — `features/homework/CLAUDE.md`) |
 | `StudentWordsSection.tsx`, `WordPicker.tsx` | раздел «Слова» карточки: статус, выдача паков и своих наборов, удаление, перепроверка |
 | `DiagnosticsSection.tsx`, `ProgramSection.tsx`, `PlacementSection.tsx`, `QuestSection.tsx`, `DailyPlanSection.tsx` | разделы под «Ещё»: диагностика, программа, тест уровня, квесты, план дня |
@@ -53,9 +59,14 @@
   показывает то же окно в 7 дней, что и строка. Сборка подписей и порядок —
   `lib/studentSignals.ts`. Разъедутся два числа про одно и то же —
   преподаватель перестанет верить обоим, а не тому, которое ошиблось.
-- **Покрытие тарифом считается ДО сортировки** и по исходному порядку
-  привязки: первые N по дате держат места (так же считает `covering_teacher`).
-  Отсортируй сначала — и пометка «вне мест тарифа» уедет не на тех людей.
+- **Держит ли ученик место тарифа — ответ базы** (`holds_seat` в
+  `get_my_student_cards`), экран «первых N» сам не считает: его прежняя
+  копия расходилась с базой после понижения тарифа, а с карточками места
+  зависят ещё и от статуса (`domains/students/CLAUDE.md`). Поэтому сортировка
+  строк пометку «вне мест тарифа» не двигает. Пробных и тех, кто в архиве,
+  не помечаем: место им не полагается.
+- **На паузе и в архиве внимания не просят**: сводка «Нужно внимание» —
+  только по «занимается» и «пробный» в приложении.
 - **Домашки всех учеников — ОДНИМ запросом** (`get_homework_many`), форму
   ответа строит тот же `homework_json`, что и `get_homework`. Свой «лёгкий»
   подсчёт для списка разошёлся бы с карточкой на первом же пункте «на выбор».
@@ -86,7 +97,7 @@
 
 **Карточка ученика**
 
-- **Построена вокруг домашки** (`TeacherPage` + `HomeworkSection`,
+- **Построена вокруг домашки** (`StudentStudio` + `HomeworkSection`,
   `HomeworkComposer`): сверху срок и счёт, под ним «Собрать домашку», ниже три
   плашки, остальное — под «Ещё»: эти разделы нужны раз в месяц, а занимали
   весь экран каждый раз. Числа плашек — из общей `lib/diagnostics`, второго
@@ -132,6 +143,9 @@
   перевернуть порядок, выключить сортировку или посчитать группы «на выбор» по
   отдельности.
 - `node scripts/smoke-lost-students.mjs` — список учеников на живом экране.
+- `node scripts/smoke-student-cards.mjs` — карточки: «+ Ученик», приглашение,
+  архив и «Вернуть», ученик по ссылке → та же карточка «в приложении»,
+  компьютер 1280 — список и карточка рядом (`--shots` — скриншоты).
 - `node scripts/smoke-teacher-words.mjs` — раздел «Слова»: выдача, статус,
   удаление, перепроверка.
 - `node scripts/smoke-material-diagnostics.mjs` — перехватывает запрос к AI и
@@ -160,7 +174,7 @@
 <!-- Пишет `npm run gen:docs` (scripts/gen/module-docs.mjs) по коду — руками не править. -->
 ## Из кода (сгенерировано)
 
-- **Файлы:** `AssignmentsPage.tsx`, `DailyPlanSection.tsx`, `DiagnosticsSection.tsx`, `GuideSection.tsx`, `HomeworkComposer.tsx`, `HomeworkSection.tsx`, `index.ts`, `materials/MaterialDetail.tsx`, `materials/MaterialsByLevel.tsx`, `materials/PlanScreen.tsx`, `materials/PreviewScreen.tsx`, `materials/RequestForm.tsx`, `materials/shared.ts`, `MaterialsSection.tsx`, `PlacementSection.tsx`, `PrintSheet.tsx`, `ProgramSection.tsx`, `QuestSection.tsx`, `ReportSheet.tsx`, `ReviewScreen.tsx`, `StudentWordsSection.tsx`, `TeacherBlock.tsx`, `TeacherPage.tsx`, `useAnswerDraft.ts`, `useComposerDraft.ts`, `useReviewDraft.ts`, `useWritingTaskDraft.ts`, `WordPicker.tsx`, `WritingSection.tsx`
+- **Файлы:** `AssignmentsPage.tsx`, `DailyPlanSection.tsx`, `DiagnosticsSection.tsx`, `GuideSection.tsx`, `HomeworkComposer.tsx`, `HomeworkSection.tsx`, `index.ts`, `materials/MaterialDetail.tsx`, `materials/MaterialsByLevel.tsx`, `materials/PlanScreen.tsx`, `materials/PreviewScreen.tsx`, `materials/RequestForm.tsx`, `materials/shared.ts`, `MaterialsSection.tsx`, `PlacementSection.tsx`, `PrintSheet.tsx`, `ProgramSection.tsx`, `QuestSection.tsx`, `ReportSheet.tsx`, `ReviewScreen.tsx`, `StudentsTab.tsx`, `StudentStudio.tsx`, `StudentWordsSection.tsx`, `TeacherBlock.tsx`, `TeacherPage.tsx`, `useAnswerDraft.ts`, `useComposerDraft.ts`, `useReviewDraft.ts`, `useWritingTaskDraft.ts`, `WordPicker.tsx`, `WritingSection.tsx`
 - **Вне папки (указатель «Описание:» в начале файла):** `src/lib/activityDays.ts`, `src/lib/diagnosticsBrief.ts`, `src/lib/materialExercises.ts`, `src/lib/studentSignals.ts`, `src/lib/wordChecks.ts`
 - **Адреса:** `/teacher`, `/assignments`
 - **Таблицы:** `cards`, `decks`, `review_states`, `word_checks`
