@@ -29,7 +29,7 @@
 
 | Файл | Что там |
 |---|---|
-| `model.ts` | форма уведомления, текст по виду (`renderNotification`) с подписью кнопки-действия (`action`), только внутренние ссылки (`safeHref`), имена тарифов (`PLAN_NAMES` — копия каталога), «когда» — без базы, из импортов только общее склонение (`shared/lib/plural.ts`), для чистого теста и будущего сервера доставки |
+| `model.ts` | форма уведомления, текст по виду (`renderNotification`; учителю `lessons_low` — «Тимур Ким: остался 1 оплаченный урок · Напомнить», ученику `teacher_message` — «Мадина пишет», Ф2.8) с подписью кнопки-действия (`action`), только внутренние ссылки (`safeHref`), имена тарифов (`PLAN_NAMES` — копия каталога), «когда» — без базы, из импортов только общее склонение (`shared/lib/plural.ts`), для чистого теста и будущего сервера доставки |
 | `api.ts` | единственное место, где домен ходит в базу: лента, счёт, «прочитано» |
 | `index.ts` | парадная дверь — экраны берут только отсюда |
 | база | `supabase/migrations/0002_notifications.sql`: `notifications`, `notification_prefs`, `notification_rules`, `notify()`, `run_notification_rules()`, `dispatch_notifications()`, `mark_notifications_read()`, задача `pg_cron`; `0007_access_ending.sql`: правило `access_ending` (`rule_access_ending` → `notify_access_ending(p_now)`) |

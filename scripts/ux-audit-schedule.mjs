@@ -3,7 +3,8 @@
  * чистый»). Та же проверка страницы, что у ux-audit.mjs (_ux-audit-page.mjs),
  * но экраны учителя: день, неделя списком и колонками, шторки урока, «Новый
  * урок» с открытым календарём и колёсами, «Перенести», «Отменить», «Сообщи
- * ученику» — на 390 и 1280. В шторке проверяется только шторка: экран под
+ * ученику», учёт уроков (карточка, «Отметить оплату», история, «Напомнить»
+ * об оплате) — на 390 и 1280. В шторке проверяется только шторка: экран под
  * затемнением человек не трогает.
  *
  * Запуск: npm run dev:test, затем node scripts/ux-audit-schedule.mjs [--theme light]
@@ -61,7 +62,7 @@ async function seed() {
   await sql(`select public.schedule_tick(now())`)
   const rows = must(await t.rpc('get_schedule', { p_from: new Date().toISOString(), p_to: at(14, '00:00') }), 'уроки')
   const next = rows.filter((r) => r.card_id === timur && r.kind === 'individual').sort((a, b) => a.starts_at.localeCompare(b.starts_at))[0]
-  return { id, next: next?.lesson_id, nextDay: next && new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Almaty' }).format(new Date(next.starts_at)), past, yesterday: at(-1, '12:00').slice(0, 10) }
+  return { id, timur, next: next?.lesson_id, nextDay: next && new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Almaty' }).format(new Date(next.starts_at)), past, yesterday: at(-1, '12:00').slice(0, 10) }
 }
 
 /** Клик по кнопке с подписью — последней в документе (шторка поверх экрана). */
@@ -113,6 +114,11 @@ try {
       ['Перенести', lesson, (p) => click(p, 'Перенести'), true],
       ['Отменить урок', lesson, (p) => click(p, 'Отменить урок'), true],
       ['Напомнить об уроке', lesson, (p) => click(p, 'Напомнить об уроке'), true],
+      // учёт уроков (Ф2.8): карточка, оплата, история, «Напомнить» об оплате
+      ['Карточка: блок «Уроки»', `/teacher?student=${s.timur}`],
+      ['Отметить оплату', `/teacher?student=${s.timur}`, (p) => click(p, 'Отметить оплату'), true],
+      ['История уроков и оплат', `/teacher?student=${s.timur}`, (p) => click(p, 'История уроков и оплат'), true],
+      ['Напомнить об оплате', `/teacher?student=${s.timur}&remind=1`, null, true],
     ]
     for (const [name, path, act, dialog] of screens) {
       await page.goto(`${APP_URL}${path}`, { waitUntil: 'networkidle2' })

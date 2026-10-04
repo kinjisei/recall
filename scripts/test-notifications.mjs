@@ -116,6 +116,29 @@ check('чужая ссылка — ни ссылки, ни кнопки', render
 for (const plan of PAID_PLANS) check(`имя тарифа ${plan} — как в каталоге`, PLAN_NAMES[plan], planName(plan))
 check('лишних имён в копии нет', Object.keys(PLAN_NAMES).sort(), [...PAID_PLANS].sort())
 
+// ── учёт уроков (Ф2.8) ─────────────────────────────────────────────────────────
+const cardId = '0f2a8c3e-1b2d-4e5f-8a9b-0c1d2e3f4a5b'
+check('«остался 1»: имя без падежей, следующий урок по Алматы, «Напомнить»', renderNotification({
+  kind: 'lessons_low',
+  data: { card: cardId, name: 'Тимур Ким', left: 1, next: '2026-10-20T05:00:00+00:00' },
+}), {
+  title: 'Тимур Ким: остался 1 оплаченный урок',
+  body: 'Следующий — вт, 20 окт, 10:00',
+  href: `/teacher?student=${cardId}&remind=1`,
+  action: 'Напомнить',
+})
+check('остаток 0 и меньше — «закончились», без следующего — без строки', renderNotification({ kind: 'lessons_low', data: { card: cardId, name: 'Алина Ли', left: -2, next: null } }), {
+  title: 'Алина Ли: оплаченные уроки закончились',
+  body: undefined,
+  href: `/teacher?student=${cardId}&remind=1`,
+  action: 'Напомнить',
+})
+check('кривой id карточки — ни ссылки, ни кнопки', renderNotification({ kind: 'lessons_low', data: { card: '../admin', name: 'X', left: 1 } }).href, undefined)
+check('сообщение учителя ученику', renderNotification({ kind: 'teacher_message', data: { teacher_name: 'Мадина', text: 'Остался один урок' } }), {
+  title: 'Мадина пишет',
+  body: 'Остался один урок',
+})
+
 // ── счёт и время ─────────────────────────────────────────────────────────────
 check('непрочитанные', unreadCount([{ read_at: null }, { read_at: '2026-09-28T10:00:00Z' }, { read_at: null }]), 2)
 const now = new Date(2026, 8, 28, 15, 0, 0) // 28 сентября 2026, 15:00 по местному

@@ -20,6 +20,7 @@ import {
   type Series,
   type SeriesKind,
 } from './model'
+import type { HistoryItem } from './ledger'
 
 /** Уроки учителя за период (не длиннее RANGE_MAX_DAYS). */
 export async function loadSchedule(from: Date, to: Date): Promise<Lesson[]> {
@@ -189,10 +190,44 @@ export async function markParticipant(lessonId: string, cardId: string, outcome:
   if (error) throw dbError(error, 'отметить урок')
 }
 
-/** Оплата «+N» уроков (журнал п.29); минус — исправление. */
-export async function addPaidLessons(cardId: string, count: number, note?: string): Promise<void> {
-  const { error } = await supabase.rpc('add_paid_lessons', { p_card: cardId, p_count: count, p_note: note })
+/** Оплата «+N» уроков (журнал п.29); минус — исправление. paidOn — день оплаты, по умолчанию сегодня (п.67). */
+export async function addPaidLessons(cardId: string, count: number, note?: string, paidOn?: string): Promise<void> {
+  const { error } = await supabase.rpc('add_paid_lessons', { p_card: cardId, p_count: count, p_note: note, p_paid_on: paidOn })
   if (error) throw dbError(error, 'отметить оплату')
+}
+
+/** История карточки (макет t7-2): оплаты и уроки, новые сверху; before — следующая страница. */
+export async function loadCardHistory(cardId: string, before?: string, limit = 50): Promise<HistoryItem[]> {
+  const { data, error } = await supabase.rpc('get_card_history', { p_card: cardId, p_before: before, p_limit: limit })
+  if (error) throw dbError(error, 'загрузить историю')
+  return (data ?? []).map((r) => ({
+    item: r.item === 'payment' ? 'payment' : 'lesson',
+    id: r.id,
+    at: r.at,
+    n: r.n ?? null,
+    note: r.note ?? null,
+    paidOn: r.paid_on ?? null,
+    lessonKind: (r.lesson_kind ?? null) as LessonKind | null,
+    lessonStatus: (r.lesson_status ?? null) as LessonStatus | null,
+    title: r.title ?? null,
+    startsAt: r.starts_at ?? null,
+    trial: r.trial ?? null,
+    attended: r.attended ?? null,
+    charge: (r.charge ?? null) as Charge | null,
+    chargeAuto: r.charge_auto ?? null,
+  }))
+}
+
+/** Отменённый урок задним числом: «поздняя отмена · списан» ↔ «не списан» (t7-2). */
+export async function setCancelCharge(lessonId: string, cardId: string, charge: boolean): Promise<void> {
+  const { error } = await supabase.rpc('set_cancel_charge', { p_lesson: lessonId, p_card: cardId, p_charge: charge })
+  if (error) throw dbError(error, 'исправить запись')
+}
+
+/** «Напомнить → В приложении» (t7-3): сообщение ученику от учителя, только по нажатию. */
+export async function sendCardMessage(cardId: string, text: string): Promise<void> {
+  const { error } = await supabase.rpc('send_card_message', { p_card: cardId, p_text: text })
+  if (error) throw dbError(error, 'отправить сообщение')
 }
 
 // ---- ученик ---------------------------------------------------------------------------

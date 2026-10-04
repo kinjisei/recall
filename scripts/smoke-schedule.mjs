@@ -214,6 +214,7 @@ try {
   check('«Да» → «теперь занимается · Отметить оплату?»', await waitText(te, /Аружан теперь занимается/))
   await shot(te, 'trial-paid-390')
   await click(te, '+8')
+  await click(te, 'Отметить')
   check('тост «Отмечено: +8»', await waitText(te, /Отмечено: \+8/))
   const aruzhan = (await cardsNow()).find((c) => c.name === 'Аружан Сейтова')
   const trialRow = (await schedule()).find((r) => r.card_id === aruzhan?.id)

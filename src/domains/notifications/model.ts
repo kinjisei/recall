@@ -9,6 +9,7 @@
 // здесь, по виду: поменять формулировку — выкатка клиента, а не миграция, и
 // старые уведомления в ленте заговорят новыми словами.
 // ============================================================================
+import { MONTH_SHORT, WEEKDAY_SHORT, isoWeekday } from '../../shared/lib/days.ts'
 import { plural } from '../../shared/lib/plural.ts'
 
 /** Уведомление, как его отдаёт база (таблица notifications, только свои). */
@@ -63,6 +64,22 @@ function dayFromData(v: unknown): string | undefined {
     : new Date(t).toLocaleDateString('ru-RU', { timeZone: 'Asia/Almaty', day: 'numeric', month: 'long' })
 }
 
+/** Время урока из данных → «вт, 20 окт, 10:00» по Алматы (как расписание); мусор — undefined. */
+function lessonWhen(v: unknown): string | undefined {
+  const s = text(v)
+  const t = s ? Date.parse(s) : NaN
+  if (Number.isNaN(t)) return undefined
+  const p = Object.fromEntries(
+    new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Almaty', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
+      .formatToParts(new Date(t))
+      .map((x) => [x.type, x.value]),
+  )
+  const day = `${p.year}-${p.month}-${p.day}`
+  return `${WEEKDAY_SHORT[isoWeekday(day) - 1]}, ${Number(p.day)} ${MONTH_SHORT[Number(p.month) - 1]}, ${p.hour}:${p.minute}`
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
+
 /** Подарок рефералки из данных: «1 месяц», «18 дней»; мусор — undefined. */
 function giftLabel(months: unknown, days: unknown): string | undefined {
   const m = typeof months === 'number' && months > 0 ? months : 0
@@ -85,7 +102,11 @@ function giftLabel(months: unknown, days: unknown): string | undefined {
  *   referral_paid — пригласившему: коллега оплатил, а своего тарифа нет —
  *     подарок ждёт его первой оплаты;
  *   plan_ending / trial_ending — тариф (plan, until) или пробный (until)
- *     кончается завтра — одно на дату окончания, PLAN.md Ф2.4.
+ *     кончается завтра — одно на дату окончания, PLAN.md Ф2.4;
+ *   lessons_low — учителю: у ученика (card, name) остаток стал 1 или меньше
+ *     (left), следующий урок next — одно на цикл оплаты, PLAN.md Ф2.8;
+ *   teacher_message — ученику: сообщение учителя (teacher_name, text) по его
+ *     нажатию «Напомнить → В приложении».
  * Неизвестный вид (правило новее клиента) — не пустая строка, а заголовок из
  * данных или нейтральное «Новое уведомление».
  */
@@ -136,6 +157,24 @@ export function renderNotification(n: Pick<AppNotification, 'kind' | 'data'>): N
         action: href && (trial ? 'Выбрать тариф' : 'Как оплатить'),
       }
     }
+    case 'lessons_low': {
+      // учителю: остаток стал 1 или меньше — одно на цикл оплаты (Ф2.8, п.67).
+      // Имя — без падежей: «Тимур Ким: остался 1 оплаченный урок»
+      const left = typeof d.left === 'number' ? d.left : 1
+      const next = lessonWhen(d.next)
+      const card = text(d.card)
+      const href = card && UUID.test(card) ? `/teacher?student=${card}&remind=1` : undefined
+      return {
+        title: `${text(d.name) ?? 'Ученик'}: ${left <= 0 ? 'оплаченные уроки закончились' : 'остался 1 оплаченный урок'}`,
+        body: next ? `Следующий — ${next}` : undefined,
+        href,
+        action: href && 'Напомнить',
+      }
+    }
+    case 'teacher_message':
+      // ученику: учитель сам нажал «Напомнить → В приложении» (t7-3). Об
+      // оплате Recall ученику сам не пишет никогда (п.29) — это его учитель
+      return { title: `${text(d.teacher_name) ?? 'Преподаватель'} пишет`, body: text(d.text) }
     default:
       return { title: text(d.title) ?? 'Новое уведомление', body: text(d.body), href: safeHref(d.href) }
   }

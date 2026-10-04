@@ -1035,6 +1035,7 @@ export type Database = {
           id: string
           n: number
           note: string | null
+          paid_on: string
           teacher_id: string
         }
         Insert: {
@@ -1044,6 +1045,7 @@ export type Database = {
           id?: string
           n: number
           note?: string | null
+          paid_on?: string
           teacher_id: string
         }
         Update: {
@@ -1053,6 +1055,7 @@ export type Database = {
           id?: string
           n?: number
           note?: string | null
+          paid_on?: string
           teacher_id?: string
         }
         Relationships: [
@@ -1922,7 +1925,12 @@ export type Database = {
         Returns: number
       }
       add_paid_lessons: {
-        Args: { p_card: string; p_count: number; p_note?: string }
+        Args: {
+          p_card: string
+          p_count: number
+          p_note?: string
+          p_paid_on?: string
+        }
         Returns: string
       }
       admin_ai_tasks: {
@@ -2175,6 +2183,26 @@ export type Database = {
         Returns: undefined
       }
       free_teacher_seats: { Args: never; Returns: number }
+      get_card_history: {
+        Args: { p_before?: string; p_card: string; p_limit?: number }
+        Returns: {
+          at: string
+          attended: boolean
+          charge: string
+          charge_auto: boolean
+          ends_at: string
+          id: string
+          item: string
+          lesson_kind: string
+          lesson_status: string
+          n: number
+          note: string
+          paid_on: string
+          starts_at: string
+          title: string
+          trial: boolean
+        }[]
+      }
       get_homework: { Args: { p_student?: string }; Returns: Json }
       get_homework_many: { Args: never; Returns: Json }
       get_lesson_balances: {
@@ -2378,6 +2406,7 @@ export type Database = {
         Returns: boolean
       }
       notify_access_ending: { Args: { p_now: string }; Returns: number }
+      notify_lessons_low: { Args: { p_card: string }; Returns: boolean }
       pin_default_seats: { Args: { p_teacher: string }; Returns: undefined }
       plan_price: { Args: { p_plan: string }; Returns: number }
       quest_correct_answer: { Args: { p_id: string }; Returns: number }
@@ -2463,6 +2492,10 @@ export type Database = {
         Args: { p_material_id: string }
         Returns: undefined
       }
+      send_card_message: {
+        Args: { p_card: string; p_text: string }
+        Returns: string
+      }
       series_days: { Args: { p_weekdays: number[] }; Returns: number[] }
       series_fill: {
         Args: { p_from: string; p_now: string; p_series: string }
@@ -2477,6 +2510,10 @@ export type Database = {
           p_weekdays: number[]
         }
         Returns: boolean
+      }
+      set_cancel_charge: {
+        Args: { p_card: string; p_charge: boolean; p_lesson: string }
+        Returns: undefined
       }
       set_daily_plan: {
         Args: { p_plan: Json; p_student_id: string }

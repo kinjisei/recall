@@ -28,6 +28,7 @@ export function StudentsList({
   cards,
   detailOf,
   outsideOf,
+  trailingOf,
   attention,
   seats,
   selectedId,
@@ -41,6 +42,8 @@ export function StudentsList({
   detailOf: (card: StudentCard) => ReactNode
   /** Ученик в приложении без места тарифа. */
   outsideOf: (card: StudentCard) => boolean
+  /** Справа в строке — остаток уроков (расписание, Ф2.8); нет — стрелка. */
+  trailingOf?: (card: StudentCard) => ReactNode
   /** Сводка «Нужно внимание» над строками. */
   attention?: ReactNode
   seats: SeatsState | null
@@ -145,6 +148,7 @@ export function StudentsList({
                   card={c}
                   detail={detailOf(c)}
                   outside={outsideOf(c)}
+                  trailing={trailingOf?.(c)}
                   selected={c.id === selectedId}
                   onOpen={() => onOpen(c.id)}
                 />
@@ -165,12 +169,14 @@ function CardRow({
   card,
   detail,
   outside,
+  trailing,
   selected,
   onOpen,
 }: {
   card: StudentCard
   detail: ReactNode
   outside: boolean
+  trailing?: ReactNode
   selected: boolean
   onOpen: () => void
 }) {
@@ -180,6 +186,7 @@ function CardRow({
       current={selected}
       onClick={onOpen}
       lead={<Avatar name={card.name} inApp={card.inApp} />}
+      trailing={trailing ?? undefined}
       title={
         <span className="flex min-w-0 items-center gap-1.5">
           <span className="truncate font-semibold">{card.name}</span>

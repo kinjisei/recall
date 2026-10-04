@@ -10,7 +10,7 @@ import { CancelSheet } from './CancelSheet'
 import { LessonForm } from './LessonForm'
 import { LessonSheet } from './LessonSheet'
 import { MoveSheet } from './MoveSheet'
-import { PaidQuickSheet } from './PaidQuickSheet'
+import { PaySheet } from './PaySheet'
 import { TellSheet } from './TellSheet'
 import type { useScheduleActions } from './useScheduleActions'
 
@@ -99,9 +99,13 @@ export function SchedulePanels({
         />
       )}
       {p?.kind === 'paid' && (
-        <PaidQuickSheet
+        <PaySheet
           cardId={p.cardId}
           name={p.name}
+          title={`${p.name} теперь занимается`}
+          later
+          balance={balances.get(p.cardId) ?? null}
+          today={today}
           onClose={close}
           onPaid={(n) => {
             close()

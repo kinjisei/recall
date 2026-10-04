@@ -79,7 +79,7 @@ check('границы дня — полночи по Алматы', [b.from.toIS
 // здесь не поймают. Поэтому сторож по тексту: в правилах расписания нет ни
 // одного метода местного времени — только Intl с поясом Алматы.
 const LOCAL_TIME = /\.(getHours|getMinutes|getDate|getDay|getMonth|getFullYear|setHours|setDate|getTimezoneOffset|toLocale\w*)\(/
-const scheduleFiles = ['calendar.ts', 'editor.ts', 'status.ts', 'model.ts'].map((f) => join(import.meta.dirname, '../src/domains/schedule', f))
+const scheduleFiles = ['calendar.ts', 'editor.ts', 'status.ts', 'model.ts', 'ledger.ts'].map((f) => join(import.meta.dirname, '../src/domains/schedule', f))
 check('в правилах расписания нет местного времени', scheduleFiles.filter((f) => LOCAL_TIME.test(readFileSync(f, 'utf8'))), [])
 check('сторож местного времени краснеет', LOCAL_TIME.test('const h = new Date(x).getHours()'), true)
 

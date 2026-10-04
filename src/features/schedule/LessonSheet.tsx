@@ -6,7 +6,9 @@
 // Открыт ли урок — в адресе (?lesson=): «назад» закрывает шторку.
 // ============================================================================
 import {
+  balanceLabel,
   canEdit,
+  isTracked,
   dayTitle,
   durationLabel,
   lessonBadge,
@@ -14,7 +16,6 @@ import {
   lessonMinutes,
   lessonName,
   lessonPhase,
-  lessonsCount,
   movedFromLabel,
   relativeLabel,
   repeatLabel,
@@ -53,13 +54,6 @@ function subtitle(l: Lesson, inApp: (id: string) => boolean): string {
   return `${l.kind === 'trial' || p?.trial ? 'Пробный' : 'Индивидуальный'} · ${where}`
 }
 
-/** «Осталось 3 урока» — только если учитель ведёт учёт (отмечал оплаты); минус виден учителю (журнал п.29). */
-function balanceLine(b: LessonBalance | undefined): string | null {
-  if (!b || b.paid <= 0) return null
-  if (b.balance <= 0) return b.balance === 0 ? 'Оплаченные уроки закончились' : `Остаток −${lessonsCount(-b.balance)}`
-  return `Осталось ${lessonsCount(b.balance)}`
-}
-
 export function LessonSheet({
   lesson,
   now,
@@ -91,7 +85,9 @@ export function LessonSheet({
   const badge = lessonBadge(lesson, now)
   const group = lesson.kind === 'group'
   const single = group ? null : (lesson.participants[0] ?? null)
-  const balance = single ? balanceLine(balances.get(single.cardId)) : null
+  const own = single ? balances.get(single.cardId) : undefined
+  // остаток — только если учитель ведёт учёт; минус виден учителю (журнал п.29)
+  const balance = own && isTracked(own) ? balanceLabel(own) : null
   const cancelled = phase === 'cancelled'
   const askTrial = single && single.trial && single.cardStatus === 'trial' && (phase === 'unmarked' || phase === 'done') && single.attended !== false
   const moved = movedFromLabel(lesson)

@@ -62,9 +62,11 @@ check('отметки = mark_lesson_participant', listIn(/p_outcome not in \(([^
 check('списывают «списан» и «поздняя отмена» = card_lesson_balance', listIn(/where card_id = p_card and charge in \(([^)]*)\)/), CHARGES.filter(isCharged))
 
 const errorsTs = readFileSync(join(root, 'src/shared/api/errors.ts'), 'utf8')
-const raised = [...new Set([...sql.matchAll(/raise exception '(RECALL_[A-Z_]+)'/g)].map((m) => m[1]))].sort()
+// и 0010 (учёт уроков, Ф2.8) — тот же домен
+const sql10 = readFileSync(join(root, 'supabase/migrations/0010_lesson_balance.sql'), 'utf8')
+const raised = [...new Set([...(sql + sql10).matchAll(/raise exception '(RECALL_[A-Z_]+)'/g)].map((m) => m[1]))].sort()
 check(
-  'у каждого кода RECALL_* из 0009 есть текст для человека',
+  'у каждого кода RECALL_* из 0009 и 0010 есть текст для человека',
   raised.filter((c) => !new RegExp(`\\b${c}:`).test(errorsTs)),
   [],
 )

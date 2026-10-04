@@ -434,11 +434,15 @@ async function run() {
   await tick(`now() + interval '6 hours'`)
   check('пропущенный урок перенесли на будущее — будильник спишет его после конца', nl3.settled === false && part(await byId(N, nL), nc).charge === 'charged')
   await sql(`update public.profiles set plan = 'free', plan_expires_at = null where id = '${N.id}'`)
+  // мерить здесь, а не в nBefore: с тарифом будильник на +3 и +6 часов законно
+  // растит окно, если «сейчас» позже 18:00 по Алматы (переход через полночь) —
+  // проверка краснела вечером на исправной базе (04.10.2026)
+  const [{ n: nFree }] = await sql(`select count(*)::int as n from public.lessons where series_id = '${nS}'`)
   await tick(`now() + interval '7 days'`)
   const grown = seriesDays({ weekdays: [3, 5], everyWeeks: 1, startsOn: TODAY, endsOn: null }, addDays(TODAY, HORIZON_DAYS + 1), addDays(TODAY, HORIZON_DAYS + 7)).length
   const [{ n: openNow }] = await sql(`select count(*)::int as n from public.lessons where series_id = '${sp2.data}'`)
   check('будильник двигает окно: +неделя уроков серии без конца', grown > 0 && openNow === openBefore + grown, `${openBefore} → ${openNow}, ждали +${grown}`)
-  check('без тарифа окно не растёт', (await sql(`select count(*)::int as n from public.lessons where series_id = '${nS}'`))[0].n === nBefore)
+  check('без тарифа окно не растёт', (await sql(`select count(*)::int as n from public.lessons where series_id = '${nS}'`))[0].n === nFree)
 }
 
 async function main() {

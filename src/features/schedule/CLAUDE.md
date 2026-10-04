@@ -34,7 +34,12 @@ Telegram, «Текст»). После пробного урока — «<имя>
 | `LessonBlock.tsx`, `LessonParts.tsx` | урок на сетке (день / неделя / мини), метка, аватар, подложка по типу |
 | `LessonSheet.tsx`, `MarksBlock.tsx` | шторка урока и отметки посещения |
 | `LessonForm.tsx`, `FormWho.tsx`, `WhenFields.tsx`, `FormRepeatLink.tsx` | «Новый урок» / «Изменить» и её части |
-| `MoveSheet.tsx`, `CancelSheet.tsx`, `TellSheet.tsx`, `PaidQuickSheet.tsx` | перенос, отмена, «Сообщи ученику», «Отметить оплату?» |
+| `MoveSheet.tsx`, `CancelSheet.tsx`, `TellSheet.tsx` | перенос, отмена, «Сообщи ученику» |
+| `PaySheet.tsx` | «Отметить оплату» (t7-1): +4 · +8 · +12 · своё, дата оплаты, «было → станет»; после «Да» на пробном — она же с «Позже» |
+| `CardLessons.tsx` | блок «Уроки» в карточке ученика (Ф2.8): остаток, «Отметить оплату», «Напомнить об оплате», ближайшие уроки, «История»; `BalanceCount` — число в строке списка |
+| `HistorySheet.tsx`, `FixRecordSheet.tsx` | история уроков и оплат по месяцам (t7-2) и исправление записи задним числом |
+| `RemindSheet.tsx` | «Напомнить» об оплате (t7-3): текст можно поправить, «В приложении» / WhatsApp / Telegram / «Напомню лично» |
+| `AttentionPanel.tsx` | «Требуют внимания» на компьютере, пока ученик не выбран (d3-3): пробный прошёл, остался 1, закончились |
 | `TrialQuestion.tsx`, `ReadOnly.tsx`, `SchedulePanels.tsx`, `types.ts` | вопрос после пробного, «только просмотр», все шторки одним местом |
 
 Правила без базы (время по Алматы, подписи, раскладка, черновик, тексты) —
@@ -85,6 +90,11 @@ Telegram, «Текст»). После пробного урока — «<имя>
 - `node scripts/ux-audit-schedule.mjs [--theme light]` — контраст и тач-цели
   экрана и всех шторок на 390 и 1280; выход 1, если есть замечания.
 - `node scripts/test-schedule-screen.mjs` — правила экрана без базы.
+- `node scripts/smoke-lesson-balance.mjs [--shots <папка>]` — учёт уроков:
+  оплата с датой, 7 списаний → «1» в строке и одно уведомление → лента →
+  «Напомнить» сразу открыт, текст t7-3, WhatsApp на номер; 1280 —
+  «Требуют внимания»; история и исправление задним числом; ученику — только
+  сообщение учителя по нажатию.
 
 ## Решения и почему
 
@@ -106,14 +116,22 @@ Telegram, «Текст»). После пробного урока — «<имя>
   «панель сдвигает содержимое без затемнения» — правка общего `Sheet` в Ф2.17.
 - **День на компьютере — колонкой 640**, неделя — шириной страницы: ленте
   одного дня на 1100 px нечего показать сбоку.
-- **После «Да» на пробном — сразу «+4 / +8 / +12»** (журнал п.30), история и
-  исправления оплат — Ф2.8.
+- **После «Да» на пробном — сразу «Отметить оплату»** (журнал п.30) — та же
+  шторка, что в карточке, с «Позже».
+- **Учёт уроков (Ф2.8) живёт здесь, а карточку собирает студия**:
+  `features/teacher` вставляет `CardLessons` и `AttentionPanel` через дверь
+  раздела. История — шторкой (на компьютере — панелью справа), а не
+  отдельным экраном, как в t7-2: из неё одно движение назад к карточке.
+- **«Напомнить» об оплате ученик получает только по нажатию учителя**
+  (`send_card_message`; журнал п.29) — правила «об оплате ученику» нет.
+  Текст правится и переживает перезагрузку (`useDraft`, Ф1.14). «Напомню
+  лично» просто закрывает шторку.
 
 <!-- generated:start -->
 <!-- Пишет `npm run gen:docs` (scripts/gen/module-docs.mjs) по коду — руками не править. -->
 ## Из кода (сгенерировано)
 
-- **Файлы:** `CancelSheet.tsx`, `DayStrip.tsx`, `DayTimeline.tsx`, `FormRepeatLink.tsx`, `FormWho.tsx`, `index.ts`, `LessonBlock.tsx`, `LessonForm.tsx`, `LessonParts.tsx`, `LessonSheet.tsx`, `MarksBlock.tsx`, `MoveSheet.tsx`, `PaidQuickSheet.tsx`, `ReadOnly.tsx`, `ScheduleHeader.tsx`, `SchedulePage.tsx`, `SchedulePanels.tsx`, `ScheduleScreen.tsx`, `TellSheet.tsx`, `TrialQuestion.tsx`, `types.ts`, `useScheduleActions.ts`, `useScheduleData.ts`, `useScheduleUrl.ts`, `WeekGrid.tsx`, `WeekList.tsx`, `WhenFields.tsx`
+- **Файлы:** `AttentionPanel.tsx`, `CancelSheet.tsx`, `CardLessons.tsx`, `DayStrip.tsx`, `DayTimeline.tsx`, `FixRecordSheet.tsx`, `FormRepeatLink.tsx`, `FormWho.tsx`, `HistorySheet.tsx`, `index.ts`, `LessonBlock.tsx`, `LessonForm.tsx`, `LessonParts.tsx`, `LessonSheet.tsx`, `MarksBlock.tsx`, `MoveSheet.tsx`, `PaySheet.tsx`, `ReadOnly.tsx`, `RemindSheet.tsx`, `ScheduleHeader.tsx`, `SchedulePage.tsx`, `SchedulePanels.tsx`, `ScheduleScreen.tsx`, `TellSheet.tsx`, `TrialQuestion.tsx`, `types.ts`, `useScheduleActions.ts`, `useScheduleData.ts`, `useScheduleUrl.ts`, `WeekGrid.tsx`, `WeekList.tsx`, `WhenFields.tsx`
 - **Адреса:** `/schedule`
-- **Кто использует (импортом):** `app`
+- **Кто использует (импортом):** `app`, `features/teacher`
 <!-- generated:end -->

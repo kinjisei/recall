@@ -10,9 +10,9 @@
 // (holds_seat), экран «первых N» сам не считает.
 // ============================================================================
 import { useState, type ReactNode } from 'react'
+import { balanceShort, loadLessonBalances } from '../../domains/schedule'
 import {
   ACTION_STATUS,
-  cardTakesSeat,
   outsideSeats,
   setCardStatus,
   STATUS_LABEL,
@@ -20,7 +20,9 @@ import {
   type CardStatus,
   type StudentCard,
 } from '../../domains/students'
-import { CardForm, CardHead, InviteBlock, StudentsList, useLeavingLessons } from '../students'
+import { AttentionPanel, BalanceCount } from '../schedule'
+import { CardForm, StudentsList, useLeavingLessons } from '../students'
+import { useAsyncData } from '../../shared/lib/useAsyncData'
 import { useUrlState } from '../../shared/lib/useUrlState'
 import { useIsDesktop } from '../../shared/lib/useMediaQuery'
 import { ListDetail } from '../../shared/ui/layouts'
@@ -31,7 +33,7 @@ import { byAttention, needAttention, studentSignal, type StudentSignal } from '.
 import type { StudentInfo } from '../../lib/teacher'
 import type { Homework } from '../../lib/homework'
 import type { MyPlan } from '../../lib/billing'
-import { StudentStudio } from './StudentStudio'
+import { CardDetail } from './CardDetail'
 
 interface Row {
   card: StudentCard
@@ -79,6 +81,12 @@ export function StudentsTab({
   const [actionError, setActionError] = useState<string | null>(null)
   const [toast, setToast] = useState<{ id: number; text: string; undo?: () => void } | null>(null)
   const leaving = useLeavingLessons()
+  // остатки уроков (Ф2.8): число в строке, блок «Уроки», «Требуют внимания»
+  const [balVersion, setBalVersion] = useState(0)
+  const balanceRows = useAsyncData(loadLessonBalances, [balVersion], 'Не удалось загрузить остатки')
+  const balances = new Map((balanceRows.data ?? []).map((b) => [b.cardId, b]))
+  // из уведомления «остался 1 · Напомнить» — ?student=<карточка>&remind=1
+  const [remind, setRemind] = useUrlState('remind')
 
   const seatsLimited = typeof plan?.seats === 'number' && !plan.is_admin
   const canWrite = plan?.can_write !== false
@@ -178,6 +186,7 @@ export function StudentsTab({
         cards={ordered.map((r) => r.card)}
         detailOf={detailOf}
         outsideOf={(c) => outsideSeats(c, seatsLimited)}
+        trailingOf={(c) => (balanceShort(balances.get(c.id)) ? <BalanceCount balance={balances.get(c.id)} /> : null)}
         attention={attentionCard}
         seats={plan}
         selectedId={selected?.card.id ?? null}
@@ -190,38 +199,31 @@ export function StudentsTab({
   )
 
   const detail = selected ? (
-    <div className="flex flex-col gap-4" key={selected.card.id}>
-      <CardHead
-        card={selected.card}
-        level={selected.info?.profile.level ?? null}
-        outside={outsideSeats(selected.card, seatsLimited)}
-        canWrite={canWrite}
-        busy={busy}
-        onBack={desktop ? undefined : () => setOpenId(null)}
-        onAction={(a) => void act(selected.card, a)}
-      />
-      {actionError && <p className="text-sm text-danger-soft-fg">{actionError}</p>}
-      {selected.card.inApp && selected.info ? (
-        <StudentStudio
-          student={selected.info}
-          name={selected.card.name}
-          onChanged={onChanged}
-          covered={selected.card.holdsSeat}
-          seatsKnown={seatsLimited && cardTakesSeat(selected.card.status)}
-        />
-      ) : selected.card.status === 'archived' ? (
-        <p className="text-sm text-fg-muted">
-          Ученик в архиве: история сохранена. Чтобы пригласить в приложение, верни из архива.
-        </p>
-      ) : (
-        <>
-          <InviteBlock card={selected.card} seats={plan} />
-          <p className="text-sm text-fg-muted">
-            ⓘ Домашка и успехи появятся, когда {selected.card.name} войдёт в приложение.
-          </p>
-        </>
-      )}
-    </div>
+    <CardDetail
+      key={selected.card.id}
+      card={selected.card}
+      info={selected.info}
+      plan={plan}
+      balance={balances.get(selected.card.id) ?? null}
+      canWrite={canWrite}
+      busy={busy}
+      actionError={actionError}
+      autoRemind={remind === '1'}
+      onRemindShown={() => setRemind(null)}
+      onBack={desktop ? undefined : () => setOpenId(null)}
+      onAction={(a) => void act(selected.card, a)}
+      onChanged={onChanged}
+      onBalances={() => setBalVersion((v) => v + 1)}
+    />
+  ) : desktop && !loading ? (
+    // никто не выбран — кого стоит не забыть (макет d3-3)
+    <AttentionPanel
+      cards={cards}
+      balances={balances}
+      canWrite={canWrite}
+      empty="Выбери ученика слева — карточка откроется здесь."
+      onOpen={(id) => setOpenId(id)}
+    />
   ) : null
 
   return (
