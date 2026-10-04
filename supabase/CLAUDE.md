@@ -28,6 +28,11 @@
 - **Применённая миграция не правится никогда:** базы её уже выполнили,
   правка ничего в них не изменит, а файл начнёт врать. Новое — следующим
   файлом. Текущее состояние видно в самой базе и в `database.types.ts`.
+  Пока миграция есть только на тестовой базе, найденное проверками чинят в
+  ней самой, но сначала снимают её с тестовой (обратный SQL: таблицы,
+  функции, триггеры, задача pg_cron, строка в
+  `supabase_migrations.schema_migrations`) и накатывают заново. Иначе
+  тестовая база разойдётся с файлом (так сделано в Ф2.6).
 - **Порядок выкатки** (журнал п.47): `npm run db:migrate` (тестовая) →
   проверки и смоуки на тестовой → владелец: `npm run db:migrate:prod` →
   `node scripts/check-db-equal.mjs` (0 расхождений) → push. Клиент зовёт RPC,
@@ -117,6 +122,19 @@
   `access_end`, `notify_access_ending`, `rule_access_ending` закрыты и от
   `authenticated`. Правила — `src/domains/billing/CLAUDE.md`, проверка —
   `check-access-ending.mjs`.
+- **Расписание и остаток уроков** (миграция 0009): `lesson_series`,
+  `series_participants`, `lessons`, `lesson_participants`, `paid_lessons`,
+  `schedule_settings` закрыты для чтения и записи всем — только RPC; запись —
+  через `assert_teacher_can_write()`. Остаток — только функция из фактов
+  `card_lesson_balance` (хранимой колонки нет), журнал оплат правке не
+  поддаётся (триггер), пробное участие не списывается — ограничение таблицы.
+  Будильник `schedule_tick(p_now)` (pg_cron `recall-schedule`, раз в 5 минут)
+  списывает закончившиеся уроки и держит окно уроков серий на 12 недель;
+  «сейчас» — параметром, для проверки. Статус карточки двигает её будущие
+  уроки (триггер `student_cards_lessons`). `card_lesson_balance`,
+  `schedule_tick`, `series_fill`, `schedule_cards`, `lesson_join_cards`,
+  `lesson_cancel`, `after_lessons_changed` закрыты и от `authenticated`.
+  Правила — `src/domains/schedule/CLAUDE.md`, проверка — `check-schedule.mjs`.
 - **Ответ RPC — таблицей (`returns table`), а не `json`**, если его читает
   клиент: тогда `database.types.ts` даёт точный тип строки, и приведение
   `as unknown as` не нужно (архитектура §8). В `plpgsql` с `returns table`
@@ -152,6 +170,10 @@
 - `node scripts/check-student-cards.mjs` — карточки учеников (миграция 0008):
   создать → пригласить → связать, места по статусам, чужие карточки, без
   тарифа — `src/domains/students/CLAUDE.md`.
+- `node scripts/check-schedule.mjs` — расписание и остаток уроков (миграция
+  0009): серии, «только этот» и «этот и все следующие», автосписание,
+  пробный, поздняя отмена, задним числом, кто что видит, пауза, без тарифа —
+  `src/domains/schedule/CLAUDE.md`.
 - `node scripts/check-answermatches-sql.mjs` (вне CI, живая база) — сверка
   ответов в SQL (`norm_typed`) совпадает с клиентом (`lib/text.ts`).
 

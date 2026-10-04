@@ -100,5 +100,5 @@
 
 - **Файлы:** `api.ts`, `index.ts`, `model.ts`
 - **RPC:** `create_student_card`, `get_my_student_cards`, `set_student_card_status`, `student_card_invite`, `update_student_card`
-- **Кто использует (импортом):** `features/students`, `features/teacher`, `lib`
+- **Кто использует (импортом):** `domains/schedule`, `features/students`, `features/teacher`, `lib`
 <!-- generated:end -->

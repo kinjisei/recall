@@ -590,6 +590,195 @@ export type Database = {
           },
         ]
       }
+      lesson_participants: {
+        Row: {
+          attended: boolean | null
+          card_id: string
+          charge: string | null
+          charge_auto: boolean
+          lesson_id: string
+          marked_at: string | null
+          teacher_id: string
+          trial: boolean
+        }
+        Insert: {
+          attended?: boolean | null
+          card_id: string
+          charge?: string | null
+          charge_auto?: boolean
+          lesson_id: string
+          marked_at?: string | null
+          teacher_id: string
+          trial?: boolean
+        }
+        Update: {
+          attended?: boolean | null
+          card_id?: string
+          charge?: string | null
+          charge_auto?: boolean
+          lesson_id?: string
+          marked_at?: string | null
+          teacher_id?: string
+          trial?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_participants_card_id_teacher_id_fkey"
+            columns: ["card_id", "teacher_id"]
+            isOneToOne: false
+            referencedRelation: "student_cards"
+            referencedColumns: ["id", "teacher_id"]
+          },
+          {
+            foreignKeyName: "lesson_participants_lesson_id_teacher_id_fkey"
+            columns: ["lesson_id", "teacher_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id", "teacher_id"]
+          },
+        ]
+      }
+      lesson_series: {
+        Row: {
+          created_at: string
+          ends_on: string | null
+          every_weeks: number
+          generated_until: string | null
+          id: string
+          kind: string
+          link: string | null
+          minutes: number
+          split_from: string | null
+          start_time: string
+          starts_on: string
+          teacher_id: string
+          title: string | null
+          updated_at: string
+          weekdays: number[]
+        }
+        Insert: {
+          created_at?: string
+          ends_on?: string | null
+          every_weeks?: number
+          generated_until?: string | null
+          id?: string
+          kind: string
+          link?: string | null
+          minutes: number
+          split_from?: string | null
+          start_time: string
+          starts_on: string
+          teacher_id: string
+          title?: string | null
+          updated_at?: string
+          weekdays: number[]
+        }
+        Update: {
+          created_at?: string
+          ends_on?: string | null
+          every_weeks?: number
+          generated_until?: string | null
+          id?: string
+          kind?: string
+          link?: string | null
+          minutes?: number
+          split_from?: string | null
+          start_time?: string
+          starts_on?: string
+          teacher_id?: string
+          title?: string | null
+          updated_at?: string
+          weekdays?: number[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_series_split_from_fkey"
+            columns: ["split_from"]
+            isOneToOne: false
+            referencedRelation: "lesson_series"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_series_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lessons: {
+        Row: {
+          cancelled_at: string | null
+          created_at: string
+          ends_at: string
+          id: string
+          kind: string
+          link: string | null
+          moved_from: string | null
+          series_date: string | null
+          series_id: string | null
+          settled_at: string | null
+          starts_at: string
+          status: string
+          teacher_id: string
+          title: string | null
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          cancelled_at?: string | null
+          created_at?: string
+          ends_at: string
+          id?: string
+          kind: string
+          link?: string | null
+          moved_from?: string | null
+          series_date?: string | null
+          series_id?: string | null
+          settled_at?: string | null
+          starts_at: string
+          status?: string
+          teacher_id: string
+          title?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          cancelled_at?: string | null
+          created_at?: string
+          ends_at?: string
+          id?: string
+          kind?: string
+          link?: string | null
+          moved_from?: string | null
+          series_date?: string | null
+          series_id?: string | null
+          settled_at?: string | null
+          starts_at?: string
+          status?: string
+          teacher_id?: string
+          title?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lessons_series_id_teacher_id_fkey"
+            columns: ["series_id", "teacher_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_series"
+            referencedColumns: ["id", "teacher_id"]
+          },
+          {
+            foreignKeyName: "lessons_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       material_assignments: {
         Row: {
           ai_review: Json | null
@@ -835,6 +1024,51 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "access_overview"
             referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      paid_lessons: {
+        Row: {
+          card_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          n: number
+          note: string | null
+          teacher_id: string
+        }
+        Insert: {
+          card_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          n: number
+          note?: string | null
+          teacher_id: string
+        }
+        Update: {
+          card_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          n?: number
+          note?: string | null
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "paid_lessons_card_id_teacher_id_fkey"
+            columns: ["card_id", "teacher_id"]
+            isOneToOne: false
+            referencedRelation: "student_cards"
+            referencedColumns: ["id", "teacher_id"]
+          },
+          {
+            foreignKeyName: "paid_lessons_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1209,6 +1443,65 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      schedule_settings: {
+        Row: {
+          default_link: string | null
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          default_link?: string | null
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          default_link?: string | null
+          teacher_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_settings_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      series_participants: {
+        Row: {
+          card_id: string
+          series_id: string
+          teacher_id: string
+        }
+        Insert: {
+          card_id: string
+          series_id: string
+          teacher_id: string
+        }
+        Update: {
+          card_id?: string
+          series_id?: string
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "series_participants_card_id_teacher_id_fkey"
+            columns: ["card_id", "teacher_id"]
+            isOneToOne: false
+            referencedRelation: "student_cards"
+            referencedColumns: ["id", "teacher_id"]
+          },
+          {
+            foreignKeyName: "series_participants_series_id_teacher_id_fkey"
+            columns: ["series_id", "teacher_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_series"
+            referencedColumns: ["id", "teacher_id"]
           },
         ]
       }
@@ -1628,6 +1921,10 @@ export type Database = {
         Args: { p_types: string[]; p_user: string }
         Returns: number
       }
+      add_paid_lessons: {
+        Args: { p_card: string; p_count: number; p_note?: string }
+        Returns: string
+      }
       admin_ai_tasks: {
         Args: { p_days?: number }
         Returns: {
@@ -1709,10 +2006,15 @@ export type Database = {
         Args: { months: number; new_plan: string; target: string }
         Returns: Json
       }
+      after_lessons_changed: {
+        Args: { p_change: Json; p_teacher: string }
+        Returns: undefined
+      }
       after_payment_confirmed: {
         Args: { p_payment: string }
         Returns: undefined
       }
+      almaty_ts: { Args: { p_day: string; p_time: string }; Returns: string }
       apply_referral_rewards: { Args: { p_referrer: string }; Returns: number }
       assert_teacher_can_write: { Args: never; Returns: undefined }
       assign_grammar_quest: {
@@ -1760,7 +2062,23 @@ export type Database = {
         Returns: boolean
       }
       become_teacher: { Args: { p_ref?: string }; Returns: undefined }
+      cancel_lesson: {
+        Args: { p_charge: boolean; p_lesson: string }
+        Returns: undefined
+      }
       cancel_placement: { Args: { p_id: string }; Returns: undefined }
+      cancel_series_from: {
+        Args: { p_charge: boolean; p_lesson: string }
+        Returns: undefined
+      }
+      card_lesson_balance: {
+        Args: { p_card: string }
+        Returns: {
+          balance: number
+          charged: number
+          paid: number
+        }[]
+      }
       card_takes_seat: { Args: { p_status: string }; Returns: boolean }
       card_text: { Args: { p: string; p_max: number }; Returns: string }
       choose_homework_item: { Args: { p_item: string }; Returns: undefined }
@@ -1795,6 +2113,32 @@ export type Database = {
           p_lang: string
           p_note?: string
           p_student_id: string
+        }
+        Returns: string
+      }
+      create_lesson: {
+        Args: {
+          p_cards: string[]
+          p_kind: string
+          p_link?: string
+          p_minutes: number
+          p_starts_at: string
+          p_title?: string
+        }
+        Returns: string
+      }
+      create_series: {
+        Args: {
+          p_cards: string[]
+          p_ends_on?: string
+          p_every_weeks: number
+          p_kind: string
+          p_link?: string
+          p_minutes: number
+          p_starts_on: string
+          p_time: string
+          p_title?: string
+          p_weekdays: number[]
         }
         Returns: string
       }
@@ -1833,6 +2177,40 @@ export type Database = {
       free_teacher_seats: { Args: never; Returns: number }
       get_homework: { Args: { p_student?: string }; Returns: Json }
       get_homework_many: { Args: never; Returns: Json }
+      get_lesson_balances: {
+        Args: never
+        Returns: {
+          balance: number
+          card_id: string
+          charged: number
+          paid: number
+        }[]
+      }
+      get_my_lesson_balances: {
+        Args: never
+        Returns: {
+          lessons_left: number
+          teacher_id: string
+          teacher_name: string
+          tracked: boolean
+        }[]
+      }
+      get_my_lessons: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          ends_at: string
+          kind: string
+          lesson_id: string
+          link: string
+          moved_from: string
+          starts_at: string
+          status: string
+          teacher_id: string
+          teacher_name: string
+          title: string
+          version: number
+        }[]
+      }
       get_my_plan: { Args: never; Returns: Json }
       get_my_referral: {
         Args: never
@@ -1843,6 +2221,23 @@ export type Database = {
           pending: number
           reward_days: number
           reward_months: number
+        }[]
+      }
+      get_my_series: {
+        Args: never
+        Returns: {
+          card_ids: string[]
+          ends_on: string
+          every_weeks: number
+          id: string
+          kind: string
+          link: string
+          minutes: number
+          split_from: string
+          start_time: string
+          starts_on: string
+          title: string
+          weekdays: number[]
         }[]
       }
       get_my_student_cards: {
@@ -1876,6 +2271,36 @@ export type Database = {
           trial_until: string
         }[]
       }
+      get_schedule: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          attended: boolean
+          card_id: string
+          card_name: string
+          card_status: string
+          charge: string
+          charge_auto: boolean
+          ends_at: string
+          kind: string
+          lesson_id: string
+          link: string
+          moved_from: string
+          series_date: string
+          series_id: string
+          settled: boolean
+          starts_at: string
+          status: string
+          title: string
+          trial: boolean
+          version: number
+        }[]
+      }
+      get_schedule_settings: {
+        Args: never
+        Returns: {
+          default_link: string
+        }[]
+      }
       has_paid_access: { Args: { uid: string }; Returns: boolean }
       has_premium_access: { Args: { uid: string }; Returns: boolean }
       holds_seat: {
@@ -1890,6 +2315,19 @@ export type Database = {
       is_student_of: { Args: { s_id: string; t_id: string }; Returns: boolean }
       join_teacher: { Args: { code: string }; Returns: string }
       latin_letters: { Args: { p: string }; Returns: string }
+      lesson_cancel: {
+        Args: { p_charge: boolean; p_lesson: string }
+        Returns: number
+      }
+      lesson_check_time: {
+        Args: { p_minutes: number; p_starts_at: string }
+        Returns: undefined
+      }
+      lesson_join_cards: {
+        Args: { p_cards: string[]; p_lesson: string }
+        Returns: undefined
+      }
+      lesson_link_clean: { Args: { p_link: string }; Returns: string }
       lock_teacher_seats: { Args: { p_teacher: string }; Returns: undefined }
       log_activity: {
         Args: {
@@ -1914,6 +2352,10 @@ export type Database = {
         Returns: boolean
       }
       mark_homework_choice: { Args: { p_item: string }; Returns: undefined }
+      mark_lesson_participant: {
+        Args: { p_card: string; p_lesson: string; p_outcome: string }
+        Returns: undefined
+      }
       mark_notifications_read: { Args: { p_ids?: string[] }; Returns: number }
       material_assigned_to: {
         Args: { m_id: string; s_id: string }
@@ -1982,6 +2424,7 @@ export type Database = {
           plan: string
         }[]
       }
+      restore_lesson: { Args: { p_lesson: string }; Returns: undefined }
       rule_access_ending: { Args: never; Returns: number }
       run_notification_rules: { Args: never; Returns: Json }
       save_material_ai_review: {
@@ -1992,6 +2435,13 @@ export type Database = {
         Args: { p_id: string; p_messages: Json }
         Returns: undefined
       }
+      schedule_cards: {
+        Args: { p_cards: string[]; p_kind: string; p_teacher: string }
+        Returns: string[]
+      }
+      schedule_horizon_days: { Args: never; Returns: number }
+      schedule_limit: { Args: { p_what: string }; Returns: number }
+      schedule_tick: { Args: { p_now: string }; Returns: Json }
       seat_links: {
         Args: { p_teacher: string }
         Returns: {
@@ -2013,10 +2463,26 @@ export type Database = {
         Args: { p_material_id: string }
         Returns: undefined
       }
+      series_days: { Args: { p_weekdays: number[] }; Returns: number[] }
+      series_fill: {
+        Args: { p_from: string; p_now: string; p_series: string }
+        Returns: number
+      }
+      series_slot: {
+        Args: {
+          p_day: string
+          p_ends: string
+          p_every: number
+          p_starts: string
+          p_weekdays: number[]
+        }
+        Returns: boolean
+      }
       set_daily_plan: {
         Args: { p_plan: Json; p_student_id: string }
         Returns: undefined
       }
+      set_default_lesson_link: { Args: { p_link: string }; Returns: undefined }
       set_student_card_status: {
         Args: { p_card: string; p_status: string }
         Returns: undefined
@@ -2096,6 +2562,33 @@ export type Database = {
       unassign_writing_task: {
         Args: { p_student_id: string; p_task_id: string }
         Returns: undefined
+      }
+      update_lesson: {
+        Args: {
+          p_cards: string[]
+          p_kind: string
+          p_lesson: string
+          p_link?: string
+          p_minutes: number
+          p_starts_at: string
+          p_title?: string
+        }
+        Returns: undefined
+      }
+      update_series_from: {
+        Args: {
+          p_cards: string[]
+          p_ends_on?: string
+          p_every_weeks: number
+          p_kind: string
+          p_lesson: string
+          p_link?: string
+          p_minutes: number
+          p_time: string
+          p_title?: string
+          p_weekdays: number[]
+        }
+        Returns: string
       }
       update_student_card: {
         Args: {
