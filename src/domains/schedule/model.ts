@@ -5,6 +5,7 @@
 // test-schedule.mjs (по тексту миграции) и check-schedule.mjs (по базе).
 // ============================================================================
 import type { CardStatus } from '../students'
+import { addDays, dayNumber, dayString, isoWeekday } from '../../shared/lib/days.ts'
 
 export const LESSON_KINDS = ['individual', 'group', 'trial'] as const
 export type LessonKind = (typeof LESSON_KINDS)[number]
@@ -174,14 +175,9 @@ export function lessonPhase(lesson: Pick<Lesson, 'status' | 'startsAt' | 'endsAt
 }
 
 // ---- дни серии --------------------------------------------------------------------
-// День — строка 'YYYY-MM-DD' по Алматы; считаем в днях от эпохи, без часов.
-
-const DAY_MS = 86_400_000
-const dayNumber = (day: string): number => Date.parse(`${day}T00:00:00Z`) / DAY_MS
-const dayString = (n: number): string => new Date(n * DAY_MS).toISOString().slice(0, 10)
-/** ISO-день недели: 1 — понедельник … 7 — воскресенье. */
-export const isoWeekday = (day: string): number => ((new Date(dayNumber(day) * DAY_MS).getUTCDay() + 6) % 7) + 1
-export const addDays = (day: string, n: number): string => dayString(dayNumber(day) + n)
+// День — строка 'YYYY-MM-DD' по Алматы; считаем в днях от эпохи, без часов
+// (shared/lib/days — общее с календарём месяца).
+export { addDays, isoWeekday }
 
 /** Сегодня (или день момента) по Алматы. */
 export function almatyDay(at: Date): string {

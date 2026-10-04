@@ -331,6 +331,25 @@ html[data-vt='out']::view-transition-new(root) { animation-name: vt-in-left; }
   scrollbar-width: thin;
 }
 
+/* Без полосы прокрутки: колёса времени (shared/ui/TimeWheel) — у колеса её
+   нет, листают пальцем, колесом мыши и стрелками. */
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Штриховка «поздняя отмена» (макеты t2-3, d1): урок отменён, но списан —
+   отличается от обычной отмены и без цветового зрения. Цвет — токен. */
+@utility bg-hatch-warning {
+  background-image: repeating-linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--color-warning) 22%, transparent) 0 6px,
+    transparent 6px 12px
+  );
+}
+
 /* ============================================================================
    Печать материалов (фича Materials, фаза C): PrintSheet рендерится порталом
    в body вне #root; при печати прячем приложение целиком, остаётся только лист.

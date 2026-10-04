@@ -22,6 +22,7 @@ export function TabPicker<T extends string>({
   onChange,
   variant = 'tabs',
   ariaLabel,
+  stretch = false,
   className = '',
 }: {
   options: TabOption<T>[]
@@ -29,6 +30,8 @@ export function TabPicker<T extends string>({
   onChange: (id: T) => void
   variant?: 'tabs' | 'segment'
   ariaLabel?: string
+  /** Варианты делят ширину поровну: «День / Неделя», «Индивидуальный / Группа / Пробный». */
+  stretch?: boolean
   className?: string
 }) {
   const segment = variant === 'segment'
@@ -36,7 +39,7 @@ export function TabPicker<T extends string>({
   // прозрачная): подложка на белом теряется. ring, а не border — рамка
   // сдвинула бы ряд вкладок (как в ChoiceGroup).
   const container = segment
-    ? 'inline-flex gap-0.5 rounded-full bg-tint/[0.07] p-0.5 ring-1 ring-control-line'
+    ? `${stretch ? 'flex' : 'inline-flex'} gap-0.5 rounded-full bg-tint/[0.07] p-0.5 ring-1 ring-control-line`
     : 'flex flex-wrap gap-2'
   // неактивный: у капсулы фон даёт контейнер (кнопка прозрачная), у tabs —
   // своя подложка. hover добавлен ко всем (раньше был только у капсулы).
@@ -59,7 +62,7 @@ export function TabPicker<T extends string>({
             role="tab"
             aria-selected={isActive}
             onClick={() => onChange(o.id)}
-            className={`flex min-h-11 items-center justify-center gap-1.5 px-4 font-semibold transition-colors ${
+            className={`flex min-h-11 items-center justify-center gap-1.5 px-4 font-semibold transition-colors ${stretch ? 'flex-1' : ''} ${
               segment ? 'rounded-full text-xs' : 'rounded-lg text-sm'
             } ${isActive ? active : inactive}`}
           >

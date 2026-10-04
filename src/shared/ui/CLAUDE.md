@@ -27,7 +27,7 @@
 | `breakpoints.ts` | точки перехода для JS (`DESKTOP_QUERY` → `useIsDesktop`) |
 | `layouts.tsx` | общие раскладки: `CenterColumn` (упражнение, игра), `ReadingColumn` (текст + панель перевода сбоку), `ListDetail` (список + подробности) |
 | `roundKeys.tsx` | клавиатура в упражнениях: `useRoundKeys` (1–4, Enter, Esc), `useRoundMode` (режим раунда + Esc — выход) |
-| компоненты | `Button`, `Card` (`tone="warning" \| "danger"` — статусная карточка), `Sheet` (на компьютере — боковая панель), `Picker`, `TabPicker` (вкладки), `ChoiceGroup` (выбор значения, radiogroup: `chips` — уровень, скорость, размер; `cards` — карточки с пояснением и ценой справа, тариф на «Как оплатить», макет t9), `Chat` (`ChatWindow` — скруглённое окно ленты с гаснущими краями, `ChatBubble`, `ChatInputBar` — плавающая капсула ввода, `draft` — строка «Черновик восстановлен»; общий вид «Диалога» и AI-квестов), `RowCard` (`flat` — строка общего списка с разделителями, `lead` — аватар вместо иконки, `current` — выбранная рядом с подробностями; ученики, макет t6), `UndoToast` (тост «… · Вернуть» с полоской времени над нижней навигацией, Ф2.5), `Reveal`, `HowItWorks`, `Loading`/`RowsSkeleton`, `LoadError`, `DraftRestored` («Черновик восстановлен · Очистить» под полем, Ф1.14), `Thinking`, `BackButton`/`BackHeader` (одна кнопка «назад»: `onClick` или `fallback` — назад по истории), `OpenPage` (рамка открытой страницы: гостю — своя на весь экран, вошедшему — общая), `AppLink`, `Brand`, `Confetti`, `icons` |
+| компоненты | `Button`, `Card` (`tone="warning" \| "danger"` — статусная карточка), `Sheet` (на компьютере — боковая панель), `Picker`, `TabPicker` (вкладки; `stretch` — поровну на всю ширину: «День / Неделя»), `ChoiceGroup` (выбор значения, radiogroup: `chips` — уровень, скорость, размер; `cards` — карточки с пояснением и ценой справа, тариф на «Как оплатить», макет t9), `Chat` (`ChatWindow` — скруглённое окно ленты с гаснущими краями, `ChatBubble`, `ChatInputBar` — плавающая капсула ввода, `draft` — строка «Черновик восстановлен»; общий вид «Диалога» и AI-квестов), `RowCard` (`flat` — строка общего списка с разделителями, `lead` — аватар вместо иконки, `current` — выбранная рядом с подробностями; ученики, макет t6), `UndoToast` (тост «… · Вернуть» с полоской времени над нижней навигацией, Ф2.5), `Switch` (тумблер: вся строка нажимается, role=switch), `DatePicker` (календарь месяца под полем: сегодня обведён, выбранный залит, `soft` — бледные прошлые дни, стрелки двигают выбор), `TimeWheel` (колёса «Часы : Минуты» на CSS scroll-snap, spinbutton для клавиатуры), `FieldButton` (поле-кнопка, открывающее выбор; `open` — обводка), `EmptyState` (иконка, фраза, действия — пусто, а не сбой), — последние пять из макета t3 и t2-4 (Ф2.7, решение владельца 04.10.2026: дата и время — свои, как в макете), `Reveal`, `HowItWorks`, `Loading`/`RowsSkeleton`, `LoadError`, `DraftRestored` («Черновик восстановлен · Очистить» под полем, Ф1.14), `Thinking`, `BackButton`/`BackHeader` (одна кнопка «назад»: `onClick` или `fallback` — назад по истории), `OpenPage` (рамка открытой страницы: гостю — своя на весь экран, вошедшему — общая), `AppLink`, `Brand`, `Confetti`, `icons` |
 
 Витрина всего этого — `/dev/ui` (только `npm run dev`, в сборку не попадает):
 токены обеих тем, все компоненты, три раскладки, упражнение для клавиатуры.
@@ -115,6 +115,9 @@ View Transitions API, вся плавность продукта стоит 0,8 
   стало»; `-soft` — глубокий тон, **только долей** (`bg-danger-soft/40` —
   выбранный неверный ответ); `-surface` + `-line` — фон и рамка статусной
   карточки (`Card tone`), в тёмной равны обычной карточке;
+- **служебные утилиты** (`src/index.css`, `@utility`): `scrollbar-none` —
+  без полосы прокрутки (колёса `TimeWheel`); `bg-hatch-warning` — штриховка
+  «поздняя отмена» цветом `warning` (уроки расписания, макеты t2-3, d1);
 - **текст вне шкалы Tailwind:** `text-micro` 10 · `text-caption` 11 ·
   `text-note` 13 · `text-body` 15;
 - **ширины:** `max-w-column` 640 · `max-w-exercise` 576 · `max-w-reading`
@@ -177,7 +180,7 @@ View Transitions API, вся плавность продукта стоит 0,8 
 - **Иконки — свои, `icons.tsx`** (инлайн-SVG в стиле Phosphor, без
   библиотеки), **генерируются** из `handoff/icons/*.svg`
   (`node scripts/gen-icons.mjs`), руками не правятся. Иконку убрать — удалить
-  её SVG и перегенерировать. 59 иконок (`IconBell` — Ф1.5, `IconCopy` — Ф2.1, `IconGift`, `IconShare`, `IconInfinity`, `IconHeart` — Ф2.3, из макета t8); 4 неиспользуемые (`IconStudents`,
+  её SVG и перегенерировать. 80 иконок (`IconBell` — Ф1.5, `IconCopy` — Ф2.1, `IconGift`, `IconShare`, `IconInfinity`, `IconHeart` — Ф2.3, из макета t8; 19 расписания — Ф2.7, из макетов t2–t5: `IconCalendar`, `IconCalendarPlus`, `IconReschedule`, `IconClock`, `IconClockAuto`, `IconRepeat`, `IconVideo`, `IconLink`, `IconTicket`, `IconUsers`, `IconUser`, `IconChevronLeft`, `IconChevronRight`, `IconColumns`, `IconList`, `IconInfo`, `IconXCircle`, `IconMinusCircle`, `IconSmartphoneOff`); 4 неиспользуемые (`IconStudents`,
   `IconSpeech`, `IconSpeechFill`, `IconMicFill`) удалены 28.09.2026.
 - **Чего не хватает новым экранам** (иконки, компоненты, состояния) — список
   в `docs/design/ui-inventory.md` §6. Добавил оттуда — отметь там же: по описи
@@ -213,7 +216,7 @@ View Transitions API, вся плавность продукта стоит 0,8 
 <!-- Пишет `npm run gen:docs` (scripts/gen/module-docs.mjs) по коду — руками не править. -->
 ## Из кода (сгенерировано)
 
-- **Файлы:** `AppLink.tsx`, `BackButton.tsx`, `Brand.tsx`, `breakpoints.ts`, `Button.tsx`, `Card.tsx`, `Chat.tsx`, `ChoiceGroup.tsx`, `Confetti.tsx`, `DraftRestored.tsx`, `HowItWorks.tsx`, `icons.tsx`, `layouts.tsx`, `LoadError.tsx`, `Loading.tsx`, `OpenPage.tsx`, `Picker.tsx`, `Reveal.tsx`, `roundKeys.tsx`, `RowCard.tsx`, `Sheet.tsx`, `TabPicker.tsx`, `theme.ts`, `ThemePicker.tsx`, `Thinking.tsx`, `tokens.css`, `UndoToast.tsx`
+- **Файлы:** `AppLink.tsx`, `BackButton.tsx`, `Brand.tsx`, `breakpoints.ts`, `Button.tsx`, `Card.tsx`, `Chat.tsx`, `ChoiceGroup.tsx`, `Confetti.tsx`, `DatePicker.tsx`, `DraftRestored.tsx`, `EmptyState.tsx`, `FieldButton.tsx`, `HowItWorks.tsx`, `icons.tsx`, `layouts.tsx`, `LoadError.tsx`, `Loading.tsx`, `OpenPage.tsx`, `Picker.tsx`, `Reveal.tsx`, `roundKeys.tsx`, `RowCard.tsx`, `Sheet.tsx`, `Switch.tsx`, `TabPicker.tsx`, `theme.ts`, `ThemePicker.tsx`, `Thinking.tsx`, `TimeWheel.tsx`, `tokens.css`, `UndoToast.tsx`
 - **localStorage:** `recall.theme`
 - **Кто использует (импортом):** `app`, `components`, `features/admin`, `features/auth`, `features/billing`, `features/conversation`, `features/dashboard`, `features/dev`, `features/flashcards`, `features/grammar`, `features/homework`, `features/landing`, `features/legal`, `features/notifications`, `features/onboarding`, `features/practice`, `features/program`, `features/progress`, `features/pronunciation`, `features/quests`, `features/reader`, `features/referral`, `features/settings`, `features/students`, `features/study`, `features/teacher`, `features/words`, `features/writing`, `shared`
 <!-- generated:end -->
