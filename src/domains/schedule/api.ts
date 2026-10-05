@@ -1,6 +1,6 @@
 // ============================================================================
-// Расписание — единственное место, где домен ходит в базу (архитектура §2,
-// §4). Таблицы миграции 0009 закрыты всем; всё — через RPC. Права, тариф и
+// Расписание учителя — слой данных домена (архитектура §2, §4); чтение
+// ученика — api.student.ts (его берёт Главная, учительское ей не нужно). Таблицы миграции 0009 закрыты всем; всё — через RPC. Права, тариф и
 // списания решает база: без тарифа после пробного запись отказывает
 // (RECALL_PLAN_REQUIRED, журнал п.41), чтение работает.
 // ============================================================================
@@ -14,8 +14,6 @@ import {
   type LessonBalance,
   type LessonKind,
   type LessonStatus,
-  type MyLesson,
-  type MyLessonBalance,
   type Outcome,
   type Series,
   type SeriesKind,
@@ -228,37 +226,4 @@ export async function setCancelCharge(lessonId: string, cardId: string, charge: 
 export async function sendCardMessage(cardId: string, text: string): Promise<void> {
   const { error } = await supabase.rpc('send_card_message', { p_card: cardId, p_text: text })
   if (error) throw dbError(error, 'отправить сообщение')
-}
-
-// ---- ученик ---------------------------------------------------------------------------
-
-/** «Мои уроки» за период: только свои, без других участников. */
-export async function loadMyLessons(from: Date, to: Date): Promise<MyLesson[]> {
-  const { data, error } = await supabase.rpc('get_my_lessons', { p_from: from.toISOString(), p_to: to.toISOString() })
-  if (error) throw dbError(error, 'загрузить уроки')
-  return (data ?? []).map((r) => ({
-    id: r.lesson_id,
-    teacherId: r.teacher_id,
-    teacherName: r.teacher_name,
-    kind: r.kind as LessonKind,
-    status: r.status as LessonStatus,
-    startsAt: r.starts_at,
-    endsAt: r.ends_at,
-    title: r.title ?? null,
-    link: r.link ?? null,
-    movedFrom: r.moved_from ?? null,
-    version: r.version,
-  }))
-}
-
-/** Остаток оплаченных уроков ученику — по каждому учителю, без минуса. */
-export async function loadMyLessonBalances(): Promise<MyLessonBalance[]> {
-  const { data, error } = await supabase.rpc('get_my_lesson_balances')
-  if (error) throw dbError(error, 'загрузить остаток уроков')
-  return (data ?? []).map((r) => ({
-    teacherId: r.teacher_id,
-    teacherName: r.teacher_name,
-    tracked: r.tracked === true,
-    lessonsLeft: r.lessons_left,
-  }))
 }

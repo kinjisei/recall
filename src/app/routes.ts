@@ -95,6 +95,9 @@ export const ROUTES: AppRoute[] = [
   // расписание репетитора (Ф2.7): роли в таблице нет, как у /teacher —
   // не-репетитору экран сам объясняет и ведёт в студию
   { path: '/schedule', place: 'app', screen: routeScreens['/schedule'] },
+  // «Мои уроки» ученика (Ф2.9, макет u2): вход — «Все уроки» на Главной и
+  // уведомления об уроках; ученику без уроков экран сам скажет «пока нет»
+  { path: '/lessons', place: 'app', screen: routeScreens['/lessons'] },
   { path: '/assignments', place: 'app', screen: routeScreens['/assignments'] },
   { path: '/writing', place: 'app', screen: routeScreens['/writing'] },
   { path: '/self-material', place: 'app', screen: routeScreens['/self-material'] },

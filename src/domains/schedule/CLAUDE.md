@@ -22,7 +22,8 @@
 
 Ученик в приложении видит только свои уроки: время, ссылку и название
 группы, без других участников. Экран учителя — `features/schedule` (Ф2.7);
-остаток и «остался 1» — Ф2.8, «Мои уроки» и уведомления ученику — Ф2.9.
+остаток и «остался 1» — Ф2.8; «Мои уроки» и карточка на Главной ученика —
+`features/lessons` (Ф2.9).
 Правила этого экрана, которым не нужна база (подписи, раскладка по часам,
 черновик урока, что написать ученику), живут здесь же и проверяются в node.
 
@@ -33,7 +34,9 @@
 | `editor.ts` | шторки: черновик урока (`LessonDraft`) → вход `createLesson`/`createSeries`, почему «Создать» нельзя (`draftProblem` — копии проверок базы), сводка «… · 20 уроков», пересечения, «Изменить» (`draftFromLesson`), перенос «этот и все следующие» (`moveSeriesInput`, `rebuildCount`), что уйдёт при паузе и архиве (`leavingLessons` — копия `trg_card_lessons`), «Останется / Станет N», тексты ученику и кому писать самому (`whoToTell`, `APP_TELLS_STUDENTS`) |
 | `ledger.ts` | учёт уроков на экране (Ф2.8): подпись остатка (`balanceLabel` — минус только учителю), число в строке, «требует внимания» (`balanceLow` — 1 и меньше при учёте), строки истории (`historyRow`), текст «Напомнить» без сумм (`paymentReminder`) |
 | `status.ts` | метка урока одним правилом для дня, недели и списка: автосписание, поздняя отмена, пробный, перенесён, не отмечен; строка под именем |
-| `api.ts` | единственное место, где домен ходит в базу: чтение расписания, серий, остатков, «мои уроки»; создать, изменить, перенести, отменить, вернуть, отметить, оплата «+N», ссылка по умолчанию |
+| `student.ts` | уроки глазами ученика (Ф2.9, макеты u1, u2): ближайший урок, «Урок через 10 мин» / «Урок идёт» (`cardPhase`), «Сегодня, 19:00–20:00», с кем — группа или имя преподавателя, пометки «Отменён» / «Перенесён с …», у какого урока «Войти в урок» (`joinLessonId` — ближайший и в его день), тихая строка остатка (`balanceLines`) |
+| `api.ts` | слой данных учителя: чтение расписания, серий, остатков; создать, изменить, перенести, отменить, вернуть, отметить, оплата «+N», ссылка по умолчанию |
+| `api.student.ts` | слой данных ученика: «мои уроки» и остаток без минуса — отдельным файлом, чтобы Главная не тянула в стартовый бандл учительские запросы |
 | `index.ts` | парадная дверь — экраны берут только отсюда |
 | база (учёт) | `supabase/migrations/0010_lesson_balance.sql`: дата оплаты, история карточки `get_card_history`, исправление отменённого `set_cancel_charge`, правило «остался 1» `notify_lessons_low`, сообщение ученику `send_card_message` |
 | база | `supabase/migrations/0009_schedule.sql`: `lesson_series`, `series_participants`, `lessons`, `lesson_participants`, `paid_lessons`, `schedule_settings`; будильник `schedule_tick` (pg_cron `recall-schedule`) |
@@ -102,7 +105,8 @@
   урока (`cleanLink` = `lesson_link_clean`) — `test-schedule-screen.mjs`.
   `draftProblem` — только подсказка до нажатия: решает база.
 - **Время урока — по Алматы, не по поясу телефона**: в `calendar.ts`,
-  `editor.ts`, `status.ts`, `model.ts` нет методов местного времени
+  `editor.ts`, `status.ts`, `model.ts`, `ledger.ts`, `student.ts` (и в
+  текстах уведомлений `notifications/lessonText.ts`) нет методов местного времени
   (`getHours`, `toLocale…`) — только Intl с `SCHEDULE_TZ`. Компьютер
   владельца в UTC+5, как Алматы, и ошибку «взяли местное время» значения
   здесь не покажут — держит сторож по тексту в `test-schedule-screen.mjs`.
@@ -120,6 +124,10 @@
   сколько перенесённых перестроит «этот и все следующие».
 - `node scripts/test-lesson-ledger.mjs` (чистый, в CI) — подпись остатка,
   строки истории, текст «Напомнить» (без сумм и минуса).
+- `node scripts/test-my-lessons.mjs` (чистый, в CI) — уроки глазами ученика
+  (`student.ts`) и кому учителю писать самому (`whoToTell`, журнал п.68).
+- `node scripts/test-domain-pure.mjs` (чистый, в CI) — модули домена ничего
+  не делают при загрузке: сборка помечает их так и выкидывает неиспользуемое.
 - `node scripts/check-lesson-balance.mjs` (тестовая база) — все условия Ф2.8:
   8 оплачено → 7 списаний → одно уведомление, дальше ни одного, новая оплата
   — новый цикл; скачок через 1; без тарифа и без учёта — тихо; ученику — ни
@@ -155,7 +163,7 @@
 <!-- Пишет `npm run gen:docs` (scripts/gen/module-docs.mjs) по коду — руками не править. -->
 ## Из кода (сгенерировано)
 
-- **Файлы:** `api.ts`, `calendar.ts`, `editor.ts`, `index.ts`, `ledger.ts`, `model.ts`, `status.ts`
+- **Файлы:** `api.student.ts`, `api.ts`, `calendar.ts`, `editor.ts`, `index.ts`, `ledger.ts`, `model.ts`, `status.ts`, `student.ts`
 - **RPC:** `add_paid_lessons`, `cancel_lesson`, `cancel_series_from`, `create_lesson`, `create_series`, `get_card_history`, `get_lesson_balances`, `get_my_lesson_balances`, `get_my_lessons`, `get_my_series`, `get_schedule`, `get_schedule_settings`, `mark_lesson_participant`, `restore_lesson`, `send_card_message`, `set_cancel_charge`, `set_default_lesson_link`, `update_lesson`, `update_series_from`
-- **Кто использует (импортом):** `features/schedule`, `features/students`, `features/teacher`
+- **Кто использует (импортом):** `features/dashboard`, `features/lessons`, `features/schedule`, `features/settings`, `features/students`, `features/teacher`
 <!-- generated:end -->

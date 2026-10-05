@@ -40,7 +40,7 @@ import {
 import type { StudentCard } from '../../domains/students'
 import { Button } from '../../shared/ui/Button'
 import { IconClose, IconList, IconWarning } from '../../shared/ui/icons'
-import { Sheet } from '../../shared/ui/Sheet'
+import { Sheet, SHEET_BODY } from '../../shared/ui/Sheet'
 import { TabPicker } from '../../shared/ui/TabPicker'
 import { FormWho } from './FormWho'
 import { FormLink, FormRepeat } from './FormRepeatLink'
@@ -49,7 +49,7 @@ import { useDayLessons, useLessonsAhead } from './useScheduleData'
 import { DurationField, WhenFields } from './WhenFields'
 
 export type FormMode =
-  | { kind: 'new'; day: string; time: string; cardIds?: string[] }
+  | { kind: 'new'; day: string; time: string; cardIds?: string[]; seed?: StudentCard[] }
   | { kind: 'edit'; lesson: Lesson; series: Series | null }
 
 const KINDS: { id: LessonKind; label: string }[] = [
@@ -121,7 +121,8 @@ export function LessonForm({
     mode.kind === 'edit' ? draftFromLesson(mode.lesson, mode.series, defaultLink) : newDraft(mode.day, mode.time, mode.cardIds ?? []),
   )
   const [scope, setScope] = useState<'one' | 'following'>('one')
-  const [extra, setExtra] = useState<StudentCard[]>([])
+  // карточки, которых ещё нет в перечитанном списке: созданные здесь и перед формой (seed)
+  const [extra, setExtra] = useState<StudentCard[]>(() => (mode.kind === 'new' ? (mode.seed ?? []) : []))
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const patch = (p: Partial<LessonDraft>) => setDraft((d) => ({ ...d, ...p }))
@@ -153,7 +154,7 @@ export function LessonForm({
 
   return (
     <Sheet onClose={onClose} labelledBy="lesson-form-title" maxH="92dvh">
-      <div className="flex min-h-0 flex-col gap-4 overflow-y-auto px-5 pb-5 pt-1">
+      <div className={SHEET_BODY}>
         <div className="flex items-center justify-between gap-3">
           <h2 id="lesson-form-title" className="text-lg font-semibold">
             {edit ? 'Изменить урок' : 'Новый урок'}

@@ -46,3 +46,36 @@ export async function markNotificationsRead(ids?: string[]): Promise<number> {
   if (error) throw dbError(error, 'отметить уведомления прочитанными')
   return data ?? 0
 }
+
+// ---- push и настройки (PLAN.md Ф2.9, миграция 0011) ----------------------------------
+
+/** Запомнить это устройство (или подтвердить при открытии приложения). */
+export async function savePushSubscription(keys: { endpoint: string; p256dh: string; auth: string }): Promise<void> {
+  const { error } = await supabase.rpc('save_push_subscription', { p_endpoint: keys.endpoint, p_p256dh: keys.p256dh, p_auth: keys.auth })
+  if (error) throw dbError(error, 'включить уведомления')
+}
+
+/** Забыть это устройство. */
+export async function deletePushSubscription(endpoint: string): Promise<void> {
+  const { error } = await supabase.rpc('delete_push_subscription', { p_endpoint: endpoint })
+  if (error) throw dbError(error, 'выключить уведомления')
+}
+
+/** «Напоминать о скором уроке»: строки ещё нет — включено (так по умолчанию в базе). */
+export async function loadLessonReminders(): Promise<boolean> {
+  const { data, error } = await supabase.from('notification_prefs').select('lesson_reminders').maybeSingle()
+  if (error) throw dbError(error, 'загрузить настройки уведомлений')
+  return data?.lesson_reminders ?? true
+}
+
+export async function setLessonReminders(on: boolean): Promise<void> {
+  const { error } = await supabase.rpc('set_lesson_reminders', { p_on: on })
+  if (error) throw dbError(error, 'сохранить настройку')
+}
+
+/** Учителю: у кого из учеников в приложении включены уведомления (журнал п.68). */
+export async function loadStudentsPush(): Promise<Map<string, boolean>> {
+  const { data, error } = await supabase.rpc('get_students_push')
+  if (error) throw dbError(error, 'узнать, включены ли уведомления у учеников')
+  return new Map((data ?? []).map((r) => [r.card_id, r.push === true]))
+}

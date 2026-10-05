@@ -19,7 +19,7 @@ import { Button } from '../../shared/ui/Button'
 import { IconClose } from '../../shared/ui/icons'
 import { LoadError } from '../../shared/ui/LoadError'
 import { RowsSkeleton } from '../../shared/ui/Loading'
-import { Sheet } from '../../shared/ui/Sheet'
+import { Sheet, SHEET_BODY } from '../../shared/ui/Sheet'
 import { FixRecordSheet } from './FixRecordSheet'
 
 const PAGE = 50
@@ -80,7 +80,7 @@ export function HistorySheet({
 
   return (
     <Sheet onClose={onClose} labelledBy="history-title" maxH="92dvh">
-      <div className="flex min-h-0 flex-col gap-4 overflow-y-auto px-5 pb-5 pt-1">
+      <div className={SHEET_BODY}>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h2 id="history-title" className="text-lg font-semibold">

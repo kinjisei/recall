@@ -13,7 +13,7 @@ import { ChoiceGroup } from '../../shared/ui/ChoiceGroup'
 import { DatePicker } from '../../shared/ui/DatePicker'
 import { FieldButton } from '../../shared/ui/FieldButton'
 import { IconArrowRight, IconCalendar, IconClose } from '../../shared/ui/icons'
-import { Sheet } from '../../shared/ui/Sheet'
+import { Sheet, SHEET_BODY } from '../../shared/ui/Sheet'
 
 type Choice = '4' | '8' | '12' | 'own'
 const signed = (n: number) => (n < 0 ? `−${-n}` : String(n))
@@ -64,7 +64,7 @@ export function PaySheet({
 
   return (
     <Sheet onClose={onClose} labelledBy="pay-title">
-      <div className="flex min-h-0 flex-col gap-4 overflow-y-auto px-5 pb-5 pt-1">
+      <div className={SHEET_BODY}>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h2 id="pay-title" className="text-lg font-semibold">

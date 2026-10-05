@@ -1,7 +1,8 @@
 // ============================================================================
 // Данные расписания — два слоя загрузки (PLAN.md Ф2.7):
 //   • основа — роль, тариф (можно ли писать), карточки учеников, серии,
-//     остатки, ссылка по умолчанию: читается при входе и после действий;
+//     остатки, ссылка по умолчанию, у кого включены уведомления (Ф2.9):
+//     читается при входе и после действий;
 //   • уроки — неделя на экране плюс две недели до сегодня (вопрос «остаётся
 //     заниматься?» после пробного, журнал п.30): читаются при листании.
 // Сбой связи — LoadError с «Повторить», а не пустое расписание (Ф1.13).
@@ -20,6 +21,7 @@ import {
   type Series,
 } from '../../domains/schedule'
 import { loadStudentCards, type StudentCard } from '../../domains/students'
+import { loadStudentsPush } from '../../domains/notifications'
 import { loadProfile } from '../../lib/profile'
 import { getMyPlan, type MyPlan } from '../../lib/billing'
 
@@ -30,6 +32,8 @@ export interface ScheduleBase {
   series: Series[]
   balances: LessonBalance[]
   defaultLink: string | null
+  /** Карточка → включены ли у ученика уведомления (журнал п.68). */
+  push: Map<string, boolean>
 }
 
 export function useScheduleBase(userId: string | null, version: number) {
@@ -37,16 +41,17 @@ export function useScheduleBase(userId: string | null, version: number) {
     async () => {
       const profile = userId ? await loadProfile(userId) : null
       if (profile?.role !== 'teacher') {
-        return { teacher: false, plan: null, cards: [], series: [], balances: [], defaultLink: null }
+        return { teacher: false, plan: null, cards: [], series: [], balances: [], defaultLink: null, push: new Map() }
       }
-      const [plan, cards, series, balances, defaultLink] = await Promise.all([
+      const [plan, cards, series, balances, defaultLink, push] = await Promise.all([
         getMyPlan(),
         loadStudentCards(),
         loadMySeries(),
         loadLessonBalances(),
         loadDefaultLessonLink(),
+        loadStudentsPush(),
       ])
-      return { teacher: true, plan, cards, series, balances, defaultLink }
+      return { teacher: true, plan, cards, series, balances, defaultLink, push }
     },
     [userId, version],
     'Не удалось открыть расписание',

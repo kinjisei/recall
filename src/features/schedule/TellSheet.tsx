@@ -1,9 +1,9 @@
 // ============================================================================
 // «Сообщи ученику» после переноса или отмены и «Напомнить об уроке» (макет
-// t5-4; журнал п.38, 42). Recall ученику без приложения не пишет никогда —
-// учитель пересылает сам, со своего номера. Пока Recall не пишет и ученикам в
-// приложении (до Ф2.9, `APP_TELLS_STUDENTS`), шторка предлагает написать всем
-// (решение владельца 04.10.2026). WhatsApp — сразу на номер из карточки.
+// t5-4; журнал п.38, 42, 68). Recall ученику без приложения не пишет никогда —
+// учитель пересылает сам, со своего номера. Ученику в приложении Recall пишет
+// сам (Ф2.9), поэтому здесь он только с выключенными уведомлениями: ленту
+// увидит, лишь открыв приложение. WhatsApp — сразу на номер из карточки.
 // ============================================================================
 import { contactLinks } from '../../domains/students'
 import { useCopy } from '../../shared/lib/useCopy'
@@ -11,7 +11,7 @@ import { telegramLink, whatsappLink } from '../../shared/lib/share'
 import { Button } from '../../shared/ui/Button'
 import { IconCheck, IconClose, IconCopy, IconSmartphoneOff } from '../../shared/ui/icons'
 import { SHARE_BUTTON, ShareLink } from '../../shared/ui/ShareLink'
-import { Sheet } from '../../shared/ui/Sheet'
+import { Sheet, SHEET_BODY } from '../../shared/ui/Sheet'
 
 export interface TellItem {
   cardId: string
@@ -37,7 +37,7 @@ function Item({ item, url }: { item: TellItem; url: string }) {
         {!item.inApp && <IconSmartphoneOff size={16} aria-hidden className="flex-none text-fg-muted" />}
         {/* без падежей: «Тимура нет» правилом из любого имени не получить */}
         {item.inApp
-          ? `${item.name} — уведомления об уроках в Recall пока не приходят, напиши сам`
+          ? `${item.name} — уведомления в Recall выключены, напиши сам`
           : `${item.name} — без приложения, отправь сообщение сам`}
       </p>
       <p className="whitespace-pre-line break-words rounded-xl bg-input px-4 py-3 text-sm leading-relaxed text-fg" data-tell-message>
@@ -58,7 +58,7 @@ function Item({ item, url }: { item: TellItem; url: string }) {
 export function TellSheet({ tell, onClose }: { tell: Tell; onClose: () => void }) {
   return (
     <Sheet onClose={onClose} labelledBy="tell-title">
-      <div className="flex min-h-0 flex-col gap-4 overflow-y-auto px-5 pb-5 pt-1">
+      <div className={SHEET_BODY}>
         <div className="flex items-start justify-between gap-3">
           <h2 id="tell-title" className="text-lg font-semibold">
             {tell.title}

@@ -43,6 +43,11 @@ const config = defineConfig([
     languageOptions: { globals: globals.node },
   },
   {
+    // обработчик push в service worker'е (Ф2.9) — там self, clients, registration
+    files: ['public/**/*.js'],
+    languageOptions: { globals: globals.serviceworker },
+  },
+  {
     // смоуки выполняют куски кода внутри страницы (page.evaluate) — там
     // живут document и window
     files: ['scripts/**'],

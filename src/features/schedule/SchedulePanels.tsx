@@ -3,7 +3,7 @@
 // useScheduleActions; шторка урока — по адресу (?lesson=).
 // ============================================================================
 import { almatyMinutes, defaultSlot, type Lesson, type LessonBalance, type Series } from '../../domains/schedule'
-import type { StudentCard } from '../../domains/students'
+import { provisionalCard, type StudentCard } from '../../domains/students'
 import { CardForm } from '../students'
 import { UndoToast } from '../../shared/ui/UndoToast'
 import { CancelSheet } from './CancelSheet'
@@ -118,10 +118,12 @@ export function SchedulePanels({
         <CardForm
           card={null}
           onClose={close}
-          onSaved={(id) => {
+          onSaved={(id, saved) => {
             refresh()
-            // первая карточка → сразу первый урок (t2-4: пустое состояние ведёт к обоим)
-            act.setPanel({ kind: 'form', mode: { kind: 'new', ...defaultSlot(today, today, almatyMinutes(now)), cardIds: [id] } })
+            // первая карточка → сразу первый урок (t2-4: пустое состояние ведёт к обоим);
+            // карточку отдаём форме сразу — список ещё перечитывается
+            const seed = [provisionalCard(id, saved, new Date().toISOString())]
+            act.setPanel({ kind: 'form', mode: { kind: 'new', ...defaultSlot(today, today, almatyMinutes(now)), cardIds: [id], seed } })
           }}
         />
       )}

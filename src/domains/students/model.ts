@@ -53,6 +53,25 @@ export interface StudentCard {
   holdsSeat: boolean
 }
 
+/** Что только что сохранили в форме карточки — до того, как список перечитался. */
+export interface SavedCard {
+  name: string
+  contact: string | null
+  status: CardStatus
+}
+
+/**
+ * Карточка, которой ещё нет в перечитанном списке: только что создана в
+ * форме. Экран показывает её сразу, а не «Новый ученик» на полсекунды, пока
+ * список перечитывается (форма урока после «Добавить первого ученика», Ф2.9).
+ */
+export function provisionalCard(id: string, saved: SavedCard, now: string): StudentCard {
+  return {
+    id, userId: null, name: saved.name.trim(), contact: saved.contact?.trim() || null, note: null, status: saved.status,
+    createdAt: now, updatedAt: now, inApp: false, linkedAt: null, seat: false, holdsSeat: false,
+  }
+}
+
 /** Фильтр списка (макет t6-1). «Все» — без архива. */
 export type CardFilter = 'all' | 'active' | 'trial' | 'paused' | 'archived'
 

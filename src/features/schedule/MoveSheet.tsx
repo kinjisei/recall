@@ -35,7 +35,7 @@ import {
 } from '../../domains/schedule'
 import { Button } from '../../shared/ui/Button'
 import { IconArrowRight, IconClose, IconInfo, IconWarning } from '../../shared/ui/icons'
-import { Sheet } from '../../shared/ui/Sheet'
+import { Sheet, SHEET_BODY } from '../../shared/ui/Sheet'
 import { TabPicker } from '../../shared/ui/TabPicker'
 import { LessonAvatar } from './LessonParts'
 import type { Done } from './types'
@@ -111,7 +111,7 @@ export function MoveSheet({
 
   return (
     <Sheet onClose={onClose} labelledBy="move-title">
-      <div className="flex min-h-0 flex-col gap-4 overflow-y-auto px-5 pb-5 pt-1">
+      <div className={SHEET_BODY}>
         <div className="flex items-center justify-between gap-3">
           <h2 id="move-title" className="text-lg font-semibold">
             Перенести урок

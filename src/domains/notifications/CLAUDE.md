@@ -35,7 +35,9 @@
 |---|---|
 | `model.ts` | форма уведомления, текст по виду (`renderNotification`; учителю `lessons_low` — «Тимур Ким: остался 1 оплаченный урок · Напомнить», ученику `teacher_message` — «Мадина пишет», Ф2.8) с подписью кнопки-действия (`action`), только внутренние ссылки (`safeHref`), имена тарифов (`PLAN_NAMES` — копия каталога), «когда»; push — какие виды (`PUSH_KINDS` — копия `push_kinds()`) и что показать на телефоне (`pushView`: срок доставки, один на урок). Без базы, импорты с `.js` — его читают клиент, чистый тест и сервер доставки (`api/_push.ts`) |
 | `lessonText.ts` | тексты об уроках (Ф2.9, макет u3): «Урок через час · 19:00 · Мадина Сейткали · ссылка на урок внутри», «Урок перенесён · чт, 22 окт, 19:00 → пт, 23 окт, 18:00», «Уроки по четвергам теперь в 18:00 · с 29 окт · вместо 19:00»; время — по Алматы |
-| `api.ts` | единственное место, где домен ходит в базу: лента, счёт, «прочитано» |
+| `api.ts` | единственное место, где домен ходит в базу: лента, счёт, «прочитано»; push — запомнить и забыть устройство, «Напоминать о скором уроке», учителю — у кого из учеников включены (`loadStudentsPush`) |
+| `push.ts` | push на этом устройстве: умеет ли и готово ли (`devicePush`), «Включить» / «Выключить», подтвердить подписку при входе (`syncPush` — не создаёт новую сама), забыть при выходе из аккаунта; браузерная часть — `shared/lib/push.ts` |
+| `ask.ts` | когда просить включить (`pushAsk`): только с уроками, iPhone во вкладке — инструкция, «Не сейчас» — через 14 дней и не больше двух раз |
 | `index.ts` | парадная дверь — экраны берут только отсюда |
 | база | `supabase/migrations/0002_notifications.sql`: `notifications`, `notification_prefs`, `notification_rules`, `notify()`, `run_notification_rules()`, `dispatch_notifications()`, `mark_notifications_read()`, задача `pg_cron`; `0007_access_ending.sql`: правило `access_ending`; `0011_lesson_notifications.sql`: подписки `push_subscriptions` (`save_/delete_push_subscription`, учителю — `get_students_push`), `set_lesson_reminders`, правило `lessons_soon` (`notify_lessons_soon(p_now)`), крючок `after_lessons_changed` (перенос, отмена, серия), доставка с подписками (`dispatch_payload`) и разбор ответов (`settle_dispatches`) |
 | сервер | `api/notify.ts` (вход по секрету), `api/_channels.ts` (каналы), `api/_push.ts` (push) |
@@ -107,21 +109,30 @@
   служба push держит его не дольше, чем до начала урока (TTL).
 - **Сбой крючка уроков не мешает учителю**: ошибка пишется в «Ошибки с
   прода» (`/admin`), перенос проходит. Проверка следит, что крючок не падал.
+- **Подписку при открытии приложения только подтверждаем, новую не
+  создаём** (`syncPush`): выключил в Настройках — значит выключил. Выход из
+  аккаунта забывает устройство (`forgetPushOnThisDevice` в `AuthContext`):
+  на общем телефоне уроки прежнего человека не придут следующему.
 
 ## Как проверить
 
 - `node scripts/check-notifications.mjs` — живая тестовая база: одно на
   ключ, изоляция упавшего правила, права (вошедший не пишет и не будит,
   видит только своё), доставка через `pg_net` и повтор до 3 попыток, задача
-  `pg_cron` (25 проверок). Секреты доставки возвращает как были (`_vault.mjs`).
-- `node scripts/check-lesson-notify.mjs` — уроки ученику на тестовой базе
-  (46 проверок): «урок через час» — одно, выключение, без тарифа; перенос →
+  `pg_cron`. Секреты доставки возвращает как были (`_vault.mjs`).
+- `node scripts/check-lesson-notify.mjs` — уроки ученику на тестовой базе:
+  «урок через час» — одно, выключение, без тарифа; перенос →
   одно, «Вернуть» — ничего, отмена серии — одно; без приложения — ничего;
   подписки и права; разбор ответов доставки. Краснеет на 4 поломках
   (без тарифа, склейка, серия, удаление мёртвых подписок).
 - `node scripts/test-push.mjs` (чистый, в CI) — тексты по макету u3, копия
   видов = миграция, канал push: тест сам расшифровывает отправленное, как
   телефон (RFC 8291), и проверяет подпись VAPID; ответы службы.
+- `node scripts/test-my-lessons.mjs` (чистый, в CI) — когда просить включить
+  уведомления (`ask.ts`).
+- `node scripts/push-tunnel.mjs` → `node scripts/smoke-push-live.mjs <адрес>` —
+  весь путь по-настоящему: тестовая база → туннель → наш сервер → служба push
+  браузера → уведомление на экране; живой телефон — по тому же туннелю.
 - `node scripts/test-notifications.mjs` — модель: тексты (и оплаты: имя,
   срок по Алматы, кривые данные; «закончится завтра» с кнопкой), ссылки,
   копия имён тарифов = каталог, «когда» (чистый, в CI).
@@ -153,8 +164,9 @@
 <!-- Пишет `npm run gen:docs` (scripts/gen/module-docs.mjs) по коду — руками не править. -->
 ## Из кода (сгенерировано)
 
-- **Файлы:** `api.ts`, `index.ts`, `lessonText.ts`, `model.ts`
-- **Таблицы:** `notifications`
-- **RPC:** `mark_notifications_read`
-- **Кто использует (импортом):** `api`, `features/notifications`
+- **Файлы:** `api.ts`, `ask.ts`, `index.ts`, `lessonText.ts`, `model.ts`, `push.ts`
+- **Таблицы:** `notification_prefs`, `notifications`
+- **RPC:** `delete_push_subscription`, `get_students_push`, `mark_notifications_read`, `save_push_subscription`, `set_lesson_reminders`
+- **localStorage:** `recall.push.asked`
+- **Кто использует (импортом):** `api`, `app`, `context`, `features/lessons`, `features/notifications`, `features/schedule`, `features/settings`
 <!-- generated:end -->

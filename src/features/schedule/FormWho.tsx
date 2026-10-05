@@ -5,7 +5,7 @@
 // пробного урока). Пауза и архив в урок не берутся — их отклонит и база.
 // ============================================================================
 import { useState } from 'react'
-import { createStudentCard, matchesQuery, type StudentCard } from '../../domains/students'
+import { createStudentCard, matchesQuery, provisionalCard, type StudentCard } from '../../domains/students'
 import type { LessonKind } from '../../domains/schedule'
 import { Avatar } from '../students'
 import { Button } from '../../shared/ui/Button'
@@ -26,8 +26,7 @@ function NewStudent({ kind, onCreated, onCancel }: { kind: LessonKind; onCreated
     const status = kind === 'trial' ? 'trial' : 'active'
     try {
       const id = await createStudentCard({ name, contact, note: '', status })
-      const now = new Date().toISOString()
-      onCreated({ id, userId: null, name: name.trim(), contact: contact.trim() || null, note: null, status, createdAt: now, updatedAt: now, inApp: false, linkedAt: null, seat: false, holdsSeat: false })
+      onCreated(provisionalCard(id, { name, contact, status }, new Date().toISOString()))
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Не удалось добавить ученика')
       setBusy(false)

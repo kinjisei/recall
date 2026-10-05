@@ -14,6 +14,8 @@
 //
 // Над стартовым экраном и студией — плашка «Тариф закончился — продлить»
 // (PLAN.md Ф2.4; где — navigation.ts, что сказать — features/billing).
+// Push (Ф2.9): подписка этого устройства и переход по нажатию на уведомление —
+// usePushBridge.
 // ============================================================================
 import { useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
@@ -27,6 +29,7 @@ import { BottomNav } from './BottomNav'
 import { SideNav } from './SideNav'
 import { TopBar } from './TopBar'
 import { useMyRole } from './useMyRole'
+import { usePushBridge } from './usePushBridge'
 
 /** Меню компьютера — 15rem (w-60 в SideNav, pl-60 ниже) слева; снизу ничего нет. */
 const DESKTOP_INSETS: ShellInsets = { left: '15rem', bottom: '0px', bottomPx: 0 }
@@ -42,6 +45,7 @@ export function Layout() {
   const role = useMyRole()
   const { pathname } = useLocation()
   const banner = !focus && role && showsAccessBanner(pathname, role) ? role : null
+  usePushBridge()
 
   return (
     <FocusModeContext.Provider value={setFocus}>

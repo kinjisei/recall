@@ -23,10 +23,19 @@ import { getMyPlans, isProgramSeen } from '../../lib/studyPlan'
 import { getMyPlan, type MyPlan } from '../../lib/billing'
 import { settleAll } from '../../shared/lib/settleAll'
 import { loadAssignmentCounts, type AssignmentCounts } from '../teacher'
+import { HOME_LESSONS_AHEAD_DAYS, loadMyLessons, type MyLesson } from '../../domains/schedule'
 import type { Profile, StudyPlan } from '../../types'
 
 /** Через сколько показать рамку, даже если не все входы пришли. */
 const FIRST_FRAME_GUARD_MS = 4000
+const HOUR_MS = 3_600_000
+
+/**
+ * Уроки ученика для карточки «Ближайший урок» (Ф2.9): от 8 часов назад (урок
+ * длиной до 8 ч может идти прямо сейчас) до двух недель вперёд.
+ */
+const homeLessons = () =>
+  loadMyLessons(new Date(Date.now() - 8 * HOUR_MS), new Date(Date.now() + HOME_LESSONS_AHEAD_DAYS * 24 * HOUR_MS))
 
 export interface HomeData {
   profile: Profile | null
@@ -42,6 +51,8 @@ export interface HomeData {
   myPlan: MyPlan | null
   /** Программа, которую ученик ещё не открывал (флаг recall.program_seen.<id>). */
   newProgram: StudyPlan | null
+  /** Уроки на ближайшие две недели; null — не загрузились (карточки нет, плашка о связи). */
+  lessons: MyLesson[] | null
 }
 
 export interface HomeLoad {
@@ -77,6 +88,7 @@ export function useHomeData(userId: string | undefined): HomeLoad {
       // тариф и энергия: функция сама отдаёт null при сбое — полоска просто не покажется
       plan: () => getMyPlan(),
       programs: () => getMyPlans(),
+      lessons: homeLessons,
     }).then(({ values: v, failed: lost }) => {
       if (!alive) return
       const planOk = !lost.includes('dailyCfg') && !lost.includes('quests') && !lost.includes('assignments')
@@ -96,6 +108,7 @@ export function useHomeData(userId: string | undefined): HomeLoad {
               return false
             }
           }) ?? null,
+        lessons: v.lessons,
       }
       window.clearTimeout(guard)
       setResult({ key, data, failed: lost.length })

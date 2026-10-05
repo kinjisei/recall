@@ -36,7 +36,7 @@ export const ROLE_NAV_ENABLED = false
 // Без `also` заход в грамматику или задания гасил всю навигацию — человек
 // оказывался «нигде»: ни одна вкладка не была активной.
 export const STUDENT_TABS: NavTab[] = [
-  { to: '/', label: 'Главная', icon: 'home', end: true, also: ['/progress', '/settings', '/teacher', '/schedule', '/admin'] },
+  { to: '/', label: 'Главная', icon: 'home', end: true, also: ['/progress', '/settings', '/teacher', '/schedule', '/lessons', '/admin'] },
   {
     to: '/study',
     label: 'Учёба',

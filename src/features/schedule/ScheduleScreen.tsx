@@ -55,6 +55,7 @@ export function ScheduleScreen({ base, version, refresh }: { base: ScheduleBase;
   const inApp = (id: string) => cards.get(id)?.inApp === true
   const act = useScheduleActions({
     cards,
+    push: base.push,
     refresh,
     goToDay: (d) => url.goTo(d),
     closeLesson: url.closeLesson,

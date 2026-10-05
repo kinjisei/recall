@@ -1,8 +1,6 @@
 {
   "about": "Сторож размера (scripts/checks/size.mjs): файлы больше 400 строк и компоненты больше 250 строк на момент появления сторожа. Число — планка: до переезда раздела (PLAN.md Ф3) файл не растёт (решение владельца 27.09.2026), при переезде режется до лимита.",
   "items": {
-    "src/features/dashboard/DashboardPage.tsx": 527,
-    "src/features/dashboard/DashboardPage.tsx#DashboardPage": 251,
     "src/features/flashcards/DeckReview.tsx#DeckReview": 263,
     "src/features/grammar/ConjugationSection.tsx": 474,
     "src/features/grammar/GrammarPage.tsx": 638,

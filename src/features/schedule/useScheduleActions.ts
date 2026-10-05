@@ -1,6 +1,7 @@
 // ============================================================================
 // Действия расписания и их последствия: тост «… · Вернуть», «Сообщи
-// ученику» (кому — whoToTell: до Ф2.9 всем, потом — только без приложения),
+// ученику» (кому — whoToTell: тем, до кого Recall не достаёт сам — без
+// приложения или с выключенными уведомлениями, журнал п.68),
 // переход к дню урока, перечитать после записи. Шторки только сообщают, что
 // сделали (Done), — что показать дальше, решает здесь одно место.
 // ============================================================================
@@ -38,11 +39,14 @@ const message = (e: unknown, fallback: string) => (e instanceof Error ? e.messag
 
 export function useScheduleActions({
   cards,
+  push,
   refresh,
   goToDay,
   closeLesson,
 }: {
   cards: Map<string, StudentCard>
+  /** Карточка → включены ли у ученика уведомления. */
+  push: Map<string, boolean>
   refresh: () => void
   goToDay: (day: string) => void
   closeLesson: () => void
@@ -60,7 +64,7 @@ export function useScheduleActions({
   const tellOf = (t: NonNullable<Done['tell']>): Tell | null => {
     const people = whoToTell(
       t.cardIds.map((cardId) => ({ cardId, card: cards.get(cardId) })),
-      (id) => cards.get(id)?.inApp === true,
+      (id) => cards.get(id)?.inApp === true && push.get(id) === true,
     ).filter((x): x is { cardId: string; card: StudentCard } => !!x.card)
     if (!people.length) return null
     return {

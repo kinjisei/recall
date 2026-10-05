@@ -32,6 +32,7 @@
 | `ErrorBoundary.tsx` | сбой отрисовки → понятный экран вместо белого; без сети не скачанный раздел — «Нет интернета», а не «Что-то пошло не так» |
 | `ScrollToTop.tsx`, `PageTracker.tsx` | прокрутка вверх при смене адреса; учёт посещений |
 | `shell/Layout.tsx` | общая рамка по ширине экрана: телефон — `TopBar` + `BottomNav`, компьютер — `SideNav`; колонка экрана или ширина страницы (`screenWidth`); режим раунда; геометрия каркаса для экранов (`shellInsets`); над стартовым экраном, студией и расписанием — плашка «Тариф закончился» (`features/billing`, PLAN.md Ф2.4, Ф2.7) |
+| `shell/usePushBridge.ts` | push (Ф2.9): вошёл — подтвердить подписку этого устройства (новую не создаёт); нажали на уведомление при открытом приложении — перейти по его адресу без перезагрузки (сообщение из `public/push-sw.js`) |
 | `shell/SideNav.tsx` | меню компьютера слева: логотип, вкладки со скользящей подложкой, внизу аватар, колокольчик и EN/ES |
 | `shell/TopBar.tsx`, `shell/AvatarMenu.tsx`, `shell/LangSwitch.tsx` | шапка телефона (EN/ES, колокольчик уведомлений — `features/notifications`, только когда они есть, подарок-рефералка у репетитора — `features/referral`, аватар); меню профиля (вниз — в шапке, вверх — в панели; у репетитора — метка пробного и «Тариф · Выбрать» на «Как оплатить», макет t9-1); EN/ES |
 | `navigation.ts` | **меню по роли**: наборы вкладок ученика и учителя, какая вкладка активна на каком адресе; выключатель `ROLE_NAV_ENABLED`; где плашка «Тариф закончился» (`showsAccessBanner`) |
@@ -231,7 +232,7 @@
 <!-- Пишет `npm run gen:docs` (scripts/gen/module-docs.mjs) по коду — руками не править. -->
 ## Из кода (сгенерировано)
 
-- **Файлы:** `App.tsx`, `AppProviders.tsx`, `AuthWait.tsx`, `BlockedScreen.tsx`, `ErrorBoundary.tsx`, `main.tsx`, `navigation.ts`, `PageTracker.tsx`, `ProtectedRoute.tsx`, `RoleGate.tsx`, `routeChunks.ts`, `routes.ts`, `ScrollToTop.tsx`, `shell/AvatarMenu.tsx`, `shell/BottomNav.tsx`, `shell/LangSwitch.tsx`, `shell/Layout.tsx`, `shell/navIcons.ts`, `shell/SideNav.tsx`, `shell/TopBar.tsx`, `shell/useMyRole.ts`, `shell/useNavTabs.ts`
+- **Файлы:** `App.tsx`, `AppProviders.tsx`, `AuthWait.tsx`, `BlockedScreen.tsx`, `ErrorBoundary.tsx`, `main.tsx`, `navigation.ts`, `PageTracker.tsx`, `ProtectedRoute.tsx`, `RoleGate.tsx`, `routeChunks.ts`, `routes.ts`, `ScrollToTop.tsx`, `shell/AvatarMenu.tsx`, `shell/BottomNav.tsx`, `shell/LangSwitch.tsx`, `shell/Layout.tsx`, `shell/navIcons.ts`, `shell/SideNav.tsx`, `shell/TopBar.tsx`, `shell/useMyRole.ts`, `shell/useNavTabs.ts`, `shell/usePushBridge.ts`
 - **localStorage:** `recall.chunk_reload_at`
 - **Кто использует (импортом):** никто
 <!-- generated:end -->

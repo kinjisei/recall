@@ -8,8 +8,6 @@ export {
   loadCardHistory,
   loadDefaultLessonLink,
   loadLessonBalances,
-  loadMyLessonBalances,
-  loadMyLessons,
   loadMySeries,
   loadSchedule,
   markParticipant,
@@ -22,6 +20,7 @@ export {
   type LessonInput,
   type SeriesInput,
 } from './api'
+export { loadMyLessonBalances, loadMyLessons } from './api.student'
 export {
   almatyInstant,
   almatyMinutes,
@@ -138,3 +137,21 @@ export {
   type SeriesKind,
   type SeriesRule,
 } from './model'
+export {
+  HOME_LESSONS_AHEAD_DAYS,
+  MY_LESSONS_AHEAD_DAYS,
+  MY_LESSONS_BACK_DAYS,
+  balanceLines,
+  canJoin,
+  cardPhase,
+  cardTitle,
+  dateTile,
+  isGroup,
+  joinLessonId,
+  lessonNote,
+  nextLesson,
+  splitMyLessons,
+  whenLabel as myLessonWhen,
+  whoLabel,
+  type CardPhase,
+} from './student'

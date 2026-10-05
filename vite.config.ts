@@ -1,4 +1,7 @@
-import { defineConfig, loadEnv, type Plugin } from 'vite'
+import { createHash } from 'node:crypto'
+import { readFileSync } from 'node:fs'
+import type { IncomingMessage, ServerResponse } from 'node:http'
+import { defineConfig, loadEnv, type Logger, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
@@ -32,54 +35,60 @@ type ApiHandler = (req: VercelRequest, res: VercelResponse) => unknown
  * энергию на ЖИВОЙ базе, `npm run dev:test` — на тестовой.
  */
 function vercelRoute(path: string, handler: ApiHandler, needs?: string): Plugin {
+  const middleware = (logger: Logger) => (req: IncomingMessage, res: ServerResponse) => {
+    const chunks: Buffer[] = []
+    req.on('data', (chunk: Buffer) => chunks.push(chunk))
+    req.on('end', () => {
+      const raw = Buffer.concat(chunks).toString()
+      let body: unknown
+      try {
+        body = raw ? JSON.parse(raw) : undefined
+      } catch {
+        res.statusCode = 400 // как Vercel на кривой JSON
+        res.end('Invalid JSON')
+        return
+      }
+      const vreq: VercelRequest = Object.assign(req, { body, query: {}, cookies: {} })
+      const vres: VercelResponse = Object.assign(res, {
+        status(code: number) {
+          res.statusCode = code
+          return vres
+        },
+        json(value: unknown) {
+          res.setHeader('Content-Type', 'application/json; charset=utf-8')
+          res.end(JSON.stringify(value))
+          return vres
+        },
+        send(value: unknown) {
+          res.end(typeof value === 'string' || Buffer.isBuffer(value) ? value : JSON.stringify(value))
+          return vres
+        },
+        redirect(statusOrUrl: string | number, url?: string) {
+          res.statusCode = typeof statusOrUrl === 'number' ? statusOrUrl : 307
+          res.setHeader('Location', url ?? String(statusOrUrl))
+          res.end()
+          return vres
+        },
+      })
+      Promise.resolve(handler(vreq, vres)).catch((e: unknown) => {
+        logger.error(`${path}: ${e instanceof Error ? e.stack : String(e)}`)
+        if (!res.headersSent) {
+          res.statusCode = 500
+          res.end(JSON.stringify({ error: 'Сбой обработчика в dev — смотри терминал.' }))
+        } else res.destroy()
+      })
+    })
+  }
   return {
     name: `vercel-route:${path}`,
     configureServer(server) {
-      server.middlewares.use(path, (req, res) => {
-        const chunks: Buffer[] = []
-        req.on('data', (chunk: Buffer) => chunks.push(chunk))
-        req.on('end', () => {
-          const raw = Buffer.concat(chunks).toString()
-          let body: unknown
-          try {
-            body = raw ? JSON.parse(raw) : undefined
-          } catch {
-            res.statusCode = 400 // как Vercel на кривой JSON
-            res.end('Invalid JSON')
-            return
-          }
-          const vreq: VercelRequest = Object.assign(req, { body, query: {}, cookies: {} })
-          const vres: VercelResponse = Object.assign(res, {
-            status(code: number) {
-              res.statusCode = code
-              return vres
-            },
-            json(value: unknown) {
-              res.setHeader('Content-Type', 'application/json; charset=utf-8')
-              res.end(JSON.stringify(value))
-              return vres
-            },
-            send(value: unknown) {
-              res.end(typeof value === 'string' || Buffer.isBuffer(value) ? value : JSON.stringify(value))
-              return vres
-            },
-            redirect(statusOrUrl: string | number, url?: string) {
-              res.statusCode = typeof statusOrUrl === 'number' ? statusOrUrl : 307
-              res.setHeader('Location', url ?? String(statusOrUrl))
-              res.end()
-              return vres
-            },
-          })
-          Promise.resolve(handler(vreq, vres)).catch((e: unknown) => {
-            server.config.logger.error(`${path}: ${e instanceof Error ? e.stack : String(e)}`)
-            if (!res.headersSent) {
-              res.statusCode = 500
-              res.end(JSON.stringify({ error: 'Сбой обработчика в dev — смотри терминал.' }))
-            } else res.destroy()
-          })
-        })
-      })
+      server.middlewares.use(path, middleware(server.config.logger))
       if (needs && !process.env[needs]) server.config.logger.warn(`${needs} нет в .env.local — ${path} в dev не ответит`)
+    },
+    // собранное приложение (vite preview) — тоже: туннель к телефону ведёт на
+    // него, у dev-сервера нет service worker'а, а без него нет push (Ф2.9)
+    configurePreviewServer(server) {
+      server.middlewares.use(path, middleware(server.config.logger))
     },
   }
 }
@@ -97,8 +106,22 @@ export default defineConfig(({ mode }) => {
   // трогаем: dev:test подменяет адрес базы на тестовую именно так.
   for (const key of SERVER_ENV) if (process.env[key] === undefined && env[key]) process.env[key] = env[key]
   const precache = startupPrecache()
+  // Обработчик push (Ф2.9) — в sw.js через importScripts, с отпечатком
+  // содержимого: поменялся файл — поменялся sw.js, и браузер обновит его.
+  const pushSw = `/push-sw.js?v=${createHash('sha256').update(readFileSync('public/push-sw.js')).digest('hex').slice(0, 12)}`
 
   return {
+    build: {
+      rolldownOptions: {
+        // Домены — чистые правила без действий при загрузке (архитектура §1).
+        // Без этой пометки сборщик обязан выполнить всё, что перечисляет
+        // «дверь» домена (index.ts), там, где она нужна впервые: Главная
+        // берёт из domains/schedule уроки ученика (Ф2.9) — и в стартовый
+        // бандл каждого ученика уезжал весь учительский код расписания
+        // (+37 КБ). Остальные модули сборщик проверяет как прежде.
+        treeshake: { moduleSideEffects: [{ test: /[\\/]src[\\/]domains[\\/]/, sideEffects: false }] },
+      },
+    },
     plugins: [
       react(),
       tailwindcss(),
@@ -121,6 +144,7 @@ export default defineConfig(({ mode }) => {
           // Цена: перезагрузка стирает набранный, но не отправленный текст.
           skipWaiting: true,
           clientsClaim: true,
+          importScripts: [pushSw],
           // не отдавать /api/* из офлайн-кэша SPA (иначе прокси ломается офлайн)
           navigateFallbackDenylist: [/^\/api\//],
           // Офлайн-кэш (precache) = стили, шрифты, картинки и СТАРТОВЫЙ ГРАФ:

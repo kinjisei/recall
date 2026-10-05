@@ -5,7 +5,7 @@
 // страницу, а заметка бывает длинной.
 // ============================================================================
 import { useState, type FormEvent } from 'react'
-import { createStudentCard, updateStudentCard, type StudentCard } from '../../domains/students'
+import { createStudentCard, updateStudentCard, type SavedCard, type StudentCard } from '../../domains/students'
 import { useDraftForm } from '../../shared/lib/useDraft'
 import { Button } from '../../shared/ui/Button'
 import { ChoiceGroup } from '../../shared/ui/ChoiceGroup'
@@ -30,8 +30,8 @@ export function CardForm({
   /** null — новый ученик. */
   card: StudentCard | null
   onClose: () => void
-  /** Сохранено: id карточки (новой или изменённой). */
-  onSaved: (id: string) => void
+  /** Сохранено: id карточки (новой или изменённой) и что сохранили — список ещё не перечитан. */
+  onSaved: (id: string, saved: SavedCard) => void
 }) {
   const [form, field, draft] = useDraftForm(card ? `student-card:${card.id}` : 'student-card:new', {
     name: card?.name ?? '',
@@ -53,7 +53,7 @@ export function CardForm({
       const id = card ? card.id : await createStudentCard({ ...input, status: form.status })
       if (card) await updateStudentCard(card.id, input)
       draft.forget()
-      onSaved(id)
+      onSaved(id, { name: form.name, contact: form.contact || null, status: card ? card.status : form.status })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Не удалось сохранить')
       setBusy(false)

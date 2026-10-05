@@ -29,7 +29,7 @@ import {
 import { Button } from '../../shared/ui/Button'
 import { ChoiceGroup } from '../../shared/ui/ChoiceGroup'
 import { IconClose, IconInfo, IconWarning } from '../../shared/ui/icons'
-import { Sheet } from '../../shared/ui/Sheet'
+import { Sheet, SHEET_BODY } from '../../shared/ui/Sheet'
 import { TabPicker } from '../../shared/ui/TabPicker'
 import { LessonAvatar } from './LessonParts'
 import type { Done } from './types'
@@ -92,7 +92,7 @@ export function CancelSheet({
 
   return (
     <Sheet onClose={onClose} labelledBy="cancel-title">
-      <div className="flex min-h-0 flex-col gap-4 overflow-y-auto px-5 pb-5 pt-1">
+      <div className={SHEET_BODY}>
         <div className="flex items-center justify-between gap-3">
           <h2 id="cancel-title" className="text-lg font-semibold">
             Отменить урок

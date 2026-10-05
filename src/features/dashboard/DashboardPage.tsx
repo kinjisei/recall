@@ -1,48 +1,43 @@
 // ============================================================================
 // Главная в теме «Nocturne».
-// Порядок: приветствие → стрик-герой (с неделей) → новое задание учителя →
-// «Начать занятие» → план на сегодня → слово дня → сданное задание/учитель.
+// Порядок: приветствие → ближайший урок (Ф2.9, макет u1) → стрик-герой (с
+// неделей) → новое задание учителя → «Начать занятие» → план на сегодня →
+// слово дня → сданное задание/учитель. За 10 минут до урока и во время него
+// главное — «Войти в урок», «Начать занятие» становится второстепенной (u1-2).
 // Данные берём из уже существующих источников: activity_log (стрик, неделя,
 // сделанное сегодня) и FSRS (карточки к повторению, слово дня).
 // ============================================================================
 import { useEffect, useMemo, useState } from 'react'
-import { createPortal } from 'react-dom'
-import { useNavigate } from 'react-router-dom'
 import {
-  IconFlame,
-  IconArrowRight,
   IconGap,
   IconCheck,
   IconMic,
   IconDialog,
   IconHint,
-  IconPlus,
-  IconSpeaker,
-  IconClose,
   IconCards,
   IconRows,
   type IconLike,
 } from '../../shared/ui/icons'
-import { Button } from '../../shared/ui/Button'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
-import { logActivity, type WeekDay } from '../../lib/activity'
+import { logActivity } from '../../lib/activity'
 import { buildTodayPlan, isPerfectDay } from '../../lib/dailyPlan'
 import { countDueCards } from '../../lib/fsrs'
 import { cachedWordOfDay, newWordOfDay, type PoolItem } from '../../lib/wordPool'
-import { addCard, countMyWords } from '../../lib/cards'
+import { countMyWords } from '../../lib/cards'
 import { getEsLevel } from '../../lib/esLevel'
 import { EnergyBar } from '../../components/EnergyBar'
-import { startGuidedRoute } from '../../lib/guided'
-import { speak } from '../../lib/speech'
 import { RowCard } from '../../shared/ui/RowCard'
 import { HowItWorks } from '../../shared/ui/HowItWorks'
 import { HOW_IT_WORKS } from '../../data/howItWorks'
 import { AssignmentsNotice, TeacherBlock } from '../teacher'
 import { LoadError } from '../../shared/ui/LoadError'
+import { LessonPushAsk, NextLessonCard, useNextLesson } from '../lessons'
 import { useHomeData } from './useHomeData'
+import { StreakHero } from './StreakHero'
+import { WordOfDay } from './WordOfDay'
+import { StartButton } from './StartButton'
 import type { ActivityType } from '../../types'
-import { AppLink } from '../../shared/ui/AppLink'
 
 /** Иконки пунктов плана дня (сами пункты строит lib/dailyPlan). */
 const PLAN_ICONS: Record<string, IconLike> = {
@@ -58,9 +53,10 @@ const PLAN_ICONS: Record<string, IconLike> = {
 export function DashboardPage() {
   const { user } = useAuth()
   const { lang } = useLanguage()
-  const navigate = useNavigate()
   // первый кадр: все входы разом, без выдуманных нулей при сбое связи (useHomeData)
   const { data: home, ready, failed, reload } = useHomeData(user?.id)
+  // ближайший урок ученика (Ф2.9): за 10 минут до начала — главное на экране
+  const next = useNextLesson(home?.lessons ?? null)
   const profile = home?.profile ?? null
   const assignments = home?.assignments ?? null
   const planInputs = home?.planInputs ?? null
@@ -195,6 +191,10 @@ export function DashboardPage() {
         />
       )}
 
+      {/* 1в. Ближайший урок и просьба включить уведомления (Ф2.9, макеты u1, u3) */}
+      {next.lesson && <NextLessonCard lesson={next.lesson} urgent={next.urgent} now={next.now} />}
+      <LessonPushAsk hasLessons={next.lesson !== null} />
+
       {/* 2. Стрик-герой (скелетон, пока не пришёл activity_log — чтобы не мигать «0»;
           не пришёл совсем — героя нет: серию мы не знаем) */}
       {!home ? (
@@ -224,22 +224,8 @@ export function DashboardPage() {
         />
       )}
 
-      {/* 4. Начать занятие. Куда вести — решаем ДО перехода, иначе хаб
-          «Практика» открывается зря и через несколько секунд сам меняется
-          под пальцем (замер ревью 1А). */}
-      <button
-        onClick={() => void startGuidedRoute(lang).then((r) => navigate(r))}
-        className="lift animate-fade-up flex h-[58px] items-center justify-center gap-2.5 rounded-2xl border border-accent-line bg-linear-[135deg] from-cta to-cta-end font-medium text-fg shadow-raised"
-        style={{ animationDelay: '.12s' }}
-      >
-        <IconArrowRight size={22} className="text-accent-soft-fg" />
-        <span className="flex flex-col items-start leading-tight">
-          Начать занятие
-          <span className="text-[11px] font-normal text-fg-muted">
-            ~15 минут · слова → чтение → речь
-          </span>
-        </span>
-      </button>
+      {/* 4. Начать занятие — за 10 минут до урока второстепенная (u1-2) */}
+      <StartButton lang={lang} afterLesson={next.urgent} />
 
       {/* 5. План на сегодня: пункты от учителя или умный дефолт (lib/dailyPlan).
           Входы не пришли — плана не показываем: дефолт мог бы разойтись с учительским. */}
@@ -333,195 +319,5 @@ function HomeSkeleton() {
         </div>
       </section>
     </div>
-  )
-}
-
-function StreakHero({
-  streak,
-  week,
-  didToday,
-  perfect = false,
-}: {
-  streak: number
-  week: WeekDay[]
-  didToday: boolean
-  /** Все пункты плана дня выполнены — пламя «золотое». */
-  perfect?: boolean
-}) {
-  const hint = perfect
-    ? 'Идеальный день: весь план выполнен ✦'
-    : didToday
-    ? 'Сегодня засчитано — так держать!'
-    : streak > 0
-      ? 'Позанимайся, чтобы не потерять серию'
-      : 'Занимайся каждый день — серия растёт'
-
-  return (
-    // Фон и пятно — токены hero-* (в тёмной — прежние цвета, в светлой —
-    // бледно-лавандовая карточка с тенью); форма градиента та же, что была.
-    <div
-      className="animate-fade-up relative overflow-hidden rounded-3xl border border-accent/25 bg-radial-[140%_160%_at_15%_0%] from-hero via-hero-mid via-55% to-hero-edge p-5 shadow-card"
-      style={{ animationDelay: '.06s' }}
-    >
-      {/* размытое акцентное пятно справа-сверху */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -right-10 -top-14 h-40 w-40 rounded-full bg-radial-[circle] from-hero-glow to-transparent to-70% blur-3xl"
-      />
-
-      <div className="relative flex items-start justify-between gap-3">
-        <div>
-          <p className="text-sm text-fg-tertiary">Серия дней подряд</p>
-          <p className="mt-1.5 flex items-center gap-2.5">
-            <IconFlame
-              size={34}
-              className={`animate-flame ${perfect ? 'text-warning-strong' : 'text-accent-soft-fg'}`}
-            />
-            <span className="animate-pop-in text-4xl font-medium tabular-nums">{streak}</span>
-          </p>
-        </div>
-        <p className="max-w-[48%] pt-1 text-right text-sm leading-snug text-fg-tertiary">
-          {hint}
-        </p>
-      </div>
-
-      {/* неделя: 7 полосок */}
-      <div className="relative mt-5 flex items-end gap-1.5">
-        {week.map((d, i) => (
-          <div key={d.day} className="flex flex-1 flex-col items-center gap-1.5">
-            <span
-              className={`animate-grow-bar h-1.5 w-full rounded-full ${
-                d.active ? 'bg-accent' : 'bg-tint/[0.09]'
-              } ${d.isToday && !d.active ? 'ring-1 ring-accent-line' : ''}`}
-              // заметный каскад слева направо: пн → вт → ср → …
-              style={{ animationDelay: `${0.2 + i * 0.12}s` }}
-            />
-            <span
-              className={`text-[10px] ${
-                d.isToday ? 'text-accent-strong' : 'text-fg-muted'
-              }`}
-            >
-              {d.label}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      <AppLink
-        to="/progress"
-        className="relative mt-3 inline-flex min-h-[44px] items-center gap-1 text-sm text-accent-strong hover:underline"
-      >
-        Мой прогресс <IconArrowRight size={14} />
-      </AppLink>
-    </div>
-  )
-}
-
-function WordOfDay({ word, lang }: { word: PoolItem; lang: 'en' | 'es' }) {
-  const [open, setOpen] = useState(false)
-  const [state, setState] = useState<'idle' | 'busy' | 'added' | 'error'>('idle')
-
-  const add = async () => {
-    if (state === 'busy' || state === 'added') return
-    setState('busy')
-    try {
-      await addCard({
-        front: word.term,
-        back: word.translation,
-        example: word.example,
-        lang,
-        source: 'manual',
-      })
-      setState('added')
-    } catch {
-      setState('error')
-    }
-  }
-
-  return (
-    <>
-      {/* Вся строка — кнопка: тап открывает окно со словом (стрелка-подсказка) */}
-      <button
-        onClick={() => setOpen(true)}
-        className="lift animate-fade-up flex w-full items-center gap-3.5 rounded-2xl border border-tint/[0.08] bg-surface px-4 py-3.5 text-left shadow-card"
-        style={{ animationDelay: '.45s' }}
-      >
-        <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-accent-soft text-accent-soft-fg">
-          <IconHint size={20} />
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-[10px] uppercase tracking-wider text-fg-muted">
-            Слово дня
-          </p>
-          <p className="truncate text-[15px] font-medium">
-            {word.term}
-            <span className="text-fg-muted"> — {word.translation}</span>
-          </p>
-        </div>
-        <IconArrowRight size={18} className="flex-none text-fg-muted" />
-      </button>
-
-      {open &&
-        createPortal(
-          <div
-            className="fixed inset-0 z-50 flex items-end justify-center bg-scrim/60 sm:items-center"
-            onClick={() => setOpen(false)}
-          >
-            <div
-              className="animate-fade-up w-full rounded-t-3xl border border-tint/[0.08] bg-surface p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] sm:max-w-sm sm:rounded-3xl sm:pb-5"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-start justify-between">
-                <p className="text-[10px] uppercase tracking-wider text-fg-muted">
-                  Слово дня
-                </p>
-                <button
-                  onClick={() => setOpen(false)}
-                  aria-label="Закрыть"
-                  className="lift -mr-2 -mt-2 flex h-11 w-11 items-center justify-center rounded-full text-fg-muted"
-                >
-                  <IconClose size={20} />
-                </button>
-              </div>
-              <p className="mt-1 text-2xl font-semibold">{word.term}</p>
-              <p className="text-fg-secondary">{word.translation}</p>
-              {word.example && (
-                <p className="mt-3 rounded-xl bg-tint/[0.04] px-3 py-2 text-sm italic leading-relaxed text-fg-secondary">
-                  {word.example}
-                </p>
-              )}
-              <div className="mt-4 flex gap-2">
-                <Button
-                  variant="secondary"
-                  className="flex-1"
-                  onClick={() => speak(word.term, { lang })}
-                >
-                  <IconSpeaker size={18} /> Послушать
-                </Button>
-                <Button
-                  className="flex-1"
-                  onClick={add}
-                  loading={state === 'busy'}
-                  disabled={state === 'added'}
-                >
-                  {state === 'added' ? (
-                    <>
-                      <IconCheck size={18} /> В колоде
-                    </>
-                  ) : (
-                    <>
-                      <IconPlus size={18} /> В колоду
-                    </>
-                  )}
-                </Button>
-              </div>
-              {state === 'error' && (
-                <p className="mt-2 text-xs text-danger-strong">Не удалось добавить — попробуй ещё раз</p>
-              )}
-            </div>
-          </div>,
-          document.body,
-        )}
-    </>
   )
 }

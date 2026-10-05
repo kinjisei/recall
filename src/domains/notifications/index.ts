@@ -1,5 +1,12 @@
 // Парадная дверь домена уведомлений (архитектура §2): экраны берут отсюда.
-export { loadNotifications, markNotificationsRead, notificationCounts } from './api'
+export {
+  loadLessonReminders,
+  loadNotifications,
+  loadStudentsPush,
+  markNotificationsRead,
+  notificationCounts,
+  setLessonReminders,
+} from './api'
 export {
   renderNotification,
   safeHref,
@@ -8,3 +15,14 @@ export {
   type AppNotification,
   type NotificationView,
 } from './model'
+export { pushAsk, type PushAsk } from './ask'
+export {
+  askMemory,
+  devicePush,
+  disablePush,
+  enablePush,
+  forgetPushOnThisDevice,
+  rememberPostponed,
+  syncPush,
+  type DevicePush,
+} from './push'

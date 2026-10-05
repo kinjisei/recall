@@ -15,7 +15,7 @@ import { Button } from '../../shared/ui/Button'
 import { DraftRestored } from '../../shared/ui/DraftRestored'
 import { IconClose, IconSmartphone } from '../../shared/ui/icons'
 import { ShareLink } from '../../shared/ui/ShareLink'
-import { Sheet } from '../../shared/ui/Sheet'
+import { Sheet, SHEET_BODY } from '../../shared/ui/Sheet'
 
 export function RemindSheet({
   card,
@@ -60,7 +60,7 @@ export function RemindSheet({
 
   return (
     <Sheet onClose={onClose} labelledBy="remind-title">
-      <div className="flex min-h-0 flex-col gap-4 overflow-y-auto px-5 pb-5 pt-1">
+      <div className={SHEET_BODY}>
         <div className="flex items-center justify-between gap-3">
           <h2 id="remind-title" className="text-lg font-semibold">
             Напомнить: {card.name}

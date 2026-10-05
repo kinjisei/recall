@@ -7,6 +7,7 @@
 import { useEffect, useState } from 'react'
 
 import { SecuritySection } from './SecuritySection'
+import { LessonReminders } from './LessonReminders'
 import { SUPPORT_EMAIL, SUPPORT_SLA, supportMailto } from '../../shared/lib/contacts'
 import { IconSpeaker, IconCheck, IconThumbsUp } from '../../shared/ui/icons'
 import { BackButton } from '../../shared/ui/BackButton'
@@ -159,6 +160,9 @@ export function SettingsPage() {
         </Button>
       </Section>
       )}
+
+      {/* Уведомления об уроках (Ф2.9, макет u4-1) — только ученику с преподавателем */}
+      <LessonReminders />
 
       {/* Озвучка */}
       <Section title="Озвучка" delay=".11s">

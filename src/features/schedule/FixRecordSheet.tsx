@@ -23,7 +23,7 @@ import {
 import { Button } from '../../shared/ui/Button'
 import { ChoiceGroup } from '../../shared/ui/ChoiceGroup'
 import { IconClose } from '../../shared/ui/icons'
-import { Sheet } from '../../shared/ui/Sheet'
+import { Sheet, SHEET_BODY } from '../../shared/ui/Sheet'
 
 const signedLessons = (n: number) => (n < 0 ? `−${lessonsCount(-n)}` : lessonsCount(n))
 
@@ -79,7 +79,7 @@ export function FixRecordSheet({
 
   return (
     <Sheet onClose={onClose} labelledBy="fix-title">
-      <div className="flex min-h-0 flex-col gap-4 overflow-y-auto px-5 pb-5 pt-1">
+      <div className={SHEET_BODY}>
         <div className="flex items-center justify-between gap-3">
           <h2 id="fix-title" className="text-lg font-semibold">
             {row.fix === 'payment' ? 'Исправить оплату' : 'Исправить запись'}

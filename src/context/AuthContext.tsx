@@ -11,6 +11,8 @@ import { supabase } from '../shared/api/supabase'
 import { isConnectionError } from '../shared/api/connection'
 import { purgeOldDrafts, setDraftOwner } from '../shared/lib/drafts'
 import { clearUserLocalData } from '../lib/profile'
+import { withTimeout } from '../shared/lib/settleAll'
+import { forgetPushOnThisDevice } from '../domains/notifications'
 
 interface AuthContextValue {
   user: User | null
@@ -86,6 +88,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signOut = async () => {
+    // Уведомления этого устройства — до выхода, пока есть вход: на общем
+    // телефоне уроки прежнего человека не должны приходить следующему (Ф2.9).
+    // Без связи выход не ждёт дольше 3 с — браузер отписан всё равно.
+    await withTimeout(forgetPushOnThisDevice(), 3000).catch(() => {})
     await supabase.auth.signOut()
     // данные аккаунта в localStorage (уровень, «Мои тексты», банки ошибок, кэши)
     // не должны пережить выход — иначе на общем устройстве их увидит следующий

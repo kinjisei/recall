@@ -305,15 +305,16 @@ export function balanceAfter(balance: number, wasCharged: boolean, willCharge: b
 
 /**
  * Пишет ли Recall сам ученику в приложении о переносе, отмене и скором уроке.
- * До Ф2.9 — нет (крючок after_lessons_changed пуст), поэтому «Сообщи ученику»
- * предлагает написать всем (решение владельца 04.10.2026). Ф2.9 включит —
- * останутся только ученики без приложения: им Recall не пишет никогда.
+ * С Ф2.9 — да (крючок after_lessons_changed, миграция 0011): «Сообщи ученику»
+ * остаётся для тех, до кого Recall не достаёт, — без приложения (им Recall не
+ * пишет никогда) и в приложении, но с выключенными уведомлениями: ленту такой
+ * ученик увидит, только открыв приложение (журнал п.68).
  */
-export const APP_TELLS_STUDENTS = false
+export const APP_TELLS_STUDENTS = true
 
-/** Кому учителю написать самому. */
-export function whoToTell<P extends { cardId: string }>(participants: P[], inApp: (cardId: string) => boolean): P[] {
-  return APP_TELLS_STUDENTS ? participants.filter((p) => !inApp(p.cardId)) : participants
+/** Кому учителю написать самому; reached — до этой карточки Recall достаёт сам. */
+export function whoToTell<P extends { cardId: string }>(participants: P[], reached: (cardId: string) => boolean): P[] {
+  return APP_TELLS_STUDENTS ? participants.filter((p) => !reached(p.cardId)) : participants
 }
 
 /** «в ср» · «во вт» */

@@ -81,13 +81,15 @@ module.exports = {
     {
       name: 'db-outside-data-layer',
       comment:
-        'Клиент базы импортируется только в слое данных: domains/*/api.ts, domains/profile, shared/api ' +
+        'Клиент базы импортируется только в слое данных: domains/*/api.ts (и api.<часть>.ts — часть слоя, ' +
+        'которую берёт стартовый экран), domains/profile, shared/api ' +
         '(и, до переезда, старые lib/ и context/). Экран в базу не ходит (§2, §4).',
       severity: 'error',
       from: {
         path: '^src/',
         pathNot: [
           '^src/domains/[^/]+/api\\.ts$',
+          '^src/domains/[^/]+/api\\.[a-z]+\\.ts$',
           '^src/domains/profile/',
           '^src/shared/api/',
           // старые слои данных — переезжают в domains/ (PLAN.md Ф3)

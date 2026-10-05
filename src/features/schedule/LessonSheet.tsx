@@ -30,7 +30,7 @@ import { Button } from '../../shared/ui/Button'
 import { IconClose, IconPencil, IconRefresh, IconRepeat, IconReschedule, IconSend, IconTicket, IconUser, IconVideo, IconXCircle } from '../../shared/ui/icons'
 import { plural } from '../../shared/lib/plural'
 import { RowCard } from '../../shared/ui/RowCard'
-import { Sheet } from '../../shared/ui/Sheet'
+import { Sheet, SHEET_BODY } from '../../shared/ui/Sheet'
 import { Badge, LessonAvatar } from './LessonParts'
 import { MarksBlock } from './MarksBlock'
 import { PlanRequired } from './ReadOnly'
@@ -94,7 +94,7 @@ export function LessonSheet({
 
   return (
     <Sheet onClose={onClose} labelledBy="lesson-title" maxH="88dvh">
-      <div className="flex min-h-0 flex-col gap-4 overflow-y-auto px-5 pb-5 pt-1">
+      <div className={SHEET_BODY}>
         <div className="flex items-center gap-3">
           <LessonAvatar lesson={lesson} inApp={inApp} />
           <div className="min-w-0 flex-1">
