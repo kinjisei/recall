@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { IconGraduation, IconBadgeCheck } from '../../shared/ui/icons'
-import { BackHeader } from '../../shared/ui/BackButton'
 import { useUrlState } from '../../shared/lib/useUrlState'
 import { useCopy } from '../../shared/lib/useCopy'
 import { Card } from '../../shared/ui/Card'
@@ -15,7 +13,6 @@ import { useAuth } from '../../context/AuthContext'
 import {
   getOrCreateInviteCode,
   regenerateInviteCode,
-  becomeTeacher,
   stopTeaching,
   getMyStudents,
   type StudentInfo,
@@ -25,12 +22,13 @@ import { MaterialsSection } from './MaterialsSection'
 import { WritingSection } from './WritingSection'
 import { GuideSection } from './GuideSection'
 import { StudentsTab } from './StudentsTab'
+import { BecomeTeacher } from './BecomeTeacher'
+import { StudioEnergy } from './StudioEnergy'
 import { StudioTabs, type TeacherTab } from './StudioTabs'
 import { getHomeworkMany, type Homework } from '../../lib/homework'
 import { countSubmittedWorks } from '../../lib/materials'
 import { countSubmittedWriting } from '../../lib/writing'
 import { getMyPlan, type MyPlan } from '../../lib/billing'
-import { IconSparkle } from '../../shared/ui/icons'
 import { AppLink } from '../../shared/ui/AppLink'
 import { Loading } from '../../shared/ui/Loading'
 
@@ -53,80 +51,6 @@ export function TeacherPage() {
   }
 
   return <TeacherDashboard />
-}
-
-// --- Включение режима преподавателя ----------------------------------------
-// Раньше здесь стояла заглушка «попроси владельца включить роль в SQL Editor» —
-// то есть репетитор, пришедший сам, не мог начать вообще (A1 в docs/archive/mkt/19-fix-plan.md).
-
-const TEACHER_PERKS = [
-  'Привязываешь учеников по коду — они занимаются, ты видишь результат',
-  'AI проверяет письменные работы, ты правишь вердикт, если не согласен',
-  'Карта ошибок ученика: какие слова не держатся, какие темы валит',
-  'Отчёт родителям на печать — в одну кнопку',
-]
-
-function BecomeTeacher({ onDone, onBack }: { onDone: () => void; onBack: () => void }) {
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  // число бесплатных мест живёт в БД (free_teacher_seats) — здесь только показываем
-  const [freeSeats, setFreeSeats] = useState<number | null>(null)
-
-  useEffect(() => {
-    getMyPlan().then((p) => setFreeSeats(p?.free_seats ?? null))
-  }, [])
-
-  const enable = async () => {
-    setBusy(true)
-    setError(null)
-    try {
-      await becomeTeacher()
-      onDone()
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Не получилось включить режим')
-      setBusy(false)
-    }
-  }
-
-  return (
-    <div className="flex flex-col gap-4">
-      <BackHeader onBack={onBack} title="Преподаватель" label="На главную" />
-      <Card>
-        <div className="flex items-start gap-3">
-          <span className="flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-accent-soft text-accent-soft-fg">
-            <IconGraduation size={22} />
-          </span>
-          <div>
-            <h2 className="text-[17px] font-medium">Ведёшь учеников?</h2>
-            <p className="mt-1 text-sm text-fg-secondary">
-              Включи режим преподавателя — появится своя студия с кодом-приглашением.
-            </p>
-          </div>
-        </div>
-
-        <ul className="mt-4 flex flex-col gap-2">
-          {TEACHER_PERKS.map((p) => (
-            <li key={p} className="flex gap-2.5 text-sm text-fg-secondary">
-              <IconBadgeCheck size={17} className="mt-0.5 flex-none text-accent" />
-              {p}
-            </li>
-          ))}
-        </ul>
-
-        {error && <p className="mt-4 text-sm text-danger-soft-fg">{error}</p>}
-
-        <Button className="mt-5 w-full" onClick={enable} loading={busy}>
-          Включить режим преподавателя
-        </Button>
-        <p className="mt-3 text-center text-xs text-fg-muted">
-          Включается бесплатно и ничего не меняет в твоих собственных занятиях.
-          Общий запас AI для студии и генерация материалов появляются, когда
-          привяжешь первого ученика
-          {freeSeats ? ` (на пробном периоде их до ${freeSeats})` : ''}.
-        </p>
-      </Card>
-    </div>
-  )
 }
 
 function TeacherDashboard() {
@@ -364,56 +288,5 @@ function Seats({ plan, inApp }: { plan: MyPlan | null; inApp: number }) {
       </AppLink>
       . Пробные ученики и карточки без приложения мест не занимают.
     </p>
-  )
-}
-
-// Панель энергии студии (E3): общий дневной пул на всех учеников + месячные
-// генерации материалов/программ. Показывается на вкладке «Ученики».
-function StudioEnergy({ plan }: { plan: MyPlan }) {
-  const max = plan.energy_max ?? 0
-  const spent = plan.energy_spent ?? 0
-  const left = Math.max(0, max - spent)
-  const genLim = plan.gen_limit ?? 0
-  const genUsed = plan.gen_used ?? 0
-  const bar = (used: number, cap: number) => (
-    <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-tint/[0.07]">
-      <div
-        className="h-full rounded-full bg-accent transition-[width] duration-500"
-        style={{ width: `${cap ? Math.min(100, (used / cap) * 100) : 0}%` }}
-      />
-    </div>
-  )
-  return (
-    <Card className="flex flex-col gap-3">
-      <p className="flex items-center gap-1.5 text-sm font-semibold">
-        <IconSparkle size={16} className="text-accent-strong" /> Энергия студии
-      </p>
-      <div>
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-fg-secondary">Разговоры с AI сегодня</span>
-          <span className="font-medium">{left} из {max} осталось</span>
-        </div>
-        {bar(spent, max)}
-        <p className="mt-1 text-xs text-fg-muted">
-          Общий дневной запас на всех учеников. Пополняется утром.
-        </p>
-      </div>
-      {genLim > 0 && (
-        <div>
-          <div className="flex items-center justify-between text-sm">
-            {/* Раньше подпись называла только материалы и программы, а тот же
-                счётчик тратят вопрос и график «Письма» — репетитор видел, как
-                лимит тает от действий, которые материалами не считал. */}
-            <span className="text-fg-secondary">Генерации AI за месяц</span>
-            <span className="font-medium">{genUsed} из {genLim}</span>
-          </div>
-          {bar(genUsed, genLim)}
-          <p className="mt-1 text-xs text-fg-muted">
-            Материалы, программы и задания «Письма». Материал стоит двух генераций
-            (план и текст), каждая переделка — ещё одной.
-          </p>
-        </div>
-      )}
-    </Card>
   )
 }
