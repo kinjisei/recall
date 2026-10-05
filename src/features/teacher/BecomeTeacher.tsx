@@ -1,4 +1,8 @@
 // --- Включение режима преподавателя ----------------------------------------
+// Приглашение на экранах студии для того, кто ещё не репетитор: показывает
+// проверка роли в таблице маршрутов (app/RoleGate, PLAN.md Ф2.10). Включил
+// режим — роль перечитывается сама (invalidateProfile в becomeTeacher), и
+// вместо приглашения открывается экран, на который шли.
 // Раньше здесь стояла заглушка «попроси владельца включить роль в SQL Editor» —
 // то есть репетитор, пришедший сам, не мог начать вообще (A1 в docs/archive/mkt/19-fix-plan.md).
 import { useEffect, useState } from 'react'
@@ -16,7 +20,7 @@ const TEACHER_PERKS = [
   'Отчёт родителям на печать — в одну кнопку',
 ]
 
-export function BecomeTeacher({ onDone, onBack }: { onDone: () => void; onBack: () => void }) {
+export function BecomeTeacher({ onBack }: { onBack: () => void }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   // число бесплатных мест живёт в БД (free_teacher_seats) — здесь только показываем
@@ -30,8 +34,8 @@ export function BecomeTeacher({ onDone, onBack }: { onDone: () => void; onBack: 
     setBusy(true)
     setError(null)
     try {
+      // кнопка крутится, пока проверка роли не откроет экран
       await becomeTeacher()
-      onDone()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Не получилось включить режим')
       setBusy(false)

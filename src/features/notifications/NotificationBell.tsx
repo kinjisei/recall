@@ -17,6 +17,7 @@ import { useAuth } from '../../context/AuthContext'
 import { notificationCounts } from '../../domains/notifications'
 import { plural } from '../../shared/lib/plural'
 import { readRaw, writeRaw } from '../../shared/lib/storage'
+import { CountBadge } from '../../shared/ui/CountBadge'
 import { IconBell } from '../../shared/ui/icons'
 import { NotificationFeed } from './NotificationFeed'
 
@@ -70,14 +71,7 @@ export function NotificationBell() {
         className="lift relative flex h-11 w-11 flex-none items-center justify-center rounded-full border border-tint/[0.08] bg-surface text-fg-secondary hover:text-fg"
       >
         <IconBell size={20} />
-        {unread > 0 && (
-          <span
-            aria-hidden
-            className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1 text-caption font-semibold text-accent-fg"
-          >
-            {unread > 9 ? '9+' : unread}
-          </span>
-        )}
+        <CountBadge n={unread} className="-right-0.5 -top-0.5" />
       </button>
       {open && (
         <NotificationFeed

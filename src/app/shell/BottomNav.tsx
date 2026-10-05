@@ -6,11 +6,12 @@
 // ============================================================================
 import { AppLink } from '../../shared/ui/AppLink'
 import { useKeyboardInset } from '../../lib/useKeyboardInset'
+import { CountBadge } from '../../shared/ui/CountBadge'
 import { NAV_ICONS } from './navIcons'
 import { useNavTabs } from './useNavTabs'
 
 export function BottomNav() {
-  const { tabs, activeIndex, onTabClick } = useNavTabs()
+  const { tabs, activeIndex, badgeOf, onTabClick } = useNavTabs()
   // при открытой клавиатуре навигацию прячем: на телефонах фиксированная
   // капсула иначе «всплывает» над клавиатурой и мешает набору
   const kb = useKeyboardInset()
@@ -35,13 +36,16 @@ export function BottomNav() {
             opacity: activeIndex < 0 ? 0 : 1,
           }}
         />
-        {tabs.map(({ to, label, icon }, i) => {
+        {tabs.map((tab, i) => {
+          const { to, label, icon } = tab
           const active = i === activeIndex
           const TabIcon = active ? NAV_ICONS[icon].IconFill : NAV_ICONS[icon].Icon
+          const badge = badgeOf(tab)
           return (
             <AppLink
               key={to}
               to={to}
+              aria-label={badge.label}
               // экран едет в ту сторону, в какую человек двигается по вкладкам:
               // вправо по ряду — контент приезжает справа, и наоборот
               direction={activeIndex >= 0 && i < activeIndex ? 'out' : 'in'}
@@ -53,12 +57,16 @@ export function BottomNav() {
                   : 'text-fg-muted hover:text-fg-secondary'
               }`}
             >
-              <TabIcon
-                size={22}
-                className={`transition-transform duration-300 [transition-timing-function:cubic-bezier(.22,1,.36,1)] ${
-                  active ? '-translate-y-0.5' : ''
-                }`}
-              />
+              <span className="relative">
+                <TabIcon
+                  size={22}
+                  className={`transition-transform duration-300 [transition-timing-function:cubic-bezier(.22,1,.36,1)] ${
+                    active ? '-translate-y-0.5' : ''
+                  }`}
+                />
+                {/* «ждут проверки» на «Заданиях» учителя (макет t1) */}
+                <CountBadge n={badge.n} className="-right-3 -top-2" />
+              </span>
               <span>{label}</span>
             </AppLink>
           )

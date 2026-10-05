@@ -7,11 +7,13 @@
 // таблицу, ProtectedRoute читает из неё исключения онбординга.
 //
 // ⚠️ Это видимость, а не защита. Настоящую защиту держит сервер: RLS и RPC
-// сами проверяют и вход, и роль (admin_* — is_admin).
+// сами проверяют и вход, и роль (admin_* — is_admin, запись студии —
+// teacher_can_write).
 //
-// Роли преподавателя здесь пока нет намеренно: /teacher для не-преподавателя
-// показывает приглашение «Я веду учеников», это часть продукта, а не запрет.
-// Меню и доступ по роли учителя включаются в PLAN.md Ф2.10.
+// Экраны студии (role: 'teacher', PLAN.md Ф2.10) не-репетитору показывают
+// приглашение «Ведёшь учеников? Включи режим преподавателя» — это часть
+// продукта, а не запрет; без связи — «Повторить», а не приглашение настоящему
+// учителю. Стартовый экран у роли свой: учитель с «/» уходит в расписание.
 // ============================================================================
 import type { ComponentType } from 'react'
 import { devShowcase, routeScreens } from './routeChunks'
@@ -32,7 +34,7 @@ import { DashboardPage } from '../features/dashboard/DashboardPage'
 export type RoutePlace = 'public' | 'open' | 'fullscreen' | 'app'
 
 /** Роль, без которой экран не показывается (видимость, защищает сервер). */
-export type RouteRole = 'admin'
+export type RouteRole = 'admin' | 'teacher'
 
 export interface ScreenRoute {
   path: string
@@ -41,6 +43,13 @@ export interface ScreenRoute {
   /** Открывается и до онбординга: онбординг сам ведёт сюда. */
   beforeOnboarding?: true
   role?: RouteRole
+  /**
+   * Не этой роли — сюда, а не приглашение или «нет доступа»: «Моя учёба»
+   * ученику — это его Главная.
+   */
+  othersTo?: string
+  /** Стартовый экран: человек со своим стартом (учитель — расписание) уходит туда. */
+  start?: true
 }
 
 /** Старый адрес → новый. Живёт там же, где жил экран, чтобы вход вёл туда же. */
@@ -74,7 +83,7 @@ export const ROUTES: AppRoute[] = [
   // онбординг — без общей рамки: свои шаги на весь экран
   { path: '/onboarding', place: 'fullscreen', screen: routeScreens['/onboarding'], beforeOnboarding: true },
 
-  { path: '/', place: 'app', screen: DashboardPage },
+  { path: '/', place: 'app', screen: DashboardPage, start: true },
   // хаб «Слова» вырос в «Практику» — старые ссылки не ломаем
   { path: '/flashcards', place: 'app', redirect: '/practice' },
   // «Ввод» слился с «Учёбой»: один экран, старая ссылка ведёт туда же
@@ -91,10 +100,11 @@ export const ROUTES: AppRoute[] = [
   // недостижим для нового пользователя. По окончании теста PlacementTest
   // ставит markOnboarded, поэтому цикла нет.
   { path: '/placement', place: 'app', screen: routeScreens['/placement'], beforeOnboarding: true },
-  { path: '/teacher', place: 'app', screen: routeScreens['/teacher'] },
-  // расписание репетитора (Ф2.7): роли в таблице нет, как у /teacher —
-  // не-репетитору экран сам объясняет и ведёт в студию
-  { path: '/schedule', place: 'app', screen: routeScreens['/schedule'] },
+  // Меню учителя (Ф2.10): Расписание · Ученики · Задания · Моя учёба
+  { path: '/schedule', place: 'app', screen: routeScreens['/schedule'], role: 'teacher' },
+  { path: '/teacher', place: 'app', screen: routeScreens['/teacher'], role: 'teacher' },
+  { path: '/tasks', place: 'app', screen: routeScreens['/tasks'], role: 'teacher' },
+  { path: '/learn', place: 'app', screen: routeScreens['/learn'], role: 'teacher', othersTo: '/' },
   // «Мои уроки» ученика (Ф2.9, макет u2): вход — «Все уроки» на Главной и
   // уведомления об уроках; ученику без уроков экран сам скажет «пока нет»
   { path: '/lessons', place: 'app', screen: routeScreens['/lessons'] },
@@ -105,9 +115,8 @@ export const ROUTES: AppRoute[] = [
   { path: '/program', place: 'app', screen: routeScreens['/program'] },
   // «Как оплатить тариф»: тариф включается на аккаунт — только после входа
   { path: '/pay', place: 'app', screen: routeScreens['/pay'] },
-  // «Пригласи коллегу» (Ф2.3): роли в таблице нет, как у /teacher —
-  // не-репетитору экран сам объясняет, что приглашают репетиторы
-  { path: '/invite', place: 'app', screen: routeScreens['/invite'] },
+  // «Пригласи коллегу» (Ф2.3): приглашают репетиторы
+  { path: '/invite', place: 'app', screen: routeScreens['/invite'], role: 'teacher' },
   { path: '/admin', place: 'app', screen: routeScreens['/admin'], role: 'admin' },
   // витрина дизайн-системы — только в разработке (routeChunks.devShowcase)
   ...(devShowcase ? [{ path: '/dev/ui', place: 'app' as const, screen: devShowcase }] : []),

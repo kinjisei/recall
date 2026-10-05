@@ -13,7 +13,8 @@
  *      дней, подарок в шапке появляется без перезагрузки;
  *   4. владелец подтверждает оплату Б → у А счётчик 1 · 1 · 1 мес;
  *   5. компьютер 1280: подарок строкой в боковой панели, экран в колонке;
- *   6. ученик: подарка нет, /invite объясняет, что приглашают репетиторы.
+ *   6. ученик: подарка нет, /invite — общее приглашение экранов студии
+ *      «Ведёшь учеников?» (проверка роли в таблице маршрутов, PLAN.md Ф2.10).
  *
  * Запуск: `npm run dev:test` (5174, тестовая база), затем
  * `node scripts/smoke-referral.mjs [--shots <папка>]`.
@@ -206,7 +207,9 @@ async function run(browser, ids) {
   await a.reload({ waitUntil: 'networkidle2' })
   await waitText(a, 'Приглашено')
   const counter = await a.evaluate(() => document.querySelector('[data-referral-counter]')?.innerText.replace(/\s+/g, ' ').trim())
-  check('у А счётчик: приглашено 1, оплатили 1, получено 1 мес', counter === 'Приглашено 1 Оплатили 1 Получено 1 мес', counter)
+  // счётчика нет — показать, что на экране вместо него (иначе красное без подсказки)
+  const seenInstead = counter ?? (await a.evaluate(() => `${location.pathname}: ${document.body.innerText.replace(/\s+/g, ' ').slice(0, 200)}`))
+  check('у А счётчик: приглашено 1, оплатили 1, получено 1 мес', counter === 'Приглашено 1 Оплатили 1 Получено 1 мес', seenInstead)
   await shot(a, 'referral-invite-390')
   if (SHOTS) {
     // светлая тема (пока у владельца, журнал п.48) — тот же экран на токенах
@@ -238,7 +241,7 @@ async function run(browser, ids) {
   await sleep(1000)
   check('ученик: подарка в шапке нет', (await gift(l)) === null)
   await l.goto(`${BASE}/invite`, { waitUntil: 'networkidle2' })
-  check('ученик на /invite: «Приглашают коллег репетиторы»', await waitText(l, 'Приглашают коллег репетиторы'))
+  check('ученик на /invite: приглашение «Ведёшь учеников?»', await waitText(l, 'Ведёшь учеников?'))
 }
 
 async function main() {

@@ -1,5 +1,5 @@
 // ============================================================================
-// Фирменный icon-набор Recall (80 шт.), сгенерирован из handoff/icons/*.svg
+// Фирменный icon-набор Recall (86 шт.), сгенерирован из handoff/icons/*.svg
 // (Claude Design). Единый стиль: viewBox 0 0 24 24, stroke 1.75px (2px у *-fill),
 // currentColor. Меняем весь набор здесь — приложение подхватит.
 //   НЕ РЕДАКТИРОВАТЬ ВРУЧНУЮ: перегенерировать из SVG.
@@ -57,6 +57,12 @@ export const IconBadgeCheck = icon(
 export const IconBell = icon(
   '<path d="M6 10.5a6 6 0 0 1 12 0v3.2l1.5 2.6a.7.7 0 0 1-.6 1H5.1a.7.7 0 0 1-.6-1L6 13.7Z"></path><path d="M9.8 20a2.3 2.3 0 0 0 4.4 0"></path>',
 )
+export const IconBook = icon(
+  '<path d="M12 6.5C10.2 5.2 7.8 4.5 4 4.5v13c3.8 0 6.2.7 8 2 1.8-1.3 4.2-2 8-2v-13c-3.8 0-6.2.7-8 2Z"></path><path d="M12 6.5v13"></path>',
+)
+export const IconCalendarFill = icon(
+  '<rect x="3.5" y="5" width="17" height="15.5" rx="2.5" fill="currentColor" fill-opacity=".32"></rect><path d="M3.5 10h17M8 3v4M16 3v4"></path>', '2',
+)
 export const IconCalendarPlus = icon(
   '<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"></rect><path d="M3.5 10h17M8 3v4M16 3v4M12 13.5v4M10 15.5h4"></path>',
 )
@@ -80,6 +86,15 @@ export const IconChevronLeft = icon(
 )
 export const IconChevronRight = icon(
   '<path d="m9 5.5 6.5 6.5L9 18.5"></path>',
+)
+export const IconClipboardCheck = icon(
+  '<rect x="5" y="4.5" width="14" height="16" rx="2.5"></rect><rect x="9" y="3" width="6" height="3.2" rx="1"></rect><path d="M9.2 13.2l2 2 3.6-4"></path>',
+)
+export const IconClipboardFill = icon(
+  '<rect x="5" y="4.5" width="14" height="16" rx="2.5" fill="currentColor" fill-opacity=".32"></rect><rect x="9" y="3" width="6" height="3.2" rx="1"></rect><path d="M9 11h6M9 15h4"></path>', '2',
+)
+export const IconClipboard = icon(
+  '<rect x="5" y="4.5" width="14" height="16" rx="2.5"></rect><rect x="9" y="3" width="6" height="3.2" rx="1"></rect><path d="M9 11h6M9 15h4"></path>',
 )
 export const IconClockAuto = icon(
   '<path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"></path><path d="M19.5 4.5v4h-4"></path><path d="M12 8.5V12l2.5 1.5"></path>',
@@ -269,6 +284,9 @@ export const IconTrophy = icon(
 )
 export const IconUser = icon(
   '<circle cx="12" cy="8.5" r="3.5"></circle><path d="M5 20a7 7 0 0 1 14 0"></path>',
+)
+export const IconUsersFill = icon(
+  '<circle cx="9" cy="8.5" r="3" fill="currentColor" fill-opacity=".32"></circle><path d="M3.5 19a5.5 5.5 0 0 1 11 0Z" fill="currentColor" fill-opacity=".32"></path><path d="M15.5 5.6a3 3 0 0 1 0 5.8M17.5 14.4a5.3 5.3 0 0 1 3 4.6"></path>', '2',
 )
 export const IconUsers = icon(
   '<circle cx="9" cy="8.5" r="3"></circle><path d="M3.5 19a5.5 5.5 0 0 1 11 0M15.5 5.6a3 3 0 0 1 0 5.8M17.5 14.4a5.3 5.3 0 0 1 3 4.6"></path>',

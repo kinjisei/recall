@@ -63,8 +63,9 @@ export function StudentsList({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold">Ученики</h2>
+      {/* заголовок «Ученики» — у экрана (вкладка меню учителя, макет t6-1): свой
+          здесь повторял бы его строкой ниже */}
+      <div className="flex justify-end">
         <Button className="min-h-11 px-4 py-2 text-sm" onClick={onAdd} disabled={!canWrite}>
           <IconPlus size={18} /> Ученик
         </Button>

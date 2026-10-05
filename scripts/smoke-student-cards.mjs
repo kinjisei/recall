@@ -82,12 +82,14 @@ const text = (page) => page.evaluate(() => document.body.innerText)
 const waitText = (page, re, timeout = 15000) =>
   page.waitForFunction((src) => new RegExp(src).test(document.body.innerText), { polling: 250, timeout }, re.source).then(() => true, () => false)
 const waitSel = (page, sel, timeout = 15000) => page.waitForSelector(sel, { visible: true, timeout }).then(() => true, () => false)
+// Кнопки экрана, а не вкладки меню: с меню учителя (Ф2.10) «Ученик» нашлось
+// бы во вкладке «Ученики», и смоук жал бы её вместо «+ Ученик».
 async function click(page, label, timeout = 15000) {
   const ok = await page
-    .waitForFunction((l) => [...document.querySelectorAll('button, a, [role="menuitem"]')].some((x) => x.textContent.trim().includes(l)), { polling: 250, timeout }, label)
+    .waitForFunction((l) => [...document.querySelectorAll('button, a, [role="menuitem"]')].some((x) => !x.closest('.vt-nav') && x.textContent.trim().includes(l)), { polling: 250, timeout }, label)
     .then(() => true, () => false)
   if (!ok) return false
-  await page.evaluate((l) => [...document.querySelectorAll('button, a, [role="menuitem"]')].reverse().find((x) => x.textContent.trim().includes(l))?.click(), label)
+  await page.evaluate((l) => [...document.querySelectorAll('button, a, [role="menuitem"]')].reverse().find((x) => !x.closest('.vt-nav') && x.textContent.trim().includes(l))?.click(), label)
   await sleep(600)
   return true
 }

@@ -1,8 +1,12 @@
-# teacher — студия репетитора: ученики, карточка ученика, материалы
+# teacher — студия репетитора: «Ученики», карточка ученика, «Задания»
 
 ## Простыми словами
 
-Здесь работает преподаватель (`/teacher`). Сверху — список учеников: по
+Здесь работает преподаватель. У него своё меню (PLAN.md Ф2.10, макет t1):
+Расписание (`features/schedule`) · Ученики · Задания · Моя учёба
+(`features/dashboard`). Два экрана из четырёх — здесь.
+
+«Ученики» (`/teacher`) — список учеников: по
 строке видно, кем заняться сегодня, не открывая карточку. Ученики — карточки
 (PLAN.md Ф2.5, `domains/students`): и в приложении, и без него; на
 компьютере список и карточка рядом. Карточка без приложения — с
@@ -13,20 +17,30 @@
 занимался. Всё, что нужно раз в месяц (диагностика, программа по неделям,
 слова, тест уровня, AI-квесты), убрано под «Ещё».
 
-Отдельные вкладки студии — материалы (AI собирает текст и упражнения, можно
-«под ученика» — по его ошибкам), письменные работы с проверкой и методичка.
-Отчёт родителям печатается белым листом при любой теме.
+Под списком — общий код-приглашение и места тарифа.
+
+«Задания» (`/tasks`, макет t1-3) — хаб: «Проверка работ» — кто из учеников
+сдал письмо или задание по материалу (нажал строку — сразу разбор этой
+работы), «Материалы» с энергией студии (AI собирает текст и упражнения,
+можно «под ученика» — по его ошибкам), «Письменные задания» (IELTS и эссе) и
+«Методичка». Число «ждут проверки» стоит на вкладке «Задания» в меню. До
+Ф2.10 эти разделы были вкладками студии — старые ссылки `/teacher?tab=…`
+ведут сюда. Отчёт родителям печатается белым листом при любой теме.
 
 Здесь же лежит экран ученика `/assignments` (`AssignmentsPage`): его домашка
 (`features/homework`) и задания-материалы с разбором. Для того, кто ещё не
-преподаватель, `/teacher` показывает приглашение «Я веду учеников» — это часть
-продукта, а не запрет (`app/routes.ts`). Тарифы и места учеников —
-`features/billing/CLAUDE.md`.
+преподаватель, экраны студии показывают приглашение «Ведёшь учеников?»
+(`BecomeTeacher`) — это часть продукта, а не запрет; решает таблица
+маршрутов (`app/routes.ts`), сами экраны роль не проверяют. Тарифы и места
+учеников — `features/billing/CLAUDE.md`.
 
 | Файл | Что там |
 |---|---|
-| `TeacherPage.tsx` | студия: загрузка, энергия студии, общий код-приглашение и места тарифа |
-| `StudioTabs.tsx` | ряд вкладок студии; первая — «Расписание» (ведёт на /schedule, Ф2.7; до меню учителя Ф2.10 — единственный вход) |
+| `TeacherPage.tsx` | «Ученики» (`/teacher`): загрузка, общий код-приглашение и места тарифа, выключение режима; старые `/teacher?tab=…` — во «Задания» |
+| `TasksPage.tsx`, `TasksHub.tsx` | «Задания» (`/tasks`): хаб, разделы (`?tab=materials|writing|guide`), разбор сданной работы из хаба (`?work=<id назначения>`) |
+| `waitingWorks.ts`, `waitingCount.ts` | «ждут проверки»: список для хаба и число на вкладке меню (лёгкое, в стартовом коде каркаса) |
+| `StudioEnergy.tsx` | энергия студии в карточке «Материалы» |
+| `BecomeTeacher.tsx` | приглашение «Ведёшь учеников?» — его показывает проверка роли маршрута (`app/RoleGate`), лениво |
 | `CardDetail.tsx` | карточка справа (на телефоне — экраном): шапка, блок «Уроки» (`features/schedule`, Ф2.8), студия или приглашение |
 | `StudentsTab.tsx` | вкладка «Ученики»: остаток числом в строке и «Требуют внимания» на компьютере, пока никто не выбран (Ф2.8); ?remind=1 из уведомления открывает «Напомнить»; строки «кем заняться», сводка «Нужно внимание», выбранная карточка (в адресе `?student=`), смена статуса с тостом «Вернуть»; перед паузой и архивом — сколько уроков уйдёт (`useLeavingLessons`, Ф2.7) |
 | `StudentStudio.tsx` | ученик в приложении под шапкой карточки: домашка, три плашки, «Ещё», место тарифа, отвязка; раскрытый раздел — в адресе |
@@ -45,6 +59,19 @@
 | `src/lib/materialExercises.ts` | отсев несобираемых упражнений |
 
 ## Правила, которые нельзя нарушить
+
+**«Ждут проверки» — одно число** (PLAN.md Ф2.10)
+
+- Число на вкладке «Задания» и список «Проверки работ» считают одно и то же
+  одними условиями (`countSubmitted*` / `listSubmitted*` в `lib/materials`,
+  `lib/writing`): работа сдана и не проверена, материал или задание — мои,
+  а ученик — не я. RLS отдаёт и назначения, где учитель сам ученик (учится
+  у коллеги, «Материал под себя»), — без `neq('student_id', я)` они попадали
+  в «На проверку». Список при загрузке обновляет число на вкладке.
+- **Сбой — не «0»** (Ф1.13): счётчики бросают, число на вкладке при сбое
+  остаётся прежним, хаб показывает «Повторить», а не «Сданных работ нет».
+- Разбор из хаба ищет работу среди ждущих: уже проверенная — «больше не
+  ждёт», а не пустой экран.
 
 **Список учеников: кому нужно внимание**
 
@@ -75,9 +102,14 @@
 
 **Без связи — плашка, а не чужое состояние** (PLAN.md Ф1.13)
 
-- Студия решает «учитель или нет» по `loadProfile`: сбой связи — плашка с
-  «Повторить». Раньше `getProfile` отдавал при сбое `null`, и настоящий
+- «Учитель или нет» решает проверка роли маршрута (`app/RoleGate`, Ф2.10):
+  сбой связи без прошлого ответа — «Повторить». Раньше при сбое настоящий
   учитель видел «Ведёшь учеников? Включи режим преподавателя».
+- «Ученики» без связи — «Повторить» вместо списка, пока он ни разу не
+  загрузился: пустой список сказал бы «учеников нет». Роль с устройства
+  открывает экран и без сети, поэтому сбой загрузки списка теперь виден —
+  раньше его заслоняла плашка профиля. Сбой обновления при уже
+  показанном списке — «Повторить» над ним.
 - Блок домашки при сбое — плашка, а не «Домашки нет» с кнопкой «Собрать»:
   учитель собрал бы новую поверх существующей. Остальные разделы карточки
   уже показывают `LoadError`; `loadAssignmentCounts` (для Главной ученика)
@@ -145,6 +177,9 @@
   перевернуть порядок, выключить сортировку или посчитать группы «на выбор» по
   отдельности.
 - `node scripts/smoke-lost-students.mjs` — список учеников на живом экране.
+- `node scripts/smoke-navigation.mjs` — меню учителя, «ждут проверки» на
+  вкладке, хаб «Заданий» → разбор работы → назад, материалы в адресе,
+  старые ссылки `/teacher?tab=…` (`app/CLAUDE.md`).
 - `node scripts/smoke-student-cards.mjs` — карточки: «+ Ученик», приглашение,
   архив и «Вернуть», ученик по ссылке → та же карточка «в приложении»,
   компьютер 1280 — список и карточка рядом (`--shots` — скриншоты).
@@ -176,9 +211,9 @@
 <!-- Пишет `npm run gen:docs` (scripts/gen/module-docs.mjs) по коду — руками не править. -->
 ## Из кода (сгенерировано)
 
-- **Файлы:** `AssignmentsPage.tsx`, `BecomeTeacher.tsx`, `CardDetail.tsx`, `DailyPlanSection.tsx`, `DiagnosticsSection.tsx`, `GuideSection.tsx`, `HomeworkComposer.tsx`, `HomeworkSection.tsx`, `index.ts`, `materials/MaterialDetail.tsx`, `materials/MaterialsByLevel.tsx`, `materials/PlanScreen.tsx`, `materials/PreviewScreen.tsx`, `materials/RequestForm.tsx`, `materials/shared.ts`, `MaterialsSection.tsx`, `PlacementSection.tsx`, `PrintSheet.tsx`, `ProgramSection.tsx`, `QuestSection.tsx`, `ReportSheet.tsx`, `ReviewScreen.tsx`, `StudentsTab.tsx`, `StudentStudio.tsx`, `StudentWordsSection.tsx`, `StudioEnergy.tsx`, `StudioTabs.tsx`, `TeacherBlock.tsx`, `TeacherPage.tsx`, `useAnswerDraft.ts`, `useComposerDraft.ts`, `useReviewDraft.ts`, `useWritingTaskDraft.ts`, `WordPicker.tsx`, `WritingSection.tsx`
+- **Файлы:** `AssignmentsPage.tsx`, `BecomeTeacher.tsx`, `CardDetail.tsx`, `DailyPlanSection.tsx`, `DiagnosticsSection.tsx`, `GuideSection.tsx`, `HomeworkComposer.tsx`, `HomeworkSection.tsx`, `index.ts`, `materials/MaterialDetail.tsx`, `materials/MaterialsByLevel.tsx`, `materials/PlanScreen.tsx`, `materials/PreviewScreen.tsx`, `materials/RequestForm.tsx`, `materials/shared.ts`, `MaterialsSection.tsx`, `PlacementSection.tsx`, `PrintSheet.tsx`, `ProgramSection.tsx`, `QuestSection.tsx`, `ReportSheet.tsx`, `ReviewScreen.tsx`, `StudentsTab.tsx`, `StudentStudio.tsx`, `StudentWordsSection.tsx`, `StudioEnergy.tsx`, `TasksHub.tsx`, `TasksPage.tsx`, `TeacherBlock.tsx`, `TeacherPage.tsx`, `useAnswerDraft.ts`, `useComposerDraft.ts`, `useReviewDraft.ts`, `useWritingTaskDraft.ts`, `waitingCount.ts`, `waitingWorks.ts`, `WordPicker.tsx`, `WritingSection.tsx`
 - **Вне папки (указатель «Описание:» в начале файла):** `src/lib/activityDays.ts`, `src/lib/diagnosticsBrief.ts`, `src/lib/materialExercises.ts`, `src/lib/studentSignals.ts`, `src/lib/wordChecks.ts`
-- **Адреса:** `/teacher`, `/assignments`
+- **Адреса:** `/teacher`, `/tasks`, `/assignments`
 - **Таблицы:** `cards`, `decks`, `review_states`, `word_checks`
 - **RPC:** `assign_word_check`, `submit_word_check`
 - **Кто использует (импортом):** `app`, `features/dashboard`, `features/flashcards`, `features/homework`, `features/progress`, `features/words`, `lib`

@@ -71,6 +71,8 @@ export const routeScreens = {
   '/teachers': makeRoute(() => import('../features/landing/TeachersPage'), (m) => m.TeachersPage),
   '/teacher': makeRoute(() => import('../features/teacher/TeacherPage'), (m) => m.TeacherPage),
   '/schedule': makeRoute(() => import('../features/schedule/SchedulePage'), (m) => m.SchedulePage),
+  '/tasks': makeRoute(() => import('../features/teacher/TasksPage'), (m) => m.TasksPage),
+  '/learn': makeRoute(() => import('../features/dashboard/MyStudyPage'), (m) => m.MyStudyPage),
   '/lessons': makeRoute(() => import('../features/lessons/MyLessonsPage'), (m) => m.MyLessonsPage),
   '/assignments': makeRoute(() => import('../features/teacher/AssignmentsPage'), (m) => m.AssignmentsPage),
   '/writing': makeRoute(() => import('../features/writing/WritingPage'), (m) => m.WritingPage),

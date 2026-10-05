@@ -22,11 +22,9 @@ import {
 } from '../../domains/schedule'
 import { loadStudentCards, type StudentCard } from '../../domains/students'
 import { loadStudentsPush } from '../../domains/notifications'
-import { loadProfile } from '../../lib/profile'
 import { getMyPlan, type MyPlan } from '../../lib/billing'
 
 export interface ScheduleBase {
-  teacher: boolean
   plan: MyPlan | null
   cards: StudentCard[]
   series: Series[]
@@ -36,13 +34,12 @@ export interface ScheduleBase {
   push: Map<string, boolean>
 }
 
+// Роль здесь не проверяем: экран открывается только репетитору — решает
+// таблица маршрутов (app/routes.ts, PLAN.md Ф2.10). userId — ключ: сменился
+// человек — данные перечитываются.
 export function useScheduleBase(userId: string | null, version: number) {
   return useAsyncData<ScheduleBase>(
     async () => {
-      const profile = userId ? await loadProfile(userId) : null
-      if (profile?.role !== 'teacher') {
-        return { teacher: false, plan: null, cards: [], series: [], balances: [], defaultLink: null, push: new Map() }
-      }
       const [plan, cards, series, balances, defaultLink, push] = await Promise.all([
         getMyPlan(),
         loadStudentCards(),
@@ -51,7 +48,7 @@ export function useScheduleBase(userId: string | null, version: number) {
         loadDefaultLessonLink(),
         loadStudentsPush(),
       ])
-      return { teacher: true, plan, cards, series, balances, defaultLink, push }
+      return { plan, cards, series, balances, defaultLink, push }
     },
     [userId, version],
     'Не удалось открыть расписание',

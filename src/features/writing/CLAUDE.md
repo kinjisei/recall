@@ -18,6 +18,7 @@
 |---|---|
 | `WritingPage.tsx` | задания ученика → написание → разбор → результат |
 | `WritingGradeView.tsx`, `WritingReviewScreen.tsx`, `WritingHistory.tsx` | показ разбора, экран разбора, история работ |
+| `index.ts` | парадная дверь: экран разбора письма для студии — «Письменные задания» и «Проверка работ» во «Заданиях» учителя (Ф2.10) |
 | `QuickWriteCheck.tsx` | быстрая проверка свободного текста |
 | `src/lib/writingGrade.ts` | промпт и разбор ответа AI: `FOCUS_RULE`, `MAX_FOCUS` |
 
@@ -52,7 +53,7 @@
 <!-- Пишет `npm run gen:docs` (scripts/gen/module-docs.mjs) по коду — руками не править. -->
 ## Из кода (сгенерировано)
 
-- **Файлы:** `QuickWriteCheck.tsx`, `WritingGradeView.tsx`, `WritingHistory.tsx`, `WritingPage.tsx`, `WritingReviewScreen.tsx`
+- **Файлы:** `index.ts`, `QuickWriteCheck.tsx`, `WritingGradeView.tsx`, `WritingHistory.tsx`, `WritingPage.tsx`, `WritingReviewScreen.tsx`
 - **Вне папки (указатель «Описание:» в начале файла):** `src/lib/writingGrade.ts`
 - **Адреса:** `/writing`
 - **Таблицы:** `writing_submissions`

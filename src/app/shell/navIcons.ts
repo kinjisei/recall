@@ -3,16 +3,19 @@
 // Пара: обычная и залитая (активная вкладка); где залитой нет — одна и та же.
 import {
   IconCalendar,
+  IconCalendarFill,
+  IconClipboard,
+  IconClipboardFill,
   IconDialog,
   IconDialogFill,
   IconHome,
   IconHomeFill,
-  IconMaterials,
   IconPractice,
   IconPracticeFill,
   IconStudy,
   IconStudyFill,
-  IconTeacher,
+  IconUsers,
+  IconUsersFill,
   type IconProps,
 } from '../../shared/ui/icons'
 import type { NavIconName } from '../navigation'
@@ -24,9 +27,8 @@ export const NAV_ICONS: Record<NavIconName, { Icon: IconCmp; IconFill: IconCmp }
   study: { Icon: IconStudy, IconFill: IconStudyFill },
   practice: { Icon: IconPractice, IconFill: IconPracticeFill },
   dialog: { Icon: IconDialog, IconFill: IconDialogFill },
-  // меню учителя до Ф2.10: календарь есть (Ф2.7), залитого календаря,
-  // users и clipboard — нет (опись интерфейса §6.2)
-  schedule: { Icon: IconCalendar, IconFill: IconCalendar },
-  students: { Icon: IconTeacher, IconFill: IconTeacher },
-  tasks: { Icon: IconMaterials, IconFill: IconMaterials },
+  // меню учителя (макет t1, опись интерфейса §6.2)
+  schedule: { Icon: IconCalendar, IconFill: IconCalendarFill },
+  students: { Icon: IconUsers, IconFill: IconUsersFill },
+  tasks: { Icon: IconClipboard, IconFill: IconClipboardFill },
 }

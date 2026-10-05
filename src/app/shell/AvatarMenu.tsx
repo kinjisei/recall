@@ -31,7 +31,7 @@ export function AvatarMenu({ opensUp = false }: { opensUp?: boolean }) {
   const initial = name.trim().charAt(0).toUpperCase() || '?'
 
   // роль — общим хуком каркаса: перечитывается после смены роли (стал
-  // репетитором — «Преподаватель» и «Тариф» без перезагрузки)
+  // репетитором — «Тариф» и метка пробного без перезагрузки)
   const isTeacher = useMyRole() === 'teacher'
 
   useEffect(() => {
@@ -111,15 +111,15 @@ export function AvatarMenu({ opensUp = false }: { opensUp?: boolean }) {
           <AppLink to="/progress" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
             <IconChart size={17} /> Мой прогресс
           </AppLink>
-          {/* не-преподавателю показываем вход в режим: до A1 попасть в студию
-              самостоятельно было нельзя вообще, роль выдавалась вручную SQL-ом */}
-          <AppLink to="/teacher" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
-            {/* Экран /teacher зовётся «Преподаватель» и в заголовке, и на
-                Главной: раньше меню обещало «Мои ученики», а открывался экран
-                с другим названием и четырьмя вкладками (ревью 1Г). Для НЕ
-                преподавателя это по-прежнему приглашение, а не название. */}
-            <IconTeacher size={17} /> {isTeacher ? 'Преподаватель' : 'Я веду учеников'}
-          </AppLink>
+          {/* не-преподавателю — вход в режим: до A1 попасть в студию
+              самостоятельно было нельзя вообще, роль выдавалась вручную SQL-ом.
+              У репетитора студия — вкладки меню (Ф2.10, макет t1-2), пункт
+              здесь повторял бы вкладку «Ученики». */}
+          {!isTeacher && (
+            <AppLink to="/teacher" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
+              <IconTeacher size={17} /> Я веду учеников
+            </AppLink>
+          )}
           {/* репетитору — сразу «Как оплатить» (макет t9-1), остальным — тарифы */}
           {isTeacher ? (
             <AppLink to="/pay" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>

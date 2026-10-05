@@ -1,15 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useUrlState } from '../../shared/lib/useUrlState'
+import { Navigate, useLocation } from 'react-router-dom'
 import { useCopy } from '../../shared/lib/useCopy'
 import { Card } from '../../shared/ui/Card'
 import { Button } from '../../shared/ui/Button'
 import { HowItWorks } from '../../shared/ui/HowItWorks'
 import { HOW_IT_WORKS } from '../../data/howItWorks'
-import { loadProfile } from '../../lib/profile'
-import { useAsyncData } from '../../shared/lib/useAsyncData'
-import { LoadError } from '../../shared/ui/LoadError'
-import { useAuth } from '../../context/AuthContext'
 import {
   getOrCreateInviteCode,
   regenerateInviteCode,
@@ -18,49 +13,27 @@ import {
   type StudentInfo,
 } from '../../lib/teacher'
 import { loadStudentCards, type StudentCard } from '../../domains/students'
-import { MaterialsSection } from './MaterialsSection'
-import { WritingSection } from './WritingSection'
-import { GuideSection } from './GuideSection'
 import { StudentsTab } from './StudentsTab'
-import { BecomeTeacher } from './BecomeTeacher'
-import { StudioEnergy } from './StudioEnergy'
-import { StudioTabs, type TeacherTab } from './StudioTabs'
 import { getHomeworkMany, type Homework } from '../../lib/homework'
-import { countSubmittedWorks } from '../../lib/materials'
-import { countSubmittedWriting } from '../../lib/writing'
 import { getMyPlan, type MyPlan } from '../../lib/billing'
 import { AppLink } from '../../shared/ui/AppLink'
-import { Loading } from '../../shared/ui/Loading'
+import { LoadError } from '../../shared/ui/LoadError'
+import { isConnectionError } from '../../shared/api/connection'
 
 export function TeacherPage() {
-  const { user } = useAuth()
-  const navigate = useNavigate()
-  // Кэш профиля — Главная и меню аватара уже запрашивали тот же ряд. Сбой связи —
-  // плашка, а не «Включи режим преподавателя» настоящему учителю (Ф1.13).
-  const { data: profile, error, loading, reload } = useAsyncData(
-    () => (user ? loadProfile(user.id) : Promise.resolve(null)),
-    [user],
-    'Не удалось открыть студию',
-  )
-
-  if (error) return <LoadError message={error} onRetry={reload} />
-  if (loading) return <Loading label="Открываем студию" />
-
-  if (profile?.role !== 'teacher') {
-    return <BecomeTeacher onDone={reload} onBack={() => navigate('/')} />
-  }
-
-  return <TeacherDashboard />
+  const { search } = useLocation()
+  // «Материалы», «Письменные работы» и «Методичка» переехали во «Задания»
+  // (PLAN.md Ф2.10): старые ссылки /teacher?tab=… ведут туда же, с открытым
+  // материалом (?mat=) и прочим адресом
+  if (new URLSearchParams(search).has('tab')) return <Navigate to={`/tasks${search}`} replace />
+  return <StudentsScreen />
 }
 
-function TeacherDashboard() {
-  // вкладка — в адресе: «назад» из «Методички» уводил на Главную, а не на
-  // предыдущую вкладку (замер ревью 1Г); заодно на вкладку можно дать ссылку
-  const [rawTab, setRawTab] = useUrlState('tab', (v) =>
-    ['materials', 'writing', 'guide'].includes(v),
-  )
-  const tab = (rawTab as TeacherTab | null) ?? 'students'
-  const setTab = (t: TeacherTab) => setRawTab(t === 'students' ? null : t)
+// «Ученики» — вкладка меню учителя (журнал п.35): список и карточки, общий
+// код-приглашение, места тарифа. Кто сюда пускается — таблица маршрутов
+// (роль teacher, app/routes.ts): не-репетитору — приглашение, без связи —
+// «Повторить»; экран сам роль не проверяет.
+function StudentsScreen() {
   const [code, setCode] = useState<string | null>(null)
   const { copied, copy } = useCopy()
   const [regenerating, setRegenerating] = useState(false)
@@ -71,34 +44,33 @@ function TeacherDashboard() {
   // Домашки всех учеников одним запросом. Пустая карта — либо их нет, либо
   // запрос не прошёл: список обязан работать и без домашки, как раньше.
   const [homeworks, setHomeworks] = useState<Map<string, Homework | null>>(new Map())
-  const [pendingWorks, setPendingWorks] = useState(0)
-  const [pendingWriting, setPendingWriting] = useState(0)
   const [myPlan, setMyPlan] = useState<MyPlan | null>(null)
   const [loading, setLoading] = useState(true)
+  // сбой загрузки — «Повторить», а не пустой список «учеников нет» (Ф1.13);
+  // ошибка действия (сменить код, выключить режим) — отдельно, плашкой
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   // «Загрузка…» только при первом открытии: при обновлениях список остаётся
   // на экране, иначе раскрытые колоды учеников схлопываются при каждом действии.
   const load = useCallback(async () => {
-    setError(null)
+    setLoadError(null)
     try {
-      const [c, s, sc, pending, pendingW, hw] = await Promise.all([
+      const [c, s, sc, hw] = await Promise.all([
         getOrCreateInviteCode(),
         getMyStudents(),
         loadStudentCards(),
-        countSubmittedWorks().catch(() => 0), // был отдельным шагом ПОСЛЕ Promise.all
-        countSubmittedWriting().catch(() => 0),
         getHomeworkMany().catch(() => new Map<string, Homework | null>()),
       ])
       setCode(c)
       setStudents(s)
       setCards(sc)
       setHomeworks(hw)
-      setPendingWorks(pending)
-      setPendingWriting(pendingW)
       getMyPlan().then(setMyPlan).catch(() => {})
+      setLoaded(true)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Ошибка загрузки')
+      setLoadError(isConnectionError(e) || !(e instanceof Error) ? 'Не удалось загрузить учеников' : e.message)
     } finally {
       setLoading(false)
     }
@@ -151,29 +123,17 @@ function TeacherDashboard() {
   return (
     <div className="flex flex-col gap-4">
       <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Преподаватель</h1>
-        {tab === 'students' && (
-          <Button variant="ghost" className="px-3 py-1 text-sm" onClick={load}>
-            Обновить
-          </Button>
-        )}
+        <h1 className="text-2xl font-bold">Ученики</h1>
+        <Button variant="ghost" className="px-3 py-1 text-sm" onClick={load}>
+          Обновить
+        </Button>
       </header>
 
       <HowItWorks>{HOW_IT_WORKS.teacher}</HowItWorks>
 
-      <StudioTabs tab={tab} onTab={setTab} pendingWorks={pendingWorks} pendingWriting={pendingWriting} />
-
-      {tab === 'guide' ? (
-        <GuideSection />
-      ) : tab === 'writing' ? (
-        <WritingSection students={students} />
-      ) : tab === 'materials' ? (
-        // onWorksChanged: после проверки/переназначения пересчитываем бейдж
-        // «На проверку» на вкладке — иначе он висел старым числом до «Обновить»
-        <MaterialsSection
-          students={students}
-          onWorksChanged={() => countSubmittedWorks().then(setPendingWorks)}
-        />
+      {/* не загрузилось ни разу — только «Повторить»: пустой список сказал бы «учеников нет» */}
+      {loadError && !loaded ? (
+        <LoadError message={loadError} onRetry={load} />
       ) : (
         <StudentsTab
           cards={cards}
@@ -182,12 +142,12 @@ function TeacherDashboard() {
           plan={myPlan}
           loading={loading}
           onChanged={load}
-          notice={error && <Card tone="danger"><p className="text-sm text-danger-soft-fg">{error}</p></Card>}
+          notice={
+            loadError ? <LoadError message={loadError} onRetry={load} />
+            : error && <Card tone="danger"><p className="text-sm text-danger-soft-fg">{error}</p></Card>
+          }
           extras={
             <>
-              {myPlan && typeof myPlan.energy_max === 'number' && !myPlan.is_admin && myPlan.in_studio && (
-                <StudioEnergy plan={myPlan} />
-              )}
               <Card>
                 <p className="text-sm text-fg-muted">
                   Общий код — ученик вводит его у себя на Главной и появляется в списке.

@@ -15,7 +15,7 @@ import { AppProviders } from './AppProviders'
 import { ScrollToTop } from './ScrollToTop'
 import { PageTracker } from './PageTracker'
 import { ProtectedRoute } from './ProtectedRoute'
-import { RoleGate } from './RoleGate'
+import { RoleGate, StartGate } from './RoleGate'
 import { Layout } from './shell/Layout'
 import { ROUTES, isLazyScreen, opensForGuests, type AppRoute } from './routes'
 
@@ -23,12 +23,13 @@ function PageFallback() {
   return <Loading label="Открываем экран" />
 }
 
-/** Элемент маршрута: экран (с заглушкой, проверкой роли и входа) или переадресация. */
+/** Элемент маршрута: экран (с заглушкой, проверкой роли, стартом роли и входа) или переадресация. */
 function routeElement(route: AppRoute): ReactNode {
   if ('redirect' in route) return <Navigate to={route.redirect} replace />
   const Screen = route.screen
   let element: ReactNode = <Screen />
-  if (route.role) element = <RoleGate role={route.role}>{element}</RoleGate>
+  if (route.role) element = <RoleGate role={route.role} othersTo={route.othersTo}>{element}</RoleGate>
+  if (route.start) element = <StartGate>{element}</StartGate>
   if (isLazyScreen(Screen)) element = <Suspense fallback={<PageFallback />}>{element}</Suspense>
   // экран «на весь экран» пускается по входу сам; экраны в рамке — через рамку
   if (route.place === 'fullscreen') element = <ProtectedRoute>{element}</ProtectedRoute>

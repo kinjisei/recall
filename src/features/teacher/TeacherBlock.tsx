@@ -4,7 +4,7 @@ import { Card } from '../../shared/ui/Card'
 import { Button } from '../../shared/ui/Button'
 import { joinTeacher, getMyTeachers } from '../../lib/teacher'
 import { pendingJoin } from '../../lib/pendingRole'
-import { countSubmittedWorks, getMyAssignments } from '../../lib/materials'
+import { getMyAssignments } from '../../lib/materials'
 import type { Profile } from '../../types'
 import { AppLink } from '../../shared/ui/AppLink'
 
@@ -25,50 +25,17 @@ export async function loadAssignmentCounts(): Promise<AssignmentCounts> {
 }
 
 /**
- * Блок «Преподаватель» на Главной (Фаза 4).
- * Преподавателю — ссылка на экран учеников; ученику — привязка по коду
- * и имя его преподавателя, когда привязка уже есть.
+ * Блок «Преподаватель» на Главной ученика: привязка по коду и имя его
+ * преподавателя, когда привязка уже есть. Репетитору — ничего: Главной у
+ * него нет (старт — расписание), студия — вкладки меню (PLAN.md Ф2.10).
+ * Раньше здесь была карточка «Преподаватель» со счётчиком работ — теперь
+ * число «ждут проверки» стоит на вкладке «Задания».
  */
 export function TeacherBlock({ profile }: { profile: Profile | null }) {
-  if (!profile) return null
-  if (profile.role === 'teacher') {
-    return <TeacherCard />
-  }
+  if (!profile || profile.role === 'teacher') return null
   // AssignmentsNotice здесь больше нет: Главная рендерит её сама, и раньше
   // плашка «Все задания выполнены» показывалась дважды подряд.
   return <JoinTeacherBlock />
-}
-
-/** Карточка преподавателя: ссылка на экран + уведомление о сданных работах. */
-function TeacherCard() {
-  const [pending, setPending] = useState(0)
-
-  useEffect(() => {
-    countSubmittedWorks().then(setPending).catch(() => {})
-  }, [])
-
-  return (
-    <AppLink to="/teacher">
-      <Card className="flex items-center justify-between transition-transform active:scale-[0.99]">
-        <div>
-          {/* то же имя, что у экрана и в меню аватара */}
-          <p className="font-semibold">Преподаватель</p>
-          <p className="text-sm text-fg-muted">
-            {pending > 0
-              ? `Работ на проверку: ${pending}`
-              : 'Код-приглашение, наборы слов, материалы, прогресс'}
-          </p>
-        </div>
-        {pending > 0 ? (
-          <span className="rounded-full bg-warning-soft/50 px-2.5 py-1 text-sm font-bold text-warning-strong">
-            {pending}
-          </span>
-        ) : (
-          <span className="text-fg-muted">→</span>
-        )}
-      </Card>
-    </AppLink>
-  )
 }
 
 /**

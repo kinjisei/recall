@@ -5,12 +5,25 @@
 // После изменения профиля (экран «Настройки») вызвать invalidateProfile().
 // ============================================================================
 import { supabase } from '../shared/api/supabase'
-import { readRaw, writeRaw } from '../shared/lib/storage'
+import { readJson, readRaw, writeJson, writeRaw } from '../shared/lib/storage'
 import type { Profile } from '../types'
 
 let cache: { userId: string; promise: Promise<Profile | null> } | null = null
 
 const LEVEL_CACHE_KEY = 'recall.en_level_cache'
+const ROLE_CACHE_KEY = 'recall.role'
+
+/**
+ * Роль из прошлого ответа базы на этом устройстве (PLAN.md Ф2.10): меню и
+ * стартовый экран зависят от роли, и без кэша учитель при каждом запуске
+ * видел бы меню ученика, пока идёт запрос, а без сети — всё время. Роль —
+ * вместе с тем, чья она. undefined — не знаем (кэша нет или он чужой); при
+ * выходе стирается вместе с остальными данными аккаунта.
+ */
+export function getCachedRole(userId: string): string | null | undefined {
+  const v = readJson<{ id?: string; role?: string | null } | null>(ROLE_CACHE_KEY, null)
+  return v?.id === userId ? (v.role ?? null) : undefined
+}
 
 /**
  * Мгновенный уровень EN из localStorage — чтобы строки вроде «Твой уровень»
@@ -62,6 +75,7 @@ async function fetchProfile(userId: string): Promise<Profile | null> {
   if (error) throw error
   const profile = data as Profile
   writeRaw(LEVEL_CACHE_KEY, profile.level ?? '')
+  writeJson(ROLE_CACHE_KEY, { id: userId, role: profile.role ?? null })
   return profile
 }
 
@@ -96,6 +110,17 @@ export function getProfile(userId: string): Promise<Profile | null> {
   return loadProfile(userId).catch(() => null)
 }
 
+/**
+ * Имена учеников одним запросом (RLS «linked profiles visible») — для
+ * списков учителя: «На проверку», «Проверка работ». Сбой — пустая карта:
+ * список покажет «Ученик», а не упадёт целиком из-за подписи.
+ */
+export async function displayNames(ids: string[]): Promise<Map<string, string | null>> {
+  if (ids.length === 0) return new Map()
+  const { data } = await supabase.from('profiles').select('id, display_name').in('id', ids)
+  return new Map((data ?? []).map((p) => [p.id as string, p.display_name as string | null]))
+}
+
 const PROFILE_CHANGED = 'recall:profile-changed'
 
 /**
@@ -106,6 +131,9 @@ const PROFILE_CHANGED = 'recall:profile-changed'
  */
 export function invalidateProfile(): void {
   cache = null
+  // и прошлую роль: выключил режим репетитора — страница перезагружается
+  // раньше, чем профиль перечитан, и старая роль увела бы в расписание
+  writeJson(ROLE_CACHE_KEY, null)
   if (typeof window !== 'undefined') window.dispatchEvent(new Event(PROFILE_CHANGED))
 }
 

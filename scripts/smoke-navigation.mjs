@@ -11,9 +11,14 @@
  *   2. назад  — браузерный «назад» возвращает НА ШАГ, а не на Главную;
  *   3. F5     — перезагрузка оставляет на том же экране.
  *
- * ⚠️ До этапа 1 плана ремонта часть проверок ПАДАЕТ — это ожидаемо, скрипт и
- * писался как приёмка этого этапа. Эталон «как надо» — сценарий «Практика»,
- * где режим уже лежит в адресе (?m=).
+ * Эталон «как надо» — сценарий «Практика», где режим лежит в адресе (?m=).
+ *
+ * Меню по роли (PLAN.md Ф2.10, макет t1): ученику — прежнее меню, экраны
+ * студии — приглашение; учитель стартует в расписании, видит Расписание ·
+ * Ученики · Задания · Моя учёба (и на 1280 — слева), «ждут проверки» на
+ * «Заданиях»; хаб «Заданий» открывает разбор сданной работы, разделы и
+ * открытый материал — в адресе; старые ссылки /teacher?tab=… ведут во
+ * «Задания»; «Моя учёба» — плитки в экраны ученика.
  *
  * Запуск: `npm run dev:test` (5174, тестовая база), затем `node scripts/smoke-navigation.mjs`.
  * Аккаунт создаётся и удаляется сам (service_role из .env.local).
@@ -27,6 +32,7 @@ import { APP_URL, scriptEnv } from './_env.mjs'
 const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
 const BASE = APP_URL
 const EMAIL = 'nav-smoke@recall.test'
+const STUDENT_EMAIL = 'nav-smoke-st@recall.test'
 const PASSWORD = 'NavSmoke!2026'
 
 const env = scriptEnv()
@@ -66,6 +72,15 @@ const seen = (page, text) =>
   page.evaluate((t) => (document.body.innerText || '').includes(t), text)
 
 /**
+ * Появится ли текст за ms — после F5: dev-сервер собирает экран заново, и
+ * фиксированной паузы то хватает, то нет (ложное красное на рабочем коде).
+ */
+const appears = (page, text, ms = 10000) =>
+  page
+    .waitForFunction((t) => (document.body.innerText || '').includes(t), { polling: 250, timeout: ms }, text)
+    .then(() => true, () => false)
+
+/**
  * Отпечаток внутреннего экрана: заголовок + начало текста.
  *
  * ⚠️ Без него смоук ВРЁТ. Пока состояние экрана не в адресе, после F5
@@ -78,6 +93,16 @@ const fingerprint = (page) =>
     const body = (document.body.innerText || '').replace(/\s+/g, ' ').trim().slice(0, 120)
     return { h, body }
   })
+
+/**
+ * Экран дорисовался: у первого заголовка есть текст. Фиксированная пауза
+ * ловила испанский текст до того, как пришёл его кусок (заголовок «»), и
+ * после F5 «заголовок сменился» — ложное красное на рабочем коде.
+ */
+const headingReady = (page, ms = 10000) =>
+  page
+    .waitForFunction(() => !!document.querySelector('h1, h2')?.textContent?.trim(), { polling: 250, timeout: ms })
+    .then(() => true, () => false)
 
 /** Мы на Главной? (признак «нас выкинуло в начало») */
 const onHome = async (page) => {
@@ -287,7 +312,8 @@ async function main() {
     // значит клик никуда не привёл, и остальные проверки бессмысленны
     const printBefore = await fingerprint(page)
     const reached = await s.reach()
-    await sleep(1500)
+    await sleep(800)
+    await headingReady(page)
     const urlInside = page.url()
     const printInside = await fingerprint(page)
     const moved = printInside.body !== printBefore.body
@@ -302,7 +328,8 @@ async function main() {
     // в играх раунд начинается заново (новое слово) — это правильно и сменой
     // экрана не считается.
     await page.reload({ waitUntil: 'networkidle2' })
-    await sleep(2500)
+    await headingReady(page)
+    await sleep(500)
     const printAfter = await fingerprint(page)
     // решающий признак: если после F5 виден маркер СПИСКА, значит нас отбросило
     // назад (у урока грамматики заголовок тот же, что у списка, — одного
@@ -331,7 +358,8 @@ async function main() {
 
     // 2. «Назад» — на шаг, а не на Главную
     await page.goBack({ waitUntil: 'networkidle2' }).catch(() => {})
-    await sleep(2000)
+    if (s.backMarker) await appears(page, s.backMarker)
+    else await sleep(2000)
     const home = await onHome(page)
     const backOk = !home && (s.backMarker ? await seen(page, s.backMarker) : true)
     check(
@@ -341,10 +369,38 @@ async function main() {
     )
   }
 
-  // --- Студия преподавателя: вкладка и открытый материал в адресе -----------
-  // Отдельным блоком, потому что нужна роль teacher и материал в БД. Материал
-  // вставляем напрямую: живая генерация жжёт дорогую квоту Pro-моделей.
+  // --- Меню по роли (PLAN.md Ф2.10, макет t1) --------------------------------
+  // Подписи вкладок нижней панели (без числа счётчика) и активная вкладка.
+  const navTabs = () =>
+    page.evaluate(() =>
+      [...document.querySelectorAll('nav.vt-nav a')].map((a) => a.querySelector(':scope > span:last-of-type')?.textContent?.trim() ?? ''),
+    )
+  const activeTab = () =>
+    page.evaluate(() => document.querySelector('nav.vt-nav a[aria-current="page"] > span:last-of-type')?.textContent?.trim() ?? '—')
+  const path = () => new URL(page.url()).pathname + new URL(page.url()).search
+
+  // Пока ученик: меню прежнее, экраны студии — приглашение, «Моя учёба» — его Главная
+  await page.goto(`${BASE}/`, { waitUntil: 'networkidle2' })
+  await sleep(1500)
+  check('ученик: меню Главная · Учёба · Практика · Диалог', (await navTabs()).join(' · ') === 'Главная · Учёба · Практика · Диалог', (await navTabs()).join(' · '))
+  await page.goto(`${BASE}/tasks`, { waitUntil: 'networkidle2' })
+  await sleep(1800)
+  check('ученик: «Задания» учителя — приглашение «Ведёшь учеников?»', await seen(page, 'Ведёшь учеников?'), path())
+  await page.goto(`${BASE}/learn`, { waitUntil: 'networkidle2' })
+  await sleep(1500)
+  check('ученик: «Моя учёба» учителя ведёт на его Главную', new URL(page.url()).pathname === '/', path())
+
+  // Учитель с учеником, который сдал письмо и задание по материалу. Данные —
+  // напрямую в базу: живая генерация жжёт дорогую квоту Pro-моделей.
   await admin.from('profiles').update({ role: 'teacher' }).eq('id', userId)
+  await admin.from('allowed_emails').upsert({ email: STUDENT_EMAIL, note: 'nav-smoke (временный)' })
+  const { data: su } = await admin.auth.admin.createUser({ email: STUDENT_EMAIL, password: PASSWORD, email_confirm: true })
+  const studentId =
+    su?.user?.id ??
+    (await admin.auth.admin.listUsers({ perPage: 1000 })).data.users.find((u) => (u.email ?? '').toLowerCase() === STUDENT_EMAIL)?.id
+  if (!studentId) throw new Error('не удалось завести ученика')
+  await admin.from('profiles').update({ display_name: 'Әсел Навигация' }).eq('id', studentId)
+  await admin.from('teacher_students').upsert({ teacher_id: userId, student_id: studentId, seat: true }, { onConflict: 'teacher_id,student_id' })
   const { data: mat } = await admin
     .from('materials')
     .insert({
@@ -356,52 +412,120 @@ async function main() {
       length_range: 'short',
       title: 'Материал для смоука навигации',
       body: 'A short body for the navigation smoke.',
-      exercises: [],
+      exercises: [{ kind: 'comprehension', type: 'mcq', prompt: 'Is it short?', options: ['yes', 'no'], answer: 0 }],
     })
     .select('id')
     .single()
+  const { data: work } = await admin
+    .from('material_assignments')
+    .insert({
+      material_id: mat.id,
+      student_id: studentId,
+      status: 'submitted',
+      submitted_at: new Date(Date.now() - 3600_000).toISOString(),
+      answers: [{ index: 0, given: 'no', auto_ok: false }],
+      auto_score: 0,
+      auto_total: 1,
+    })
+    .select('id')
+    .single()
+  const { data: task } = await admin
+    .from('writing_tasks')
+    .insert({ teacher_id: userId, lang: 'en', mode: 'regular', level: 'B1', prompt: 'Nav smoke essay: your town.', settings: {} })
+    .select('id')
+    .single()
+  await admin.from('writing_task_assignments').insert({
+    task_id: task.id,
+    student_id: studentId,
+    status: 'submitted',
+    submitted_at: new Date().toISOString(),
+    essay: 'My town is small and green.',
+    ai_review: { level: 'B1', errors: [], strengths: ['clear'] },
+  })
 
-  await page.goto(`${BASE}/teacher?tab=materials`, { waitUntil: 'networkidle2' })
+  // Старт учителя — расписание, меню — четыре вкладки, счётчик на «Заданиях»
+  await page.goto(`${BASE}/`, { waitUntil: 'networkidle2' })
   await sleep(2500)
-  check(
-    'Студия: вкладка «Материалы» открывается по адресу',
-    await seen(page, 'Материал для смоука навигации'),
-    page.url(),
-  )
+  check('учитель: с «/» — в расписание (стартовый экран)', new URL(page.url()).pathname === '/schedule', path())
+  check('учитель: меню Расписание · Ученики · Задания · Моя учёба', (await navTabs()).join(' · ') === 'Расписание · Ученики · Задания · Моя учёба', (await navTabs()).join(' · '))
+  check('учитель: подсвечено «Расписание»', (await activeTab()) === 'Расписание', await activeTab())
+  const tasksLabel = await page.evaluate(() => document.querySelector('nav.vt-nav a[href="/tasks"]')?.getAttribute('aria-label') ?? '')
+  check('учитель: на «Заданиях» — «ждут проверки: 2»', tasksLabel.includes('ждут проверки: 2'), tasksLabel)
 
+  // «Задания»: хаб → разбор сданной работы → назад
+  await tap(page, 'Задания', 'nav.vt-nav a')
+  await sleep(1500)
+  check('«Задания»: хаб с «Проверкой работ» и тем, кто сдал', path() === '/tasks' && (await seen(page, 'Проверка работ')) && (await seen(page, 'Әсел Навигация')), path())
+  check('«Задания»: «2 ждут»', await seen(page, '2 ждут'))
+  check('«Задания»: разделы «Материалы», «Письменные задания», «Методичка»', (await seen(page, 'Собрать материал')) && (await seen(page, 'Письменные задания')) && (await seen(page, 'Методичка')))
+  await tap(page, 'Методичка')
+  await sleep(1500)
+  check('«Задания» → «Методичка» по адресу', path() === '/tasks?tab=guide', path())
+  await page.goBack({ waitUntil: 'networkidle2' }).catch(() => {})
+  await sleep(1500)
+  await tap(page, '«Материал для смоука навигации»')
+  await sleep(1800)
+  check('«Задания»: строка открывает разбор этой работы', path() === `/tasks?work=${work.id}` && (await seen(page, 'Проверка работы: Әсел Навигация')), path())
+  await page.reload({ waitUntil: 'networkidle2' })
+  check('«Задания»: F5 оставляет в разборе', await appears(page, 'Проверка работы: Әсел Навигация'), path())
+  await page.goBack({ waitUntil: 'networkidle2' }).catch(() => {})
+  await sleep(1800)
+  check('«Задания»: «назад» из разбора — в хаб', path() === '/tasks' && (await seen(page, 'Проверка работ')), path())
+  await page.goto(`${BASE}/tasks?work=00000000-0000-0000-0000-000000000000`, { waitUntil: 'networkidle2' })
+  await sleep(2000)
+  check('«Задания»: уже проверенная работа — «больше не ждёт», а не пустой экран', await seen(page, 'больше не ждёт'), path())
+
+  // Раздел «Материалы»: открытый материал в адресе
+  await page.goto(`${BASE}/tasks`, { waitUntil: 'networkidle2' })
+  await sleep(2000)
+  await tap(page, 'Библиотека')
+  await sleep(2000)
+  check('«Задания» → «Библиотека»: материалы по адресу', path() === '/tasks?tab=materials' && (await seen(page, 'Материал для смоука навигации')), path())
   await tap(page, 'Материал для смоука навигации')
   await sleep(1800)
   const matUrl = page.url()
-  check('Студия: открытый материал попал в адрес', matUrl.includes('mat='), matUrl)
-
+  check('Материалы: открытый материал попал в адрес', matUrl.includes('mat='), matUrl)
   await page.reload({ waitUntil: 'networkidle2' })
-  await sleep(2500)
-  check(
-    'Студия: F5 оставляет в материале',
-    await seen(page, 'Материал для смоука навигации'),
-    page.url(),
-  )
-
+  check('Материалы: F5 оставляет в материале', await appears(page, 'Материал для смоука навигации'), path())
   await page.goBack({ waitUntil: 'networkidle2' }).catch(() => {})
   await sleep(2000)
-  check(
-    'Студия: «назад» из материала возвращает к списку',
-    !(await onHome(page)) && page.url().includes('tab=materials') && !page.url().includes('mat='),
-    page.url(),
-  )
-
+  check('Материалы: «назад» из материала — к списку', path() === '/tasks?tab=materials', path())
   // чужой/удалённый id не должен давать пустой экран
-  await page.goto(`${BASE}/teacher?tab=materials&mat=00000000-0000-0000-0000-000000000000`, {
-    waitUntil: 'networkidle2',
-  })
+  await page.goto(`${BASE}/tasks?tab=materials&mat=00000000-0000-0000-0000-000000000000`, { waitUntil: 'networkidle2' })
   await sleep(2500)
-  check(
-    'Студия: несуществующий материал показывает список',
-    await seen(page, 'Создать материал'),
-    page.url(),
-  )
+  check('Материалы: несуществующий материал показывает список', await seen(page, 'Создать материал'), path())
+  // старые ссылки на вкладки студии (до Ф2.10) ведут во «Задания»
+  await page.goto(`${BASE}/teacher?tab=writing`, { waitUntil: 'networkidle2' })
+  await sleep(2000)
+  check('старая ссылка /teacher?tab=writing → «Задания», письменные', path() === '/tasks?tab=writing' && (await seen(page, 'Nav smoke essay')), path())
+  check('на «Заданиях» подсвечены «Задания»', (await activeTab()) === 'Задания', await activeTab())
+
+  // «Ученики»: студия без ряда вкладок
+  await tap(page, 'Ученики', 'nav.vt-nav a')
+  await sleep(2000)
+  const h1 = await page.evaluate(() => document.querySelector('h1')?.textContent?.trim())
+  check('«Ученики»: /teacher с заголовком «Ученики», без ряда вкладок студии', path() === '/teacher' && h1 === 'Ученики' && !(await seen(page, 'Методичка')), `${path()} «${h1}»`)
+
+  // «Моя учёба»: сводка и плитки, внутри — экраны ученика
+  await tap(page, 'Моя учёба', 'nav.vt-nav a')
+  await sleep(2000)
+  check('«Моя учёба»: /learn с плитками Учёба · Практика · Диалог', path() === '/learn' && (await seen(page, 'Начать занятие')) && (await seen(page, 'Разговор с AI')), path())
+  await tap(page, 'Практика', 'nav[aria-label="Разделы учёбы"] a')
+  await sleep(2000)
+  check('«Моя учёба» → «Практика»: экран ученика, подсвечена «Моя учёба»', path().startsWith('/practice') && (await activeTab()) === 'Моя учёба', `${path()} · ${await activeTab()}`)
+
+  // Компьютер: те же четыре вкладки в меню слева
+  await page.setViewport({ width: 1280, height: 800 })
+  await page.goto(`${BASE}/schedule`, { waitUntil: 'networkidle2' })
+  await sleep(2000)
+  const side = await page.evaluate(() => [...document.querySelectorAll('nav[aria-label="Разделы"] a[href]')].map((a) => a.querySelector('span')?.textContent?.trim()).filter(Boolean))
+  check('1280: меню слева — Расписание · Ученики · Задания · Моя учёба', side.slice(0, 4).join(' · ') === 'Расписание · Ученики · Задания · Моя учёба', side.join(' · '))
+  await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2 })
 
   if (mat?.id) await admin.from('materials').delete().eq('id', mat.id)
+  if (task?.id) await admin.from('writing_tasks').delete().eq('id', task.id)
+  await admin.auth.admin.deleteUser(studentId).catch(() => {})
+  await admin.from('allowed_emails').delete().eq('email', STUDENT_EMAIL)
 
   check('JS-ошибок за прогон нет', jsErrors.length === 0, jsErrors.slice(0, 2).join(' | '))
 

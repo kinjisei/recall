@@ -17,12 +17,13 @@ import { NotificationBell } from '../../features/notifications'
 import { GiftButton } from '../../features/referral'
 import { AvatarMenu } from './AvatarMenu'
 import { LangSwitch } from './LangSwitch'
+import { CountBadge } from '../../shared/ui/CountBadge'
 import { NAV_ICONS } from './navIcons'
 import { useMyRole } from './useMyRole'
 import { useNavTabs } from './useNavTabs'
 
 export function SideNav() {
-  const { tabs, activeIndex, onTabClick } = useNavTabs()
+  const { tabs, activeIndex, badgeOf, onTabClick } = useNavTabs()
   const teacher = useMyRole() === 'teacher'
 
   return (
@@ -47,13 +48,16 @@ export function SideNav() {
             opacity: activeIndex < 0 ? 0 : 1,
           }}
         />
-        {tabs.map(({ to, label, icon }, i) => {
+        {tabs.map((tab, i) => {
+          const { to, label, icon } = tab
           const active = i === activeIndex
           const TabIcon = active ? NAV_ICONS[icon].IconFill : NAV_ICONS[icon].Icon
+          const badge = badgeOf(tab)
           return (
             <AppLink
               key={to}
               to={to}
+              aria-label={badge.label}
               // вниз по списку — экран приезжает справа, вверх — слева
               direction={activeIndex >= 0 && i < activeIndex ? 'out' : 'in'}
               onClick={() => onTabClick(to)}
@@ -65,7 +69,9 @@ export function SideNav() {
               }`}
             >
               <TabIcon size={22} />
-              <span>{label}</span>
+              <span className="flex-1">{label}</span>
+              {/* «ждут проверки» на «Заданиях» учителя: в строке — справа */}
+              <CountBadge n={badge.n} inline />
             </AppLink>
           )
         })}

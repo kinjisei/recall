@@ -10,6 +10,7 @@ import { correctAnswerText } from './text'
 import { validExercises } from './materialExercises'
 import { studentBriefBlock } from './diagnosticsBrief'
 import { track } from './analytics'
+import { displayNames } from './profile'
 import type {
   AppLang,
   AssignmentAnswer,
@@ -470,14 +471,16 @@ export async function submitAssignment(
 // Фаза B: проверка работ (AI-разбор → вердикты преподавателя).
 // ---------------------------------------------------------------------------
 
-/** Сколько сданных работ ждут проверки (для бейджа преподавателя). */
+/** Ждут проверки (вкладка «Задания»): мои материалы, не мои работы — RLS отдаёт и те, где я ученик. Сбой — бросает. */
 export async function countSubmittedWorks(): Promise<number> {
-  // RLS отдаёт преподавателю только назначения его материалов
+  const userId = await requireUserId()
   const { count, error } = await supabase
     .from('material_assignments')
-    .select('id', { count: 'exact', head: true })
+    .select('id, materials!inner(teacher_id)', { count: 'exact', head: true })
     .eq('status', 'submitted')
-  if (error) return 0
+    .eq('materials.teacher_id', userId)
+    .neq('student_id', userId)
+  if (error) throw error
   return count ?? 0
 }
 
@@ -494,23 +497,20 @@ export interface SubmittedWork {
  * КТО сдал и ЧТО именно проверять, пока не откроет каждый материал вручную.
  */
 export async function listSubmittedWorks(): Promise<SubmittedWork[]> {
+  const userId = await requireUserId()
   const { data, error } = await supabase
     .from('material_assignments')
-    .select('*, materials(*)')
+    .select('*, materials!inner(*)')
     .eq('status', 'submitted')
+    .eq('materials.teacher_id', userId)
+    .neq('student_id', userId)
     .order('submitted_at', { ascending: true })
   if (error) throw error
 
   const rows = (data ?? []) as (MaterialAssignment & { materials: Material | null })[]
   if (rows.length === 0) return []
 
-  // имена учеников одним запросом (RLS «linked profiles visible» разрешает)
-  const ids = [...new Set(rows.map((r) => r.student_id))]
-  const { data: profs } = await supabase
-    .from('profiles')
-    .select('id, display_name')
-    .in('id', ids)
-  const names = new Map((profs ?? []).map((p) => [p.id as string, p.display_name as string | null]))
+  const names = await displayNames([...new Set(rows.map((r) => r.student_id))])
 
   return rows
     .filter((r) => r.materials)

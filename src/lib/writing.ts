@@ -6,6 +6,7 @@
 import { supabase, requireUserId, toJson } from '../shared/api/supabase'
 import { dbError } from '../shared/api/errors'
 import { chat } from '../shared/api/ai'
+import { displayNames } from './profile'
 import type {
   AppLang,
   CEFRLevel,
@@ -160,14 +161,52 @@ export async function reassignWriting(assignmentId: string, note: string): Promi
   if (error) throw dbError(error, 'переназначить письмо')
 }
 
-/** Сколько писем ждут проверки (для бейджа вкладки «Письмо» у преподавателя). */
+/**
+ * Сколько писем учеников ждут проверки (счётчик вкладки «Задания», Ф2.10).
+ * Только по своим заданиям и не свои — как countSubmittedWorks; сбой —
+ * исключение, а не «0» (Ф1.13).
+ */
 export async function countSubmittedWriting(): Promise<number> {
+  const userId = await requireUserId()
   const { count, error } = await supabase
     .from('writing_task_assignments')
-    .select('id', { count: 'exact', head: true })
+    .select('id, writing_tasks!inner(teacher_id)', { count: 'exact', head: true })
     .eq('status', 'submitted')
-  if (error) return 0
+    .eq('writing_tasks.teacher_id', userId)
+    .neq('student_id', userId)
+  if (error) throw error
   return count ?? 0
+}
+
+/** Сданное письмо для «Проверки работ»: кто, какое задание, когда. */
+export interface SubmittedWriting {
+  assignment: WritingTaskAssignment
+  task: WritingTask
+  studentName: string
+}
+
+/**
+ * Все сданные и не проверенные письма учеников разом — для «Проверки работ»
+ * во «Заданиях» (Ф2.10). Раньше письмо, ждущее проверки, искали, открывая
+ * задания по одному: в списке заданий не видно, где кто-то сдал.
+ */
+export async function listSubmittedWriting(): Promise<SubmittedWriting[]> {
+  const userId = await requireUserId()
+  const { data, error } = await supabase
+    .from('writing_task_assignments')
+    .select('*, writing_tasks!inner(*)')
+    .eq('status', 'submitted')
+    .eq('writing_tasks.teacher_id', userId)
+    .neq('student_id', userId)
+    .order('submitted_at', { ascending: true })
+  if (error) throw error
+  const rows = (data ?? []) as (WritingTaskAssignment & { writing_tasks: WritingTask })[]
+  const names = await displayNames([...new Set(rows.map((r) => r.student_id))])
+  return rows.map(({ writing_tasks, ...assignment }) => ({
+    assignment: assignment as WritingTaskAssignment,
+    task: writing_tasks,
+    studentName: names.get(assignment.student_id) ?? 'Ученик',
+  }))
 }
 
 /** Сколько письменных заданий у ученика (для строки в «Учёбе»). */

@@ -1,18 +1,19 @@
 /**
- * Меню по роли (src/app/navigation.ts): набор вкладок и какая из них активна.
+ * Меню по роли (src/app/navigation.ts): набор вкладок, какая из них активна,
+ * стартовый экран и где плашка «Тариф закончился».
  *
- * Зачем. Конфиг один на нижнюю панель (телефон) и боковую (компьютер), и меню
- * по роли в нём пока ВЫКЛЮЧЕНО — включает PLAN.md Ф2.10. Тест держит три вещи:
- *   1. выключатель действительно выключен: учитель видит то же меню, что и
- *      ученик, — ровно нынешние четыре вкладки;
- *   2. подсветка не потерялась при переезде из BottomNav: каждый внутренний
- *      экран подсвечивает свою вкладку (без `also` грамматика гасила бы всю
- *      навигацию);
- *   3. включённый выключатель (параметр, константу не трогаем) даёт учителю
- *      его меню из архитектуры §16, а ученику — прежнее;
- *   4. плашка «Тариф закончился» (PLAN.md Ф2.4) — на стартовом экране и у
- *      репетитора в студии; с меню учителя — над расписанием, а не в
- *      «Моей учёбе».
+ * Зачем. Конфиг один на нижнюю панель (телефон) и боковую (компьютер). С
+ * PLAN.md Ф2.10 у учителя своё меню (журнал п.34–35, макет t1). Тест держит:
+ *   1. ученик видит прежние четыре вкладки, учитель — Расписание · Ученики ·
+ *      Задания · Моя учёба; пока роль неизвестна — вкладок нет (а не чужое
+ *      меню), роль не пришла из-за сбоя — меню ученика;
+ *   2. старт: учитель — расписание, ученик — Главная;
+ *   3. подсветка: каждый внутренний экран подсвечивает свою вкладку (без
+ *      `also` грамматика гасила бы всю навигацию); у учителя экраны ученика
+ *      — «Моя учёба»; лендинг /teachers не подсвечивает «Ученики» /teacher;
+ *   4. счётчик «ждут проверки» — только на «Заданиях»;
+ *   5. плашка «Тариф закончился» (Ф2.4) — на стартовом экране роли и во всей
+ *      студии, но не в «Моей учёбе».
  *
  * ⚠️ Ожидания — литералами, а не из того же конфига: сверка конфига с самим
  * собой зелёная при любой поломке.
@@ -20,11 +21,11 @@
  * Запуск: node scripts/test-navigation.mjs
  */
 import {
-  ROLE_NAV_ENABLED,
   STUDENT_TABS,
   TEACHER_TABS,
   activeTabIndex,
   showsAccessBanner,
+  startPath,
   tabsFor,
 } from '../src/app/navigation.ts'
 
@@ -36,77 +37,107 @@ const check = (name, ok, extra = '') => {
   console.log(`${ok ? '✓' : '✗'} ${name}${extra ? ' — ' + extra : ''}`)
 }
 const labels = (tabs) => tabs.map((t) => t.label).join(' · ')
+const paths = (tabs) => tabs.map((t) => t.to).join(' ')
 
-// ── 1. выключатель выключен: у всех нынешнее меню ────────────────────────
-check('меню по роли выключено до Ф2.10', ROLE_NAV_ENABLED === false)
+// ── 1. наборы вкладок ───────────────────────────────────────────────────────
 const STUDENT = 'Главная · Учёба · Практика · Диалог'
-check('ученик видит четыре вкладки', labels(tabsFor('student')) === STUDENT, labels(tabsFor('student')))
-check('учитель видит то же меню, что ученик', labels(tabsFor('teacher')) === STUDENT, labels(tabsFor('teacher')))
-check('без роли (профиль не загрузился) — то же меню', labels(tabsFor(null)) === STUDENT)
-check(
-  'адреса вкладок прежние',
-  STUDENT_TABS.map((t) => t.to).join(' ') === '/ /study /practice /conversation',
-  STUDENT_TABS.map((t) => t.to).join(' '),
-)
+const TEACHER = 'Расписание · Ученики · Задания · Моя учёба'
+check('ученик видит четыре прежние вкладки', labels(tabsFor('learner')) === STUDENT, labels(tabsFor('learner')))
+check('адреса вкладок ученика прежние', paths(STUDENT_TABS) === '/ /study /practice /conversation', paths(STUDENT_TABS))
+check('учитель — Расписание · Ученики · Задания · Моя учёба', labels(tabsFor('teacher')) === TEACHER, labels(tabsFor('teacher')))
+check('адреса вкладок учителя', paths(TEACHER_TABS) === '/schedule /teacher /tasks /learn', paths(TEACHER_TABS))
+check('роль неизвестна (первый вход на устройстве) — вкладок нет, а не чужое меню', tabsFor(undefined).length === 0)
+check('роли нет или база не ответила — меню ученика', labels(tabsFor(null)) === STUDENT)
+check('другая роль (admin) — меню ученика', labels(tabsFor('admin')) === STUDENT)
 
-// ── 2. подсветка: адрес → индекс вкладки ─────────────────────────────────
-const expected = {
-  '/': 0,
-  '/progress': 0,
-  '/settings': 0,
-  '/teacher': 0,
-  '/admin': 0,
-  '/study': 1,
-  '/grammar': 1,
-  '/placement': 1,
-  '/assignments': 1,
-  '/program': 1,
-  '/quests': 1,
-  '/writing': 1,
-  '/self-material': 1,
-  '/practice': 2,
-  '/pronunciation': 2,
-  '/conversation': 3,
-  // экраны вне вкладок: подложку не показываем, а не вешаем на первую
-  '/login': -1,
-  '/onboarding': -1,
+// ── 2. стартовый экран ──────────────────────────────────────────────────────
+check('старт учителя — расписание', startPath('teacher') === '/schedule', startPath('teacher'))
+check('старт ученика — Главная', startPath('learner') === '/', startPath('learner'))
+check('старт без роли — Главная', startPath(null) === '/', startPath(null))
+
+// ── 3. подсветка: адрес → вкладка ───────────────────────────────────────────
+const active = (role, path) => labels([tabsFor(role)[activeTabIndex(tabsFor(role), path)] ?? { label: '—' }])
+const studentExpected = {
+  '/': 'Главная',
+  '/progress': 'Главная',
+  '/settings': 'Главная',
+  '/lessons': 'Главная',
+  '/admin': 'Главная',
+  // экраны студии у ученика — приглашение «Ведёшь учеников?»
+  '/teacher': 'Главная',
+  '/schedule': 'Главная',
+  '/tasks': 'Главная',
+  '/invite': 'Главная',
+  '/study': 'Учёба',
+  '/grammar': 'Учёба',
+  '/placement': 'Учёба',
+  '/assignments': 'Учёба',
+  '/program': 'Учёба',
+  '/quests': 'Учёба',
+  '/writing': 'Учёба',
+  '/self-material': 'Учёба',
+  '/practice': 'Практика',
+  '/pronunciation': 'Практика',
+  '/conversation': 'Диалог',
+  // вне вкладок: подложку не показываем, а не вешаем на первую
+  '/login': '—',
+  '/onboarding': '—',
+  '/pay': '—',
+  // лендинг /teachers — не студия /teacher (startsWith подсвечивал бы Главную)
+  '/teachers': '—',
 }
-for (const [path, index] of Object.entries(expected)) {
-  const got = activeTabIndex(tabsFor('student'), path)
-  check(`${path} подсвечивает ${index < 0 ? 'ничего' : labels([STUDENT_TABS[index]])}`, got === index, `индекс ${got}`)
+for (const [path, label] of Object.entries(studentExpected)) {
+  const got = active('learner', path)
+  check(`ученик: ${path} — ${label === '—' ? 'ничего' : label}`, got === label, got)
+}
+const teacherExpected = {
+  '/schedule': 'Расписание',
+  '/teacher': 'Ученики',
+  '/tasks': 'Задания',
+  '/learn': 'Моя учёба',
+  // экраны ученика — внутри «Моей учёбы», их никто не дублирует
+  '/study': 'Моя учёба',
+  '/grammar': 'Моя учёба',
+  '/placement': 'Моя учёба',
+  '/assignments': 'Моя учёба',
+  '/program': 'Моя учёба',
+  '/quests': 'Моя учёба',
+  '/writing': 'Моя учёба',
+  '/self-material': 'Моя учёба',
+  '/practice': 'Моя учёба',
+  '/pronunciation': 'Моя учёба',
+  '/conversation': 'Моя учёба',
+  '/progress': 'Моя учёба',
+  '/settings': 'Моя учёба',
+  '/lessons': 'Моя учёба',
+  // не учёба и не вкладка
+  '/admin': '—',
+  '/invite': '—',
+  '/pay': '—',
+  '/teachers': '—',
+}
+for (const [path, label] of Object.entries(teacherExpected)) {
+  const got = active('teacher', path)
+  check(`учитель: ${path} — ${label === '—' ? 'ничего' : label}`, got === label, got)
 }
 
-// ── 3. включённый выключатель: меню учителя из §16 ────────────────────────
-check(
-  'учителю — Расписание · Ученики · Задания · Моя учёба',
-  labels(tabsFor('teacher', true)) === 'Расписание · Ученики · Задания · Моя учёба',
-  labels(tabsFor('teacher', true)),
-)
-check('ученику при включённом — прежнее меню', labels(tabsFor('student', true)) === STUDENT)
-check('неизвестная роль — меню ученика', labels(tabsFor('admin', true)) === STUDENT)
-const teacherActive = (path) => labels([TEACHER_TABS[activeTabIndex(TEACHER_TABS, path)] ?? { label: '—' }])
-check('учитель: студия — вкладка «Ученики»', teacherActive('/teacher') === 'Ученики', teacherActive('/teacher'))
-check('учитель: расписание — вкладка «Расписание», а не «Моя учёба»', teacherActive('/schedule') === 'Расписание', teacherActive('/schedule'))
-for (const path of ['/', '/study', '/grammar', '/practice', '/pronunciation', '/conversation', '/settings']) {
-  check(`учитель: ${path} — «Моя учёба» (экраны ученика те же)`, teacherActive(path) === 'Моя учёба', teacherActive(path))
-}
+// ── 4. счётчик «ждут проверки» ──────────────────────────────────────────────
+const badged = TEACHER_TABS.filter((t) => t.badge).map((t) => `${t.label}:${t.badge}`).join(' ')
+check('счётчик «ждут проверки» — только на «Заданиях»', badged === 'Задания:reviews', badged)
+check('у ученика счётчиков на вкладках нет', STUDENT_TABS.every((t) => !t.badge))
 
-// ── плашка «Тариф закончился» (Ф2.4) ─────────────────────────────────────────
-const banner = (path, role, enabled) => showsAccessBanner(path, role, enabled)
-check('сейчас: репетитору — на Главной', banner('/', 'teacher', false))
-check('сейчас: репетитору — в студии', banner('/teacher', 'teacher', false))
-check('сейчас: репетитору — над расписанием (Ф2.7, макет t9-3)', banner('/schedule', 'teacher', false))
-check('ученику на /schedule — нет', !banner('/schedule', 'learner', false))
-check('сейчас: самоучке — на Главной', banner('/', 'learner', false))
-check('ученику в «Преподавателе» (приглашение) — нет', !banner('/teacher', 'learner', false))
+// ── 5. плашка «Тариф закончился» (Ф2.4) ─────────────────────────────────────
+const banner = (path, role) => showsAccessBanner(path, role)
+check('самоучке — на Главной', banner('/', 'learner'))
+check('учителю — над расписанием (старт, макет t9-3)', banner('/schedule', 'teacher'))
+check('учителю — в «Учениках»', banner('/teacher', 'teacher'))
+check('учителю — в «Заданиях»', banner('/tasks', 'teacher'))
+check('учителю в «Моей учёбе» — нет', !banner('/learn', 'teacher'))
 for (const path of ['/study', '/practice', '/conversation', '/settings', '/pay', '/progress']) {
-  check(`на ${path} — нет`, !banner(path, 'teacher', false))
+  check(`учителю на ${path} — нет`, !banner(path, 'teacher'))
 }
-check('роль ещё не пришла — нет', !banner('/', null, false))
-check('с меню учителя (Ф2.10): над расписанием', banner('/schedule', 'teacher', true))
-check('с меню учителя: в студии — да', banner('/teacher', 'teacher', true))
-check('с меню учителя: «Моя учёба» — без плашки', !banner('/', 'teacher', true))
-check('с меню учителя ученику — по-прежнему Главная', banner('/', 'learner', true))
+check('ученику на экранах студии (приглашение) — нет', !banner('/schedule', 'learner') && !banner('/teacher', 'learner'))
+check('роль ещё не пришла — нет', !banner('/', null) && !banner('/schedule', undefined))
 
 console.log(`\nИтог: ${pass}/${pass + fail}`)
 process.exitCode = fail === 0 ? 0 : 1

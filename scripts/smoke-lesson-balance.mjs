@@ -163,7 +163,10 @@ try {
   // ── 3. компьютер: «Требуют внимания» ────────────────────────────────────────────
   const desk = await openAs(b, TEACHER, 1280)
   await go(desk, '/teacher')
-  check('1280, никто не выбран: «Требуют внимания» — Тимур, остался 1', await waitText(desk, /Требуют внимания · 1[\s\S]*Тимур Ким[\s\S]*Остался 1 оплаченный урок/))
+  const attentionOk = await waitText(desk, /Требуют внимания · 1[\s\S]*Тимур Ким[\s\S]*Остался 1 оплаченный урок/)
+  // красное — показать, что на экране вместо панели
+  const deskText = attentionOk ? '' : `${new URL(desk.url()).pathname}: ${(await text(desk)).replace(/\s+/g, ' ').slice(0, 300)}`
+  check('1280, никто не выбран: «Требуют внимания» — Тимур, остался 1', attentionOk, deskText)
   await shot(desk, 'attention-1280')
 
   // ── 4. история и исправление задним числом ──────────────────────────────────────

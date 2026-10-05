@@ -40,10 +40,13 @@ type Mode =
 
 export function MaterialsSection({
   students,
+  startForm = false,
   onWorksChanged,
 }: {
   students: StudentInfo[]
-  /** Позвать, когда число работ «на проверку» могло измениться (для бейджа вкладки). */
+  /** Сразу форма нового материала — «Собрать материал» во «Заданиях» (Ф2.10). */
+  startForm?: boolean
+  /** Позвать, когда число работ «на проверку» могло измениться (счётчик вкладки «Задания»). */
   onWorksChanged?: () => void
 }) {
   // Шаги мастера — черновик (Ф1.14): план и текст уже стоили генерации AI, и
@@ -57,6 +60,12 @@ export function MaterialsSection({
     clearDraft(REQUEST_DRAFT)
   }
   const restoredNote = flowDraft.restored && <DraftRestored onClear={discard} className="mb-3" />
+  // «Собрать материал»: форма — если мастер не продолжается с прошлого раза
+  // (начатый план или текст не выбрасываем ради пустой формы)
+  useEffect(() => {
+    if (startForm && !flow) setFlow({ name: 'form' })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   // список → форма → предпросмотр → материал: каждый шаг с верха экрана
   useScrollTop(mode.name)
 
