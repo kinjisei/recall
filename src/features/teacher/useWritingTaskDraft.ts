@@ -4,15 +4,18 @@
 // график, слова и грамматика — одним черновиком (shared/lib/useDraft).
 // ============================================================================
 import { useDraftForm } from '../../shared/lib/useDraft'
+import { useLanguage } from '../../context/LanguageContext'
 import type { AppLang, CEFRLevel, ChartSpec, WritingMode } from '../../types'
 
 /** Черновик формы — его ищет и список: есть черновик — открыть сразу форму. */
 export const WRITING_TASK_DRAFT = 'writing-task'
 
 export function useWritingTaskDraft() {
+  // язык по умолчанию — тот, что учитель преподаёт (EN/ES в шапке, онбординг Ф2.11)
+  const { lang: appLang } = useLanguage()
   const [form, field, draft] = useDraftForm(WRITING_TASK_DRAFT, {
     mode: 'ielts' as WritingMode,
-    lang: 'en' as AppLang,
+    lang: appLang as AppLang,
     level: 'B1' as CEFRLevel,
     ieltsTask: 'task2' as 'task2' | 'gt1' | 'academic1',
     targetBand: '6.5',

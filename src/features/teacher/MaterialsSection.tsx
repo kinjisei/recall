@@ -10,17 +10,11 @@ import { Button } from '../../shared/ui/Button'
 import { LoadError } from '../../shared/ui/LoadError'
 import { useAsyncData } from '../../shared/lib/useAsyncData'
 import { getMyPlan } from '../../lib/billing'
-import {
-  listMyMaterials,
-  listSubmittedWorks,
-  type MaterialContent,
-  type MaterialRequest,
-  type SubmittedWork,
-} from '../../lib/materials'
+import { listMyMaterials, listSubmittedWorks, type SubmittedWork } from '../../lib/materials'
 import type { StudentInfo } from '../../lib/teacher'
 import { useScrollTop } from '../../lib/useScrollTop'
 import { useUrlState } from '../../shared/lib/useUrlState'
-import type { Material, MaterialAssignment, MaterialPlan } from '../../types'
+import type { Material, MaterialAssignment } from '../../types'
 import { MaterialsByLevel } from './materials/MaterialsByLevel'
 import { REQUEST_DRAFT, RequestForm } from './materials/RequestForm'
 import { useDraft } from '../../shared/lib/useDraft'
@@ -30,13 +24,8 @@ import { PlanScreen } from './materials/PlanScreen'
 import { PreviewScreen } from './materials/PreviewScreen'
 import { MaterialDetail } from './materials/MaterialDetail'
 import { RowsSkeleton } from '../../shared/ui/Loading'
-
-type Mode =
-  | { name: 'list' }
-  | { name: 'form' }
-  | { name: 'plan'; req: MaterialRequest; plan: MaterialPlan }
-  // own: материал по своему тексту преподавателя (плана нет, назад — к форме)
-  | { name: 'preview'; req: MaterialRequest; plan: MaterialPlan; content: MaterialContent; own?: boolean }
+import { START, advance, ahead, back, current, forward, fromDraft, replace, type Flow } from './materials/wizard'
+import { useInnerScreen } from './innerScreen'
 
 export function MaterialsSection({
   students,
@@ -52,9 +41,12 @@ export function MaterialsSection({
   // Шаги мастера — черновик (Ф1.14): план и текст уже стоили генерации AI, и
   // перезагрузка (новая версия включается сразу) не должна их выбрасывать.
   // null — список; стирается, когда материал сохранён или работу выбросили.
-  const [flow, setFlow, flowDraft] = useDraft<Mode | null>('material-flow', null)
-  const mode: Mode = flow ?? { name: 'list' }
-  const setMode = (m: Mode) => setFlow(m.name === 'list' ? null : m)
+  // «Назад» внутри мастера готовое тоже не выбрасывает (Ф2.11, wizard.ts).
+  const [saved, setFlow, flowDraft] = useDraft<unknown>('material-flow', null)
+  const flow = fromDraft(saved)
+  const step = flow ? current(flow) : null
+  const next = flow ? ahead(flow) : undefined
+  const go = (f: Flow | null) => setFlow(f)
   const discard = () => {
     flowDraft.clear()
     clearDraft(REQUEST_DRAFT)
@@ -63,11 +55,11 @@ export function MaterialsSection({
   // «Собрать материал»: форма — если мастер не продолжается с прошлого раза
   // (начатый план или текст не выбрасываем ради пустой формы)
   useEffect(() => {
-    if (startForm && !flow) setFlow({ name: 'form' })
+    if (startForm && !flow) setFlow(START)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   // список → форма → предпросмотр → материал: каждый шаг с верха экрана
-  useScrollTop(mode.name)
+  useScrollTop(step?.name ?? 'list')
 
   // Открытый материал — в адресе (?mat=<id>): «назад» возвращает к списку
   // материалов, а не выбрасывает из студии, и на материал можно дать ссылку.
@@ -112,6 +104,8 @@ export function MaterialsSection({
   // за шаги мастера. Материал ищем в уже загруженном списке: чужой или
   // удалённый id показывает список, а не пустой экран.
   const openMaterial = matId ? (materials ?? []).find((m) => m.id === matId) : undefined
+  // у материала, плана и предпросмотра своя шапка «назад» — шапку раздела прячем
+  useInnerScreen(!!openMaterial || step?.name === 'plan' || step?.name === 'preview')
   if (matId && openMaterial) {
     return (
       <MaterialDetail
@@ -134,53 +128,54 @@ export function MaterialsSection({
     )
   }
 
-  if (mode.name === 'form') {
+  if (flow && step?.name === 'form') {
     return (
       <RequestForm
         students={students}
-        onCancel={() => setMode({ name: 'list' })}
-        onPlanned={(req, plan) => setMode({ name: 'plan', req, plan })}
+        resumeLabel={next && (next.name === 'plan' ? 'Вернуться к плану' : 'Вернуться к упражнениям')}
+        onResume={() => go(forward(flow))}
+        onCancel={() => go(null)}
+        onPlanned={(req, plan) => go(advance(flow, { name: 'plan', req, plan }))}
         onOwnGenerated={(req, plan, content) =>
-          setMode({ name: 'preview', req, plan, content, own: true })
+          go(advance(flow, { name: 'preview', req, plan, content, own: true }))
         }
       />
     )
   }
-  if (mode.name === 'plan') {
+  if (flow && step?.name === 'plan') {
     return (
       <>
         {restoredNote}
         <PlanScreen
-          req={mode.req}
-          plan={mode.plan}
-          onBack={() => setMode({ name: 'form' })}
-          onReplanned={(plan) => setMode({ ...mode, plan })}
-          onGenerated={(content) => setMode({ name: 'preview', req: mode.req, plan: mode.plan, content })}
+          req={step.req}
+          plan={step.plan}
+          onBack={() => go(back(flow))}
+          onForward={next ? () => go(forward(flow)) : undefined}
+          onReplanned={(plan) => go(replace(flow, { ...step, plan }))}
+          onGenerated={(content) => go(advance(flow, { name: 'preview', req: step.req, plan: step.plan, content }))}
         />
       </>
     )
   }
-  if (mode.name === 'preview') {
+  if (flow && step?.name === 'preview') {
     return (
       <>
         {restoredNote}
         <PreviewScreen
-          req={mode.req}
-          plan={mode.plan}
-          content={mode.content}
-          own={mode.own}
-          onRegenerated={(content) => setMode({ ...mode, content })}
+          req={step.req}
+          plan={step.plan}
+          content={step.content}
+          own={step.own}
+          onRegenerated={(content) => go(replace(flow, { ...step, content }))}
           onSaved={(material) => {
-            flowDraft.forget()
+            // мастер закрыт: раньше он оставался на предпросмотре, и выход из
+            // карточки материала возвращал к «Сохранить» — второй экземпляр
+            flowDraft.clear()
             clearDraft(REQUEST_DRAFT)
             reload()
             setMatId(material.id)
           }}
-          onBack={() =>
-            mode.own
-              ? setMode({ name: 'form' })
-              : setMode({ name: 'plan', req: mode.req, plan: mode.plan })
-          }
+          onBack={() => go(back(flow))}
         />
       </>
     )
@@ -228,7 +223,7 @@ export function MaterialsSection({
           сгенерирует текст и упражнения. Материал можно назначить ученикам или
           просто хранить в библиотеке.
         </p>
-        <Button className="mt-3" onClick={() => setMode({ name: 'form' })}>
+        <Button className="mt-3" onClick={() => go(START)}>
           + Создать материал
         </Button>
         {/* Остаток генераций ДО того, как в него упрёшься. Раньше о лимите

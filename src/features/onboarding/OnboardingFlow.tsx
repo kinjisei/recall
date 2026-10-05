@@ -1,10 +1,13 @@
 // ============================================================================
-// Онбординг нового пользователя (роут /onboarding): 3 шага —
+// Онбординг нового пользователя (роут /onboarding). Ученик — 3 шага:
 //   1) какой язык учим (пишет recall.lang),
 //   2) уровень: тест (есть для обоих языков) ИЛИ для EN ещё и выбор вручную;
 //      шаг можно пропустить,
 //   3) «Твой план готов» + конфетти и запуск первой ведомой сессии.
-// Показывается только новичку: см. useIsNewUser ниже.
+// Репетитор — один экран (StepTeacher, PLAN.md Ф2.11): пришёл по ссылке
+// /login?role=teacher, режим уже включён или выбрал «Я преподаватель» на
+// первом шаге. Вопросы ученика ему не задаём.
+// Показывается только новичку: см. shouldOnboard в lib/onboarding.
 // ============================================================================
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -19,30 +22,41 @@ import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { supabase } from '../../shared/api/supabase'
 import { joinTeacher } from '../../lib/teacher'
-import { pendingJoin } from '../../lib/pendingRole'
-import { invalidateProfile } from '../../lib/profile'
+import { hasPendingTeacherRole, pendingJoin } from '../../lib/pendingRole'
+import { getProfile, invalidateProfile } from '../../lib/profile'
 import { setEsLevel } from '../../lib/esLevel'
 import { markOnboarded } from '../../lib/onboarding'
 import { startGuidedRoute } from '../../lib/guided'
-import { track, setSelfReportedSource } from '../../lib/analytics'
+import { track } from '../../lib/analytics'
+import { useAsyncData } from '../../shared/lib/useAsyncData'
 import { celebrate } from '../../shared/ui/Confetti'
 import { Button } from '../../shared/ui/Button'
 import { GOAL_LABELS, type AppLang, type CEFRLevel, type LearningGoal } from '../../types'
+import { Heading, HowHeard, ONBOARDING_CTA } from './parts'
+import { StepTeacher } from './StepTeacher'
 
 // A1 добавлен: profiles.level и тест уровня теперь допускают его (новичок с нуля)
 const EN_LEVELS: CEFRLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1']
 
 /** Варианты ответа «как узнал» — короткие, чтобы влезали в один-два ряда чипов. */
 const HOW_HEARD = ['Инстаграм', 'TikTok', 'Телеграм', 'От преподавателя', 'Друзья', 'Поиск', 'Другое']
-// Главные кнопки онбординга крупнее обычных: скругление 16 и вес 500. «!» —
-// потому что обычный класс проиграл бы базе Button (rounded-xl, font-semibold)
-// по порядку в CSS, а не по порядку в строке.
-const ONBOARDING_CTA = 'rounded-2xl! font-medium! disabled:opacity-40!'
 
 export function OnboardingFlow() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { lang, setLang } = useLanguage()
+  // Репетитор ли это. Метку из ссылки снимает включение режима сразу после
+  // входа (ProtectedRoute), поэтому запоминаем её на старте экрана, а после —
+  // смотрим роль в профиле. Пока не выяснили — пустой экран, а не вопросы
+  // ученика на миг.
+  const [fromLanding] = useState(hasPendingTeacherRole)
+  const { data: profile, loading } = useAsyncData(
+    () => (user ? getProfile(user.id) : Promise.resolve(null)),
+    [user?.id],
+  )
+  const [picked, setPicked] = useState<boolean | null>(null)
+  const teacher = picked ?? (fromLanding || profile?.role === 'teacher')
+  const deciding = picked === null && !fromLanding && loading
   const [step, setStep] = useState(0)
   const [level, setLevel] = useState<CEFRLevel | null>(null)
   // Зачем человек учит язык. Спрашиваем на том же шаге, что и уровень: это
@@ -79,8 +93,30 @@ export function OnboardingFlow() {
     setTimeout(() => void route.then((r) => navigate(r, { replace: true })), 600)
   }
 
+  const finishTeacher = () => {
+    // онбординг считаем пройденным, иначе ProtectedRoute вернёт сюда же
+    markOnboarded()
+    void track('onboarding_done', { lang, role: 'teacher' })
+    // стартовый экран роли выбирает каркас (StartGate): учителя «/» уводит в расписание
+    navigate('/', { replace: true })
+  }
+
+  const frame = 'mx-auto flex min-h-[100dvh] max-w-screen-sm flex-col gap-7 bg-page px-5 pb-10 pt-[calc(env(safe-area-inset-top)+2rem)] text-fg'
+  if (deciding) return <main className={frame} />
+  if (teacher) {
+    return (
+      <main className={frame}>
+        <StepTeacher
+          enable={profile?.role !== 'teacher'}
+          onBack={picked ? () => setPicked(false) : undefined}
+          onDone={finishTeacher}
+        />
+      </main>
+    )
+  }
+
   return (
-    <main className="mx-auto flex min-h-[100dvh] max-w-screen-sm flex-col gap-7 bg-page px-5 pb-10 pt-[calc(env(safe-area-inset-top)+2rem)] text-fg">
+    <main className={frame}>
       {/* прогресс из трёх сегментов */}
       <div className="flex gap-2" aria-label={`Шаг ${step + 1} из 3`}>
         {[0, 1, 2].map((i) => (
@@ -100,6 +136,7 @@ export function OnboardingFlow() {
             setLevel(null)
             setStep(1)
           }}
+          onTeacher={() => setPicked(true)}
         />
       )}
 
@@ -117,17 +154,7 @@ export function OnboardingFlow() {
       )}
 
       {step === 2 && (
-        <StepReady
-          lang={lang}
-          level={level}
-          onFinish={finish}
-          onTeacher={async () => {
-            // онбординг считаем пройденным, иначе ProtectedRoute вернёт сюда же
-            await saveLevel()
-            markOnboarded()
-            navigate('/teacher', { replace: true })
-          }}
-        />
+        <StepReady lang={lang} level={level} onFinish={finish} />
       )}
     </main>
   )
@@ -135,7 +162,7 @@ export function OnboardingFlow() {
 
 // --- Шаг 1: язык -----------------------------------------------------------
 
-function StepLanguage({ onPick }: { onPick: (l: AppLang) => void }) {
+function StepLanguage({ onPick, onTeacher }: { onPick: (l: AppLang) => void; onTeacher: () => void }) {
   const options: { id: AppLang; label: string; desc: string }[] = [
     { id: 'en', label: 'EN', desc: 'Английский' },
     { id: 'es', label: 'ES', desc: 'Испанский' },
@@ -158,6 +185,13 @@ function StepLanguage({ onPick }: { onPick: (l: AppLang) => void }) {
           </button>
         ))}
       </div>
+      {/* Развилка — на первом шаге: репетитору вопросы ученика не нужны (Ф2.11) */}
+      <button
+        onClick={onTeacher}
+        className="min-h-11 self-center py-1 text-sm text-fg-muted underline underline-offset-4"
+      >
+        Я преподаватель — веду своих учеников
+      </button>
     </div>
   )
 }
@@ -297,14 +331,11 @@ function StepReady({
   lang,
   level,
   onFinish,
-  onTeacher,
 }: {
   lang: AppLang
   level: CEFRLevel | null
   onFinish: () => void
-  onTeacher: () => void
 }) {
-  const [heard, setHeard] = useState<string | null>(null)
   // Развилка «сам / с преподавателем»: у кого есть преподаватель — вводит код тут же,
   // чтобы не искать, куда его вводить потом; по ссылке-приглашению (Ф2.5) код уже в поле.
   const [showCode, setShowCode] = useState(() => pendingJoin() !== null)
@@ -360,31 +391,7 @@ function StepReady({
         ))}
       </div>
 
-      {/* «Как узнал» — единственный источник, который переживает пересылку
-          ссылки без параметров (а в телеграме и вотсапе так пересылают почти
-          всегда) и ловит сарафан, которого метки не видят вовсе.
-          Отдельным шагом делать не стал: это налог на всех ради одной строки. */}
-      <div className="flex flex-col gap-2.5">
-        <p className="text-sm text-fg-muted">Как ты о нас узнал?</p>
-        <div className="flex flex-wrap gap-2">
-          {HOW_HEARD.map((h) => (
-            <button
-              key={h}
-              onClick={() => {
-                setHeard(h)
-                setSelfReportedSource(h)
-              }}
-              className={`min-h-11 rounded-xl border px-3.5 py-2 text-sm ${
-                heard === h
-                  ? 'border-accent-line bg-[rgba(145,132,217,.16)]'
-                  : 'border-tint/[0.08] bg-surface text-fg-secondary'
-              }`}
-            >
-              {h}
-            </button>
-          ))}
-        </div>
-      </div>
+      <HowHeard options={HOW_HEARD} />
 
       <div className="mt-auto flex flex-col gap-3">
         {!showCode ? (
@@ -424,31 +431,7 @@ function StepReady({
             </button>
           </form>
         )}
-        {/* вход для репетитора: роль включается изнутри приложения */}
-        <button
-          onClick={onTeacher}
-          className="min-h-[44px] py-1 text-sm text-fg-muted underline underline-offset-4"
-        >
-          Я преподаватель — веду своих учеников
-        </button>
       </div>
-    </div>
-  )
-}
-
-function Heading({
-  title,
-  desc,
-  center = false,
-}: {
-  title: string
-  desc: string
-  center?: boolean
-}) {
-  return (
-    <div className={`flex flex-col gap-2 ${center ? 'items-center text-center' : ''}`}>
-      <h1 className="text-2xl font-medium tracking-tight">{title}</h1>
-      <p className="text-sm text-fg-muted">{desc}</p>
     </div>
   )
 }

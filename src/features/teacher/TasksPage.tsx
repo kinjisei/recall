@@ -17,6 +17,7 @@ import { LoadError } from '../../shared/ui/LoadError'
 import { Loading } from '../../shared/ui/Loading'
 import { WritingReviewScreen } from '../writing'
 import { GuideSection } from './GuideSection'
+import { InnerScreenContext } from './innerScreen'
 import { MaterialsSection } from './MaterialsSection'
 import { ReviewScreen } from './ReviewScreen'
 import { TasksHub, type TaskSection } from './TasksHub'
@@ -38,14 +39,18 @@ export function TasksPage() {
   // «Собрать материал» в хабе открывает раздел сразу с формой; «назад» в хаб
   // и следующий заход в «Библиотеку» — уже без неё
   const [startForm, setStartForm] = useState(false)
+  // внутренний экран раздела со своей шапкой «назад» — шапку раздела прячем (innerScreen.ts)
+  const [inner, setInner] = useState(false)
 
   if (workId) return <WaitingReview id={workId} onClose={() => setWorkId(null)} />
   if (tab) {
     return (
-      <div className="flex flex-col gap-4">
-        <BackHeader onBack={() => setTab(null)} title={TITLES[tab]} label="Задания" />
-        {tab === 'guide' ? <GuideSection /> : <StudentsSection tab={tab} startForm={startForm} />}
-      </div>
+      <InnerScreenContext.Provider value={setInner}>
+        <div className="flex flex-col gap-4">
+          {!inner && <BackHeader onBack={() => setTab(null)} title={TITLES[tab]} label="Задания" />}
+          {tab === 'guide' ? <GuideSection /> : <StudentsSection tab={tab} startForm={startForm} />}
+        </div>
+      </InnerScreenContext.Provider>
     )
   }
   return (

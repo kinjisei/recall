@@ -6,6 +6,7 @@
 // ============================================================================
 import { useCallback, useState } from 'react'
 import { Button } from '../../shared/ui/Button'
+import { useLanguage } from '../../context/LanguageContext'
 import { LoadError } from '../../shared/ui/LoadError'
 import { Picker } from '../../shared/ui/Picker'
 import { useAsyncData } from '../../shared/lib/useAsyncData'
@@ -35,7 +36,8 @@ const inputCls =
 const programDraft = (studentId: string, lang: AppLang) => `program:${studentId}:${lang}`
 
 export function ProgramSection({ studentId }: { studentId: string }) {
-  const [lang, setLang] = useState<AppLang>('en')
+  // язык по умолчанию — тот, что учитель преподаёт (EN/ES в шапке, онбординг Ф2.11)
+  const [lang, setLang] = useState<AppLang>(useLanguage().lang)
   // есть черновик новой программы — сразу форма, иначе его не увидеть
   const modeFor = (l: AppLang) => (readDraft(programDraft(studentId, l)) ? 'form' : 'view')
   const [mode, setMode] = useState<'view' | 'form'>(() => modeFor('en'))
@@ -173,18 +175,21 @@ function PlanForm({
   onSaved: () => void
 }) {
   // Форма и составленная AI программа — черновик (Ф1.14): перезагрузка не
-  // выбрасывает ни набранное, ни уже потраченную генерацию.
+  // выбрасывает ни набранное, ни уже потраченную генерацию. «К форме» её тоже
+  // не выбрасывает (PLAN.md Ф2.11): editing — смотрим форму, а программа ждёт.
   const [form, field, draft] = useDraftForm(programDraft(studentId, lang), {
     level: 'B1',
     weeks: 4,
     goal: '',
     feedback: '',
     preview: null as GeneratedPlan | null,
+    editing: false,
   })
-  const { level, weeks, goal, feedback, preview } = form
+  const { level, weeks, goal, feedback, preview, editing } = form
   const [setLevel, setWeeks, setGoal] = [field('level'), field('weeks'), field('goal')]
-  const [setFeedback, setPreview] = [field('feedback'), field('preview')]
+  const [setFeedback, setPreview, setEditing] = [field('feedback'), field('preview'), field('editing')]
   const cancel = () => {
+    if (preview && !window.confirm('Выбросить программу, которую составил AI?')) return
     draft.clear()
     onCancel?.()
   }
@@ -199,6 +204,7 @@ function PlanForm({
     try {
       setPreview(await generateStudyPlan(req, withFeedback))
       setFeedback('')
+      setEditing(false)
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Не удалось составить программу')
     } finally {
@@ -225,8 +231,13 @@ function PlanForm({
   return (
     <div className="flex flex-col gap-3">
       {draft.restored && <DraftRestored onClear={draft.clear} />}
-      {!preview ? (
+      {!preview || editing ? (
         <>
+          {preview && (
+            <Button variant="secondary" className="px-3 py-2 text-sm" onClick={() => setEditing(false)}>
+              Вернуться к программе →
+            </Button>
+          )}
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1 text-xs text-fg-muted">
               Уровень ученика
@@ -268,7 +279,7 @@ function PlanForm({
               loading={busy === 'gen'}
               onClick={() => void generate()}
             >
-              {busy === 'gen' ? 'Составляю (до минуты)…' : 'Составить программу (AI)'}
+              {busy === 'gen' ? 'Составляю (до минуты)…' : preview ? 'Составить заново (AI)' : 'Составить программу (AI)'}
             </Button>
             {onCancel && (
               <Button variant="ghost" className="px-3 py-2 text-sm" onClick={cancel}>
@@ -308,7 +319,7 @@ function PlanForm({
             >
               Пересоставить
             </Button>
-            <Button variant="ghost" className="px-3 py-2 text-sm" onClick={() => setPreview(null)}>
+            <Button variant="ghost" className="px-3 py-2 text-sm" onClick={() => setEditing(true)}>
               К форме
             </Button>
           </div>

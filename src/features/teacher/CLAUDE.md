@@ -39,6 +39,7 @@
 |---|---|
 | `TeacherPage.tsx` | «Ученики» (`/teacher`): загрузка, общий код-приглашение и места тарифа, выключение режима; старые `/teacher?tab=…` — во «Задания» |
 | `TasksPage.tsx`, `TasksHub.tsx` | «Задания» (`/tasks`): хаб, разделы (`?tab=materials|writing|guide`), разбор сданной работы из хаба (`?work=<id назначения>`) |
+| `innerScreen.ts` | внутренний экран со своей шапкой «назад» прячет шапку страницы: в «Заданиях» и карточка ученика на телефоне (Ф2.11) |
 | `waitingWorks.ts`, `waitingCount.ts` | «ждут проверки»: список для хаба и число на вкладке меню (лёгкое, в стартовом коде каркаса) |
 | `StudioEnergy.tsx` | энергия студии в карточке «Материалы» |
 | `BecomeTeacher.tsx` | приглашение «Ведёшь учеников?» — его показывает проверка роли маршрута (`app/RoleGate`), лениво |
@@ -48,7 +49,7 @@
 | `HomeworkSection.tsx`, `HomeworkComposer.tsx` | домашка в карточке и её сборка (правила — `features/homework/CLAUDE.md`) |
 | `StudentWordsSection.tsx`, `WordPicker.tsx` | раздел «Слова» карточки: статус, выдача паков и своих наборов, удаление, перепроверка |
 | `DiagnosticsSection.tsx`, `ProgramSection.tsx`, `PlacementSection.tsx`, `QuestSection.tsx`, `DailyPlanSection.tsx` | разделы под «Ещё»: диагностика, программа, тест уровня, квесты, план дня |
-| `MaterialsSection.tsx`, `materials/*` | материалы: заявка, план, предпросмотр, по уровням |
+| `MaterialsSection.tsx`, `materials/*` | материалы: заявка, план, предпросмотр, по уровням; шаги мастера и «назад/вперёд» без потерь — `materials/wizard.ts` |
 | `WritingSection.tsx`, `ReviewScreen.tsx` | письменные работы и проверка |
 | `ReportSheet.tsx`, `PrintSheet.tsx` | отчёт родителям и печать |
 | `AssignmentsPage.tsx` | экран ученика `/assignments` |
@@ -125,10 +126,41 @@
   правки к плану и к тексту.
 - **Мастер материала — черновик целиком** (`material-flow`): план и текст
   уже стоили генерации, перезагрузка не выбрасывает их. Стирается, когда
-  материал сохранён или «Очистить»; «Отмена» в форме тоже стирает.
+  материал сохранён (мастер закрывается — раньше выход из нового материала
+  возвращал к «Сохранить», и получался второй экземпляр) или «Очистить»;
+  «Отмена» в форме тоже стирает. Черновик прежнего вида (один шаг, до Ф2.11)
+  восстанавливается с шагами позади (`wizard.fromDraft`).
 - Черновик, спрятанный за кнопкой, должен быть виден: есть черновик
   программы или письменного задания — раздел сразу открывает форму; есть
   черновик сборки — кнопка «Продолжить сборку».
+
+**«Назад» не выбрасывает то, что составил AI** (PLAN.md Ф2.11)
+
+- Шаги мастера материала живут как история браузера (`materials/wizard.ts`):
+  «К плану» и «К форме» двигают указатель, готовое остаётся впереди — на
+  плане «Вернуться к готовому тексту», в форме «Вернуться к плану». Раньше
+  «К плану» стирал текст, «К форме» — план, и вернуть их можно было только
+  новой генерацией. Новый план из формы или новый текст из плана — другая
+  ветка, прежнее впереди убирается (кнопки тогда говорят «Новый план»,
+  «Новый текст»); пересоставить план — правка того же шага, текст впереди
+  остаётся со своим планом.
+- «Программа»: «К форме» не стирает составленную программу —
+  «Вернуться к программе» (`editing` в черновике).
+- «Отмена» при готовом впереди спрашивает, прежде чем выбросить.
+
+**Язык по умолчанию — тот, что учитель преподаёт** (PLAN.md Ф2.11)
+
+- Формы студии (материал, программа, квесты, письменное задание, слова)
+  берут EN/ES из шапки, а его задаёт онбординг репетитора («Какой язык
+  преподаёшь?»). Зашитый `'en'` встречал учителя испанского английским.
+
+**Одна шапка «назад»** (PLAN.md Ф2.11)
+
+- Внутренний экран со своей шапкой прячет шапку страницы над собой —
+  `useInnerScreen` из `innerScreen.ts`: в «Заданиях» — план и предпросмотр
+  мастера, карточка материала, письменное задание и его разбор; в «Учениках»
+  — карточка ученика на телефоне (только «‹ Ученики», как в макете t6-2). Две
+  стрелки друг под другом не говорили, какая куда ведёт.
 
 **Карточка ученика**
 
@@ -140,6 +172,11 @@
 - **Раскрытый раздел живёт в адресе** (`?sec=diag|words|program|placement|plan|quests`)
   и открыт всегда один: в PWA свайп-назад — единственный способ вернуться, а
   два раскрытых подряд раздела давали непролистываемый экран.
+- **Подпись «Ещё» собирается из списка разделов** (`SECTIONS` в
+  `StudentStudio`): написанная рукой, она называла 4 раздела из 6.
+- **У раздела под «Ещё» нет своей раскрывашки** — его открывает строка
+  списка. Тест уровня раньше открывался дважды: «Тест уровня» →
+  «Тест уровня ▼» (Ф2.11).
 
 **Слова ученика — одно место**
 
@@ -178,6 +215,12 @@
   перевернуть порядок, выключить сортировку или посчитать группы «на выбор» по
   отдельности.
 - `node scripts/smoke-lost-students.mjs` — список учеников на живом экране.
+- `node scripts/smoke-teacher-path.mjs` — путь нового репетитора целиком
+  (Ф2.11): лендинг → регистрация → онбординг → первый ученик и урок →
+  приглашение; «Ещё», тест уровня, «назад» в программе и мастере, одна
+  шапка, язык форм (`--shots`, `--theme light`, `--width 1280`).
+- `node scripts/test-material-wizard.mjs` (чистый, в CI) — шаги мастера:
+  «назад» и «вперёд» без потерь, ветки, черновик прежнего вида.
 - `node scripts/smoke-navigation.mjs` — меню учителя, «ждут проверки» на
   вкладке, хаб «Заданий» → разбор работы → назад, материалы в адресе,
   старые ссылки `/teacher?tab=…` (`app/CLAUDE.md`).
@@ -212,7 +255,7 @@
 <!-- Пишет `npm run gen:docs` (scripts/gen/module-docs.mjs) по коду — руками не править. -->
 ## Из кода (сгенерировано)
 
-- **Файлы:** `AssignmentsPage.tsx`, `BecomeTeacher.tsx`, `CardDetail.tsx`, `DailyPlanSection.tsx`, `DiagnosticsSection.tsx`, `GuideSection.tsx`, `HomeworkComposer.tsx`, `HomeworkSection.tsx`, `index.ts`, `materials/MaterialDetail.tsx`, `materials/MaterialsByLevel.tsx`, `materials/PlanScreen.tsx`, `materials/PreviewScreen.tsx`, `materials/RequestForm.tsx`, `materials/shared.ts`, `MaterialsSection.tsx`, `PlacementSection.tsx`, `PrintSheet.tsx`, `ProgramSection.tsx`, `QuestSection.tsx`, `ReportSheet.tsx`, `ReviewScreen.tsx`, `StudentsTab.tsx`, `StudentStudio.tsx`, `StudentWordsSection.tsx`, `StudioEnergy.tsx`, `TasksHub.tsx`, `TasksPage.tsx`, `TeacherBlock.tsx`, `TeacherPage.tsx`, `useAnswerDraft.ts`, `useComposerDraft.ts`, `useReviewDraft.ts`, `useWritingTaskDraft.ts`, `waitingCount.ts`, `waitingWorks.ts`, `WordPicker.tsx`, `WritingSection.tsx`
+- **Файлы:** `AssignmentsPage.tsx`, `BecomeTeacher.tsx`, `CardDetail.tsx`, `DailyPlanSection.tsx`, `DiagnosticsSection.tsx`, `GuideSection.tsx`, `HomeworkComposer.tsx`, `HomeworkSection.tsx`, `index.ts`, `innerScreen.ts`, `materials/MaterialDetail.tsx`, `materials/MaterialsByLevel.tsx`, `materials/PlanScreen.tsx`, `materials/PreviewScreen.tsx`, `materials/RequestForm.tsx`, `materials/shared.ts`, `materials/wizard.ts`, `MaterialsSection.tsx`, `PlacementSection.tsx`, `PrintSheet.tsx`, `ProgramSection.tsx`, `QuestSection.tsx`, `ReportSheet.tsx`, `ReviewScreen.tsx`, `StudentsTab.tsx`, `StudentStudio.tsx`, `StudentWordsSection.tsx`, `StudioEnergy.tsx`, `TasksHub.tsx`, `TasksPage.tsx`, `TeacherBlock.tsx`, `TeacherPage.tsx`, `useAnswerDraft.ts`, `useComposerDraft.ts`, `useReviewDraft.ts`, `useWritingTaskDraft.ts`, `waitingCount.ts`, `waitingWorks.ts`, `WordPicker.tsx`, `WritingSection.tsx`
 - **Вне папки (указатель «Описание:» в начале файла):** `src/lib/activityDays.ts`, `src/lib/diagnosticsBrief.ts`, `src/lib/materialExercises.ts`, `src/lib/studentSignals.ts`, `src/lib/wordChecks.ts`
 - **Адреса:** `/teacher`, `/tasks`, `/assignments`
 - **Таблицы:** `cards`, `decks`, `review_states`, `word_checks`

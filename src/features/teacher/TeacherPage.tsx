@@ -14,6 +14,7 @@ import {
 } from '../../lib/teacher'
 import { loadStudentCards, type StudentCard } from '../../domains/students'
 import { StudentsTab } from './StudentsTab'
+import { InnerScreenContext } from './innerScreen'
 import { getHomeworkMany, type Homework } from '../../lib/homework'
 import { getMyPlan, type MyPlan } from '../../lib/billing'
 import { AppLink } from '../../shared/ui/AppLink'
@@ -51,6 +52,7 @@ function StudentsScreen() {
   const [loadError, setLoadError] = useState<string | null>(null)
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [inner, setInner] = useState(false)
 
   // «Загрузка…» только при первом открытии: при обновлениях список остаётся
   // на экране, иначе раскрытые колоды учеников схлопываются при каждом действии.
@@ -121,88 +123,94 @@ function StudentsScreen() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Ученики</h1>
-        <Button variant="ghost" className="px-3 py-1 text-sm" onClick={load}>
-          Обновить
-        </Button>
-      </header>
+    <InnerScreenContext.Provider value={setInner}>
+      <div className="flex flex-col gap-4">
+        {/* карточка на телефоне — экран со своим «‹ Ученики», шапка страницы над ней лишняя (t6-2) */}
+        {!inner && (
+          <>
+            <header className="flex items-center justify-between">
+              <h1 className="text-2xl font-bold">Ученики</h1>
+              <Button variant="ghost" className="px-3 py-1 text-sm" onClick={load}>
+                Обновить
+              </Button>
+            </header>
+            <HowItWorks>{HOW_IT_WORKS.teacher}</HowItWorks>
+          </>
+        )}
 
-      <HowItWorks>{HOW_IT_WORKS.teacher}</HowItWorks>
-
-      {/* не загрузилось ни разу — только «Повторить»: пустой список сказал бы «учеников нет» */}
-      {loadError && !loaded ? (
-        <LoadError message={loadError} onRetry={load} />
-      ) : (
-        <StudentsTab
-          cards={cards}
-          students={students}
-          homeworks={homeworks}
-          plan={myPlan}
-          loading={loading}
-          onChanged={load}
-          notice={
-            loadError ? <LoadError message={loadError} onRetry={load} />
-            : error && <Card tone="danger"><p className="text-sm text-danger-soft-fg">{error}</p></Card>
-          }
-          extras={
-            <>
-              <Card>
-                <p className="text-sm text-fg-muted">
-                  Общий код — ученик вводит его у себя на Главной и появляется в списке.
-                  Пригласить того, кто уже есть в списке, — из его карточки.
-                </p>
-                <div className="mt-2 flex items-center gap-3">
-                  <span className="rounded-xl bg-tint/[0.08] px-4 py-2 font-mono text-2xl font-bold tracking-widest">
-                    {code ?? '……'}
-                  </span>
-                  <Button variant="secondary" className="px-3 py-2 text-sm" onClick={copyCode}>
-                    {/* подтверждение «клюёт» — иначе подмена текста на секунду
-                        проходит мимо глаза, и человек жмёт второй раз */}
-                    <span key={copied ? 'yes' : 'no'} className={copied ? 'animate-pop-in' : ''}>
-                      {copied ? 'Скопирован ✓' : 'Скопировать'}
+        {/* не загрузилось ни разу — только «Повторить»: пустой список сказал бы «учеников нет» */}
+        {loadError && !loaded ? (
+          <LoadError message={loadError} onRetry={load} />
+        ) : (
+          <StudentsTab
+            cards={cards}
+            students={students}
+            homeworks={homeworks}
+            plan={myPlan}
+            loading={loading}
+            onChanged={load}
+            notice={
+              loadError ? <LoadError message={loadError} onRetry={load} />
+              : error && <Card tone="danger"><p className="text-sm text-danger-soft-fg">{error}</p></Card>
+            }
+            extras={
+              <>
+                <Card>
+                  <p className="text-sm text-fg-muted">
+                    Общий код — ученик вводит его у себя на Главной и появляется в списке.
+                    Пригласить того, кто уже есть в списке, — из его карточки.
+                  </p>
+                  <div className="mt-2 flex items-center gap-3">
+                    <span className="rounded-xl bg-tint/[0.08] px-4 py-2 font-mono text-2xl font-bold tracking-widest">
+                      {code ?? '……'}
                     </span>
-                  </Button>
-                </div>
-                <div className="mt-3 flex flex-wrap items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    className="min-h-[44px] px-3 py-2 text-sm"
-                    loading={regenerating}
-                    onClick={changeCode}
-                  >
-                    Сменить код
-                  </Button>
-                  <span className="text-xs text-fg-muted">
-                    если код попал не тем — старый перестанет работать
-                  </span>
-                </div>
-                <Seats plan={myPlan} inApp={students.length} />
-
-                {/* Включить режим можно было одним нажатием, а выключить — никак:
-                    нажавший из любопытства оставался с чужой ролью навсегда.
-                    Показываем только когда учеников нет — с ними выключение всё
-                    равно откажет, и кнопка-обманка была бы хуже её отсутствия;
-                    с карточками — студией явно пользуются. */}
-                {students.length === 0 && cards.length === 0 && (
-                  <div className="mt-3 border-t border-tint/[0.06] pt-3">
-                    <Button
-                      variant="ghost"
-                      className="min-h-[44px] px-3 py-2 text-sm text-fg-muted"
-                      loading={stopping}
-                      onClick={stopTeach}
-                    >
-                      Выключить режим преподавателя
+                    <Button variant="secondary" className="px-3 py-2 text-sm" onClick={copyCode}>
+                      {/* подтверждение «клюёт» — иначе подмена текста на секунду
+                          проходит мимо глаза, и человек жмёт второй раз */}
+                      <span key={copied ? 'yes' : 'no'} className={copied ? 'animate-pop-in' : ''}>
+                        {copied ? 'Скопирован ✓' : 'Скопировать'}
+                      </span>
                     </Button>
                   </div>
-                )}
-              </Card>
-            </>
-          }
-        />
-      )}
-    </div>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      className="min-h-[44px] px-3 py-2 text-sm"
+                      loading={regenerating}
+                      onClick={changeCode}
+                    >
+                      Сменить код
+                    </Button>
+                    <span className="text-xs text-fg-muted">
+                      если код попал не тем — старый перестанет работать
+                    </span>
+                  </div>
+                  <Seats plan={myPlan} inApp={students.length} />
+
+                  {/* Включить режим можно было одним нажатием, а выключить — никак:
+                      нажавший из любопытства оставался с чужой ролью навсегда.
+                      Показываем только когда учеников нет — с ними выключение всё
+                      равно откажет, и кнопка-обманка была бы хуже её отсутствия;
+                      с карточками — студией явно пользуются. */}
+                  {students.length === 0 && cards.length === 0 && (
+                    <div className="mt-3 border-t border-tint/[0.06] pt-3">
+                      <Button
+                        variant="ghost"
+                        className="min-h-[44px] px-3 py-2 text-sm text-fg-muted"
+                        loading={stopping}
+                        onClick={stopTeach}
+                      >
+                        Выключить режим преподавателя
+                      </Button>
+                    </div>
+                  )}
+                </Card>
+              </>
+            }
+          />
+        )}
+      </div>
+    </InnerScreenContext.Provider>
   )
 }
 

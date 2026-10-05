@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Card } from '../../../shared/ui/Card'
 import { Button } from '../../../shared/ui/Button'
+import { useLanguage } from '../../../context/LanguageContext'
 import {
   MATERIAL_FORMATS,
   MATERIAL_LENGTHS,
@@ -25,12 +26,17 @@ export const REQUEST_DRAFT = 'material-request'
 
 export function RequestForm({
   students,
+  resumeLabel,
+  onResume,
   onCancel,
   onPlanned,
   onOwnGenerated,
 }: {
   /** Для кого можно собрать материал — чтобы AI увидел диагностику ученика. */
   students: StudentInfo[]
+  /** Есть готовый план или упражнения впереди (вернулись «назад») — подпись кнопки к ним. */
+  resumeLabel?: string
+  onResume: () => void
   onCancel: () => void
   onPlanned: (req: MaterialRequest, plan: MaterialPlan) => void
   /** «Мой текст»: упражнения готовы, сразу в предпросмотр (плана нет). */
@@ -40,7 +46,7 @@ export function RequestForm({
   // стирается при отмене и когда материал сохранён (MaterialsSection).
   const [form, field, draft] = useDraftForm(REQUEST_DRAFT, {
     source: 'generate' as 'generate' | 'own',
-    lang: 'en' as AppLang,
+    lang: useLanguage().lang as AppLang, // тот, что учитель преподаёт (шапка, онбординг Ф2.11)
     level: 'A2' as CEFRLevel,
     topic: '',
     format: MATERIAL_FORMATS[0] as string,
@@ -56,6 +62,8 @@ export function RequestForm({
   const [setFormat, setLengthRange, setVocabulary] = [field('format'), field('lengthRange'), field('vocabulary')]
   const [setGrammar, setBody, setStudentId] = [field('grammar'), field('body'), field('studentId')]
   const cancel = () => {
+    // «Отмена» выбрасывает и готовое впереди — то, что уже стоило генерации AI
+    if (resumeLabel && !window.confirm('Выбросить материал? То, что уже составил AI, пропадёт.')) return
     draft.clear()
     onCancel()
   }
@@ -101,17 +109,15 @@ export function RequestForm({
     }
   }
 
-  const chip = (active: boolean) =>
-    `rounded-lg px-3 py-1.5 text-sm font-semibold ${
-      active
-        ? 'bg-accent-soft text-accent-soft-fg'
-        : 'bg-tint/[0.07] text-fg-secondary'
-    }`
-
   return (
     <Card className="flex flex-col gap-3">
       <p className="font-semibold">Новый материал</p>
       {draft.restored && <DraftRestored onClear={draft.clear} />}
+      {resumeLabel && (
+        <Button variant="secondary" onClick={onResume}>
+          {resumeLabel} →
+        </Button>
+      )}
 
       <div>
         <p className="mb-1 text-xs font-semibold text-fg-muted">Источник текста</p>
@@ -246,25 +252,32 @@ export function RequestForm({
 
       {error && <p className="text-sm text-danger">{error}</p>}
 
-      {source === 'generate' ? (
-        <div className="flex gap-2">
+      <div className="flex gap-2">
+        {source === 'generate' ? (
           <Button className="flex-1" onClick={submit} disabled={busy || !topic.trim()}>
-            {busy ? 'AI составляет план…' : 'Составить план →'}
+            {submitLabel(false, busy, !!resumeLabel)}
           </Button>
-          <Button variant="ghost" onClick={cancel} disabled={busy}>
-            Отмена
-          </Button>
-        </div>
-      ) : (
-        <div className="flex gap-2">
+        ) : (
           <Button className="flex-1" onClick={submitOwn} disabled={busy || body.trim().length < 40}>
-            {busy ? 'AI собирает упражнения…' : 'Составить упражнения →'}
+            {submitLabel(true, busy, !!resumeLabel)}
           </Button>
-          <Button variant="ghost" onClick={cancel} disabled={busy}>
-            Отмена
-          </Button>
-        </div>
-      )}
+        )}
+        <Button variant="ghost" onClick={cancel} disabled={busy}>
+          Отмена
+        </Button>
+      </div>
     </Card>
   )
+}
+
+const chip = (active: boolean) =>
+  `rounded-lg px-3 py-1.5 text-sm font-semibold ${
+    active ? 'bg-accent-soft text-accent-soft-fg' : 'bg-tint/[0.07] text-fg-secondary'
+  }`
+
+/** Подпись главной кнопки; готовое впереди уже есть (again) — новое его заменит. */
+function submitLabel(own: boolean, busy: boolean, again: boolean): string {
+  if (busy) return own ? 'AI собирает упражнения…' : 'AI составляет план…'
+  if (own) return again ? 'Составить заново →' : 'Составить упражнения →'
+  return again ? 'Новый план →' : 'Составить план →'
 }

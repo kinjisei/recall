@@ -6,17 +6,16 @@
 // вслепую нельзя. Раньше оставалось попросить пройти тест на словах, причём
 // результат по испанскому вообще жил в localStorage ученика и учителю не
 // показывался. Данные — lib/placement (таблица placement_requests).
+//
+// Своего заголовка-раскрывашки у раздела нет: его открывает строка «Тест
+// уровня» под «Ещё» в карточке (StudentStudio). Раньше внутри стояла вторая
+// такая же — «Ещё» → «Тест уровня» → «Тест уровня ▼» (PLAN.md Ф2.11).
 // ============================================================================
-import { useCallback, useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Button } from '../../shared/ui/Button'
-import { Reveal } from '../../shared/ui/Reveal'
 import { LoadError } from '../../shared/ui/LoadError'
-import {
-  assignPlacement,
-  cancelPlacement,
-  listPlacements,
-  type PlacementRequest,
-} from '../../lib/placement'
+import { useAsyncData } from '../../shared/lib/useAsyncData'
+import { assignPlacement, cancelPlacement, listPlacements } from '../../lib/placement'
 import type { AppLang } from '../../types'
 import { RowsSkeleton } from '../../shared/ui/Loading'
 
@@ -36,23 +35,14 @@ export function PlacementSection({
   studentId: string
   studentName: string
 }) {
-  const [open, setOpen] = useState(false)
-  const [rows, setRows] = useState<PlacementRequest[] | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   // сбой загрузки ≠ «тестов не было»: иначе учитель не отличит одно от другого
-  const [loadError, setLoadError] = useState<string | null>(null)
-
-  const load = useCallback(() => {
-    setLoadError(null)
-    listPlacements(studentId)
-      .then(setRows)
-      .catch((e) => setLoadError(e instanceof Error ? e.message : 'Не удалось загрузить тесты'))
-  }, [studentId])
-
-  useEffect(() => {
-    if (open && rows === null) load()
-  }, [open, rows, load])
+  const {
+    data: rows,
+    error: loadError,
+    reload: load,
+  } = useAsyncData(() => listPlacements(studentId), [studentId], 'Не удалось загрузить тесты')
 
   const assign = async (lang: AppLang) => {
     setBusy(lang)
@@ -84,82 +74,70 @@ export function PlacementSection({
     (rows ?? []).some((r) => r.lang === lang && r.status === 'assigned')
 
   return (
-    <div className="rounded-xl border border-tint/[0.08]">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="flex min-h-[44px] w-full items-center justify-between px-3 py-2 text-left text-sm font-medium"
-      >
-        Тест уровня
-        <span className="text-fg-muted">{open ? '▲' : '▼'}</span>
-      </button>
+    <div className="flex flex-col gap-3 rounded-xl border border-tint/[0.08] p-3">
+      <p className="text-xs leading-relaxed text-fg-muted">
+        Назначь тест, если не знаешь уровень {studentName}. Тест появится у
+        ученика в «Учёбе», а результат вернётся сюда.
+      </p>
 
-      <Reveal open={open}>
-        <div className="flex flex-col gap-3 border-t border-tint/[0.08] px-3 py-3">
-          <p className="text-xs leading-relaxed text-fg-muted">
-            Назначь тест, если не знаешь уровень {studentName}. Тест появится у
-            ученика в «Учёбе», а результат вернётся сюда.
-          </p>
+      <div className="flex flex-wrap gap-2">
+        {LANGS.map((l) => (
+          <Button
+            key={l.id}
+            variant="secondary"
+            className="px-3 py-2 text-sm"
+            loading={busy === l.id}
+            disabled={pendingIn(l.id)}
+            onClick={() => assign(l.id)}
+          >
+            {pendingIn(l.id) ? `${l.label} — ждём` : `Назначить · ${l.label}`}
+          </Button>
+        ))}
+      </div>
 
-          <div className="flex flex-wrap gap-2">
-            {LANGS.map((l) => (
+      {error && <p className="text-sm text-danger-strong">{error}</p>}
+
+      {loadError ? (
+        <LoadError message={loadError} onRetry={load} />
+      ) : rows === null ? (
+        <RowsSkeleton count={2} height={44} />
+      ) : rows.length === 0 ? (
+        <p className="text-sm text-fg-muted">Тестов пока не было.</p>
+      ) : (
+        <ul className="flex flex-col gap-2">
+          {rows.map((r) => (
+            <li
+              key={r.id}
+              className="flex items-center justify-between gap-2 rounded-lg bg-tint/[0.04] px-3 py-2"
+            >
+              <div className="min-w-0">
+                <p className="text-sm">
+                  {r.lang === 'es' ? 'Испанский' : 'Английский'}
+                  {r.status === 'done' ? (
+                    <span className="ml-2 font-semibold text-success-strong">
+                      {r.result_level}
+                    </span>
+                  ) : (
+                    <span className="ml-2 text-fg-muted">ждём результат</span>
+                  )}
+                </p>
+                <p className="text-xs text-fg-muted">
+                  назначен {fmt(r.created_at)}
+                  {r.completed_at ? ` · пройден ${fmt(r.completed_at)}` : ''}
+                </p>
+              </div>
               <Button
-                key={l.id}
-                variant="secondary"
-                className="px-3 py-2 text-sm"
-                loading={busy === l.id}
-                disabled={pendingIn(l.id)}
-                onClick={() => assign(l.id)}
+                variant="ghost"
+                className="px-2 py-1 text-xs"
+                loading={busy === r.id}
+                onClick={() => remove(r.id)}
               >
-                {pendingIn(l.id) ? `${l.label} — ждём` : `Назначить · ${l.label}`}
+                {r.status === 'done' ? 'Убрать' : 'Снять'}
               </Button>
-            ))}
-          </div>
-
-          {error && <p className="text-sm text-danger-strong">{error}</p>}
-
-          {loadError ? (
-            <LoadError message={loadError} onRetry={load} />
-          ) : rows === null ? (
-            <RowsSkeleton count={2} height={44} />
-          ) : rows.length === 0 ? (
-            <p className="text-sm text-fg-muted">Тестов пока не было.</p>
-          ) : (
-            <ul className="flex flex-col gap-2">
-              {rows.map((r) => (
-                <li
-                  key={r.id}
-                  className="flex items-center justify-between gap-2 rounded-lg bg-tint/[0.04] px-3 py-2"
-                >
-                  <div className="min-w-0">
-                    <p className="text-sm">
-                      {r.lang === 'es' ? 'Испанский' : 'Английский'}
-                      {r.status === 'done' ? (
-                        <span className="ml-2 font-semibold text-success-strong">
-                          {r.result_level}
-                        </span>
-                      ) : (
-                        <span className="ml-2 text-fg-muted">ждём результат</span>
-                      )}
-                    </p>
-                    <p className="text-xs text-fg-muted">
-                      назначен {fmt(r.created_at)}
-                      {r.completed_at ? ` · пройден ${fmt(r.completed_at)}` : ''}
-                    </p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    className="px-2 py-1 text-xs"
-                    loading={busy === r.id}
-                    onClick={() => remove(r.id)}
-                  >
-                    {r.status === 'done' ? 'Убрать' : 'Снять'}
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </Reveal>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }

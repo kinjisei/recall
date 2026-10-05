@@ -12,6 +12,7 @@ import { CardHead, InviteBlock } from '../students'
 import type { MyPlan } from '../../lib/billing'
 import type { StudentInfo } from '../../lib/teacher'
 import { StudentStudio } from './StudentStudio'
+import { useInnerScreen } from './innerScreen'
 
 export function CardDetail({
   card,
@@ -45,6 +46,8 @@ export function CardDetail({
   onBalances: () => void
 }) {
   const seatsLimited = typeof plan?.seats === 'number' && !plan.is_admin
+  // на телефоне карточка — экран со своим «‹ Ученики»: шапку страницы прячем (макет t6-2)
+  useInnerScreen(!!onBack)
   return (
     <div className="flex flex-col gap-4" key={card.id}>
       <CardHead

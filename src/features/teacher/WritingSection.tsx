@@ -4,7 +4,6 @@
 // Оценка и проверка работ — в 5b/5c. Механика назначения — как в «Материалах».
 // ============================================================================
 import { useState } from 'react'
-
 import { Card } from '../../shared/ui/Card'
 import { Button } from '../../shared/ui/Button'
 import { BackHeader } from '../../shared/ui/BackButton'
@@ -30,6 +29,7 @@ import { RowsSkeleton } from '../../shared/ui/Loading'
 import { readDraft } from '../../shared/lib/drafts'
 import { DraftRestored } from '../../shared/ui/DraftRestored'
 import { WRITING_TASK_DRAFT, useWritingTaskDraft } from './useWritingTaskDraft'
+import { useInnerScreen } from './innerScreen'
 
 const CHART_KINDS: { id: ChartSpec['kind']; label: string }[] = [
   { id: 'bar', label: 'Столбцы' },
@@ -50,9 +50,8 @@ function chipCls(active: boolean) {
 
 export function WritingSection({ students }: { students: StudentInfo[] }) {
   // есть черновик нового задания — сразу форма, иначе его не увидеть (Ф1.14)
-  const [screen, setScreen] = useState<'list' | 'form' | { task: WritingTask }>(() =>
-    readDraft(WRITING_TASK_DRAFT) ? 'form' : 'list',
-  )
+  const [screen, setScreen] = useState<'list' | 'form' | { task: WritingTask }>(() => (readDraft(WRITING_TASK_DRAFT) ? 'form' : 'list'))
+  useInnerScreen(screen !== 'list') // у формы и карточки задания своя шапка «назад»
   const { data: tasks, error, loading, reload } = useAsyncData<WritingTask[]>(
     () => listMyWritingTasks(),
     [],

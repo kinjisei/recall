@@ -22,17 +22,24 @@ import { HomeworkComposer } from './HomeworkComposer'
  * Разделы под «Ещё» — то, что нужно раз в месяц. Порядок значим: тест уровня
  * первым, потому что с нового ученика начинают именно с него (это и в
  * методичке, и в комментариях кода стояло всегда, а на экране — нет).
+ * `short` — имя в подписи «Ещё: …».
  */
 const SECTIONS = [
-  { id: 'placement', title: 'Тест уровня' },
-  { id: 'diag', title: 'Диагностическая карта' },
-  { id: 'plan', title: 'План дня' },
-  { id: 'program', title: 'Программа обучения' },
-  { id: 'words', title: 'Слова и перепроверка' },
-  { id: 'quests', title: 'AI-квесты по грамматике' },
+  { id: 'placement', title: 'Тест уровня', short: 'тест уровня' },
+  { id: 'diag', title: 'Диагностическая карта', short: 'диагностика' },
+  { id: 'plan', title: 'План дня', short: 'план дня' },
+  { id: 'program', title: 'Программа обучения', short: 'программа' },
+  { id: 'words', title: 'Слова и перепроверка', short: 'слова' },
+  { id: 'quests', title: 'AI-квесты по грамматике', short: 'квесты' },
 ] as const
 
 type StudentSection = (typeof SECTIONS)[number]['id']
+
+/**
+ * Подпись собирается из самого списка: написанная рукой, она называла 4
+ * раздела из 6 — план дня и квесты было не найти (PLAN.md Ф2.11).
+ */
+const MORE_LABEL = `Ещё: ${SECTIONS.map((s) => s.short).join(', ')}`
 
 /**
  * Студия ученика в приложении — под шапкой карточки (features/students):
@@ -134,7 +141,7 @@ export function StudentStudio({
           aria-expanded={more}
           className="mt-1 flex min-h-11 items-center gap-1.5 self-start text-sm font-medium text-accent-strong"
         >
-          {more ? '▾' : '▸'} Ещё: тест уровня, диагностика, программа, слова
+          {more ? '▾' : '▸'} {MORE_LABEL}
         </button>
 
         <Reveal open={more}>

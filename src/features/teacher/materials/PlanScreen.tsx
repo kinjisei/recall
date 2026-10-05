@@ -18,12 +18,15 @@ export function PlanScreen({
   req,
   plan,
   onBack,
+  onForward,
   onReplanned,
   onGenerated,
 }: {
   req: MaterialRequest
   plan: MaterialPlan
   onBack: () => void
+  /** Текст по плану уже готов (вернулись «назад» из предпросмотра) — к нему без новой генерации. */
+  onForward?: () => void
   onReplanned: (plan: MaterialPlan) => void
   onGenerated: (content: MaterialContent) => void
 }) {
@@ -111,12 +114,17 @@ export function PlanScreen({
 
       {error && <p className="text-sm text-danger">{error}</p>}
 
+      {onForward && (
+        <Button variant="secondary" onClick={onForward} disabled={busy !== null}>
+          Вернуться к готовому тексту →
+        </Button>
+      )}
       <div className="flex gap-2">
         <Button variant="secondary" className="flex-1" onClick={replan} disabled={busy !== null}>
           {busy === 'replan' ? 'Пересоставляю…' : '↻ Пересоставить план'}
         </Button>
         <Button className="flex-1" onClick={generate} disabled={busy !== null}>
-          {busy === 'generate' ? 'Генерирую…' : 'Генерировать ✓'}
+          {busy === 'generate' ? 'Генерирую…' : onForward ? 'Новый текст' : 'Генерировать ✓'}
         </Button>
       </div>
     </div>

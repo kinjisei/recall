@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import { BrandLogo, BrandMark } from '../../shared/ui/Brand'
 import { describeAuthError, describeSignUpError } from '../../lib/access'
 import { supabase } from '../../shared/api/supabase'
-import { joinInSearch, refInSearch, rememberPendingRole } from '../../lib/pendingRole'
+import { hasPendingTeacherRole, joinInSearch, refInSearch, rememberPendingRole } from '../../lib/pendingRole'
 import { IconGift } from '../../shared/ui/icons'
 import { track } from '../../lib/analytics'
 import { AppLink } from '../../shared/ui/AppLink'
@@ -43,6 +43,8 @@ export function LoginPage() {
   }, [search])
   const invited = refInSearch(search)
   const joining = joinInSearch(search)
+  // репетитор с лендинга или по приглашению коллеги: слова про учеников, а не про свои занятия (Ф2.11)
+  const forTeacher = invited || new URLSearchParams(search).get('role') === 'teacher' || hasPendingTeacherRole()
 
   // ⚠️ state берём из useLocation, а не из глобального location: у window
   // такого поля нет, и адрес молча оказывался бы undefined.
@@ -68,7 +70,7 @@ export function LoginPage() {
         // оставалась на экране, и кнопка «Создать аккаунт» приглашала нажать
         // ещё раз: человек получал «этот адрес уже зарегистрирован» и терялся.
         else {
-          void track('signup', { role: signup ? 'learner' : undefined })
+          void track('signup', { role: forTeacher ? 'teacher' : 'learner' })
           setSentTo(email.trim())
         }
       } else {
@@ -99,13 +101,13 @@ export function LoginPage() {
               Присоединяйся к Recall
             </h1>
             <p className="px-4 text-sm leading-relaxed text-fg-tertiary">
-              Две минуты на настройку — и можно заниматься.
+              Две минуты на настройку — и можно {forTeacher ? 'вести учеников' : 'заниматься'}.
             </p>
           </div>
           <div className="flex flex-col gap-3">
             <StepItem number={1} text="Создай аккаунт" active delay=".5s" />
-            <StepItem number={2} text="Выбери язык — EN или ES" delay=".65s" />
-            <StepItem number={3} text="Определи свой уровень" delay=".8s" />
+            <StepItem number={2} text={forTeacher ? 'Выбери язык, который преподаёшь' : 'Выбери язык — EN или ES'} delay=".65s" />
+            <StepItem number={3} text={forTeacher ? 'Добавь первого ученика' : 'Определи свой уровень'} delay=".8s" />
           </div>
         </div>
       </div>
@@ -127,7 +129,7 @@ export function LoginPage() {
               {sentTo
                 ? 'Остался один шаг — подтвердить адрес.'
                 : signup
-                  ? 'Займёт минуту. На почту придёт письмо — подтверди адрес, и можно заниматься.'
+                  ? `Займёт минуту. На почту придёт письмо — подтверди адрес, и можно ${forTeacher ? 'вести учеников' : 'заниматься'}.`
                   : 'Войди, чтобы продолжить занятия.'}
             </p>
             {/* по ссылке-приглашению коллеги (Ф2.3): видно, что она сработала */}

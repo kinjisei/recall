@@ -6,6 +6,7 @@
 // ============================================================================
 import { useCallback, useState } from 'react'
 import { Button } from '../../shared/ui/Button'
+import { useLanguage } from '../../context/LanguageContext'
 import { Reveal } from '../../shared/ui/Reveal'
 import { LoadError } from '../../shared/ui/LoadError'
 import { Picker } from '../../shared/ui/Picker'
@@ -52,7 +53,8 @@ export function QuestSection({ studentId }: { studentId: string }) {
     'Не удалось загрузить квесты',
   )
 
-  const [lang, setLang] = useState<AppLang>('en')
+  // язык по умолчанию — тот, что учитель преподаёт (EN/ES в шапке, онбординг Ф2.11)
+  const [lang, setLang] = useState<AppLang>(useLanguage().lang)
   const [level, setLevel] = useState<string>('B1')
   const [topic, setTopic] = useState('')
   // SCENARIOS — непустой константный список, [0] всегда есть; ?? '' только

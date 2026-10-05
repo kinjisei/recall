@@ -313,11 +313,6 @@
       "count": 1
     }
   },
-  "src/features/teacher/PlacementSection.tsx": {
-    "react-hooks/set-state-in-effect": {
-      "count": 1
-    }
-  },
   "src/features/teacher/StudentWordsSection.tsx": {
     "react-hooks/set-state-in-effect": {
       "count": 1
