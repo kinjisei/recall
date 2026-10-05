@@ -36,7 +36,14 @@ VS Code, где у Claude есть файлы и терминал: фичи со
   ключи — только новые `sb_publishable_`/`sb_secret_` (Ф1.9, `scripts/_keys.mjs`).
 - AI — свои функции на Vercel (`api/`), ключи только на сервере, модель по
   задаче выбирает сервер (Gemini, Groq). Речь — Web Speech API и Groq Whisper.
-- Vercel, автодеплой из `main`; прод — https://recall-pgkz.vercel.app
+- Vercel, автодеплой из `main`; прод — https://recall-pgkz.vercel.app, проект
+  Vercel **один — `recall-pgkz`** (лишний «recall» на том же репозитории падал
+  на каждом коммите без переменных — удалён владельцем 05.10.2026). **Сборка
+  на Vercel падает намеренно**, если нет переменной: ключей Supabase
+  (`VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`) или push
+  (`VITE_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`) — прод тогда остаётся прежним;
+  причина — в логе сборки («Ключи Supabase: …»), список — `scripts/_keys.mjs`.
+  Красный крест на коммите в GitHub — сначала смотреть, какой проект и что в логе.
 - Библиотек интерфейса — ноль (иконки свои, анимации на CSS): каждая — лишний
   вес стартовой загрузки у каждого ученика.
 
