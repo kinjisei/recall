@@ -13,7 +13,7 @@ import { Card } from '../../shared/ui/Card'
 import { LoadError } from '../../shared/ui/LoadError'
 import { RowsSkeleton } from '../../shared/ui/Loading'
 import { RowCard } from '../../shared/ui/RowCard'
-import { IconBook, IconClipboardCheck, IconPencil, IconSparkle, type IconLike } from '../../shared/ui/icons'
+import { IconArrowRight, IconBook, IconClipboardCheck, IconPencil, IconSparkle, type IconLike } from '../../shared/ui/icons'
 import { Avatar } from '../students'
 import { StudioEnergy, hasStudioEnergy } from './StudioEnergy'
 import { loadWaitingWorks, type WaitingWork } from './waitingWorks'
@@ -123,23 +123,22 @@ export function TasksHub({
     <div className="flex flex-col gap-3">
       <Review onReview={onReview} />
 
+      {/* макет t1-3 и правка владельца 05.10.2026: без лишних слов — строка
+          энергии и одна кнопка; библиотека — по заголовку карточки (стрелка,
+          как у соседних карточек), иначе до готовых материалов не добраться */}
       <Card className="flex flex-col gap-4">
-        <div className="flex items-start gap-3">
+        <button type="button" onClick={() => onSection('materials')} className="flex items-start gap-3 text-left">
           <Tile Icon={IconSparkle} />
-          <div className="min-w-0 flex-1">
-            <h2 className="text-body font-semibold">Материалы</h2>
-            <p className="text-note text-fg-muted">AI соберёт текст и упражнения под ученика</p>
-          </div>
-        </div>
+          <span className="flex min-w-0 flex-1 flex-col">
+            <span className="text-body font-semibold">Материалы</span>
+            <span className="text-note text-fg-muted">AI соберёт текст и упражнения под ученика</span>
+          </span>
+          <IconArrowRight size={16} className="mt-1 flex-none text-fg-faint" aria-hidden />
+        </button>
         {hasStudioEnergy(plan) && <StudioEnergy plan={plan} />}
-        <div className="flex gap-2">
-          <Button variant="secondary" className="flex-1" onClick={() => onSection('materials', true)}>
-            Собрать материал
-          </Button>
-          <Button variant="ghost" onClick={() => onSection('materials')}>
-            Библиотека
-          </Button>
-        </div>
+        <Button variant="secondary" className="w-full" onClick={() => onSection('materials', true)}>
+          Собрать материал
+        </Button>
       </Card>
 
       <RowCard

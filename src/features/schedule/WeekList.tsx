@@ -2,6 +2,8 @@
 // Неделя списком по дням (макет t2-2 «список» — на телефоне по умолчанию):
 // «вт, 13 окт · 5 уроков ›» открывает день; строки — время, аватар, имя,
 // метка; пустой день — «Свободный день». Строка — общий RowCard (flat).
+// Уроки одного дня (`DayLessons`) — те же строки и в дне списком (макет t1-1,
+// Ф2.10): у дня и недели одна строка урока, а не две похожие.
 // ============================================================================
 import { addDays } from '../../shared/lib/days'
 import {
@@ -16,6 +18,57 @@ import {
 import { IconChevronRight } from '../../shared/ui/icons'
 import { RowCard } from '../../shared/ui/RowCard'
 import { Badge, LessonAvatar } from './LessonParts'
+
+/** Уроки одного дня строками; сегодня — в акцентной рамке, пусто — «Свободный день». */
+export function DayLessons({
+  list,
+  isToday,
+  now,
+  nextId,
+  inApp,
+  onOpen,
+}: {
+  list: Lesson[]
+  isToday: boolean
+  now: Date
+  nextId: string | null
+  inApp: (cardId: string) => boolean
+  onOpen: (id: string) => void
+}) {
+  if (!list.length) {
+    return <p className="rounded-2xl border border-dashed border-tint/[0.10] px-4 py-3 text-sm text-fg-muted">Свободный день</p>
+  }
+  return (
+    <div
+      className={`divide-y divide-tint/[0.06] overflow-hidden rounded-2xl border bg-surface shadow-card ${
+        isToday ? 'border-accent-line' : 'border-tint/[0.08]'
+      }`}
+    >
+      {list.map((l) => {
+        const badge = lessonBadge(l, now) ?? (l.id === nextId ? { text: relativeLabel(l, now), tone: 'accent' as const } : null)
+        return (
+          <RowCard
+            key={l.id}
+            flat
+            muted={l.status === 'cancelled'}
+            onClick={() => onOpen(l.id)}
+            lead={
+              <span className="flex flex-none items-center gap-3">
+                <span className="flex w-11 flex-col tabular-nums">
+                  <span className="text-sm font-semibold">{almatyTime(l.startsAt)}</span>
+                  <span className="text-caption text-fg-muted">–{almatyTime(l.endsAt)}</span>
+                </span>
+                <LessonAvatar lesson={l} inApp={inApp} small />
+              </span>
+            }
+            title={lessonName(l)}
+            trailing={badge ? <Badge badge={badge} /> : <span aria-hidden />}
+          />
+        )
+      })}
+    </div>
+  )
+}
 
 export function WeekList({
   monday,
@@ -53,38 +106,7 @@ export function WeekList({
                 <IconChevronRight size={14} aria-hidden />
               </span>
             </button>
-            {list.length ? (
-              <div
-                className={`divide-y divide-tint/[0.06] overflow-hidden rounded-2xl border bg-surface shadow-card ${
-                  isToday ? 'border-accent-line' : 'border-tint/[0.08]'
-                }`}
-              >
-                {list.map((l) => {
-                  const badge = lessonBadge(l, now) ?? (l.id === nextId ? { text: relativeLabel(l, now), tone: 'accent' as const } : null)
-                  return (
-                    <RowCard
-                      key={l.id}
-                      flat
-                      muted={l.status === 'cancelled'}
-                      onClick={() => onOpen(l.id)}
-                      lead={
-                        <span className="flex flex-none items-center gap-3">
-                          <span className="flex w-11 flex-col tabular-nums">
-                            <span className="text-sm font-semibold">{almatyTime(l.startsAt)}</span>
-                            <span className="text-caption text-fg-muted">–{almatyTime(l.endsAt)}</span>
-                          </span>
-                          <LessonAvatar lesson={l} inApp={inApp} small />
-                        </span>
-                      }
-                      title={lessonName(l)}
-                      trailing={badge ? <Badge badge={badge} /> : <span aria-hidden />}
-                    />
-                  )
-                })}
-              </div>
-            ) : (
-              <p className="rounded-2xl border border-dashed border-tint/[0.10] px-4 py-3 text-sm text-fg-muted">Свободный день</p>
-            )}
+            <DayLessons list={list} isToday={isToday} now={now} nextId={nextId} inApp={inApp} onOpen={onOpen} />
           </section>
         )
       })}

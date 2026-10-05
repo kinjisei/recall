@@ -1,8 +1,10 @@
 // ============================================================================
-// Экран «Расписание» (PLAN.md Ф2.7; макеты t2, t9-3, d1, d2). Шапка, строка
-// «только для просмотра» без тарифа, вопрос после пробного, день (полоска
-// недели + лента часов) или неделя (колонками или списком), пустое состояние
-// нового репетитора, «Новый урок». Где я — в адресе (useScheduleUrl).
+// Экран «Расписание» (PLAN.md Ф2.7; макеты t1-1, t2, t9-3, d1, d2). Шапка,
+// строка «только для просмотра» без тарифа, вопрос после пробного, день
+// (полоска недели + лента часов или уроки списком) или неделя (колонками или
+// списком) — таблица или список у обоих, на телефоне по умолчанию список,
+// на компьютере таблица (Ф2.10); пустое состояние нового репетитора, «Новый
+// урок». Где я — в адресе (useScheduleUrl).
 // На компьютере экран широкий (неделя — по умолчанию), шторки — панелью справа.
 // ============================================================================
 import { useState } from 'react'
@@ -36,7 +38,7 @@ import { useScheduleActions } from './useScheduleActions'
 import { useLessons, type ScheduleBase } from './useScheduleData'
 import { useScheduleUrl } from './useScheduleUrl'
 import { WeekGrid } from './WeekGrid'
-import { WeekList } from './WeekList'
+import { DayLessons, WeekList } from './WeekList'
 
 export function ScheduleScreen({ base, version, refresh }: { base: ScheduleBase; version: number; refresh: () => void }) {
   const desktop = useIsDesktop()
@@ -109,7 +111,11 @@ export function ScheduleScreen({ base, version, refresh }: { base: ScheduleBase;
           busy={new Set(week.filter((l) => l.status !== 'cancelled').map(lessonDay))}
           onPick={(d) => url.goTo(d)}
         />
-        <DayTimeline day={url.day} today={today} lessons={days.get(url.day) ?? []} now={now} nextId={nextId} inApp={inApp} onOpen={url.openLesson} />
+        {url.layout === 'cols' ? (
+          <DayTimeline day={url.day} today={today} lessons={days.get(url.day) ?? []} now={now} nextId={nextId} inApp={inApp} onOpen={url.openLesson} />
+        ) : (
+          <DayLessons list={days.get(url.day) ?? []} isToday={url.day === today} now={now} nextId={nextId} inApp={inApp} onOpen={url.openLesson} />
+        )}
       </div>
     )
   else if (url.layout === 'cols')
@@ -119,7 +125,7 @@ export function ScheduleScreen({ base, version, refresh }: { base: ScheduleBase;
   else body = <WeekList monday={monday} today={today} days={days} now={now} nextId={nextId} inApp={inApp} onOpen={url.openLesson} onDay={(d) => url.goTo(d, 'day')} />
 
   return (
-    <div className={`flex flex-col gap-4 ${desktop ? '' : 'pb-16'}`} data-schedule-view={url.view}>
+    <div className={`flex flex-col gap-4 ${desktop ? '' : 'pb-16'}`} data-schedule-view={url.view} data-schedule-layout={url.layout}>
       <ScheduleHeader
         view={url.view}
         layout={url.layout}

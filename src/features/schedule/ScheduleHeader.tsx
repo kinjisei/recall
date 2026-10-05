@@ -1,21 +1,23 @@
 // ============================================================================
-// Шапка расписания (макеты t2, d1). Телефон: «Расписание», «День / Неделя»,
-// под ними ‹ дата › и «Сегодня». Компьютер — одной строкой: ‹ › период
-// «Сегодня» … «День / Неделя», вид недели и «+ Новый урок».
+// Шапка расписания (макеты t2, d1). Телефон: «Расписание» и справа вверху
+// «таблица / список», под ними «День / Неделя», ниже ‹ дата › и «Сегодня».
+// Компьютер — одной строкой: ‹ › период «Сегодня» … «День / Неделя»,
+// «таблица / список» и «+ Новый урок». Таблица и список — у дня и у недели
+// (правка владельца 05.10.2026, PLAN.md Ф2.10).
 // ============================================================================
 import { dayLong, weekTitle } from '../../domains/schedule'
 import { Button } from '../../shared/ui/Button'
 import { IconChevronLeft, IconChevronRight, IconColumns, IconList, IconPlus } from '../../shared/ui/icons'
 import { TabPicker } from '../../shared/ui/TabPicker'
-import type { ScheduleView, WeekLayout } from './useScheduleUrl'
+import type { ScheduleLayout, ScheduleView } from './useScheduleUrl'
 
 const VIEWS = [
   { id: 'day' as const, label: 'День' },
   { id: 'week' as const, label: 'Неделя' },
 ]
 
-function LayoutToggle({ layout, onLayout }: { layout: WeekLayout; onLayout: (l: WeekLayout) => void }) {
-  const item = (id: WeekLayout, label: string, Icon: typeof IconList) => (
+function LayoutToggle({ layout, onLayout }: { layout: ScheduleLayout; onLayout: (l: ScheduleLayout) => void }) {
+  const item = (id: ScheduleLayout, label: string, Icon: typeof IconList) => (
     <button
       type="button"
       aria-label={label}
@@ -29,9 +31,9 @@ function LayoutToggle({ layout, onLayout }: { layout: WeekLayout; onLayout: (l: 
     </button>
   )
   return (
-    <div role="group" aria-label="Вид недели" className="inline-flex flex-none gap-0.5 rounded-full bg-tint/[0.07] p-0.5 ring-1 ring-control-line">
-      {item('cols', 'Колонками по часам', IconColumns)}
-      {item('list', 'Списком по дням', IconList)}
+    <div role="group" aria-label="Таблица или список" className="inline-flex flex-none gap-0.5 rounded-full bg-tint/[0.07] p-0.5 ring-1 ring-control-line">
+      {item('cols', 'Таблицей по часам', IconColumns)}
+      {item('list', 'Списком', IconList)}
     </div>
   )
 }
@@ -51,7 +53,7 @@ export function ScheduleHeader({
   onNew,
 }: {
   view: ScheduleView
-  layout: WeekLayout
+  layout: ScheduleLayout
   day: string
   monday: string
   /** На экране сегодня (день) или эта неделя — «Сегодня» не нужно. */
@@ -59,7 +61,7 @@ export function ScheduleHeader({
   desktop: boolean
   canWrite: boolean
   onView: (v: ScheduleView) => void
-  onLayout: (l: WeekLayout) => void
+  onLayout: (l: ScheduleLayout) => void
   /** −1 — назад, 1 — вперёд: на день или на неделю. */
   onShift: (dir: -1 | 1) => void
   onToday: () => void
@@ -111,7 +113,7 @@ export function ScheduleHeader({
         {today}
         <span className="flex-1" />
         <div className="w-56">{switcher}</div>
-        {view === 'week' && <LayoutToggle layout={layout} onLayout={onLayout} />}
+        <LayoutToggle layout={layout} onLayout={onLayout} />
         <Button className="min-h-11 px-4 py-2 text-sm" onClick={onNew} disabled={!canWrite}>
           <IconPlus size={18} /> Новый урок
         </Button>
@@ -120,11 +122,11 @@ export function ScheduleHeader({
   }
   return (
     <header className="flex flex-col gap-3">
-      <h1 className="text-2xl font-bold">Расписание</h1>
-      <div className="flex items-center gap-2">
-        <div className="min-w-0 flex-1">{switcher}</div>
-        {view === 'week' && <LayoutToggle layout={layout} onLayout={onLayout} />}
+      <div className="flex items-center justify-between gap-2">
+        <h1 className="text-2xl font-bold">Расписание</h1>
+        <LayoutToggle layout={layout} onLayout={onLayout} />
       </div>
+      {switcher}
       <div className="flex items-center gap-1">
         {arrows}
         {today}

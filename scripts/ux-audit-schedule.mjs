@@ -104,7 +104,8 @@ try {
     await page.waitForFunction(() => location.pathname !== '/login', { timeout: 30000, polling: 250 })
     const lesson = `/schedule?view=day&day=${s.nextDay}&lesson=${s.next}`
     const screens = [
-      ['День', '/schedule?view=day'],
+      ['День списком', '/schedule?view=day&layout=list'],
+      ['День таблицей', '/schedule?view=day&layout=cols'],
       ['Неделя списком', '/schedule?view=week&layout=list'],
       ['Неделя колонками', '/schedule?view=week&layout=cols'],
       ['Шторка урока', lesson, null, true],

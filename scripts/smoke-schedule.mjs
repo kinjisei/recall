@@ -280,6 +280,18 @@ try {
   check('база: отменён, поздняя отмена, остаток 3', row?.status === 'cancelled' && row?.charge === 'late_cancel' && (await balance(timur.id)).balance === 3, JSON.stringify({ s: row?.status, c: row?.charge }))
   await click(te, 'Готово')
 
+  // ── 5б. таблица или список — у дня тоже (правка владельца 05.10.2026, Ф2.10) ───
+  await go(te, '/schedule')
+  const layoutNow = (p) => p.$eval('[data-schedule-layout]', (e) => e.getAttribute('data-schedule-layout')).catch(() => null)
+  check('телефон: день по умолчанию списком — уроки строками, без ленты часов', (await layoutNow(te)) === 'list' && !(await te.$('ol[aria-label="Уроки дня"]')))
+  await shot(te, 'day-list-390')
+  await clickSel(te, 'button[aria-label="Таблицей по часам"]')
+  await sleep(500)
+  check('«Таблицей по часам» в углу — день лентой часов', (await layoutNow(te)) === 'cols' && !!(await te.$('ol[aria-label="Уроки дня"]')) && new URL(te.url()).searchParams.get('layout') === 'cols')
+  await clickSel(te, 'button[aria-label="Списком"]')
+  await sleep(500)
+  check('«Списком» — снова строки', (await layoutNow(te)) === 'list' && !(await te.$('ol[aria-label="Уроки дня"]')))
+
   // ── 6. неделя целиком ───────────────────────────────────────────────────────────
   await go(te, '/schedule?view=week')
   const weekText = await text(te)
@@ -324,6 +336,9 @@ try {
   await go(desk, '/schedule')
   check('компьютер: по умолчанию неделя колонками', await desk.waitForSelector('[data-schedule-view="week"]', { timeout: 10000 }).then(() => true, () => false) && (await desk.$$eval('button[aria-label$="Открыть день"]', (x) => x.length)) === 7)
   await shot(desk, 'week-1280')
+  await go(desk, '/schedule?view=day')
+  check('компьютер: день по умолчанию таблицей (лента часов), «Списком» рядом', !!(await desk.waitForSelector('ol[aria-label="Уроки дня"]', { timeout: 10000 }).catch(() => null)) && !!(await desk.$('button[aria-label="Списком"]')))
+  await go(desk, '/schedule')
   await click(desk, 'Новый урок')
   const panel = await desk.evaluate(() => {
     const d = [...document.querySelectorAll('[role="dialog"]')].pop()?.getBoundingClientRect()

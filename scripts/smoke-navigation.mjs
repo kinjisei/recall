@@ -478,9 +478,10 @@ async function main() {
   // Раздел «Материалы»: открытый материал в адресе
   await page.goto(`${BASE}/tasks`, { waitUntil: 'networkidle2' })
   await sleep(2000)
-  await tap(page, 'Библиотека')
+  // библиотека — по заголовку карточки «Материалы» (кнопка карточки — «Собрать материал»)
+  await tap(page, 'AI соберёт текст')
   await sleep(2000)
-  check('«Задания» → «Библиотека»: материалы по адресу', path() === '/tasks?tab=materials' && (await seen(page, 'Материал для смоука навигации')), path())
+  check('«Задания» → заголовок «Материалы»: библиотека по адресу', path() === '/tasks?tab=materials' && (await seen(page, 'Материал для смоука навигации')), path())
   await tap(page, 'Материал для смоука навигации')
   await sleep(1800)
   const matUrl = page.url()
