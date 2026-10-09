@@ -25,6 +25,7 @@ import { mkdirSync } from 'node:fs'
 import puppeteer from 'puppeteer-core'
 import { profileDir } from './_profile.mjs'
 import { APP_URL, scriptEnv } from './_env.mjs'
+import { settledScreenshot } from './_shots.mjs'
 
 if (process.argv.includes('--prod')) {
   console.error('Смоук заводит аккаунты — только тестовая база (npm run dev:test).')
@@ -104,7 +105,7 @@ async function typeInto(page, sel, value) {
 async function shot(page, name) {
   if (!SHOTS) return
   mkdirSync(SHOTS, { recursive: true })
-  await page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: true })
+  await settledScreenshot(page, { path: `${SHOTS}/${name}.png`, fullPage: true })
 }
 
 const PORT = 9400 + Math.floor(Math.random() * 500)

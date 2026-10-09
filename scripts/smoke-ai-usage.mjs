@@ -23,6 +23,7 @@ import { join } from 'node:path'
 import puppeteer from 'puppeteer-core'
 import { profileDir } from './_profile.mjs'
 import { APP_URL, scriptEnv } from './_env.mjs'
+import { settleAnimations } from './_shots.mjs'
 
 if (process.argv.includes('--prod')) {
   console.error('Смоук заводит аккаунты и пишет журнал — только тестовая база.')
@@ -141,7 +142,7 @@ try {
   check('без ошибок JavaScript', jsErrors.length === 0, jsErrors.join(' | '))
 
   if (process.env.SHOT_DIR) {
-    await page.evaluate(() => document.getAnimations().forEach((a) => a.finish()))
+    await settleAnimations(page)
     const el = await page.evaluateHandle(() =>
       [...document.querySelectorAll('h2')].find((x) => x.textContent?.trim() === 'Расход AI')?.closest('section'))
     await el.asElement()?.screenshot({ path: join(process.env.SHOT_DIR, 'ai-usage-360.png') })

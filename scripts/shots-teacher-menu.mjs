@@ -15,6 +15,7 @@ import puppeteer from 'puppeteer-core'
 import { profileDir } from './_profile.mjs'
 import { APP_URL, dbTarget, runSql, scriptEnv } from './_env.mjs'
 import { deleteTestUser } from './_users.mjs'
+import { settledScreenshot } from './_shots.mjs'
 
 if (process.argv.includes('--prod')) {
   console.error('Снимки заводят аккаунты — только тестовая база (npm run dev:test).')
@@ -90,7 +91,7 @@ try {
       await page.goto(`${APP_URL}${path}`, { waitUntil: 'networkidle2' })
       await sleep(2500)
       const file = `${DIR}/${name}-${width}-${theme}.png`
-      await page.screenshot({ path: file, fullPage: width < 600 })
+      await settledScreenshot(page, { path: file, fullPage: width < 600 })
       console.log(`снимок ${file}`)
     }
     await ctx.close()

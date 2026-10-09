@@ -25,6 +25,7 @@ import { join } from 'node:path'
 import puppeteer from 'puppeteer-core'
 import { profileDir } from './_profile.mjs'
 import { APP_URL, scriptEnv } from './_env.mjs'
+import { settledScreenshot } from './_shots.mjs'
 
 const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
 const BASE = APP_URL
@@ -244,7 +245,7 @@ async function screenshots(page) {
       await page.goto(`${BASE}${p}`, { waitUntil: 'networkidle2' })
       await sleep(1800)
       const name = `${tag}-${p === '/' ? 'home' : p.slice(1)}.png`
-      await page.screenshot({ path: join(SHOTS, name) })
+      await settledScreenshot(page, { path: join(SHOTS, name) })
     }
   }
   console.log(`скриншоты: ${SHOTS}`)

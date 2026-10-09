@@ -33,6 +33,7 @@ import { profileDir } from './_profile.mjs'
 import { APP_URL, dbTarget, runSql, scriptEnv } from './_env.mjs'
 import { deleteTestUser } from './_users.mjs'
 import { informal } from './_formal.mjs'
+import { settledScreenshot } from './_shots.mjs'
 
 if (process.argv.includes('--prod')) {
   console.error('Смоук заводит аккаунты — только тестовая база (npm run dev:test).')
@@ -133,7 +134,7 @@ async function signupWithoutMail(page) {
 async function shot(page, name) {
   if (!SHOTS) return
   mkdirSync(SHOTS, { recursive: true })
-  await page.screenshot({ path: `${SHOTS}/${name}-${WIDTH}-${THEME}.png`, fullPage: true })
+  await settledScreenshot(page, { path: `${SHOTS}/${name}-${WIDTH}-${THEME}.png`, fullPage: true })
 }
 /** Колесо времени: Home и стрелки вниз до нужного числа (как в smoke-schedule). */
 async function setTime(page, hh) {

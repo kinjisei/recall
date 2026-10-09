@@ -24,6 +24,7 @@ import { join } from 'node:path'
 import puppeteer from 'puppeteer-core'
 import { profileDir } from './_profile.mjs'
 import { APP_URL, scriptEnv } from './_env.mjs'
+import { settledScreenshot } from './_shots.mjs'
 
 const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
 const BASE = APP_URL
@@ -109,7 +110,7 @@ async function openBrowser() {
 async function shot(page, name) {
   if (!SHOTS) return
   mkdirSync(SHOTS, { recursive: true })
-  await page.screenshot({ path: join(SHOTS, `${name}.png`) })
+  await settledScreenshot(page, { path: join(SHOTS, `${name}.png`) })
 }
 
 // ── 1. тема ─────────────────────────────────────────────────────────────────

@@ -29,6 +29,7 @@ import puppeteer from 'puppeteer-core'
 import sharp from 'sharp'
 import { profileDir } from './_profile.mjs'
 import { APP_URL, scriptEnv } from './_env.mjs'
+import { settleAnimations, settledScreenshot } from './_shots.mjs'
 
 const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
 // --url — снимать с другого сервера (например, vite preview отдельной сборки
@@ -141,10 +142,10 @@ async function save(dir) {
         // задержкой по очереди, а в headless-вкладке кадры идут рывками — без
         // этого снимок ловит разное число проявившихся строк, и «разница» —
         // это время, а не код.
-        await tab.evaluate(() => document.getAnimations().forEach((a) => a.finish()))
+        await settleAnimations(tab)
         await sleep(200)
         const t2 = Date.now()
-        await tab.screenshot({ path: join(dir, fileName(tag, p)), fullPage: true })
+        await settledScreenshot(tab, { path: join(dir, fileName(tag, p)), fullPage: true })
         // время по шагам: медленный прогон сразу показывает, где он стоит
         console.log(`${tag} ${p}: загрузка ${t1 - t0} мс, снимок ${Date.now() - t2} мс`)
         await tab.close()

@@ -38,6 +38,7 @@ import { build, preview } from 'vite'
 import { chunksOutsidePrecache, RUNTIME_CHUNKS_MAX, startupGraph } from './_precache.mjs'
 import { profileDir } from './_profile.mjs'
 import { ROOT, scriptEnv } from './_env.mjs'
+import { settledScreenshot } from './_shots.mjs'
 
 if (process.argv.includes('--prod')) {
   console.error('Смоук офлайн-старта — только на тестовой базе.')
@@ -162,7 +163,7 @@ async function offlineStart(label, expectEntry = '') {
   const shown = TABS.every((t) => txt.includes(t))
   check(`${label}: экран есть, меню на месте`, shown, shown ? '' : `на экране: «${txt.trim().slice(0, 80)}»`)
   check(`${label}: главная нарисовалась, а не только каркас`, txt.includes(HOME))
-  if (process.argv.includes('--shots')) await page.screenshot({ path: join(tmpdir(), `offline-start-${label.replace(/\s+/g, '-')}.png`) })
+  if (process.argv.includes('--shots')) await settledScreenshot(page, { path: join(tmpdir(), `offline-start-${label.replace(/\s+/g, '-')}.png`) })
   // Стартовые файлы обязаны быть; ленивые куски (слово дня тянет словарь на
   // 750–850 КБ) в precache не входят по замыслу — без сети в стёртом кэше они
   // не грузятся, и экран обходится без них (проверки выше и ниже).

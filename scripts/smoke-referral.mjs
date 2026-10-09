@@ -27,6 +27,7 @@ import puppeteer from 'puppeteer-core'
 import { profileDir } from './_profile.mjs'
 import { APP_URL, scriptEnv } from './_env.mjs'
 import { INVITE_TEXT } from '../src/domains/billing/referral.ts'
+import { settledScreenshot } from './_shots.mjs'
 
 const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
 const BASE = APP_URL
@@ -54,12 +55,12 @@ async function shot(page, name) {
   mkdirSync(SHOTS, { recursive: true })
   await page.evaluate(() => window.scrollTo(0, 0))
   await sleep(300)
-  await page.screenshot({ path: join(SHOTS, `${name}.png`) })
+  await settledScreenshot(page, { path: join(SHOTS, `${name}.png`) })
   const more = await page.evaluate(() => document.documentElement.scrollHeight > window.innerHeight + 20)
   if (!more) return
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
   await sleep(400)
-  await page.screenshot({ path: join(SHOTS, `${name}-bottom.png`) })
+  await settledScreenshot(page, { path: join(SHOTS, `${name}-bottom.png`) })
   await page.evaluate(() => window.scrollTo(0, 0))
 }
 

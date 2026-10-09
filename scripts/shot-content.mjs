@@ -8,6 +8,7 @@ import { tmpdir } from 'node:os'
 import puppeteer from 'puppeteer-core'
 import { profileDir } from './_profile.mjs'
 import { APP_URL, scriptEnv } from './_env.mjs'
+import { settledScreenshot } from './_shots.mjs'
 
 const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
 const BASE = APP_URL
@@ -68,7 +69,7 @@ try {
     b?.click()
   })
   await new Promise((r) => setTimeout(r, 1000))
-  await page.screenshot({ path: OUT + '\\shot-phrasal-ref.png' })
+  await settledScreenshot(page, { path: OUT + '\\shot-phrasal-ref.png' })
 
   // 2. фразовые: тренажёр (с ответом)
   await page.evaluate(() => {
@@ -78,7 +79,7 @@ try {
   await new Promise((r) => setTimeout(r, 700))
   await page.evaluate(() => document.querySelector('.grid.grid-cols-2 button')?.click())
   await new Promise((r) => setTimeout(r, 500))
-  await page.screenshot({ path: OUT + '\\shot-phrasal-trainer.png' })
+  await settledScreenshot(page, { path: OUT + '\\shot-phrasal-trainer.png' })
 
   // 3. паки: идиомы раскрыты
   await page.goto(BASE + '/study', { waitUntil: 'networkidle2' })
@@ -100,7 +101,7 @@ try {
     rows[rows.length - 1]?.scrollIntoView()
   })
   await new Promise((r) => setTimeout(r, 400))
-  await page.screenshot({ path: OUT + '\\shot-idiom-packs.png' })
+  await settledScreenshot(page, { path: OUT + '\\shot-idiom-packs.png' })
 
   await browser.close()
   console.log('скриншоты готовы')

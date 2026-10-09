@@ -29,6 +29,7 @@ import puppeteer from 'puppeteer-core'
 import { profileDir } from './_profile.mjs'
 import { APP_URL, dbTarget, runSql, scriptEnv } from './_env.mjs'
 import { deleteTestUser } from './_users.mjs'
+import { settledScreenshot } from './_shots.mjs'
 
 if (process.argv.includes('--prod')) {
   console.error('Смоук заводит аккаунты и уроки — только тестовая база (npm run dev:test).')
@@ -121,7 +122,7 @@ async function setTime(page, hh, mm = 0) {
 async function shot(page, name) {
   if (!SHOTS) return
   mkdirSync(SHOTS, { recursive: true })
-  await page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: false })
+  await settledScreenshot(page, { path: `${SHOTS}/${name}.png`, fullPage: false })
 }
 
 const ids = []

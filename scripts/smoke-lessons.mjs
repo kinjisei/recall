@@ -35,6 +35,7 @@ import { profileDir } from './_profile.mjs'
 import { APP_URL, dbTarget, runSql, scriptEnv } from './_env.mjs'
 import { deleteTestUser } from './_users.mjs'
 import { auditPage } from './_ux-audit-page.mjs'
+import { settledScreenshot } from './_shots.mjs'
 
 const env = scriptEnv()
 const sql = (q) => runSql(dbTarget([]), q)
@@ -101,7 +102,7 @@ const waitText = (page, re, timeout = 15000) =>
 async function shot(page, name) {
   if (!SHOTS) return
   mkdirSync(SHOTS, { recursive: true })
-  await page.screenshot({ path: `${SHOTS}/${name}-${THEME}.png`, fullPage: true })
+  await settledScreenshot(page, { path: `${SHOTS}/${name}-${THEME}.png`, fullPage: true })
 }
 /** UX-аудит части экрана (контраст, тач-цели, подписи) — 0 замечаний. */
 async function audit(page, name, sel) {
