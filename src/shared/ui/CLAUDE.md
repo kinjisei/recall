@@ -180,7 +180,7 @@ View Transitions API, вся плавность продукта стоит 0,8 
 - **Иконки — свои, `icons.tsx`** (инлайн-SVG в стиле Phosphor, без
   библиотеки), **генерируются** из `handoff/icons/*.svg`
   (`node scripts/gen-icons.mjs`), руками не правятся. Иконку убрать — удалить
-  её SVG и перегенерировать. 80 иконок (`IconBell` — Ф1.5, `IconCopy` — Ф2.1, `IconGift`, `IconShare`, `IconInfinity`, `IconHeart` — Ф2.3, из макета t8; 19 расписания — Ф2.7, из макетов t2–t5: `IconCalendar`, `IconCalendarPlus`, `IconReschedule`, `IconClock`, `IconClockAuto`, `IconRepeat`, `IconVideo`, `IconLink`, `IconTicket`, `IconUsers`, `IconUser`, `IconChevronLeft`, `IconChevronRight`, `IconColumns`, `IconList`, `IconInfo`, `IconXCircle`, `IconMinusCircle`, `IconSmartphoneOff`); 4 неиспользуемые (`IconStudents`,
+  её SVG и перегенерировать. 87 иконок (`IconBell` — Ф1.5, `IconCopy` — Ф2.1, `IconGift`, `IconShare`, `IconInfinity`, `IconHeart` — Ф2.3, из макета t8; 19 расписания — Ф2.7, из макетов t2–t5: `IconCalendar`, `IconCalendarPlus`, `IconReschedule`, `IconClock`, `IconClockAuto`, `IconRepeat`, `IconVideo`, `IconLink`, `IconTicket`, `IconUsers`, `IconUser`, `IconChevronLeft`, `IconChevronRight`, `IconColumns`, `IconList`, `IconInfo`, `IconXCircle`, `IconMinusCircle`, `IconSmartphoneOff`); 4 неиспользуемые (`IconStudents`,
   `IconSpeech`, `IconSpeechFill`, `IconMicFill`) удалены 28.09.2026.
 - **Чего не хватает новым экранам** (иконки, компоненты, состояния) — список
   в `docs/design/ui-inventory.md` §6. Добавил оттуда — отметь там же: по описи

@@ -177,7 +177,7 @@ export function renderNotification(
 
 /**
  * Какие виды уходят в push. Копия push_kinds() из миграции 0011 — пару
- * сверяет test-notifications.mjs. Ученику — только об уроках: экран
+ * сверяет test-push.mjs. Ученику — только об уроках: экран
  * разрешения обещает «Больше ничего присылать не будем» (макет u3-3).
  */
 export const PUSH_KINDS = [

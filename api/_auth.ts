@@ -161,7 +161,7 @@ export async function isTeacher(
 
 /**
  * Отказы spend_energy → текст человеку. Про энергию — в ⚡, на том же языке,
- * что счётчик на экране (CLAUDE.md, раздел «Энергия»).
+ * что счётчик на экране (src/features/billing/CLAUDE.md, «Энергия»).
  */
 const REFUSALS: [code: string, status: number, error: string][] = [
   [

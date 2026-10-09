@@ -10,8 +10,8 @@ import type { GrammarExercise } from '../types'
  *   регистр                 «Esta» = «esta»
  *   диакритика              «está» = «esta», «ёлка» = «елка»
  *   лишние пробелы          «  Hello  world » = «hello world»
- *   апострофы (любые)       «don't» = «don’t» = «dont»
- *   дефисы и тире → пробел  «well-known» = «well known»
+ *   апострофы (любые)       «don't» = «don’t» (но «dont» ≠ «don't»)
+ *   дефисы и тире → дефис   «well–known» = «well-known» (но ≠ «well known»)
  *   финальная пунктуация    «Yes.» = «Yes»
  *
  * Три последних правила добавлены 2026-08-09 (находка ревью 2А №7): в статике

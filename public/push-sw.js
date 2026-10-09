@@ -41,7 +41,7 @@ self.addEventListener('notificationclick', (event) => {
       const wins = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
       const win = wins.find((w) => new URL(w.url).origin === url.origin)
       if (win) {
-        // приложение слушает это сообщение и переходит без перезагрузки (app/usePushOpen)
+        // приложение слушает это сообщение и переходит без перезагрузки (app/shell/usePushBridge)
         win.postMessage({ type: 'recall:open', href: url.pathname + url.search })
         await win.focus().catch(() => undefined)
         return

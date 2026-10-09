@@ -217,7 +217,7 @@ export function spacedCode(code: string): string {
 /**
  * Текст приглашения без ссылки (ссылку Telegram приклеивает сам).
  * Расписание названо с Ф2.7 (решение владельца 04.10.2026): свои уроки
- * ученик увидит на экране «Мои уроки» — он появится в Ф2.9.
+ * ученик видит на экране «Мои уроки» (Ф2.9).
  */
 export function cardInviteText(name: string, code: string): string {
   return (

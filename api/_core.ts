@@ -79,7 +79,7 @@ export const GEMINI_TIER_CHAINS: Record<AiTier, string[]> = {
   //     2.5-flash первым — в 5× дешевле при достаточном качестве; дорогие 3.6/
   //     3.5 уходят в хвост «на случай, если дешёвая упрётся». Именно это делает
   //     энергетические пулы прибыльными.
-  // Терминальный фолбэк (Groq-70b, ещё дешевле) добавляет api/gemini.ts.
+  // Терминальный фолбэк (Groq gpt-oss-120b, ещё дешевле) добавляет api/gemini.ts.
   standard:
     process.env.RECALL_CHEAP_MODELS === '1'
       ? ['gemini-2.5-flash', 'gemini-3.6-flash', 'gemini-3.5-flash']
