@@ -52,6 +52,19 @@ async function mkUser(key, email, patch) {
 }
 const spend = (c, cost, kind = 'heavy', gen = false) =>
   c.rpc('spend_energy', { p_kind: kind, p_cost: cost, p_generation: gen }).then((r) => r.error?.message || null)
+/**
+ * Потратить total ⚡ так, как тратит сервер: списаниями не дороже самой
+ * дорогой задачи (2 ⚡, api/_tasks.ts). Одним списанием на 35 ⚡ база
+ * отказывает с RECALL_BAD_COST с миграции 0012 (PLAN.md Ф2.23). Первый отказ
+ * — наружу.
+ */
+const spendTotal = async (c, total) => {
+  for (let left = total; left > 0; left -= 2) {
+    const err = await spend(c, Math.min(2, left))
+    if (err) return err
+  }
+  return null
+}
 const plan = async (c) => (await c.rpc('get_my_plan')).data
 
 try {
@@ -62,7 +75,7 @@ try {
   ok('free: light НЕ тратит энергию', !(await spend(free, 0, 'light')) , '')
   p = await plan(free)
   ok('free: после light energy_spent = 0', p.energy_spent === 0, `got ${p.energy_spent}`)
-  ok('free: heavy на 5 проходит', !(await spend(free, 5, 'heavy')))
+  ok('free: heavy на 5 проходит', !(await spendTotal(free, 5)))
   ok('free: 6-я энергия блокируется', (await spend(free, 1, 'heavy')) === 'RECALL_FREE_LIMIT')
 
   // 1b) ТРИАЛ ступенькой: 30 первые 3 дня, дальше 15 (решение владельца 06.08.2026).
@@ -116,14 +129,14 @@ try {
     .eq('id', ids.trialNew.id)
   p = await plan(trialNew)
   ok('триал, день 5: energy_max = 15', p.energy_max === 15, `got ${p.energy_max}`)
-  ok('триал: 15 проходит', !(await spend(trialNew, 15)))
+  ok('триал: 15 проходит', !(await spendTotal(trialNew, 15)))
   ok('триал: 16-я блокируется', (await spend(trialNew, 1)) === 'RECALL_ENERGY_DAY')
 
   // 2) PREMIUM (соло): бюджет 30 — оплаченный тариф ступенькой НЕ режется
   const prem = await mkUser('prem', 'en-prem@recall.test', { plan: 'premium', plan_expires_at: FUT, trial_until: PAST })
   p = await plan(prem)
   ok('premium: energy_max = 30', p.energy_max === 30, `got ${p.energy_max}`)
-  ok('premium: 30 проходит', !(await spend(prem, 30)))
+  ok('premium: 30 проходит', !(await spendTotal(prem, 30)))
   ok('premium: 31-я блокируется', (await spend(prem, 1)) === 'RECALL_ENERGY_DAY')
 
   // 3) СТУДИЯ (teacher_mini пул 70) + 2 ученицы
@@ -139,11 +152,11 @@ try {
   ok('студия: in_studio = true', p.in_studio === true)
   ok('студия: под-кап = 35 (50% пула)', p.energy_subcap === 35, `got ${p.energy_subcap}`)
 
-  const errA = await spend(stA, 35)
+  const errA = await spendTotal(stA, 35)
   ok('под-кап: ученица A тратит 35 — ок', !errA, errA ?? '')
   ok('под-кап: 36-я по A блокируется (её лимит 35)', (await spend(stA, 1)) === 'RECALL_ENERGY_SUBCAP')
   // пул уже потрачен на 35 (A); B добирает до 70
-  ok('пул: ученица B тратит ещё 35 — ок (пул 70)', !(await spend(stB, 35)))
+  ok('пул: ученица B тратит ещё 35 — ок (пул 70)', !(await spendTotal(stB, 35)))
   ok('пул: следующая энергия B блокируется (пул исчерпан)', (await spend(stB, 1)) === 'RECALL_ENERGY_POOL')
   p = await plan(stB)
   ok('пул: energy_spent = 70 у обеих (общий счётчик)', p.energy_spent === 70, `got ${p.energy_spent}`)
@@ -160,9 +173,9 @@ try {
 
   // 5) АДМИН — без лимитов
   const adm = await mkUser('adm', 'en-adm@recall.test', { is_admin: true, trial_until: PAST, plan: 'free' })
-  let admOk = true
-  for (let i = 0; i < 3; i++) if (await spend(adm, 100)) admOk = false
-  ok('админ: без лимитов (300 энергии подряд)', admOk)
+  const admErr = await spendTotal(adm, 100)
+  ok('админ: без лимитов (100 энергии подряд при бюджете free 5)', !admErr, admErr ?? '')
+  ok('админ: граница цены и для него — одно списание на 100 отказ', (await spend(adm, 100)) === 'RECALL_BAD_COST')
 } catch (e) {
   console.log('ОШИБКА:', String(e).slice(0, 200)); fail++
 } finally {

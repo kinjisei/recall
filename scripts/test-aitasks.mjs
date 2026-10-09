@@ -111,6 +111,23 @@ check(
   [undefined, null, 42, {}, ['dialog']].every((v) => taskSpec(v) === undefined),
 )
 
+// --- граница цены в базе = самая дорогая задача (PLAN.md Ф2.23) ---
+// spend_energy зовут и из браузера, поэтому база сама держит цену в 0..N
+// (миграция 0012). Подняли цену задачи выше N без новой миграции — сервер
+// получит RECALL_BAD_COST, и AI закроется у всех на этой задаче.
+{
+  const dir = 'supabase/migrations'
+  const defs = readdirSync(dir)
+    .filter((f) => f.endsWith('.sql'))
+    .sort()
+    .map((f) => readFileSync(join(dir, f), 'utf8'))
+    .flatMap((sql) => [...sql.matchAll(/create (?:or replace )?function public\.spend_energy\([^)]*\)[\s\S]*?\$fn\$([\s\S]*?)\$fn\$/g)].map((m) => m[1]))
+  const bound = Number(/p_cost\s*>\s*(\d+)/.exec(defs.at(-1) ?? '')?.[1])
+  const priciest = Math.max(...entries.map(([, s]) => s.energyCost))
+  check(`граница цены в spend_energy (${bound}) = самая дорогая задача (${priciest})`, bound === priciest)
+  check('цены задач не отрицательные', entries.every(([, s]) => Number.isInteger(s.energyCost) && s.energyCost >= 0))
+}
+
 const failed = results.filter((r) => !r).length
 console.log(`\n${results.length - failed}/${results.length} проверок прошло`)
 process.exit(failed ? 1 : 0)
