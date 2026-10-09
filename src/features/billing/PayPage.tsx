@@ -8,7 +8,7 @@
 // тариф сразу (с карточки на странице тарифов). Открытая заявка переживает
 // перезаход: экран показывает «Спасибо», пока её не подтвердят или не уберут.
 // Раскладка одна на все ширины — колонка: форма короткая, на компьютере ей
-// ширина колонки впору.
+// ширина колонки впору. Страница оплаты — на «вы», как открытые (журнал п.71).
 // ============================================================================
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
@@ -16,6 +16,7 @@ import { AppLink } from '../../shared/ui/AppLink'
 import { BackButton } from '../../shared/ui/BackButton'
 import { Button } from '../../shared/ui/Button'
 import { Card } from '../../shared/ui/Card'
+import { ContactLinks } from '../../shared/ui/ContactLinks'
 import { ChoiceGroup } from '../../shared/ui/ChoiceGroup'
 import { LoadError } from '../../shared/ui/LoadError'
 import { RowsSkeleton } from '../../shared/ui/Loading'
@@ -57,6 +58,10 @@ export function PayPage() {
       ) : (
         <RowsSkeleton count={4} />
       )}
+      <section className="mt-3 flex flex-col gap-3">
+        <p className="text-sm text-fg-tertiary">Что-то не сходится с оплатой — напишите нам:</p>
+        <ContactLinks subject="Recall — вопрос по оплате" />
+      </section>
     </div>
   )
 }
@@ -90,7 +95,7 @@ function PayForm({ info, requested }: { info: PayInfo; requested: string | null 
     try {
       setClaim(await reportPaymentSent(plan))
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Не получилось отправить — попробуй ещё раз.')
+      setError(e instanceof Error ? e.message : 'Не получилось отправить — попробуйте ещё раз.')
     } finally {
       setBusy(false)
     }
@@ -111,7 +116,7 @@ function PayForm({ info, requested }: { info: PayInfo; requested: string | null 
             return {
               id,
               label: planShortTitle(id),
-              hint: id === mine ? `${what} · сейчас у тебя` : what,
+              hint: id === mine ? `${what} · сейчас у вас` : what,
               trailing: <Price amount={amountFor(id, 1)} />,
             }
           })}
@@ -134,13 +139,13 @@ function PayForm({ info, requested }: { info: PayInfo; requested: string | null 
           {error && <p className="mt-2 text-sm text-danger-strong">{error}</p>}
           {claim ? (
             <p className="mt-2 text-note text-fg-muted">
-              Мы уже ждём оплату за {planShortTitle(claim.plan as PaidPlan)}. Перевёл за {planShortTitle(plan)} — нажми, и
+              Мы уже ждём оплату за {planShortTitle(claim.plan as PaidPlan)}. Перевели за {planShortTitle(plan)} — нажмите, и
               мы поправим заявку.
             </p>
           ) : (
             <p className="mt-2 flex gap-2 text-note text-fg-muted">
               <IconHint size={16} className="mt-0.5 flex-none text-fg-faint" />
-              <span>Нажми после перевода — мы проверим и включим тариф.</span>
+              <span>Нажмите после перевода — мы проверим и включим тариф.</span>
             </p>
           )}
         </div>

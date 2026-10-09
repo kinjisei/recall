@@ -2,7 +2,7 @@
  * Путь нового репетитора — первые 15 минут (PLAN.md Ф2.11). Как у людей:
  *
  *   1. лендинг /teachers → «Начать» ведёт на /login?role=teacher, метка
- *      запомнена; регистрация формой → «Проверь почту»; почту подтверждаем
+ *      запомнена; регистрация формой → «Проверьте почту»; почту подтверждаем
  *      через админку (вместо письма) → вход;
  *   2. онбординг репетитора — один экран: язык и «Как узнал», без вопросов
  *      ученика (находка 1); ES выбран → в студию, режим включён, язык ES;
@@ -16,7 +16,10 @@
  *      (находка 3); после «Сохранить» и «назад» — список, а не снова
  *      «Сохранить»; «Энергия студии» — во «Заданиях», не над учениками (4);
  *   7. «Я преподаватель» на первом шаге онбординга без ссылки с лендинга;
- *   8. тот же репетитор на новом устройстве — экран репетитора, а не ученика.
+ *   8. тот же репетитор на новом устройстве — экран репетитора, а не ученика;
+ *   9. открытые страницы на «вы», блок связи WhatsApp · Telegram · Почта, шапка
+ *      лендинга и фон регистрации в цветах темы, «Я преподаватель» — внизу
+ *      экрана (Ф2.11б-1); снимки тарифов, «Как оплатить», Настроек.
  *
  * Запуск: npm run dev:test, затем node scripts/smoke-teacher-path.mjs
  *         [--shots <папка>] [--theme light] [--width 1280]
@@ -24,10 +27,12 @@
 import { createClient } from '@supabase/supabase-js'
 import { spawn } from 'node:child_process'
 import { mkdirSync } from 'node:fs'
+import { inflateSync } from 'node:zlib'
 import puppeteer from 'puppeteer-core'
 import { profileDir } from './_profile.mjs'
 import { APP_URL, dbTarget, runSql, scriptEnv } from './_env.mjs'
 import { deleteTestUser } from './_users.mjs'
+import { informal } from './_formal.mjs'
 
 if (process.argv.includes('--prod')) {
   console.error('Смоук заводит аккаунты — только тестовая база (npm run dev:test).')
@@ -141,6 +146,49 @@ async function setTime(page, hh) {
     await sleep(300)
   }
 }
+/**
+ * Цвет точки страницы [r, g, b] — по снимку, а не по CSS: градиенты и
+ * color-mix в стилях не сравнить, а пиксель — это то, что видит человек.
+ * Верхний левый пиксель PNG без предсказателя строки: у первого пикселя первой
+ * строки любой фильтр PNG даёт сырое значение.
+ */
+async function pixel(page, x, y) {
+  const png = Buffer.from(await page.screenshot({ clip: { x, y, width: 1, height: 1 } }))
+  const idat = []
+  for (let i = 8; i < png.length; ) {
+    const len = png.readUInt32BE(i)
+    if (png.toString('ascii', i + 4, i + 8) === 'IDAT') idat.push(png.subarray(i + 8, i + 8 + len))
+    i += 12 + len
+  }
+  const raw = inflateSync(Buffer.concat(idat))
+  return [raw[1], raw[2], raw[3]]
+}
+/** Светлое под светлую тему, тёмное под тёмную (по средней яркости: у «авроры» есть сиреневые пятна). */
+const inTheme = ([r, g, b]) => (THEME === 'light' ? (r + g + b) / 3 > 180 : (r + g + b) / 3 < 120)
+/**
+ * Блок связи: три ссылки — WhatsApp с номером, Telegram, почта; номер текстом
+ * не печатается (в любой записи, «+7 776 210 02 21» тоже). Исключение —
+ * «Как оплатить»: там тот же номер — реквизиты Kaspi, видны только вошедшему.
+ */
+async function contactsOk(page, { numberHidden = true } = {}) {
+  return page.evaluate((hide) => {
+    const hrefs = Object.fromEntries([...document.querySelectorAll('[data-contact]')].map((a) => [a.dataset.contact, a.getAttribute('href')]))
+    const digits = document.body.innerText.replace(/[\s()-]/g, '')
+    return (
+      hrefs.whatsapp?.startsWith('https://wa.me/77762100221?text=') &&
+      hrefs.telegram === 'https://t.me/Yerb0lat' &&
+      hrefs.email?.startsWith('mailto:') &&
+      (!hide || !digits.includes('7762100221'))
+    )
+  }, numberHidden)
+}
+/** Текст содержимого (без меню каркаса: внутри приложения оно на «ты»). */
+const mainText = (page) => page.evaluate(() => (document.querySelector('main') ?? document.body).innerText)
+async function formalOk(page, name) {
+  const found = informal(await mainText(page))
+  check(`${name}: на «вы»`, found.length === 0, [...new Set(found)].join(', '))
+}
+
 async function putDraft(page, owner, scope, value) {
   await page.evaluate((k, v) => localStorage.setItem(k, JSON.stringify({ v, at: Date.now() })), `recall.draft.${owner}.${scope}`, value)
 }
@@ -164,8 +212,22 @@ try {
   // ── 1. лендинг → регистрация → почта → вход ────────────────────────────────────
   const te = await newPage(b)
   await signupWithoutMail(te)
+  // открытые страницы гостю: «вы» и блок связи (Ф2.11б-1)
+  await go(te, '/forgot')
+  await waitText(te, /Забыли пароль\?/)
+  await formalOk(te, '«Забыли пароль»')
+  check('«Забыли пароль»: блок связи', await contactsOk(te))
+  await go(te, '/pricing')
+  await waitText(te, /Тарифы/)
+  await formalOk(te, 'тарифы гостю')
+  check('тарифы гостю: блок связи', await contactsOk(te))
   await go(te, '/teachers')
+  await waitText(te, /Что внутри/)
   await shot(te, '01-landing')
+  await formalOk(te, 'лендинг')
+  check('лендинг: блок связи, номер текстом не напечатан', await contactsOk(te))
+  check('лендинг: про расписание и учёт — на первом экране', /Расписание, оплаты и домашка/.test(await text(te)))
+  check(`лендинг: шапка в цвет темы (${THEME})`, inTheme(await pixel(te, Math.round(WIDTH / 2), 6)), String(await pixel(te, Math.round(WIDTH / 2), 6)))
   await te.evaluate(() => [...document.querySelectorAll('a')].find((a) => (a.getAttribute('href') ?? '').startsWith('/login?role=teacher'))?.click())
   check('кнопка лендинга → /login?role=teacher', await waitPath(te, '/login') && (await te.evaluate(() => location.search)).includes('role=teacher'))
   check('метка «репетитор» запомнена', (await te.evaluate(() => localStorage.getItem('recall.pending_role'))) === 'teacher')
@@ -174,9 +236,13 @@ try {
   await te.type('#f-email', TEACHER)
   await te.type('#f-password', PASS)
   check('регистрация говорит с репетитором: «можно вести учеников»', /можно вести учеников/.test(await text(te)))
+  await formalOk(te, 'регистрация')
+  // фон-«аврора»: на телефоне — весь экран, на компьютере — левая панель
+  const [ax, ay] = WIDTH < 600 ? [4, 4] : [48, 48]
+  check(`регистрация: фон в цвет темы (${THEME})`, inTheme(await pixel(te, ax, ay)), String(await pixel(te, ax, ay)))
   await shot(te, '02-signup')
   await te.click('button[type="submit"]')
-  check('регистрация → «Проверь почту»', await waitText(te, /Проверь почту/))
+  check('регистрация → «Проверьте почту»', await waitText(te, /Проверьте почту/))
   const tId = await idOf(TEACHER)
   if (!tId) throw new Error('аккаунт репетитора не создан')
   ids.push(tId)
@@ -310,6 +376,11 @@ try {
   await signIn(fk, FORK)
   check('без ссылки с лендинга — онбординг ученика', (await waitPath(fk, '/onboarding')) && (await waitText(fk, /Что будем учить\?/)))
   await shot(fk, '12-onboarding-student-step1')
+  const low = await fk.evaluate(() => {
+    const el = [...document.querySelectorAll('button')].find((x) => x.textContent.includes('Я преподаватель'))
+    return el ? el.getBoundingClientRect().top / innerHeight : 0
+  })
+  check('«Я преподаватель» — внизу экрана, а не под вариантами', low > 0.75, low.toFixed(2))
   await click(fk, 'Я преподаватель')
   check('«Я преподаватель» → экран репетитора с «Назад»', await waitText(fk, /Какой язык преподаёшь\?[\s\S]*Назад/))
   await click(fk, 'Назад')
@@ -329,6 +400,22 @@ try {
   const where = await nd.evaluate(() => location.pathname)
   const teacherScreen = where === '/schedule' || (await waitText(nd, /Какой язык преподаёшь\?/))
   check('новое устройство: не вопросы ученика', teacherScreen && !/Что будем учить/.test(await text(nd)), where)
+
+  // ── 9. тарифы, «Как оплатить», Настройки — вошедшему (Ф2.11б-1) ─────────────────
+  await go(te, '/pricing')
+  check('тарифы: «Ваш тариф»', await waitText(te, /Ваш тариф/))
+  await formalOk(te, 'тарифы')
+  check('тарифы: блок связи', await contactsOk(te))
+  await shot(te, '13-pricing')
+  await go(te, '/pay')
+  check('«Как оплатить»: реквизиты', await waitText(te, /Впишите код/))
+  await formalOk(te, '«Как оплатить»')
+  check('«Как оплатить»: блок связи', await contactsOk(te, { numberHidden: false }))
+  await shot(te, '14-pay')
+  await go(te, '/settings')
+  check('Настройки внутри приложения — на «ты»: «Напиши нам»', await waitText(te, /Напиши нам — починим/))
+  check('Настройки: блок связи', await contactsOk(te))
+  await shot(te, '15-settings')
 } catch (e) {
   check('смоук дошёл до конца', false, String(e?.stack ?? e).split('\n').slice(0, 3).join(' | '))
 } finally {

@@ -168,7 +168,7 @@ function StepLanguage({ onPick, onTeacher }: { onPick: (l: AppLang) => void; onT
     { id: 'es', label: 'ES', desc: 'Испанский' },
   ]
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-1 flex-col gap-6">
       <Heading title="Что будем учить?" desc="Язык можно поменять в любой момент в шапке." />
       <div className="grid grid-cols-2 gap-3">
         {options.map((o, i) => (
@@ -185,10 +185,10 @@ function StepLanguage({ onPick, onTeacher }: { onPick: (l: AppLang) => void; onT
           </button>
         ))}
       </div>
-      {/* Развилка — на первом шаге: репетитору вопросы ученика не нужны (Ф2.11) */}
+      {/* Развилка репетитора (Ф2.11) — внизу экрана, не третьим вариантом (п.71) */}
       <button
         onClick={onTeacher}
-        className="min-h-11 self-center py-1 text-sm text-fg-muted underline underline-offset-4"
+        className="mt-auto min-h-11 self-center py-1 text-sm text-fg-muted underline underline-offset-4"
       >
         Я преподаватель — веду своих учеников
       </button>

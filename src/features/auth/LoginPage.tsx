@@ -97,17 +97,18 @@ export function LoginPage() {
             <BrandLogo width={210} />
           </div>
           <div className="flex animate-fade-up flex-col gap-3 text-center [animation-delay:.35s]">
-            <h1 className="whitespace-nowrap text-4xl font-medium tracking-tight">
-              Присоединяйся к Recall
+            {/* с переносом: «Присоединяйтесь» длиннее «Присоединяйся», в строку на 1024 px не влезало */}
+            <h1 className="text-balance text-4xl font-medium tracking-tight">
+              Присоединяйтесь к Recall
             </h1>
             <p className="px-4 text-sm leading-relaxed text-fg-tertiary">
               Две минуты на настройку — и можно {forTeacher ? 'вести учеников' : 'заниматься'}.
             </p>
           </div>
           <div className="flex flex-col gap-3">
-            <StepItem number={1} text="Создай аккаунт" active delay=".5s" />
-            <StepItem number={2} text={forTeacher ? 'Выбери язык, который преподаёшь' : 'Выбери язык — EN или ES'} delay=".65s" />
-            <StepItem number={3} text={forTeacher ? 'Добавь первого ученика' : 'Определи свой уровень'} delay=".8s" />
+            <StepItem number={1} text="Создайте аккаунт" active delay=".5s" />
+            <StepItem number={2} text={forTeacher ? 'Выберите язык, который преподаёте' : 'Выберите язык — EN или ES'} delay=".65s" />
+            <StepItem number={3} text={forTeacher ? 'Добавьте первого ученика' : 'Определите свой уровень'} delay=".8s" />
           </div>
         </div>
       </div>
@@ -123,26 +124,26 @@ export function LoginPage() {
 
           <div className="flex flex-col gap-2">
             <h2 className="text-3xl font-medium tracking-tight">
-              {sentTo ? 'Проверь почту' : signup ? 'Создать новый профиль' : 'С возвращением'}
+              {sentTo ? 'Проверьте почту' : signup ? 'Создать новый профиль' : 'С возвращением'}
             </h2>
             <p className="text-sm text-fg-muted">
               {sentTo
                 ? 'Остался один шаг — подтвердить адрес.'
                 : signup
-                  ? `Займёт минуту. На почту придёт письмо — подтверди адрес, и можно ${forTeacher ? 'вести учеников' : 'заниматься'}.`
-                  : 'Войди, чтобы продолжить занятия.'}
+                  ? `Займёт минуту. На почту придёт письмо — подтвердите адрес, и можно ${forTeacher ? 'вести учеников' : 'заниматься'}.`
+                  : 'Войдите, чтобы продолжить занятия.'}
             </p>
             {/* по ссылке-приглашению коллеги (Ф2.3): видно, что она сработала */}
             {invited && !sentTo && (
               <p className="flex items-start gap-2 text-sm text-accent-strong" data-referral-note>
                 <IconGift size={18} className="mt-px flex-none" />
-                <span>По приглашению коллеги пробный период у тебя на неделю дольше.</span>
+                <span>По приглашению коллеги пробный период у вас на неделю дольше.</span>
               </p>
             )}
             {/* по приглашению преподавателя (Ф2.5): код подставится после входа */}
             {joining && !sentTo && (
               <p className="text-sm text-accent-strong" data-join-note>
-                Тебя пригласил преподаватель. Войди или зарегистрируйся — код подставится сам.
+                Вас пригласил преподаватель. Войдите или зарегистрируйтесь — код подставится сам.
               </p>
             )}
           </div>
@@ -232,7 +233,7 @@ export function LoginPage() {
 
             {signup && (
               <p className="text-center text-xs leading-relaxed text-fg-muted">
-                Создавая аккаунт, ты принимаешь{' '}
+                Создавая аккаунт, вы принимаете{' '}
                 <AppLink to="/terms" className="underline hover:text-fg-secondary">
                   условия
                 </AppLink>{' '}
@@ -305,7 +306,7 @@ function CheckEmail({
       // частый случай — слишком частые повторы; текст Supabase технический
       setErr(
         /rate|seconds|too many/i.test(error.message)
-          ? 'Письма отправляются не чаще раза в минуту. Подожди немного.'
+          ? 'Письма отправляются не чаще раза в минуту. Подождите немного.'
           : error.message,
       )
     } else {
@@ -317,12 +318,12 @@ function CheckEmail({
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="rounded-2xl border border-accent-line bg-[rgba(145,132,217,.10)] p-4">
+      <div className="rounded-2xl border border-accent-line bg-accent/10 p-4">
         <p className="text-sm text-fg-secondary">Письмо ушло на адрес</p>
         <p className="mt-1 break-all font-medium">{email}</p>
         <p className="mt-3 text-sm text-fg-secondary">
-          Открой ссылку из письма — и сразу попадёшь в приложение. Обычно приходит за
-          минуту. Если не видно, загляни в «Спам» и «Промоакции».
+          Откройте ссылку из письма — и сразу попадёте в приложение. Обычно приходит за
+          минуту. Если не видно, загляните в «Спам» и «Промоакции».
         </p>
       </div>
 
@@ -345,14 +346,14 @@ function CheckEmail({
           onClick={onGoSignIn}
           className="-m-3 p-3 font-medium text-accent-strong hover:underline"
         >
-          Уже подтвердил — войти
+          Уже подтвердили — войти
         </button>
         <button
           type="button"
           onClick={onChangeEmail}
           className="-m-3 p-3 text-fg-muted hover:text-fg-secondary hover:underline"
         >
-          Ошибся в адресе — изменить
+          Ошиблись в адресе — изменить
         </button>
       </div>
     </div>

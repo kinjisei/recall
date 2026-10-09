@@ -17,6 +17,7 @@
 // устройства живёт и продлевается сам — без этого шага сброс бессмысленный.
 // ============================================================================
 import { supabase } from '../shared/api/supabase'
+import { SUPPORT_EMAIL } from '../shared/lib/contacts'
 
 /** Минимальная длина пароля. Совпадает с minLength в формах входа. */
 export const MIN_PASSWORD = 8
@@ -98,22 +99,24 @@ export function validatePassword(password: string): string | null {
  * Ошибки восстановления приходят от Supabase по-английски. Человек в этот
  * момент и так раздражён — он не смог войти; английская техническая строка
  * добивает. Неизвестное отдаём как есть, но с подсказкой, что делать.
+ * Тексты БЕЗЛИЧНЫЕ — без «ты» и «вы»: их показывают и открытые страницы
+ * пароля (там «вы»), и «Настройки» внутри приложения (там «ты»), журнал п.71.
  */
 export function describeResetError(raw: string): string {
   const s = raw.toLowerCase()
   if (s.includes('token has expired') || s.includes('otp_expired') || s.includes('expired'))
-    return 'Ссылка или код уже недействительны — они живут 30 минут. Запроси письмо заново.'
+    return 'Ссылка или код уже недействительны — они живут 30 минут. Нужно запросить письмо заново.'
   if (s.includes('invalid') && (s.includes('token') || s.includes('otp')))
-    return 'Код не подошёл. Проверь, что взял его из последнего письма — старые перестают работать.'
+    return 'Код не подошёл. Нужен код из последнего письма — старые перестают работать.'
   if (s.includes('same as the old') || s.includes('should be different'))
-    return 'Это твой прежний пароль. Придумай другой.'
+    return 'Это прежний пароль — нужен другой.'
   if (s.includes('password should be at least') || s.includes('weak'))
     return `Пароль слишком короткий — нужно минимум ${MIN_PASSWORD} символов.`
   if (s.includes('rate limit') || s.includes('you can only request this after') || s.includes('too many'))
-    return 'Слишком много попыток подряд. Подожди минуту и попробуй снова.'
+    return 'Слишком много попыток подряд. Повторить можно через минуту.'
   if (s.includes('failed to fetch') || s.includes('networkerror') || s.includes('load failed'))
-    return 'Нет связи с сервером. Проверь интернет и попробуй ещё раз.'
-  return `Не получилось: ${raw}. Попробуй ещё раз — если повторится, напиши нам.`
+    return 'Нет связи с сервером. Повторить можно, когда появится интернет.'
+  return `Не получилось: ${raw}. Если повторится — адрес поддержки: ${SUPPORT_EMAIL}.`
 }
 
 /**

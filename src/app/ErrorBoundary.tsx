@@ -8,7 +8,7 @@
 // перезагрузка его не достанет. Говорим это прямо (PLAN.md Ф1.13).
 // ============================================================================
 import { Component, type ReactNode } from 'react'
-import { supportMailto } from '../shared/lib/contacts'
+import { ContactLinks } from '../shared/ui/ContactLinks'
 import { IconWarning } from '../shared/ui/icons'
 import { CHUNK_OFFLINE_TEXT, isChunkLoadError } from '../shared/api/connection'
 import { logError } from '../lib/errorLog'
@@ -58,20 +58,8 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
             {this.state.offline ? 'Нет интернета' : 'Что-то пошло не так'}
           </p>
           <p className="max-w-sm text-sm text-fg-muted">
-            {this.state.offline ? CHUNK_OFFLINE_TEXT : 'Попробуй обновить страницу — обычно это помогает.'}
+            {this.state.offline ? CHUNK_OFFLINE_TEXT : 'Обычно помогает обновить страницу.'}
           </p>
-          {/* Экран поломки — самое место для контакта: если обновление не
-              спасло, человеку больше некуда идти */}
-          {!this.state.offline && <p className="max-w-sm text-sm text-fg-muted">
-            Не помогло?{' '}
-            <a
-              href={supportMailto('Recall — ошибка в приложении')}
-              className="text-accent-strong underline"
-            >
-              Напиши мне
-            </a>
-            , починю.
-          </p>}
           {/* ⚠️ Раньше здесь была только «Обновить», а она перезагружает ТОТ ЖЕ
               адрес — то есть возвращает ровно в ту поломку, из которой человек
               пытается выбраться. Экран ошибок стоит снаружи роутера, уйти с
@@ -96,6 +84,15 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
               На главную
             </button>
           </div>
+          {/* Экран поломки — самое место для контакта: если обновление не
+              спасло, человеку больше некуда идти. Без «ты» и «вы»: экран
+              ловит сбой и на открытых страницах, и внутри приложения. */}
+          {!this.state.offline && (
+            <div className="flex w-full max-w-sm flex-col gap-2">
+              <p className="mt-2 text-sm text-fg-muted">Не помогло — связь с нами:</p>
+              <ContactLinks subject="Recall — ошибка в приложении" />
+            </div>
+          )}
         </div>
       )
     }

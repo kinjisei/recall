@@ -14,15 +14,19 @@ import { Button } from '../../shared/ui/Button'
 export const inputClass =
   'h-11 w-full rounded-xl border-none bg-input px-4 text-sm text-fg ring-1 ring-control-line placeholder:text-fg-muted outline-none focus:ring-2 focus:ring-accent-line'
 
-/** Переливающийся фон: глубокий индиго-градиент + 3 дрейфующих blur-пятна + блик. */
+/**
+ * Переливающийся фон: градиент + 3 дрейфующих blur-пятна + блик. Цвета —
+ * токены aurora-* (обе темы, shared/ui/tokens.css); у блика пять точек, утилиты
+ * from/via/to столько не держат — поэтому токен внутри значения градиента.
+ */
 export function AuroraBg() {
   return (
     <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
-      <div className="absolute inset-0 bg-[radial-gradient(130%_110%_at_25%_0%,#232449_0%,#14152a_58%,#0f1020_100%)]" />
-      <div className="absolute -left-[18%] -top-[12%] aspect-square w-[75%] animate-blob-a rounded-full bg-[radial-gradient(circle,rgba(145,132,217,.5),transparent_65%)] blur-[70px]" />
-      <div className="absolute -bottom-[15%] -right-[20%] aspect-square w-[70%] animate-blob-b rounded-full bg-[radial-gradient(circle,rgba(76,70,160,.65),transparent_62%)] blur-[80px]" />
-      <div className="absolute left-[20%] top-[30%] aspect-square w-[55%] animate-blob-c rounded-full bg-[radial-gradient(circle,rgba(120,105,205,.35),transparent_60%)] blur-[60px]" />
-      <div className="absolute -inset-[20%] animate-sheen bg-[conic-gradient(from_0deg_at_50%_50%,transparent_0deg,rgba(145,132,217,.08)_90deg,transparent_180deg,rgba(145,132,217,.06)_270deg,transparent_360deg)]" />
+      <div className="absolute inset-0 bg-radial-[130%_110%_at_25%_0%] from-aurora via-aurora-mid via-58% to-aurora-edge" />
+      <div className="absolute -left-[18%] -top-[12%] aspect-square w-[75%] animate-blob-a rounded-full bg-radial-[circle] from-aurora-a to-transparent to-65% blur-[70px]" />
+      <div className="absolute -bottom-[15%] -right-[20%] aspect-square w-[70%] animate-blob-b rounded-full bg-radial-[circle] from-aurora-b to-transparent to-62% blur-[80px]" />
+      <div className="absolute left-[20%] top-[30%] aspect-square w-[55%] animate-blob-c rounded-full bg-radial-[circle] from-aurora-c to-transparent to-60% blur-[60px]" />
+      <div className="absolute -inset-[20%] animate-sheen bg-[conic-gradient(from_0deg_at_50%_50%,transparent_0deg,var(--color-aurora-sheen)_90deg,transparent_180deg,var(--color-aurora-sheen)_270deg,transparent_360deg)]" />
     </div>
   )
 }

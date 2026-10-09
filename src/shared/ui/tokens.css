@@ -79,6 +79,18 @@
      через oklab, и градиент расходился с прежним на единицу. */
   --color-cta: rgba(145, 132, 217, 0.22);
   --color-cta-end: rgba(145, 132, 217, 0.1);
+  /* «Аврора» — фон входа, регистрации и смены пароля (features/auth/authUi):
+     основа — радиальный градиент aurora → aurora-mid → aurora-edge, сверху
+     три дрейфующих пятна aurora-a/b/c и блик aurora-sheen. Значения тёмной —
+     те, что стояли в коде до токенов (журнал п.71: в светлой фон оставался
+     тёмно-фиолетовым). */
+  --color-aurora: #232449;
+  --color-aurora-mid: #14152a;
+  --color-aurora-edge: #0f1020;
+  --color-aurora-a: rgba(145, 132, 217, 0.5);
+  --color-aurora-b: rgba(76, 70, 160, 0.65);
+  --color-aurora-c: rgba(120, 105, 205, 0.35);
+  --color-aurora-sheen: rgba(145, 132, 217, 0.08);
 
   /* --- Акцент --- */
   --color-accent: #9184d9; /* линии, рамки, метки, заливка */
@@ -215,6 +227,13 @@
   --color-hero-glow: rgba(107, 92, 204, 0.18);
   --color-cta: rgba(107, 92, 204, 0.16);
   --color-cta-end: rgba(107, 92, 204, 0.06);
+  --color-aurora: #ebe7fb;
+  --color-aurora-mid: #f5f4fb;
+  --color-aurora-edge: #f5f5f9;
+  --color-aurora-a: rgba(107, 92, 204, 0.24);
+  --color-aurora-b: rgba(124, 108, 222, 0.2);
+  --color-aurora-c: rgba(160, 146, 236, 0.24);
+  --color-aurora-sheen: rgba(107, 92, 204, 0.05);
 
   --color-accent: #6b5ccc;
   --color-accent-strong: #5241b3;

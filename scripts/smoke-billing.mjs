@@ -169,11 +169,11 @@ async function run(browser, ids) {
   check('«Сейчас: … закончился»', await waitText(t, 'Сейчас: Репетитор · Mini, закончился'))
   const r1 = await radios(t)
   check('три тарифа репетитора, выбран Start из ссылки', r1.length === 3 && r1[1]?.on && /Start/.test(r1[1].text), JSON.stringify(r1))
-  check('у Mini пометка «сейчас у тебя»', /сейчас у тебя/.test(r1[0]?.text ?? ''))
+  check('у Mini пометка «сейчас у вас»', /сейчас у вас/.test(r1[0]?.text ?? ''))
   const body1 = await text(t)
   const code = body1.match(/\b(MADINA[2-9]{1,4})\b/)?.[1]
   check('сумма 6 500 ₸ и личный код в сообщении', /6\s500\s₸/.test(body1) && !!code, code ?? 'кода нет')
-  check('в подсказке тот же код', body1.includes(`Впиши код ${code}`))
+  check('в подсказке тот же код', body1.includes(`Впишите код ${code}`))
   await clickText(t, 'Pro', '[role=radio]')
   await sleep(300)
   check('выбрал Pro — сумма 14 990 ₸', /Сумма\s*14\s990\s₸/.test(await text(t)))

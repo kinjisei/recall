@@ -248,7 +248,7 @@ try {
 
   // Тот же экран для адреса, которого нет: текст обязан совпасть слово в слово,
   // иначе разница сама по себе и есть ответ «такой аккаунт существует».
-  await tap(tab, 'Ошибся в адресе')
+  await tap(tab, 'Ошиблись в адресе')
   await tab.waitForSelector('#f-email', { timeout: 10000, polling: 250 })
   await typeInto(tab, '#f-email', 'no-such-person-zzz@recall.test')
   const typed = await tab.$eval('#f-email', (el) => el.value)

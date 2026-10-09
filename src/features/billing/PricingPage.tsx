@@ -4,12 +4,14 @@
 // из domains/billing и, если пользователь вошёл, плашку с его текущим
 // тарифом. Оплата — на «Как оплатить» (/pay): реквизиты и «Оплата
 // отправлена» только вошедшему — тариф включается на аккаунт.
+// Открытая страница — на «вы» (журнал п.71); связь — общий блок ContactLinks.
 // ============================================================================
 import { useEffect, useState } from 'react'
 import { IconCheck, IconTeacher, IconTrophy } from '../../shared/ui/icons'
 import { BackButton } from '../../shared/ui/BackButton'
 import { AppLink } from '../../shared/ui/AppLink'
 import { OpenPage } from '../../shared/ui/OpenPage'
+import { ContactLinks } from '../../shared/ui/ContactLinks'
 import { useAuth } from '../../context/AuthContext'
 import { PLANS, getMyPlan, type MyPlan, type PlanCard } from '../../lib/billing'
 import { energyLeft } from '../../components/EnergyBar'
@@ -40,7 +42,7 @@ function MyPlanBanner({ plan }: { plan: MyPlan }) {
         <IconTrophy size={18} />
       </div>
       <p className="text-sm text-accent-soft-fg">
-        Твой тариф: <span className="font-medium">{planTitle}</span> · {statusLine}
+        Ваш тариф: <span className="font-medium">{planTitle}</span> · {statusLine}
       </p>
     </div>
   )
@@ -122,7 +124,7 @@ export function PricingPage() {
 
       <h1 className="text-2xl font-medium tracking-tight">Тарифы</h1>
       <p className="mt-1 text-sm text-fg-muted">
-        Слова, тексты и грамматика бесплатны без срока. Платишь за энергию ⚡ на AI, а репетитор — ещё за места учеников и генерации материалов.
+        Слова, тексты и грамматика бесплатны без срока. Платите за энергию ⚡ на AI, а репетитор — ещё за места учеников и генерации материалов.
       </p>
 
       {myPlan && (
@@ -150,12 +152,12 @@ export function PricingPage() {
       <section className="animate-fade-up mt-8 rounded-2xl border border-tint/[0.08] bg-surface p-4 shadow-card">
         <h2 className="font-medium">Как оплатить</h2>
         <p className="mt-2 text-sm leading-relaxed text-fg-secondary">
-          Платишь переводом на Kaspi Gold: выбираешь тариф, переводишь и
-          нажимаешь «Оплата отправлена». Мы сверяем перевод и включаем тариф,
-          обычно в тот же день; если переведёшь ночью — утром. Карту мы не
-          привязываем и сами ничего не списываем: чтобы продлить тариф, переведи
-          ещё раз. Платишь до конца пробного периода или текущего тарифа — новый
-          срок начнётся, когда они закончатся, ни один день не сгорит.
+          Платите переводом на Kaspi Gold: выбираете тариф, переводите и
+          нажимаете «Оплата отправлена». Мы сверяем перевод и включаем тариф,
+          обычно в тот же день; если переведёте ночью — утром. Карту мы не
+          привязываем и сами ничего не списываем: чтобы продлить тариф, переведите
+          ещё раз. Если платите до конца пробного периода или текущего тарифа, новый
+          срок начнётся, когда они закончатся, — ни один день не сгорит.
         </p>
         {/* тариф включается на аккаунт: реквизиты — тому, кто вошёл */}
         <AppLink to={user ? '/pay' : '/login'} className={`mt-3 ${LINK_BUTTON}`}>
@@ -174,6 +176,11 @@ export function PricingPage() {
           материал, чтобы увидеть качество. С первым учеником их становится 3 в
           месяц.
         </p>
+      </section>
+
+      <section className="mt-8 flex flex-col gap-3">
+        <p className="text-sm text-fg-tertiary">Вопросы по тарифам — напишите нам:</p>
+        <ContactLinks subject="Recall — вопрос по тарифам" />
       </section>
     </OpenPage>
   )

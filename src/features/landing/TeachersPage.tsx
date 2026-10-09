@@ -1,107 +1,26 @@
 // ============================================================================
-// Лендинг «для преподавателей» (роут /teachers, публичный — работает без
-// входа). Продаёт teacher-режим Recall репетиторам английского в Казахстане.
-// Цифры и решения — docs/monetization-draft.md + docs/energy-design.md: тарифы
-// 3900/6500/14990₸ (энергия E4), триал 14 дней без карты, «привёл коллегу» (2 недели —
-// только пригласившему: у новичка свои 14 дней пробного периода и так есть).
-// ⚠️ Реферальной механики в коде и в базе НЕТ — продление делается руками по
-// письму, поэтому в тексте прямо стоит «напиши нам» (находка ревью 2В).
-// Копирайт: конкретика вместо обещаний, боль → механизм → цена; без
-// выдуманных отзывов (соц. доказательства появятся после пилота).
+// Лендинг «для преподавателей» (роут /teachers, открытый — работает без
+// входа). Продаёт режим репетитора Recall репетиторам английского и испанского
+// в Казахстане. Описание и правила — features/landing/CLAUDE.md: на «вы»,
+// расписание и учёт первыми, тексты утверждает владелец (landingContent.ts),
+// цены — из каталога domains/billing, связь — общий блок ContactLinks.
+// Копирайт: конкретика вместо обещаний, без выдуманных отзывов
+// (соц. доказательства появятся после пилота).
 // ============================================================================
 
-import { SUPPORT_SLA, supportMailto } from '../../shared/lib/contacts'
+import { SUPPORT_SLA } from '../../shared/lib/contacts'
 import { useInShell } from '../../shared/lib/shellInsets'
 import { BrandLogo } from '../../shared/ui/Brand'
 import { AppLink } from '../../shared/ui/AppLink'
-import {
-  IconCheck,
-  IconMaterials,
-  IconChart,
-  IconPuzzle,
-  IconRows,
-  IconPrinter,
-  IconCards,
-  type IconLike,
-} from '../../shared/ui/icons'
+import { ContactLinks } from '../../shared/ui/ContactLinks'
+import { IconCards } from '../../shared/ui/icons'
+import { BETWEEN_LESSONS, FAQ, INSIDE, REFERRAL } from './landingContent'
+import { CTA, MIN_TEACHER_PRICE, PlanCards, ReportSample } from './LandingParts'
 
-/** Главная кнопка действия — на регистрацию. */
-function CTA({ label = 'Попробовать 14 дней бесплатно' }: { label?: string }) {
-  return (
-    <div className="flex flex-col items-center gap-1.5">
-      <AppLink
-        to="/login?role=teacher"
-        className="lift inline-flex min-h-[52px] items-center justify-center rounded-2xl bg-accent px-7 font-medium text-accent-fg"
-      >
-        {label}
-      </AppLink>
-      {/* ⚠️ «Отмена в любой момент» подразумевала подписку, которой нет:
-          оплата — ручной перевод на Kaspi, автосписания не существует. Обещание
-          отменить то, что не начиналось, — вежливое враньё. */}
-      <span className="text-xs text-fg-muted">
-        Карта не нужна. Оплата переводом — только если решишь продолжить
-      </span>
-    </div>
-  )
-}
-
-const TOOLS: { Icon: IconLike; title: string; desc: string }[] = [
-  {
-    Icon: IconMaterials,
-    title: 'Материал под тему и уровень',
-    desc: 'Задаёшь тему и уровень — AI пишет текст с упражнениями под конкретного ученика. Дальше распечатать или назначить прямо в приложении.',
-  },
-  {
-    Icon: IconCheck,
-    title: 'Проверка с AI-черновиком',
-    desc: 'Работа сдана — AI уже разобрал каждый ответ. Ты только соглашаешься или правишь вердикт и добавляешь комментарий.',
-  },
-  {
-    Icon: IconChart,
-    title: 'Диагностическая карта',
-    desc: 'Слабые темы грамматики, буксующие слова, динамика за месяц — собирается сама из занятий, без твоих таблиц.',
-  },
-  {
-    Icon: IconRows,
-    title: 'Программа по неделям',
-    desc: 'AI раскладывает план на 2–8 недель по слабым местам ученика. Ты правишь и утверждаешь — он видит свою неделю.',
-  },
-  {
-    Icon: IconPuzzle,
-    title: 'AI-квесты по грамматике',
-    desc: '«Собеседование», «Побег из комнаты» — разговорная практика на заданную тему между уроками. Вся переписка видна тебе.',
-  },
-  {
-    Icon: IconPrinter,
-    title: 'Отчёт родителям на печать',
-    desc: 'Страница PDF: что изменилось за месяц, что получается, над чем работаете дальше. Собирается из занятий — руками ничего не сводить.',
-  },
-]
-
-const PLANS = [
-  { title: 'Мини', price: '3 900', per: '780 ₸ за ученика', limit: 'до 5 учеников', hot: false },
-  { title: 'Старт', price: '6 500', per: '650 ₸ за ученика', limit: 'до 10 учеников', hot: true },
-  { title: 'Про', price: '14 990', per: '500 ₸ за ученика', limit: 'до 30 учеников', hot: false },
-]
-
-const FAQ = [
-  {
-    q: 'Ученикам нужно платить?',
-    a: 'Нет. Пока у тебя активный тариф, твои ученики пользуются приложением бесплатно, включая AI. Число мест зависит от тарифа: когда они кончатся, новый ученик не привяжется, пока не перейдёшь на тариф побольше.',
-  },
-  {
-    q: 'Что будет после 14 дней пробного периода?',
-    a: 'Ничего не списывается — карту мы не просим. Две недели считаются с первого ученика в приложении, но не дольше 20 дней с регистрации — успеешь показать Recall ученикам в деле. В пробные две недели открыты все разделы и энергия AI на разговоры (Диалог, проверка письма, ходы в квестах). Перевод слов, произношение, карточки и грамматика не тратят энергию вообще. Понравится — оплатишь Kaspi-переводом, и все твои ученики получат общую энергию студии на занятия с AI (тариф сам её пополняет каждый день).',
-  },
-  {
-    q: 'Это замена мне как преподавателю?',
-    a: 'Нет — это твой ассистент между уроками. Материалы, проверку и план утверждаешь ты; AI убирает рутину, а не тебя.',
-  },
-  {
-    q: 'Подходит только для английского?',
-    a: 'Английский и испанский. Словарь, грамматика A1–C1, тексты, произношение и AI-диалоги — уже внутри.',
-  },
-]
+const SECTION = 'border-t border-tint/[0.06] py-10'
+const CARD = 'rounded-2xl border border-tint/[0.08] bg-surface p-4 shadow-card'
+// неразрывные пробелы: «От» и «₸» не отрываются от числа при переносе строки
+const fromPrice = `От\u00a0${MIN_TEACHER_PRICE.toLocaleString('ru-RU')}\u00a0₸ в месяц`
 
 export function TeachersPage() {
   // Вошедший видит лендинг внутри общей рамки приложения (меню, вкладки):
@@ -110,14 +29,14 @@ export function TeachersPage() {
   const Frame = inShell ? 'div' : 'main'
   return (
     <Frame className={inShell ? undefined : 'min-h-[100dvh] bg-page text-fg'}>
-      {/* шапка: логотип + вход — только гостю */}
+      {/* шапка: логотип + вход — только гостю; фон — страница темы, не тёмный литерал */}
       {!inShell && (
-        <header className="sticky top-0 z-20 border-b border-tint/[0.06] bg-[rgba(22,24,38,.85)] pt-[env(safe-area-inset-top)] backdrop-blur-xl">
+        <header className="sticky top-0 z-20 border-b border-tint/[0.06] bg-page/85 pt-[env(safe-area-inset-top)] backdrop-blur-xl">
           <div className="mx-auto flex max-w-screen-md items-center justify-between px-5 py-3">
             <BrandLogo width={92} />
             <AppLink
               to="/login?role=teacher"
-              className="flex min-h-[40px] items-center rounded-full border border-tint/[0.12] px-4 text-sm text-fg-secondary"
+              className="flex min-h-10 items-center rounded-full border border-tint/[0.12] px-4 text-sm text-fg-secondary"
             >
               Войти
             </AppLink>
@@ -126,76 +45,30 @@ export function TeachersPage() {
       )}
 
       <div className={inShell ? 'pb-4' : 'mx-auto max-w-screen-md px-5 pb-16'}>
-        {/* ---- Hero ---- */}
+        {/* ---- Первый экран: расписание и учёт, как на звонке (Ф2.13) ---- */}
         <section className="flex flex-col items-center gap-6 pb-12 pt-10 text-center">
           <p className="rounded-full border border-accent-line px-3 py-1 text-xs text-accent-strong">
             Для репетиторов английского и испанского
           </p>
           <h1 className="max-w-xl text-[2rem] font-semibold leading-tight tracking-tight">
-            Твои ученики занимаются между уроками.
+            Расписание, оплаты и домашка всех учеников — в одном месте.
             <br />
-            <span className="text-accent-strong">А рутину делает AI.</span>
+            <span className="text-accent-strong">А материалы и разбор работ готовит AI.</span>
           </h1>
-          <p className="max-w-lg text-[15px] leading-relaxed text-fg-tertiary">
-            Recall берёт на себя то, что съедает вечера: подбор материала, проверку
-            работ и учёт, кто что забыл. Стоит меньше одного твоего занятия в месяц.
+          <p className="max-w-lg text-body leading-relaxed text-fg-tertiary">
+            Уроки, переносы, кто сколько оплатил и кому пора напомнить — всё в одном
+            расписании. {fromPrice}, ученикам — бесплатно.
           </p>
           <CTA />
-
-          {/* signature: живой мини-отчёт — артефакт, которого нет у конкурентов */}
-          <div data-theme="light" className="mt-4 w-full max-w-sm rounded-2xl border border-tint/[0.10] bg-surface p-4 text-left text-fg shadow-[0_18px_60px_rgba(0,0,0,.45)]">
-            <p className="text-[10px] uppercase tracking-widest text-fg-muted">
-              Отчёт о занятиях · за месяц
-            </p>
-            <p className="font-serif text-lg font-bold">Айгерим</p>
-            <div className="mt-2 flex flex-col gap-1 text-[13px]">
-              <p className="flex justify-between border-b border-line pb-1">
-                <span>Дней с занятиями</span>
-                <span className="font-semibold">18 <span className="text-success-strong">▲ 6</span></span>
-              </p>
-              <p className="flex justify-between border-b border-line pb-1">
-                <span>Средний балл заданий</span>
-                <span className="font-semibold">84% <span className="text-success-strong">▲ 12%</span></span>
-              </p>
-              <p className="flex justify-between">
-                <span>Выучено слов</span>
-                <span className="font-semibold">47</span>
-              </p>
-            </div>
-            <p className="mt-2 text-[11px] text-fg-muted">
-              Такой отчёт собирается из занятий сам — родители видят, за что платят.
-            </p>
-          </div>
+          <ReportSample />
         </section>
 
-        {/* ---- Как это работает ---- */}
-        <section className="border-t border-tint/[0.06] py-10">
-          <h2 className="text-center text-xl font-semibold">Как это работает</h2>
-          <div className="mt-6 flex flex-col gap-3">
-            {[
-              ['Пригласи ученика кодом', 'Он вводит код на своей Главной — и появляется в твоём списке. Никаких настроек.'],
-              ['Назначай и проверяй', 'Материалы, наборы слов, квесты и программа — из карточки ученика. Проверка приходит с готовым AI-разбором.'],
-              ['Смотри, что было между уроками', 'Диагностика собирается из занятий сама. Раз в месяц — отчёт родителям на печать.'],
-            ].map(([t, d], i) => (
-              <div key={t} className="flex gap-3 rounded-2xl border border-tint/[0.08] bg-surface p-4 shadow-card">
-                <span className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-accent-soft text-sm font-bold text-accent-soft-fg">
-                  {i + 1}
-                </span>
-                <div>
-                  <p className="font-medium">{t}</p>
-                  <p className="mt-0.5 text-sm leading-relaxed text-fg-tertiary">{d}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ---- Инструменты ---- */}
-        <section className="border-t border-tint/[0.06] py-10">
+        {/* ---- Что внутри: один блок вместо «Как это работает» + «Что внутри» ---- */}
+        <section className={SECTION}>
           <h2 className="text-center text-xl font-semibold">Что внутри</h2>
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
-            {TOOLS.map(({ Icon, title, desc }) => (
-              <div key={title} className="rounded-2xl border border-tint/[0.08] bg-surface p-4 shadow-card">
+            {INSIDE.map(({ Icon, title, desc }) => (
+              <div key={title} className={CARD}>
                 <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-soft text-accent-soft-fg">
                   <Icon size={18} />
                 </span>
@@ -207,85 +80,35 @@ export function TeachersPage() {
         </section>
 
         {/* ---- Между уроками ---- */}
-        <section className="border-t border-tint/[0.06] py-10">
-          <div className="rounded-2xl border border-accent-line-soft bg-[rgba(145,132,217,.07)] p-5">
+        <section className={SECTION}>
+          <div className="rounded-2xl border border-accent-line-soft bg-accent/[0.07] p-5">
             <h2 className="flex items-center gap-2 text-lg font-semibold">
               <IconCards size={20} className="text-accent-strong" />
               Между уроками ученик не пропадает
             </h2>
-            <p className="mt-2 text-sm leading-relaxed text-fg-secondary">
-              Слова сами возвращаются на повторение тогда, когда начинают
-              забываться: ученику не нужно решать, что учить сегодня.
-              <br />
-              Рядом — 60 уроков грамматики A1–C1, 476 фразовых глаголов, 911
-              идиом, тексты с переводом слова по тапу, проверка произношения и
-              разговор с AI, который поправляет ошибки. Всё это работает и без
-              тебя — а что из этого ученик открывал, видно в диагностике.
-            </p>
+            <p className="mt-2 text-sm leading-relaxed text-fg-secondary">{BETWEEN_LESSONS}</p>
           </div>
         </section>
 
         {/* ---- Цены ---- */}
-        <section className="border-t border-tint/[0.06] py-10">
-          <h2 className="text-center text-xl font-semibold">Цена — меньше часа твоей работы</h2>
+        <section className={SECTION}>
+          <h2 className="text-center text-xl font-semibold">Цена зависит от числа учеников</h2>
           <p className="mx-auto mt-1 max-w-md text-center text-sm text-fg-muted">
-            Средняя ставка репетитора — 5 000 ₸/час. Recall стоит от 3 900 ₸ в месяц,
-            а ученикам — бесплатно.
+            {fromPrice}. Ученикам — бесплатно.
           </p>
-          <div className="mt-6 grid gap-3 sm:grid-cols-3">
-            {PLANS.map((p) => (
-              <div
-                key={p.title}
-                className={`rounded-2xl border p-4 text-center ${
-                  p.hot
-                    ? 'border-accent-line bg-[rgba(145,132,217,.10)]'
-                    : 'border-tint/[0.08] bg-surface'
-                }`}
-              >
-                {/* ⚠️ Здесь стояло «Выбор большинства» — а большинства ещё нет:
-                    продукт до пилота, статистики выборов не существует. Это то
-                    самое выдуманное соц. доказательство, от которого файл
-                    отказывается в своей же шапке. Осталась наша рекомендация,
-                    названная нашей. */}
-                {p.hot && (
-                  <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-accent-strong">
-                    Советуем начать с него
-                  </p>
-                )}
-                <p className="font-medium">{p.title}</p>
-                <p className="mt-1 text-2xl font-semibold">
-                  {p.price} <span className="text-sm font-normal text-fg-muted">₸/мес</span>
-                </p>
-                <p className="mt-0.5 text-xs text-fg-muted">{p.limit}</p>
-                <p className="mt-2 text-sm text-accent-strong">{p.per}</p>
-              </div>
-            ))}
-          </div>
-          {/* «Приведи коллегу — 2 недели» висело без единого механизма: ни
-              кода, ни поля, ни строчки в базе. Обещание без способа его
-              получить — то же враньё, только вежливое (находка ревью 2В).
-              Пока активация тарифов ручная, механизм тоже ручной и назван прямо. */}
-          <p className="mt-3 text-center text-xs text-fg-muted">
-            Для сравнения: аналоги берут ~1 000 ₸ за ученика. Привёл коллегу —{' '}
-            <a
-              className="text-accent-strong underline underline-offset-2"
-              href={supportMailto('Recall — привёл коллегу')}
-            >
-              напиши нам
-            </a>
-            , когда он зарегистрируется, и мы продлим твой тариф на 2 недели.
-          </p>
-          <div className="mt-6">
-            <CTA label="Начать бесплатный триал" />
+          <PlanCards />
+          <p className="mx-auto mt-3 max-w-md text-center text-xs leading-relaxed text-fg-muted">{REFERRAL}</p>
+          <div className="mt-6 flex justify-center">
+            <CTA label="Начать пробный период" />
           </div>
         </section>
 
         {/* ---- FAQ ---- */}
-        <section className="border-t border-tint/[0.06] py-10">
+        <section className={SECTION}>
           <h2 className="text-center text-xl font-semibold">Частые вопросы</h2>
           <div className="mt-6 flex flex-col gap-3">
             {FAQ.map((f) => (
-              <div key={f.q} className="rounded-2xl border border-tint/[0.08] bg-surface p-4 shadow-card">
+              <div key={f.q} className={CARD}>
                 <p className="font-medium">{f.q}</p>
                 <p className="mt-1 text-sm leading-relaxed text-fg-tertiary">{f.a}</p>
               </div>
@@ -297,22 +120,20 @@ export function TeachersPage() {
         <section className="border-t border-tint/[0.06] py-12 text-center">
           <h2 className="text-xl font-semibold">14 дней — достаточно, чтобы понять</h2>
           <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-fg-tertiary">
-            Подключи одного реального ученика, назначь ему материал и посмотри на диагностику
-            через неделю. Если не сэкономит тебе время — просто не плати.
+            Заведите расписание, подключите одного ученика и назначьте ему материал.
+            Через неделю будет видно, экономит ли Recall вам время. Если нет — просто не платите.
           </p>
           <div className="mt-5">
             <CTA />
           </div>
           {/* Живой человек на другом конце — для холодного посетителя это часто
               решает больше, чем ещё один блок про возможности */}
-          <p className="mt-8 text-sm text-fg-tertiary">
-            Вопросы до регистрации?{' '}
-            <a href={supportMailto('Recall — вопрос от преподавателя')} className="text-accent-strong underline">
-              Напиши мне
-            </a>
-            . {SUPPORT_SLA}.
-          </p>
-          <p className="mt-4 text-xs text-fg-muted">
+          <div className="mx-auto mt-10 flex max-w-sm flex-col items-center gap-3">
+            <p className="text-sm text-fg-tertiary">Вопросы по проекту — напишите нам:</p>
+            <ContactLinks subject="Recall — вопрос от преподавателя" />
+            <p className="text-xs text-fg-muted">{SUPPORT_SLA}.</p>
+          </div>
+          <p className="mt-6 text-xs text-fg-muted">
             <AppLink to="/pricing" className="underline">Все тарифы</AppLink> ·{' '}
             <AppLink to="/terms" className="underline">Условия</AppLink> ·{' '}
             <AppLink to="/privacy" className="underline">Конфиденциальность</AppLink>

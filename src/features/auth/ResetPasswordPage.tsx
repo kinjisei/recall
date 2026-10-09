@@ -16,7 +16,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { AppLink } from '../../shared/ui/AppLink'
-import { supportMailto } from '../../shared/lib/contacts'
+import { ContactLinks } from '../../shared/ui/ContactLinks'
 import {
   MIN_PASSWORD,
   completeReset,
@@ -133,10 +133,10 @@ export function ResetPasswordPage() {
       title={askCode ? 'Код из письма' : 'Новый пароль'}
       subtitle={
         askCode
-          ? 'Введи адрес и код — проверим, и откроем смену пароля.'
+          ? 'Введите адрес и код — проверим, и откроем смену пароля.'
           : verified
-            ? 'Код принят. Придумай пароль, с которым будешь входить.'
-            : 'Ссылка из письма подошла. Придумай пароль, с которым будешь входить.'
+            ? 'Код принят. Придумайте пароль, с которым будете входить.'
+            : 'Ссылка из письма подошла. Придумайте пароль, с которым будете входить.'
       }
     >
       {askCode ? (
@@ -210,15 +210,10 @@ export function ResetPasswordPage() {
         >
           Код не подошёл — прислать новое письмо
         </AppLink>
-        <p className="text-xs leading-relaxed text-fg-muted">
-          Совсем ничего не выходит?{' '}
-          <a
-            href={supportMailto('Recall — не удаётся сменить пароль')}
-            className="underline hover:text-fg-secondary"
-          >
-            Напиши нам
-          </a>
+        <p className="mt-2 text-xs leading-relaxed text-fg-muted">
+          Совсем ничего не выходит? Напишите нам:
         </p>
+        <ContactLinks subject="Recall — не удаётся сменить пароль" />
       </div>
     </AuthCard>
   )

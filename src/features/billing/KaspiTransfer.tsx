@@ -54,13 +54,13 @@ export function KaspiTransfer({ amount, code }: { amount: number; code: string }
         </Button>
       </div>
       {failed && (
-        <p className="mt-2 text-note text-fg-muted">Не получилось скопировать — нажми на номер или код и скопируй вручную.</p>
+        <p className="mt-2 text-note text-fg-muted">Не получилось скопировать — нажмите на номер или код и скопируйте вручную.</p>
       )}
 
       <p className="mt-3 flex gap-2 text-note text-fg-muted">
         <IconHint size={16} className="mt-0.5 flex-none text-fg-faint" />
         <span>
-          Впиши код {code} в сообщение к переводу — так мы поймём, что оплата от тебя. Забыл — не страшно: сверим по
+          Впишите код {code} в сообщение к переводу — так мы поймём, что оплата от вас. Забыли — не страшно: сверим по
           имени отправителя.
         </span>
       </p>

@@ -9,7 +9,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AppLink } from '../../shared/ui/AppLink'
-import { SUPPORT_EMAIL, supportMailto } from '../../shared/lib/contacts'
+import { ContactLinks } from '../../shared/ui/ContactLinks'
 import { RESET_SENT_TEXT, requestReset } from '../../lib/passwordReset'
 import { AuthCard, InputGroup, PrimaryButton } from './authUi'
 
@@ -45,14 +45,14 @@ export function ForgotPasswordPage() {
 
   if (sent) {
     return (
-      <AuthCard title="Проверь почту" subtitle={RESET_SENT_TEXT}>
+      <AuthCard title="Проверьте почту" subtitle={RESET_SENT_TEXT}>
         <div className="flex flex-col gap-5">
-          <div className="rounded-2xl border border-accent-line bg-[rgba(145,132,217,.10)] p-4">
+          <div className="rounded-2xl border border-accent-line bg-accent/10 p-4">
             <p className="text-sm text-fg-secondary">Письмо отправлено на адрес</p>
             <p className="mt-1 break-all font-medium">{email.trim()}</p>
             <p className="mt-3 text-sm text-fg-secondary">
-              Нажми кнопку в письме или введи код — они живут 30 минут.
-              Письма нет? Загляни в «Спам».
+              Нажмите кнопку в письме или введите код — они живут 30 минут.
+              Письма нет? Загляните в «Спам».
             </p>
           </div>
 
@@ -83,7 +83,7 @@ export function ForgotPasswordPage() {
               }}
               className="-m-3 p-3 text-fg-muted hover:text-fg-secondary hover:underline"
             >
-              Ошибся в адресе — изменить
+              Ошиблись в адресе — изменить
             </button>
           </div>
         </div>
@@ -94,7 +94,7 @@ export function ForgotPasswordPage() {
   return (
     <AuthCard
       title="Забыли пароль?"
-      subtitle="Введи адрес, на который заведён аккаунт, — пришлём письмо со ссылкой и кодом."
+      subtitle="Введите адрес, на который заведён аккаунт, — пришлём письмо со ссылкой и кодом."
     >
       <form onSubmit={submit} className="flex flex-col gap-5">
         <InputGroup
@@ -119,20 +119,14 @@ export function ForgotPasswordPage() {
 
       <div className="flex flex-col gap-2 text-center text-sm">
         <AppLink to="/login" className="-m-3 p-3 font-medium text-accent-strong hover:underline">
-          Вспомнил пароль — войти
+          Вспомнили пароль — войти
         </AppLink>
         {/* Тупик без этой строчки: доступа к почте нет, и человек просто теряет
-            всю свою учёбу. Адрес — из shared/lib/contacts, второго заводить не надо. */}
-        <p className="text-xs leading-relaxed text-fg-muted">
-          Нет доступа к почте?{' '}
-          <a
-            href={supportMailto('Recall — нет доступа к почте от аккаунта')}
-            className="underline hover:text-fg-secondary"
-          >
-            Напиши нам
-          </a>{' '}
-          — поможем вручную. {SUPPORT_EMAIL}
+            всю свою учёбу. Контакты — общий блок (shared/lib/contacts). */}
+        <p className="mt-2 text-xs leading-relaxed text-fg-muted">
+          Нет доступа к почте? Напишите нам — поможем вручную:
         </p>
+        <ContactLinks subject="Recall — нет доступа к почте от аккаунта" />
       </div>
     </AuthCard>
   )

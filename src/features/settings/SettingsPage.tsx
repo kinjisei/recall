@@ -8,7 +8,8 @@ import { useEffect, useState } from 'react'
 
 import { SecuritySection } from './SecuritySection'
 import { LessonReminders } from './LessonReminders'
-import { SUPPORT_EMAIL, SUPPORT_SLA, supportMailto } from '../../shared/lib/contacts'
+import { SUPPORT_SLA } from '../../shared/lib/contacts'
+import { ContactLinks } from '../../shared/ui/ContactLinks'
 import { IconSpeaker, IconCheck, IconThumbsUp } from '../../shared/ui/icons'
 import { BackButton } from '../../shared/ui/BackButton'
 import { useAuth } from '../../context/AuthContext'
@@ -219,7 +220,7 @@ export function SettingsPage() {
       <div className="rounded-2xl border border-tint/[0.08] bg-surface p-4 shadow-card">
         <p className="text-[15px] font-medium">Что-то не работает или непонятно?</p>
         <p className="mt-1 text-sm text-fg-secondary">
-          Напиши мне — починю или объясню. {SUPPORT_SLA}.
+          Напиши нам — починим или объясним. {SUPPORT_SLA}.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           {/* Отзыв — отдельно от письма: письмо человек пишет, когда что-то
@@ -231,13 +232,8 @@ export function SettingsPage() {
           >
             <IconThumbsUp size={16} /> Оставить отзыв
           </button>
-          <a
-            href={supportMailto()}
-            className="inline-flex min-h-11 items-center rounded-xl border border-tint/[0.10] px-4 text-sm font-medium text-fg-secondary shadow-card"
-          >
-            Написать на {SUPPORT_EMAIL}
-          </a>
         </div>
+        <ContactLinks className="mt-2" />
       </div>
 
       {feedback && <FeedbackSheet where="settings" onClose={() => setFeedback(false)} />}
