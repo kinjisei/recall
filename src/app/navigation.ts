@@ -14,6 +14,8 @@
 // никто не дублирует.
 // ============================================================================
 
+import type { UpTarget } from '../shared/lib/shellUp'
+
 /** Имя иконки вкладки; компоненты — в shell/navIcons. */
 export type NavIconName = 'home' | 'study' | 'practice' | 'dialog' | 'schedule' | 'students' | 'tasks'
 
@@ -29,6 +31,8 @@ export interface NavTab {
   /** Внутренние экраны вкладки: на них она тоже подсвечивается. */
   also?: string[]
   badge?: NavBadge
+  /** Подпись «назад» в эту вкладку с хабов ученика внутри неё (`tabUp`). */
+  upLabel?: string
 }
 
 /** Экраны студии репетитора: расписание, ученики, задания (Ф2.7, Ф2.10). */
@@ -71,7 +75,7 @@ export const TEACHER_TABS: NavTab[] = [
   { to: '/schedule', label: 'Расписание', icon: 'schedule', end: false },
   { to: '/teacher', label: 'Ученики', icon: 'students', end: false },
   { to: '/tasks', label: 'Задания', icon: 'tasks', end: false, badge: 'reviews' },
-  { to: '/learn', label: 'Моя учёба', icon: 'study', end: false, also: LEARNER_PATHS },
+  { to: '/learn', label: 'Моя учёба', icon: 'study', end: false, also: LEARNER_PATHS, upLabel: 'К моей учёбе' },
 ]
 
 /**
@@ -111,6 +115,32 @@ export function isTabActive(tab: NavTab, pathname: string): boolean {
  */
 export function activeTabIndex(tabs: NavTab[], pathname: string): number {
   return tabs.findIndex((t) => isTabActive(t, pathname))
+}
+
+/**
+ * «Назад» у хаба ученика, который у этой роли не вкладка (PLAN.md Ф2.18,
+ * журнал п.70). Ученику «Учёба», «Практика», «Диалог» — вкладки, «назад» там
+ * нет. Учитель приходит в них из «Моей учёбы», и выйти мог только нижним
+ * меню — тупик. Теперь «назад» ведёт во вкладку, внутри которой экран живёт у
+ * этой роли. Внутренние экраны (грамматика, речь…) возвращают к своему хабу
+ * сами, а хаб — сюда. null — экран у этой роли и есть вкладка.
+ */
+export function tabUp(pathname: string, role: string | null | undefined): UpTarget | null {
+  const tabs = tabsFor(role)
+  const hub = STUDENT_TABS.some((t) => t.to === pathname)
+  if (!hub || tabs.some((t) => t.to === pathname)) return null
+  const host = tabs[activeTabIndex(tabs, pathname)]
+  return host ? { to: host.to, label: host.upLabel ?? 'Назад' } : null
+}
+
+/**
+ * Главная учёбы роли — куда наверх ведёт «Учёба»: ученику (там «Учёба» сама
+ * вкладка) — Главная, учителю — «Моя учёба». Туда уходят экраны ученика,
+ * открытые не из хаба: тест уровня по «назад» и в конце, Прогресс при прямом
+ * заходе. Голый «/» уводил учителя в расписание — мимо «Моей учёбы».
+ */
+export function learnHome(role: string | null | undefined): UpTarget {
+  return tabUp('/study', role) ?? { to: '/', label: 'На главную' }
 }
 
 /**

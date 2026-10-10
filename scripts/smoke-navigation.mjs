@@ -20,6 +20,11 @@
  * открытый материал — в адресе; старые ссылки /teacher?tab=… ведут во
  * «Задания»; «Моя учёба» — плитки в экраны ученика.
  *
+ * «Назад» у учителя (Ф2.18): хабы «Учёба», «Практика», «Диалог» — «назад» в
+ * «Мою учёбу» (с плитки, прямым заходом, из «Речи» через «Практику»); тест
+ * уровня и Прогресс — в «Мою учёбу», а не в расписание. У ученика хабы — без
+ * «назад», тест уровня — «На главную».
+ *
  * Запуск: `npm run dev:test` (5174, тестовая база), затем `node scripts/smoke-navigation.mjs`.
  * Аккаунт создаётся и удаляется сам (service_role из .env.local).
  */
@@ -378,6 +383,21 @@ async function main() {
   const activeTab = () =>
     page.evaluate(() => document.querySelector('nav.vt-nav a[aria-current="page"] > span:last-of-type')?.textContent?.trim() ?? '—')
   const path = () => new URL(page.url()).pathname + new URL(page.url()).search
+  // «назад» хаба (Ф2.18) — кнопка слева от заголовка в одной строке (TabHeading):
+  // подпись кнопки или null, если её нет; tapHubBack — нажать её
+  const hubBack = (press = false) =>
+    page.evaluate((press) => {
+      const h = document.querySelector('main h1')
+      const head = h?.parentElement?.tagName === 'HEADER' ? h.parentElement : h
+      const b = head?.previousElementSibling
+      if (b?.tagName !== 'BUTTON') return null
+      if (press) b.click()
+      return b.getAttribute('aria-label') ?? ''
+    }, press)
+  const tapHubBack = () => hubBack(true).then(() => sleep(1500))
+  const tapLabel = (label) =>
+    page.evaluate((l) => document.querySelector(`main button[aria-label="${l}"]`)?.click(), label).then(() => sleep(1500))
+  const h1Text = () => page.evaluate(() => document.querySelector('main h1')?.textContent?.trim() ?? '')
 
   // Пока ученик: меню прежнее, экраны студии — приглашение, «Моя учёба» — его Главная
   await page.goto(`${BASE}/`, { waitUntil: 'networkidle2' })
@@ -389,6 +409,16 @@ async function main() {
   await page.goto(`${BASE}/learn`, { waitUntil: 'networkidle2' })
   await sleep(1500)
   check('ученик: «Моя учёба» учителя ведёт на его Главную', new URL(page.url()).pathname === '/', path())
+  // Хабы ученика — вкладки меню: «назад» у заголовка нет, как до Ф2.18
+  for (const [to, title] of [['/study', 'Учёба'], ['/practice', 'Практика'], ['/conversation', 'Диалог']]) {
+    await page.goto(`${BASE}${to}`, { waitUntil: 'networkidle2' })
+    await headingReady(page)
+    const b = await hubBack()
+    check(`ученик: «${title}» — вкладка, без «назад»`, b === null && (await h1Text()) === title, `${path()} · ${b} · ${await h1Text()}`)
+  }
+  await page.goto(`${BASE}/placement`, { waitUntil: 'networkidle2' })
+  await sleep(1500)
+  check('ученик: тест уровня — «назад» «На главную»', !!(await page.$('main button[aria-label="На главную"]')), path())
 
   // Учитель с учеником, который сдал письмо и задание по материалу. Данные —
   // напрямую в базу: живая генерация жжёт дорогую квоту Pro-моделей.
@@ -514,6 +544,40 @@ async function main() {
   await tap(page, 'Практика', 'nav[aria-label="Разделы учёбы"] a')
   await sleep(2000)
   check('«Моя учёба» → «Практика»: экран ученика, подсвечена «Моя учёба»', path().startsWith('/practice') && (await activeTab()) === 'Моя учёба', `${path()} · ${await activeTab()}`)
+
+  // «Назад» из экранов ученика у учителя (Ф2.18, журнал п.70): у ученика это
+  // вкладки, у учителя — экраны внутри «Моей учёбы»; выйти было можно только меню
+  for (const title of ['Практика', 'Учёба', 'Диалог']) {
+    if (title !== 'Практика') await tap(page, title, 'nav[aria-label="Разделы учёбы"] a')
+    await headingReady(page)
+    const b = await hubBack()
+    check(`учитель: «${title}» — «назад» у заголовка`, b === 'К моей учёбе', `${path()} · ${b}`)
+    await tapHubBack()
+    check(`учитель: «${title}» → «назад» → «Моя учёба»`, path() === '/learn' && (await appears(page, 'Начать занятие', 5000)), path())
+  }
+  await page.goto(`${BASE}/conversation`, { waitUntil: 'networkidle2' })
+  await headingReady(page)
+  await tapHubBack()
+  check('учитель: прямой заход в «Диалог» → «назад» → «Моя учёба»', path() === '/learn', path())
+  // «Речь» → своё «назад» в «Практику» → оттуда в «Моя учёба»
+  await page.goto(`${BASE}/pronunciation`, { waitUntil: 'networkidle2' })
+  await sleep(1500)
+  await tapLabel('К практике')
+  await headingReady(page)
+  check('учитель: «Речь» → «назад» → «Практика»', path().startsWith('/practice') && (await h1Text()) === 'Практика', path())
+  await tapHubBack()
+  check('учитель: «Практика» после «Речи» → «назад» → «Моя учёба»', path() === '/learn', path())
+  // тест уровня и Прогресс уводили в «/», а учителя оттуда — в расписание
+  await page.goto(`${BASE}/placement`, { waitUntil: 'networkidle2' })
+  await sleep(1500)
+  check('учитель: тест уровня — «назад» «К моей учёбе»', !!(await page.$('main button[aria-label="К моей учёбе"]')), path())
+  await tapLabel('К моей учёбе')
+  check('учитель: тест уровня → «назад» → «Моя учёба», а не расписание', path() === '/learn', path())
+  await page.goto(`${BASE}/progress`, { waitUntil: 'networkidle2' })
+  await sleep(1500)
+  await page.evaluate(() => document.querySelector('main header button')?.click())
+  await sleep(1500)
+  check('учитель: прямой заход в Прогресс → «назад» → «Моя учёба»', path() === '/learn', path())
 
   // Компьютер: те же четыре вкладки в меню слева
   await page.setViewport({ width: 1280, height: 800 })

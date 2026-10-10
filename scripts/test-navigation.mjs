@@ -13,7 +13,10 @@
  *      — «Моя учёба»; лендинг /teachers не подсвечивает «Ученики» /teacher;
  *   4. счётчик «ждут проверки» — только на «Заданиях»;
  *   5. плашка «Тариф закончился» (Ф2.4) — на стартовом экране роли и во всей
- *      студии, но не в «Моей учёбе».
+ *      студии, но не в «Моей учёбе»;
+ *   6. «назад» наверх (Ф2.18): у учителя хабы «Учёба», «Практика», «Диалог»
+ *      ведут в «Мою учёбу», у ученика это вкладки — без «назад»; главная
+ *      учёбы учителя — «Моя учёба», а не расписание (тест уровня, Прогресс).
  *
  * ⚠️ Ожидания — литералами, а не из того же конфига: сверка конфига с самим
  * собой зелёная при любой поломке.
@@ -24,8 +27,10 @@ import {
   STUDENT_TABS,
   TEACHER_TABS,
   activeTabIndex,
+  learnHome,
   showsAccessBanner,
   startPath,
+  tabUp,
   tabsFor,
 } from '../src/app/navigation.ts'
 
@@ -138,6 +143,27 @@ for (const path of ['/study', '/practice', '/conversation', '/settings', '/pay',
 }
 check('ученику на экранах студии (приглашение) — нет', !banner('/schedule', 'learner') && !banner('/teacher', 'learner'))
 check('роль ещё не пришла — нет', !banner('/', null) && !banner('/schedule', undefined))
+
+// ── 6. «назад» наверх с экранов ученика (Ф2.18, журнал п.70) ─────────────────
+const up = (path, role) => {
+  const t = tabUp(path, role)
+  return t ? `${t.to} «${t.label}»` : '—'
+}
+const LEARN = '/learn «К моей учёбе»'
+for (const path of ['/study', '/practice', '/conversation']) {
+  check(`учитель: хаб ${path} — «назад» в «Мою учёбу»`, up(path, 'teacher') === LEARN, up(path, 'teacher'))
+  check(`ученик: хаб ${path} — вкладка, «назад» нет`, up(path, 'learner') === '—', up(path, 'learner'))
+  check(`роль не пришла (сбой): ${path} — как у ученика`, up(path, null) === '—', up(path, null))
+}
+check('роль ещё неизвестна — «назад» нет (вкладок тоже нет)', up('/study', undefined) === '—', up('/study', undefined))
+// внутренние экраны возвращают к своему хабу сами; вкладки роли — без «назад»
+for (const path of ['/grammar', '/pronunciation', '/writing', '/learn', '/schedule', '/teacher', '/tasks', '/', '/settings']) {
+  check(`учитель: ${path} — без «назад» наверх`, up(path, 'teacher') === '—', up(path, 'teacher'))
+}
+const home = (role) => `${learnHome(role).to} «${learnHome(role).label}»`
+check('главная учёбы учителя — «Моя учёба», а не расписание', home('teacher') === LEARN, home('teacher'))
+check('главная учёбы ученика — Главная', home('learner') === '/ «На главную»', home('learner'))
+check('главная учёбы без роли — Главная', home(null) === '/ «На главную»' && home(undefined) === '/ «На главную»', home(null))
 
 console.log(`\nИтог: ${pass}/${pass + fail}`)
 process.exitCode = fail === 0 ? 0 : 1

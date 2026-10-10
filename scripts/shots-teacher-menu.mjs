@@ -1,8 +1,9 @@
 /**
  * Снимки меню учителя для приёмки владельцем (PLAN.md Ф2.10, макет t1):
  * расписание с меню и счётчиком, «Задания» (хаб со сданными работами и
- * раздел материалов), «Ученики» (первый заход и обычный), «Моя учёба» — 390
- * в тёмной и светлой теме и 1280 в тёмной. Ученик сдаёт письмо и задание —
+ * раздел материалов), «Ученики» (первый заход и обычный), «Моя учёба» и её
+ * разделы «Учёба», «Практика», «Диалог» с «назад» (Ф2.18) — 390 в тёмной и
+ * светлой теме и 1280 в тёмной. Ученик сдаёт письмо и задание —
  * данные кладутся в тестовую базу напрямую, AI не вызывается.
  *
  * Запуск: npm run dev:test, затем node scripts/shots-teacher-menu.mjs [папка]
@@ -89,7 +90,8 @@ try {
     await page.waitForFunction(() => location.pathname === '/schedule', { timeout: 30000, polling: 250 })
     // «Ученики» дважды: первый заход — с раскрытым «Как это работает?»
     // (Ф2.11б-2), второй — как дальше всегда, пояснение за значком (?)
-    for (const [name, path] of [['1-schedule', '/schedule'], ['2-tasks', '/tasks'], ['3-materials', '/tasks?tab=materials'], ['4b-students-first', '/teacher'], ['4-students', '/teacher'], ['5-learn', '/learn']]) {
+    // 6–8 — хабы ученика из «Моей учёбы»: «назад» у заголовка (Ф2.18)
+    for (const [name, path] of [['1-schedule', '/schedule'], ['2-tasks', '/tasks'], ['3-materials', '/tasks?tab=materials'], ['4b-students-first', '/teacher'], ['4-students', '/teacher'], ['5-learn', '/learn'], ['6-study', '/study'], ['7-practice', '/practice'], ['8-conversation', '/conversation']]) {
       await page.goto(`${APP_URL}${path}`, { waitUntil: 'networkidle2' })
       await sleep(2500)
       const file = `${DIR}/${name}-${width}-${theme}.png`

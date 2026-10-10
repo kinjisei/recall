@@ -27,7 +27,7 @@ import { HowItWorks } from '../../shared/ui/HowItWorks'
 import { HOW_IT_WORKS } from '../../data/howItWorks'
 import { LoadError } from '../../shared/ui/LoadError'
 import { settleAll } from '../../shared/lib/settleAll'
-import { BackHeader } from '../../shared/ui/BackButton'
+import { BackHeader, TabHeading } from '../../shared/ui/BackButton'
 import { Button } from '../../shared/ui/Button'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
@@ -172,7 +172,7 @@ export function StudyPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-medium tracking-tight">Учёба</h1>
+      <TabHeading title="Учёба" />
       <p className="-mt-2 text-sm text-fg-muted">
         Тексты, грамматика и словарь — всё для изучения нового.
       </p>

@@ -10,21 +10,23 @@
 //
 // Режим раунда (игра на весь экран) прячет навигацию на любой ширине —
 // shared/lib/focusMode. Сколько места занимает каркас вокруг экрана, экраны
-// с закреплёнными элементами узнают из shared/lib/shellInsets.
+// с закреплёнными элементами узнают из shared/lib/shellInsets, куда «наверх»
+// с экранов ученика у этой роли — из shared/lib/shellUp (Ф2.18).
 //
 // Над стартовым экраном и студией — плашка «Тариф закончился — продлить»
 // (PLAN.md Ф2.4; где — navigation.ts, что сказать — features/billing).
 // Push (Ф2.9): подписка этого устройства и переход по нажатию на уведомление —
 // usePushBridge.
 // ============================================================================
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { AccessEndedBanner } from '../../features/billing'
 import { FocusModeContext } from '../../shared/lib/focusMode'
 import { PageWidthContext } from '../../shared/lib/screenWidth'
 import { InShellContext, PHONE_INSETS, ShellInsetsContext, type ShellInsets } from '../../shared/lib/shellInsets'
+import { ShellUpContext, type ShellUp } from '../../shared/lib/shellUp'
 import { useIsDesktop } from '../../shared/lib/useMediaQuery'
-import { showsAccessBanner } from '../navigation'
+import { learnHome, showsAccessBanner, tabUp } from '../navigation'
 import { BottomNav } from './BottomNav'
 import { SideNav } from './SideNav'
 import { TopBar } from './TopBar'
@@ -45,12 +47,16 @@ export function Layout() {
   const role = useMyRole()
   const { pathname } = useLocation()
   const banner = !focus && role && showsAccessBanner(pathname, role) ? role : null
+  // куда «наверх» с экранов ученика у этой роли (Ф2.18); memo — чтобы экраны
+  // не перерисовывались от нового объекта на каждый кадр каркаса
+  const up = useMemo<ShellUp>(() => ({ tab: tabUp(pathname, role), home: learnHome(role) }), [pathname, role])
   usePushBridge()
 
   return (
     <FocusModeContext.Provider value={setFocus}>
       <PageWidthContext.Provider value={setPageWidth}>
       <ShellInsetsContext.Provider value={insets}>
+      <ShellUpContext.Provider value={up}>
       <InShellContext.Provider value={true}>
         <div className="min-h-[100dvh] bg-page text-fg">
           {!focus && (desktop ? <SideNav /> : <TopBar />)}
@@ -77,6 +83,7 @@ export function Layout() {
           {!focus && !desktop && <BottomNav />}
         </div>
       </InShellContext.Provider>
+      </ShellUpContext.Provider>
       </ShellInsetsContext.Provider>
       </PageWidthContext.Provider>
     </FocusModeContext.Provider>

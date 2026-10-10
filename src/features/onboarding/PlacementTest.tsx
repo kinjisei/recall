@@ -26,6 +26,7 @@ import { useLanguage } from '../../context/LanguageContext'
 import type { AppLang, CEFRLevel, PlacementQuestion } from '../../types'
 import { Loading } from '../../shared/ui/Loading'
 import { useAsyncData } from '../../shared/lib/useAsyncData'
+import { useShellUp } from '../../shared/lib/shellUp'
 import { LoadError } from '../../shared/ui/LoadError'
 
 const LEVELS_BY_LANG: Record<AppLang, CEFRLevel[]> = {
@@ -55,6 +56,7 @@ function scoreLevel(
 
 export function PlacementTest() {
   const navigate = useNavigate()
+  const { home } = useShellUp()
   const { user } = useAuth()
   const { lang } = useLanguage()
   const levels = LEVELS_BY_LANG[lang]
@@ -83,7 +85,7 @@ export function PlacementTest() {
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState(false)
 
-  const back = () => navigate('/')
+  const back = () => navigate(home.to)
 
   const restart = () => {
     setAnswers({})
@@ -179,7 +181,7 @@ export function PlacementTest() {
         // прохождение теста = онбординг пройден: иначе новичок, дошедший до
         // теста из онбординга, после '/' снова улетал бы на первый шаг
         markOnboarded()
-        navigate('/')
+        navigate(home.to)
       } catch {
         setSaveError(true) // остаёмся на экране — можно нажать «Сохранить» снова
       } finally {
@@ -260,7 +262,10 @@ export function PlacementTest() {
   )
 }
 
-/** «Назад» теста — на Главную (тест открывают с неё и из онбординга). */
+/**
+ * «Назад» теста — на главную учёбы: ученику — Главная (тест открывают из
+ * «Учёбы» и онбординга), учителю — «Моя учёба», а не расписание (Ф2.18).
+ */
 function TopBack({ onBack }: { onBack: () => void }) {
-  return <BackButton onClick={onBack} label="На главную" />
+  return <BackButton onClick={onBack} label={useShellUp().home.label} />
 }

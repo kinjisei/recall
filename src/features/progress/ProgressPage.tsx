@@ -23,6 +23,7 @@ import { useLanguage } from '../../context/LanguageContext'
 import { supabase, currentUserId } from '../../shared/api/supabase'
 import { getBestStreak, getStreak, getWeek, type WeekDay } from '../../lib/activity'
 import { settleAll } from '../../shared/lib/settleAll'
+import { useShellUp } from '../../shared/lib/shellUp'
 import { LoadError } from '../../shared/ui/LoadError'
 import { getDeckIds } from '../../lib/cards'
 import { countDueCards } from '../../lib/fsrs'
@@ -139,6 +140,7 @@ function useProgressData(lang: 'en' | 'es') {
 export function ProgressPage() {
   const { signOut } = useAuth()
   const { lang } = useLanguage()
+  const { home } = useShellUp()
   const { week: weekOrNull, streak, metrics, weak, failed, reload } = useProgressData(lang)
   const week = weekOrNull ?? []
 
@@ -150,7 +152,8 @@ export function ProgressPage() {
   return (
     <div className="flex flex-col gap-6">
       <header className="flex items-center gap-2">
-        <BackButton fallback="/" />
+        {/* прямой заход — на главную учёбы: учителю «Моя учёба», а не расписание (Ф2.18) */}
+        <BackButton fallback={home.to} />
         <h1 className="text-2xl font-medium tracking-tight">Мой прогресс</h1>
       </header>
 

@@ -10,7 +10,6 @@
 //                     Мои ошибки (банк из lib/mistakes) · Глаголы
 //   РЕЧЬ            — слушай фразу и повторяй вслух (features/pronunciation)
 // ============================================================================
-import type React from 'react'
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
@@ -27,7 +26,7 @@ import {
   IconShuffle,
   IconTranslate,
   IconTimer,
-  type IconProps,
+  type IconLike,
   IconCards,
 } from '../../shared/ui/icons'
 import { Card } from '../../shared/ui/Card'
@@ -45,6 +44,7 @@ import { useRoundMode } from '../../shared/ui/roundKeys'
 import { Loading } from '../../shared/ui/Loading'
 import { markMorph } from '../../shared/lib/morph'
 import { withViewTransition } from '../../shared/lib/viewTransition'
+import { TabHeading } from '../../shared/ui/BackButton'
 
 const MatchMode = lazy(() => import('../words/MatchMode').then((m) => ({ default: m.MatchMode })))
 const GapMode = lazy(() => import('../words/QuizModes').then((m) => ({ default: m.GapMode })))
@@ -80,7 +80,7 @@ type Mode =
   | 'gr-order'
 
 interface Tile {
-  Icon: (p: IconProps) => React.JSX.Element
+  Icon: IconLike
   title: string
   desc: string
   /** Внутренний режим хаба ИЛИ переход по роуту. */
@@ -141,7 +141,7 @@ const GROUP_IDS = new Set<string>(['review', 'words', 'grammar', 'speech'])
 interface PracticeGroup {
   id: GroupId
   title: string
-  Icon: (p: { size?: number; className?: string }) => React.JSX.Element
+  Icon: IconLike
   hint: string
   badge?: number
 }
@@ -354,7 +354,7 @@ export function PracticePage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-medium tracking-tight">Практика</h1>
+      <TabHeading title="Практика" />
 
       {/* Абзац-инструкция отсюда убран (замер ревью 1Б: из-за него ни одна из
           13 плиток не была видна без прокрутки, а первым, что читал новичок,

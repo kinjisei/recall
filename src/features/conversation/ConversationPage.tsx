@@ -23,6 +23,7 @@ import { getEsLevel } from '../../lib/esLevel'
 import type { AppLang, CEFRLevel, ChatTurn, LearningGoal } from '../../types'
 import { Thinking } from '../../shared/ui/Thinking'
 import { HowItWorks } from '../../shared/ui/HowItWorks'
+import { TabHeading } from '../../shared/ui/BackButton'
 import { HOW_IT_WORKS } from '../../data/howItWorks'
 import { ChatBubble, ChatInputBar, ChatWindow } from '../../shared/ui/Chat'
 
@@ -58,19 +59,21 @@ export function ConversationPage() {
           docs/nav-structure-options.md): проверка письма переехала в «Учёбу →
           Письмо», чтобы всё письмо жило в одном месте, а вкладка отвечала за
           одну вещь. */}
-      <header className="min-w-0">
-        <h1 className="text-2xl font-medium tracking-tight">Диалог</h1>
-        <p className="text-xs text-fg-muted">
-          {/* Уровень показываем, только если он ИЗВЕСТЕН: у нового аккаунта
-              его нет, а B1 здесь — рабочее умолчание для промпта, не факт
-              о человеке. Раньше экран уверенно писал «уровень B1». */}
-          {lang === 'es'
-            ? `испанский · ${level}`
-            : knownLevel
-              ? `уровень ${level}`
-              : 'уровень определим по ходу'}
-        </p>
-      </header>
+      <TabHeading
+        title="Диалог"
+        subtitle={
+          <p className="text-xs text-fg-muted">
+            {/* Уровень показываем, только если он ИЗВЕСТЕН: у нового аккаунта
+                его нет, а B1 здесь — рабочее умолчание для промпта, не факт
+                о человеке. Раньше экран уверенно писал «уровень B1». */}
+            {lang === 'es'
+              ? `испанский · ${level}`
+              : knownLevel
+                ? `уровень ${level}`
+                : 'уровень определим по ходу'}
+          </p>
+        }
+      />
 
       <HowItWorks>{HOW_IT_WORKS.conversation}</HowItWorks>
 
