@@ -1,6 +1,7 @@
 // ============================================================================
 // Список «Ученики» (макеты t6-1, d3): фильтр по статусу, поиск, тихая строка
-// мест тарифа, строки карточек. Порядок строк и их вторую строку («кем
+// мест тарифа, строки карточек. «+ Ученик» — в шапке экрана, одной строкой с
+// заголовком (Ф2.11б-2). Порядок строк и их вторую строку («кем
 // заняться») даёт студия — у ученика в приложении это домашка и регулярность
 // (features/teacher), у карточки без приложения — контакт.
 // ============================================================================
@@ -15,9 +16,8 @@ import {
   type StudentCard,
 } from '../../domains/students'
 import { useUrlState } from '../../shared/lib/useUrlState'
-import { Button } from '../../shared/ui/Button'
 import { Card } from '../../shared/ui/Card'
-import { IconPlus, IconSearch, IconSmartphone } from '../../shared/ui/icons'
+import { IconSearch, IconSmartphone } from '../../shared/ui/icons'
 import { RowCard } from '../../shared/ui/RowCard'
 import { Avatar, StatusBadge } from './CardBits'
 
@@ -34,7 +34,6 @@ export function StudentsList({
   selectedId,
   canWrite,
   onOpen,
-  onAdd,
 }: {
   /** Карточки в порядке показа. */
   cards: StudentCard[]
@@ -51,7 +50,6 @@ export function StudentsList({
   /** Без тарифа после пробного — только просмотр (журнал п.41). */
   canWrite: boolean
   onOpen: (id: string) => void
-  onAdd: () => void
 }) {
   const [rawFilter, setRawFilter] = useUrlState('filter', (v) => CARD_FILTERS.some((f) => f.id === v))
   const filter = (rawFilter as CardFilter | null) ?? 'all'
@@ -63,13 +61,6 @@ export function StudentsList({
 
   return (
     <div className="flex flex-col gap-3">
-      {/* заголовок «Ученики» — у экрана (вкладка меню учителя, макет t6-1): свой
-          здесь повторял бы его строкой ниже */}
-      <div className="flex justify-end">
-        <Button className="min-h-11 px-4 py-2 text-sm" onClick={onAdd} disabled={!canWrite}>
-          <IconPlus size={18} /> Ученик
-        </Button>
-      </div>
       {!canWrite && (
         <p className="text-sm text-fg-muted">
           Тариф закончился — ученики только для просмотра. Пригласить в приложение можно.
@@ -90,8 +81,14 @@ export function StudentsList({
         </label>
       )}
 
-      {/* Перенос, а не прокрутка вбок: пятый фильтр не должен прятаться за краем */}
-      <div role="radiogroup" aria-label="Статус" className="flex flex-wrap gap-2">
+      {/* Телефон — одна строка с прокруткой вбок (t6-1): перенос давал две
+          полупустые строки над списком; край строки — до края экрана, видно, что
+          там есть ещё. Компьютер — перенос внутри колонки списка (d3). */}
+      <div
+        role="radiogroup"
+        aria-label="Статус"
+        className="-mx-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none] lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0"
+      >
         {CARD_FILTERS.map((f) => (
           <button
             key={f.id}
@@ -99,7 +96,7 @@ export function StudentsList({
             role="radio"
             aria-checked={filter === f.id}
             onClick={() => setRawFilter(f.id === 'all' ? null : f.id)}
-            className={`min-h-11 rounded-full border px-4 text-sm font-semibold ${
+            className={`min-h-11 flex-none rounded-full border px-4 text-sm font-semibold ${
               filter === f.id
                 ? 'border-accent-line bg-accent-soft text-accent-soft-fg'
                 : 'border-tint/[0.10] text-fg-secondary'

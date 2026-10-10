@@ -1,5 +1,5 @@
 // ============================================================================
-// Фирменный icon-набор Recall (88 шт.), сгенерирован из handoff/icons/*.svg
+// Фирменный icon-набор Recall (93 шт.), сгенерирован из handoff/icons/*.svg
 // (Claude Design). Единый стиль: viewBox 0 0 24 24, stroke 1.75px (2px у *-fill),
 // currentColor. Меняем весь набор здесь — приложение подхватит.
 //   НЕ РЕДАКТИРОВАТЬ ВРУЧНУЮ: перегенерировать из SVG.
@@ -53,6 +53,9 @@ export const IconBack = icon(
 )
 export const IconBadgeCheck = icon(
   '<path d="M12 3.5l1.9 1.4 2.3-.3 1 2.2 2.2 1-.3 2.3 1.4 1.9-1.4 1.9.3 2.3-2.2 1-1 2.2-2.3-.3-1.9 1.4-1.9-1.4-2.3.3-1-2.2-2.2-1 .3-2.3L3.5 12l1.4-1.9-.3-2.3 2.2-1 1-2.2 2.3.3Z"></path><path d="M9.2 12.2l2 2 3.6-4"></path>',
+)
+export const IconBars = icon(
+  '<path d="M4 19V13M10 19V9M16 19V5"></path>',
 )
 export const IconBell = icon(
   '<path d="M6 10.5a6 6 0 0 1 12 0v3.2l1.5 2.6a.7.7 0 0 1-.6 1H5.1a.7.7 0 0 1-.6-1L6 13.7Z"></path><path d="M9.8 20a2.3 2.3 0 0 0 4.4 0"></path>',
@@ -120,8 +123,14 @@ export const IconDialogFill = icon(
 export const IconDialog = icon(
   '<path d="M7.5 4.5h9A3.5 3.5 0 0 1 20 8v4.5a3.5 3.5 0 0 1-3.5 3.5h-6.3l-3.9 3.2a.8.8 0 0 1-1.3-.6V8a3.5 3.5 0 0 1 3.5-3.5Z"></path>',
 )
+export const IconDocument = icon(
+  '<path d="M5 4.5h10.5L19 8v11.5H5z"></path><path d="M8.5 11h7M8.5 15h5"></path>',
+)
 export const IconEye = icon(
   '<path d="M3.5 12s3-6.5 8.5-6.5S20.5 12 20.5 12s-3 6.5-8.5 6.5S3.5 12 3.5 12Z"></path><circle cx="12" cy="12" r="2.6"></circle>',
+)
+export const IconFlag = icon(
+  '<path d="M5 20V5M5 5h11l-2 3.5L16 12H5"></path>',
 )
 export const IconFlame = icon(
   '<path d="M12 3.5c1.2 2.4 3.6 4 4.9 6.4a6.3 6.3 0 1 1-11-.2C7.2 7.5 10.6 6 12 3.5Z"></path><path d="M9.8 16.7a2.2 2.2 0 0 0 4.4 0c0-1.3-1-2.1-2.2-3.2-1.2 1.1-2.2 1.9-2.2 3.2Z"></path>',
@@ -207,6 +216,9 @@ export const IconPractice = icon(
 export const IconPrinter = icon(
   '<path d="M7 8V4.5h10V8"></path><path d="M7 16H5a1.5 1.5 0 0 1-1.5-1.5v-5A1.5 1.5 0 0 1 5 8h14a1.5 1.5 0 0 1 1.5 1.5v5A1.5 1.5 0 0 1 19 16h-2"></path><path d="M7 13h10v6.5H7Z"></path><path d="M17 10.7h.2"></path>',
 )
+export const IconPulse = icon(
+  '<path d="M3 12h4l2-6 4 12 2-6h6"></path>',
+)
 export const IconPuzzle = icon(
   '<path d="M9.7 5.4a2.1 2.1 0 1 1 4.2 0h2.3A1.6 1.6 0 0 1 17.8 7v2.3a2.1 2.1 0 1 1 0 4.2v2.3a1.6 1.6 0 0 1-1.6 1.6h-2.3a2.1 2.1 0 1 0-4.2 0H7.4a1.6 1.6 0 0 1-1.6-1.6v-2.3a2.1 2.1 0 1 0 0-4.2V7a1.6 1.6 0 0 1 1.6-1.6Z"></path>',
 )
@@ -266,6 +278,9 @@ export const IconStudy = icon(
 )
 export const IconTeacher = icon(
   '<rect x="4" y="4.5" width="16" height="10.5" rx="1.5"></rect><path d="M8 8.2h5.5"></path><path d="M8 11.2h8"></path><path d="M12 15v2"></path><path d="M8 20.5l4-3.5 4 3.5"></path>',
+)
+export const IconText = icon(
+  '<path d="M4 6.5h9M8.5 6.5V19M13 13h7M16.5 13v6"></path>',
 )
 export const IconThumbsUp = icon(
   '<path d="M7.5 10.8 11.2 4.5c1.2 0 2 .9 2 2.1v3.2h4.5a1.8 1.8 0 0 1 1.8 2.1l-.9 5.1a2.4 2.4 0 0 1-2.4 2H7.5Z"></path><path d="M4.5 10.8h3V19h-3Z"></path>',

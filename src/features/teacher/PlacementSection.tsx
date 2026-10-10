@@ -7,9 +7,10 @@
 // результат по испанскому вообще жил в localStorage ученика и учителю не
 // показывался. Данные — lib/placement (таблица placement_requests).
 //
-// Своего заголовка-раскрывашки у раздела нет: его открывает строка «Тест
-// уровня» под «Ещё» в карточке (StudentStudio). Раньше внутри стояла вторая
-// такая же — «Ещё» → «Тест уровня» → «Тест уровня ▼» (PLAN.md Ф2.11).
+// Раздел открывается плиткой «Тест уровня» в карточке экраном со своим
+// заголовком (StudioSection, Ф2.11б-2). Главная кнопка — на языке, который
+// учитель преподаёт (EN/ES в шапке): учителю испанского первым предлагался
+// английский. Второй язык — тихой кнопкой «Другой язык».
 // ============================================================================
 import { useState } from 'react'
 import { Button } from '../../shared/ui/Button'
@@ -18,11 +19,9 @@ import { useAsyncData } from '../../shared/lib/useAsyncData'
 import { assignPlacement, cancelPlacement, listPlacements } from '../../lib/placement'
 import type { AppLang } from '../../types'
 import { RowsSkeleton } from '../../shared/ui/Loading'
+import { useLanguage } from '../../context/LanguageContext'
 
-const LANGS: { id: AppLang; label: string }[] = [
-  { id: 'en', label: 'Английский' },
-  { id: 'es', label: 'Испанский' },
-]
+const LANG_LABEL: Record<AppLang, string> = { en: 'Английский', es: 'Испанский' }
 
 function fmt(iso: string): string {
   return new Date(iso).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
@@ -35,6 +34,8 @@ export function PlacementSection({
   studentId: string
   studentName: string
 }) {
+  const { lang: mine } = useLanguage()
+  const other: AppLang = mine === 'en' ? 'es' : 'en'
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   // сбой загрузки ≠ «тестов не было»: иначе учитель не отличит одно от другого
@@ -80,19 +81,24 @@ export function PlacementSection({
         ученика в «Учёбе», а результат вернётся сюда.
       </p>
 
-      <div className="flex flex-wrap gap-2">
-        {LANGS.map((l) => (
-          <Button
-            key={l.id}
-            variant="secondary"
-            className="px-3 py-2 text-sm"
-            loading={busy === l.id}
-            disabled={pendingIn(l.id)}
-            onClick={() => assign(l.id)}
-          >
-            {pendingIn(l.id) ? `${l.label} — ждём` : `Назначить · ${l.label}`}
-          </Button>
-        ))}
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          className="px-4 py-2.5 text-sm"
+          loading={busy === mine}
+          disabled={pendingIn(mine)}
+          onClick={() => assign(mine)}
+        >
+          {pendingIn(mine) ? `${LANG_LABEL[mine]} — ждём` : `Назначить · ${LANG_LABEL[mine]}`}
+        </Button>
+        <Button
+          variant="ghost"
+          className="min-h-11 px-3 py-2 text-sm"
+          loading={busy === other}
+          disabled={pendingIn(other)}
+          onClick={() => assign(other)}
+        >
+          {pendingIn(other) ? `${LANG_LABEL[other]} — ждём` : `Другой язык · ${LANG_LABEL[other]}`}
+        </Button>
       </div>
 
       {error && <p className="text-sm text-danger-strong">{error}</p>}
@@ -112,7 +118,7 @@ export function PlacementSection({
             >
               <div className="min-w-0">
                 <p className="text-sm">
-                  {r.lang === 'es' ? 'Испанский' : 'Английский'}
+                  {LANG_LABEL[r.lang]}
                   {r.status === 'done' ? (
                     <span className="ml-2 font-semibold text-success-strong">
                       {r.result_level}

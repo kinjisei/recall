@@ -15,12 +15,17 @@ import {
 import { IconBack, IconDialog, IconPencil, IconPhone, IconSend } from '../../shared/ui/icons'
 import { AppBadge, Avatar, StatusBadge } from './CardBits'
 
-const contactCls =
-  'lift flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-tint/[0.08] bg-surface px-2 text-sm font-semibold text-accent-strong'
+// Телефон (t6-2): значок над подписью, три кнопки на всю ширину — влезают и на
+// 360 px. Компьютер (d3): короткие кнопки строкой у имени.
+const contactBase =
+  'lift flex items-center justify-center rounded-xl border border-tint/[0.08] bg-surface font-semibold text-accent-strong [&>svg]:flex-none'
+const contactPhone = `${contactBase} min-h-14 min-w-0 flex-1 flex-col gap-1 px-1 py-2 text-note`
+const contactDesk = `${contactBase} min-h-11 gap-1.5 px-3 text-sm`
 
 export function CardHead({
   card,
   level,
+  goal,
   outside,
   canWrite,
   busy,
@@ -30,6 +35,8 @@ export function CardHead({
   card: StudentCard
   /** Уровень ученика в приложении (тест уровня), если известен. */
   level?: string | null
+  /** Цель ученика словами — с ней по-разному строятся занятия (IELTS и школа). */
+  goal?: string | null
   /** В приложении, места тарифа не хватило. */
   outside: boolean
   canWrite: boolean
@@ -40,6 +47,7 @@ export function CardHead({
 }) {
   const links = contactLinks(card.contact)
   const anyLink = links.whatsapp || links.telegram || links.phone
+  const contactCls = onBack ? contactPhone : contactDesk
   // без тарифа после пробного менять нечего — меню нет (журнал п.41)
   const menu = canWrite ? <CardMenu actions={cardActions(card.status)} busy={busy} onPick={onAction} /> : null
 
@@ -74,14 +82,15 @@ export function CardHead({
               </span>
             )}
           </div>
+          {card.inApp && goal && <p className="mt-1.5 text-xs text-fg-muted">Цель: {goal}</p>}
         </div>
         {!onBack && menu}
       </div>
 
       {outside && (
         <p className="rounded-xl bg-warning/10 px-3 py-2 text-sm text-warning-soft-fg">
-          Вне мест тарифа — занимается на бесплатных лимитах AI. Освободи место или расширь
-          тариф.
+          Вне мест тарифа — AI по бесплатным лимитам. Чтобы включить в тариф, убери из него
+          другого ученика или расширь тариф.
         </p>
       )}
 

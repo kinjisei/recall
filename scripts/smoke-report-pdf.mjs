@@ -2,8 +2,8 @@
  * Смоук Захода 6: динамика + отчёт родителям, с генерацией НАСТОЯЩЕГО PDF.
  *  1. service_role: учитель + ученица с данными (активность в двух окнах,
  *     слова с расписаниями — одно «выучено» недавно, ошибки грамматики).
- *  2. Headless Edge: вход учителем → карточка ученицы → «Диагностическая
- *     карта» → блок «Динамика за месяц» виден → «🖨 Отчёт для родителей» →
+ *  2. Headless Edge: вход учителем → карточка ученицы → «Диагностика» →
+ *     блок «Динамика за месяц» виден → назад, плитка «Отчёт родителям» →
  *     комментарий → page.pdf() → проверка, что PDF не пустой и содержит лист.
  * Запуск: node scripts/smoke-report-pdf.mjs (`npm run dev:test` — 5174, тестовая база).
  */
@@ -155,17 +155,16 @@ try {
     // Карточка ученика адресуемая (?student=id): на голом /teacher лежит список,
     // и кнопки карточки там просто нет. Раньше смоук стучался в /teacher и ждал
     // диагностику — с тех пор как экран стал адресуемым, он ждал впустую.
-    // Диагностика переехала под «Ещё», но осталась адресуемой: ?sec=diag
-    // открывает её сразу. Кликать по подписи не надо — и проверка перестаёт
-    // ломаться от каждого переименования раздела.
+    // Диагностика — плиткой карточки, и адресуемая: ?sec=diag открывает её
+    // сразу. Кликать по подписи не надо — и проверка перестаёт ломаться от
+    // каждого переименования раздела.
     await page.goto(BASE + `/teacher?student=${sId}&sec=diag`, {
       waitUntil: 'networkidle2',
       timeout: 30000,
     })
-    await new Promise((r) => setTimeout(r, 2500))
-    const opened = await page.evaluate(() =>
-      document.body.innerText.includes('Диагностическая карта'),
-    )
+    const opened = await page
+      .waitForSelector('[data-studio-section="diag"]', { timeout: 15000 })
+      .then(() => true, () => false)
     check('диагностика открылась по адресу ?sec=diag', opened)
     await page.waitForFunction(
       () => document.body.textContent.includes('Динамика за месяц'),
@@ -178,13 +177,13 @@ try {
     )
     check('блок «Динамика за месяц» отрисован', trendOk)
 
-    // открыть отчёт, вписать комментарий
-    await page.evaluate(() => {
-      const btn = [...document.querySelectorAll('button')].find((b) =>
-        b.textContent.includes('Отчёт для родителей'),
-      )
-      btn?.click()
-    })
+    // отчёт — своя плитка карточки (макет t6-2): «‹ Имя» к карточке, плитка
+    await page.click('[data-section-back]')
+    await page.waitForSelector('[data-tile="report"]', { timeout: 15000 })
+    // переход «назад» идёт анимацией (view transition) — нажатие во время неё теряется
+    await new Promise((r) => setTimeout(r, 600))
+    await page.$eval('[data-tile="report"]', (el) => el.scrollIntoView({ block: 'center' }))
+    await page.click('[data-tile="report"]')
     await page.waitForSelector('.print-sheet textarea', { timeout: 10000 })
     await page.type('.print-sheet textarea', 'Занимаемся стабильно, виден прогресс в лексике.')
     const sheetOk = await page.evaluate(

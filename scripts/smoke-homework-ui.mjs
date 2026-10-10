@@ -106,18 +106,18 @@ try {
   // ---- 1. карточка построена вокруг домашки ---------------------------------
   await page.goto(`${BASE}/teacher?student=${sId}`, { waitUntil: 'networkidle2', timeout: 30000 })
   check('карточка открылась', await waitText(page, STUDENT_NAME))
-  check('пустая домашка объясняет себя', await seen(page, 'Домашки нет'))
+  check('пустая домашка: «Домашка на неделю — пока не задана» (t6-2)', await seen(page, 'Пока не задана'))
   check('главная кнопка на месте', await seen(page, 'Собрать домашку'))
-  check('плашки с числами показаны', await seen(page, 'буксуют слов') && (await seen(page, 'слабых тем')))
+  check('плашки показаны: буксующие слова, слабая тема, занятия', (await seen(page, 'Буксующие слова')) && (await seen(page, 'Слабая тема')) && (await seen(page, 'Занятия')))
 
-  // ⚠️ Старые разделы должны быть СПРЯТАНЫ под «Ещё»: ради этого всё и делалось.
-  // Если они снова окажутся на виду, экран вернётся к пяти раскрывашкам подряд.
-  check('разделы убраны под «Ещё»', !(await seen(page, 'Диагностическая карта')))
-  check('кнопка «Ещё» есть', await seen(page, 'Ещё:'))
+  // ⚠️ Старые разделы — плитками, а не раскрытыми на карточке (Ф2.11б-2): если
+  // они снова окажутся на виду, экран вернётся к пяти раскрывашкам подряд.
+  check('разделы — плитками, содержимое не на карточке', (await page.$('[data-section-tiles]')) !== null && !(await seen(page, 'Дней с занятиями')))
 
   // ---- 2. разделы адресуемые ------------------------------------------------
   await page.goto(`${BASE}/teacher?student=${sId}&sec=diag`, { waitUntil: 'networkidle2', timeout: 30000 })
-  check('?sec=diag открывает диагностику сразу', await waitText(page, 'Диагностическая карта'))
+  // заголовки диагностики набраны капсом — innerText видит их так; ждём строку динамики
+  check('?sec=diag открывает диагностику сразу', await waitText(page, 'Дней с занятиями'))
 
   // ---- 3. сборка домашки шторкой --------------------------------------------
   await page.goto(`${BASE}/teacher?student=${sId}`, { waitUntil: 'networkidle2', timeout: 30000 })
@@ -265,7 +265,7 @@ try {
   // На соседнем смоуке эта ловушка уже дала зелёную проверку при сломанном
   // счёте — здесь закрываем её тем же приёмом.
   const counterShown = await page.evaluate(() =>
-    [...document.querySelectorAll('span, p, div')].some(
+    [...document.querySelectorAll('b, span, p, div')].some(
       (e) => (e.textContent || '').trim() === '0 из 3',
     ),
   )

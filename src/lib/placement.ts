@@ -35,14 +35,18 @@ export async function cancelPlacement(id: string): Promise<void> {
   if (error) throw dbError(error, 'снять тест уровня')
 }
 
-/** Все тесты, назначенные этому ученику (для карточки у преподавателя). */
+/**
+ * Все тесты, назначенные этому ученику (для карточки у преподавателя). Сбой
+ * бросает (PLAN.md Ф1.13): пустой список сказал бы «тестов не было», и плитка
+ * позвала бы «Назначить» второй тест поверх ждущего.
+ */
 export async function listPlacements(studentId: string): Promise<PlacementRequest[]> {
   const { data, error } = await supabase
     .from('placement_requests')
     .select('*')
     .eq('student_id', studentId)
     .order('created_at', { ascending: false })
-  if (error) return []
+  if (error) throw dbError(error, 'загрузить тесты уровня')
   return (data ?? []) as PlacementRequest[]
 }
 

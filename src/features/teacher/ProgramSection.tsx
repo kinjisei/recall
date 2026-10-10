@@ -279,7 +279,7 @@ function PlanForm({
               loading={busy === 'gen'}
               onClick={() => void generate()}
             >
-              {busy === 'gen' ? 'Составляю (до минуты)…' : preview ? 'Составить заново (AI)' : 'Составить программу (AI)'}
+              {busy === 'gen' ? 'Составляю (до минуты)…' : preview ? 'Составить заново' : 'Составить программу'}
             </Button>
             {onCancel && (
               <Button variant="ghost" className="px-3 py-2 text-sm" onClick={cancel}>

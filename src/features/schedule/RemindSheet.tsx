@@ -14,7 +14,7 @@ import { telegramLink, whatsappLink } from '../../shared/lib/share'
 import { Button } from '../../shared/ui/Button'
 import { DraftRestored } from '../../shared/ui/DraftRestored'
 import { IconClose, IconSmartphone } from '../../shared/ui/icons'
-import { ShareLink } from '../../shared/ui/ShareLink'
+import { SHARE_ROW, ShareLink } from '../../shared/ui/ShareLink'
 import { Sheet, SHEET_BODY } from '../../shared/ui/Sheet'
 
 export function RemindSheet({
@@ -91,7 +91,7 @@ export function RemindSheet({
               <span className="text-caption font-normal text-fg-muted">Придёт в Recall как сообщение от тебя</span>
             </Button>
           )}
-          <div className="flex gap-2">
+          <div className={SHARE_ROW}>
             <ShareLink channel="whatsapp" href={whatsappLink(message, phone)} onClick={() => draft.forget()} />
             <ShareLink channel="telegram" href={telegramLink(message, window.location.origin)} onClick={() => draft.forget()} />
           </div>

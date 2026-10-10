@@ -5,25 +5,30 @@
 // Отправляет сам учитель со своего номера (журнал п.23): WhatsApp — сразу на
 // номер ученика, если он записан; Telegram — выбор получателя; «Ссылка» —
 // скопировать. Под кнопками — займёт ли ученик место тарифа.
+//
+// Сообщение — от учителя, про домашку и практику (журнал п.71, 6), язык
+// разговора с AI — тот, что учитель преподаёт (EN/ES в шапке). Те же кнопки
+// и то же сообщение без имени — у общего кода (GeneralInvite).
 // ============================================================================
 import { useState } from 'react'
 import {
   cardInviteLink,
-  cardInviteMessage,
-  cardInviteText,
   contactLinks,
   firstName,
+  inviteMessage,
   inviteSeatHint,
+  inviteTelegramText,
   loadCardInvite,
   spacedCode,
   type SeatsState,
   type StudentCard,
 } from '../../domains/students'
+import { useLanguage } from '../../context/LanguageContext'
 import { telegramLink, whatsappLink } from '../../shared/lib/share'
 import { useAsyncData } from '../../shared/lib/useAsyncData'
 import { useCopy } from '../../shared/lib/useCopy'
 import { IconCheck, IconCopy, IconShare } from '../../shared/ui/icons'
-import { SHARE_BUTTON, ShareLink } from '../../shared/ui/ShareLink'
+import { SHARE_BUTTON, SHARE_ROW, ShareLink } from '../../shared/ui/ShareLink'
 import { LoadError } from '../../shared/ui/LoadError'
 import { track } from '../../lib/analytics'
 
@@ -34,18 +39,20 @@ export function InviteBlock({ card, seats }: { card: StudentCard; seats: SeatsSt
     'Не удалось получить код приглашения',
   )
   const hint = inviteSeatHint(card, seats)
+  const name = firstName(card.name)
 
   return (
     <section
-      className="flex flex-col gap-3 rounded-2xl border border-accent-line bg-surface p-5 shadow-card"
+      className="flex flex-col gap-3 rounded-2xl border border-accent-line bg-surface p-4 shadow-card"
       data-card-invite
     >
       <h3 className="flex items-center gap-2 font-semibold">
         <IconShare size={18} className="text-accent-strong" /> Пригласить в Recall
       </h3>
+      {/* польза для учителя — то, ради чего стоит отправить */}
       <p className="text-sm text-fg-secondary">
-        {firstName(card.name)} пока не в Recall. Когда войдёт, будет получать от тебя домашку и
-        задания, а ты — видеть, как идут занятия.
+        {name} пока не в Recall. Когда войдёт, задания будут проверяться сразу, а ты увидишь, что
+        сделано между уроками и где нужна помощь.
       </p>
 
       {error ? (
@@ -53,7 +60,7 @@ export function InviteBlock({ card, seats }: { card: StudentCard; seats: SeatsSt
       ) : loading || !code ? (
         <div className="h-24 animate-pulse rounded-xl bg-tint/[0.05]" />
       ) : (
-        <Ready card={card} code={code} />
+        <InviteShare name={card.name} code={code} phone={contactLinks(card.contact).whatsapp ? card.contact : null} event="card_invite_share" />
       )}
 
       {hint && <p className="text-xs text-fg-muted">ⓘ {hint}</p>}
@@ -61,18 +68,35 @@ export function InviteBlock({ card, seats }: { card: StudentCard; seats: SeatsSt
   )
 }
 
-function Ready({ card, code }: { card: StudentCard; code: string }) {
+/**
+ * Сообщение и кнопки «поделиться»: личный код карточки (name — имя ученика)
+ * или общий код (name = null). Ссылка подставляет код в поле «Код
+ * преподавателя» — оба кода оно принимает одинаково.
+ */
+export function InviteShare({
+  name,
+  code,
+  phone = null,
+  event,
+}: {
+  name: string | null
+  code: string
+  /** Номер ученика — WhatsApp откроется сразу на нём. */
+  phone?: string | null
+  /** Событие аналитики: какой код отправили. */
+  event: 'card_invite_share' | 'general_invite_share'
+}) {
+  const { lang } = useLanguage()
   const { copied, copy } = useCopy()
   // буфер недоступен — подсказать выделить и скопировать руками
   const [failed, setFailed] = useState(false)
   const link = cardInviteLink(window.location.origin, code)
-  const message = cardInviteMessage(card.name, code, link)
-  const phone = contactLinks(card.contact).whatsapp ? card.contact : null
+  const message = inviteMessage(name, code, link, lang)
 
   const copyLink = async () => {
     const ok = await copy('link', link)
     setFailed(!ok)
-    if (ok) void track('card_invite_share', { via: 'copy' })
+    if (ok) void track(event, { via: 'copy' })
   }
 
   return (
@@ -86,16 +110,12 @@ function Ready({ card, code }: { card: StudentCard; code: string }) {
       <p className="text-sm text-fg-muted">
         Код для ученика: <span className="font-mono text-base font-bold tracking-widest text-fg" data-invite-code={code}>{spacedCode(code)}</span>
       </p>
-      <div className="flex gap-2">
-        <ShareLink
-          channel="whatsapp"
-          href={whatsappLink(message, phone)}
-          onClick={() => void track('card_invite_share', { via: 'whatsapp' })}
-        />
+      <div className={SHARE_ROW}>
+        <ShareLink channel="whatsapp" href={whatsappLink(message, phone)} onClick={() => void track(event, { via: 'whatsapp' })} />
         <ShareLink
           channel="telegram"
-          href={telegramLink(cardInviteText(card.name, code), link)}
-          onClick={() => void track('card_invite_share', { via: 'telegram' })}
+          href={telegramLink(inviteTelegramText(name, code, lang), link)}
+          onClick={() => void track(event, { via: 'telegram' })}
         />
         <button type="button" className={SHARE_BUTTON} onClick={copyLink}>
           {copied === 'link' ? <IconCheck size={18} /> : <IconCopy size={18} />}

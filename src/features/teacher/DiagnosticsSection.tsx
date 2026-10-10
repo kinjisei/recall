@@ -1,18 +1,17 @@
 // ============================================================================
-// Диагностическая карта ученика — раскрывашка в карточке ученика у
-// преподавателя. Показывает сильные/слабые места из реальных данных:
+// Диагностическая карта ученика — экран плитки «Диагностика» в карточке
+// ученика у преподавателя (Ф2.11б-2). Показывает сильные/слабые места из реальных данных:
 // слова (статусы FSRS + «буксующие»), задания (средний балл + разбивка по
 // категориям упражнений), грамматические ошибки по темам (grammar_mistakes),
 // AI-квесты, активность за 14 дней. Данные — lib/diagnostics.ts, только чтение.
+// Отчёт родителям — своей плиткой карточки (макет t6-2), не отсюда.
 // ============================================================================
 import { useEffect, useState } from 'react'
-import { Button } from '../../shared/ui/Button'
 import { LoadError } from '../../shared/ui/LoadError'
-import { IconPrinter } from '../../shared/ui/icons'
 import { getStudentDiagnostics, type StudentDiagnostics } from '../../lib/diagnostics'
 import type { MetricDelta } from '../../lib/dynamics'
-import { ReportSheet } from './ReportSheet'
-import type { AppLang, GrammarTopic, MaterialExerciseKind } from '../../types'
+import { useTopicTitles } from './topicTitles'
+import type { AppLang, MaterialExerciseKind } from '../../types'
 
 const KIND_LABELS: Record<MaterialExerciseKind, string> = {
   comprehension: 'Понимание текста',
@@ -21,9 +20,6 @@ const KIND_LABELS: Record<MaterialExerciseKind, string> = {
 }
 
 const LANG_FLAG: Record<AppLang, string> = { en: 'EN', es: 'ES' }
-
-/** Заголовки грамматических тем: lang:topicId → название урока. */
-type TopicTitles = Map<string, { title: string; level: string }>
 
 function Stat({ label, value, tone }: { label: string; value: string | number; tone?: string }) {
   return (
@@ -90,11 +86,9 @@ function pctTone(pct: number): string {
 
 export function DiagnosticsSection({
   studentId,
-  studentName,
   preloaded,
 }: {
   studentId: string
-  studentName: string
   /**
    * Уже загруженная карта из карточки ученика. Без неё раздел лез в базу
    * второй раз за те же пять запросов: карточка считает по ним плашки, а
@@ -103,10 +97,10 @@ export function DiagnosticsSection({
   preloaded?: StudentDiagnostics | null
 }) {
   const [diag, setDiag] = useState<StudentDiagnostics | null>(preloaded ?? null)
-  const [titles, setTitles] = useState<TopicTitles>(new Map())
   const [error, setError] = useState<string | null>(null)
   const [attempt, setAttempt] = useState(0)
-  const [showReport, setShowReport] = useState(false)
+  // названия тем — из ленивых данных грамматики (только нужные языки)
+  const titles = useTopicTitles(diag)
 
   useEffect(() => {
     let alive = true
@@ -114,22 +108,8 @@ export function DiagnosticsSection({
     // Карта уже пришла сверху — второй запрос за теми же данными не делаем.
     const source = preloaded ? Promise.resolve(preloaded) : getStudentDiagnostics(studentId)
     source
-      .then(async (d) => {
-        if (!alive) return
-        setDiag(d)
-        // названия тем — из ленивых данных грамматики (только нужные языки)
-        const langs = [...new Set(d.mistakes.map((m) => m.lang))]
-        const map: TopicTitles = new Map()
-        for (const lang of langs) {
-          const mod =
-            lang === 'es'
-              ? await import('../../data/spanish/grammar')
-              : await import('../../data/english/grammar')
-          for (const t of mod.grammarTopics as GrammarTopic[]) {
-            map.set(`${lang}:${t.id}`, { title: t.title, level: t.level })
-          }
-        }
-        if (alive) setTitles(map)
+      .then((d) => {
+        if (alive) setDiag(d)
       })
       .catch((e) => {
         if (alive) setError(e instanceof Error ? e.message : 'Не удалось загрузить диагностику')
@@ -170,22 +150,6 @@ export function DiagnosticsSection({
           </p>
         )}
       </div>
-      <Button
-        variant="secondary"
-        className="self-start px-3 py-2 text-sm"
-        onClick={() => setShowReport(true)}
-      >
-        <IconPrinter size={16} /> Отчёт для родителей
-      </Button>
-      {showReport && (
-        <ReportSheet
-          studentId={studentId}
-          diag={diag}
-          studentName={studentName}
-          topicTitle={(lng, id) => titles.get(`${lng}:${id}`)?.title ?? `тема №${id}`}
-          onClose={() => setShowReport(false)}
-        />
-      )}
 
       {/* активность */}
       <div className="grid grid-cols-3 gap-2">

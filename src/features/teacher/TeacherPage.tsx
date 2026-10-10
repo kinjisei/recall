@@ -3,7 +3,9 @@ import { Navigate, useLocation } from 'react-router-dom'
 import { useCopy } from '../../shared/lib/useCopy'
 import { Card } from '../../shared/ui/Card'
 import { Button } from '../../shared/ui/Button'
-import { HowItWorks } from '../../shared/ui/HowItWorks'
+import { HintButton, HintPanel, useHint } from '../../shared/ui/HowItWorks'
+import { IconPlus, IconRefresh } from '../../shared/ui/icons'
+import { useOnReturn } from '../../shared/lib/useOnReturn'
 import { HOW_IT_WORKS } from '../../data/howItWorks'
 import {
   getOrCreateInviteCode,
@@ -12,7 +14,8 @@ import {
   getMyStudents,
   type StudentInfo,
 } from '../../lib/teacher'
-import { loadStudentCards, type StudentCard } from '../../domains/students'
+import { loadStudentCards, spacedCode, type StudentCard } from '../../domains/students'
+import { GeneralInvite } from '../students'
 import { StudentsTab } from './StudentsTab'
 import { InnerScreenContext } from './innerScreen'
 import { getHomeworkMany, type Homework } from '../../lib/homework'
@@ -34,9 +37,13 @@ export function TeacherPage() {
 // код-приглашение, места тарифа. Кто сюда пускается — таблица маршрутов
 // (роль teacher, app/routes.ts): не-репетитору — приглашение, без связи —
 // «Повторить»; экран сам роль не проверяет.
+//
+// Шапка — одна строка «Ученики (?) [↻] [+ Ученик]» (Ф2.11б-2): пояснение
+// значком, раскрыто при первом заходе; список сам перечитывается, когда
+// учитель возвращается в приложение (useOnReturn), ↻ — когда хочется сейчас.
+// Общий код под списком — строкой, всё остальное о нём — в «+ Ученик».
 function StudentsScreen() {
   const [code, setCode] = useState<string | null>(null)
-  const { copied, copy } = useCopy()
   const [regenerating, setRegenerating] = useState(false)
   const [stopping, setStopping] = useState(false)
   const [students, setStudents] = useState<StudentInfo[]>([])
@@ -53,6 +60,10 @@ function StudentsScreen() {
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [inner, setInner] = useState(false)
+  const [adding, setAdding] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
+  // шапки (и пояснения) нет, пока на телефоне открыта карточка
+  const hint = useHint('teacher-students', !inner)
 
   // «Загрузка…» только при первом открытии: при обновлениях список остаётся
   // на экране, иначе раскрытые колоды учеников схлопываются при каждом действии.
@@ -81,10 +92,13 @@ function StudentsScreen() {
   useEffect(() => {
     void load()
   }, [load])
+  useOnReturn(() => void load())
 
-  // нет доступа к буферу — код виден на экране, скопируют руками
-  const copyCode = () => {
-    if (code) void copy('invite', code)
+  // ↻ крутится, пока идёт перечитывание: иначе нажатие выглядит как пустое
+  const refresh = async () => {
+    setRefreshing(true)
+    await load()
+    setRefreshing(false)
   }
 
   // Перевыпуск кода: старый сразу перестаёт работать, уже привязанные ученики
@@ -127,15 +141,26 @@ function StudentsScreen() {
       <div className="flex flex-col gap-4">
         {/* карточка на телефоне — экран со своим «‹ Ученики», шапка страницы над ней лишняя (t6-2) */}
         {!inner && (
-          <>
-            <header className="flex items-center justify-between">
+          <div>
+            <header className="flex items-center gap-1">
               <h1 className="text-2xl font-bold">Ученики</h1>
-              <Button variant="ghost" className="px-3 py-1 text-sm" onClick={load}>
-                Обновить
+              <HintButton open={hint.open} onToggle={hint.toggle} />
+              <span className="flex-1" />
+              <button
+                type="button"
+                onClick={() => void refresh()}
+                aria-label="Обновить"
+                title="Обновить"
+                className="flex size-11 flex-none items-center justify-center rounded-full text-fg-muted hover:text-fg-secondary"
+              >
+                <IconRefresh size={20} className={refreshing ? 'animate-spin' : ''} />
+              </button>
+              <Button className="min-h-11 px-4 py-2 text-sm" onClick={() => setAdding(true)} disabled={myPlan?.can_write === false}>
+                <IconPlus size={18} /> Ученик
               </Button>
             </header>
-            <HowItWorks>{HOW_IT_WORKS.teacher}</HowItWorks>
-          </>
+            <HintPanel open={hint.open}>{HOW_IT_WORKS.teacher}</HintPanel>
+          </div>
         )}
 
         {/* не загрузилось ни разу — только «Повторить»: пустой список сказал бы «учеников нет» */}
@@ -148,6 +173,9 @@ function StudentsScreen() {
             homeworks={homeworks}
             plan={myPlan}
             loading={loading}
+            adding={adding}
+            onAddClose={() => setAdding(false)}
+            generalInvite={<GeneralInvite code={code} regenerating={regenerating} onRegenerate={changeCode} />}
             onChanged={load}
             notice={
               loadError ? <LoadError message={loadError} onRetry={load} />
@@ -155,36 +183,9 @@ function StudentsScreen() {
             }
             extras={
               <>
-                <Card>
-                  <p className="text-sm text-fg-muted">
-                    Общий код — ученик вводит его у себя на Главной и появляется в списке.
-                    Пригласить того, кто уже есть в списке, — из его карточки.
-                  </p>
-                  <div className="mt-2 flex items-center gap-3">
-                    <span className="rounded-xl bg-tint/[0.08] px-4 py-2 font-mono text-2xl font-bold tracking-widest">
-                      {code ?? '……'}
-                    </span>
-                    <Button variant="secondary" className="px-3 py-2 text-sm" onClick={copyCode}>
-                      {/* подтверждение «клюёт» — иначе подмена текста на секунду
-                          проходит мимо глаза, и человек жмёт второй раз */}
-                      <span key={copied ? 'yes' : 'no'} className={copied ? 'animate-pop-in' : ''}>
-                        {copied ? 'Скопирован ✓' : 'Скопировать'}
-                      </span>
-                    </Button>
-                  </div>
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
-                    <Button
-                      variant="ghost"
-                      className="min-h-[44px] px-3 py-2 text-sm"
-                      loading={regenerating}
-                      onClick={changeCode}
-                    >
-                      Сменить код
-                    </Button>
-                    <span className="text-xs text-fg-muted">
-                      если код попал не тем — старый перестанет работать
-                    </span>
-                  </div>
+                {/* строка, а не блок: по высоте — как строка списка */}
+                <Card className="py-2">
+                  <CodeRow code={code} />
                   <Seats plan={myPlan} inApp={students.length} />
 
                   {/* Включить режим можно было одним нажатием, а выключить — никак:
@@ -211,6 +212,37 @@ function StudentsScreen() {
         )}
       </div>
     </InnerScreenContext.Provider>
+  )
+}
+
+/**
+ * Общий код строкой под списком: продиктовать или скопировать. Что это за код,
+ * сообщение с кнопками и «Сменить код» — в «+ Ученик → Пригласить по общему
+ * коду» (GeneralInvite): нужно реже, чем список, и занимало пол-экрана.
+ */
+function CodeRow({ code }: { code: string | null }) {
+  const { copied, copy } = useCopy()
+  return (
+    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-fg-muted" data-general-code={code ?? ''}>
+      <span>
+        Общий код:{' '}
+        <span className="font-mono text-base font-bold tracking-widest text-fg">{code ? spacedCode(code) : '……'}</span>
+      </span>
+      <span aria-hidden>·</span>
+      {/* нет доступа к буферу — код виден на экране, скопируют руками */}
+      <button
+        type="button"
+        disabled={!code}
+        onClick={() => code && void copy('invite', code)}
+        className="-mx-1 min-h-11 rounded-lg px-1 font-semibold text-accent-strong"
+      >
+        {/* подтверждение «клюёт» — иначе подмена текста на секунду проходит
+            мимо глаза, и человек жмёт второй раз */}
+        <span key={copied ? 'yes' : 'no'} className={copied ? 'inline-block animate-pop-in' : ''}>
+          {copied ? 'Скопирован ✓' : 'Скопировать'}
+        </span>
+      </button>
+    </div>
   )
 }
 

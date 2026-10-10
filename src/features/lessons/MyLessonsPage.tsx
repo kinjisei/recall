@@ -18,6 +18,7 @@ import {
 } from '../../domains/schedule'
 import { useAsyncData } from '../../shared/lib/useAsyncData'
 import { useNow } from '../../shared/lib/useNow'
+import { useOnReturn } from '../../shared/lib/useOnReturn'
 import { BackButton } from '../../shared/ui/BackButton'
 import { EmptyState } from '../../shared/ui/EmptyState'
 import { IconCalendar, IconCaretDown, IconTicket } from '../../shared/ui/icons'
@@ -56,6 +57,8 @@ export function MyLessonsPage() {
   const highlight = params.get('lesson')
   const now = useNow()
   const { data, error, loading, reload } = useAsyncData(loadMine, [], 'Не удалось загрузить уроки — похоже, пропала связь.')
+  // учитель перенёс урок, пока приложение было свёрнуто, — список узнает сам
+  useOnReturn(reload)
   // «Прошедшие» свёрнуты; урок из уведомления среди прошедших — раскрыты сами
   const [pastToggled, setPastToggled] = useState<boolean | null>(null)
 

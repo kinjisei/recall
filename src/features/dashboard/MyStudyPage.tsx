@@ -5,6 +5,9 @@
 // разделы ученика: Учёба, Практика, Диалог. Сами разделы те же, что у
 // ученика, — не дублируются. Решение владельца 05.10.2026: только сводка и
 // плитки, без плана дня и слова дня (они остаются на Главной ученика).
+// На телефоне плитки — столбиком (Ф2.11б-2): втроём в строку на 390 px
+// подписи переносились по слову и плитки выходили разной высоты; компьютер —
+// тремя колонками (пустоты на нём — Ф2.19).
 // Кто сюда пускается — таблица маршрутов: не-учителя уводит на его Главную.
 // ============================================================================
 import { useNavigate } from 'react-router-dom'
@@ -19,7 +22,7 @@ import { useAsyncData } from '../../shared/lib/useAsyncData'
 import { AppLink } from '../../shared/ui/AppLink'
 import { Button } from '../../shared/ui/Button'
 import { LoadError } from '../../shared/ui/LoadError'
-import { IconArrowRight, IconDialog, IconFlame, IconPractice, IconStudy, type IconLike } from '../../shared/ui/icons'
+import { IconArrowRight, IconChevronRight, IconDialog, IconFlame, IconPractice, IconStudy, type IconLike } from '../../shared/ui/icons'
 import type { AppLang } from '../../types'
 
 const TILES: { to: string; title: string; desc: string; Icon: IconLike }[] = [
@@ -91,20 +94,21 @@ export function MyStudyPage() {
         <div aria-hidden className="h-52 animate-pulse rounded-3xl border border-accent-line bg-tint/[0.04]" />
       )}
 
-      <nav aria-label="Разделы учёбы" className="grid grid-cols-3 gap-2.5">
+      <nav aria-label="Разделы учёбы" className="grid grid-cols-1 gap-2.5 lg:grid-cols-3" data-learn-tiles>
         {TILES.map(({ to, title, desc, Icon }) => (
           <AppLink
             key={to}
             to={to}
-            className="lift flex min-h-33 flex-col justify-between gap-4 rounded-3xl bg-surface p-3.5 text-fg shadow-card ring-1 ring-tint/[0.06]"
+            className="lift flex items-center gap-3.5 rounded-3xl bg-surface p-3.5 text-fg shadow-card ring-1 ring-tint/[0.06] lg:min-h-33 lg:flex-col lg:items-start lg:justify-between lg:gap-4"
           >
-            <span className="flex size-11 items-center justify-center rounded-full bg-accent-soft text-accent-soft-fg">
+            <span className="flex size-11 flex-none items-center justify-center rounded-full bg-accent-soft text-accent-soft-fg">
               <Icon size={22} />
             </span>
-            <span className="flex flex-col gap-0.5">
+            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
               <span className="text-base font-semibold">{title}</span>
               <span className="text-xs leading-snug text-fg-muted">{desc}</span>
             </span>
+            <IconChevronRight size={18} aria-hidden className="flex-none text-fg-muted lg:hidden" />
           </AppLink>
         ))}
       </nav>

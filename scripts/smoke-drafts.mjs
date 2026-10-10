@@ -238,10 +238,8 @@ try {
   await go(te, `/teacher?student=${sId}`)
   check('сборка домашки: кнопка зовёт продолжить', await click(te, 'Продолжить сборку', 8000))
   await draftCase(te, 'отчёт родителям', {
-    open: async () => {
-      await go(te, `/teacher?student=${sId}&sec=diag`)
-      await click(te, 'Отчёт для родителей')
-    },
+    // отчёт — своя плитка карточки (Ф2.11б-2): ?sec=report открывает лист сразу
+    open: () => go(te, `/teacher?student=${sId}&sec=report`),
     field: 'textarea[placeholder^="Пара живых фраз"]',
     value: 'Стала увереннее говорить',
   })

@@ -10,8 +10,10 @@
  *   • «вне мест тарифа» — только ученику в приложении, которому место
  *     полагается; меню карточки по статусу;
  *   • подписи мест и приглашения: «будет 4 из 5», мест нет, пробный не займёт;
- *   • ссылка-приглашение несёт код и разбирается обратно (мусор — нет), текст —
- *     без ссылки (её добавляет «поделиться»).
+ *   • ссылка-приглашение несёт код и разбирается обратно (мусор — нет);
+ *   • приглашение от учителя (журнал п.71, 6): имя в начале, домашка и
+ *     практика, язык — тот, что преподаёт, без «бесплатно»; у общего кода — то
+ *     же без имени; для Telegram — без ссылки (её ставит сам Telegram).
  * Чистый: без сети и базы.
  * Запуск: node scripts/test-student-cards.mjs
  */
@@ -23,13 +25,13 @@ import {
   CARD_STATUSES,
   cardActions,
   cardInviteLink,
-  cardInviteMessage,
-  cardInviteText,
   cardTakesSeat,
   contactLinks,
   firstName,
   initials,
+  inviteMessage,
   inviteSeatHint,
+  inviteTelegramText,
   matchesFilter,
   matchesQuery,
   outsideSeats,
@@ -114,9 +116,19 @@ check('каждый пункт меню ведёт в существующий �
 // ── приглашение ─────────────────────────────────────────────────────────────────────
 const link = cardInviteLink('https://recall-pgkz.vercel.app/', 'K7M2PX')
 check('ссылка несёт код', link, 'https://recall-pgkz.vercel.app/login?join=K7M2PX')
-check('текст — по имени и с кодом, без ссылки', [cardInviteText('Тимур Ким', 'K7M2PX').startsWith('Тимур, '), cardInviteText('Тимур Ким', 'K7M2PX').includes('K7M2PX'), cardInviteText('Тимур Ким', 'K7M2PX').includes('http')], [true, true, false])
-check('текст называет расписание (Ф2.7, решение владельца 04.10.2026)', /расписание уроков/.test(cardInviteText('Тимур Ким', 'K7M2PX')), true)
-check('сообщение целиком — текст и ссылка', cardInviteMessage('Тимур Ким', 'K7M2PX', link).endsWith(` ${link}`), true)
+const msgEn = inviteMessage('Тимур Ким', 'K7M2PX', link, 'en')
+check(
+  'приглашение — как в журнале п.71: имя, домашка и практика, ссылка и код',
+  msgEn,
+  `Тимур, домашку теперь буду давать в Recall: задания с проверкой сразу, слова на повторение, разговор с AI на английском.
+Вот ссылка: ${link}
+Вот код: K7M2PX`,
+)
+check('язык разговора — тот, что преподаёт учитель', /разговор с AI на испанском\./.test(inviteMessage('Тимур Ким', 'K7M2PX', link, 'es')), true)
+check('без «бесплатно»', /бесплатн/i.test(msgEn), false)
+check('общий код — то же без имени', inviteMessage(null, 'U5J34H', link, 'en').startsWith('Домашку теперь буду давать в Recall: '), true)
+const tg = inviteTelegramText('Тимур Ким', 'K7M2PX', 'en')
+check('Telegram: та же форма, ссылку добавляет он сам', [tg.startsWith('Тимур, домашку'), tg.endsWith('Вот код: K7M2PX'), tg.includes('http')], [true, true, false])
 check('код для диктовки', spacedCode('K7M2PX'), 'K7M 2PX')
 check('код из ссылки: туда и обратно', parseJoinCode(new URL(link).searchParams.get('join')), 'K7M2PX')
 check('код из ссылки: регистр и пробелы', parseJoinCode('  k7m2px '), 'K7M2PX')

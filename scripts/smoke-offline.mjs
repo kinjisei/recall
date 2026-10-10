@@ -163,10 +163,10 @@ try {
   // ученика. Раньше блок домашки писал «Домашки нет» с кнопкой «Собрать» —
   // и учитель собрал бы новую поверх существующей.
   const card = `/teacher?student=${ids[0]}`
-  const hwShown = () => /Домашки нет|Домашка на неделю|Не удалось прочитать домашку/.test(document.body.innerText)
+  const hwShown = () => /Пока не задана|Домашка на неделю|Не удалось прочитать домашку/.test(document.body.innerText)
   await spa(teacher.page, card)
   const cardOn = await teacher.page.waitForFunction(hwShown, { polling: 250, timeout: 20000 }).then(() => true, () => false)
-  check('карточка ученика онлайн: блок домашки на месте (контроль)', cardOn && /Домашки нет/.test((await probe(teacher.page)).text))
+  check('карточка ученика онлайн: блок домашки на месте (контроль)', cardOn && /Пока не задана/.test((await probe(teacher.page)).text))
   await spa(teacher.page, '/teacher')
   await sleep(1000)
   teacher.net.blocked = true
@@ -175,8 +175,8 @@ try {
   await sleep(1500)
   const cardOff = await probe(teacher.page)
   check(
-    'карточка без связи: домашка — «Повторить», а не «Домашки нет» с «Собрать»',
-    /Не удалось прочитать домашку/.test(cardOff.text) && cardOff.retry && !/Домашки нет/.test(cardOff.text),
+    'карточка без связи: домашка — «Повторить», а не «Пока не задана» с «Собрать»',
+    /Не удалось прочитать домашку/.test(cardOff.text) && cardOff.retry && !/Пока не задана/.test(cardOff.text),
     cardOff.text.replace(/s+/g, ' ').slice(0, 160),
   )
   const tOff = await visit(teacher.page, '/teacher', true)

@@ -1,4 +1,5 @@
-// Снимки экранов для владельца — общий порядок для смоуков.
+// Снимки экранов для владельца — общий порядок для смоуков: сперва данные
+// (waitForData), потом анимации.
 //
 // Экраны появляются анимацией (fade-up с задержкой до ~0,8 с). Снимок,
 // сделанный раньше, показывает полупрозрачный текст — и владелец видит
@@ -25,8 +26,22 @@ export async function settleAnimations(page) {
   })
 }
 
-/** page.screenshot(options), но экран — в конечном виде, без недопроявленных надписей. */
+/**
+ * Дождаться данных: на экране не осталось заглушек загрузки (серые полосы
+ * animate-pulse у блоков, не у значков-подсказок). Проверка смоука может
+ * дождаться одного элемента, а соседний блок ещё грузится — и снимок ловил
+ * заглушку вместо приглашения и «Ближайших» (приёмка Ф2.11, снимок 07 на
+ * 1280). Не дождались за `ms` — снимаем как есть: сбой тоже надо видеть.
+ */
+export async function waitForData(page, ms = 10_000) {
+  await page
+    .waitForFunction(() => !document.querySelector('main :is(div, span).animate-pulse'), { polling: 250, timeout: ms })
+    .catch(() => {})
+}
+
+/** page.screenshot(options), но экран — в конечном виде: данные пришли, надписи проявились. */
 export async function settledScreenshot(page, options) {
+  await waitForData(page)
   const style = await page.addStyleTag({ content: NO_MOTION })
   try {
     await settleAnimations(page)

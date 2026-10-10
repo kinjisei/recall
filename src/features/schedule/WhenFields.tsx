@@ -113,10 +113,14 @@ export function DurationField({ minutes, trial, onMinutes }: { minutes: number; 
           минут · {durationLabel(Math.min(Math.max(minutes, MINUTES_MIN), MINUTES_MAX))}
         </label>
       )}
-      <p className="flex items-center gap-1.5 text-note text-fg-muted">
-        <IconInfo size={15} aria-hidden className="flex-none" />
-        {trial ? 'Пробный урок не списывается' : 'Списывается 1 урок при любой длительности'}
-      </p>
+      {/* у обычного урока подписи нет: «списывается 1 урок» — то, что учитель
+          и так знает (приёмка Ф2.11, журнал п.71) */}
+      {trial && (
+        <p className="flex items-center gap-1.5 text-note text-fg-muted">
+          <IconInfo size={15} aria-hidden className="flex-none" />
+          Пробный урок не списывается
+        </p>
+      )}
     </div>
   )
 }

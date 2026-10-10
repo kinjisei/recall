@@ -55,7 +55,7 @@ export function InviteShare({ code }: { code: string }) {
         {failed && <p className="mt-2 text-note text-fg-muted">Не получилось скопировать — выдели ссылку и скопируй вручную.</p>}
         {copied === 'message' && <p className="mt-2 text-note text-fg-muted">Сообщение скопировано — вставь его, куда удобно.</p>}
 
-        <div className={`mt-3 grid gap-2 ${canShareNative ? 'grid-cols-3' : 'grid-cols-2'}`}>
+        <div className={`@container mt-3 grid gap-2 ${canShareNative ? 'grid-cols-3' : 'grid-cols-2'}`}>
           <ShareLink
             channel="whatsapp"
             href={whatsappLink(message)}

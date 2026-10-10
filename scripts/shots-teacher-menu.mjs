@@ -1,9 +1,9 @@
 /**
  * Снимки меню учителя для приёмки владельцем (PLAN.md Ф2.10, макет t1):
  * расписание с меню и счётчиком, «Задания» (хаб со сданными работами и
- * раздел материалов), «Ученики», «Моя учёба» — 390 в тёмной и светлой теме и
- * 1280 в тёмной. Ученик сдаёт письмо и задание — данные кладутся в тестовую
- * базу напрямую, AI не вызывается.
+ * раздел материалов), «Ученики» (первый заход и обычный), «Моя учёба» — 390
+ * в тёмной и светлой теме и 1280 в тёмной. Ученик сдаёт письмо и задание —
+ * данные кладутся в тестовую базу напрямую, AI не вызывается.
  *
  * Запуск: npm run dev:test, затем node scripts/shots-teacher-menu.mjs [папка]
  * (по умолчанию shots-teacher-menu/ в корне — она в .gitignore). Аккаунты удаляются сами.
@@ -87,7 +87,9 @@ try {
     await page.type('#f-password', PASS)
     await page.click('button[type="submit"]')
     await page.waitForFunction(() => location.pathname === '/schedule', { timeout: 30000, polling: 250 })
-    for (const [name, path] of [['1-schedule', '/schedule'], ['2-tasks', '/tasks'], ['3-materials', '/tasks?tab=materials'], ['4-students', '/teacher'], ['5-learn', '/learn']]) {
+    // «Ученики» дважды: первый заход — с раскрытым «Как это работает?»
+    // (Ф2.11б-2), второй — как дальше всегда, пояснение за значком (?)
+    for (const [name, path] of [['1-schedule', '/schedule'], ['2-tasks', '/tasks'], ['3-materials', '/tasks?tab=materials'], ['4b-students-first', '/teacher'], ['4-students', '/teacher'], ['5-learn', '/learn']]) {
       await page.goto(`${APP_URL}${path}`, { waitUntil: 'networkidle2' })
       await sleep(2500)
       const file = `${DIR}/${name}-${width}-${theme}.png`

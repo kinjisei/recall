@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 import { whenLabel } from '../../domains/notifications'
 import { getMyPlan, type MyPlan } from '../../lib/billing'
 import { useAsyncData } from '../../shared/lib/useAsyncData'
+import { useOnReturn } from '../../shared/lib/useOnReturn'
 import { plural } from '../../shared/lib/plural'
 import { Button } from '../../shared/ui/Button'
 import { Card } from '../../shared/ui/Card'
@@ -38,6 +39,8 @@ function Tile({ Icon }: { Icon: IconLike }) {
 
 function Review({ onReview }: { onReview: (id: string) => void }) {
   const { data, error, loading, reload } = useAsyncData(loadWaitingWorks, [], 'Не удалось загрузить сданные работы')
+  // ученик сдал работу, пока приложение было свёрнуто, — список узнает сам
+  useOnReturn(reload)
   const list = data ?? []
   const n = list.length
   const rest = n - SHOWN
@@ -60,7 +63,7 @@ function Review({ onReview }: { onReview: (id: string) => void }) {
         <div className="px-4 pb-4">
           <LoadError message={error} onRetry={reload} />
         </div>
-      ) : loading ? (
+      ) : loading && !data ? (
         <div className="px-4 pb-4">
           <RowsSkeleton count={2} height={56} />
         </div>

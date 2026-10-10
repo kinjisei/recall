@@ -4,17 +4,27 @@
  * привязки, AI не трогает.
  *
  *   1. список: ученик в приложении со строкой «кем заняться», тихая строка
- *      «В приложении 1 из 5 мест тарифа»;
- *   2. «+ Ученик» → шторка → карточка без приложения открылась сама:
- *      «без приложения», приглашение с кодом, WhatsApp — на номер ученика;
+ *      «В приложении 1 из 5 мест тарифа»; шапка одной строкой «Ученики (?)
+ *      ↻ + Ученик», фильтры — одной строкой, общий код — строкой (Ф2.11б-2);
+ *   2. «+ Ученик» → «Пригласить по общему коду» — сообщение без имени и тот
+ *      же код; → шторка → карточка без приложения открылась сама:
+ *      «без приложения», приглашение с кодом, WhatsApp — на номер ученика,
+ *      текст — от учителя про домашку (журнал п.71), значки кнопок целиком;
  *   3. меню «⋯»: «В архив» → тост «Вернуть» → статус вернулся; «Изменить
  *      данные» → заметка видна в карточке;
  *   4. ученик открывает ссылку-приглашение → на Главной код уже в поле →
  *      «Привязать» → у учителя та же карточка «в приложении», мест 2 из 5,
- *      под шапкой — студия (домашка);
+ *      под шапкой — студия (домашка); шесть плиток по t6-2 — каждая открывает
+ *      экран раздела, «‹ Имя» — назад к плиткам; «Убрать из тарифа» → тост
+ *      «Вернуть»;
+ *   4а. учитель вернулся в приложение (вкладка снова видна после фона) —
+ *      список перечитался сам: карточка, заведённая в базе, пока приложение
+ *      было свёрнуто, видна без «Обновить»;
  *   4б. новичок по ссылке: «Вас пригласил преподаватель» → вход → онбординг
  *      → на последнем шаге код уже в поле → привязан к своей карточке;
- *   5. компьютер 1280: список и карточка рядом; ничего не выбрано — подсказка.
+ *   5. компьютер 1280: список и карточка рядом; ничего не выбрано — подсказка;
+ *      страница не прокручивается — карточка своей прокруткой, раздел
+ *      открывается с начала панели.
  *
  * Запуск: npm run dev:test, затем node scripts/smoke-student-cards.mjs
  *         [--shots <папка>] — сохранить скриншоты 390 и 1280.
@@ -48,6 +58,11 @@ const results = []
 const check = (name, ok, extra = '') => {
   results.push(ok)
   console.log(`${ok ? '✓' : '✗'} ${name}${ok || !extra ? '' : ' — ' + extra}`)
+}
+
+const must = (r, what) => {
+  if (r.error) throw new Error(`${what}: ${r.error.message}`)
+  return r.data
 }
 
 async function makeUser(email, name) {
@@ -94,6 +109,14 @@ async function click(page, label, timeout = 15000) {
   await sleep(600)
   return true
 }
+/** Нажать элемент как палец: сперва в середину экрана — у края его закрывает плавающее меню. */
+async function tap(page, sel) {
+  await page.waitForSelector(sel, { visible: true, timeout: 15000 })
+  await page.$eval(sel, (el) => el.scrollIntoView({ block: 'center' }))
+  await sleep(250)
+  await page.click(sel)
+  await sleep(400)
+}
 async function typeInto(page, sel, value) {
   await page.focus(sel)
   await page.keyboard.down('Control')
@@ -135,12 +158,30 @@ try {
   let txt = await text(te)
   check('строка отвечает «кем заняться»: домашка и регулярность', /Домашка не выдана/.test(txt) && /занимался/.test(txt))
   check('тихая строка мест: 1 из 5', /В приложении 1 из 5 мест тарифа/.test(txt), (txt.match(/В приложении[^\n]*/) || [''])[0])
+  const head = await te.evaluate(() => {
+    const h = document.querySelector('main header')
+    const els = [h?.querySelector('h1'), h?.querySelector('[aria-label="Как это работает?"]'), h?.querySelector('[aria-label="Обновить"]'), [...(h?.querySelectorAll('button') ?? [])].find((x) => x.textContent.includes('Ученик'))]
+    const tops = els.map((el) => (el ? Math.round(el.getBoundingClientRect().top + el.getBoundingClientRect().height / 2) : null))
+    return { tops, oneRow: tops.every((t) => t !== null && Math.abs(t - tops[0]) <= 6) }
+  })
+  check('шапка одной строкой: «Ученики (?) ↻ + Ученик»', head.oneRow, JSON.stringify(head.tops))
+  check('«Как это работает?» раскрыто при первом заходе', /Здесь все твои ученики/.test(txt))
+  const filterRows = await te.evaluate(() => new Set([...document.querySelectorAll('[aria-label="Статус"] [role="radio"]')].map((r) => r.offsetTop)).size)
+  check('фильтры — одной строкой (прокрутка вбок)', filterRows === 1, `строк: ${filterRows}`)
+  const generalCode = await te.$eval('[data-general-code]', (el) => el.getAttribute('data-general-code')).catch(() => null)
+  check('общий код — строкой под списком', /Общий код:/.test(txt) && /^[A-Z2-9]{6}$/.test(generalCode ?? '') && !/ученик вводит его у себя/.test(txt), generalCode)
   await shot(te, 'list-390')
 
   // ── 2. новый ученик без приложения ─────────────────────────────────────────────
   await click(te, 'Ученик')
   check('шторка «Новый ученик»', await waitText(te, /Новый ученик/))
   await shot(te, 'new-sheet-390')
+  await click(te, 'Пригласить по общему коду')
+  const general = await te.$eval('[data-general-invite] [data-invite-message]', (el) => el.textContent).catch(() => '')
+  check('«+ Ученик → Пригласить по общему коду»: сообщение без имени, тот же код', general.startsWith('Домашку теперь буду давать в Recall') && general.endsWith(`Вот код: ${generalCode}`), general.slice(0, 80))
+  await shot(te, 'general-code-390')
+  await tap(te, '[aria-label="К новому ученику"]')
+  check('…«‹» — обратно к форме нового ученика', await waitSel(te, 'input[placeholder="Имя и фамилия"]'))
   await typeInto(te, 'input[placeholder="Имя и фамилия"]', 'Тимур Ким')
   await typeInto(te, 'input[placeholder^="+7 700"]', '+7 701 123 45 67')
   await click(te, 'Занимается')
@@ -152,6 +193,15 @@ try {
   const wa = await te.evaluate(() => [...document.querySelectorAll('[data-card-invite] a')].find((a) => a.textContent.includes('WhatsApp'))?.href ?? '')
   check('WhatsApp — сразу на номер ученика, с текстом и ссылкой', wa.startsWith('https://wa.me/77011234567?text=') && decodeURIComponent(wa).includes(`join=${code}`), wa.slice(0, 80))
   check('подпись мест: займёт место, будет 2 из 5', /будет 2 из 5/.test(await text(te)))
+  const inv = await te.$eval('[data-card-invite] [data-invite-message]', (el) => el.textContent)
+  check('приглашение — от учителя, про домашку, без «бесплатно» (журнал п.71)', inv.startsWith('Тимур, домашку теперь буду давать в Recall') && /разговор с AI на английском/.test(inv) && !/бесплатн/i.test(inv), inv.slice(0, 90))
+  const share = await te.evaluate(() =>
+    [...(document.querySelector('[data-card-invite] [data-share]')?.parentElement?.children ?? [])].map((el) => {
+      const svg = el.querySelector('svg')?.getBoundingClientRect()
+      return { icon: Math.round(svg?.width ?? 0), fits: el.scrollWidth <= el.clientWidth + 1 }
+    }),
+  )
+  check('кнопки «поделиться»: значок не сплющен, подпись внутри кнопки', share.length === 3 && share.every((x) => x.icon >= 16 && x.fits), JSON.stringify(share))
   await shot(te, 'invite-390')
 
   // ── 3. меню: архив и откат, правка ─────────────────────────────────────────────
@@ -188,8 +238,47 @@ try {
   check('у учителя та же карточка — «в приложении»', await waitText(te, /в приложении/) && /Тимур Ким/.test(await text(te)))
   check('заметка на месте после привязки', /IELTS, цель 7\.0/.test(await text(te)))
   check('под шапкой — студия ученика (домашка)', await waitText(te, /Собрать домашку|Домашка/))
+  check('«Ещё: …» больше нет — плитки разделов', (await waitSel(te, '[data-section-tiles]')) && !/Ещё:/.test(await text(te)))
+  const tileIds = await te.evaluate(() => [...document.querySelectorAll('[data-tile]')].map((x) => x.dataset.tile).join(','))
+  check('шесть плиток по t6-2', tileIds === 'diag,program,words,placement,quests,report', tileIds)
+  await shot(te, 'card-app-390')
+  for (const id of ['diag', 'program', 'words', 'placement', 'quests', 'report']) {
+    await tap(te, `[data-tile="${id}"]`)
+    const opened = await waitSel(te, `[data-studio-section="${id}"]`)
+    const inUrl = (await te.evaluate(() => location.search)).includes(`sec=${id}`)
+    if (id === 'report') {
+      const sheet = await waitText(te, /Печать \/ Сохранить в PDF/)
+      await click(te, 'Закрыть')
+      check('плитка «Отчёт родителям» → лист отчёта, «Закрыть» — к карточке', opened && inUrl && sheet && (await waitSel(te, '[data-section-tiles]')))
+      continue
+    }
+    if (id === 'program') check('…в «Программе» — и «План дня»', await waitText(te, /План дня/))
+    await tap(te, '[data-section-back]')
+    check(`плитка «${id}» → экран раздела, «‹ Тимур Ким» — к плиткам`, opened && inUrl && (await waitSel(te, '[data-section-tiles]')))
+  }
+  check('строка про тариф под «Убрать из тарифа»', /останется в списке, но AI — по бесплатным лимитам/.test(await text(te)))
+  await click(te, 'Убрать из тарифа')
+  check('«Убрать из тарифа» → тост «Вернуть»', await waitText(te, /Тимур Ким — вне тарифа/))
+  await click(te, 'Вернуть')
+  check('«Вернуть» — снова в тарифе', await waitText(te, /Убрать из тарифа/))
   await go(te, '/teacher')
   check('мест занято 2 из 5', await waitText(te, /В приложении 2 из 5 мест тарифа/))
+
+  // ── 4а. возврат в приложение: список перечитывается сам ────────────────────────
+  // Фон и полминуты — подменой: visibilityState и часы страницы (ждать 30 с ни к чему)
+  must(await admin.from('student_cards').insert({ teacher_id: tId, name: 'Карточка из фона', status: 'trial' }), 'карточка из фона')
+  await te.evaluate(async () => {
+    const real = Date.now.bind(Date)
+    const setVis = (v) => {
+      Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => v })
+      document.dispatchEvent(new Event('visibilitychange'))
+    }
+    setVis('hidden')
+    Date.now = () => real() + 31_000
+    setVis('visible')
+    Date.now = real
+  })
+  check('вернулся в приложение — список перечитался сам', await waitText(te, /Карточка из фона/))
 
   // ── 4б. новый ученик по ссылке: вход → онбординг → код уже в поле ─────────────
   const code2 = Array.from({ length: 6 }, () => 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 31)]).join('')
@@ -233,6 +322,25 @@ try {
     name: document.querySelector('[data-card-name]')?.textContent ?? '',
   }))
   check('1280: список и карточка рядом', both.rows >= 2 && both.name === 'Тимур Ким', JSON.stringify(both))
+  await waitSel(te, '[data-section-tiles]')
+  const scroll = await te.evaluate(async () => {
+    const pane = document.querySelector('[data-pane="detail"]')
+    const list = document.querySelector('[data-pane="list"]')
+    if (!pane || !list) return null
+    const page = document.documentElement.scrollHeight - innerHeight
+    const longer = pane.scrollHeight - pane.clientHeight
+    pane.scrollTop = 300
+    await new Promise((r) => setTimeout(r, 150))
+    return { page, longer, pane: pane.scrollTop, list: list.scrollTop, win: scrollY }
+  })
+  check('1280: страница стоит, карточка прокручивается сама (d3)', !!scroll && scroll.page <= 1 && scroll.longer > 0 && scroll.pane > 0 && scroll.list === 0 && scroll.win === 0, JSON.stringify(scroll))
+  await tap(te, '[data-tile="placement"]')
+  await waitSel(te, '[data-studio-section="placement"]')
+  const top = await te.evaluate(() => document.querySelector('[data-pane="detail"]')?.scrollTop)
+  check('1280: раздел открылся с начала панели', top === 0, String(top))
+  await shot(te, 'section-1280')
+  await tap(te, '[data-section-back]')
+  await waitSel(te, '[data-section-tiles]')
   await shot(te, 'card-1280')
 } catch (e) {
   check('смоук дошёл до конца', false, String(e?.stack ?? e).split('\n').slice(0, 3).join(' | '))

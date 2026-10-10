@@ -13,8 +13,16 @@
 //
 // Состояние НЕ запоминаем: это не баннер «принять», а всегда доступная
 // подсказка. Свернул — свернул до следующего интереса, localStorage тут лишний.
+//
+// Вариант значком (?) — для экрана, где заголовок, значок и действия стоят
+// одной строкой («Ученики», PLAN.md Ф2.11б-2): строка «Как это работает?»
+// отдельно занимала место над списком. Значок — в строке заголовка
+// (HintButton), пояснение — под ней (HintPanel); раскрыто один раз, при
+// первом заходе на экран (useHint): тому, кто пришёл впервые, объяснение
+// нужно сразу, дальше оно ждёт за значком. Запоминаем только «уже видел».
 // ============================================================================
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
+import { readRaw, writeRaw } from '../lib/storage'
 import { IconHint, IconCaretDown } from './icons'
 import { Reveal } from './Reveal'
 
@@ -43,11 +51,67 @@ export function HowItWorks({
           className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
         />
       </button>
-      <Reveal open={open}>
-        <div className="mt-2 rounded-2xl bg-tint/[0.04] px-4 py-3 text-sm leading-relaxed text-fg-secondary">
-          {children}
-        </div>
-      </Reveal>
+      <HintPanel open={open}>{children}</HintPanel>
     </div>
+  )
+}
+
+/**
+ * Раскрыто ли пояснение экрана `screen`: при первом заходе — да, дальше — по
+ * нажатию. «Уже видел» запоминается, когда пояснение побыло на экране
+ * (`shown`) секунду: пришёл по ссылке сразу в карточку ученика, где шапки
+ * нет, — пояснение дождётся первого захода в сам список. Секунда — потому
+ * что экран узнаёт «шапки нет» уже после первой отрисовки.
+ */
+export function useHint(screen: string, shown = true): { open: boolean; toggle: () => void } {
+  const key = `recall.hint-seen.${screen}`
+  const [open, setOpen] = useState(() => readRaw(key) === null)
+  useEffect(() => {
+    if (!shown) return
+    const t = setTimeout(() => writeRaw(key, '1'), 1000)
+    return () => clearTimeout(t)
+  }, [key, shown])
+  return { open, toggle: () => setOpen((v) => !v) }
+}
+
+/** Значок (?) в строке заголовка: открывает и закрывает HintPanel. */
+export function HintButton({
+  open,
+  onToggle,
+  label = 'Как это работает?',
+}: {
+  open: boolean
+  onToggle: () => void
+  label?: string
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-expanded={open}
+      aria-label={label}
+      title={label}
+      className={`flex size-11 flex-none items-center justify-center rounded-full transition-colors ${
+        open ? 'text-accent-strong' : 'text-fg-muted hover:text-fg-secondary'
+      }`}
+    >
+      <span
+        aria-hidden
+        className="flex size-6 items-center justify-center rounded-full border-2 border-current text-xs font-bold"
+      >
+        ?
+      </span>
+    </button>
+  )
+}
+
+/** Само пояснение — плашкой под строкой, где стоит его кнопка. */
+export function HintPanel({ open, children }: { open: boolean; children: ReactNode }) {
+  return (
+    <Reveal open={open}>
+      <div className="mt-2 rounded-2xl bg-tint/[0.04] px-4 py-3 text-sm leading-relaxed text-fg-secondary">
+        {children}
+      </div>
+    </Reveal>
   )
 }

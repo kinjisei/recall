@@ -9,6 +9,7 @@
 // подписей; пару с card_takes_seat сверяет check-student-cards.mjs.
 // ============================================================================
 import { waPhone } from '../../shared/lib/share.ts'
+import type { AppLang } from '../../types/index.ts'
 
 export type CardStatus = 'trial' | 'active' | 'paused' | 'archived'
 
@@ -188,7 +189,7 @@ export function inviteSeatHint(card: Pick<StudentCard, 'status'>, s: SeatsState 
   if (!s || typeof s.seats !== 'number' || s.seats <= 0) return null
   const used = s.seats_used ?? 0
   if (used >= s.seats) {
-    return `Мест в тарифе нет (${used} из ${s.seats}) — код не сработает, пока не освободишь место или не расширишь тариф.`
+    return `Мест в тарифе нет (${used} из ${s.seats}) — код не сработает, пока не уберёшь кого-то из тарифа или не расширишь его.`
   }
   return `Займёт место в тарифе: будет ${used + 1} из ${s.seats}.`
 }
@@ -214,19 +215,28 @@ export function spacedCode(code: string): string {
   return code.length === 6 ? `${code.slice(0, 3)} ${code.slice(3)}` : code
 }
 
+/** Язык разговора с AI в приглашении — тот, что преподаёт учитель (EN/ES в шапке). */
+const LANG_IN: Record<AppLang, string> = { en: 'на английском', es: 'на испанском' }
+
 /**
- * Текст приглашения без ссылки (ссылку Telegram приклеивает сам).
- * Расписание названо с Ф2.7 (решение владельца 04.10.2026): свои уроки
- * ученик видит на экране «Мои уроки» (Ф2.9).
+ * Начало приглашения (журнал п.71, 6): от учителя, про домашку и практику,
+ * без «бесплатно». Имя в начале — защита от отправки личного кода не тому;
+ * у общего кода (name = null) — то же без имени.
  */
-export function cardInviteText(name: string, code: string): string {
-  return (
-    `${firstName(name)}, присоединяйся к моим занятиям в Recall — там расписание уроков, домашка и задания от меня. ` +
-    `Открой ссылку или введи код преподавателя ${code}:`
-  )
+function inviteIntro(name: string | null, lang: AppLang): string {
+  const rest = `омашку теперь буду давать в Recall: задания с проверкой сразу, слова на повторение, разговор с AI ${LANG_IN[lang]}.`
+  return name ? `${firstName(name)}, д${rest}` : `Д${rest}`
 }
 
 /** Сообщение целиком — так его увидит ученик (и так оно уходит в WhatsApp). */
-export function cardInviteMessage(name: string, code: string, link: string): string {
-  return `${cardInviteText(name, code)} ${link}`
+export function inviteMessage(name: string | null, code: string, link: string, lang: AppLang): string {
+  return `${inviteIntro(name, lang)}\nВот ссылка: ${link}\nВот код: ${code}`
+}
+
+/**
+ * То же для Telegram: ссылку он ставит в сообщение сам (t.me/share/url, без
+ * неё не отправляет) — в тексте остальное, иначе ссылка была бы дважды.
+ */
+export function inviteTelegramText(name: string | null, code: string, lang: AppLang): string {
+  return `${inviteIntro(name, lang)}\nВот код: ${code}`
 }

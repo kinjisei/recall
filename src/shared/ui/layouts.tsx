@@ -8,7 +8,9 @@
 //                   компьютере — панель (перевод слова), место под неё держим
 //                   всегда; на телефоне панель открывается шторкой снизу;
 //   ListDetail    — список слева, подробности справа (ученики, материалы); на
-//                   телефоне — или список, или подробности.
+//                   телефоне — или список, или подробности; с `fill` на
+//                   компьютере занимает окно до низа, и список с подробностями
+//                   прокручиваются каждый сам, а страница — нет (макет d3).
 //
 // Раскладкам с панелью мало колонки 640 px: они сами просят у каркаса ширину
 // страницы (shared/lib/screenWidth) — экран об этом не думает. Одна такая
@@ -17,7 +19,7 @@
 // Ширины — токены tokens.css (--container-*). Точка «компьютер» — та же, что у
 // меню слева (useIsDesktop): раскладка и каркас переключаются вместе.
 // ============================================================================
-import type { ReactNode } from 'react'
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { usePageWidth } from '../lib/screenWidth'
 import { useIsDesktop } from '../lib/useMediaQuery'
 import { Sheet } from './Sheet'
@@ -86,21 +88,38 @@ export function ListDetail({
   list,
   detail,
   empty,
+  fill = false,
 }: {
   list: ReactNode
   /** Подробности выбранного; null — ничего не выбрано. */
   detail: ReactNode | null
   /** Что показать справа, пока ничего не выбрано (только компьютер). */
   empty: ReactNode
+  /**
+   * Компьютер: до низа окна, у списка и подробностей своя прокрутка. Длинная
+   * карточка иначе уносила вверх и список (приёмка Ф2.11, макет d3).
+   */
+  fill?: boolean
 }) {
   const desktop = useIsDesktop()
   usePageWidth()
+  const fillRef = useRef<HTMLDivElement>(null)
+  const height = useFillHeight(fillRef, desktop && fill)
 
   if (!desktop) return <>{detail ?? list}</>
+  const pane = fill ? 'h-full min-h-0 overflow-y-auto overscroll-contain px-1 pb-4 -mx-1' : ''
   return (
-    <div className="grid grid-cols-[var(--container-list)_minmax(0,1fr)] items-start gap-6">
-      <div className="min-w-0">{list}</div>
-      <section className="min-w-0">
+    <div
+      ref={fillRef}
+      data-list-detail={fill ? 'fill' : undefined}
+      style={fill ? { height } : undefined}
+      className={`grid grid-cols-[var(--container-list)_minmax(0,1fr)] gap-6 ${fill ? '' : 'items-start'}`}
+    >
+      <div className={`min-w-0 ${pane}`} data-pane="list">
+        {list}
+      </div>
+      {/* data-pane — экран находит свою панель прокрутки (новый раздел карточки — наверх) */}
+      <section className={`min-w-0 ${pane}`} data-pane="detail">
         {detail ?? (
           <div className="rounded-2xl border border-dashed border-tint/[0.10] p-8 text-center text-sm text-fg-muted">
             {empty}
@@ -109,4 +128,28 @@ export function ListDetail({
       </section>
     </div>
   )
+}
+
+/**
+ * Высота «от этого места до низа окна» минус нижний отступ рамки (pb-10 у
+ * <main> на компьютере). Место сдвигается, когда над ним раскрывается
+ * пояснение или появляется плашка тарифа, — следим за размером <main>.
+ */
+function useFillHeight(ref: React.RefObject<HTMLElement | null>, on: boolean): string | undefined {
+  const [top, setTop] = useState<number | null>(null)
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!on || !el) return
+    const measure = () => setTop(el.getBoundingClientRect().top + window.scrollY)
+    measure()
+    const ro = new ResizeObserver(measure)
+    const main = el.closest('main')
+    if (main) ro.observe(main)
+    window.addEventListener('resize', measure)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', measure)
+    }
+  }, [ref, on])
+  return on && top !== null ? `calc(100dvh - ${Math.round(top)}px - 2.5rem)` : undefined
 }

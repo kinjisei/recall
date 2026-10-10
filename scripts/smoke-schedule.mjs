@@ -20,7 +20,8 @@
  *   8. компьютер 1280: по умолчанию неделя колонками, «Новый урок» — панелью.
  *
  * Запуск: npm run dev:test, затем node scripts/smoke-schedule.mjs
- *         [--shots <папка>] — скриншоты 390 и 1280.
+ *         [--shots <папка>] — скриншоты 390 и 1280; [--theme light] — в светлой
+ *         теме (как переключатель владельца, `recall.theme`).
  */
 import { createClient } from '@supabase/supabase-js'
 import { spawn } from 'node:child_process'
@@ -45,6 +46,8 @@ const TEACHER = 'schedule-smoke-teacher@recall.test'
 const STUDENT = 'schedule-smoke-student@recall.test'
 const shotsAt = process.argv.indexOf('--shots')
 const SHOTS = shotsAt > 0 ? process.argv[shotsAt + 1] : null
+const themeAt = process.argv.indexOf('--theme')
+const THEME = themeAt > 0 ? process.argv[themeAt + 1] : 'dark'
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 const MONTHS = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря']
 
@@ -76,7 +79,10 @@ async function openAs(b, email, width = 390) {
   page.on('pageerror', (e) => console.log('  ошибка страницы:', e.message))
   await page.setViewport({ width, height: width > 600 ? 860 : 844 })
   await page.goto(`${APP_URL}/login`, { waitUntil: 'networkidle2' })
-  await page.evaluate(() => localStorage.setItem('recall.onboarded', '1'))
+  await page.evaluate((th) => {
+    localStorage.setItem('recall.onboarded', '1')
+    localStorage.setItem('recall.theme', th)
+  }, THEME)
   await page.evaluate(() => [...document.querySelectorAll('button')].find((x) => x.textContent.trim() === 'Войти')?.click())
   await sleep(400)
   await page.type('#f-email', email)

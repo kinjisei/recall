@@ -10,7 +10,7 @@ import { useCopy } from '../../shared/lib/useCopy'
 import { telegramLink, whatsappLink } from '../../shared/lib/share'
 import { Button } from '../../shared/ui/Button'
 import { IconCheck, IconClose, IconCopy, IconSmartphoneOff } from '../../shared/ui/icons'
-import { SHARE_BUTTON, ShareLink } from '../../shared/ui/ShareLink'
+import { SHARE_BUTTON, SHARE_ROW, ShareLink } from '../../shared/ui/ShareLink'
 import { Sheet, SHEET_BODY } from '../../shared/ui/Sheet'
 
 export interface TellItem {
@@ -43,7 +43,7 @@ function Item({ item, url }: { item: TellItem; url: string }) {
       <p className="whitespace-pre-line break-words rounded-xl bg-input px-4 py-3 text-sm leading-relaxed text-fg" data-tell-message>
         {item.text}
       </p>
-      <div className="flex gap-2">
+      <div className={SHARE_ROW}>
         <ShareLink channel="whatsapp" href={whatsappLink(item.text, phone)} />
         <ShareLink channel="telegram" href={telegramLink(item.text, url)} />
         <button type="button" className={SHARE_BUTTON} onClick={() => void copy(item.cardId, item.text)}>

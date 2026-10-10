@@ -26,29 +26,14 @@ import { useAsyncData } from '../../shared/lib/useAsyncData'
 import { useUrlState } from '../../shared/lib/useUrlState'
 import { useIsDesktop } from '../../shared/lib/useMediaQuery'
 import { ListDetail } from '../../shared/ui/layouts'
-import { Card } from '../../shared/ui/Card'
 import { RowsSkeleton } from '../../shared/ui/Loading'
 import { UndoToast } from '../../shared/ui/UndoToast'
 import { byAttention, needAttention, studentSignal, type StudentSignal } from '../../lib/studentSignals'
 import type { StudentInfo } from '../../lib/teacher'
+import { AttentionSummary, RowDetail, type StudentRow } from './StudentRowBits'
 import type { Homework } from '../../lib/homework'
 import type { MyPlan } from '../../lib/billing'
 import { CardDetail } from './CardDetail'
-
-interface Row {
-  card: StudentCard
-  info: StudentInfo | null
-  signal: StudentSignal | null
-}
-
-/** Человеческий срок последнего занятия. */
-function lastSeen(s: StudentInfo): string {
-  const d = s.daysSinceActive
-  if (d === null) return 'ещё не начинал'
-  if (d === 0) return 'занимался сегодня'
-  if (d === 1) return 'был вчера'
-  return `не заходил ${d} ${d < 5 ? 'дня' : 'дней'}`
-}
 
 export function StudentsTab({
   cards,
@@ -56,6 +41,9 @@ export function StudentsTab({
   homeworks,
   plan,
   loading,
+  adding,
+  onAddClose,
+  generalInvite,
   notice,
   extras,
   onChanged,
@@ -66,6 +54,11 @@ export function StudentsTab({
   homeworks: Map<string, Homework | null>
   plan: MyPlan | null
   loading: boolean
+  /** «+ Ученик» в шапке экрана нажат — открыть шторку нового ученика. */
+  adding: boolean
+  onAddClose: () => void
+  /** Общий код — второй экран шторки «+ Ученик». */
+  generalInvite: ReactNode
   /** Сбой загрузки — над всем. */
   notice: ReactNode
   /** Энергия студии и общий код — под списком: в макетах t6 и d3 список идёт первым. */
@@ -76,7 +69,7 @@ export function StudentsTab({
   // Выбранная карточка — в адресе: свайп-назад в PWA возвращает к списку.
   // Старые ссылки вели по id аккаунта ученика — их тоже понимаем.
   const [openId, setOpenId] = useUrlState('student')
-  const [form, setForm] = useState<'new' | StudentCard | null>(null)
+  const [form, setForm] = useState<StudentCard | null>(null)
   const [busy, setBusy] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
   const [toast, setToast] = useState<{ id: number; text: string; undo?: () => void } | null>(null)
@@ -92,7 +85,7 @@ export function StudentsTab({
   const canWrite = plan?.can_write !== false
 
   const infoByUser = new Map(students.map((s) => [s.profile.id, s]))
-  const rows: Row[] = cards.map((card) => {
+  const rows: StudentRow[] = cards.map((card) => {
     const info = card.userId ? (infoByUser.get(card.userId) ?? null) : null
     return { card, info, signal: info ? studentSignal(info, homeworks.get(info.profile.id) ?? null) : null }
   })
@@ -139,60 +132,20 @@ export function StudentsTab({
     }
   }
 
-  const detailOf = (card: StudentCard): ReactNode => {
-    const r = rowById.get(card.id)
-    if (r?.info && r.signal) {
-      const s = r.signal
-      return (
-        <>
-          {/* Домашка — первое, что нужно перед уроком: «3 из 5 · до вторника». */}
-          <span className={`block truncate text-sm ${s.overdue ? 'text-warning-soft-fg' : 'text-fg-secondary'}`}>
-            {s.homeworkText ? `${s.homeworkText} · ${s.dueText}` : 'Домашка не выдана'}
-          </span>
-          {/* ⚠️ Регулярность, а не объём: «занимался 5 дней из 7» — привычка. */}
-          <span className="block truncate text-sm text-fg-muted">
-            занимался {s.regularity} ·{' '}
-            <span className={s.lost ? 'text-warning-soft-fg' : ''}>{lastSeen(r.info)}</span>
-          </span>
-        </>
-      )
-    }
-    return <span className="block truncate text-sm text-fg-muted">{card.contact || 'без приложения'}</span>
-  }
-
-  const attentionCard =
-    attention > 0 ? (
-      <Card tone="warning">
-        <p className="text-sm font-semibold text-warning-soft-fg">Нужно внимание: {attention}</p>
-        <p className="mt-1 text-sm text-fg-secondary">
-          {byAttention(watched, (r) => r.signal as StudentSignal)
-            .filter((r) => r.signal?.attention === 'overdue' || r.signal?.attention === 'lost')
-            .map((r) => `${r.card.name} — ${r.signal?.overdue ? 'домашка просрочена' : lastSeen(r.info as StudentInfo)}`)
-            .join(' · ')}
-        </p>
-        <p className="mt-2 text-xs text-fg-muted">
-          {watched.some((r) => r.signal?.lost)
-            ? 'Неделя без занятий — обычно момент, когда стоит написать самому.'
-            : 'Срок домашки прошёл, а сделано не всё.'}
-        </p>
-      </Card>
-    ) : null
-
   const list = loading ? (
     <RowsSkeleton count={3} />
   ) : (
     <div className="flex flex-col gap-4">
       <StudentsList
         cards={ordered.map((r) => r.card)}
-        detailOf={detailOf}
+        detailOf={(c) => <RowDetail row={rowById.get(c.id)} card={c} />}
         outsideOf={(c) => outsideSeats(c, seatsLimited)}
         trailingOf={(c) => (balanceShort(balances.get(c.id)) ? <BalanceCount balance={balances.get(c.id)} /> : null)}
-        attention={attentionCard}
+        attention={<AttentionSummary watched={watched} count={attention} />}
         seats={plan}
         selectedId={selected?.card.id ?? null}
         canWrite={canWrite}
         onOpen={(id) => setOpenId(id)}
-        onAdd={() => setForm('new')}
       />
       {extras}
     </div>
@@ -229,13 +182,18 @@ export function StudentsTab({
   return (
     <>
       {notice}
-      <ListDetail list={list} detail={detail} empty="Выбери ученика слева — карточка откроется здесь." />
-      {form && (
+      <ListDetail fill list={list} detail={detail} empty="Выбери ученика слева — карточка откроется здесь." />
+      {(form || adding) && (
         <CardForm
-          card={form === 'new' ? null : form}
-          onClose={() => setForm(null)}
+          card={form}
+          generalInvite={generalInvite}
+          onClose={() => {
+            setForm(null)
+            onAddClose()
+          }}
           onSaved={(id) => {
             setForm(null)
+            onAddClose()
             setOpenId(id)
             onChanged()
           }}

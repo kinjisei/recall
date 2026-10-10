@@ -8,9 +8,10 @@
  *      ученика (находка 1); ES выбран → в студию, режим включён, язык ES;
  *   3. пустое расписание → «Добавить первого ученика» → карточка → первый урок;
  *   4. карточка → приглашение с кодом; ученик привязывается по коду;
- *   5. карточка ученика: «Ещё» называет все разделы (находка 5); «Тест уровня»
- *      открывается одной строкой, без второй раскрывашки (находка 2);
- *      «Программа»: «К форме» не выбрасывает составленную AI программу;
+ *   5. карточка ученика: плитки разделов по t6-2 вместо «Ещё: …» (Ф2.11б-2);
+ *      «Тест уровня» — экраном раздела, главная кнопка на языке студии,
+ *      второй — «Другой язык»; «Программа»: «К форме» не выбрасывает
+ *      составленную AI программу;
  *   6. «Материалы» (черновик мастера прежнего вида, без генераций AI):
  *      «К плану» и «К форме» не теряют готовое, «вперёд» без новой генерации
  *      (находка 3); после «Сохранить» и «назад» — список, а не снова
@@ -190,6 +191,14 @@ async function formalOk(page, name) {
   check(`${name}: на «вы»`, found.length === 0, [...new Set(found)].join(', '))
 }
 
+/** Нажать элемент как палец: сперва в середину экрана — у края его закрывает плавающее меню. */
+async function tap(page, sel) {
+  await page.waitForSelector(sel, { visible: true, timeout: 15000 })
+  await page.$eval(sel, (el) => el.scrollIntoView({ block: 'center' }))
+  await sleep(250)
+  await page.click(sel)
+  await sleep(500)
+}
 async function putDraft(page, owner, scope, value) {
   await page.evaluate((k, v) => localStorage.setItem(k, JSON.stringify({ v, at: Date.now() })), `recall.draft.${owner}.${scope}`, value)
 }
@@ -288,7 +297,8 @@ try {
   // ── 4. приглашение ─────────────────────────────────────────────────────────────
   const [card] = await sql(`select id from public.student_cards where teacher_id = '${tId}'`)
   await go(te, `/teacher?student=${card.id}`)
-  check('карточка: приглашение с кодом', await te.waitForSelector('[data-invite-code]', { visible: true, timeout: 15000 }).then(() => true, () => false))
+  const invited = await te.waitForSelector('[data-invite-code]', { visible: true, timeout: 15000 }).then(() => true, () => false)
+  check('карточка: приглашение с кодом', invited, await te.evaluate(() => (document.querySelector('[data-card-invite]')?.innerText ?? `нет блока; ${location.search}; ${(document.querySelector('main')?.innerText ?? '').slice(0, 200)}`).replace(/\n/g, ' | ')))
   // код заводится при первом показе приглашения — берём тот, что видит учитель
   const code = await te.$eval('[data-invite-code]', (el) => el.getAttribute('data-invite-code'))
   if (WIDTH < 1024) {
@@ -303,22 +313,31 @@ try {
   const join = await sc.rpc('join_teacher', { code })
   check('ученик привязался по коду из приглашения', !join.error, join.error?.message)
 
-  // ── 5. карточка ученика: «Ещё», тест уровня, программа ─────────────────────────
+  // ── 5. карточка ученика: плитки, тест уровня, программа ───────────────────────
   // черновик — испанской программы: язык по умолчанию — выбранный в онбординге (ES)
   await putDraft(te, tId, `program:${sId}:es`, {
     level: 'B1', weeks: 4, goal: '', feedback: '',
     preview: { summary: 'Программа от AI: смоук', weeks: [{ title: 'Неделя 1', focus: 'Present Simple', items: [{ type: 'custom', title: 'Пункт смоука', note: 'пояснение' }] }] },
   })
   await go(te, `/teacher?student=${card.id}`)
-  const more = 'Ещё: тест уровня, диагностика, план дня, программа, слова, квесты'
-  check('«Ещё» называет все 6 разделов', await waitText(te, new RegExp(more)), (await text(te)).match(/Ещё:[^\n]*/)?.[0])
-  await click(te, 'Ещё:')
-  await click(te, 'Тест уровня')
-  check('тест уровня открылся сразу: «Назначить · Английский»', await waitText(te, /Назначить · Английский/, 8000))
-  const toggles = await te.evaluate(() => [...document.querySelectorAll('button')].filter((x) => x.textContent.trim().startsWith('Тест уровня')).length)
-  check('одна строка «Тест уровня», второй раскрывашки нет', toggles === 1, `строк: ${toggles}`)
+  const tiles = await te.waitForSelector('[data-section-tiles]', { visible: true, timeout: 15000 }).then(() => true, () => false)
+  check('карточка: плитки разделов по t6-2 вместо «Ещё: …»', tiles && !/Ещё:/.test(await text(te)))
+  await shot(te, '07b-card-app')
+  if (WIDTH >= 1024) {
+    // компьютер: карточка листается сама (d3) — второй снимок с её низом, плитками
+    await te.evaluate(() => {
+      const pane = document.querySelector('[data-pane="detail"]')
+      if (pane) pane.scrollTop = pane.scrollHeight
+    })
+    await shot(te, '07c-card-app-tiles')
+  }
+  await tap(te, '[data-tile="placement"]')
+  check('тест уровня: экран раздела, главная кнопка — язык студии (ES)', (await waitText(te, /Назначить · Испанский/, 8000)) && /Другой язык · Английский/.test(await text(te)))
+  const heads = await te.evaluate(() => [...document.querySelectorAll('[data-studio-section] h2')].filter((x) => x.textContent.includes('Тест уровня')).length)
+  check('один заголовок «Тест уровня», второй раскрывашки нет', heads === 1, `заголовков: ${heads}`)
   await shot(te, '08-placement')
-  await click(te, 'Программа обучения')
+  await tap(te, '[data-section-back]')
+  await tap(te, '[data-tile="program"]')
   check('программа: составленная AI видна', await waitText(te, /Программа от AI: смоук/))
   await click(te, 'К форме')
   check('«К форме» → форма и «Вернуться к программе»', await waitText(te, /Вернуться к программе/) && !/Программа от AI: смоук/.test(await text(te)))
