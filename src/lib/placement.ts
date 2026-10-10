@@ -51,6 +51,21 @@ export async function listPlacements(studentId: string): Promise<PlacementReques
 }
 
 /**
+ * Пройденные тесты нескольких учеников — уровень в «Для кого» материала
+ * (Ф2.11б-3; испанский уровень учителю виден только так). Сбой бросает.
+ */
+export async function listDonePlacements(studentIds: string[]): Promise<PlacementRequest[]> {
+  if (studentIds.length === 0) return []
+  const { data, error } = await supabase
+    .from('placement_requests')
+    .select('*')
+    .in('student_id', studentIds)
+    .eq('status', 'done')
+  if (error) throw dbError(error, 'загрузить тесты уровня')
+  return (data ?? []) as PlacementRequest[]
+}
+
+/**
  * Незакрытая просьба пройти тест — для строки в «Учёбе» у ученика.
  * null, если теста никто не назначал.
  */

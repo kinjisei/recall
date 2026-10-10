@@ -100,9 +100,18 @@ export async function getStudentDiagnostics(studentId: string): Promise<StudentD
   ])
 
   // --- слова -----------------------------------------------------------
+  // одно слово в двух колодах (своя и от учителя) — одно слово: дубль занимал
+  // место в шестёрке и в промптах AI (Ф2.11б-3); после сортировки остаётся худшее
+  const seen = new Set<string>()
   const struggling = words
     .filter((w) => (w.state?.lapses ?? 0) >= 2)
     .sort((a, b) => (b.state?.lapses ?? 0) - (a.state?.lapses ?? 0))
+    .filter((w) => {
+      const key = w.card.front.trim().toLowerCase()
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
     .slice(0, 6)
     .map((w) => ({
       front: w.card.front,

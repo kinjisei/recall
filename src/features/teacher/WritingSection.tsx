@@ -21,7 +21,8 @@ import {
 } from '../../lib/writing'
 import type { StudentInfo } from '../../lib/teacher'
 import type { ChartSpec, WritingSettings, WritingTask, WritingTaskAssignment } from '../../types'
-import { LEVELS, inputClass } from './materials/shared'
+import { LEVELS, chip as chipCls, inputClass } from './materials/shared'
+import { FORM_HINTS } from './formHints'
 import { ChartView } from '../../components/ChartView'
 import { WritingReviewScreen } from '../writing'
 import { AppLink } from '../../shared/ui/AppLink'
@@ -39,14 +40,6 @@ const CHART_KINDS: { id: ChartSpec['kind']; label: string }[] = [
 ]
 
 const BANDS = ['5.5', '6.0', '6.5', '7.0', '7.5', '8.0']
-
-function chipCls(active: boolean) {
-  return `rounded-lg px-3 py-1.5 text-sm font-semibold ${
-    active
-      ? 'bg-accent-soft text-accent-soft-fg'
-      : 'bg-tint/[0.07] text-fg-secondary'
-  }`
-}
 
 export function WritingSection({ students }: { students: StudentInfo[] }) {
   // есть черновик нового задания — сразу форма, иначе его не увидеть (Ф1.14)
@@ -326,7 +319,7 @@ function WritingForm({
               </p>
               <input
                 className={inputClass}
-                placeholder="journey, adventure, unforgettable"
+                placeholder={FORM_HINTS[lang].essayWords}
                 value={targetWords}
                 onChange={(e) => setTargetWords(e.target.value)}
               />
@@ -337,7 +330,7 @@ function WritingForm({
               </p>
               <input
                 className={inputClass}
-                placeholder="Past Simple, used to"
+                placeholder={FORM_HINTS[lang].essayGrammar}
                 value={targetGrammar}
                 onChange={(e) => setTargetGrammar(e.target.value)}
               />

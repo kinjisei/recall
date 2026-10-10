@@ -15,6 +15,7 @@ import { useAsyncData } from '../../shared/lib/useAsyncData'
 import { assignQuest, deleteQuest, listStudentQuests } from '../../lib/quests'
 import type { AppLang, GrammarQuest } from '../../types'
 import { RowsSkeleton } from '../../shared/ui/Loading'
+import { FORM_HINTS, questTopicHint } from './formHints'
 
 const LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1'] as const
 
@@ -26,20 +27,6 @@ const SCENARIOS = [
   'Заказ в кафе в чужой стране',
   'Выживание на необитаемом острове',
   'Путешествие во времени',
-]
-
-/** Подсказки тем — свободное поле, это только datalist. */
-const TOPIC_HINTS = [
-  'Present Simple',
-  'Past Simple',
-  'Present Perfect',
-  'Future (will / going to)',
-  'Conditionals (if)',
-  'Passive voice',
-  'Modal verbs',
-  'Pretérito Indefinido',
-  'Subjuntivo',
-  'Ser vs Estar',
 ]
 
 const inputCls =
@@ -212,11 +199,11 @@ export function QuestSection({ studentId }: { studentId: string }) {
             list="quest-topics"
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
-            placeholder="Past Simple, Conditionals…"
+            placeholder={questTopicHint(lang)}
             className={inputCls}
           />
           <datalist id="quest-topics">
-            {TOPIC_HINTS.map((t) => (
+            {FORM_HINTS[lang].questTopics.map((t) => (
               <option key={t} value={t} />
             ))}
           </datalist>

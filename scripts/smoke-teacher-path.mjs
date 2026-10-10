@@ -317,7 +317,8 @@ try {
   // черновик — испанской программы: язык по умолчанию — выбранный в онбординге (ES)
   await putDraft(te, tId, `program:${sId}:es`, {
     level: 'B1', weeks: 4, goal: '', feedback: '',
-    preview: { summary: 'Программа от AI: смоук', weeks: [{ title: 'Неделя 1', focus: 'Present Simple', items: [{ type: 'custom', title: 'Пункт смоука', note: 'пояснение' }] }] },
+    // заготовка AI — правдоподобная: она на снимке 09 (Ф2.11б-3)
+    preview: { summary: 'Четыре недели: прошедшее время и рассказ о поездках', weeks: [{ title: 'Неделя 1', focus: 'Pretérito Indefinido', items: [{ type: 'custom', title: 'Рассказ о выходных', note: '5–6 предложений в прошедшем времени' }] }] },
   })
   await go(te, `/teacher?student=${card.id}`)
   const tiles = await te.waitForSelector('[data-section-tiles]', { visible: true, timeout: 15000 }).then(() => true, () => false)
@@ -338,29 +339,48 @@ try {
   await shot(te, '08-placement')
   await tap(te, '[data-section-back]')
   await tap(te, '[data-tile="program"]')
-  check('программа: составленная AI видна', await waitText(te, /Программа от AI: смоук/))
+  check('программа: составленная AI видна', await waitText(te, /Четыре недели: прошедшее время/))
   await click(te, 'К форме')
-  check('«К форме» → форма и «Вернуться к программе»', await waitText(te, /Вернуться к программе/) && !/Программа от AI: смоук/.test(await text(te)))
+  check('«К форме» → форма и «Вернуться к программе»', await waitText(te, /Вернуться к программе/) && !/Четыре недели: прошедшее время/.test(await text(te)))
   await shot(te, '09-program-form')
   await click(te, 'Вернуться к программе')
-  check('…программа на месте, без новой генерации', await waitText(te, /Программа от AI: смоук/))
+  check('…программа на месте, без новой генерации', await waitText(te, /Четыре недели: прошедшее время/))
 
   // ── 6. материалы: «назад» без потерь ──────────────────────────────────────────
-  const req = { lang: 'es', level: 'A2', topic: 'Поход в горы', format: 'рассказ', lengthRange: '100-250', vocabulary: '', grammar: '', studentId: null }
-  const plan = { comments: 'План смоука: текст про горы', vocabulary: ['montaña'], grammar_focus: '', exercise_plan: [{ kind: 'comprehension', count: 1, note: 'вопрос' }] }
-  const content = { title: 'Texto de humo', body: 'Fuimos a la montaña el sábado.', exercises: [{ kind: 'comprehension', type: 'mcq', prompt: '¿Adónde fuimos?', options: ['a la montaña', 'al mar'], answer: 0 }] }
+  // Заготовки AI — правдоподобные: план и текст на снимках 10–11 (Ф2.11б-3).
+  // Заявка — для Тимура, в поле слов просто тема «природа»; черновик мастера —
+  // прежнего вида (один шаг, один studentId), заявки — нынешнего (studentIds).
+  const req = { lang: 'es', level: 'A2', topic: 'Выходные в горах', format: 'рассказ', lengthRange: '100-250', vocabulary: 'природа', grammar: '', studentId: sId }
+  const plan = {
+    comments: 'Рассказ о выходных в горах для A2. По теме «природа» подобрал 7 слов уровня A2; грамматику не задавали — упор на понимание и слова.',
+    vocabulary: ['montaña', 'sendero', 'río', 'lago', 'árbol', 'hoguera', 'estrella'],
+    grammar_focus: null,
+    exercise_plan: [{ kind: 'comprehension', type: 'mcq', count: 2, note: 'вопросы по смыслу текста' }, { kind: 'vocab', type: 'mcq', count: 1, note: 'слово по определению' }],
+  }
+  const content = {
+    title: 'Un fin de semana en la montaña',
+    body: 'El sábado fuimos a la montaña con mis amigos. Caminamos por un sendero entre árboles altos y vimos un río muy limpio. A mediodía comimos al lado del lago.\n\nPor la noche hicimos una hoguera y miramos las estrellas. Hacía frío, pero estábamos contentos. El domingo volvimos a casa cansados y felices.',
+    exercises: [
+      { kind: 'comprehension', type: 'mcq', prompt: '¿Con quién fue a la montaña?', options: ['Con sus amigos', 'Con su familia', 'Solo', 'Con su profesor'], answer: 0 },
+      { kind: 'comprehension', type: 'mcq', prompt: '¿Qué hicieron por la noche?', options: ['Fueron al cine', 'Hicieron una hoguera', 'Durmieron en un hotel', 'Volvieron a casa'], answer: 1 },
+      { kind: 'vocab', type: 'mcq', prompt: 'camino estrecho en el campo o en la montaña', options: ['sendero', 'río', 'hoguera', 'lago'], answer: 0 },
+    ],
+  }
   await putDraft(te, tId, 'material-flow', { name: 'preview', req, plan, content }) // вид до Ф2.11
+  await putDraft(te, tId, 'material-request', { source: 'generate', lang: 'es', level: 'A2', topic: req.topic, format: 'рассказ', lengthRange: '100-250', vocabulary: 'природа', grammar: '', body: '', studentIds: [sId] })
   await go(te, '/tasks?tab=materials')
-  check('черновик прежнего вида: предпросмотр', await waitText(te, /Texto de humo/))
+  check('черновик прежнего вида: предпросмотр', await waitText(te, /Un fin de semana en la montaña/))
   const backs = () => te.evaluate(() => [...document.querySelectorAll('button[aria-label]')].map((x) => x.getAttribute('aria-label')).filter((l) => ['Задания', 'К форме', 'К плану', 'К материалам'].includes(l)).join(','))
   check('предпросмотр: одна шапка «назад» — своя', (await backs()) === 'К плану', await backs())
   await click(te, 'К плану')
-  check('«К плану» → план и «Вернуться к готовому тексту»', await waitText(te, /План смоука[\s\S]*Вернуться к готовому тексту/))
+  check('«К плану» → план и «Вернуться к готовому тексту»', await waitText(te, /Рассказ о выходных в горах[\s\S]*Вернуться к готовому тексту/))
   check('…генерация — «Новый текст», а не «Генерировать ✓»', /Новый текст/.test(await text(te)) && !/Генерировать ✓/.test(await text(te)))
   check('…одна шапка «назад» — «К форме»', (await backs()) === 'К форме', await backs())
+  txt = await text(te)
+  check('план: для кого — Тимур, слова правятся (×)', /A2 · для: Тимур Ким/.test(txt) && !!(await te.$('[aria-label="Убрать «sendero»"]')), (txt.match(/A2 · [^\n]*/) ?? ['нет строки'])[0])
   await shot(te, '10-material-plan-back')
   await click(te, 'Вернуться к готовому тексту')
-  check('…тот же текст, без новой генерации', await waitText(te, /Texto de humo/))
+  check('…тот же текст, без новой генерации', await waitText(te, /Un fin de semana en la montaña/))
   await click(te, 'К плану')
   await click(te, 'К форме')
   check('«К форме» → форма и «Вернуться к плану»', await waitText(te, /Новый материал[\s\S]*Вернуться к плану/))
@@ -368,13 +388,20 @@ try {
   check('…у формы шапка раздела «Задания»', (await backs()) === 'Задания', await backs())
   const esChip = await te.evaluate(() => [...document.querySelectorAll('button')].find((x) => x.textContent.trim() === 'Испанский')?.className.includes('bg-accent-soft'))
   check('…язык материала по умолчанию — испанский, как в онбординге', esChip)
+  const form = await te.evaluate(() => ({
+    tim: [...document.querySelectorAll('[data-for-whom] button')].find((x) => x.textContent.includes('Тимур Ким'))?.className.includes('bg-accent-soft'),
+    words: [...document.querySelectorAll('input')].map((x) => x.value).includes('природа'),
+    hints: [...document.querySelectorAll('input')].map((x) => x.placeholder).join(' | '),
+  }))
+  check('…«Для кого» — Тимур, в поле слов — тема «природа»', form.tim && form.words, JSON.stringify(form).slice(0, 160))
+  check('…подсказки форм — испанские, а не «mountain» и «there is»', /montaña/.test(form.hints) && /hay \/ está/.test(form.hints) && !/mountain|there is/.test(form.hints), form.hints)
   await shot(te, '11-material-form-back')
   await click(te, 'Вернуться к плану')
   await click(te, 'Вернуться к готовому тексту')
-  check('вперёд дважды — тот же текст', await waitText(te, /Texto de humo/))
+  check('вперёд дважды — тот же текст', await waitText(te, /Un fin de semana en la montaña/))
   await click(te, 'Сохранить')
   const opened = await te.waitForFunction(() => location.search.includes('mat='), { polling: 250, timeout: 15000 }).then(() => true, () => false)
-  check('«Сохранить» → материал открыт', opened && (await waitText(te, /Texto de humo/)))
+  check('«Сохранить» → материал открыт', opened && (await waitText(te, /Un fin de semana en la montaña/)))
   await sleep(1500)
   await te.goBack({ waitUntil: 'networkidle2' })
   await sleep(800)
@@ -382,6 +409,8 @@ try {
   check('«назад» из материала — список, а не снова «Сохранить»', /Создать материал/.test(txt) && !/Предпросмотр/.test(txt), txt.slice(0, 160))
   const [{ n }] = await sql(`select count(*)::int as n from public.materials where teacher_id = '${tId}'`)
   check('материал один, дубля нет', n === 1, `материалов: ${n}`)
+  const [{ a }] = await sql(`select count(*)::int as a from public.material_assignments ma join public.materials m on m.id = ma.material_id where m.teacher_id = '${tId}' and ma.student_id = '${sId}'`)
+  check('«Сохранить» назначил материал Тимуру — «Для кого» это и есть назначение', a === 1, `назначений: ${a}`)
   await go(te, '/tasks')
   check('«Энергия студии» — во «Заданиях»', await waitText(te, /[Ээ]нерги/))
   await go(te, '/teacher')

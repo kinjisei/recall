@@ -17,7 +17,10 @@ import {
 import { MY_TEXT_LIMIT } from '../../../lib/myTexts'
 import type { AppLang, CEFRLevel, MaterialPlan } from '../../../types'
 import type { StudentInfo } from '../../../lib/teacher'
-import { LEVELS, inputClass } from './shared'
+import { LEVELS, chip, inputClass } from './shared'
+import { pickedIds } from './audience'
+import { ForWhom } from './ForWhom'
+import { FORM_HINTS } from '../formHints'
 import { useDraftForm } from '../../../shared/lib/useDraft'
 import { DraftRestored } from '../../../shared/ui/DraftRestored'
 
@@ -32,7 +35,7 @@ export function RequestForm({
   onPlanned,
   onOwnGenerated,
 }: {
-  /** Для кого можно собрать материал — чтобы AI увидел диагностику ученика. */
+  /** Для кого можно собрать материал: AI видит их диагностику, «Сохранить» назначает им. */
   students: StudentInfo[]
   /** Есть готовый план или упражнения впереди (вернулись «назад») — подпись кнопки к ним. */
   resumeLabel?: string
@@ -54,13 +57,15 @@ export function RequestForm({
     vocabulary: '',
     grammar: '',
     body: '',
-    // Кому адресован материал. null — «всем»: старое поведение, материал общий.
-    studentId: null as string | null,
+    // Для кого (Ф2.11б-3): несколько учеников, им же назначится. Пусто — материал общий.
+    studentIds: [] as string[],
   })
-  const { source, lang, level, topic, format, lengthRange, vocabulary, grammar, body, studentId } = form
+  const { source, lang, level, topic, format, lengthRange, vocabulary, grammar, body } = form
+  const picked = pickedIds(form) // черновик до Ф2.11б-3 хранил одного ученика
   const [setSource, setLang, setLevel, setTopic] = [field('source'), field('lang'), field('level'), field('topic')]
   const [setFormat, setLengthRange, setVocabulary] = [field('format'), field('lengthRange'), field('vocabulary')]
-  const [setGrammar, setBody, setStudentId] = [field('grammar'), field('body'), field('studentId')]
+  const [setGrammar, setBody, setStudentIds] = [field('grammar'), field('body'), field('studentIds')]
+  const hints = FORM_HINTS[lang]
   const cancel = () => {
     // «Отмена» выбрасывает и готовое впереди — то, что уже стоило генерации AI
     if (resumeLabel && !window.confirm('Выбросить материал? То, что уже составил AI, пропадёт.')) return
@@ -82,7 +87,7 @@ export function RequestForm({
       lengthRange,
       vocabulary,
       grammar,
-      studentId,
+      studentIds: picked,
     }
     try {
       const plan = await generateMaterialPlan(req)
@@ -101,7 +106,7 @@ export function RequestForm({
     setError(null)
     try {
       const content = await generateExercisesForText(text, lang, level, { vocabulary, grammar })
-      onOwnGenerated(ownTextRequest(lang, level, text, { vocabulary, grammar }), ownTextPlan(), content)
+      onOwnGenerated({ ...ownTextRequest(lang, level, text, { vocabulary, grammar }), studentIds: picked }, ownTextPlan(), content)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Ошибка генерации упражнений')
     } finally {
@@ -139,6 +144,21 @@ export function RequestForm({
         </div>
       </div>
 
+      {/* Для кого — до уровня: выбор учеников ставит уровень самого слабого. */}
+      {students.length > 0 && (
+        <ForWhom
+          students={students}
+          lang={lang}
+          level={level}
+          own={source === 'own'}
+          picked={picked}
+          onPick={(ids, weakest) => {
+            setStudentIds(ids)
+            if (weakest) setLevel(weakest)
+          }}
+        />
+      )}
+
       <div>
         <p className="mb-1 text-xs font-semibold text-fg-muted">Уровень ученика</p>
         <div className="flex flex-wrap gap-2">
@@ -147,34 +167,6 @@ export function RequestForm({
           ))}
         </div>
       </div>
-
-      {/* Для кого. Это не формальность: выбранному ученику AI получает его
-          диагностику — буксующие слова и темы, где он реально ошибается, — и
-          строит задание вокруг них. Без выбора материал общий, как раньше. */}
-      {students.length > 0 && (
-        <div>
-          <p className="mb-1 text-xs font-semibold text-fg-muted">Для кого</p>
-          <div className="flex flex-wrap gap-2">
-            <button className={chip(studentId === null)} onClick={() => setStudentId(null)}>
-              Общий материал
-            </button>
-            {students.map((st) => (
-              <button
-                key={st.profile.id}
-                className={chip(studentId === st.profile.id)}
-                onClick={() => setStudentId(st.profile.id)}
-              >
-                {st.profile.display_name || 'без имени'}
-              </button>
-            ))}
-          </div>
-          <p className="mt-1 text-xs text-fg-muted">
-            {studentId
-              ? 'AI учтёт слова и темы, где этот ученик ошибается.'
-              : 'Без ученика материал соберётся по общим правилам уровня.'}
-          </p>
-        </div>
-      )}
 
       {source === 'generate' ? (
         <>
@@ -228,11 +220,11 @@ export function RequestForm({
         <p className="mb-1 text-xs font-semibold text-fg-muted">
           {source === 'own'
             ? 'Слова для акцента в словаре (необязательно)'
-            : 'Слова через запятую или тема словаря (необязательно)'}
+            : 'Слова, тема словаря или просто тема (необязательно)'}
         </p>
         <input
           className={inputClass}
-          placeholder="mountain, tent, campfire — или просто «поход»"
+          placeholder={source === 'own' ? hints.words : `${hints.words} — или просто «природа»`}
           value={vocabulary}
           onChange={(e) => setVocabulary(e.target.value)}
         />
@@ -244,7 +236,7 @@ export function RequestForm({
         </p>
         <input
           className={inputClass}
-          placeholder="there is / there are"
+          placeholder={hints.grammar}
           value={grammar}
           onChange={(e) => setGrammar(e.target.value)}
         />
@@ -269,11 +261,6 @@ export function RequestForm({
     </Card>
   )
 }
-
-const chip = (active: boolean) =>
-  `rounded-lg px-3 py-1.5 text-sm font-semibold ${
-    active ? 'bg-accent-soft text-accent-soft-fg' : 'bg-tint/[0.07] text-fg-secondary'
-  }`
 
 /** Подпись главной кнопки; готовое впереди уже есть (again) — новое его заменит. */
 function submitLabel(own: boolean, busy: boolean, again: boolean): string {

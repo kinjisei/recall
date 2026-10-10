@@ -25,6 +25,7 @@ export function MaterialDetail({
   material,
   students,
   initialReview,
+  initialError,
   onDeleted,
   onBack,
   onWorksChanged,
@@ -33,6 +34,8 @@ export function MaterialDetail({
   students: StudentInfo[]
   /** Открыть сразу проверку конкретной работы (из блока «На проверку»). */
   initialReview?: { a: MaterialAssignment; name: string }
+  /** Только что сохранён, но кому-то не назначился — сказать у блока «Назначить». */
+  initialError?: string
   onDeleted: () => void
   onBack: () => void
   /** Число работ «на проверку» могло измениться (снятие сданной работы). */
@@ -44,7 +47,7 @@ export function MaterialDetail({
   const [loadError, setLoadError] = useState<string | null>(null)
   const [busyStudent, setBusyStudent] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(initialError ?? null)
   const [showBody, setShowBody] = useState(false)
   const [reviewing, setReviewing] = useState<{ a: MaterialAssignment; name: string } | null>(
     initialReview ?? null,

@@ -30,7 +30,9 @@
 сдал письмо или задание по материалу (нажал строку — сразу разбор этой
 работы), «Материалы» — без лишних слов: строка «Энергия студии» и кнопка
 «Собрать материал», по заголовку карточки — библиотека (AI собирает текст и
-упражнения, можно «под ученика» — по его ошибкам; правка владельца 05.10.2026), «Письменные задания» (IELTS и эссе) и
+упражнения, можно под нескольких учеников или группу из расписания — по их
+ошибкам, и «Сохранить» сразу назначает им; правка владельца 05.10.2026,
+Ф2.11б-3), «Письменные задания» (IELTS и эссе) и
 «Методичка». Число «ждут проверки» стоит на вкладке «Задания» в меню. До
 Ф2.10 эти разделы были вкладками студии — старые ссылки `/teacher?tab=…`
 ведут сюда. Отчёт родителям печатается белым листом при любой теме.
@@ -61,7 +63,8 @@
 | `HomeworkSection.tsx`, `HomeworkComposer.tsx` | домашка в карточке и её сборка (правила — `features/homework/CLAUDE.md`) |
 | `StudentWordsSection.tsx`, `WordPicker.tsx` | раздел «Слова» карточки: статус, выдача паков и своих наборов, удаление, перепроверка |
 | `DiagnosticsSection.tsx`, `ProgramSection.tsx`, `PlacementSection.tsx`, `QuestSection.tsx`, `DailyPlanSection.tsx` | экраны плиток: диагностика, программа (и под ней план дня), тест уровня (главная кнопка — язык студии), квесты |
-| `MaterialsSection.tsx`, `materials/*` | материалы: заявка, план, предпросмотр, по уровням; шаги мастера и «назад/вперёд» без потерь — `materials/wizard.ts` |
+| `MaterialsSection.tsx`, `materials/*` | материалы: заявка, план (слова правятся руками), предпросмотр, по уровням; шаги мастера и «назад/вперёд» без потерь — `materials/wizard.ts`; «Для кого» — `ForWhom.tsx`, его правила (уровень, группы, предупреждение) — `audience.ts` |
+| `formHints.ts` | подсказки-примеры форм студии (материал, письмо, квест) на языке формы |
 | `WritingSection.tsx`, `ReviewScreen.tsx` | письменные работы и проверка |
 | `ReportSheet.tsx`, `PrintSheet.tsx` | отчёт родителям и печать |
 | `AssignmentsPage.tsx` | экран ученика `/assignments` |
@@ -69,7 +72,7 @@
 | `src/lib/studentSignals.ts` | подписи и порядок строк списка учеников |
 | `src/lib/activityDays.ts` | дни с занятиями за окно (`activeDaysIn`) |
 | `src/lib/wordChecks.ts` | слова ученика со статусом (`getStudentWords`), перепроверка |
-| `src/lib/diagnosticsBrief.ts` | сводка диагностики для промптов — общая с программой обучения |
+| `src/lib/diagnosticsBrief.ts` | сводка диагностики для промптов — общая с программой обучения; сводка нескольких учеников для одного материала |
 | `src/lib/materialExercises.ts` | отсев несобираемых упражнений |
 
 ## Правила, которые нельзя нарушить
@@ -165,6 +168,10 @@
 - Формы студии (материал, программа, квесты, письменное задание, слова)
   берут EN/ES из шапки, а его задаёт онбординг репетитора («Какой язык
   преподаёшь?»). Зашитый `'en'` встречал учителя испанского английским.
+- **Подсказки-примеры — на языке формы** (`formHints.ts`, Ф2.11б-3): слова,
+  грамматика, темы квеста. Учителю испанского подсказывали «mountain, tent,
+  campfire» и «there is / there are». Новый пример с иностранными словами —
+  только в `formHints.ts`, по строке на язык.
 
 **Список сам свежий** (PLAN.md Ф2.11б-2)
 
@@ -222,15 +229,35 @@
   преподавателя» в «Моём словаре», учитель — «выдал я» / «ученик» перед
   удалением.
 
-**Задания под ученика**
+**Задания под учеников** (журнал п.71 (10), Ф2.11б-3)
 
-- В форме генерации материала есть выбор «Для кого». Выбран ученик — в
-  промпт уходит сводка его диагностики (`lib/diagnosticsBrief.ts`): буксующие
-  слова, слабые темы грамматики, баллы по категориям. Без выбора материал
-  общий.
+- **«Для кого» — это же назначение.** Отметить можно нескольких учеников
+  или группу из расписания (групповая серия: её ученики в приложении; кто
+  вне приложения — названы, им не назначится); никто не отмечен — «Общий
+  материал». «Сохранить» назначает материал отмеченным тем же RPC
+  `assign_material`, что кнопка «Назначить» (права и связь с учеником
+  проверяет база, безопасность п.1); не вышло у кого-то — материал сохранён,
+  карточка материала называет, кому назначить ещё раз. Второй экземпляр не
+  заводим.
+- **Уровень — самого слабого.** Отметки ставят в форме уровень самого
+  слабого из тех, чей уровень известен; учитель может поменять. Строка под
+  выбором: «Уровни разные: …», «Текст B1 будет трудным для: …», «Уровень не
+  знаем: …». Уровень в языке материала: английский — из профиля (его пишет
+  и любой тест), испанский — последний пройденный тест на испанском (больше
+  учителю его взять негде, `lib/level`).
+- В промпт уходит сводка диагностики (`lib/diagnosticsBrief.ts`): одного
+  ученика — как раньше, нескольких — общая: что буксует у нескольких сразу —
+  первым, «у 2 из 3»; потолок `GROUP_BRIEF_MAX` (8 учеников, 10 слов, 5 тем)
+  держит промпт, имён в нём нет. Без выбора материал общий.
+- **Поле слов принимает и тему** («природа»): в промпте плана — «если
+  указана тема — подбери 6-8 слов этой темы по уровню». Слова плана видны и
+  правятся руками (убрать «×», дописать своё) без новой генерации; текст
+  собирается вокруг поправленного списка.
 - **Сводку пишем в ОДНОМ месте** — она общая с программой обучения. Второй
   экземпляр разойдётся с первым молча, и программа с заданиями начнут
-  по-разному представлять одного ученика.
+  по-разному представлять одного ученика. Одно слово в двух колодах ученика
+  — одно «буксующее» (`getStudentDiagnostics`), иначе группа получала «у 3
+  из 2».
 - В заданиях работают все ТРИ типа упражнений (выбор, вписать, собрать
   предложение); `lib/materialExercises.ts` отсеивает несобираемые: если набор
   слов не совпадает с ответом, упражнение невозможно пройти. Подсказки и
@@ -262,7 +289,13 @@
 - `node scripts/smoke-teacher-words.mjs` — раздел «Слова»: выдача, статус,
   удаление, перепроверка.
 - `node scripts/smoke-material-diagnostics.mjs` — перехватывает запрос к AI и
-  смотрит промпт «под ученика», не тратя ни энергии, ни генераций.
+  смотрит промпт «под ученика», не тратя ни энергии, ни генераций; затем
+  группа из расписания на двух учеников: уровень самого слабого и
+  предупреждение, общие слабые места в промпте, правка слов плана, ответ AI
+  заготовкой → «Сохранить» назначает обоим (краснеет на коде до Ф2.11б-3).
+- `node scripts/test-material-audience.mjs` (чистый, в CI) — «Для кого»:
+  самый слабый уровень, уровень в языке материала, строка-предупреждение,
+  группы из расписания, черновик прежнего вида.
 - `node scripts/smoke-assignment-review.mjs` — три типа упражнений доходят до
   ученика, разбор ошибок.
 - `node scripts/test-material-exercises.mjs` (чистый, в CI) — отсев
@@ -290,7 +323,7 @@
 <!-- Пишет `npm run gen:docs` (scripts/gen/module-docs.mjs) по коду — руками не править. -->
 ## Из кода (сгенерировано)
 
-- **Файлы:** `AssignmentsPage.tsx`, `BecomeTeacher.tsx`, `CardDetail.tsx`, `DailyPlanSection.tsx`, `DiagnosticsSection.tsx`, `GuideSection.tsx`, `HomeworkComposer.tsx`, `HomeworkSection.tsx`, `index.ts`, `innerScreen.ts`, `materials/MaterialDetail.tsx`, `materials/MaterialsByLevel.tsx`, `materials/PlanScreen.tsx`, `materials/PreviewScreen.tsx`, `materials/RequestForm.tsx`, `materials/shared.ts`, `materials/wizard.ts`, `MaterialsSection.tsx`, `PlacementSection.tsx`, `PrintSheet.tsx`, `ProgramSection.tsx`, `QuestSection.tsx`, `ReportSheet.tsx`, `ReviewScreen.tsx`, `StudentRowBits.tsx`, `StudentsTab.tsx`, `StudentStudio.tsx`, `StudentWordsSection.tsx`, `StudioEnergy.tsx`, `StudioSection.tsx`, `studioSections.ts`, `StudioTiles.tsx`, `TasksHub.tsx`, `TasksPage.tsx`, `TeacherBlock.tsx`, `TeacherPage.tsx`, `topicTitles.ts`, `useAnswerDraft.ts`, `useComposerDraft.ts`, `useReviewDraft.ts`, `useWritingTaskDraft.ts`, `waitingCount.ts`, `waitingWorks.ts`, `WordPicker.tsx`, `WritingSection.tsx`
+- **Файлы:** `AssignmentsPage.tsx`, `BecomeTeacher.tsx`, `CardDetail.tsx`, `DailyPlanSection.tsx`, `DiagnosticsSection.tsx`, `formHints.ts`, `GuideSection.tsx`, `HomeworkComposer.tsx`, `HomeworkSection.tsx`, `index.ts`, `innerScreen.ts`, `materials/audience.ts`, `materials/ForWhom.tsx`, `materials/MaterialDetail.tsx`, `materials/MaterialsByLevel.tsx`, `materials/PlanScreen.tsx`, `materials/PreviewScreen.tsx`, `materials/RequestForm.tsx`, `materials/shared.ts`, `materials/wizard.ts`, `MaterialsSection.tsx`, `PlacementSection.tsx`, `PrintSheet.tsx`, `ProgramSection.tsx`, `QuestSection.tsx`, `ReportSheet.tsx`, `ReviewScreen.tsx`, `StudentRowBits.tsx`, `StudentsTab.tsx`, `StudentStudio.tsx`, `StudentWordsSection.tsx`, `StudioEnergy.tsx`, `StudioSection.tsx`, `studioSections.ts`, `StudioTiles.tsx`, `TasksHub.tsx`, `TasksPage.tsx`, `TeacherBlock.tsx`, `TeacherPage.tsx`, `topicTitles.ts`, `useAnswerDraft.ts`, `useComposerDraft.ts`, `useReviewDraft.ts`, `useWritingTaskDraft.ts`, `waitingCount.ts`, `waitingWorks.ts`, `WordPicker.tsx`, `WritingSection.tsx`
 - **Вне папки (указатель «Описание:» в начале файла):** `src/lib/activityDays.ts`, `src/lib/diagnosticsBrief.ts`, `src/lib/materialExercises.ts`, `src/lib/studentSignals.ts`, `src/lib/wordChecks.ts`
 - **Адреса:** `/teacher`, `/tasks`, `/assignments`
 - **Таблицы:** `cards`, `decks`, `review_states`, `word_checks`

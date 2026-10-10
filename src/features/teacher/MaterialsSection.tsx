@@ -72,6 +72,8 @@ export function MaterialsSection({
   // какую именно работу открыть на проверке (вход из блока «На проверку»);
   // в адрес не выносим — это указание «открой сразу проверку», а не место
   const [review, setReview] = useState<{ a: MaterialAssignment; name: string } | undefined>()
+  // сохранили, но кому-то назначить не вышло — скажет карточка материала
+  const [notice, setNotice] = useState<string | undefined>()
   // остаток генераций (get_my_plan): показываем заранее, а не по факту отказа
   const [gens, setGens] = useState<{ left: number; limit: number } | null>(null)
   useEffect(() => {
@@ -112,16 +114,19 @@ export function MaterialsSection({
         material={openMaterial}
         students={students}
         initialReview={review}
+        initialError={notice}
         onWorksChanged={onWorksChanged}
         onDeleted={() => {
           reload()
           setReview(undefined)
+          setNotice(undefined)
           setMatId(null)
         }}
         onBack={() => {
           reloadWorks() // проверенная работа должна исчезнуть из «На проверку»
           onWorksChanged?.() // и бейдж вкладки пересчитать
           setReview(undefined)
+          setNotice(undefined)
           setMatId(null)
         }}
       />
@@ -149,6 +154,7 @@ export function MaterialsSection({
         <PlanScreen
           req={step.req}
           plan={step.plan}
+          students={students}
           onBack={() => go(back(flow))}
           onForward={next ? () => go(forward(flow)) : undefined}
           onReplanned={(plan) => go(replace(flow, { ...step, plan }))}
@@ -166,13 +172,15 @@ export function MaterialsSection({
           plan={step.plan}
           content={step.content}
           own={step.own}
+          students={students}
           onRegenerated={(content) => go(replace(flow, { ...step, content }))}
-          onSaved={(material) => {
+          onSaved={(material, failed) => {
             // мастер закрыт: раньше он оставался на предпросмотре, и выход из
             // карточки материала возвращал к «Сохранить» — второй экземпляр
             flowDraft.clear()
             clearDraft(REQUEST_DRAFT)
             reload()
+            setNotice(failed)
             setMatId(material.id)
           }}
           onBack={() => go(back(flow))}
