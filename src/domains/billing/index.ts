@@ -49,6 +49,17 @@ export {
   type TrialStatus,
 } from './model'
 export {
+  bandLabel,
+  planForBand,
+  planOffer,
+  STUDENT_BANDS,
+  teacherTrialOffer,
+  trialLine,
+  type PlanOffer,
+  type StudentBand,
+  type TrialOffer,
+} from './bands'
+export {
   cheaperNote,
   inviteMessage,
   INVITE_TEXT,

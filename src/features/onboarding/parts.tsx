@@ -1,5 +1,6 @@
-// Общие куски онбординга ученика (OnboardingFlow) и репетитора (StepTeacher):
-// заголовок шага, вопрос «Как узнал» и класс главной кнопки.
+// Куски онбординга ученика (OnboardingFlow): заголовок шага, вопрос «Как
+// узнал» и класс главной кнопки. У репетитора свои — по макету t10
+// (teacher/parts.tsx).
 import { useState } from 'react'
 import { setSelfReportedSource } from '../../lib/analytics'
 
@@ -35,7 +36,8 @@ export function HowHeard({ options }: { options: string[] }) {
   const [heard, setHeard] = useState<string | null>(null)
   return (
     <div className="flex flex-col gap-2.5">
-      <p className="text-sm text-fg-muted">Как ты о нас узнал?</p>
+      {/* без рода (Ф2.24, П18): «узнал» читалось бы ученице как не к ней */}
+      <p className="text-sm text-fg-muted">Откуда ты о нас знаешь?</p>
       <div className="flex flex-wrap gap-2">
         {options.map((h) => (
           <button

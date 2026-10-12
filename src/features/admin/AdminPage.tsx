@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react'
 import { DeviceTheme } from './DeviceTheme'
 import { AiUsage } from './AiUsage'
 import { supabase } from '../../shared/api/supabase'
+import { OnboardingAnswers } from './OnboardingAnswers'
 import { UserSearch } from './UserSearch'
 import { Payments } from './payments/Payments'
 import { listRecentErrors, type ClientErrorRow, listFeedback, type FeedbackRow } from '../../lib/admin'
@@ -149,6 +150,7 @@ function Funnel() {
           )}
         </>
       )}
+      <OnboardingAnswers days={days} />
     </section>
   )
 }

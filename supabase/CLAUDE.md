@@ -156,6 +156,12 @@
   если у базы нет права читать `net._http_response`. Служебные функции
   закрыты и от `authenticated`. Правила — `src/domains/notifications/CLAUDE.md`,
   проверка — `check-lesson-notify.mjs`.
+- **Ответы онбординга** (миграция 0013): «Сколько учеников» (`teacher_students`)
+  и «Как узнал» (`how_heard`) лежат событиями в `events`; владельцу их
+  сводит `admin_onboarding_answers(p_days)` — последний ответ каждого
+  человека, репетиторы и остальные отдельно. Таблицу событий не трогает.
+  Правила — `src/features/admin/CLAUDE.md`, проверка —
+  `check-onboarding-answers.mjs`.
 - **Ответ RPC — таблицей (`returns table`), а не `json`**, если его читает
   клиент: тогда `database.types.ts` даёт точный тип строки, и приведение
   `as unknown as` не нужно (архитектура §8). В `plpgsql` с `returns table`
@@ -199,6 +205,9 @@
   (миграция 0011): одно «урок через час», выключение, без тарифа, перенос,
   «Вернуть», серия, без приложения, подписки, разбор ответов доставки —
   `src/domains/notifications/CLAUDE.md`.
+- `node scripts/check-onboarding-answers.mjs` — ответы онбординга (миграция
+  0013): люди, а не события; последний ответ; роли; окно дней; только
+  владельцу — `src/features/admin/CLAUDE.md`.
 - `node scripts/check-answermatches-sql.mjs` (вне CI, живая база) — сверка
   ответов в SQL (`norm_typed`) совпадает с клиентом (`lib/text.ts`).
 

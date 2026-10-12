@@ -55,11 +55,12 @@
 | Файл | Что там |
 |---|---|
 | `model.ts` | каталог `PLANS`, реквизиты `KASPI`, способы оплаты; правило продления для показа (`termAfterPayment`), «Сейчас: …» (`planNowLabel`), какие тарифы показать (`plansToPay`), предупреждения владельцу (`confirmWarnings`), метка пробного (`teacherTrialStatus` — вид и число дней, склоняет экран), конец доступа (`accessEnd` — копия `access_end`) и плашка «закончился» (`accessEndedNotice`). Без импортов — чистый тест |
+| `bands.ts` | «Сколько у тебя учеников?» онбординга репетитора (PLAN.md Ф2.11б-4): варианты `STUDENT_BANDS` (id — значение события `teacher_students`), тариф по ответу (`planForBand`: самый маленький, куда влезают все; «больше» — Pro и «напиши нам»), карточка «Подойдёт тариф» (`planOffer`), что обещать о пробном (`teacherTrialOffer` — по `teacherTrialStatus`, а не «14» всем: на новом устройстве у репетитора отсчёт уже идёт или тариф оплачен) и строка о нём (`trialLine`). Чистый тест |
 | `referral.ts` | рефералка для показа: код из ссылки (`parseRefCode`), ссылка, текст приглашения (`INVITE_TEXT` — один на все мессенджеры), копия правила подарка (`referralReward`), сноска под свой тариф, подписи счётчика. Чистый тест |
 | `api.ts` | единственное место, где домен ходит в базу: «Как оплатить», «Оплата отправлена», заявки, подтверждение, последние оплаты; счётчик приглашений и разовая подсветка подарка |
 | `index.ts` | парадная дверь — экраны берут только отсюда |
 | база | `supabase/migrations/0004_billing.sql`: `payments`, `payment_claims`, `personal_codes`; `confirm_payment`, `report_payment_sent`, `get_pay_info`, `admin_payment_claims`, `admin_dismiss_payment_claim`, `admin_recent_payments`, `admin_find_user` (+ поиск по коду), крючок `after_payment_confirmed`; `0005_teacher_trial.sql`: `teacher_trial_end`, `recompute_teacher_trial` и три триггера, `teacher_can_write`, `assert_teacher_can_write`, поля пробного в `get_my_plan`; `0006_referrals.sql`: `referrals`, `plan_price`, `referral_reward`, `attach_referral`, `become_teacher(p_ref)`, `apply_referral_rewards`, наполненный `after_payment_confirmed`, `get_my_referral`, `referral_hint` / `dismiss_referral_hint`; `0007_access_ending.sql`: `access_end` (правило конца доступа), `teacher_can_write` на нём, напоминание `notify_access_ending` / `rule_access_ending` (реестр будильника — `domains/notifications`) |
-| экраны | `features/billing/PayPage.tsx` («Как оплатить»), `features/billing/AccessEndedBanner.tsx` (плашка «закончился», ставит каркас), `features/admin/payments/` (заявки, подтверждение, последние оплаты), метка пробного — `app/shell/AvatarMenu.tsx`, рефералка — `features/referral/` |
+| экраны | `features/billing/PayPage.tsx` («Как оплатить»), `features/billing/AccessEndedBanner.tsx` (плашка «закончился», ставит каркас), `features/admin/payments/` (заявки, подтверждение, последние оплаты), метка пробного — `app/shell/AvatarMenu.tsx`, рефералка — `features/referral/`, «Подойдёт тариф» и пробный в онбординге репетитора — `features/onboarding/teacher/` |
 
 ## Правила, которые нельзя нарушить
 
@@ -162,6 +163,10 @@
 
 - `node scripts/test-billing.mjs` (чистый, в CI) — продление во всех случаях
   и по Алматы, тарифы по роли и ссылке, «Сейчас: …», предупреждения, суммы.
+- `node scripts/test-teacher-onboarding.mjs` (чистый, в CI) — ответ → тариф,
+  пробный по базе (до первого ученика 14 и 21, отсчёт пошёл, тариф
+  оплачен, пробный кончился, режим ещё не включён), тексты карточки и
+  строки о пробном, подписи для `/admin`.
 - `node scripts/check-billing.mjs` (тестовая база) — условия Ф2.1: продление
   верное (истёкший, действующий, пробный, граница месяца) и совпадает с
   клиентом; не-владелец получает отказ и ничего не пишется; строка оплаты со
@@ -267,7 +272,7 @@
 <!-- Пишет `npm run gen:docs` (scripts/gen/module-docs.mjs) по коду — руками не править. -->
 ## Из кода (сгенерировано)
 
-- **Файлы:** `api.ts`, `index.ts`, `model.ts`, `referral.ts`
+- **Файлы:** `api.ts`, `bands.ts`, `index.ts`, `model.ts`, `referral.ts`
 - **RPC:** `admin_dismiss_payment_claim`, `admin_payment_claims`, `admin_recent_payments`, `confirm_payment`, `dismiss_referral_hint`, `get_my_referral`, `get_pay_info`, `referral_hint`, `report_payment_sent`
-- **Кто использует (импортом):** `app`, `features/admin`, `features/billing`, `features/landing`, `features/referral`, `features/schedule`, `lib`
+- **Кто использует (импортом):** `app`, `features/admin`, `features/billing`, `features/landing`, `features/onboarding`, `features/referral`, `features/schedule`, `lib`
 <!-- generated:end -->

@@ -88,6 +88,26 @@ export async function listRecentErrors(days = 7, limit = 50): Promise<ClientErro
   return (data as ClientErrorRow[] | null) ?? []
 }
 
+/** Ответ онбординга и сколько людей так ответили (миграция 0013). */
+export interface OnboardingAnswerRow {
+  /** students — «Сколько у тебя учеников?», heard — «Откуда ты о нас знаешь?». */
+  question: string
+  value: string
+  teachers: number
+  others: number
+}
+
+/**
+ * Ответы онбординга за последние дни (RPC admin_onboarding_answers, только
+ * владельцу, PLAN.md Ф2.11б-4): последний ответ каждого человека. Сами ответы
+ * лежат событиями в events — без этой сводки их не видно нигде.
+ */
+export async function listOnboardingAnswers(days = 30): Promise<OnboardingAnswerRow[]> {
+  const { data, error } = await supabase.rpc('admin_onboarding_answers', { p_days: days })
+  if (error) throw dbError(error, 'загрузить ответы онбординга')
+  return data ?? []
+}
+
 export interface FeedbackRow {
   created_at: string
   rating: 'up' | 'down' | null

@@ -4,8 +4,11 @@
  *   1. лендинг /teachers → «Начать» ведёт на /login?role=teacher, метка
  *      запомнена; регистрация формой → «Проверьте почту»; почту подтверждаем
  *      через админку (вместо письма) → вход;
- *   2. онбординг репетитора — один экран: язык и «Как узнал», без вопросов
- *      ученика (находка 1); ES выбран → в студию, режим включён, язык ES;
+ *   2. онбординг репетитора по макету t10 (Ф2.11б-4), без вопросов ученика:
+ *      язык → «Сколько у тебя учеников?» → «Студия готова»; полоски шагов
+ *      заполняются по ответам, выбор — внизу экрана и сразу ведёт дальше,
+ *      «Назад» хранит выбор; пробный — по базе; на компьютере справа тариф
+ *      по ответу; ответ — событием для /admin; в студию, режим включён, ES;
  *   3. пустое расписание → «Добавить первого ученика» → карточка → первый урок;
  *   4. карточка → приглашение с кодом; ученик привязывается по коду;
  *   5. карточка ученика: плитки разделов по t6-2 вместо «Ещё: …» (Ф2.11б-2);
@@ -16,8 +19,10 @@
  *      «К плану» и «К форме» не теряют готовое, «вперёд» без новой генерации
  *      (находка 3); после «Сохранить» и «назад» — список, а не снова
  *      «Сохранить»; «Энергия студии» — во «Заданиях», не над учениками (4);
- *   7. «Я преподаватель» на первом шаге онбординга без ссылки с лендинга;
+ *   7. «Я преподаватель» на первом шаге онбординга без ссылки с лендинга —
+ *      «Назад» уже на первом шаге, режим включает «В студию»;
  *   8. тот же репетитор на новом устройстве — экран репетитора, а не ученика;
+ *      ученик уже привязан — пробный «осталось N дней», а не «14 бесплатно»;
  *   9. открытые страницы на «вы», блок связи WhatsApp · Telegram · Почта, шапка
  *      лендинга и фон регистрации в цветах темы, «Я преподаватель» — внизу
  *      экрана (Ф2.11б-1); снимки тарифов, «Как оплатить», Настроек.
@@ -191,6 +196,23 @@ async function formalOk(page, name) {
   check(`${name}: на «вы»`, found.length === 0, [...new Set(found)].join(', '))
 }
 
+/** Сколько полосок шагов онбординга заполнено (data-filled), -1 — полосок нет. */
+const bars = (page) => page.evaluate(() => Number(document.querySelector('[role="progressbar"]')?.dataset.filled ?? -1))
+/** Отмечен ли вариант (aria-pressed) с таким текстом. */
+const pressed = (page, label) =>
+  page.evaluate((l) => [...document.querySelectorAll('button[aria-pressed]')].some((x) => x.textContent.includes(l) && x.getAttribute('aria-pressed') === 'true'), label)
+/** Низ кнопки с текстом — доля высоты экрана (1 — у самого низа). */
+const lowest = (page, label) =>
+  page.evaluate((l) => {
+    const el = [...document.querySelectorAll('button')].find((x) => x.textContent.includes(l))
+    return el ? Math.round((el.getBoundingClientRect().bottom / innerHeight) * 100) / 100 : 0
+  }, label)
+/** Видна ли «Назад» онбординга: стрелка у полосок (телефон) или ссылка над вопросом (компьютер). */
+const backVisible = (page) =>
+  page.evaluate(() =>
+    [...document.querySelectorAll('button')].some((x) => (x.getAttribute('aria-label') === 'Назад' || x.textContent.trim() === 'Назад') && x.checkVisibility({ visibilityProperty: true })),
+  )
+
 /** Нажать элемент как палец: сперва в середину экрана — у края его закрывает плавающее меню. */
 async function tap(page, sel) {
   await page.waitForSelector(sel, { visible: true, timeout: 15000 })
@@ -260,21 +282,52 @@ try {
   await go(te, '/login')
   await signIn(te, TEACHER)
 
-  // ── 2. онбординг репетитора ──────────────────────────────────────────────────────
+  // ── 2. онбординг репетитора по макету t10 (Ф2.11б-4) ─────────────────────────────
   check('после входа — онбординг', await waitPath(te, '/onboarding'))
-  check('экран репетитора: «Какой язык преподаёшь?»', await waitText(te, /Какой язык преподаёшь\?/))
+  check('шаг 1: «Какой язык преподаёшь?»', await waitText(te, /Какой язык преподаёшь\?/))
   let txt = await text(te)
   check('вопросов ученика нет (язык учёбы, уровень, план)', !/Что будем учить|Определим уровень|С чего начнём|Зачем тебе язык/.test(txt), txt.slice(0, 200))
-  check('«Назад» нет — путь выбран ссылкой с лендинга', !/^Назад$/m.test(txt))
+  check('шаг 1: «Назад» нет — путь выбран ссылкой с лендинга', !(await backVisible(te)))
+  check('полоски шагов без текста, пустые', (await bars(te)) === 0 && !/Шаг \d/.test(txt), String(await bars(te)))
+  if (WIDTH < 1024) check('варианты — внизу, в зоне большого пальца', (await lowest(te, 'Английский')) > 0.75, String(await lowest(te, 'Английский')))
+  else check('компьютер: справа «Подойдёт тариф» — общая карточка до ответа', /Подойдёт тариф[\s\S]*Mini · Start · Pro[\s\S]*5, 10 или 30 учеников/i.test(txt))
+  await shot(te, '03a-onboarding-lang')
   await click(te, 'Испанский')
-  check('ES выбран', await te.evaluate(() => [...document.querySelectorAll('[role="radio"]')].find((x) => x.textContent.includes('Испанский'))?.getAttribute('aria-checked') === 'true'))
+  check('шаг 2: «Сколько у тебя учеников?» — выбор сразу ведёт дальше', await waitText(te, /Сколько у тебя учеников\?/))
+  check('полоска языка заполнена', (await bars(te)) === 1, String(await bars(te)))
+  check('шаг 2: пробный — по базе, «14 дней … с первого ученика»', /14 дней бесплатно — отсчёт пойдёт с первого ученика в приложении/.test(await text(te)))
+  if (WIDTH < 1024) check('ответы — внизу, в зоне большого пальца', (await lowest(te, 'больше')) > 0.75, String(await lowest(te, 'больше')))
+  await shot(te, '03b-onboarding-students')
+  if (WIDTH >= 1024) {
+    // наведение показывает тариф варианта; «больше 30» — Pro и «напиши нам» (журнал п.73)
+    const more = await te.evaluateHandle(() => [...document.querySelectorAll('button')].find((x) => x.textContent.trim() === 'больше'))
+    await more.asElement()?.hover()
+    check('компьютер: наведение на «больше» — Pro и «напиши нам» с блоком связи', (await waitText(te, /Pro\s+30 учеников в приложении[\s\S]*Больше 30 учеников — напиши нам/)) && (await contactsOk(te)))
+    await shot(te, '03b2-onboarding-more')
+    await te.mouse.move(4, 4)
+    check('…мышь ушла — снова общая карточка', await waitText(te, /Mini · Start · Pro/))
+  }
+  await click(te, '6–10')
+  check('шаг 3: «Студия готова» — язык и учеников', await waitText(te, /Студия готова[\s\S]*Испанский[\s\S]*6–10/))
+  check('полоски: две заполнены', (await bars(te)) === 2, String(await bars(te)))
+  if (WIDTH >= 1024) check('компьютер: справа Start, 10 учеников, 6 500 ₸ после 14 дней', /Start\s+10 учеников в приложении\s+6\s500 ₸ в месяц — после 14 бесплатных дней/.test(await text(te)))
+  const [ans] = await sql(`select props->>'value' as v from public.events where user_id = '${tId}' and name = 'teacher_students' order by id desc limit 1`)
+  check('ответ «6–10» записан событием для /admin', ans?.v === '6-10', JSON.stringify(ans))
+  await click(te, 'Назад')
+  check('«Назад» → шаг 2, «6–10» сохранён и подсвечен', (await waitText(te, /Сколько у тебя учеников\?/)) && (await pressed(te, '6–10')))
+  check('«Назад» — сегмент пустеет', (await bars(te)) === 1, String(await bars(te)))
+  await click(te, '6–10')
+  await waitText(te, /Студия готова/)
   await click(te, 'От коллеги')
-  await shot(te, '03-onboarding-teacher')
+  check('«Откуда ты о нас знаешь?» — необязательно, отмечено', /Откуда ты о нас знаешь\?\s*· необязательно/.test(await text(te)) && (await pressed(te, 'От коллеги')))
+  await shot(te, '03c-onboarding-done')
   await click(te, 'В студию')
   check('«В студию» → расписание', await waitPath(te, '/schedule'))
   check('язык студии — ES', (await te.evaluate(() => localStorage.getItem('recall.lang'))) === 'es')
   const { data: prof } = await admin.from('profiles').select('role').eq('id', tId).single()
   check('режим репетитора включён', prof?.role === 'teacher', JSON.stringify(prof))
+  const [done] = await sql(`select props->>'students' as s from public.events where user_id = '${tId}' and name = 'onboarding_done' order by id desc limit 1`)
+  check('онбординг пройден — с ответом о числе учеников', done?.s === '6-10', JSON.stringify(done))
 
   // ── 3. пустое расписание → первый ученик → первый урок ─────────────────────────
   check('пустое расписание ведёт к первому ученику', await waitText(te, /Пока нет уроков/) && /Добавить первого ученика/.test(await text(te)))
@@ -431,10 +484,14 @@ try {
   })
   check('«Я преподаватель» — внизу экрана, а не под вариантами', low > 0.75, low.toFixed(2))
   await click(fk, 'Я преподаватель')
-  check('«Я преподаватель» → экран репетитора с «Назад»', await waitText(fk, /Какой язык преподаёшь\?[\s\S]*Назад/))
+  check('«Я преподаватель» → экран репетитора с «Назад» на первом шаге', (await waitText(fk, /Какой язык преподаёшь\?/)) && (await backVisible(fk)))
   await click(fk, 'Назад')
   check('«Назад» → снова «Что будем учить?»', await waitText(fk, /Что будем учить\?/))
   await click(fk, 'Я преподаватель')
+  await click(fk, 'Английский')
+  check('режим ещё не включён — обещаем обычные 14 дней', await waitText(fk, /14 дней бесплатно — отсчёт пойдёт с первого ученика/))
+  await click(fk, '1–5')
+  if (WIDTH >= 1024) check('компьютер: 1–5 → Mini, 5 учеников', /Mini\s+5 учеников в приложении/.test(await text(fk)))
   await click(fk, 'В студию')
   check('→ расписание', await waitPath(fk, '/schedule'))
   const { data: fprof } = await admin.from('profiles').select('role').eq('id', fId).single()
@@ -449,6 +506,13 @@ try {
   const where = await nd.evaluate(() => location.pathname)
   const teacherScreen = where === '/schedule' || (await waitText(nd, /Какой язык преподаёшь\?/))
   check('новое устройство: не вопросы ученика', teacherScreen && !/Что будем учить/.test(await text(nd)), where)
+  if (where === '/onboarding') {
+    // ученик уже привязан (раздел 4) — отсчёт пошёл: «14 дней бесплатно» было бы неправдой
+    await click(nd, 'Испанский')
+    await waitText(nd, /Сколько у тебя учеников\?/)
+    const t8 = await text(nd)
+    check('новое устройство: пробный — «осталось N дней», а не «14 дней с первого ученика»', /Пробный период — осталось \d+/.test(t8) && !/14 дней бесплатно/.test(t8), t8.slice(0, 300))
+  }
 
   // ── 9. тарифы, «Как оплатить», Настройки — вошедшему (Ф2.11б-1) ─────────────────
   await go(te, '/pricing')

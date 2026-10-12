@@ -4,9 +4,9 @@
 //   2) уровень: тест (есть для обоих языков) ИЛИ для EN ещё и выбор вручную;
 //      шаг можно пропустить,
 //   3) «Твой план готов» + конфетти и запуск первой ведомой сессии.
-// Репетитор — один экран (StepTeacher, PLAN.md Ф2.11): пришёл по ссылке
-// /login?role=teacher, режим уже включён или выбрал «Я преподаватель» на
-// первом шаге. Вопросы ученика ему не задаём.
+// Репетитор — свои три шага по макету t10 (teacher/TeacherOnboarding,
+// PLAN.md Ф2.11б-4): пришёл по ссылке /login?role=teacher, режим уже включён
+// или выбрал «Я преподаватель» на первом шаге. Вопросы ученика ему не задаём.
 // Показывается только новичку: см. shouldOnboard в lib/onboarding.
 // ============================================================================
 import { useState } from 'react'
@@ -33,7 +33,7 @@ import { celebrate } from '../../shared/ui/Confetti'
 import { Button } from '../../shared/ui/Button'
 import { GOAL_LABELS, type AppLang, type CEFRLevel, type LearningGoal } from '../../types'
 import { Heading, HowHeard, ONBOARDING_CTA } from './parts'
-import { StepTeacher } from './StepTeacher'
+import { TeacherOnboarding } from './teacher/TeacherOnboarding'
 
 // A1 добавлен: profiles.level и тест уровня теперь допускают его (новичок с нуля)
 const EN_LEVELS: CEFRLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1']
@@ -93,10 +93,10 @@ export function OnboardingFlow() {
     setTimeout(() => void route.then((r) => navigate(r, { replace: true })), 600)
   }
 
-  const finishTeacher = () => {
+  const finishTeacher = (students: string | null) => {
     // онбординг считаем пройденным, иначе ProtectedRoute вернёт сюда же
     markOnboarded()
-    void track('onboarding_done', { lang, role: 'teacher' })
+    void track('onboarding_done', { lang, role: 'teacher', students })
     // стартовый экран роли выбирает каркас (StartGate): учителя «/» уводит в расписание
     navigate('/', { replace: true })
   }
@@ -105,13 +105,11 @@ export function OnboardingFlow() {
   if (deciding) return <main className={frame} />
   if (teacher) {
     return (
-      <main className={frame}>
-        <StepTeacher
-          enable={profile?.role !== 'teacher'}
-          onBack={picked ? () => setPicked(false) : undefined}
-          onDone={finishTeacher}
-        />
-      </main>
+      <TeacherOnboarding
+        enable={profile?.role !== 'teacher'}
+        onBack={picked ? () => setPicked(false) : undefined}
+        onDone={finishTeacher}
+      />
     )
   }
 
