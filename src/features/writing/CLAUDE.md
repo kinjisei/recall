@@ -47,6 +47,11 @@
 - `node scripts/smoke-writing.mjs`, `node scripts/smoke-own-writing.mjs` —
   задание от преподавателя и своё письмо.
 
+- `node scripts/check-ai-writing.mjs` — качество разбора письма (IELTS и эссе
+  EN/ES: подложенные ошибки, фразы-ловушки, коридор балла) и заданий IELTS от
+  AI; вне CI, ключ `TEST_GEMINI_API_KEY`, порядок — `scripts/ai-quality/criteria.md`
+  (PLAN.md Ф2.20).
+
 Смоукам нужен `npm run dev:test` (`scripts/CLAUDE.md`).
 
 <!-- generated:start -->

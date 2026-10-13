@@ -66,6 +66,10 @@
   база, модели поддельные: списание → журнал → возврат (квоту AI не тратит).
 - `node scripts/check-ai-models.mjs [--call]` — каждая модель цепочек есть у
   поставщика (список моделей квоту не тратит).
+- Качество ответов по задачам — `scripts/ai-quality/` (PLAN.md Ф2.20):
+  критерии, примеры и `check-ai-material` · `-review` · `-writing` ·
+  `-program` — только на ключе `TEST_GEMINI_API_KEY` отдельного проекта,
+  Groq в них выключен; у каждого ответа пишется модель, что ответила.
 - `node scripts/smoke-ai-usage.mjs` — блок в `/admin` на 360 px (нужен
   `npm run dev:test`).
 

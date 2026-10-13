@@ -296,6 +296,12 @@
 - `node scripts/test-material-audience.mjs` (чистый, в CI) — «Для кого»:
   самый слабый уровень, уровень в языке материала, строка-предупреждение,
   группы из расписания, черновик прежнего вида.
+- Качество AI (Ф2.20, вне CI, ключ `TEST_GEMINI_API_KEY`, вечером; критерии
+  и порядок — `scripts/ai-quality/criteria.md`): `node scripts/check-ai-material.mjs`
+  (план → текст → упражнения, «Свой текст», диагностика ученика и группы),
+  `check-ai-review.mjs` (AI-разбор сданной работы), `check-ai-program.mjs`
+  (программа). Без AI — `--dry` (промпты) и `--fake` (весь путь с
+  заготовкой вместо модели); правила держит `test-ai-quality-rules.mjs` (в CI).
 - `node scripts/smoke-assignment-review.mjs` — три типа упражнений доходят до
   ученика, разбор ошибок.
 - `node scripts/test-material-exercises.mjs` (чистый, в CI) — отсев

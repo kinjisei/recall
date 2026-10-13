@@ -34,3 +34,6 @@ supabase/.temp/
 
 # Сгенерированная карта кода (пересобирается: node scripts/arch-map.mjs)
 docs/architecture/code-map.json
+
+# ответы прогонов проверки качества AI (scripts/check-ai-*.mjs, PLAN.md Ф2.20)
+scripts/ai-quality/runs/
