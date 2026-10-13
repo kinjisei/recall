@@ -1,0 +1,254 @@
+<!doctype html>
+<!--
+  Коммерческое предложение для репетиторов (PDF под экран телефона).
+  Собирается командой `node scripts/sales-kp.mjs` → docs/sales/recall-kp.pdf.
+  Цены, места и число AI-материалов сюда не вписаны: скрипт берёт их из
+  src/domains/billing/model.ts (элементы с data-plan, data-per-day,
+  data-limit, data-materials); ссылки связи — из src/shared/lib/contacts.ts
+  (data-link). Палитра — «Сумерки», светлая (design/mockups/s2), шрифт Rubik.
+  Тексты — на «вы»; факты сверены с кодом на 13.10.2026.
+-->
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Recall — расписание и оплаты для репетиторов</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=block" rel="stylesheet">
+<style>
+  @page { size: 390px 844px; margin: 0; }
+  :root {
+    --page: #F4F3F9; --surface: #FFFFFF; --input: #ECEAF4; --line: #E3E1EE;
+    --fg: #1A1C2B; --fg-secondary: #46485A; --fg-muted: #62647A;
+    --primary: #6B5CCC; --primary-fg: #FFFFFF; --accent-strong: #5241B3;
+    --accent-soft: #ECE9FB; --accent-soft-fg: #3E318F;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--page); }
+  body {
+    font-family: Rubik, sans-serif; color: var(--fg); font-size: 14px; line-height: 1.45;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  a { color: inherit; text-decoration: none; }
+  .page {
+    width: 390px; height: 844px; padding: 26px 22px 22px; overflow: hidden;
+    display: flex; flex-direction: column; break-after: page; position: relative;
+  }
+  .page:last-child { break-after: auto; }
+
+  .top { display: flex; align-items: center; gap: 9px; }
+  .top svg { width: 30px; height: 30px; border-radius: 8px; }
+  .brand { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+  .pageno { margin-left: auto; font-size: 12px; color: var(--fg-muted); font-variant-numeric: tabular-nums; }
+
+  .chip {
+    align-self: flex-start; margin-top: 16px; padding: 5px 11px; border-radius: 999px;
+    background: var(--accent-soft); color: var(--accent-soft-fg); font-size: 12px; font-weight: 500;
+  }
+  h1 { margin: 10px 0 0; font-size: 27px; line-height: 1.14; font-weight: 600; letter-spacing: -0.022em; }
+  h1 em { font-style: normal; color: var(--accent-strong); }
+  h2 { margin: 14px 0 0; font-size: 23px; line-height: 1.18; font-weight: 600; letter-spacing: -0.02em; }
+  .lead { margin: 8px 0 0; color: var(--fg-secondary); font-size: 14px; }
+
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; }
+
+  .price { margin-top: 14px; padding: 14px 16px; }
+  .price-row { display: flex; align-items: baseline; gap: 8px; }
+  .price-sum { font-size: 34px; font-weight: 700; letter-spacing: -0.025em; line-height: 1; font-variant-numeric: tabular-nums; }
+  .price-per { color: var(--fg-secondary); font-size: 15px; }
+  .price-day { margin-top: 4px; color: var(--fg-muted); font-size: 13px; }
+  .ticks { margin: 10px 0 0; padding: 10px 0 0; border-top: 1px solid var(--line); list-style: none; display: grid; gap: 4px; }
+  .ticks li { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; }
+  .ticks svg { flex: none; width: 18px; height: 18px; margin-top: 1px; color: var(--primary); }
+
+  .label { margin: 14px 0 7px; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg-muted); }
+  .cases { display: grid; gap: 7px; }
+  .case { padding: 10px 14px; }
+  .case b { display: block; font-weight: 600; font-size: 14.5px; }
+  .case span { display: block; margin-top: 3px; color: var(--fg-secondary); font-size: 13.5px; }
+  .foot { margin-top: auto; padding-top: 12px; color: var(--fg-muted); font-size: 12.5px; }
+
+  .items { margin-top: 12px; display: grid; gap: 7px; }
+  .item { display: flex; gap: 11px; padding: 10px 13px; }
+  .ic {
+    flex: none; width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: center;
+    background: var(--accent-soft); color: var(--accent-soft-fg);
+  }
+  .ic svg { width: 17px; height: 17px; }
+  .item b { display: block; font-weight: 600; font-size: 14.5px; }
+  .item span { display: block; margin-top: 2px; color: var(--fg-secondary); font-size: 13px; line-height: 1.4; }
+
+  .plans { margin-top: 14px; overflow: hidden; }
+  .plan { display: flex; align-items: center; gap: 10px; padding: 11px 14px; }
+  .plan + .plan { border-top: 1px solid var(--line); }
+  .plan-name { flex: none; width: 84px; font-weight: 600; font-size: 15px; line-height: 1.3; }
+  .plan-what { flex: 1; white-space: nowrap; color: var(--fg-secondary); font-size: 12.5px; line-height: 1.35; }
+  .plan-sum { display: block; font-weight: 500; font-size: 13.5px; color: var(--accent-strong); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .note {
+    margin-top: 8px; padding: 11px 14px; border-radius: 14px;
+    background: var(--accent-soft); color: var(--accent-soft-fg); font-size: 13px;
+  }
+  .facts { margin-top: 10px; display: grid; gap: 7px; }
+  .facts p { margin: 0; font-size: 13px; color: var(--fg-secondary); }
+  .facts b { color: var(--fg); font-weight: 600; }
+
+  .cta {
+    margin-top: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 54px; border-radius: 16px; background: var(--primary); color: var(--primary-fg);
+  }
+  .cta b { font-weight: 600; font-size: 15.5px; }
+  .cta span { font-size: 12px; opacity: 0.88; }
+  .help { margin: 9px 0 0; font-size: 13px; color: var(--fg-secondary); text-align: center; }
+  .contact { margin-top: auto; padding-top: 12px; }
+  .contact p { margin: 0 0 7px; font-size: 13px; color: var(--fg-secondary); }
+  .links { display: flex; gap: 8px; }
+  .links a {
+    flex: 1; min-height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 6px;
+    background: var(--surface); border: 1px solid var(--line); color: var(--accent-strong); font-weight: 600; font-size: 13px;
+  }
+  .links svg { width: 16px; height: 16px; }
+</style>
+</head>
+<body>
+
+<!-- ============ 1. Главное ============ -->
+<section class="page">
+  <div class="top">
+    <svg viewBox="0 0 48 48" aria-label="Recall">
+      <rect width="48" height="48" rx="11" fill="#161826"/>
+      <rect x="12" y="14" width="26" height="22" rx="6" fill="none" stroke="#38366b" stroke-width="2" transform="rotate(-6 25 25)"/>
+      <rect x="10" y="12" width="26" height="22" rx="6" fill="#1e2030" stroke="#9184d9" stroke-width="2.2" transform="rotate(3 23 23)"/>
+      <g transform="rotate(3 23 23)">
+        <rect x="16" y="18" width="4.6" height="11" rx="2" fill="none" stroke="#9184d9" stroke-width="1.7" transform="rotate(-6 18.3 23.5)"/>
+        <rect x="24" y="18" width="4.6" height="11" rx="2" fill="#9184d9" transform="rotate(6 26.3 23.5)"/>
+      </g>
+    </svg>
+    <span class="brand">Recall</span>
+    <span class="pageno">1 / 3</span>
+  </div>
+
+  <span class="chip">Для репетиторов английского и испанского</span>
+  <h1>Расписание и оплаты всех учеников&nbsp;— <em>в&nbsp;одном&nbsp;месте</em></h1>
+
+  <div class="card price">
+    <div class="price-row">
+      <span class="price-sum" data-plan="teacher_mini"></span>
+      <span class="price-per">в месяц</span>
+    </div>
+    <div class="price-day">около <span data-per-day="teacher_mini"></span> в день</div>
+    <ul class="ticks">
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>14 дней бесплатно, карту не просим</li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Ученикам — бесплатно</li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Работает в браузере телефона — ничего не нужно устанавливать</li>
+    </ul>
+  </div>
+
+  <div class="label">Как это выглядит в работе</div>
+  <div class="cases">
+    <div class="card case">
+      <b>Ученик оплатил восемь уроков</b>
+      <span>Отмечаете «+8». После урока Recall списывает его сам, а когда останется один — подскажет&nbsp;вам.</span>
+    </div>
+    <div class="card case">
+      <b>Урок перенесли</b>
+      <span>Recall напишет текст для ученика и откроет WhatsApp — останется нажать «отправить».</span>
+    </div>
+    <div class="card case">
+      <b>Ученик забыл про урок</b>
+      <span>Если ученик откроет Recall у себя и включит уведомления, за час до урока ему придёт напоминание со ссылкой на урок.</span>
+    </div>
+  </div>
+
+  <p class="foot">Неделя и день — таблицей или списком. Повтор «каждый вт и чт», групповые и пробные уроки.</p>
+</section>
+
+<!-- ============ 2. Кроме расписания ============ -->
+<section class="page">
+  <div class="top">
+    <span class="brand">Recall</span>
+    <span class="pageno">2 / 3</span>
+  </div>
+
+  <h2>Кроме расписания — домашка и помощь AI</h2>
+  <p class="lead">Всё это по желанию: расписание и оплаты работают и без AI.</p>
+
+  <div class="items">
+    <div class="card item">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2.5"/><path d="M9 4.5h6M8.5 11l2 2 4-4M8.5 17h7"/></svg></span>
+      <div><b>Домашка на неделю</b><span>Собираете задания — ученик делает их в приложении, ответы проверяются сразу.</span></div>
+    </div>
+    <div class="card item">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3.5h7l4 4V20a.5.5 0 0 1-.5.5h-10.5a.5.5 0 0 1-.5-.5V4a.5.5 0 0 1 .5-.5z"/><path d="M13.5 3.5V8h4.5M9 12h6M9 15.5h6"/></svg></span>
+      <div><b>Материал под ученика</b><span>Тема и уровень — AI пишет текст с упражнениями. Распечатать или дать&nbsp;домашкой.</span></div>
+    </div>
+    <div class="card item">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5l1-4L15.5 5a2.1 2.1 0 0 1 3 3L8 18.5l-4 1z"/><path d="M13.5 7l3 3"/></svg></span>
+      <div><b>Проверка письменных работ</b><span>AI готовит черновик разбора, эссе IELTS — по&nbsp;четырём критериям. Оценку ставите вы.</span></div>
+    </div>
+    <div class="card item">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M7 16.5v-5M12 16.5V7M17 16.5v-8"/></svg></span>
+      <div><b>Диагностика</b><span>Слабые темы и слова, которые не запоминаются, — собираются из&nbsp;занятий&nbsp;сами.</span></div>
+    </div>
+    <div class="card item">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M4 9.5h16M8.5 3v4M15.5 3v4M8 13.5h3M8 16.5h6"/></svg></span>
+      <div><b>Программа и отчёт родителям</b><span>План на 2–8 недель по слабым местам ученика и отчёт о занятиях за месяц.</span></div>
+    </div>
+    <div class="card item">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="6" width="12" height="14" rx="2.5"/><path d="M8 3.5h9a2.5 2.5 0 0 1 2.5 2.5v11"/></svg></span>
+      <div><b>Между уроками</b><span>У ученика — грамматика, слова на повторение, произношение, разговор с AI и десять игр.</span></div>
+    </div>
+  </div>
+
+  <p class="foot">Английский и испанский. Ученикам — бесплатно, пока действует ваш тариф.</p>
+</section>
+
+<!-- ============ 3. Цена и как начать ============ -->
+<section class="page">
+  <div class="top">
+    <span class="brand">Recall</span>
+    <span class="pageno">3 / 3</span>
+  </div>
+
+  <h2>Сколько стоит</h2>
+  <p class="lead">Цена в месяц зависит от того, сколько учеников пользуются приложением.</p>
+
+  <div class="card plans">
+    <div class="plan">
+      <span class="plan-name">Mini<span class="plan-sum" data-plan="teacher_mini"></span></span>
+      <span class="plan-what">до <span data-limit="teacher_mini"></span> учеников в приложении<br>около <span data-materials="teacher_mini"></span> AI-материалов в месяц</span>
+    </div>
+    <div class="plan">
+      <span class="plan-name">Start<span class="plan-sum" data-plan="teacher_start"></span></span>
+      <span class="plan-what">до <span data-limit="teacher_start"></span> учеников в приложении<br>около <span data-materials="teacher_start"></span> AI-материалов в месяц</span>
+    </div>
+    <div class="plan">
+      <span class="plan-name">Pro<span class="plan-sum" data-plan="teacher_pro"></span></span>
+      <span class="plan-what">до <span data-limit="teacher_pro"></span> учеников в приложении<br>около <span data-materials="teacher_pro"></span> AI-материалов в месяц</span>
+    </div>
+  </div>
+  <div class="note">В расписании — все ваши ученики, без ограничений. Место тарифа занимает только ученик, который пользуется приложением.</div>
+
+  <div class="facts">
+    <p><b>Пробный период</b> — 14 дней с первого ученика в приложении, но не дольше 20 дней с регистрации. Карту не просим. AI-генераций на пробном немного — хватит, чтобы попробовать материал.</p>
+    <p><b>Не продлили</b> — расписание остаётся, его можно смотреть. Оплатили — продолжаете с того же места.</p>
+    <p><b>Оплата</b> — переводом на Kaspi, тариф включаем в течение дня.</p>
+  </div>
+
+  <a class="cta" data-link="start">
+    <b>Попробовать 14 дней бесплатно</b>
+    <span>recall-pgkz.vercel.app/teachers</span>
+  </a>
+  <p class="help">Помогу начать: за 15 минут созвона заведём расписание и первого ученика.</p>
+
+  <div class="contact">
+    <p>Ерболат, делаю Recall. Отвечу в течение дня.</p>
+    <div class="links">
+      <a data-link="whatsapp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5a8 8 0 0 1-11.8 7l-4.2 1.2 1.2-4A8 8 0 1 1 20 11.5z"/></svg>WhatsApp</a>
+      <a data-link="telegram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 4L3.5 11l6 2.2M20.5 4l-3 15.5-8-6.3M20.5 4L9.5 13.2V19l3-3.2"/></svg>Telegram</a>
+      <a data-link="email"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5.5" width="17" height="13" rx="2.5"/><path d="M4 7l8 6 8-6"/></svg>Почта</a>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
