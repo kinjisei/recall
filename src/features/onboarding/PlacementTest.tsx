@@ -251,7 +251,7 @@ export function PlacementTest() {
               key={i}
               data-key={i + 1}
               onClick={() => choose(i)}
-              className="rounded-xl border border-tint/[0.10] px-4 py-2.5 text-left transition-colors hover:border-accent-line hover:bg-[rgba(145,132,217,.10)]"
+              className="rounded-xl border border-tint/[0.10] px-4 py-2.5 text-left transition-colors hover:border-accent-line hover:bg-accent/10"
             >
               {opt}
             </button>

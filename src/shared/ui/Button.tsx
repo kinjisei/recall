@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, PointerEvent, ReactNode } from 'react'
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'danger-outline'
+type Variant = 'primary' | 'secondary' | 'soft' | 'ghost' | 'danger' | 'danger-outline'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode
@@ -8,9 +8,12 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean
 }
 
-// Главная кнопка — токены primary: в тёмной теме светлая заливка с тёмным
-// текстом (как было), в светлой — фиолетовая с белым; тень видна только в
-// светлой. Вторичная — акцентная outline, ghost — только текст акцентом.
+// Главная кнопка — токены primary (лист s2): лавандовая у «Сумерек»,
+// мандариновая у «Заката»; тень видна только в светлой. Вторичная —
+// акцентная outline; мягкая — подложка accent-soft (главное действие экрана
+// уступило место другому: «Начать занятие» перед уроком, макет u1-2); ghost —
+// только текст акцентом. Высоты 44 / 48 / 56–60 и тон нажатия primary-press —
+// PLAN.md Ф2.17-3.
 // ⚠️ Своих копий главной кнопки (`bg-fg text-page` в className) не заводить:
 // они не знают про светлую тему и остаются чёрными.
 const styles: Record<Variant, string> = {
@@ -18,6 +21,7 @@ const styles: Record<Variant, string> = {
     'bg-primary text-primary-fg shadow-card hover:brightness-95 active:brightness-90',
   secondary:
     'border border-accent-line bg-accent/14 text-fg hover:bg-accent/22',
+  soft: 'bg-accent-soft text-accent-soft-fg hover:brightness-95 active:brightness-90',
   ghost:
     'bg-transparent text-accent-strong hover:bg-tint/[0.06]',
   danger: 'bg-danger/90 text-danger-fg hover:bg-danger',

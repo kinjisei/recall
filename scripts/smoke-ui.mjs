@@ -1,11 +1,12 @@
 /**
- * Смоук дизайн-системы (PLAN.md Ф1.4): тема за флагом, шторка боковой
- * панелью, общие раскладки, клавиатура в упражнениях.
+ * Смоук дизайн-системы (PLAN.md Ф1.4, Ф2.17-2): вид для всех, шторка
+ * боковой панелью, общие раскладки, клавиатура в упражнениях.
  *
- *   1. тема: у обычного человека тёмная даже при светлом телефоне; владелец в
- *      /admin выбирает светлую — меняются data-theme, фон страницы и цвет строки
- *      состояния, выбор переживает перезагрузку; «как в системе» идёт за
- *      телефоном; в Настройках переключателя нет;
+ *   1. вид (макет u4): скрипт в <head> ставит тему до приложения; без выбора
+ *      — тема телефона; в Настройках «Цвет» и «Режим»: меняются data-theme,
+ *      data-palette, фон и цвет строки состояния, смена плавная (200 мс), а
+ *      при «уменьшить движение» — сразу; выбор переживает перезагрузку; «как
+ *      в системе» идёт за телефоном; в админке блока темы нет;
  *   2. шторка: на телефоне — снизу во всю ширину, на компьютере — панелью
  *      справа на всю высоту;
  *   3. раскладки (витрина /dev/ui, только в разработке): колонка упражнения,
@@ -64,13 +65,28 @@ const clickText = (page, text, sel = 'button') =>
     sel,
   )
 
-/** Состояние темы на странице. */
+/** Вид на странице: тема, палитра, фон, цвет строки состояния. */
 const themeState = (page) =>
   page.evaluate(() => ({
     attr: document.documentElement.dataset.theme ?? null,
+    palette: document.documentElement.dataset.palette ?? null,
     bg: getComputedStyle(document.body).backgroundColor,
     meta: document.querySelector('meta[name="theme-color"]')?.getAttribute('content') ?? null,
   }))
+
+/** Выбрать вариант в группе «Цвет» или «Режим» Настроек (по началу подписи). */
+const pick = (page, group, label) =>
+  page.evaluate(
+    (g, l) => {
+      const b = [...document.querySelectorAll(`[role="radiogroup"][aria-label="${g}"] [role="radio"]`)].find((e) =>
+        (e.textContent || '').trim().startsWith(l),
+      )
+      b?.click()
+      return !!b
+    },
+    group,
+    label,
+  )
 
 async function createUser() {
   await admin.from('allowed_emails').upsert({ email: EMAIL, note: 'ui-smoke (временный)' })
@@ -113,38 +129,71 @@ async function shot(page, name) {
   await settledScreenshot(page, { path: join(SHOTS, `${name}.png`) })
 }
 
-// ── 1. тема ─────────────────────────────────────────────────────────────────
+// ── 1. вид: палитра × тема (Ф2.17-2, макет u4) ────────────────────────────
 async function theme(page, userId) {
-  // обычный человек со светлым телефоном — всё равно тёмная
+  // профиль браузера живёт между прогонами — выбор прошлого прогона стираем
+  await page.evaluate(() => {
+    localStorage.removeItem('recall.theme')
+    localStorage.removeItem('recall.palette')
+  })
   await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'light' }])
-  await page.goto(`${BASE}/`, { waitUntil: 'networkidle2' })
+
+  // до приложения: вид ставит скрипт в <head> — запрос приложения отрезаем
+  await page.setRequestInterception(true)
+  const cut = (r) => (r.url().includes('/src/app/main.tsx') ? r.abort() : r.continue())
+  page.on('request', cut)
+  await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' })
   let t = await themeState(page)
-  check('без выбора: тёмная даже при светлом телефоне', t.attr === 'dark' && t.bg === 'rgb(22, 24, 38)', JSON.stringify(t))
-  await page.goto(`${BASE}/settings`, { waitUntil: 'networkidle2' })
-  await waitText(page, 'Настройки')
-  check('в Настройках переключателя темы нет', !(await page.evaluate(() => !!document.querySelector('[aria-label="Тема оформления"]'))))
+  check('до приложения: скрипт в <head> — светлый телефон → светлая и строка состояния', t.attr === 'light' && t.meta === '#f4f3f9', JSON.stringify(t))
+  page.off('request', cut)
+  await page.setRequestInterception(false)
 
-  // владелец: блок в админке
-  await admin.from('profiles').update({ is_admin: true }).eq('id', userId)
-  await page.goto(`${BASE}/admin`, { waitUntil: 'networkidle2' })
-  check('в админке есть «Тема на этом устройстве»', await waitText(page, 'Тема на этом устройстве'))
-  await clickText(page, 'Светлая')
-  await sleep(300)
-  t = await themeState(page)
-  check('владелец выбрал светлую: data-theme, фон, строка состояния', t.attr === 'light' && t.bg === 'rgb(245, 245, 249)' && t.meta === '#f5f5f9', JSON.stringify(t))
-  await shot(page, 'theme-light-admin')
-
+  // никто не выбирал — как в телефоне (журнал п.71)
   await page.goto(`${BASE}/`, { waitUntil: 'networkidle2' })
-  await sleep(800)
   t = await themeState(page)
-  check('выбор переживает перезагрузку', t.attr === 'light', JSON.stringify(t))
+  check('без выбора: светлый телефон → светлые «Сумерки»', t.attr === 'light' && t.palette === null && t.bg === 'rgb(244, 243, 249)', JSON.stringify(t))
   await shot(page, 'theme-light-home')
 
-  // «как в системе» идёт за телефоном — и при смене на лету
-  await page.goto(`${BASE}/admin`, { waitUntil: 'networkidle2' })
-  await waitText(page, 'Тема на этом устройстве')
-  await clickText(page, 'Как в системе')
-  await sleep(300)
+  await page.goto(`${BASE}/settings`, { waitUntil: 'networkidle2' })
+  await waitText(page, 'Оформление')
+  const groups = await page.evaluate(() => [...document.querySelectorAll('[role="radiogroup"]')].map((g) => g.getAttribute('aria-label')))
+  check('в Настройках «Цвет» и «Режим»', groups.includes('Цвет') && groups.includes('Режим'), groups.join(', '))
+  await shot(page, 'theme-settings-light')
+
+  // смена режима: цвета перетекают за 200 мс, потом переход снимается (u4-3)
+  await pick(page, 'Режим', 'Тёмная')
+  const mid = await page.evaluate(() => ({
+    switching: 'themeSwitch' in document.documentElement.dataset,
+    bg: getComputedStyle(document.body).backgroundColor,
+  }))
+  await sleep(400)
+  t = await themeState(page)
+  const still = await page.evaluate(() => 'themeSwitch' in document.documentElement.dataset)
+  check('смена режима плавная: сразу после нажатия фон ещё не новый, через 400 мс — новый', mid.switching && mid.bg !== t.bg && !still, `${mid.bg} → ${t.bg}`)
+  check('«Тёмная»: data-theme, фон, строка состояния', t.attr === 'dark' && t.bg === 'rgb(22, 24, 38)' && t.meta === '#161826', JSON.stringify(t))
+
+  await page.goto(`${BASE}/`, { waitUntil: 'networkidle2' })
+  t = await themeState(page)
+  check('выбор переживает перезагрузку', t.attr === 'dark', JSON.stringify(t))
+
+  // «Закат» в обеих темах
+  await page.goto(`${BASE}/settings`, { waitUntil: 'networkidle2' })
+  await waitText(page, 'Оформление')
+  await pick(page, 'Цвет', 'Закат')
+  await sleep(400)
+  t = await themeState(page)
+  check('«Закат» · тёмная: палитра, фон, строка состояния', t.palette === 'sunset' && t.attr === 'dark' && t.bg === 'rgb(26, 21, 18)' && t.meta === '#1a1512', JSON.stringify(t))
+  await pick(page, 'Режим', 'Светлая')
+  await sleep(400)
+  t = await themeState(page)
+  check('«Закат» · светлая: палитра, фон, строка состояния', t.palette === 'sunset' && t.attr === 'light' && t.bg === 'rgb(246, 241, 237)' && t.meta === '#f6f1ed', JSON.stringify(t))
+  const marked = await page.evaluate(() => [...document.querySelectorAll('[role="radio"][aria-checked="true"]')].map((e) => (e.textContent || '').trim()))
+  check('отмечены «Закат» и «Светлая»', marked.includes('Закат') && marked.includes('Светлая'), marked.join(', '))
+  await shot(page, 'theme-sunset-light-settings')
+
+  // «Как в системе» идёт за телефоном — и при смене на лету
+  await pick(page, 'Режим', 'Как в системе')
+  await sleep(400)
   const sysLight = (await themeState(page)).attr
   await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'dark' }])
   await page.screenshot({ encoding: 'base64' }) // кадр: событие медиа-запроса приходит с ним
@@ -152,8 +201,25 @@ async function theme(page, userId) {
   const sysDark = (await themeState(page)).attr
   check('«как в системе»: светлый телефон → светлая, сменил на тёмный → тёмная', sysLight === 'light' && sysDark === 'dark', `${sysLight} → ${sysDark}`)
 
-  await clickText(page, 'Тёмная')
+  // «уменьшить движение» — без перехода, всё сразу
+  await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }])
+  await pick(page, 'Режим', 'Светлая')
+  const instant = await page.evaluate(() => getComputedStyle(document.body).backgroundColor)
+  check('при «уменьшить движение» вид меняется сразу', instant === 'rgb(246, 241, 237)', instant)
+
+  // админка: блока темы больше нет — выбор у всех в Настройках
+  await admin.from('profiles').update({ is_admin: true }).eq('id', userId)
+  await page.goto(`${BASE}/admin`, { waitUntil: 'networkidle2' })
+  await waitText(page, 'Админка')
+  check('в админке блока темы нет', !(await page.evaluate(() => (document.body.innerText || '').includes('Тема на этом устройстве'))))
   await admin.from('profiles').update({ is_admin: false }).eq('id', userId)
+
+  // дальше смоук идёт в тёмных «Сумерках», как раньше
+  await page.goto(`${BASE}/settings`, { waitUntil: 'networkidle2' })
+  await waitText(page, 'Оформление')
+  await pick(page, 'Цвет', 'Сумерки')
+  await pick(page, 'Режим', 'Тёмная')
+  await sleep(400)
   await page.emulateMediaFeatures([])
 }
 

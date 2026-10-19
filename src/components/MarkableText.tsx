@@ -33,7 +33,7 @@ export function MarkableText({
           onClick={() => setSelectMode((v) => !v)}
           className={`flex min-h-[40px] items-center gap-1.5 rounded-full border px-3.5 text-sm ${
             selectMode
-              ? 'border-accent-line bg-[rgba(145,132,217,.14)] text-accent-soft-fg'
+              ? 'border-accent-line bg-accent/14 text-accent-soft-fg'
               : 'border-tint/[0.10] text-fg-muted'
           }`}
         >

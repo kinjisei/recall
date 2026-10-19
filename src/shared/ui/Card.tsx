@@ -33,8 +33,8 @@ export function Card({
   interactive?: boolean
   tone?: CardTone
 }) {
-  // Тема «Nocturne»: поверхность + тонкая рамка; тень — только в светлой
-  // теме (shadow-card: в тёмной её цвет прозрачный).
+  // Поверхность + тонкая рамка; тень — только в светлой теме (shadow-card:
+  // в тёмной она нулевая, уровни держит тон, лист s2).
   const base = `rounded-2xl border ${TONES[tone]} p-5 text-fg shadow-card`
   const press = interactive ? 'lift hover:border-tint/[0.14]' : ''
   return <div className={`${base} ${press} ${className}`}>{children}</div>

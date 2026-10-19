@@ -103,7 +103,7 @@ export function AnalyzedItemsView({
                       className={`lift flex h-9 w-9 flex-none items-center justify-center rounded-full border ${
                         isAdded
                           ? 'border-success/60 text-success-strong'
-                          : 'border-accent-line bg-[rgba(145,132,217,.14)] text-accent-soft-fg'
+                          : 'border-accent-line bg-accent/14 text-accent-soft-fg'
                       }`}
                     >
                       {isAdded ? <IconCheck size={16} /> : <IconPlus size={16} />}

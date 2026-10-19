@@ -9,8 +9,9 @@ import { onAiRequest } from '../shared/api/ai'
 import { applyTheme } from '../shared/ui/theme'
 import '../index.css'
 
-// Тема (data-theme на <html>) — до первого рендера, чтобы экран не мигнул
-// другой темой. Пока выбирает только владелец для себя — shared/ui/theme.ts.
+// Вид (data-theme и data-palette на <html>) до первой отрисовки уже поставил
+// скрипт в index.html; здесь — то же из shared/ui/theme.ts и слежение за
+// телефоном при «Как в системе». Скрипт не пустил CSP — тема ставится здесь.
 applyTheme()
 
 // Обезличенная аналитика посещений (Vercel Web Analytics, бесплатный тариф).

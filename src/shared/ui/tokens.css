@@ -1,94 +1,106 @@
 /* ==========================================================================
    Токены дизайн-системы — единственное место, где у цвета есть значение
-   (архитектура §5; журнал п.22, п.37).
+   (архитектура §5; журнал п.22, п.37, п.56).
 
-   Два слоя:
-   1. @theme — смысловые токены и их значения в ТЁМНОЙ теме (Nocturne, она по
+   Четыре варианта вида: две палитры × две темы (лист design/mockups/
+   s2-style-colors.html, PLAN.md Ф2.17-2). Палитра — атрибут data-palette на
+   <html> («Закат» — sunset; нет атрибута — «Сумерки»), тема — data-theme.
+   Ставит их shared/ui/theme.ts (и до первой отрисовки — скрипт в index.html).
+   Блоки:
+   1. @theme — смысловые токены и значения «Сумерек» в ТЁМНОЙ теме (по
       умолчанию). Tailwind делает из каждого утилиты: --color-surface →
       bg-surface, text-surface, border-surface…; --text-body → text-body.
       `static` — переменные выводятся все, даже если ни одна утилита их не
       зовёт: на них ссылаются style={{…}}, SVG и index.css.
-   2. :root[data-theme='light'] — те же токены со светлыми значениями (и
-      [data-theme='light'] на отдельном блоке — печатные листы).
-      Черновые: настоящие придут с редизайном (PLAN.md Ф2.17). Тему выбирает
-      shared/ui/theme.ts.
+   2. «Сумерки» · светлая — :root[data-theme='light'] и [data-theme='light']
+      на отдельном блоке (печатные листы).
+   3. «Закат» · тёмная — :root[data-palette='sunset'].
+   4. «Закат» · светлая — и на <html>, и на блоке внутри «Заката».
+   В каждом блоке задан КАЖДЫЙ цветовой токен (ссылочные var(--…) тоже):
+   блок работает и на одном элементе, а переменная, вычисленная на <html>,
+   иначе принесла бы туда значение другого варианта. Кроме двух групп «только
+   палитры» — превью и образцов выбора темы в Настройках (ниже, у @theme).
+
    Экраны и компоненты пишут только утилиты (bg-surface, text-fg-muted,
    text-danger-strong) — не hex, не text-white, не [var(--…)]. Держит сторож
    токенов (scripts/checks/tokens.mjs): сырые значения законны только здесь.
 
    Слоя «токен на компонент» (--button-bg…) нет намеренно: компоненты собраны
-   из утилит на смысловых токенах, и ещё один слой удвоил бы места правки при
-   редизайне.
+   из утилит на смысловых токенах, и ещё один слой удвоил бы места правки.
 
-   Проверка — scripts/test-tokens.mjs: у каждого цвета есть светлое значение,
-   контраст текста ≥ 4,5:1 и иконок ≥ 3:1 в ОБЕИХ темах, точки перехода
-   совпадают с shared/ui/breakpoints.ts.
+   Проверка — scripts/test-tokens.mjs: все четыре варианта полные, контраст
+   текста ≥ 4,5:1 и иконок ≥ 3:1 в каждом, превью равны настоящим значениям,
+   точки перехода совпадают с shared/ui/breakpoints.ts.
    ========================================================================== */
 
 @theme static {
   /* --- Поверхности --- */
-  --color-page: #161826; /* фон страницы */
-  --color-surface: #1e2030; /* карточки, строки, панели, шторки */
-  --color-input: #262939; /* поля ввода, приподнятое внутри карточки */
-  --color-glass: rgba(22, 24, 38, 0.74); /* стеклянная панель поверх авроры (вход) */
-  --color-step: rgba(30, 32, 46, 0.72); /* неактивный шаг поверх авроры */
+  --color-page: #161826; /* фон экрана; цвет строки состояния (theme-color) */
+  --color-surface: #1e2030; /* карточки, строки, шторки, панель справа */
+  --color-input: #262939; /* поля, сегмент EN/ES, нейтральные чипы, «1 из 4» */
+  /* Стекло — слой поверх содержимого с blur 20 + saturate 1,5: glass — шапка
+     телефона и карточка входа поверх авроры, glass-bar — плавающая панель
+     вкладок. Стекло на стекло не кладём (s2, «Глубина»). */
+  --color-glass: rgba(22, 24, 38, 0.82);
+  --color-glass-bar: rgba(30, 32, 48, 0.86);
+  --color-step: rgba(30, 32, 46, 0.72); /* неактивный шаг поверх авроры (вход) */
 
-  /* --- Текст. От самого яркого к самому бледному. Числа — контраст на page
-     (подобраны по WCAG): текстовые уровни ≥ 4,5:1, faint — только иконки и
-     разделители (≥ 3:1), line — рамки. --- */
-  --color-fg: #e9e9ed; /* основной текст */
-  --color-fg-secondary: rgba(233, 233, 237, 0.75); /* ~8,4:1 — второстепенный текст */
-  --color-fg-tertiary: rgba(233, 233, 237, 0.66); /* ~6,8:1 */
-  --color-fg-muted: rgba(233, 233, 237, 0.58); /* ~5,3:1 — подписи и описания */
-  --color-fg-faint: rgba(233, 233, 237, 0.4); /* ~3,3:1 — иконки, разделители; НЕ текст */
-  --color-line: rgba(233, 233, 237, 0.1); /* рамки и разделители */
+  /* --- Текст. От самого яркого к самому бледному; сплошные цвета, а не
+     доли (s2). Контраст к page: fg 14,5 · secondary 9,5 · tertiary 7,6 ·
+     muted 6,0; faint ~3,6 — только иконки и разделители, НЕ текст. --- */
+  --color-fg: #e9e9ed; /* основной текст, заголовки, крупные цифры */
+  --color-fg-secondary: #bdbec8; /* описания в карточках, второй ряд строки */
+  --color-fg-tertiary: #a9aab6; /* ступень между secondary и muted */
+  --color-fg-muted: #9496a6; /* подписи, сноски, плейсхолдеры */
+  --color-fg-faint: #6e7085; /* шевроны, ручка шторки, разделители; НЕ текст */
+  --color-line: #2c2f42; /* разделители строк, рамка карточки — декор */
 
   /* Дымка: белая в тёмной теме, тёмная в светлой. Рамки и подложки берут её
-     долей — border-tint/[0.08], bg-tint/[0.04]: так тонкие линии остаются
-     видны в обеих темах (text-white/… в светлой исчезли бы). */
+     долей — border-tint/[0.08], bg-tint/[0.04] (нажатая строка — 4–8 %). */
   --color-tint: #fff;
-  /* Затемнение под шторкой — долей: bg-scrim/40. Текст и иконки поверх
-     затемнения — scrim-fg: белые в обеих темах, как и само затемнение. */
+  /* Затемнение — долей: bg-scrim/60 под текстом поверх (scrim-fg — белый в
+     обеих темах). Сила затемнения под шторкой своя у темы (s2: 55 % в
+     тёмной, 40 % в светлой) — переменная --scrim-sheet у :root ниже,
+     утилита bg-scrim/(--scrim-sheet). */
   --color-scrim: #000;
   --color-scrim-fg: #fff;
   /* Лёгкая дымка под правой панелью поверх содержимого на компьютере (d0,
-     правило 8; макет d3-4): закрывает область справа от меню, не меню.
-     Сила разная по теме — замер по макету: ~32 % чёрного в тёмной, ~13 % в
-     светлой, — поэтому токен, а не доля scrim. */
+     правило 8; макет d3-4): ~32 % чёрного в тёмной, ~13 % в светлой. */
   --color-haze: rgba(0, 0, 0, 0.32);
   /* Утопленная подложка внутри карточки (переписка квеста, журнал). */
   --color-sunken: rgba(0, 0, 0, 0.2);
 
-  /* --- Рамки элементов управления (чипы выбора, сегменты). В тёмной теме
-     их нет: чип держится подложкой, и так было всегда. В светлой подложка
-     теряется на белом, поэтому нужна рамка — control-line, у выбранного —
-     control-line-active. Прозрачная рамка не меняет ни пикселя: фон лежит
-     и под рамкой. --- */
-  --color-control-line: transparent;
-  --color-control-line-active: transparent;
+  /* --- Рамка элементов управления: поле и невыбранный чип — граница
+     элемента, ≥ 3:1 к surface в обеих темах (s2: в тёмной теперь видна).
+     control-line-active — у выбранного, цветом фокуса (u4: выбранный чип —
+     мягкая подложка и рамка focus). Берётся через ring-1 ring-control-line:
+     ring не занимает места, рамка border сдвинула бы ряд чипов на 2 px. --- */
+  --color-control-line: #6a6d8a;
+  --color-control-line-active: var(--color-focus);
+  /* Пунктирный круг будущего дня в серии (на hero), ≥ 3:1 к hero. */
+  --color-ring: #8a82c6;
 
-  /* --- Главная кнопка (Button primary). В тёмной — светлая заливка с тёмным
-     текстом, как было всегда; в светлой — акцентная, фиолетовая. --- */
-  --color-primary: var(--color-fg);
-  --color-primary-fg: var(--color-page);
+  /* --- Главная кнопка (Button primary) — одна на экран. press — нажатая
+     (вместе со scale .97, PLAN.md Ф2.17-3). --- */
+  --color-primary: #a99eea;
+  --color-primary-fg: #161826;
+  --color-primary-press: #8c80d0;
 
-  /* --- Карточка-герой (серия дней на Главной): радиальный градиент
-     hero → hero-mid → hero-edge и размытое акцентное пятно. Значения тёмной —
-     те, что стояли в коде до токенов. --- */
+  /* --- Карточка-герой (серия дней): радиальный градиент из левого верхнего
+     угла hero → hero-mid → hero-edge, размытое пятно hero-glow справа
+     сверху, рамка 1 px hero-line. Тот же градиент — у «билета» рефералки
+     (макет t8). Градиентные токены — в rgba/hex, а не accent долей: цвет из
+     color-mix браузер ведёт через oklab. --- */
   --color-hero: #2b2c55;
   --color-hero-mid: #1c1d38;
   --color-hero-edge: #171830;
   --color-hero-glow: rgba(145, 132, 217, 0.45);
-  /* Подложка главного призыва «Начать занятие»: градиент cta → cta-end.
-     Именно rgba, а не accent долей: цвет из color-mix браузер пересчитывает
-     через oklab, и градиент расходился с прежним на единицу. */
-  --color-cta: rgba(145, 132, 217, 0.22);
-  --color-cta-end: rgba(145, 132, 217, 0.1);
+  --color-hero-line: rgba(145, 132, 217, 0.3);
   /* «Аврора» — фон входа, регистрации и смены пароля (features/auth/authUi):
      основа — радиальный градиент aurora → aurora-mid → aurora-edge, сверху
-     три дрейфующих пятна aurora-a/b/c и блик aurora-sheen. Значения тёмной —
-     те, что стояли в коде до токенов (журнал п.71: в светлой фон оставался
-     тёмно-фиолетовым). */
+     три дрейфующих пятна aurora-a/b/c и блик aurora-sheen. На листе s2 её
+     нет: у «Сумерек» — прежние значения, у «Заката» — выведены из его
+     палитры (герой и акцент). */
   --color-aurora: #232449;
   --color-aurora-mid: #14152a;
   --color-aurora-edge: #0f1020;
@@ -98,73 +110,138 @@
   --color-aurora-sheen: rgba(145, 132, 217, 0.08);
 
   /* --- Акцент --- */
-  --color-accent: #9184d9; /* линии, рамки, метки, заливка */
-  --color-accent-strong: #b9b0e8; /* акцент как ТЕКСТ: ссылки, мелкие подписи */
-  --color-accent-soft: #2b2450; /* мягкая подложка: активная вкладка, иконка */
-  --color-accent-soft-fg: #cfc8f0; /* текст и иконка на мягкой подложке */
+  --color-accent: #9184d9; /* узлы дорожки, энергия, огонёк, иконки; НЕ текст */
+  --color-accent-strong: #b9b0e8; /* акцент как ТЕКСТ: ссылки, «Дальше» */
+  --color-accent-soft: #2b2450; /* мягкая подложка: активная вкладка, выбранный чип */
+  --color-accent-soft-fg: #cfc8f0; /* текст и иконка на accent-soft и на hero */
   --color-accent-fg: #161826; /* текст на сплошной заливке акцентом */
-  --color-accent-line: rgba(145, 132, 217, 0.45); /* акцентная рамка */
-  --color-accent-line-soft: rgba(145, 132, 217, 0.3); /* акцентная рамка тише */
-  --color-focus: #8878d4; /* кольцо фокуса с клавиатуры */
-  --color-logo-back: #38366b; /* задняя карточка логотипа */
+  /* рамки акцентом — на листе их нет, доля акцента своей палитры */
+  --color-accent-line: rgba(145, 132, 217, 0.45);
+  --color-accent-line-soft: rgba(145, 132, 217, 0.3);
+  --color-focus: #a99eea; /* кольцо фокуса с клавиатуры: 2 px, отступ 2 px */
+  --color-logo-back: #38366b; /* задняя карточка знака Recall */
 
-  /* --- Статусы. Тройка на каждый: сплошной (заливка, рамка, точка),
-     -strong (как текст на странице), -fg (надпись на сплошной заливке).
-     Мягкая подложка и рамка — долей: bg-danger/10, border-danger/30.
-     Значения — из палитры Tailwind, которой экраны красились до токенов:
-     danger = red-500 / red-400, warning = amber-400 / amber-300,
-     success = emerald-500 / emerald-400.
-     Ещё четыре роли на статус (светлая тема, 30.09.2026):
-       -soft-fg  текст на мягкой подложке и в правках «было → стало»
-                 (red-300 / amber-200 / emerald-300 в тёмной);
-       -soft     глубокий тон подложки, берётся ДОЛЕЙ: bg-danger-soft/40 —
-                 выбранный неверный ответ, счётчик на карточке (в тёмной
-                 red-950 / amber-900 / emerald-950, в светлой — бледный);
-       -surface, -line  фон и рамка статусной карточки (Card tone). В тёмной
-                 это обычная поверхность и рамка карточки — статус там
-                 говорит цветом текста, так и было; в светлой — тёплый или
-                 розовый фон с цветной рамкой. Рамка тёмной — тем же
-                 color-mix, что у border-tint/[0.08]: у rgba() прозрачность
-                 округляется до 1/255, и рамка расходилась на единицу. --- */
-  --color-danger: oklch(63.7% 0.237 25.331);
-  --color-danger-strong: oklch(70.4% 0.191 22.216);
-  --color-danger-fg: #fff;
-  --color-danger-soft: oklch(25.8% 0.092 26.042);
-  --color-danger-soft-fg: oklch(80.8% 0.114 19.571);
-  --color-danger-surface: var(--color-surface);
-  --color-danger-line: color-mix(in oklab, #fff 8%, transparent);
-  --color-warning: oklch(82.8% 0.189 84.429);
-  --color-warning-strong: oklch(87.9% 0.169 91.605);
-  --color-warning-fg: oklch(27.9% 0.077 45.635);
-  --color-warning-soft: oklch(41.4% 0.112 45.904);
-  --color-warning-soft-fg: oklch(92.4% 0.12 95.746);
-  --color-warning-surface: var(--color-surface);
-  --color-warning-line: color-mix(in oklab, #fff 8%, transparent);
-  --color-success: oklch(69.6% 0.17 162.48);
-  --color-success-strong: oklch(76.5% 0.177 163.223);
-  --color-success-fg: oklch(26.2% 0.051 172.552);
-  --color-success-soft: oklch(26.2% 0.051 172.552);
-  --color-success-soft-fg: oklch(84.5% 0.143 164.978);
+  /* --- Статусы — цвет всегда вместе с иконкой или словом. На статус:
+       сплошной   заливка, рамка, точка;
+       -strong    как текст на странице и на -surface;
+       -fg        надпись на сплошной заливке (≥ 4,5:1);
+       -soft      мягкая подложка; берётся и долей: bg-danger-soft/40 —
+                  выбранный неверный ответ;
+       -soft-fg   текст на мягкой подложке и правки «было → стало» — на листе
+                  роли нет: равен -strong своего варианта, кроме success в
+                  светлых — там на 15 % темнее (зелёный листа темнее прежнего,
+                  и -strong на подложке bg-success/15 давал 4,2:1);
+       -surface, -line  фон и рамка статусной карточки (Card tone), с
+                  оттенком статуса в обеих темах (s2).
+     Мягкая подложка долей сплошного тоже законна: bg-danger/10. --- */
+  --color-danger: #ee6b6b;
+  --color-danger-strong: #ff9c9c;
+  --color-danger-fg: #2a0a0d;
+  --color-danger-soft: #3d1d24;
+  --color-danger-soft-fg: #ff9c9c;
+  --color-danger-surface: #281c27;
+  --color-danger-line: #5a2b35;
+  --color-warning: #f2b95c;
+  --color-warning-strong: #f7cd84;
+  --color-warning-fg: #2b1c00;
+  --color-warning-soft: #3a2c14;
+  --color-warning-soft-fg: #f7cd84;
+  --color-warning-surface: #29241e;
+  --color-warning-line: #5c4520;
+  --color-success: #4cc38a;
+  --color-success-strong: #6fd3a2;
+  --color-success-fg: #0b2a1c;
+  --color-success-soft: #163126;
+  --color-success-soft-fg: #6fd3a2;
+  --color-success-surface: #1a2a28;
+  --color-success-line: #2c5240;
 
-  /* --- Тени. Шкала из двух ступеней: card — карточки, строки, чипы, главная
-     кнопка; raised — то, что стоит над соседями («Начать занятие», меню).
-     Сама тень — переменная темы --elevation-* (ниже, у :root): в тёмной её
-     НЕТ (Nocturne держит карточки рамкой и поверхностью), в светлой — лёгкая
-     тень цветом текста. Нулевая тень в тёмной, а не прозрачная: прозрачную
-     с размытием браузер всё равно рисует, и у скруглённых углов менялось
-     сглаживание (замер по пикселям 30.09.2026). --- */
+  /* --- Серии графика (ChartView: IELTS Task 1) — категориальные, в
+     постоянном порядке; одна пара на обе палитры (график — данные, не
+     бренд). Шаги из проверенной палитры скилла dataviz, прогнаны его
+     валидатором на наших поверхностях: различимы при дальтонизме (соседние
+     ΔE ≥ 8,4), в тёмной ≥ 3:1 к surface; в светлой три серии бледнее 3:1 —
+     поэтому у графика всегда подписи (легенда, «название: %»). Текст рядом с
+     серией — текстовыми токенами, не цветом серии. --- */
+  --color-chart-1: #3987e5;
+  --color-chart-2: #d95926;
+  --color-chart-3: #199e70;
+  --color-chart-4: #c98500;
+  --color-chart-5: #d55181;
+  --color-chart-6: #008300;
+
+  /* --- Только палитры, не темы: выбор вида в Настройках (макет u4). Превью
+     «Светлая» и «Тёмная» рисуют обе темы НЫНЕШНЕЙ палитры одновременно:
+     фон, карточка, главная кнопка и текст. Значения равны настоящим токенам
+     своего варианта — сверяет тест. Задаются здесь и в блоке «Заката»;
+     в светлых блоках их нет — от темы они не зависят. --- */
+  --color-preview-light-page: #f4f3f9;
+  --color-preview-light-card: #ffffff;
+  --color-preview-light-accent: #6b5ccc;
+  --color-preview-light-fg: #1a1c2b;
+  --color-preview-dark-page: #161826;
+  --color-preview-dark-card: #262939;
+  --color-preview-dark-accent: #a99eea;
+  --color-preview-dark-fg: #e9e9ed;
+  /* Кружок палитры на плитке «Цвет» — обе палитры видны всегда, поэтому
+     постоянные: от акцента-текста через акцент к светлому тону (u4). */
+  --color-swatch-twilight-from: #5241b3;
+  --color-swatch-twilight-via: #6b5ccc;
+  --color-swatch-twilight-to: #a99eea;
+  --color-swatch-sunset-from: #b5481a;
+  --color-swatch-sunset-via: #ee6a2c;
+  --color-swatch-sunset-to: #f7a87e;
+
+  /* --- Тени (s2, «Глубина»): card — карточки, строки, чипы, главная
+     кнопка; raised — панель вкладок, меню, то, что над соседями; sheet —
+     шторка снизу. Сама тень — переменная темы --elevation-* (ниже, у :root):
+     в тёмной её НЕТ (уровни держатся тоном page → surface → input и рамкой
+     line), в светлой — мягкая тень цветом текста. Нулевая тень в тёмной, а
+     не прозрачная: прозрачную с размытием браузер всё равно рисует, и у
+     скруглённых углов менялось сглаживание. --- */
   --shadow-card: var(--elevation-card);
   --shadow-raised: var(--elevation-raised);
+  --shadow-sheet: var(--elevation-sheet);
 
-  /* --- Шрифт --- */
-  --font-sans: 'Onest Variable', 'Onest', system-ui, sans-serif;
+  /* --- Радиусы (s2): кнопка и чип теперь разные. Правило кнопки — радиус
+     ≈ 30 % высоты; full (rounded-full) — чип, сегмент, панель вкладок,
+     аватар, узел дорожки. --- */
+  --radius-control-sm: 0.875rem; /* 14 — кнопка и поле 44 */
+  --radius-control: 1rem; /* 16 — кнопка 48, поле 48–60 */
+  --radius-control-lg: 1.125rem; /* 18 — главная кнопка 56–60 */
+  --radius-row: 1.25rem; /* 20 — строка-карточка, статусная карточка */
+  --radius-card: 1.5rem; /* 24 — карточка */
+  --radius-sheet: 1.75rem; /* 28 — верх шторки */
 
-  /* --- Размеры текста вне шкалы Tailwind (xs 12 · sm 14 · base 16).
-     Высоту строки не задают — как и прежние text-[15px]. --- */
-  --text-micro: 0.625rem; /* 10 — метки капсом («РАЗБОР») */
-  --text-caption: 0.6875rem; /* 11 — сноски, счётчики */
+  /* --- Шрифт — Rubik: в нём есть казахские буквы ә ғ қ ң ө ұ ү һ і (Onest их
+     не имел, PLAN.md Ф2.16). Лежит в приложении (src/index.css), работает
+     офлайн; покрытие проверяет scripts/test-font-coverage.mjs. --- */
+  --font-sans: 'Rubik Variable', 'Rubik', system-ui, sans-serif;
+
+  /* --- Шкала текста (s2). Размеры Tailwind (xs 12 · sm 14 · base 16 · lg 18 ·
+     xl 20 · 2xl 24 · 3xl 30) — как на листе; трекинг по листу:
+     отрицательный — только от 18 px. Высоты строк листа (16/22, 18/24,
+     20/26, 24/30) — в PLAN.md Ф2.17-3 вместе с высотами кнопок и полей:
+     сейчас у многих кнопок высоту держит строка, и они стали бы ниже 44 px
+     (решение владельца 19.10.2026). --- */
+  --text-lg--letter-spacing: -0.005em;
+  --text-xl--letter-spacing: -0.01em;
+  --text-2xl--letter-spacing: -0.015em;
+  --text-3xl--letter-spacing: -0.02em;
+  /* Размеры вне шкалы Tailwind. Высоту строки не задают — как и прежние
+     text-[15px] (кроме новой ступени display). */
+  --text-micro: 0.625rem; /* 10 — метка капсом над группой */
+  --text-micro--letter-spacing: 0.06em;
+  --text-caption: 0.6875rem; /* 11 — сноска, цифра на значке */
+  --text-caption--letter-spacing: 0.01em;
   --text-note: 0.8125rem; /* 13 — подпись строки списка */
   --text-body: 0.9375rem; /* 15 — заголовок строки, основной текст карточек */
+  /* 40 — крупная цифра: серия у ученика, остаток уроков у репетитора. Одна
+     на экран, всегда tabular-nums. */
+  --text-display: 2.5rem;
+  --text-display--line-height: 1;
+  --text-display--letter-spacing: -0.02em;
+  --text-display--font-weight: 700;
 
   /* --- Точки перехода по ширине ОКНА (журнал п.46, п.55; макет d0). JS
      читает те же числа из breakpoints.ts — сверяет тест.
@@ -203,37 +280,42 @@
   --container-exercise-sides: 70rem; /* 1120 — поля упражнения: прогресс и клавиши */
 }
 
+/* Переменные ТЕМЫ (не цвета): тени и сила затемнения под шторкой. Тёмная —
+   общая у обеих палитр; светлые блоки ниже задают свои. */
 :root {
   color-scheme: dark;
-  /* тени тёмной темы — нулевые: их нет (см. --shadow-* выше) */
   --elevation-card: 0 0 #0000;
   --elevation-raised: 0 0 #0000;
+  --elevation-sheet: 0 0 #0000;
+  --scrim-sheet: 55%;
 }
 
-/* Светлая тема — черновик до редизайна (журнал п.37: включается для всех
-   вместе с редизайном, когда сторож токенов покажет ноль).
+/* ── «Сумерки» · светлая ──────────────────────────────────────────────────
    Второй селектор — светлая тема на ОДНОМ блоке при любой теме страницы:
    `data-theme="light"` на обёртке. Так устроены печатные листы (отчёт
    родителям, распечатка) и «бумажный» пример отчёта на лендинге: бумага
-   белая всегда. Поэтому здесь задан КАЖДЫЙ цветовой токен, в том числе
-   ссылочные (var(--…)): переменная, вычисленная на <html>, иначе пришла бы в
-   блок тёмной. */
+   белая всегда. */
 :root[data-theme='light'],
 [data-theme='light'] {
   color-scheme: light;
+  --elevation-card: 0 1px 2px rgba(26, 28, 43, 0.05), 0 6px 16px rgba(26, 28, 43, 0.05);
+  --elevation-raised: 0 8px 24px rgba(26, 28, 43, 0.08);
+  --elevation-sheet: 0 -8px 32px rgba(26, 28, 43, 0.12);
+  --scrim-sheet: 40%;
 
-  --color-page: #f5f5f9;
+  --color-page: #f4f3f9;
   --color-surface: #ffffff;
-  --color-input: #eceef4;
-  --color-glass: rgba(255, 255, 255, 0.78);
+  --color-input: #eceaf4;
+  --color-glass: rgba(244, 243, 249, 0.84);
+  --color-glass-bar: rgba(255, 255, 255, 0.84);
   --color-step: rgba(255, 255, 255, 0.72);
 
   --color-fg: #1a1c2b;
-  --color-fg-secondary: rgba(26, 28, 43, 0.82);
-  --color-fg-tertiary: rgba(26, 28, 43, 0.74);
-  --color-fg-muted: rgba(26, 28, 43, 0.66);
-  --color-fg-faint: rgba(26, 28, 43, 0.5);
-  --color-line: rgba(26, 28, 43, 0.12);
+  --color-fg-secondary: #46485a;
+  --color-fg-tertiary: #555769;
+  --color-fg-muted: #62647a;
+  --color-fg-faint: #86889c;
+  --color-line: #e3e1ee;
 
   --color-tint: #1a1c2b;
   --color-scrim: #000;
@@ -241,23 +323,22 @@
   --color-haze: rgba(0, 0, 0, 0.13);
   --color-sunken: rgba(26, 28, 43, 0.05);
 
-  --color-control-line: rgba(26, 28, 43, 0.16);
-  --color-control-line-active: #6b5ccc;
-  --elevation-card: 0 1px 3px rgba(26, 28, 43, 0.08);
-  --elevation-raised: 0 1px 3px rgba(26, 28, 43, 0.08), 0 4px 12px rgba(26, 28, 43, 0.08);
+  --color-control-line: #8c89a3;
+  --color-control-line-active: var(--color-focus);
+  --color-ring: #857bc0;
 
   --color-primary: #6b5ccc;
   --color-primary-fg: #ffffff;
+  --color-primary-press: #5747b8;
 
   --color-hero: #efebfd;
   --color-hero-mid: #f8f6fe;
   --color-hero-edge: #ffffff;
-  --color-hero-glow: rgba(107, 92, 204, 0.18);
-  --color-cta: rgba(107, 92, 204, 0.16);
-  --color-cta-end: rgba(107, 92, 204, 0.06);
+  --color-hero-glow: rgba(107, 92, 204, 0.2);
+  --color-hero-line: rgba(107, 92, 204, 0.3);
   --color-aurora: #ebe7fb;
   --color-aurora-mid: #f5f4fb;
-  --color-aurora-edge: #f5f5f9;
+  --color-aurora-edge: #f4f3f9;
   --color-aurora-a: rgba(107, 92, 204, 0.24);
   --color-aurora-b: rgba(124, 108, 222, 0.2);
   --color-aurora-c: rgba(160, 146, 236, 0.24);
@@ -265,7 +346,7 @@
 
   --color-accent: #6b5ccc;
   --color-accent-strong: #5241b3;
-  --color-accent-soft: #ebe7fb;
+  --color-accent-soft: #ece9fb;
   --color-accent-soft-fg: #3e318f;
   --color-accent-fg: #ffffff;
   --color-accent-line: rgba(107, 92, 204, 0.45);
@@ -273,23 +354,219 @@
   --color-focus: #6b5ccc;
   --color-logo-back: #c9c4ec;
 
-  --color-danger: oklch(57.7% 0.245 27.325);
-  --color-danger-strong: oklch(50.5% 0.213 27.518);
-  --color-danger-fg: #fff;
-  --color-danger-soft: oklch(93.6% 0.032 17.717);
-  --color-danger-soft-fg: oklch(44.4% 0.177 26.899);
-  --color-danger-surface: oklch(97.1% 0.013 17.38);
-  --color-danger-line: oklch(88.5% 0.062 18.334);
-  --color-warning: oklch(76.9% 0.188 70.08);
-  --color-warning-strong: oklch(45% 0.13 46);
-  --color-warning-fg: oklch(27.9% 0.077 45.635);
-  --color-warning-soft: oklch(96.2% 0.059 95.617);
-  --color-warning-soft-fg: oklch(47.3% 0.137 46.201);
-  --color-warning-surface: oklch(98.7% 0.022 95.277);
-  --color-warning-line: oklch(90.1% 0.076 70.697);
-  --color-success: oklch(59.6% 0.145 163.225);
-  --color-success-strong: oklch(50.8% 0.118 165.612);
-  --color-success-fg: #fff;
-  --color-success-soft: oklch(95% 0.052 163.051);
-  --color-success-soft-fg: oklch(43.2% 0.095 166.913);
+  --color-danger: #d63b3b;
+  --color-danger-strong: #b42323;
+  --color-danger-fg: #ffffff;
+  --color-danger-soft: #fce8e8;
+  --color-danger-soft-fg: #b42323;
+  --color-danger-surface: #fff6f6;
+  --color-danger-line: #f2c4c4;
+  --color-warning: #e9a23b;
+  --color-warning-strong: #8a5300;
+  --color-warning-fg: #3a2300;
+  --color-warning-soft: #fdf1dc;
+  --color-warning-soft-fg: #8a5300;
+  --color-warning-surface: #fffaf0;
+  --color-warning-line: #f0d9a8;
+  --color-success: #187a4f;
+  --color-success-strong: #1b7650;
+  --color-success-fg: #ffffff;
+  --color-success-soft: #e2f4ea;
+  --color-success-soft-fg: #176444; /* темнее strong: 4,5 на bg-success/15 */
+  --color-success-surface: #f3fbf6;
+  --color-success-line: #bfe3cf;
+  --color-chart-1: #2a78d6;
+  --color-chart-2: #eb6834;
+  --color-chart-3: #1baf7a;
+  --color-chart-4: #eda100;
+  --color-chart-5: #e87ba4;
+  --color-chart-6: #008300;
+}
+
+/* ── «Закат» · тёмная ─────────────────────────────────────────────────────
+   Тёплая палитра: мандариновый акцент, тёплые серо-розовые нейтрали (журнал
+   п.56). Статусы разведены от акцента: danger — малиновый, warning —
+   жёлтый. Тени и затемнение — общие тёмной теме (:root). */
+:root[data-palette='sunset'] {
+  --color-page: #1a1512;
+  --color-surface: #251f1b;
+  --color-input: #302823;
+  --color-glass: rgba(26, 21, 18, 0.82);
+  --color-glass-bar: rgba(37, 31, 27, 0.86);
+  --color-step: rgba(37, 31, 27, 0.72);
+
+  --color-fg: #f4ede8;
+  --color-fg-secondary: #d3c6be;
+  --color-fg-tertiary: #bdafa6;
+  --color-fg-muted: #a8988e;
+  --color-fg-faint: #7a6b62;
+  --color-line: #3a302a;
+
+  --color-tint: #fff;
+  --color-scrim: #000;
+  --color-scrim-fg: #fff;
+  --color-haze: rgba(0, 0, 0, 0.32);
+  --color-sunken: rgba(0, 0, 0, 0.22);
+
+  --color-control-line: #7d6a60;
+  --color-control-line-active: var(--color-focus);
+  --color-ring: #b08a76;
+
+  --color-primary: #f08a55;
+  --color-primary-fg: #21100a;
+  --color-primary-press: #db7642;
+
+  --color-hero: #4a2a1a;
+  --color-hero-mid: #2e211b;
+  --color-hero-edge: #241c17;
+  --color-hero-glow: rgba(240, 138, 85, 0.35);
+  --color-hero-line: rgba(240, 138, 85, 0.28);
+  --color-aurora: #3a2116;
+  --color-aurora-mid: #16100d;
+  --color-aurora-edge: #100c0a;
+  --color-aurora-a: rgba(240, 138, 85, 0.42);
+  --color-aurora-b: rgba(181, 72, 26, 0.55);
+  --color-aurora-c: rgba(238, 106, 44, 0.3);
+  --color-aurora-sheen: rgba(240, 138, 85, 0.08);
+
+  --color-accent: #f08a55;
+  --color-accent-strong: #f7a87e;
+  --color-accent-soft: #3e2618;
+  --color-accent-soft-fg: #ffc9a8;
+  --color-accent-fg: #21100a;
+  --color-accent-line: rgba(240, 138, 85, 0.45);
+  --color-accent-line-soft: rgba(240, 138, 85, 0.3);
+  --color-focus: #f7a87e;
+  --color-logo-back: #5a3424;
+
+  --color-danger: #f0707f;
+  --color-danger-strong: #ff9eaa;
+  --color-danger-fg: #2a0a10;
+  --color-danger-soft: #3f1c24;
+  --color-danger-soft-fg: #ff9eaa;
+  --color-danger-surface: #2c1c1f;
+  --color-danger-line: #5a2a33;
+  --color-warning: #ebc550;
+  --color-warning-strong: #f4d77e;
+  --color-warning-fg: #2a2000;
+  --color-warning-soft: #3a3012;
+  --color-warning-soft-fg: #f4d77e;
+  --color-warning-surface: #2a2516;
+  --color-warning-line: #5a4a1e;
+  --color-success: #63c68d;
+  --color-success-strong: #7fd6a4;
+  --color-success-fg: #0b2a1c;
+  --color-success-soft: #163126;
+  --color-success-soft-fg: #7fd6a4;
+  --color-success-surface: #1b2a22;
+  --color-success-line: #2e5240;
+  --color-chart-1: #3987e5;
+  --color-chart-2: #d95926;
+  --color-chart-3: #199e70;
+  --color-chart-4: #c98500;
+  --color-chart-5: #d55181;
+  --color-chart-6: #008300;
+
+  /* превью выбора темы — обе темы «Заката» (см. @theme) */
+  --color-preview-light-page: #f6f1ed;
+  --color-preview-light-card: #ffffff;
+  --color-preview-light-accent: #ee6a2c;
+  --color-preview-light-fg: #2a1f1a;
+  --color-preview-dark-page: #1a1512;
+  --color-preview-dark-card: #302823;
+  --color-preview-dark-accent: #f08a55;
+  --color-preview-dark-fg: #f4ede8;
+}
+
+/* ── «Закат» · светлая ────────────────────────────────────────────────────
+   Второй селектор — печатный лист и другие светлые блоки внутри «Заката».
+   Белый на оранжевом не проходит (3,1:1) — на главной кнопке и заливке
+   акцентом тёмная надпись; фокус — тёмный оттенок: чистый оранжевый на page
+   не дотягивает до 3:1. */
+:root[data-palette='sunset'][data-theme='light'],
+[data-palette='sunset'] [data-theme='light'] {
+  color-scheme: light;
+  --elevation-card: 0 1px 2px rgba(42, 31, 26, 0.05), 0 6px 16px rgba(42, 31, 26, 0.06);
+  --elevation-raised: 0 8px 24px rgba(42, 31, 26, 0.1);
+  --elevation-sheet: 0 -8px 32px rgba(42, 31, 26, 0.12);
+  --scrim-sheet: 40%;
+
+  --color-page: #f6f1ed;
+  --color-surface: #ffffff;
+  --color-input: #f0e9e3;
+  --color-glass: rgba(246, 241, 237, 0.84);
+  --color-glass-bar: rgba(255, 255, 255, 0.84);
+  --color-step: rgba(255, 255, 255, 0.72);
+
+  --color-fg: #2a1f1a;
+  --color-fg-secondary: #54463f;
+  --color-fg-tertiary: #63544c;
+  --color-fg-muted: #74645b;
+  --color-fg-faint: #93837a;
+  --color-line: #ebe1da;
+
+  --color-tint: #2a1f1a;
+  --color-scrim: #000;
+  --color-scrim-fg: #fff;
+  --color-haze: rgba(0, 0, 0, 0.13);
+  --color-sunken: rgba(42, 31, 26, 0.05);
+
+  --color-control-line: #9c8a80;
+  --color-control-line-active: var(--color-focus);
+  --color-ring: #a2785f;
+
+  --color-primary: #ee6a2c;
+  --color-primary-fg: #2a1206;
+  --color-primary-press: #dd5e20;
+
+  --color-hero: #fde3d2;
+  --color-hero-mid: #fef0e7;
+  --color-hero-edge: #ffffff;
+  --color-hero-glow: rgba(238, 106, 44, 0.22);
+  --color-hero-line: rgba(238, 106, 44, 0.28);
+  --color-aurora: #fde7da;
+  --color-aurora-mid: #faf3ee;
+  --color-aurora-edge: #f6f1ed;
+  --color-aurora-a: rgba(238, 106, 44, 0.22);
+  --color-aurora-b: rgba(232, 120, 70, 0.18);
+  --color-aurora-c: rgba(247, 168, 126, 0.24);
+  --color-aurora-sheen: rgba(238, 106, 44, 0.05);
+
+  --color-accent: #ee6a2c;
+  --color-accent-strong: #b5481a;
+  --color-accent-soft: #fde7da;
+  --color-accent-soft-fg: #8e3812;
+  --color-accent-fg: #2a1206;
+  --color-accent-line: rgba(238, 106, 44, 0.45);
+  --color-accent-line-soft: rgba(238, 106, 44, 0.3);
+  --color-focus: #b5481a;
+  --color-logo-back: #f7c3a5;
+
+  --color-danger: #cc2f45;
+  --color-danger-strong: #a8213a;
+  --color-danger-fg: #ffffff;
+  --color-danger-soft: #fbe6ea;
+  --color-danger-soft-fg: #a8213a;
+  --color-danger-surface: #fff6f7;
+  --color-danger-line: #f1c3cc;
+  --color-warning: #e5b323;
+  --color-warning-strong: #7a5a00;
+  --color-warning-fg: #2a2000;
+  --color-warning-soft: #fbf3d2;
+  --color-warning-soft-fg: #7a5a00;
+  --color-warning-surface: #fffbeb;
+  --color-warning-line: #eddc9e;
+  --color-success: #23794b;
+  --color-success-strong: #2a7448;
+  --color-success-fg: #ffffff;
+  --color-success-soft: #e2f2e8;
+  --color-success-soft-fg: #24633d; /* темнее strong: 4,5 на bg-success/15 */
+  --color-success-surface: #f3faf5;
+  --color-success-line: #bfe0cb;
+  --color-chart-1: #2a78d6;
+  --color-chart-2: #eb6834;
+  --color-chart-3: #1baf7a;
+  --color-chart-4: #eda100;
+  --color-chart-5: #e87ba4;
+  --color-chart-6: #008300;
 }

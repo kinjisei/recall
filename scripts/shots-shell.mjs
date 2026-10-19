@@ -5,10 +5,11 @@
  * (данные — `_seed-studio.mjs`, AI не вызывается, аккаунты удаляются сами).
  *
  *   npm run dev:test, затем
- *   node scripts/shots-shell.mjs [папка] [--widths 390,720,1280] [--theme light]
+ *   node scripts/shots-shell.mjs [папка] [--widths 390,720,1280] [--theme light] [--palette sunset]
  *
  * По умолчанию — папка shots-shell/, ширины 390 · 720 · 1024 · 1280 · 1440 ·
- * 1920, тёмная тема. Снимки «до» и «после» правки — в разные папки, сравнение
+ * 1920, тёмные «Сумерки». Настройки ученицы и репетитора — для сверки с u4
+ * (Ф2.17-2). Снимки «до» и «после» правки — в разные папки, сравнение
  * глазами рядом или `shots-compare.mjs --compare`. Входов всего два (ученица и
  * репетитор): ширина меняется в той же вкладке, иначе упираемся в лимит
  * входов Supabase.
@@ -33,6 +34,7 @@ const arg = (name) => {
 const DIR = process.argv[2] && !process.argv[2].startsWith('--') ? process.argv[2] : 'shots-shell'
 const WIDTHS = (arg('--widths') ?? '390,720,1024,1280,1440,1920').split(',').map(Number)
 const THEME = arg('--theme') === 'light' ? 'light' : 'dark'
+const PALETTE = arg('--palette') === 'sunset' ? 'sunset' : 'twilight'
 const HEIGHT = { 390: 844, 1440: 900, 1920: 1000 }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 const st = studio('shots-shell')
@@ -42,15 +44,20 @@ let browser = null
 async function newPage() {
   const ctx = await browser.createBrowserContext()
   const page = await ctx.newPage()
-  await page.evaluateOnNewDocument((theme) => {
-    try {
-      localStorage.setItem('recall.theme', theme)
-      localStorage.setItem('recall.lang', 'en')
-      localStorage.setItem('recall.onboarded', '1')
-    } catch {
-      /* about:blank */
-    }
-  }, THEME)
+  await page.evaluateOnNewDocument(
+    (theme, palette) => {
+      try {
+        localStorage.setItem('recall.theme', theme)
+        localStorage.setItem('recall.palette', palette)
+        localStorage.setItem('recall.lang', 'en')
+        localStorage.setItem('recall.onboarded', '1')
+      } catch {
+        /* about:blank */
+      }
+    },
+    THEME,
+    PALETTE,
+  )
   return page
 }
 
@@ -116,6 +123,8 @@ try {
     await snap(tp, w, 'schedule-sheet', '/schedule', /Новый урок/, { fullPage: false, before: (p) => press(p, 'Новый урок') })
     await snap(tp, w, 'students', `/teacher?student=${ca}`, /Айгерим/)
     await snap(tp, w, 'tasks', '/tasks', /Задания/)
+    await snap(sp, w, 'settings', '/settings', /Настройки/)
+    await snap(tp, w, 'settings-teacher', '/settings', /Настройки/)
   }
 } finally {
   await browser?.close().catch(() => {})

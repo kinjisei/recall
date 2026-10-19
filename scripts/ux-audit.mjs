@@ -5,9 +5,9 @@
  *                      подписи у полей и кнопок-иконок;
  *   §2 Touch         — тач-цели ≥44×44 (кроме inline-ссылок в тексте, WCAG 2.5.5).
  *
- * Запуск:  node scripts/ux-audit.mjs [--theme light]   (нужен `npm run dev:test` — 5174, тестовая база)
- * --theme light — светлая тема, включённая так же, как её включает владелец в
- * /admin (выбор устройства recall.theme); отчёт — ux-audit-report-light.md.
+ * Запуск:  node scripts/ux-audit.mjs [--theme light] [--palette sunset]   (нужен `npm run dev:test` — 5174, тестовая база)
+ * --theme light, --palette sunset — вариант вида, как его выбирают в Настройках
+ * (recall.theme, recall.palette); отчёт — ux-audit-report[-sunset][-light].md.
  * Тестовый аккаунт создаётся через service_role и удаляется в конце.
  */
 import { createClient } from '@supabase/supabase-js'
@@ -23,9 +23,11 @@ const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
 const BASE = process.env.AUDIT_BASE_URL || APP_URL
 const EMAIL = 'ux-audit@recall.test'
 const PASSWORD = 'UxAudit!2026-temp'
-// тема устройства: как переключатель владельца в /admin (shared/ui/theme.ts)
+// вид устройства: как «Режим» и «Цвет» в Настройках (shared/ui/theme.ts)
 const themeAt = process.argv.indexOf('--theme')
 const THEME = themeAt !== -1 && process.argv[themeAt + 1] === 'light' ? 'light' : 'dark'
+const paletteAt = process.argv.indexOf('--palette')
+const PALETTE = paletteAt !== -1 && process.argv[paletteAt + 1] === 'sunset' ? 'sunset' : 'twilight'
 
 // ---- ключи из .env.local (без dotenv) ----
 const env = scriptEnv()
@@ -114,13 +116,18 @@ const main = async () => {
     page.on('pageerror', (e) => consoleErrors.push(String(e)))
 
     // флаги, чтобы не улетать в онбординг/туториал
-    await page.evaluateOnNewDocument((theme) => {
-      try {
-        localStorage.setItem('recall.onboarded', '1')
-        localStorage.setItem('recall.deck_tutorial_seen', '1')
-        localStorage.setItem('recall.theme', theme)
-      } catch {}
-    }, THEME)
+    await page.evaluateOnNewDocument(
+      (theme, palette) => {
+        try {
+          localStorage.setItem('recall.onboarded', '1')
+          localStorage.setItem('recall.deck_tutorial_seen', '1')
+          localStorage.setItem('recall.theme', theme)
+          localStorage.setItem('recall.palette', palette)
+        } catch {}
+      },
+      THEME,
+      PALETTE,
+    )
 
     const results = []
     let currentLang = 'en'
@@ -146,16 +153,16 @@ const main = async () => {
 
     // отчёт
     const total = results.reduce((n, r) => n + r.issues.length, 0)
-    let md = `# UX-аудит Recall — ${new Date().toISOString().slice(0, 10)}, тема: ${THEME}\n\nВсего замечаний: **${total}**\n`
+    let md = `# UX-аудит Recall — ${new Date().toISOString().slice(0, 10)}, вид: ${PALETTE} · ${THEME}\n\nВсего замечаний: **${total}**\n`
     for (const r of results) {
       md += `\n## ${r.screen} (${r.path}) — ${r.issues.length}\n`
       for (const i of r.issues) md += `- [${i.type}] ${i.detail}\n`
     }
     if (consoleErrors.length) md += `\n## JS-ошибки\n` + consoleErrors.map((e) => `- ${e}`).join('\n')
-    const file = THEME === 'light' ? 'ux-audit-report-light.md' : 'ux-audit-report.md'
+    const file = `ux-audit-report${PALETTE === 'sunset' ? '-sunset' : ''}${THEME === 'light' ? '-light' : ''}.md`
     const out = new URL(`../${file}`, import.meta.url)
     writeFileSync(out, md, 'utf8')
-    console.log(`\nИтого: ${total} замечаний (тема: ${THEME}). Отчёт: ${file}`)
+    console.log(`\nИтого: ${total} замечаний (вид: ${PALETTE} · ${THEME}). Отчёт: ${file}`)
     if (consoleErrors.length) console.log('JS-ошибок:', consoleErrors.length)
   } finally {
     await browser.close()

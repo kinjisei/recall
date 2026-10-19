@@ -30,11 +30,17 @@ const SWATCHES = [
   ['page', 'bg-page'],
   ['surface', 'bg-surface'],
   ['input', 'bg-input'],
+  ['line', 'bg-line'],
+  ['control-line', 'bg-control-line'],
   ['fg', 'bg-fg'],
   ['fg-muted', 'bg-fg-muted'],
   ['fg-faint', 'bg-fg-faint'],
   ['accent', 'bg-accent'],
   ['accent-soft', 'bg-accent-soft'],
+  ['primary', 'bg-primary'],
+  ['primary-press', 'bg-primary-press'],
+  ['ring', 'bg-ring'],
+  ['hero', 'bg-hero'],
   ['danger', 'bg-danger'],
   ['warning', 'bg-warning'],
   ['success', 'bg-success'],
@@ -81,7 +87,7 @@ export function UiShowcase() {
     <div className="flex flex-col gap-8">
       <h1 className="text-2xl font-medium tracking-tight">Витрина дизайн-системы</h1>
 
-      <Section title="Тема этого устройства">
+      <Section title="Вид этого устройства">
         <ThemePicker />
       </Section>
 
@@ -107,6 +113,7 @@ export function UiShowcase() {
         <div className="flex flex-wrap gap-2">
           <Button>Главная</Button>
           <Button variant="secondary">Вторичная</Button>
+          <Button variant="soft">Мягкая</Button>
           <Button variant="ghost">Тихая</Button>
           <Button variant="danger">Удалить</Button>
           <Button loading>Жду</Button>

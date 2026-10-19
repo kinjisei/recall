@@ -48,7 +48,7 @@ export function PlanView({ weeks, currentWeek }: { weeks: PlanWeek[]; currentWee
             key={n}
             className={`rounded-xl border p-3 ${
               isCurrent
-                ? 'border-accent-line bg-[rgba(145,132,217,.08)]'
+                ? 'border-accent-line bg-accent/8'
                 : 'border-tint/[0.08]'
             } ${isPast ? 'opacity-60' : ''}`}
           >

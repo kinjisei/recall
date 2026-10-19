@@ -140,8 +140,8 @@ export function TappableText({
             onClick={() => onWord(tok, i)}
             className={`cursor-pointer rounded px-0.5 transition-colors ${
               highlighted
-                ? 'bg-[rgba(145,132,217,.28)] ring-1 ring-accent-line'
-                : 'hover:bg-[rgba(145,132,217,.18)] active:bg-[rgba(145,132,217,.28)]'
+                ? 'bg-accent/28 ring-1 ring-accent-line'
+                : 'hover:bg-accent/18 active:bg-accent/28'
             }`}
           >
             {tok}
@@ -300,7 +300,7 @@ export function WordSheet({
           {/* Разбор всего предложения (фразовые глаголы/выражения/грамматика) */}
           <button
             onClick={() => setAnalyze(true)}
-            className="lift mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl border border-accent-line bg-[rgba(145,132,217,.10)] py-2.5 text-sm font-medium text-accent-soft-fg"
+            className="lift mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl border border-accent-line bg-accent/10 py-2.5 text-sm font-medium text-accent-soft-fg"
           >
             <IconSearch size={16} /> Разбор предложения
           </button>

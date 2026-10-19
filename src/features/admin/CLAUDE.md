@@ -11,7 +11,7 @@
   найденного — «Подтвердить оплату» (перевёл, а кнопку не нажал) и ручная
   правка тарифа без оплаты: подарок, исправление, выключить.
 
-Дальше — тема на этом устройстве, воронка (визиты → регистрации → … →
+Дальше — воронка (визиты → регистрации → … →
 оплаты, по источникам) и под ней ответы онбординга: сколько учеников у
 репетиторов и откуда люди о нас узнали — по их собственному ответу
 (PLAN.md Ф2.11б-4). Ниже — расход AI, отзывы и ошибки у пользователей.
@@ -27,7 +27,6 @@
 | `UserSearch.tsx` | поиск по email или коду, «Подтвердить оплату», ручная правка тарифа |
 | `OnboardingAnswers.tsx` | ответы онбординга под воронкой: «Сколько учеников» (подписи — `domains/billing/bands.ts`) и «Откуда узнали» — репетиторы и остальные |
 | `AiUsage.tsx` | расход AI (`domains/ai/CLAUDE.md`) |
-| `DeviceTheme.tsx` | тема на этом устройстве (`shared/ui/CLAUDE.md`) |
 | `src/lib/admin.ts` | поиск, ручная правка тарифа, ошибки, отзывы и ответы онбординга — RPC `admin_*` |
 
 ## Правила, которые нельзя нарушить
@@ -70,7 +69,7 @@
 <!-- Пишет `npm run gen:docs` (scripts/gen/module-docs.mjs) по коду — руками не править. -->
 ## Из кода (сгенерировано)
 
-- **Файлы:** `AdminPage.tsx`, `AiUsage.tsx`, `DeviceTheme.tsx`, `OnboardingAnswers.tsx`, `payments/ConfirmPayment.tsx`, `payments/Payments.tsx`, `UserSearch.tsx`
+- **Файлы:** `AdminPage.tsx`, `AiUsage.tsx`, `OnboardingAnswers.tsx`, `payments/ConfirmPayment.tsx`, `payments/Payments.tsx`, `UserSearch.tsx`
 - **Вне папки (указатель «Описание:» в начале файла):** `src/lib/admin.ts`
 - **Адреса:** `/admin`
 - **RPC:** `admin_feedback`, `admin_find_user`, `admin_funnel`, `admin_onboarding_answers`, `admin_recent_errors`, `admin_set_plan`

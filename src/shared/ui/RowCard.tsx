@@ -84,7 +84,7 @@ export function RowCard({
   )
 
   // тень — только у сплошной строки и только в светлой теме (shadow-card в
-  // тёмной прозрачная); пунктирное «предложение» лежит без подложки
+  // тёмной нулевая); пунктирное «предложение» лежит без подложки
   const look = flat
     ? `${current ? 'bg-accent-soft/60' : 'hover:bg-tint/[0.04]'} transition-colors`
     : `lift rounded-2xl ${dashed ? 'border border-dashed border-accent-line bg-transparent' : 'border border-tint/[0.08] bg-surface shadow-card'} hover:border-tint/[0.14]`

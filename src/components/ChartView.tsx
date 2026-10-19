@@ -1,15 +1,16 @@
 // ============================================================================
 // ChartView — рисуем график IELTS Academic Task 1 из ДАННЫХ (не из картинки).
-// Типы: bar / line / pie / table. Инлайн SVG, тёмная тема, без зависимостей.
+// Типы: bar / line / pie / table. Инлайн SVG, без зависимостей; цвета — токены
+// (серии chart-1…6 — своя пара у светлой и тёмной темы, одна на обе палитры).
 // Используется у ученика (описывает график) и в предпросмотре у учителя.
 // ============================================================================
 import type { ChartSpec } from '../types'
 
-const COLORS = ['#9184d9', '#6ee7b7', '#fbbf24', '#f87171', '#60a5fa', '#f0abfc']
-const AXIS = 'rgba(255,255,255,0.28)'
-const GRID = 'rgba(255,255,255,0.08)'
-const TEXT = 'rgba(255,255,255,0.72)'
-const MUTED = 'rgba(255,255,255,0.5)'
+const COLORS = [1, 2, 3, 4, 5, 6].map((n) => `var(--color-chart-${n})`)
+const AXIS = 'var(--color-fg-faint)'
+const GRID = 'var(--color-line)'
+const TEXT = 'var(--color-fg-secondary)'
+const MUTED = 'var(--color-fg-muted)'
 
 function fmt(v: number, unit?: string): string {
   const s = Number.isInteger(v) ? String(v) : v.toFixed(1)
@@ -35,7 +36,7 @@ export function ChartView({ chart }: { chart: ChartSpec }) {
         <div className="mt-2 flex flex-wrap justify-center gap-x-3 gap-y-1">
           {chart.series.map((s, i) => (
             <span key={i} className="flex items-center gap-1.5 text-xs text-fg-secondary">
-              <span className="h-2.5 w-2.5 rounded-sm" style={{ background: COLORS[i % COLORS.length] }} />
+              <span className="h-2.5 w-2.5 rounded-sm" style={{ background: `var(--color-chart-${(i % COLORS.length) + 1})` }} />
               {s.name}
             </span>
           ))}
@@ -152,7 +153,7 @@ function PieChart({ chart }: { chart: ChartSpec }) {
         const y2 = cy + R * Math.sin(a2)
         const d = `M ${cx} ${cy} L ${x1} ${y1} A ${R} ${R} 0 ${large} 1 ${x2} ${y2} Z`
         angle = a2
-        return <path key={i} d={d} fill={COLORS[i % COLORS.length]} stroke="#1e2030" strokeWidth={1.5} />
+        return <path key={i} d={d} fill={COLORS[i % COLORS.length]} stroke="var(--color-surface)" strokeWidth={1.5} />
       })}
       {pts.map((p, i) => (
         <g key={i} transform={`translate(250 ${28 + i * 24})`}>

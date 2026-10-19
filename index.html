@@ -7,6 +7,27 @@
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
     <meta name="theme-color" content="#161826" />
+    <!-- Вид до первой отрисовки: тема и палитра этого устройства, иначе у
+         светлой темы мелькал тёмный фон (PLAN.md Ф2.17-2). Повторяет
+         src/shared/ui/theme.ts; хэш скрипта — в CSP vercel.json. Правишь хоть
+         пробел — npm test (test-theme-boot) назовёт новый хэш. -->
+    <script>
+      (function () {
+        var t, p
+        try {
+          t = localStorage.getItem('recall.theme')
+          p = localStorage.getItem('recall.palette')
+        } catch (e) {}
+        if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+        p = p === 'sunset' ? 'sunset' : 'twilight'
+        var d = document.documentElement
+        d.setAttribute('data-theme', t)
+        if (p === 'sunset') d.setAttribute('data-palette', p)
+        var page = { twilight: { light: '#f4f3f9', dark: '#161826' }, sunset: { light: '#f6f1ed', dark: '#1a1512' } }
+        var m = document.querySelector('meta[name="theme-color"]')
+        if (m) m.setAttribute('content', page[p][t])
+      })()
+    </script>
     <meta name="description" content="Recall — учим и поддерживаем английский" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />

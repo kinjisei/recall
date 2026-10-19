@@ -130,13 +130,15 @@ export function SwipeCard({
           </p>
         </div>
 
-        {/* обратная грань — перевод и пример (заранее повёрнута на 180°) */}
+        {/* обратная грань — перевод и пример (заранее повёрнута на 180°).
+            Фон — радиальный градиент героя к карточке; раньше он был записан
+            как linear-gradient с формой радиального, браузер его отбрасывал,
+            и грань была прозрачной. */}
         <div
-          className={faceCls}
+          className={`${faceCls} bg-radial-[150%_120%_at_20%_0%] from-hero to-surface to-60%`}
           style={{
             transform: 'rotateY(180deg)',
-            background: 'linear-gradient(150% 120% at 20% 0%, #262845, #1e2030 60%)',
-            boxShadow: '0 18px 40px -24px rgba(145,132,217,.5)',
+            boxShadow: '0 18px 40px -24px color-mix(in oklab, var(--color-accent) 50%, transparent)',
           }}
         >
           <div className="flex items-center gap-2">

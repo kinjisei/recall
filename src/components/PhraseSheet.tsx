@@ -100,7 +100,7 @@ export function PhraseSheet({
 
             <button
               onClick={() => setAnalyze(true)}
-              className="lift mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl border border-accent-line bg-[rgba(145,132,217,.10)] py-2.5 text-sm font-medium text-accent-soft-fg"
+              className="lift mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl border border-accent-line bg-accent/10 py-2.5 text-sm font-medium text-accent-soft-fg"
             >
               <IconSearch size={16} /> Разбор предложения
             </button>

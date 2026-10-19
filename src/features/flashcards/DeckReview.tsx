@@ -189,7 +189,7 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
               <p className="flex items-center gap-1.5 font-semibold text-warning-soft-fg">
                 <IconRefresh size={16} /> Перепроверка от преподавателя
               </p>
-              <p className="text-sm text-warning-strong/80">
+              <p className="text-sm text-warning-strong">
                 Напиши по памяти: слов — {cards.length}
               </p>
             </div>
@@ -243,7 +243,7 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
               </button>
               <button
                 onClick={() => onSwipe('right')}
-                className="lift rounded-2xl border border-accent-line bg-[rgba(145,132,217,.18)] py-3.5 text-sm font-medium text-fg"
+                className="lift rounded-2xl border border-accent-line bg-accent/18 py-3.5 text-sm font-medium text-fg"
               >
                 Помню
               </button>

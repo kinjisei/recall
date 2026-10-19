@@ -201,7 +201,7 @@ export function SprintMode({ lang, onBack }: { lang: AppLang; onBack: () => void
         </button>
         <button
           onClick={() => answer(true)}
-          className="lift flex min-h-16 items-center justify-center gap-2 rounded-2xl border border-accent-line bg-[rgba(145,132,217,.18)] font-medium text-fg"
+          className="lift flex min-h-16 items-center justify-center gap-2 rounded-2xl border border-accent-line bg-accent/18 font-medium text-fg"
         >
           <IconCheck size={20} /> Верно
         </button>

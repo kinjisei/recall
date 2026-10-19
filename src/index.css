@@ -1,15 +1,19 @@
 @import 'tailwindcss';
-/* Шрифт Onest — локально (PWA работает офлайн, без запросов к Google Fonts).
-   Variable-начертание: один файл на все веса 100–900, кириллица включена. */
-@import '@fontsource-variable/onest';
+/* Шрифт Rubik — локально (PWA работает офлайн, без запросов к Google Fonts).
+   Variable-начертание: один файл на подмножество знаков, веса 300–900;
+   браузер качает только нужные подмножества (unicode-range): латиница и
+   кириллица всегда, cyrillic-ext — когда на экране казахские буквы
+   (PLAN.md Ф2.16, проверка — scripts/test-font-coverage.mjs). */
+@import '@fontsource-variable/rubik';
 
 /* Токены дизайн-системы: цвета двух тем, шрифт, размеры текста, точки
    перехода, ширины раскладок. Значения — только там (архитектура §5). */
 @import './shared/ui/tokens.css';
 
 /* ==========================================================================
-   Recall — базовые стили и анимации. Тёмный сине-серый фон, один акцент
-   (blurple), шрифт Onest — всё из токенов (shared/ui/tokens.css).
+   Recall — базовые стили и анимации. Цвета четырёх вариантов вида
+   («Сумерки» и «Закат» × две темы), шрифт Rubik — всё из токенов
+   (shared/ui/tokens.css).
    Всё адаптивно и уважает prefers-reduced-motion.
    ========================================================================== */
 
@@ -71,6 +75,26 @@ a,
   outline: 2px solid var(--color-focus);
   outline-offset: 2px;
   border-radius: 0.5rem;
+}
+
+/* Смена вида в Настройках («Цвет», «Режим»; макет u4-3): фон, карточки,
+   текст, иконки и рамки перетекают в новые цвета одним переходом 200 мс
+   ease-out — ничего не мигает. Атрибут ставит shared/ui/theme.ts на время
+   перехода. Сразу, без перехода: отметка выбранного и превью
+   (data-theme-instant), строка состояния; градиенты (герой) переход не умеют
+   — они меняются сразу. При «уменьшить движение» правило не действует. */
+@media (prefers-reduced-motion: no-preference) {
+  html[data-theme-switch] *,
+  html[data-theme-switch] *::before,
+  html[data-theme-switch] *::after {
+    transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, box-shadow !important;
+    transition-duration: 200ms !important;
+    transition-timing-function: ease-out !important;
+  }
+  html[data-theme-switch] [data-theme-instant],
+  html[data-theme-switch] [data-theme-instant] * {
+    transition: none !important;
+  }
 }
 
 /* Мягкое появление контента.

@@ -164,7 +164,8 @@ export function Sheet({
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-end bg-scrim/40" onClick={onClose}>
+    // затемнение — сила своя у темы: 55 % в тёмной, 40 % в светлой (s2)
+    <div className="fixed inset-0 z-50 flex items-end bg-scrim/(--scrim-sheet)" onClick={onClose}>
       <div
         role="dialog"
         aria-modal="true"

@@ -249,7 +249,7 @@ function StepLevel({
           EN ещё и ручной выбор, чтобы не заставлять новичка проходить тест. */}
       <button
         onClick={onPlacement}
-        className="lift animate-fade-up rounded-2xl border border-accent-line bg-[linear-gradient(135deg,rgba(145,132,217,.22),rgba(145,132,217,.10))] px-4 py-4 text-left"
+        className="lift animate-fade-up rounded-2xl border border-accent-line bg-linear-135 from-accent/22 to-accent/10 px-4 py-4 text-left"
       >
         <span className="block text-[15px] font-medium">
           Пройти тест · до {lang === 'es' ? 40 : 50} вопросов
@@ -269,7 +269,7 @@ function StepLevel({
                 onClick={() => onPick(l)}
                 className={`lift animate-fade-up rounded-2xl border px-4 py-4 text-left ${
                   level === l
-                    ? 'border-accent-line bg-[rgba(145,132,217,.16)]'
+                    ? 'border-accent-line bg-accent/16'
                     : 'border-tint/[0.08] bg-surface'
                 }`}
                 style={{ animationDelay: `${0.05 + i * 0.06}s` }}

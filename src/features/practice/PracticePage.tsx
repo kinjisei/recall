@@ -381,7 +381,7 @@ export function PracticePage() {
           заставляет браузер показать, как одна карточка выросла, а другая
           сжалась: те же элементы, а не подмена содержимого. */}
       <div
-        className="animate-fade-up flex flex-col gap-3 rounded-3xl border border-accent-line bg-[linear-gradient(135deg,rgba(145,132,217,.16),rgba(145,132,217,.05))] p-4"
+        className="animate-fade-up flex flex-col gap-3 rounded-3xl border border-accent-line bg-linear-135 from-accent/16 to-accent/5 p-4"
         style={{ viewTransitionName: `pg-${active.id}` }}
       >
         <div className="flex items-center gap-3">

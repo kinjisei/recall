@@ -1,20 +1,24 @@
 /**
- * Токены дизайн-системы: обе темы читаемы и полны (PLAN.md Ф1.4; архитектура §5).
+ * Токены дизайн-системы: все четыре варианта вида полны и читаемы (PLAN.md
+ * Ф1.4, Ф2.17-2; архитектура §5).
  *
- * Зачем. Светлая тема — черновая и пока выключена (журнал п.37), поэтому глазами
- * её никто не проверяет. Ошибка в ней всплыла бы в день запуска: забытое светлое
- * значение (токен молча остаётся тёмным) или серый текст, который не читается.
- * Тест меряет это сразу, по самому файлу токенов:
- *   1. у каждого цветового токена есть значение в ОБЕИХ темах;
- *   2. контраст по WCAG: текст ≥ 4,5:1, иконки и рамки ≥ 3:1 — в обеих темах;
- *   3. точки перехода в CSS совпадают с теми, что читает JS (breakpoints.ts).
+ * Зачем. Вариантов четыре — «Сумерки» и «Закат» × тёмная и светлая (лист
+ * design/mockups/s2-style-colors.html), а глазами каждый день смотрят один.
+ * Ошибка в остальных всплыла бы у клиента: забытое значение (токен молча
+ * берёт цвет другого варианта) или серый текст, который не читается. Тест
+ * меряет это сразу, по самому файлу токенов:
+ *   1. у каждого цветового токена есть значение в КАЖДОМ варианте (и на
+ *      отдельном светлом блоке — печатный лист);
+ *   2. контраст по WCAG: текст ≥ 4,5:1, иконки и рамки ≥ 3:1 — в каждом;
+ *   3. превью и образцы выбора вида в Настройках равны настоящим значениям;
+ *   4. в тёмной теней нет; роли, которых нет на листе, выведены по правилу;
+ *   5. точки перехода в CSS совпадают с теми, что читает JS (breakpoints.ts).
  * Чистый: без сети, базы и браузера.
  */
 import { readFileSync } from 'node:fs'
+import { blocks, tokensCss, variants } from './_tokens.mjs'
 
-const ROOT = new URL('../', import.meta.url)
-const css = readFileSync(new URL('src/shared/ui/tokens.css', ROOT), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
-const bpTs = readFileSync(new URL('src/shared/ui/breakpoints.ts', ROOT), 'utf8')
+const bpTs = readFileSync(new URL('../src/shared/ui/breakpoints.ts', import.meta.url), 'utf8')
 
 let fails = 0
 let total = 0
@@ -24,22 +28,10 @@ const check = (name, ok, extra = '') => {
   console.log(`${ok ? '✓' : '✗'} ${name}${extra ? ' — ' + extra : ''}`)
 }
 
-/** Объявления `--имя: значение;` из тела блока. */
-function decls(body) {
-  const out = {}
-  for (const m of body.matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)) out[m[1]] = m[2].trim()
-  return out
-}
-/** Тело блока по началу селектора (с учётом вложенных скобок не нужно — их нет). */
-function block(re) {
-  const m = css.match(re)
-  return m ? decls(m[1]) : null
-}
-
-const dark = block(/@theme\s+static\s*\{([\s\S]*?)\n\}/) ?? block(/@theme\s*\{([\s\S]*?)\n\}/)
-const light = block(/\[data-theme='light'\]\s*\{([\s\S]*?)\n\}/)
-check('в tokens.css есть @theme (тёмная тема) и блок светлой', !!dark && !!light)
-if (!dark || !light) process.exit(1)
+const V = variants()
+check('в tokens.css есть @theme, :root и блоки трёх других вариантов', !!V)
+if (!V) process.exit(1)
+const dark = blocks.theme.decls
 
 // ── цвет → sRGB ────────────────────────────────────────────────────────────
 function oklchToRgb(L, C, h) {
@@ -60,12 +52,12 @@ function oklchToRgb(L, C, h) {
   return lin.map(enc)
 }
 
-/** Значение токена → [r, g, b, alpha]; var(--x) раскрывается в той же теме. */
+/** Значение токена → [r, g, b, alpha]; var(--x) раскрывается в том же варианте. */
 function parse(value, theme, depth = 0) {
   const v = value.trim()
   const ref = v.match(/^var\((--[\w-]+)\)$/)
   if (ref) {
-    const next = theme[ref[1]] ?? dark[ref[1]]
+    const next = theme[ref[1]]
     if (!next || depth > 5) throw new Error(`не раскрывается ${v}`)
     return parse(next, theme, depth + 1)
   }
@@ -78,18 +70,14 @@ function parse(value, theme, depth = 0) {
   if (m) return [+m[1], +m[2], +m[3], m[4] === undefined ? 1 : +m[4]]
   m = v.match(/^oklch\(\s*([\d.]+)%\s+([\d.]+)\s+([\d.]+)\s*\)$/)
   if (m) return [...oklchToRgb(+m[1] / 100, +m[2], +m[3]), 1]
-  if (v === 'white') return [255, 255, 255, 1]
-  if (v === 'black') return [0, 0, 0, 1]
   if (v === 'transparent') return [0, 0, 0, 0]
-  // color-mix(in oklab, <цвет> N%, transparent) — цвет долей, как у утилиты
-  // bg-tint/[0.08]: тот же цвет с прозрачностью N %
-  m = v.match(/^color-mix\(\s*in oklab,\s*(.+?)\s+([\d.]+)%,\s*transparent\s*\)$/)
-  if (m) {
-    const c = parse(m[1], theme, depth + 1)
-    return [c[0], c[1], c[2], c[3] * (+m[2] / 100)]
-  }
   throw new Error(`не разобрать цвет «${v}»`)
 }
+const hex = (value, theme) =>
+  parse(value, theme)
+    .slice(0, 3)
+    .map((c) => Math.round(c).toString(16).padStart(2, '0'))
+    .join('')
 
 /** Полупрозрачный цвет поверх непрозрачного фона (так смешивает браузер — в sRGB). */
 const over = (fg, bg) => [0, 1, 2].map((i) => fg[3] * fg[i] + (1 - fg[3]) * bg[i]).concat(1)
@@ -105,20 +93,50 @@ const ratio = (a, b) => {
   return (x + 0.05) / (y + 0.05)
 }
 
-// ── 1. полнота: у каждого цвета — два значения ──────────────────────────────
+// ── 1. полнота ─────────────────────────────────────────────────────────────
+// Две группы зависят только от палитры, а не от темы (выбор вида в
+// Настройках): превью — в @theme и в блоке «Заката», образцы — только в @theme.
+const PALETTE_ONLY = /^--color-preview-/
+const CONSTANT = /^--color-swatch-/
 const colorKeys = (o) => Object.keys(o).filter((k) => k.startsWith('--color-'))
-const noLight = colorKeys(dark).filter((k) => !(k in light))
-const noDark = colorKeys(light).filter((k) => !(k in dark))
-check('у каждого цветового токена есть светлое значение', noLight.length === 0, noLight.join(', '))
-check('в светлой теме нет токенов, которых нет в тёмной', noDark.length === 0, noDark.join(', '))
-check('светлая тема объявляет color-scheme: light', /\[data-theme='light'\]\s*\{[^}]*color-scheme:\s*light/.test(css))
+const themed = colorKeys(dark).filter((k) => !PALETTE_ONLY.test(k) && !CONSTANT.test(k))
+for (const [name, b, extra] of [
+  ['сумерки · светлая', blocks.twilightLight, []],
+  ['закат · тёмная', blocks.sunsetDark, colorKeys(dark).filter((k) => PALETTE_ONLY.test(k))],
+  ['закат · светлая', blocks.sunsetLight, []],
+]) {
+  const need = [...themed, ...extra]
+  const missing = need.filter((k) => !(k in b.decls))
+  const unknown = colorKeys(b.decls).filter((k) => !need.includes(k))
+  check(`${name}: задан каждый цветовой токен`, missing.length === 0, missing.join(', '))
+  check(`${name}: нет лишних (чужих или неизвестных @theme) токенов`, unknown.length === 0, unknown.join(', '))
+}
+const VARS = ['--elevation-card', '--elevation-raised', '--elevation-sheet', '--scrim-sheet']
+for (const [name, b] of [
+  ['тёмная (:root)', blocks.root],
+  ['сумерки · светлая', blocks.twilightLight],
+  ['закат · светлая', blocks.sunsetLight],
+]) {
+  const missing = VARS.filter((k) => !(k in b.decls))
+  check(`${name}: заданы тени и затемнение шторки`, missing.length === 0, missing.join(', '))
+}
+for (const [name, b] of [
+  ['сумерки · светлая', blocks.twilightLight],
+  ['закат · светлая', blocks.sunsetLight],
+]) {
+  check(`${name}: color-scheme: light`, /color-scheme:\s*light/.test(b.body))
+}
+check('тёмная: color-scheme: dark у :root', /color-scheme:\s*dark/.test(blocks.root.body))
+check('cta и cta-end удалены (s2: «Начать занятие» — главная кнопка)', !/--color-cta/.test(tokensCss))
 
 // ── 2. контраст ────────────────────────────────────────────────────────────
-// [текст, фон, порог] — ровно те пары, в которых токены живут в интерфейсе.
-// «имя@доля» — токен долей, как в утилите: bg-danger/10 → 'danger@0.1'.
-// Полупрозрачный фон кладётся на страницу, полупрозрачный текст — на фон.
+// [текст, фон, порог] — ровно те пары, в которых токены живут в интерфейсе
+// (и те, что лист s2 обещает в колонке «контраст»). «имя@доля» — токен долей,
+// как в утилите: bg-danger/10 → 'danger@0.1'. Полупрозрачный фон кладётся на
+// страницу, полупрозрачный текст — на фон.
 const TEXT = 4.5
 const ICON = 3
+const LARGE = 3 // крупный текст по WCAG: от 24 px или от 18,66 px полужирным
 const PAIRS = [
   ['fg', 'page', TEXT],
   ['fg', 'surface', TEXT],
@@ -129,69 +147,78 @@ const PAIRS = [
   ['fg-tertiary', 'surface', TEXT],
   ['fg-muted', 'page', TEXT],
   ['fg-muted', 'surface', TEXT],
+  ['fg-muted', 'input', TEXT], // плейсхолдер в поле
   ['fg-faint', 'page', ICON],
   ['accent-strong', 'page', TEXT],
   ['accent-strong', 'surface', TEXT],
-  ['accent', 'page', ICON],
+  // акцент — не текст; к surface, как на листе (у «Заката» светлого на page
+  // оранжевый не дотягивает — там фокус и иконки энергии тёмным оттенком)
+  ['accent', 'surface', ICON],
   ['accent-soft-fg', 'accent-soft', TEXT],
   ['accent-fg', 'accent', TEXT],
-  ['primary-fg', 'primary', TEXT], // главная кнопка (Button primary)
+  ['primary-fg', 'primary', TEXT], // главная кнопка
+  ['primary-fg', 'primary-press', TEXT], // нажатая главная кнопка
+  ['focus', 'page', ICON], // кольцо фокуса
+  ['control-line', 'surface', ICON], // рамка поля и чипа — граница элемента
+  ['control-line-active', 'surface', ICON], // выбранный вариант виден по рамке
   ['danger-strong', 'page', TEXT],
   ['danger-strong', 'surface', TEXT],
   ['warning-strong', 'page', TEXT],
   ['warning-strong', 'surface', TEXT],
   ['success-strong', 'page', TEXT],
   ['success-strong', 'surface', TEXT],
-  // Надпись на сплошной заливке статуса: крупная полужирная (кнопка) — 3:1.
-  // Белое на red-500 даёт 3,8:1 и сегодня; поднимать до 4,5 — это редизайн.
-  ['danger-fg', 'danger', ICON],
+  // надпись на сплошной заливке статуса (с листа s2 — все ≥ 4,5)
+  ['danger-fg', 'danger', TEXT],
   ['warning-fg', 'warning', TEXT],
-  ['success-fg', 'success', ICON],
+  ['success-fg', 'success', TEXT],
   // текст на мягкой подложке статуса и правки «было → стало»
   ['danger-soft-fg', 'page', TEXT],
   ['danger-soft-fg', 'surface', TEXT],
   ['danger-soft-fg', 'danger@0.1', TEXT],
+  ['danger-soft-fg', 'danger-soft', TEXT],
   ['warning-soft-fg', 'page', TEXT],
   ['warning-soft-fg', 'surface', TEXT],
   ['warning-soft-fg', 'warning@0.1', TEXT],
+  ['warning-soft-fg', 'warning-soft', TEXT],
   ['success-soft-fg', 'page', TEXT],
   ['success-soft-fg', 'surface', TEXT],
   ['success-soft-fg', 'success@0.15', TEXT],
+  ['success-soft-fg', 'success-soft', TEXT],
   // глубокий тон долей: выбранный ответ, счётчик на карточке
   ['fg', 'danger-soft@0.4', TEXT],
   ['fg', 'success-soft@0.4', TEXT],
   ['warning-strong', 'warning-soft@0.5', TEXT],
   // статусная карточка (Card tone): заголовок, подпись долей, счётчик
+  ['danger-strong', 'danger-surface', TEXT],
+  ['warning-strong', 'warning-surface', TEXT],
+  ['success-strong', 'success-surface', TEXT],
   ['warning-soft-fg', 'warning-surface', TEXT],
-  ['warning-strong@0.8', 'warning-surface', TEXT],
   ['danger-soft-fg', 'danger-surface', TEXT],
   ['fg-secondary', 'warning-surface', TEXT],
-  // карточка-герой: подписи на градиенте, ссылка «Мой прогресс»
+  // карточка-герой и «билет» рефералки: подписи на градиенте, ссылка
+  // «Мой прогресс», пунктир будущего дня
+  ['accent-soft-fg', 'hero', TEXT],
+  ['accent-strong', 'hero', LARGE], // крупная цифра билета (30 px)
+  ['fg-secondary', 'hero', TEXT], // подписи билета
   ['fg-tertiary', 'hero', TEXT],
   ['fg-tertiary', 'hero-mid', TEXT],
   ['fg-muted', 'hero-edge', TEXT],
   ['accent-strong', 'hero-mid', TEXT],
   ['accent-strong', 'hero-edge', TEXT],
-  // «Начать занятие»: текст на подложке главного призыва
-  ['fg', 'cta', TEXT],
-  ['fg', 'cta-end', TEXT],
+  ['ring', 'hero', ICON],
   // текст поверх затемнения (подсказка жестов карточки)
   ['scrim-fg', 'scrim@0.6', TEXT],
 ]
-// Только светлая: в тёмной у этих токенов значения нет — рамка прозрачная
-// (так было всегда), проверяет блок «тёмная не меняется» ниже.
-const LIGHT_ONLY = [
-  ['control-line-active', 'surface', ICON], // выбранный вариант виден по рамке
-]
-for (const [name, theme, pairs] of [
-  ['тёмная', dark, PAIRS],
-  ['светлая', { ...dark, ...light }, [...PAIRS, ...LIGHT_ONLY]],
-]) {
+// Серии графика — 3:1 к карточке только в тёмной (в светлой по палитре
+// dataviz три серии бледнее — у графика всегда подписи, ChartView)
+const DARK_ONLY = [1, 2, 3, 4, 5, 6].map((n) => [`chart-${n}`, 'surface', ICON])
+for (const [name, { t, theme }] of Object.entries(V)) {
+  const pairs = theme === 'dark' ? [...PAIRS, ...DARK_ONLY] : PAIRS
   const col = (spec) => {
-    const [t, share] = spec.split('@')
-    const v = theme[`--color-${t}`]
-    if (!v) throw new Error(`нет токена --color-${t}`)
-    const c = parse(v, theme)
+    const [tk, share] = spec.split('@')
+    const v = t[`--color-${tk}`]
+    if (!v) throw new Error(`нет токена --color-${tk}`)
+    const c = parse(v, t)
     return share === undefined ? c : [c[0], c[1], c[2], c[3] * Number(share)]
   }
   const page = col('page')
@@ -202,23 +229,66 @@ for (const [name, theme, pairs] of [
   }
 }
 
-// ── 2б. тёмная не меняется: тени и рамки чипов — только светлой ────────────
-// Тень и рамка управления заведены ради светлой темы (30.09.2026). В тёмной
-// рамка обязана быть прозрачной, а тень — НУЛЕВОЙ (0 0 #0000): прозрачную
-// тень с размытием браузер всё равно рисует, и сглаживание скруглённых углов
-// менялось на несколько пикселей (поймано сверкой скриншотов).
-for (const t of ['control-line', 'control-line-active']) {
-  const v = dark[`--color-${t}`]
-  check(`тёмная: --color-${t} прозрачный (тёмная тема не меняется)`, v === 'transparent', v)
+// ── 3. превью и образцы выбора вида (Настройки, макет u4) ─────────────────
+// Превью «Светлая» и «Тёмная» рисуют обе темы нынешней палитры; разойдутся с
+// настоящими значениями — человек выберет одно, а получит другое.
+const PREVIEW = [
+  ['light-page', 'light', 'page'],
+  ['light-card', 'light', 'surface'],
+  ['light-accent', 'light', 'primary'],
+  ['light-fg', 'light', 'fg'],
+  ['dark-page', 'dark', 'page'],
+  ['dark-card', 'dark', 'input'],
+  ['dark-accent', 'dark', 'primary'],
+  ['dark-fg', 'dark', 'fg'],
+]
+const variantOf = (palette, theme) => Object.values(V).find((v) => v.palette === palette && v.theme === theme).t
+for (const palette of ['twilight', 'sunset']) {
+  for (const [name, theme, real] of PREVIEW) {
+    const here = variantOf(palette, 'dark') // превью зависит только от палитры
+    const want = variantOf(palette, theme)
+    const a = hex(here[`--color-preview-${name}`], here)
+    const b = hex(want[`--color-${real}`], want)
+    check(`превью ${palette}: preview-${name} = ${real} (${theme})`, a === b, `${a} / ${b}`)
+  }
 }
-const rootDark = block(/\n:root\s*\{([\s\S]*?)\n\}/) ?? {}
-for (const t of ['card', 'raised']) {
-  check(`тень shadow-${t} берёт переменную темы`, dark[`--shadow-${t}`] === `var(--elevation-${t})`, dark[`--shadow-${t}`])
-  check(`тёмная: --elevation-${t} нулевая (теней нет)`, rootDark[`--elevation-${t}`] === '0 0 #0000', rootDark[`--elevation-${t}`])
-  check(`светлая: --elevation-${t} задана`, /\d+px/.test(light[`--elevation-${t}`] ?? ''), light[`--elevation-${t}`])
+// Кружок палитры: от акцента-текста светлой через акцент к светлому тону тёмной
+const SWATCH = {
+  twilight: [['from', 'light', 'accent-strong'], ['via', 'light', 'accent'], ['to', 'dark', 'primary']],
+  sunset: [['from', 'light', 'accent-strong'], ['via', 'light', 'accent'], ['to', 'dark', 'accent-strong']],
+}
+for (const [palette, stops] of Object.entries(SWATCH)) {
+  for (const [stop, theme, real] of stops) {
+    const want = variantOf(palette, theme)
+    const a = hex(dark[`--color-swatch-${palette}-${stop}`], dark)
+    const b = hex(want[`--color-${real}`], want)
+    check(`образец ${palette}-${stop} = ${real} (${theme})`, a === b, `${a} / ${b}`)
+  }
 }
 
-// ── 3. точки перехода и пороги раскладок: CSS = JS ──────────────────────────
+// ── 4. правила листа: тени, выведенные роли ────────────────────────────────
+// Тёмная — без теней (s2, «Глубина»): НУЛЕВАЯ тень (0 0 #0000), а не
+// прозрачная — прозрачную с размытием браузер всё равно рисует, и у
+// скруглённых углов менялось сглаживание (замер по пикселям 30.09.2026).
+for (const t of ['card', 'raised', 'sheet']) {
+  check(`тень shadow-${t} берёт переменную темы`, dark[`--shadow-${t}`] === `var(--elevation-${t})`, dark[`--shadow-${t}`])
+  check(`тёмная: --elevation-${t} нулевая (теней нет)`, blocks.root.decls[`--elevation-${t}`] === '0 0 #0000', blocks.root.decls[`--elevation-${t}`])
+  for (const [name, b] of [['сумерки · светлая', blocks.twilightLight], ['закат · светлая', blocks.sunsetLight]]) {
+    check(`${name}: --elevation-${t} — настоящая тень`, /\d+px/.test(b.decls[`--elevation-${t}`] ?? ''), b.decls[`--elevation-${t}`])
+  }
+}
+// -soft-fg на листе нет — равен -strong своего варианта, кроме success в
+// светлых (там темнее ради подложки bg-success/15; её держат пары выше). Так
+// записано в tokens.css; разойдутся — описание соврёт.
+for (const [name, { t, theme }] of Object.entries(V)) {
+  for (const s of theme === 'light' ? ['danger', 'warning'] : ['danger', 'warning', 'success']) {
+    const a = hex(t[`--color-${s}-soft-fg`], t)
+    const b = hex(t[`--color-${s}-strong`], t)
+    check(`${name}: ${s}-soft-fg = ${s}-strong`, a === b, `${a} / ${b}`)
+  }
+}
+
+// ── 5. точки перехода и пороги раскладок: CSS = JS ──────────────────────────
 for (const [cssName, tsName] of [
   ['--breakpoint-sm', 'TABLET_MIN'],
   ['--breakpoint-rail', 'RAIL_MIN'],

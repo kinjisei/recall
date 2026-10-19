@@ -250,7 +250,7 @@ function MatchRound({
                   lDone
                     ? doneCls
                     : sel
-                      ? 'border-accent-line bg-[rgba(145,132,217,.14)]'
+                      ? 'border-accent-line bg-accent/14'
                       : 'border-tint/[0.10]'
                 }`}
               >

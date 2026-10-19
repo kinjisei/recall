@@ -7,7 +7,6 @@
 // 'admin' → app/RoleGate). Сам доступ на сервере проверяют RPC (admin_*).
 // ============================================================================
 import { useEffect, useState } from 'react'
-import { DeviceTheme } from './DeviceTheme'
 import { AiUsage } from './AiUsage'
 import { supabase } from '../../shared/api/supabase'
 import { OnboardingAnswers } from './OnboardingAnswers'
@@ -28,7 +27,6 @@ export function AdminPage() {
       </header>
       <Payments version={paidVersion} onChanged={bump} />
       <UserSearch onPaid={bump} />
-      <DeviceTheme />
       <Funnel />
       <AiUsage />
       <FeedbackList />

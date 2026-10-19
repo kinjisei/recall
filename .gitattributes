@@ -3,3 +3,8 @@
 
 # Экспорт Claude Design — упакованные приложения: переводы строк не трогать
 design/mockups/*.html -text
+
+# Хэш скрипта темы в <head> стоит в CSP (vercel.json) и должен совпасть байт
+# в байт с тем, что соберёт Vercel, — поэтому LF и в рабочей копии Windows
+# (PLAN.md Ф2.17-2, проверка scripts/test-theme-boot.mjs)
+index.html text eol=lf

@@ -5,7 +5,7 @@
  * тёмную тему такой же, как была. «На глаз похоже» не проверка: разница в один
  * оттенок рамки не видна на скриншоте, но видна в счёте пикселей.
  *
- *   node scripts/shots-compare.mjs --save <папка> [--theme light]   снять экраны
+ *   node scripts/shots-compare.mjs --save <папка> [--theme light] [--palette sunset]   снять экраны
  *   node scripts/shots-compare.mjs --compare <до> <после> [--out <папка>]
  *
  * Снимает список экранов на телефоне (390) и компьютере (1280) целиком, с
@@ -13,10 +13,10 @@
  * появления. Сравнение пишет по каждому экрану число отличающихся пикселей и
  * кладёт картинку разницы (отличия красным) в --out.
  *
- * --theme light — светлая тема, включённая так же, как её включает владелец в
- * /admin («Тема на этом устройстве»): выбор устройства `recall.theme`. Без
- * флага — тёмная (у всех она по умолчанию). Снимки двух тем кладите в разные
- * папки: имена файлов у них одинаковые.
+ * --theme light, --palette sunset — вариант вида, выбранный так же, как в
+ * Настройках («Режим», «Цвет»): выбор устройства `recall.theme` и
+ * `recall.palette` (shared/ui/theme.ts). Без флагов — тёмные «Сумерки». Снимки
+ * разных вариантов кладите в разные папки: имена файлов у них одинаковые.
  *
  * Нужен `npm run dev:test` (5174, тестовая база). Аккаунт — преподаватель,
  * создаётся и удаляется сам (service_role тестовой базы).
@@ -59,6 +59,7 @@ const arg = (name) => {
 }
 // тема устройства: как переключатель владельца в /admin (shared/ui/theme.ts)
 const THEME = arg('--theme') === 'light' ? 'light' : 'dark'
+const PALETTE = arg('--palette') === 'sunset' ? 'sunset' : 'twilight'
 const fileName = (tag, path) => `${tag}-${path === '/' ? 'home' : path.slice(1)}.png`
 
 async function openBrowser() {
@@ -109,10 +110,15 @@ async function save(dir) {
       () => [...document.querySelectorAll('button')].some((e) => (e.textContent || '').trim() === 'Войти'),
       { polling: 250, timeout: 20000 },
     )
-    await page.evaluate((theme) => {
-      localStorage.setItem('recall.onboarded', '1')
-      localStorage.setItem('recall.theme', theme)
-    }, THEME)
+    await page.evaluate(
+      (theme, palette) => {
+        localStorage.setItem('recall.onboarded', '1')
+        localStorage.setItem('recall.theme', theme)
+        localStorage.setItem('recall.palette', palette)
+      },
+      THEME,
+      PALETTE,
+    )
     await page.evaluate(() => {
       const b = [...document.querySelectorAll('button')].find((e) => (e.textContent || '').trim() === 'Войти')
       b?.click()
@@ -151,7 +157,7 @@ async function save(dir) {
         await tab.close()
       }
     }
-    console.log(`снято ${SCREENS.length * SIZES.length} экранов (тема: ${THEME}) → ${dir}`)
+    console.log(`снято ${SCREENS.length * SIZES.length} экранов (вид: ${PALETTE} · ${THEME}) → ${dir}`)
   } finally {
     await browser.close().catch(() => {})
     await admin.auth.admin.deleteUser(id).catch(() => {})

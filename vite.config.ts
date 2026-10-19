@@ -159,6 +159,11 @@ export default defineConfig(({ mode }) => {
           // не нужны каждому, докачиваются при первом открытии (runtime ниже).
           // Сборка падает, если хоть один файл графа не в precache (verify).
           globPatterns: ['**/*.{css,html,ico,svg,png,webmanifest,woff2}', 'assets/*.js'],
+          // Подмножества Rubik для арабского и иврита (41 КБ) Recall не нужны:
+          // не качаем их каждому заранее. Встретятся такие буквы — браузер
+          // скачает файл сам по unicode-range (Ф2.17-2). Первые три маски —
+          // умолчания плагина, иначе бы потерялись.
+          globIgnores: ['**/node_modules/**/*', 'sw.js', 'workbox-*.js', '**/*-arabic-*.woff2', '**/*-hebrew-*.woff2'],
           manifestTransforms: [precache.transform],
           runtimeCaching: [
             {

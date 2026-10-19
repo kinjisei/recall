@@ -65,7 +65,7 @@ export function AssignmentsNotice({
             <p className="font-semibold text-warning-soft-fg">
               Новое задание от преподавателя
             </p>
-            <p className="text-sm text-warning-strong/80">
+            <p className="text-sm text-warning-strong">
               {counts.pending === 1
                 ? 'Тебя ждёт 1 задание'
                 : `Тебя ждут задания: ${counts.pending}`}

@@ -35,9 +35,9 @@ export function TabPicker<T extends string>({
   className?: string
 }) {
   const segment = variant === 'segment'
-  // Обводка ring-control-line видна только в светлой теме (в тёмной она
-  // прозрачная): подложка на белом теряется. ring, а не border — рамка
-  // сдвинула бы ряд вкладок (как в ChoiceGroup).
+  // Обводка ring-control-line — граница элемента в обеих темах (лист s2):
+  // подложка на белом теряется. ring, а не border — рамка сдвинула бы ряд
+  // вкладок (как в ChoiceGroup).
   const container = segment
     ? `${stretch ? 'flex' : 'inline-flex'} gap-0.5 rounded-full bg-tint/[0.07] p-0.5 ring-1 ring-control-line`
     : 'flex flex-wrap gap-2'
