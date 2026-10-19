@@ -140,20 +140,10 @@ function ActivePlanView({
       <PlanView weeks={plan.weeks} currentWeek={week} />
       {err && <p className="text-sm text-danger-strong">{err}</p>}
       <div className="flex gap-2">
-        <Button
-          variant="secondary"
-          className="px-3 py-2 text-sm"
-          onClick={onNew}
-          disabled={archiving}
-        >
+        <Button size="sm" variant="secondary" onClick={onNew} disabled={archiving}>
           Составить новую
         </Button>
-        <Button
-          variant="ghost"
-          className="px-3 py-2 text-sm"
-          onClick={remove}
-          loading={archiving}
-        >
+        <Button size="sm" variant="ghost" onClick={remove} loading={archiving}>
           Снять программу
         </Button>
       </div>
@@ -234,7 +224,7 @@ function PlanForm({
       {!preview || editing ? (
         <>
           {preview && (
-            <Button variant="secondary" className="px-3 py-2 text-sm" onClick={() => setEditing(false)}>
+            <Button size="sm" variant="secondary" onClick={() => setEditing(false)}>
               Вернуться к программе →
             </Button>
           )}
@@ -274,15 +264,11 @@ function PlanForm({
           </p>
           {err && <p className="text-sm text-danger-strong">{err}</p>}
           <div className="flex gap-2">
-            <Button
-              className="px-4 py-2 text-sm"
-              loading={busy === 'gen'}
-              onClick={() => void generate()}
-            >
+            <Button size="sm" loading={busy === 'gen'} onClick={() => void generate()}>
               {busy === 'gen' ? 'Составляю (до минуты)…' : preview ? 'Составить заново' : 'Составить программу'}
             </Button>
             {onCancel && (
-              <Button variant="ghost" className="px-3 py-2 text-sm" onClick={cancel}>
+              <Button size="sm" variant="ghost" onClick={cancel}>
                 Отмена
               </Button>
             )}
@@ -308,18 +294,13 @@ function PlanForm({
           </label>
           {err && <p className="text-sm text-danger-strong">{err}</p>}
           <div className="flex flex-wrap gap-2">
-            <Button className="px-4 py-2 text-sm" loading={busy === 'save'} onClick={save}>
+            <Button size="sm" loading={busy === 'save'} onClick={save}>
               Сохранить и назначить
             </Button>
-            <Button
-              variant="secondary"
-              className="px-3 py-2 text-sm"
-              loading={busy === 'gen'}
-              onClick={() => void generate(feedback.trim() || undefined)}
-            >
+            <Button size="sm" variant="secondary" loading={busy === 'gen'} onClick={() => void generate(feedback.trim() || undefined)}>
               Пересоставить
             </Button>
-            <Button variant="ghost" className="px-3 py-2 text-sm" onClick={() => setEditing(true)}>
+            <Button size="sm" variant="ghost" onClick={() => setEditing(true)}>
               К форме
             </Button>
           </div>

@@ -15,6 +15,8 @@ import { ContactLinks } from '../../shared/ui/ContactLinks'
 import { useAuth } from '../../context/AuthContext'
 import { PLANS, getMyPlan, type MyPlan, type PlanCard } from '../../lib/billing'
 import { energyLeft } from '../../components/EnergyBar'
+import { Bolt, BoltText } from '../../shared/ui/Bolt'
+import { buttonClass } from '../../shared/ui/Button'
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -42,7 +44,7 @@ function MyPlanBanner({ plan }: { plan: MyPlan }) {
         <IconTrophy size={18} />
       </div>
       <p className="text-sm text-accent-soft-fg">
-        Ваш тариф: <span className="font-medium">{planTitle}</span> · {statusLine}
+        Ваш тариф: <span className="font-medium">{planTitle}</span> · <BoltText>{statusLine}</BoltText>
       </p>
     </div>
   )
@@ -54,7 +56,9 @@ function Feature({ children }: { children: string }) {
       <span className="mt-0.5 text-accent-strong">
         <IconCheck size={14} />
       </span>
-      {children}
+      <span>
+        <BoltText>{children}</BoltText>
+      </span>
     </li>
   )
 }
@@ -71,8 +75,8 @@ function Price({ price }: { price: number }) {
 }
 
 /** Ссылка-кнопка в духе Button secondary: ведёт по адресу, а не жмёт действие. */
-const LINK_BUTTON =
-  'lift inline-flex min-h-11 items-center justify-center rounded-xl border border-accent-line bg-accent-soft px-4 text-sm font-medium text-accent-soft-fg'
+// ссылка «Оплатить» видом вторичной кнопки (shared/ui/Button)
+const LINK_BUTTON = buttonClass('secondary', 'sm')
 
 function PlanCardView({ plan, canPay }: { plan: PlanCard; canPay: boolean }) {
   return (
@@ -124,7 +128,7 @@ export function PricingPage() {
 
       <h1 className="text-2xl font-medium tracking-tight">Тарифы</h1>
       <p className="mt-1 text-sm text-fg-muted">
-        Слова, тексты и грамматика бесплатны без срока. Платите за энергию ⚡ на AI, а репетитор — ещё за места учеников и генерации материалов.
+        Слова, тексты и грамматика бесплатны без срока. Платите за энергию <Bolt /> на AI, а репетитор — ещё за места учеников и генерации материалов.
       </p>
 
       {myPlan && (
@@ -167,9 +171,9 @@ export function PricingPage() {
           Первые 14 дней после регистрации — пробный период, открыто всё, карта
           не нужна. У репетитора 14 дней считаются с первого ученика в
           приложении, но не дольше 20 дней с включения режима преподавателя. Энергии первые три дня столько же, сколько на Premium, —
-          30 ⚡ в день, дальше 15 ⚡. Реплика в «Диалоге», ход в квесте и разбор
-          фрагмента текста стоят по 1 ⚡, проверка письма — 2 ⚡. Целый текст
-          разбирается кусками по 1 ⚡, и цену видно до запуска. Переводы слов по
+          30 <Bolt /> в день, дальше 15 <Bolt />. Реплика в «Диалоге», ход в квесте и разбор
+          фрагмента текста стоят по 1 <Bolt />, проверка письма — 2 <Bolt />. Целый текст
+          разбирается кусками по 1 <Bolt />, и цену видно до запуска. Переводы слов по
           тапу и произношение энергию не тратят, на пробном периоде их по 150 в
           день. Повторение карточек, игры и грамматика ничем не ограничены.
           Репетитору на пробном периоде дают 2 генерации — ровно на один

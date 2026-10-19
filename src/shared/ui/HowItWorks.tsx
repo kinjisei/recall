@@ -25,6 +25,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { readRaw, writeRaw } from '../lib/storage'
 import { IconHint, IconCaretDown } from './icons'
 import { Reveal } from './Reveal'
+import { BoltText } from './Bolt'
 
 export function HowItWorks({
   children,
@@ -110,7 +111,7 @@ export function HintPanel({ open, children }: { open: boolean; children: ReactNo
   return (
     <Reveal open={open}>
       <div className="mt-2 rounded-2xl bg-tint/[0.04] px-4 py-3 text-sm leading-relaxed text-fg-secondary">
-        {children}
+        {typeof children === 'string' ? <BoltText>{children}</BoltText> : children}
       </div>
     </Reveal>
   )

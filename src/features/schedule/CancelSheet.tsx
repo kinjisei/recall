@@ -165,7 +165,7 @@ export function CancelSheet({
         )}
         {/* сплошной красный (макет t5-2) — с редизайном: белое на danger в тёмной
             теме 4,4:1, ниже нормы для текста (test-tokens.mjs, Ф2.17) */}
-        <Button variant="danger-outline" className="w-full" onClick={() => void submit()} loading={busy}>
+        <Button variant="danger" className="w-full" onClick={() => void submit()} loading={busy}>
           {following ? 'Отменить уроки' : 'Отменить урок'}
         </Button>
       </div>

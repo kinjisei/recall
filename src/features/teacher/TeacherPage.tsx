@@ -155,7 +155,7 @@ function StudentsScreen() {
               >
                 <IconRefresh size={20} className={refreshing ? 'animate-spin' : ''} />
               </button>
-              <Button className="min-h-11 px-4 py-2 text-sm" onClick={() => setAdding(true)} disabled={myPlan?.can_write === false}>
+              <Button size="sm" onClick={() => setAdding(true)} disabled={myPlan?.can_write === false}>
                 <IconPlus size={18} /> Ученик
               </Button>
             </header>
@@ -195,9 +195,9 @@ function StudentsScreen() {
                       с карточками — студией явно пользуются. */}
                   {students.length === 0 && cards.length === 0 && (
                     <div className="mt-3 border-t border-tint/[0.06] pt-3">
-                      <Button
+                      <Button size="sm"
                         variant="ghost"
-                        className="min-h-[44px] px-3 py-2 text-sm text-fg-muted"
+                        className="text-fg-muted"
                         loading={stopping}
                         onClick={stopTeach}
                       >

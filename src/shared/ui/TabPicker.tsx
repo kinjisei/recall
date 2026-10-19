@@ -35,22 +35,17 @@ export function TabPicker<T extends string>({
   className?: string
 }) {
   const segment = variant === 'segment'
-  // Обводка ring-control-line — граница элемента в обеих темах (лист s2):
-  // подложка на белом теряется. ring, а не border — рамка сдвинула бы ряд
-  // вкладок (как в ChoiceGroup).
+  // tabs: обводка ring-control-line — граница элемента в обеих темах (лист
+  // s2): подложка на белом теряется. ring, а не border — рамка сдвинула бы ряд.
   const container = segment
-    ? `${stretch ? 'flex' : 'inline-flex'} gap-0.5 rounded-full bg-tint/[0.07] p-0.5 ring-1 ring-control-line`
+    ? `${stretch ? 'flex' : 'inline-flex'} rounded-full bg-input`
     : 'flex flex-wrap gap-2'
-  // неактивный: у капсулы фон даёт контейнер (кнопка прозрачная), у tabs —
-  // своя подложка. hover добавлен ко всем (раньше был только у капсулы).
   const inactive = segment
-    ? 'text-fg-muted hover:text-fg-secondary'
-    : 'bg-tint/[0.07] text-fg-secondary ring-1 ring-control-line hover:text-fg'
-  // выбранная вкладка в светлой теме обведена акцентом, выбранная капсула —
-  // приподнята тенью; в тёмной — как было
+    ? 'font-medium text-fg-muted hover:text-fg-secondary'
+    : 'bg-tint/[0.07] font-semibold text-fg-secondary ring-1 ring-control-line hover:text-fg'
   const active = segment
-    ? 'bg-accent-soft text-accent-soft-fg shadow-card'
-    : 'bg-accent-soft text-accent-soft-fg ring-2 ring-control-line-active'
+    ? 'font-semibold text-fg'
+    : 'bg-accent-soft font-semibold text-accent-soft-fg ring-2 ring-control-line-active'
 
   return (
     <div role="tablist" aria-label={ariaLabel} className={`${container} ${className}`}>
@@ -62,12 +57,13 @@ export function TabPicker<T extends string>({
             role="tab"
             aria-selected={isActive}
             onClick={() => onChange(o.id)}
-            className={`flex min-h-11 items-center justify-center gap-1.5 px-4 font-semibold transition-colors ${stretch ? 'flex-1' : ''} ${
-              segment ? 'rounded-full text-xs' : 'rounded-lg text-sm'
+            className={`relative flex min-h-11 items-center justify-center gap-1.5 px-4 transition-colors duration-(--dur-1) ease-out ${stretch ? 'flex-1' : ''} ${
+              segment ? 'min-w-27.5 rounded-full text-body' : 'rounded-lg text-sm'
             } ${isActive ? active : inactive}`}
           >
-            {o.Icon && <o.Icon size={segment ? 14 : 16} />}
-            {o.label}
+            {segment && isActive && <span aria-hidden className="absolute inset-0.75 rounded-full bg-segment shadow-segment" />}
+            {o.Icon && <o.Icon size={segment ? 18 : 16} className="relative" />}
+            <span className="relative">{o.label}</span>
           </button>
         )
       })}

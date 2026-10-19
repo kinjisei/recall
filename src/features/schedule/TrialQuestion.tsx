@@ -29,10 +29,10 @@ export function TrialQuestion({
   const when = `${day === today ? 'сегодня' : day === addDays(today, -1) ? 'вчера' : dayShort(day)}, ${almatyTime(lesson.startsAt)}`
   const buttons = (
     <div className={`flex gap-2 ${desktop ? 'flex-none' : ''}`}>
-      <Button variant="secondary" className={`min-h-11 px-4 py-2 text-sm ${desktop ? '' : 'flex-1'}`} loading={busy} onClick={() => onAnswer(true)}>
+      <Button size="sm" variant="secondary" className={desktop ? '' : 'flex-1'} loading={busy} onClick={() => onAnswer(true)}>
         Да
       </Button>
-      <Button variant="ghost" className={`min-h-11 px-4 py-2 text-sm ${desktop ? '' : 'flex-1'}`} disabled={busy} onClick={() => onAnswer(false)}>
+      <Button size="sm" variant="ghost" className={desktop ? '' : 'flex-1'} disabled={busy} onClick={() => onAnswer(false)}>
         Нет
       </Button>
     </div>

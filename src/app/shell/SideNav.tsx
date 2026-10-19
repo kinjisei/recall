@@ -7,7 +7,8 @@
 //   • рельс 72 из иконок (720–1279, или 240 свёрнуто руками): подпись — при
 //     наведении, внизу те же кнопки иконками.
 // Вкладки — те же, что у нижней панели телефона (app/navigation.ts), с той же
-// скользящей подложкой, только по вертикали. Шапки при меню слева нет.
+// скользящей подложкой (240 мс, ease-sheet — лист s4), только по вертикали;
+// активная — залитая иконка и жирная подпись. Шапки при меню слева нет.
 //
 // ⚠️ Ширины w-60 (240) и w-18 (72) — те же, что MENU_PX / RAIL_PX
 // (shared/ui/breakpoints) и отступ области в Layout.tsx: меняешь здесь —
@@ -69,7 +70,7 @@ export function SideNav({ rail, collapsible, onToggle }: { rail: boolean; collap
             в меню 240 шаг — высота и промежуток 4 px (макет d4-v2). */}
         <span
           aria-hidden
-          className={`pointer-events-none absolute top-0 rounded-2xl bg-accent-soft transition-[transform,opacity] duration-300 [transition-timing-function:cubic-bezier(.22,1,.36,1)] ${
+          className={`pointer-events-none absolute top-0 rounded-2xl bg-accent-soft transition-[transform,opacity] duration-(--dur-2) ease-sheet ${
             rail ? 'size-12' : 'inset-x-0 h-11'
           }`}
           style={{
@@ -91,14 +92,14 @@ export function SideNav({ rail, collapsible, onToggle }: { rail: boolean; collap
               // в рельсе подпись видна только при наведении и скрыта от
               // скринридера — имя вкладки даёт aria-label
               aria-label={badge.label ?? (rail ? label : undefined)}
-              // вниз по списку — экран приезжает справа, вверх — слева
-              direction={activeIndex >= 0 && i < activeIndex ? 'out' : 'in'}
+              // соседняя вкладка — проявление на месте, без сдвига (s4)
+              direction="fade"
               onClick={() => onTabClick(to)}
               aria-current={active ? 'page' : undefined}
               className={`group relative flex items-center rounded-2xl transition-colors duration-300 ${
                 rail
                   ? `size-12 justify-center ${active ? 'text-accent-soft-fg' : 'text-fg-muted hover:text-fg-secondary'}`
-                  : `h-11 gap-3 px-3 text-body font-semibold ${active ? 'text-accent-soft-fg' : 'text-fg-secondary hover:text-fg'}`
+                  : `h-11 gap-3 px-3 text-body ${active ? 'font-semibold text-accent-soft-fg' : 'font-medium text-fg-secondary hover:text-fg'}`
               }`}
             >
               <span className="relative flex">

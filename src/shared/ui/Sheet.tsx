@@ -20,17 +20,31 @@
 // поверх первой — всегда поверх. Ручки на компьютере нет — тянуть мышью
 // некуда. Шторки ничего не знают о ширине: раскладку выбирает этот компонент.
 //
+// Движение (лист s4): шторка выезжает снизу за 320 мс и уходит вниз за 240
+// — от того места, куда её дотянули; панель — справа за 280 и вправо за 220;
+// затемнение и дымка — параллельно. При «уменьшить движение» — только
+// прозрачность. Уход играет сама шторка и зовёт onClose по его концу
+// (shared/lib/motion): Escape, затемнение, свайп и закрытие изнутри
+// (useSheetClose — «закрыть» в SheetHeader). Закрытие, которое начал сам
+// экран (сохранил и снял шторку), — мгновенное.
+//
 // ⚠️ Свайп берём ТОЛЬКО с «ручки» (touch-none на ней), а не со всей панели:
 // внутри у шторок свой скролл, и перехват свайпа с контента сломал бы прокрутку.
 // ============================================================================
 import { useEffect, useRef, useState } from 'react'
 import type React from 'react'
 import { createPortal } from 'react-dom'
+import { LEAVE_MS, useLeave } from '../lib/motion'
 import { useSidePanel } from '../lib/sidePanel'
 import { useIsDesktop } from '../lib/useMediaQuery'
+import { SheetCloseContext } from './sheetClose'
 
-/** Насколько утянуть вниз, чтобы закрылось. Меньше — закрывается случайно. */
-const CLOSE_AT = 100
+/** Отпустил ниже трети высоты — закрывается (s4); меньше — вернётся на место. */
+const CLOSE_SHARE = 1 / 3
+/** Быстрый жест вниз закрывает и с короткого хода (s4): скорость, px/мс, и
+ *  ход не меньше FLICK_MIN — случайное касание с дрожью не закроет. */
+const FLICK_SPEED = 0.6
+const FLICK_MIN = 64
 
 /**
  * Тело шторки с прокруткой — одно на все: колонка с отступами, а дети не
@@ -78,10 +92,12 @@ export function Sheet({
   const [first] = useState(() => stack.length === 0)
   const push = desktop && first && !!slot?.fits
   const setPushed = slot?.setPushed
+  const { leaving, leave } = useLeave(onClose, desktop ? LEAVE_MS.panel : LEAVE_MS.sheet)
   const [dy, setDy] = useState(0)
   // тянут ли сейчас — состоянием, а не ref: от него зависит стиль панели
   const [dragging, setDragging] = useState(false)
-  const startY = useRef(0)
+  const drag = useRef({ y: 0, t: 0, speed: 0 })
+  const panelRef = useRef<HTMLDivElement>(null)
   const [id] = useState(() => Symbol('sheet'))
 
   // Регистрируемся в стеке на монтировании — так Escape знает, кто наверху.
@@ -104,31 +120,38 @@ export function Sheet({
   // закрыл бы заодно и композер.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && stack[stack.length - 1] === id) onClose()
+      if (e.key === 'Escape' && stack[stack.length - 1] === id) leave()
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [onClose, id])
+  }, [leave, id])
 
   const onDown = (e: React.PointerEvent) => {
-    startY.current = e.clientY
+    drag.current = { y: e.clientY, t: e.timeStamp, speed: 0 }
     setDragging(true)
     ;(e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId)
   }
   const onMove = (e: React.PointerEvent) => {
     if (!dragging) return
-    setDy(Math.max(0, e.clientY - startY.current)) // тянем только вниз
+    const next = Math.max(0, e.clientY - drag.current.y) // тянем только вниз
+    const dt = e.timeStamp - drag.current.t
+    if (dt > 0) drag.current.speed = (next - dy) / dt
+    drag.current.t = e.timeStamp
+    setDy(next)
   }
   const onUp = () => {
     if (!dragging) return
     setDragging(false)
-    if (dy > CLOSE_AT) {
+    const height = panelRef.current?.offsetHeight ?? 300
+    if (dy > height * CLOSE_SHARE || (dy >= FLICK_MIN && drag.current.speed > FLICK_SPEED)) {
       navigator.vibrate?.(10)
-      onClose()
+      leave()
     } else {
       setDy(0) // не дотянул — вернуть на место
     }
   }
+
+  const content = <SheetCloseContext.Provider value={leave}>{children}</SheetCloseContext.Provider>
 
   if (desktop) {
     const panel = (
@@ -138,12 +161,12 @@ export function Sheet({
         aria-label={label}
         aria-labelledby={labelledBy}
         data-panel={push ? 'push' : 'over'}
-        className={`animate-panel-in flex h-full w-side max-w-full flex-col border-l border-line bg-surface pt-5 ${
+        className={`${leaving ? 'animate-panel-out' : 'animate-panel-in'} flex h-full w-side max-w-full flex-col border-l border-line bg-surface pt-5 ${
           push ? 'fixed inset-y-0 right-0 z-40 shadow-raised' : ''
         } ${className}`}
         onClick={(e) => e.stopPropagation()}
       >
-        {children}
+        {content}
       </div>
     )
     return createPortal(
@@ -152,9 +175,9 @@ export function Sheet({
       ) : (
         // дымка — справа от меню: меню остаётся ярким (макет d3-4)
         <div
-          className="animate-haze-in fixed inset-y-0 right-0 z-50 flex justify-end bg-haze"
+          className={`${leaving ? 'animate-haze-out' : 'animate-haze-in'} fixed inset-y-0 right-0 z-50 flex justify-end bg-haze`}
           style={{ left: slot?.left ?? '0px' }}
-          onClick={onClose}
+          onClick={leave}
         >
           {panel}
         </div>
@@ -163,35 +186,42 @@ export function Sheet({
     )
   }
 
+  // уход — анимацией от места, куда дотянули (index.css, sheet-out читает --drag)
+  const panelStyle = {
+    maxHeight: maxH,
+    '--drag': `${dy}px`,
+    transform: dy && !leaving ? `translateY(${dy}px)` : undefined,
+    transition: dragging ? 'none' : 'transform 0.24s var(--ease-out)',
+  } as React.CSSProperties
+
   return createPortal(
     // затемнение — сила своя у темы: 55 % в тёмной, 40 % в светлой (s2)
-    <div className="fixed inset-0 z-50 flex items-end bg-scrim/(--scrim-sheet)" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end" onClick={leave}>
+      <div aria-hidden className={`${leaving ? 'animate-scrim-out' : 'animate-scrim-in'} absolute inset-0 bg-scrim/(--scrim-sheet)`} />
       <div
+        ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-label={label}
         aria-labelledby={labelledBy}
-        className={`animate-fade-up flex w-full flex-col rounded-t-3xl bg-surface pb-[env(safe-area-inset-bottom)] ${className}`}
-        style={{
-          maxHeight: maxH,
-          transform: dy ? `translateY(${dy}px)` : undefined,
-          transition: dragging ? 'none' : 'transform 0.25s ease-out',
-        }}
+        className={`${leaving ? 'animate-sheet-out' : 'animate-sheet-in'} relative flex w-full flex-col rounded-t-sheet bg-surface pb-[env(safe-area-inset-bottom)] shadow-sheet ${className}`}
+        style={panelStyle}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Область захвата: сама «ручка» плюс поле вокруг неё, чтобы палец
-            попадал. touch-none — иначе браузер начнёт свой скролл/refresh. */}
+        {/* Область захвата: сама «ручка» 36 × 5 плюс поле вокруг неё, чтобы
+            палец попадал. touch-none — иначе браузер начнёт свой
+            скролл/refresh. */}
         <div
-          className="flex shrink-0 cursor-grab touch-none justify-center pb-1 pt-3 active:cursor-grabbing"
+          className="flex shrink-0 cursor-grab touch-none justify-center py-2 active:cursor-grabbing"
           onPointerDown={onDown}
           onPointerMove={onMove}
           onPointerUp={onUp}
           onPointerCancel={onUp}
           aria-hidden
         >
-          <div className="h-1.5 w-10 rounded-full bg-fg-faint" />
+          <div className="h-1.25 w-9 rounded-full bg-fg-faint" />
         </div>
-        {children}
+        {content}
       </div>
     </div>,
     document.body,

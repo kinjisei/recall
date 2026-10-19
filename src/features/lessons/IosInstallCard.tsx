@@ -64,7 +64,7 @@ export function IosInstallCard({ onHide }: { onHide: () => void }) {
         </Step>
       </ol>
       <p className="mt-4 text-sm text-fg-secondary">Потом открой Recall со значка на экране «Домой» — и включи напоминания.</p>
-      <Button variant="ghost" className="mt-2 w-full min-h-11 text-sm" onClick={onHide}>
+      <Button size="sm" variant="ghost" className="mt-2 w-full" onClick={onHide}>
         Не сейчас
       </Button>
     </section>

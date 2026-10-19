@@ -98,13 +98,13 @@ export function CardLessons({
           {balanceLabel(balance)}
         </span>
         {canWrite && (
-          <Button variant="secondary" className="min-h-11 px-3 py-2 text-sm" onClick={() => setSheet('pay')}>
+          <Button size="sm" variant="secondary" onClick={() => setSheet('pay')}>
             Отметить оплату
           </Button>
         )}
       </div>
       {balanceLow(balance) && (
-        <Button variant="ghost" className="min-h-11 self-start px-3 py-2 text-sm" onClick={() => setSheet('remind')}>
+        <Button size="sm" variant="ghost" className="self-start" onClick={() => setSheet('remind')}>
           Напомнить об оплате
         </Button>
       )}

@@ -187,7 +187,7 @@ export function PrimaryButton({
   onClick?: () => void
 }) {
   return (
-    <Button type={type} onClick={onClick} disabled={disabled} className="h-14 w-full">
+    <Button size="lg" type={type} onClick={onClick} disabled={disabled} className="w-full">
       {children}
     </Button>
   )

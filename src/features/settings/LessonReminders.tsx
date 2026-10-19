@@ -99,7 +99,7 @@ export function LessonReminders() {
         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-tint/[0.06] pt-3">
           <p className="min-w-0 flex-1 text-sm text-fg-secondary">{line.text}</p>
           {line.action && (
-            <Button variant={line.action === 'on' ? 'secondary' : 'ghost'} className="min-h-11 px-4 text-sm" loading={busy} onClick={() => void switchDevice()}>
+            <Button size="sm" variant={line.action === 'on' ? 'secondary' : 'ghost'} loading={busy} onClick={() => void switchDevice()}>
               {line.action === 'on' ? 'Включить' : 'Выключить'}
             </Button>
           )}

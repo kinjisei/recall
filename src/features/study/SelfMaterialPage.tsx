@@ -144,7 +144,7 @@ export function SelfMaterialPage() {
         </p>
       )}
 
-      <Button className="w-full py-3" disabled={!topic.trim() || busy} loading={busy} onClick={make}>
+      <Button className="w-full" disabled={!topic.trim() || busy} loading={busy} onClick={make}>
         {busy ? <Thinking label="Собираю материал" /> : 'Собрать материал'}
       </Button>
     </div>

@@ -31,7 +31,7 @@ export function GeneralInvite({
         <div className="h-24 animate-pulse rounded-xl bg-tint/[0.05]" />
       )}
       <div className="flex flex-wrap items-center gap-2 border-t border-tint/[0.06] pt-3">
-        <Button variant="ghost" className="min-h-11 px-3 py-2 text-sm" loading={regenerating} onClick={onRegenerate}>
+        <Button size="sm" variant="ghost" loading={regenerating} onClick={onRegenerate}>
           Сменить код
         </Button>
         <span className="text-xs text-fg-muted">если код попал не тем — старый перестанет работать</span>

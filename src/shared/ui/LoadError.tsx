@@ -1,6 +1,7 @@
-// Плашка «не удалось загрузить» с повтором. Показывается вместо пустого
-// состояния, чтобы сбой сети не выглядел как «данных нет».
-import { IconRefresh, IconWarning } from './icons'
+// Плашка «не удалось загрузить» с повтором — статусная карточка листа s3:
+// иконка, заголовок danger-strong, пояснение и одно действие. Показывается
+// вместо пустого состояния, чтобы сбой сети не выглядел как «данных нет».
+import { IconAlert } from './icons'
 import { Card } from './Card'
 import { Button } from './Button'
 
@@ -12,17 +13,15 @@ export function LoadError({
   onRetry: () => void
 }) {
   return (
-    <Card tone="danger" className="flex flex-col items-center gap-3 text-center">
-      <IconWarning size={28} className="text-danger-strong" />
-      <div>
-        <p className="font-medium">{message}</p>
-        <p className="mt-1 text-sm text-fg-muted">
-          Проверь соединение — данные не потеряны.
-        </p>
+    <Card tone="danger" className="flex gap-3">
+      <IconAlert size={20} className="mt-px flex-none text-danger-strong" />
+      <div className="flex min-w-0 flex-1 flex-col items-start gap-1">
+        <p className="font-semibold text-danger-strong">{message}</p>
+        <p className="text-body text-fg-secondary">Проверь соединение — данные не потеряны.</p>
+        <Button variant="secondary" size="sm" className="mt-2" onClick={onRetry}>
+          Повторить
+        </Button>
       </div>
-      <Button variant="secondary" className="min-h-11 px-4 text-sm" onClick={onRetry}>
-        <IconRefresh size={16} /> Повторить
-      </Button>
     </Card>
   )
 }

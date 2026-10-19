@@ -1,85 +1,127 @@
-import type { ButtonHTMLAttributes, PointerEvent, ReactNode } from 'react'
+import type { ButtonHTMLAttributes, ReactNode, Ref } from 'react'
 
-type Variant = 'primary' | 'secondary' | 'soft' | 'ghost' | 'danger' | 'danger-outline'
+type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'danger-solid'
+type Size = 'sm' | 'md' | 'lg'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode
   variant?: Variant
+  /** Высота по листу s3: sm 44 · md 48 · lg 56 (главная на экране). */
+  size?: Size
   loading?: boolean
+  ref?: Ref<HTMLButtonElement>
 }
 
-// Главная кнопка — токены primary (лист s2): лавандовая у «Сумерек»,
-// мандариновая у «Заката»; тень видна только в светлой. Вторичная —
-// акцентная outline; мягкая — подложка accent-soft (главное действие экрана
-// уступило место другому: «Начать занятие» перед уроком, макет u1-2); ghost —
-// только текст акцентом. Высоты 44 / 48 / 56–60 и тон нажатия primary-press —
-// PLAN.md Ф2.17-3.
+// Кнопки листа s3 («Основа стиля · компоненты»):
+//   primary   — главная, одна на экран: primary, нажатая — primary-press;
+//   secondary — вторичная: мягкая подложка accent-soft («Перенести», «Начать
+//               занятие» перед уроком, макет u1-2), нажатая — accent-soft-press;
+//   ghost     — тихая: только текст accent-strong, нажатая — дымка;
+//   danger    — опасная: только там, где действие что-то отменяет — мягкая
+//               danger-soft с текстом danger-strong;
+//   danger-solid — сплошной красный: подтверждение необратимого в диалоге
+//               (ConfirmDialog, макет t5-2).
+// Нажатие — на касание (pointerdown, :active): тон -press и scale .97 сразу
+// (80 мс), возврат 160 мс; при «уменьшить движение» — только тон. Выключенная
+// — подложка input и текст fg-faint: читается, но явно неактивна (контраст
+// выключенному элементу WCAG не задаёт); рядом экран объясняет, почему.
 // ⚠️ Своих копий главной кнопки (`bg-fg text-page` в className) не заводить:
-// они не знают про светлую тему и остаются чёрными.
-const styles: Record<Variant, string> = {
-  primary:
-    'bg-primary text-primary-fg shadow-card hover:brightness-95 active:brightness-90',
-  secondary:
-    'border border-accent-line bg-accent/14 text-fg hover:bg-accent/22',
-  soft: 'bg-accent-soft text-accent-soft-fg hover:brightness-95 active:brightness-90',
-  ghost:
-    'bg-transparent text-accent-strong hover:bg-tint/[0.06]',
-  danger: 'bg-danger/90 text-danger-fg hover:bg-danger',
-  // спокойное опасное действие («Выйти из аккаунта»): красный текст на мягкой
-  // подложке с рамкой — заметно в обеих темах, но не кричит, как сплошной danger
-  'danger-outline':
-    'border border-danger/30 bg-danger/10 text-danger-strong hover:bg-danger/15',
+// они не знают про светлую тему и остаются чёрными. Высоту, радиус и размер
+// текста не перебивать классами (py-2 text-sm): два класса одного свойства
+// решает порядок в CSS, а не в строке, — для этого есть size.
+const VARIANTS: Record<Variant, string> = {
+  primary: 'bg-primary font-semibold text-primary-fg shadow-card active:bg-primary-press',
+  secondary: 'bg-accent-soft font-medium text-accent-soft-fg active:bg-accent-soft-press',
+  ghost: 'bg-transparent font-medium text-accent-strong active:bg-ghost-press',
+  danger: 'bg-danger-soft font-medium text-danger-strong active:bg-danger-soft-press',
+  'danger-solid': 'bg-danger font-semibold text-danger-fg shadow-card active:brightness-90',
 }
 
-function Spinner() {
+/** Нажатое состояние без пальца — витрина /dev/ui показывает его рядом с обычным. */
+const PRESSED: Record<Variant, string> = {
+  primary: 'data-press:bg-primary-press',
+  secondary: 'data-press:bg-accent-soft-press',
+  ghost: 'data-press:bg-ghost-press',
+  danger: 'data-press:bg-danger-soft-press',
+  'danger-solid': 'data-press:brightness-90',
+}
+
+// радиус ≈ 30 % высоты (s2): 14 · 16 · 18
+const SIZES: Record<Size, string> = {
+  sm: 'min-h-11 rounded-control-sm px-4 text-sm',
+  md: 'min-h-12 rounded-control px-4 text-base',
+  lg: 'min-h-14 rounded-control-lg px-5 text-lg',
+}
+
+const BASE =
+  'relative inline-flex select-none items-center justify-center gap-2 transition-[scale,background-color,color,filter] duration-(--dur-1) ease-out ' +
+  'active:scale-97 active:duration-(--dur-press) data-press:scale-97 motion-reduce:active:scale-100 motion-reduce:data-press:scale-100'
+
+/** Выключенная: у тихой подложки нет и в выключенном виде (s3). */
+const OFF = 'cursor-not-allowed font-medium text-fg-faint'
+const OFF_BG: Record<Variant, string> = {
+  primary: 'bg-input',
+  secondary: 'bg-input',
+  ghost: 'bg-transparent',
+  danger: 'bg-input',
+  'danger-solid': 'bg-input',
+}
+
+/** Индикатор загрузки листа s3: кольцо и дуга, 0,9 с на оборот. */
+export function Spinner({ size = 22 }: { size?: number }) {
   return (
     <svg
-      className="h-4 w-4 animate-spin"
+      width={size}
+      height={size}
       viewBox="0 0 24 24"
       fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      className="animate-spin [animation-duration:0.9s]"
       aria-hidden="true"
     >
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.4 0 0 5.4 0 12h4z" />
+      <circle cx="12" cy="12" r="8.5" strokeOpacity="0.3" />
+      <path d="M20.5 12A8.5 8.5 0 0 0 12 3.5" />
     </svg>
   )
 }
 
-/** Волна от точки нажатия; узел удаляет себя по окончании анимации. */
-function spawnRipple(e: PointerEvent<HTMLButtonElement>) {
-  const btn = e.currentTarget
-  const rect = btn.getBoundingClientRect()
-  const d = Math.max(rect.width, rect.height) * 2
-  const span = document.createElement('span')
-  span.className = 'ripple'
-  span.style.width = span.style.height = `${d}px`
-  span.style.left = `${e.clientX - rect.left - d / 2}px`
-  span.style.top = `${e.clientY - rect.top - d / 2}px`
-  btn.appendChild(span)
-  span.addEventListener('animationend', () => span.remove())
+/** Классы кнопки — и для ссылки, которая выглядит кнопкой (`AppLink`). */
+export function buttonClass(variant: Variant = 'primary', size: Size = 'md', off = false): string {
+  const look = off ? `${OFF} ${OFF_BG[variant]}` : `${VARIANTS[variant]} ${PRESSED[variant]}`
+  return `${BASE} ${look} ${SIZES[size]}`
 }
 
 export function Button({
   children,
   variant = 'primary',
+  size = 'md',
   loading = false,
   className = '',
   disabled,
-  onPointerDown,
   ...props
 }: ButtonProps) {
+  // Загрузка держит ширину: подпись остаётся в раскладке невидимой, индикатор
+  // встаёт поверх по центру — кнопка не прыгает и не нажимается повторно.
+  // Выключенный вид — только у disabled: кнопка в загрузке остаётся своего цвета.
   return (
     <button
-      className={`relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl px-4 py-3 text-base font-semibold transition-[transform,filter,background-color] duration-150 active:scale-98 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100 ${styles[variant]} ${className}`}
+      className={`${buttonClass(variant, size, !!disabled && !loading)} ${className}`}
       disabled={disabled || loading}
-      onPointerDown={(e) => {
-        spawnRipple(e)
-        onPointerDown?.(e)
-      }}
+      aria-busy={loading || undefined}
       {...props}
     >
-      {loading && <Spinner />}
-      {children}
+      {loading ? (
+        <>
+          <span className="invisible inline-flex items-center gap-2">{children}</span>
+          <span className="absolute inset-0 flex items-center justify-center">
+            <Spinner />
+          </span>
+        </>
+      ) : (
+        children
+      )}
     </button>
   )
 }

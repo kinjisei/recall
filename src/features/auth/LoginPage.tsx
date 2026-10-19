@@ -227,7 +227,7 @@ export function LoginPage() {
             )}
             {info && <p className="text-sm text-success-strong">{info}</p>}
 
-            <Button type="submit" disabled={busy} className="mt-2 h-14 w-full">
+            <Button size="lg" type="submit" disabled={busy} className="mt-2 w-full">
               {busy ? '…' : signup ? 'Создать аккаунт' : 'Войти'}
             </Button>
 
@@ -334,9 +334,9 @@ function CheckEmail({
         </p>
       )}
 
-      {/* disabled:opacity-40! — своя прозрачность ожидания: обычный класс
-          проиграл бы базе Button (50) по порядку в CSS */}
-      <Button type="button" onClick={resend} disabled={busy || left > 0} className="h-14 w-full disabled:opacity-40!">
+      {/* ожидание — общий выключенный вид Button (лист s3): подпись со
+          счётчиком читается, кнопка явно неактивна */}
+      <Button size="lg" type="button" onClick={resend} disabled={busy || left > 0} className="w-full">
         {busy ? '…' : left > 0 ? `Отправить ещё раз через ${left} с` : 'Отправить письмо ещё раз'}
       </Button>
 

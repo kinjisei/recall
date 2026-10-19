@@ -138,9 +138,9 @@ export function QuickWriteCheck({
           <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-fg">
             {feedback}
           </p>
-          <Button
+          <Button size="sm"
             variant="ghost"
-            className="mt-3 px-3 py-1 text-sm"
+            className="mt-3"
             onClick={() => {
               setFeedback(null)
               setText('')

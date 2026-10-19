@@ -80,7 +80,7 @@ export function WritingSection({ students }: { students: StudentInfo[] }) {
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <p className="font-semibold">Письменные задания</p>
-        <Button className="px-3 py-1.5 text-sm" onClick={() => setScreen('form')}>
+        <Button size="sm" onClick={() => setScreen('form')}>
           + Новое письмо
         </Button>
       </div>
@@ -253,7 +253,7 @@ function WritingForm({
                   value={chartTopic}
                   onChange={(e) => setChartTopic(e.target.value)}
                 />
-                <Button variant="secondary" className="self-start px-3 py-2 text-sm" onClick={genChart} loading={busy === 'chart'} disabled={busy !== null}>
+                <Button size="sm" variant="secondary" className="self-start" onClick={genChart} loading={busy === 'chart'} disabled={busy !== null}>
                   {busy === 'chart' ? 'AI рисует данные…' : '📊 Сгенерировать график'}
                 </Button>
                 {chart && (
@@ -497,19 +497,11 @@ function WritingDetail({
                 </div>
                 <div className="flex shrink-0 gap-1.5">
                   {a && a.status !== 'assigned' && (
-                    <Button
-                      className="px-3 py-1.5 text-sm"
-                      onClick={() => setReviewing({ a, name })}
-                    >
+                    <Button size="sm" onClick={() => setReviewing({ a, name })}>
                       {a.status === 'submitted' ? 'Проверить' : 'Разбор'}
                     </Button>
                   )}
-                  <Button
-                    variant={a ? 'ghost' : 'secondary'}
-                    className="px-3 py-1.5 text-sm"
-                    disabled={busyStudent !== null}
-                    onClick={() => toggle(st.profile.id)}
-                  >
+                  <Button size="sm" variant={a ? 'ghost' : 'secondary'} disabled={busyStudent !== null} onClick={() => toggle(st.profile.id)}>
                     {busyStudent === st.profile.id ? '…' : a ? 'Убрать ✓' : 'Назначить'}
                   </Button>
                 </div>
@@ -520,7 +512,7 @@ function WritingDetail({
         {err && <p className="text-sm text-danger">{err}</p>}
       </Card>
 
-      <Button variant="ghost" className="self-start text-sm text-danger" onClick={remove} loading={deleting}>
+      <Button size="sm" variant="ghost" className="self-start text-danger" onClick={remove} loading={deleting}>
         Удалить задание
       </Button>
     </div>

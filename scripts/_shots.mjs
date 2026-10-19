@@ -28,14 +28,15 @@ export async function settleAnimations(page) {
 
 /**
  * Дождаться данных: на экране не осталось заглушек загрузки (серые полосы
- * animate-pulse у блоков, не у значков-подсказок). Проверка смоука может
+ * animate-pulse у блоков экранов и animate-skeleton общего RowsSkeleton, не
+ * у значков-подсказок). Проверка смоука может
  * дождаться одного элемента, а соседний блок ещё грузится — и снимок ловил
  * заглушку вместо приглашения и «Ближайших» (приёмка Ф2.11, снимок 07 на
  * 1280). Не дождались за `ms` — снимаем как есть: сбой тоже надо видеть.
  */
 export async function waitForData(page, ms = 10_000) {
   await page
-    .waitForFunction(() => !document.querySelector('main :is(div, span).animate-pulse'), { polling: 250, timeout: ms })
+    .waitForFunction(() => !document.querySelector('main :is(div, span):is(.animate-pulse, .animate-skeleton)'), { polling: 250, timeout: ms })
     .catch(() => {})
 }
 

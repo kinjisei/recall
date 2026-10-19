@@ -111,7 +111,7 @@ export function StepDone({
         <HeardChips value={heard} onPick={onHeard} />
       </div>
       {error && <p className="mb-3 text-sm text-danger-strong">{error}</p>}
-      <Button onClick={onGo} loading={busy} className="h-14 w-full rounded-2xl! py-0! text-lg! font-bold!">
+      <Button size="lg" onClick={onGo} loading={busy} className="w-full font-bold!">
         В студию
       </Button>
     </>

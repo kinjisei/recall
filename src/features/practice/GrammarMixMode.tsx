@@ -187,7 +187,7 @@ export function GrammarMixMode({
         onNext={next}
         isLast={index + 1 >= items.length}
       />
-      <Button variant="ghost" className="self-center px-3 py-1 text-sm" onClick={onBack}>
+      <Button size="sm" variant="ghost" className="self-center" onClick={onBack}>
         Завершить досрочно
       </Button>
     </div>

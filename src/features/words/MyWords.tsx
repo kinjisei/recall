@@ -380,10 +380,10 @@ function WordRow({
           placeholder="Пример (необязательно)"
         />
         <div className="mt-1 flex gap-2">
-          <Button className="flex-1 py-2 text-sm" onClick={() => onSave({ front, back, example })} disabled={!front.trim()}>
+          <Button size="sm" className="flex-1" onClick={() => onSave({ front, back, example })} disabled={!front.trim()}>
             <IconCheck size={16} /> Сохранить
           </Button>
-          <Button variant="ghost" className="py-2 text-sm" onClick={onCancelEdit}>
+          <Button size="sm" variant="ghost" onClick={onCancelEdit}>
             Отмена
           </Button>
         </div>

@@ -353,7 +353,7 @@ export function HomeworkComposer({
         </div>
 
         <div className="border-t border-tint/[0.06] px-5 py-3">
-          <Button className="w-full py-3" disabled={!ready} loading={busy} onClick={send}>
+          <Button className="w-full" disabled={!ready} loading={busy} onClick={send}>
             {items.length > 0 ? `Выдать домашку · ${countable}` : 'Выдать домашку'}
           </Button>
         </div>

@@ -156,7 +156,8 @@ async function main() {
     await sleep(600)
     const navState = await page.evaluate(() => ({
       path: location.pathname,
-      tabs: [...document.querySelectorAll('nav a span')].map((s) => s.textContent.trim()),
+      // подписи вкладок: у иконки свой span без текста — его пропускаем
+      tabs: [...document.querySelectorAll('nav a span')].map((s) => s.textContent.trim()).filter(Boolean),
     }))
     check(
       'Навигация: 4 вкладки + редирект на /practice',
@@ -189,7 +190,7 @@ async function main() {
     await page.goto(BASE + '/study', { waitUntil: 'networkidle2' })
     await sleep(800)
     const studyState = await page.evaluate(() => {
-      const rows = [...document.querySelectorAll('main a.lift, main button.lift')].map((b) =>
+      const rows = [...document.querySelectorAll('main [data-row]')].map((b) =>
         (b.textContent || '').trim(),
       )
       return {
@@ -436,10 +437,11 @@ async function main() {
       return {
         noEmoji: !body.includes('💬') && !body.includes('✍️'),
         segmentGone: !document.querySelector('[role="tablist"][aria-label="Режим"]'),
-        send: !!document.querySelector('button[aria-label="Отправить"].h-12'),
+        // цель касания ≥ 44 (размер, а не класс: классы меняются с видом)
+        send: ((r) => !!r && r.width >= 44 && r.height >= 44)(document.querySelector('button[aria-label="Отправить"]')?.getBoundingClientRect()),
       }
     })
-    check('Диалог — только чат (сегмент убран) + кнопка отправки 48×48', convState.noEmoji && convState.segmentGone && convState.send, JSON.stringify(convState))
+    check('Диалог — только чат (сегмент убран) + кнопка отправки ≥ 44×44', convState.noEmoji && convState.segmentGone && convState.send, JSON.stringify(convState))
 
     if (errors.length) {
       console.log('\nJS-ошибки на страницах:')

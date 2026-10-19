@@ -17,7 +17,7 @@
  *   5. верный ответ «клюёт» (проходим упражнение правильно);
  *   6. класс мест не разъехался — все шесть ожиданий AI на общем компоненте;
  *   7. keyframes живы в собранном CSS;
- *   8. вкладки: направление по порядку, повторный тап не плодит переходов.
+ *   8. вкладки: проявление на месте (s4), повторный тап не плодит переходов.
  *
  * Запуск: `npm run dev:test` (5174, тестовая база), затем `node scripts/smoke-motion.mjs`.
  * Аккаунт создаётся и удаляется сам (service_role из .env.local).
@@ -186,7 +186,7 @@ function checkBuiltCss() {
     .filter((f) => f.endsWith('.css'))
     .map((f) => readFileSync(join(dir, f), 'utf8'))
     .join('\n')
-  const need = ['dot-bounce', 'answer-pop', 'vt-in-right', 'vt-out-left', 'recall-nav']
+  const need = ['dot-bounce', 'answer-pop', 'vt-in-right', 'vt-out-left', 'recall-nav', 'sheet-out', 'panel-out', 'toast-out', 'menu-out', 'data-vt=fade']
   const missing = need.filter((n) => !css.includes(n))
   check('анимации доехали до собранного CSS', missing.length === 0, missing.join(', ') || need.length + '/' + need.length)
 }
@@ -493,10 +493,12 @@ async function main() {
     !!tf && tf.before !== tf.after && !/Загрузка…/.test(tf.after),
     tf ? `${tf.before.slice(0, 22)} → ${tf.after.slice(0, 22)}` : 'кадр не снят',
   )
-  check('вкладка вправо — экран приезжает справа', toStudy.dirs[0] === 'in', String(toStudy.dirs[0]))
+  // соседняя вкладка — проявление на месте, без сдвига (лист s4): вкладки
+  // стоят рядом, а не вложены друг в друга; вбок едут только заход и возврат
+  check('вкладка — экран проявляется на месте (fade), а не едет вбок', toStudy.dirs[0] === 'fade', String(toStudy.dirs[0]))
 
   const backHome = await tapTab('Главная')
-  check('вкладка влево — экран приезжает слева', backHome.dirs[0] === 'out', String(backHome.dirs[0]))
+  check('и обратно — тоже на месте', backHome.dirs[0] === 'fade', String(backHome.dirs[0]))
 
   // повторный тап по своей вкладке не должен плодить историю и переходы
   await page.goto(`${BASE}/practice`, { waitUntil: 'networkidle2' })

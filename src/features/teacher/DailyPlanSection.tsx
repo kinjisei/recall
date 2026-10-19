@@ -110,21 +110,11 @@ export function DailyPlanSection({ studentId }: { studentId: string }) {
       {notice && <p className="text-sm text-success-strong">{notice}</p>}
 
       <div className="flex flex-wrap gap-2">
-        <Button
-          className="px-4 py-2 text-sm"
-          loading={busy}
-          disabled={draft === undefined}
-          onClick={() => save({ kinds, auto })}
-        >
+        <Button size="sm" loading={busy} disabled={draft === undefined} onClick={() => save({ kinds, auto })}>
           Сохранить план
         </Button>
         {(data || draft) && (
-          <Button
-            variant="ghost"
-            className="px-3 py-2 text-sm"
-            disabled={busy}
-            onClick={() => save(null)}
-          >
+          <Button size="sm" variant="ghost" disabled={busy} onClick={() => save(null)}>
             Вернуть умный дефолт
           </Button>
         )}

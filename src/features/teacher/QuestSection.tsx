@@ -238,7 +238,7 @@ export function QuestSection({ studentId }: { studentId: string }) {
           />
         </label>
         {formError && <p className="text-sm text-danger-strong">{formError}</p>}
-        <Button loading={busy} onClick={submit} className="py-2 text-sm">
+        <Button size="sm" loading={busy} onClick={submit}>
           Назначить квест
         </Button>
       </div>

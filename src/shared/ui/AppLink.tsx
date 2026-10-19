@@ -31,6 +31,8 @@ export interface AppLinkProps {
   role?: string
   'aria-label'?: string
   'aria-current'?: 'page' | undefined
+  /** Строка списка (RowCard) — признак для проверок, класс у неё меняется с видом. */
+  'data-row'?: boolean
 }
 
 export function AppLink({

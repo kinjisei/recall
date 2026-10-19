@@ -154,11 +154,12 @@ try {
     await sleep(400)
   }
 
-  // Короткий свайп (< порога 100px) — шторка возвращается на место.
+  // Короткий свайп (меньше трети шторки и короче 64 px быстрого жеста,
+  // shared/ui/Sheet) — шторка возвращается на место.
   await dragDown(40)
   check('короткий свайп не закрывает', await seen(page, 'Сдать до'))
 
-  // Длинный свайп — закрывает. Порог CLOSE_AT = 100.
+  // Длинный свайп — ниже трети высоты шторки — закрывает (уходит вниз за 240 мс).
   await dragDown(240)
   const swipedClosed = await page
     .waitForFunction(() => !document.querySelector('[role="dialog"]'), {
@@ -197,10 +198,12 @@ try {
 
   // Escape закрывает ТОЛЬКО пикер, композер остаётся — стек шторок.
   await page.keyboard.press('Escape')
-  await sleep(400)
-  const onlyComposer = await page.evaluate(
-    () => document.querySelectorAll('[role="dialog"]').length === 1,
-  )
+  // шторка уходит анимацией и снимается таймером (shared/lib/motion); в фоновой
+  // вкладке таймеры сдвинуты к целой секунде — ждём, а не паузу
+  const onlyComposer = await page
+    .waitForFunction(() => document.querySelectorAll('[role="dialog"]').length === 1, { polling: 250, timeout: 3000 })
+    .then(() => true)
+    .catch(() => false)
   check('Escape закрыл пикер, но не композер', onlyComposer && (await seen(page, 'Сдать до')))
 
   // Выбор в пикере применяется к строке.
@@ -264,17 +267,22 @@ try {
   // словами показывает «0 из 20», и поиск подстроки «0 из 2» нашёл бы её.
   // На соседнем смоуке эта ловушка уже дала зелёную проверку при сломанном
   // счёте — здесь закрываем её тем же приёмом.
-  const counterShown = await page.evaluate(() =>
-    [...document.querySelectorAll('b, span, p, div')].some(
-      (e) => (e.textContent || '').trim() === '0 из 3',
-    ),
-  )
+  // Заголовок «Домашка на неделю» есть и до перезагрузки секции — ждём сам
+  // счёт (запись и перечитывание идут через базу, 1–4 с), а не паузу.
+  const counterShown = await page
+    .waitForFunction(
+      () => [...document.querySelectorAll('b, span, p, div')].some((e) => (e.textContent || '').trim() === '0 из 3'),
+      { polling: 250, timeout: 15000 },
+    )
+    .then(() => true)
+    .catch(() => false)
   check('видно счёт', counterShown)
 
-  const { count } = await admin
-    .from('homework')
-    .select('id', { count: 'exact', head: true })
-    .eq('student_id', sId)
+  let count = 0
+  for (let i = 0; i < 20 && count !== 1; i++) {
+    ;({ count } = await admin.from('homework').select('id', { count: 'exact', head: true }).eq('student_id', sId))
+    if (count !== 1) await sleep(500)
+  }
   check('домашка появилась в базе', count === 1, `строк: ${count}`)
 
   // ---- 4. закрытый сервером пункт подписан честно ---------------------------

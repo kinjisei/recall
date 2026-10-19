@@ -125,7 +125,7 @@ export function FixRecordSheet({
             {error}
           </p>
         )}
-        <Button className="w-full" variant={row.fix === 'payment' ? 'danger-outline' : 'primary'} onClick={() => void save()} disabled={unchanged || (!choice && row.fix !== 'payment')} loading={busy}>
+        <Button className="w-full" variant={row.fix === 'payment' ? 'danger' : 'primary'} onClick={() => void save()} disabled={unchanged || (!choice && row.fix !== 'payment')} loading={busy}>
           {row.fix === 'payment' ? `Снять оплату +${item.n}` : 'Исправить'}
         </Button>
       </div>

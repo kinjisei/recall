@@ -99,7 +99,7 @@ export function AttentionPanel({
                   <span className="block truncate text-note text-fg-muted">{sent === c.id ? 'Напоминание отправлено' : detail}</span>
                 </span>
               </button>
-              <Button variant="ghost" className="min-h-11 flex-none px-3 py-2 text-sm" onClick={() => setRemind(c)}>
+              <Button size="sm" variant="ghost" className="flex-none" onClick={() => setRemind(c)}>
                 Напомнить
               </Button>
             </li>

@@ -25,6 +25,7 @@ import { CountBadge } from '../../shared/ui/CountBadge'
 import { HoverTip } from '../../shared/ui/HoverTip'
 import { IconBell } from '../../shared/ui/icons'
 import { NotificationFeed } from './NotificationFeed'
+import { ICON_BUTTON } from '../../shared/ui/IconButton'
 
 const REFRESH_MS = 5 * 60 * 1000
 
@@ -99,10 +100,10 @@ export function NotificationBell({ variant = 'icon' }: { variant?: 'icon' | 'row
           type="button"
           onClick={() => setOpen(true)}
           aria-label={label}
-          className="lift relative flex h-11 w-11 flex-none items-center justify-center rounded-full border border-tint/[0.08] bg-surface text-fg-secondary hover:text-fg"
+          className={ICON_BUTTON}
         >
-          <IconBell size={20} />
-          <CountBadge n={unread} className="-right-0.5 -top-0.5" />
+          <IconBell size={24} />
+          <CountBadge n={unread} className="right-1.25 top-1.5" />
         </button>
       )}
       {open && (

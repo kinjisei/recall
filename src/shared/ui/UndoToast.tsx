@@ -1,10 +1,13 @@
 // ============================================================================
-// Тост с откатом (макет t6-3: «Тимур Ким — в архиве · Вернуть»; дальше —
+// Тост с откатом (лист s3; макет t6-3: «Тимур Ким — в архиве · Вернуть»;
 // перенос урока, t5): короткое подтверждение действия и одна кнопка, которая
-// его отменяет. Сам уходит через несколько секунд — полоска внизу показывает,
-// сколько осталось. Стоит над нижней навигацией (shellInsets), не перекрывая её.
+// его отменяет целиком. Над панелью вкладок (shellInsets), ~5 секунд;
+// выезжает снизу и уходит вниз (s4: 200 / 160 мс, при «уменьшить движение» —
+// только прозрачность). Один тост за раз: новый заменяет старый — экран
+// держит один тост в состоянии.
 // ============================================================================
 import { useEffect, useRef } from 'react'
+import { LEAVE_MS, useLeave } from '../lib/motion'
 import { useShellInsets } from '../lib/shellInsets'
 import { IconCheck } from './icons'
 
@@ -13,7 +16,7 @@ export function UndoToast({
   actionLabel = 'Вернуть',
   onAction,
   onClose,
-  ms = 6000,
+  ms = 5000,
 }: {
   text: string
   actionLabel?: string
@@ -29,10 +32,11 @@ export function UndoToast({
   useEffect(() => {
     close.current = onClose
   })
+  const { leaving, leave } = useLeave(() => close.current(), LEAVE_MS.toast)
   useEffect(() => {
-    const t = window.setTimeout(() => close.current(), ms)
+    const t = window.setTimeout(leave, ms)
     return () => window.clearTimeout(t)
-  }, [ms, text])
+  }, [ms, text, leave])
 
   return (
     <div
@@ -40,27 +44,54 @@ export function UndoToast({
       className="pointer-events-none fixed inset-x-0 z-40 flex justify-center px-4 pb-3"
       style={{ bottom: insets.bottom, left: insets.left }}
     >
-      <div className="pointer-events-auto relative flex w-full max-w-exercise animate-pop-in items-center gap-3 overflow-hidden rounded-2xl bg-fg py-3 pl-4 pr-2 text-page shadow-card">
-        <IconCheck size={18} className="flex-none" />
-        <span className="min-w-0 flex-1 truncate text-sm font-semibold">{text}</span>
-        {onAction && (
-          <button
-            type="button"
-            onClick={() => {
-              onAction()
-              onClose()
-            }}
-            className="min-h-11 flex-none rounded-xl px-3 text-sm font-semibold text-accent-line"
-          >
-            {actionLabel}
-          </button>
-        )}
-        <span
-          aria-hidden
-          className="absolute bottom-0 left-0 h-0.5 w-full origin-left bg-accent-line"
-          style={{ animation: `shrink-x ${ms}ms linear forwards` }}
-        />
-      </div>
+      <ToastView
+        text={text}
+        actionLabel={actionLabel}
+        leaving={leaving}
+        className="pointer-events-auto max-w-exercise"
+        onAction={
+          onAction &&
+          (() => {
+            onAction()
+            leave()
+          })
+        }
+      />
+    </div>
+  )
+}
+
+/** Сама плашка тоста — и неподвижно на витрине /dev/ui. */
+export function ToastView({
+  text,
+  actionLabel = 'Вернуть',
+  onAction,
+  leaving = false,
+  className = '',
+}: {
+  text: string
+  actionLabel?: string
+  onAction?: () => void
+  leaving?: boolean
+  className?: string
+}) {
+  return (
+    <div
+      className={`flex h-14 w-full items-center gap-2.5 rounded-control bg-toast pl-4 pr-1.5 text-body font-medium text-toast-fg shadow-raised ${
+        leaving ? 'animate-toast-out' : 'animate-toast-in'
+      } ${className}`}
+    >
+      <IconCheck size={20} className="flex-none" />
+      <span className="min-w-0 flex-1 truncate">{text}</span>
+      {onAction && (
+        <button
+          type="button"
+          onClick={onAction}
+          className="min-h-11 flex-none rounded-xl px-3.5 font-semibold text-toast-action active:bg-ghost-press"
+        >
+          {actionLabel}
+        </button>
+      )}
     </div>
   )
 }

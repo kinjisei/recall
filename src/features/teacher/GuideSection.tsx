@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { Card } from '../../shared/ui/Card'
 import { teacherGuide, type GuideBlock } from '../../data/teacher-guide'
 import { Reveal } from '../../shared/ui/Reveal'
+import { RevealHeader } from '../../shared/ui/Disclosure'
 
 function BlockView({ block }: { block: GuideBlock }) {
   return (
@@ -62,14 +63,11 @@ export function GuideSection() {
         const isOpen = open === s.id
         return (
           <div key={s.id}>
-            <button
-              onClick={() => setOpen((cur) => (cur === s.id ? null : s.id))}
-              className="flex min-h-[44px] w-full items-center justify-between rounded-lg bg-tint/[0.06] px-3 py-2 text-left"
-              aria-expanded={isOpen}
-            >
-              <span className="text-sm font-bold">{s.title}</span>
-              <span className="text-fg-muted">{isOpen ? '▾' : '▸'}</span>
-            </button>
+            <RevealHeader
+              open={isOpen}
+              onToggle={() => setOpen((cur) => (cur === s.id ? null : s.id))}
+              title={s.title}
+            />
             <Reveal open={isOpen}>
               <Card className="mt-2 flex flex-col gap-3">
                 {s.intro && (

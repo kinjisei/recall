@@ -47,7 +47,7 @@ export function InviteShare({ code }: { code: string }) {
           <span className="min-w-0 flex-1 select-all truncate text-sm text-fg" data-referral-link={link}>
             {link.replace(/^https?:\/\//, '')}
           </span>
-          <Button variant="secondary" className="min-h-11 flex-none px-3 text-sm" onClick={copyLink}>
+          <Button size="sm" variant="secondary" className="flex-none" onClick={copyLink}>
             {copied === 'link' ? <IconCheck size={16} /> : <IconCopy size={16} />}
             {copied === 'link' ? 'Скопировано' : 'Скопировать'}
           </Button>

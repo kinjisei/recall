@@ -97,12 +97,8 @@ export function matchesQuery(card: Pick<StudentCard, 'name' | 'contact'>, query:
   return fold(card.name).includes(q) || fold(card.contact ?? '').includes(q)
 }
 
-/** Инициалы для аватара: «Әсел Жұмабаева» → «ӘЖ». */
-export function initials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean)
-  const letters = parts.slice(0, 2).map((p) => [...p][0] ?? '')
-  return letters.join('').toLocaleUpperCase('ru') || '?'
-}
+/** Инициалы для аватара: «Әсел Жұмабаева» → «ӘЖ» — общее правило аватара. */
+export { initials } from '../../shared/lib/initials.ts'
 
 /** Имя для обращения в приглашении: «Тимур Ким» → «Тимур». */
 export function firstName(name: string): string {

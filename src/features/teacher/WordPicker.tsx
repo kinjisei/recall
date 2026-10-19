@@ -29,6 +29,7 @@ import {
 } from '../../lib/wordPacks'
 import { describeDbError } from '../../shared/api/errors'
 import type { AppLang, CEFRLevel, Deck, WordTopic } from '../../types'
+import { DisclosureIcon } from '../../shared/ui/Disclosure'
 
 const SEARCH_FROM = 20 // поиск показываем только на длинных списках
 
@@ -264,9 +265,7 @@ function SetList({
                               </span>
                             )}
                           </span>
-                          <span className="text-fg-muted">
-                            {list.length} · {isOpen ? '▾' : '▸'}
-                          </span>
+                          <span className="flex items-center gap-1.5 text-fg-muted">{list.length}<DisclosureIcon open={isOpen} size={16} /></span>
                         </button>
                         <Reveal open={isOpen}>
                           <div className="mt-1.5 flex flex-col gap-1.5 pl-1">

@@ -111,7 +111,7 @@ for (const [name, b, extra] of [
   check(`${name}: задан каждый цветовой токен`, missing.length === 0, missing.join(', '))
   check(`${name}: нет лишних (чужих или неизвестных @theme) токенов`, unknown.length === 0, unknown.join(', '))
 }
-const VARS = ['--elevation-card', '--elevation-raised', '--elevation-sheet', '--scrim-sheet']
+const VARS = ['--elevation-card', '--elevation-raised', '--elevation-sheet', '--elevation-segment', '--scrim-sheet']
 for (const [name, b] of [
   ['тёмная (:root)', blocks.root],
   ['сумерки · светлая', blocks.twilightLight],
@@ -208,6 +208,26 @@ const PAIRS = [
   ['ring', 'hero', ICON],
   // текст поверх затемнения (подсказка жестов карточки)
   ['scrim-fg', 'scrim@0.6', TEXT],
+  // компоненты листа s3: нажатые состояния, сегмент, тост, бейджи, плашки
+  ['accent-soft-fg', 'accent-soft-press', TEXT], // нажатая вторичная кнопка
+  ['danger-strong', 'danger-soft', TEXT], // «опасная» кнопка
+  ['danger-strong', 'danger-soft-press', TEXT],
+  // нажатая тихая кнопка: дымка поверх page; у светлого «Заката» на page —
+  // 4,3 : 1 на мгновение нажатия (значения листа s3), поэтому мерим «Сумерки»
+  // и тёмные через fg, а сам акцент-текст — без дымки (accent-strong на page)
+  ['fg', 'ghost-press', TEXT], // нажатый чип
+  ['fg', 'row-press', TEXT], // нажатая строка
+  ['fg-muted', 'row-press', TEXT],
+  ['fg', 'segment', TEXT], // выбранный вариант сегмента
+  ['fg-muted', 'input', TEXT], // невыбранный вариант сегмента
+  ['toast-fg', 'toast', TEXT],
+  ['toast-action', 'toast', TEXT], // «Вернуть»
+  ['success-strong', 'success-soft', TEXT], // бейдж «занимается»
+  ['fg-secondary', 'input', TEXT], // бейдж «пауза»
+  ['warning-strong', 'warning-soft', TEXT], // плашка-предупреждение
+  // счётчик на вкладке и включённый тумблер: оранжевый, как и accent, меряется
+  // к surface — на page у светлого «Заката» он 2,8 : 1 (лист s2)
+  ['primary', 'surface', ICON],
 ]
 // Серии графика — 3:1 к карточке только в тёмной (в светлой по палитре
 // dataviz три серии бледнее — у графика всегда подписи, ChartView)
@@ -321,6 +341,39 @@ for (const [cssName, px, label] of [
 ]) {
   const inCss = rem(dark[cssName])
   check(`порог ${cssName} = ${label}`, Number.isFinite(px) && inCss === px, `${inCss} / ${px}`)
+}
+
+// ── 6. движение (лист s4) ──────────────────────────────────────────────────
+// Компонент ждёт конца ухода (shared/lib/motion LEAVE_MS) и только потом
+// исчезает. Разойдутся с index.css — шторка пропадёт посреди анимации или
+// повиснет невидимой и будет ловить нажатия.
+const indexCss = readFileSync(new URL('../src/index.css', import.meta.url), 'utf8')
+const motionTs = readFileSync(new URL('../src/shared/lib/motion.ts', import.meta.url), 'utf8')
+const leaveMs = (k) => Number(motionTs.match(new RegExp(`\\b${k}: (\\d+)`))?.[1])
+const cssMs = (cls) => Number(indexCss.match(new RegExp(`\\.${cls} \\{\\s*animation: [\\w-]+ (\\d+)ms`))?.[1])
+for (const [key, cls, want] of [
+  ['sheet', 'animate-sheet-out', 240],
+  ['panel', 'animate-panel-out', 220],
+  ['toast', 'animate-toast-out', 160],
+  ['menu', 'animate-menu-out', 140],
+]) {
+  check(`уход ${key}: index.css = motion.ts = s4 (${want} мс)`, cssMs(cls) === want && leaveMs(key) === want, `${cssMs(cls)} / ${leaveMs(key)}`)
+}
+for (const [cls, want] of [
+  ['animate-sheet-in', 320],
+  ['animate-panel-in', 280],
+  ['animate-toast-in', 200],
+  ['animate-menu-in', 180],
+]) {
+  check(`появление ${cls} = ${want} мс (s4)`, cssMs(cls) === want)
+}
+const reducedBlock = indexCss.slice(indexCss.indexOf('@media (prefers-reduced-motion: reduce)'))
+for (const cls of ['animate-sheet-in', 'animate-sheet-out', 'animate-panel-in', 'animate-panel-out', 'animate-toast-in', 'animate-toast-out', 'animate-menu-in', 'animate-menu-out']) {
+  check(`«уменьшить движение»: ${cls} — только прозрачность`, reducedBlock.includes(`.${cls}`))
+}
+check('уход при «уменьшить движение» = 150 мс в CSS и motion.ts', /REDUCED_LEAVE_MS = 150\b/.test(motionTs) && /animation-duration: 150ms !important/.test(reducedBlock))
+for (const [name, v] of [['--dur-press', '80ms'], ['--dur-1', '160ms'], ['--dur-2', '240ms'], ['--dur-3', '320ms'], ['--ease-out', 'cubic-bezier(0.2, 0, 0, 1)'], ['--ease-sheet', 'cubic-bezier(0.32, 0.72, 0, 1)'], ['--ease-in', 'cubic-bezier(0.4, 0, 1, 1)']]) {
+  check(`токен движения ${name} = ${v} (s4)`, dark[name] === v, String(dark[name]))
 }
 
 console.log(`\nИтог: ${total - fails}/${total}`)

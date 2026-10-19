@@ -14,6 +14,7 @@ import { AppLink } from '../../shared/ui/AppLink'
 import { HoverTip } from '../../shared/ui/HoverTip'
 import { IconClose, IconGift } from '../../shared/ui/icons'
 import { dismissReferralHint, loadReferralHint } from '../../domains/billing'
+import { ICON_BUTTON } from '../../shared/ui/IconButton'
 
 /** Подсветка проверяется при открытии и не чаще раза в 5 минут при возвращении в приложение. */
 const RECHECK_MS = 5 * 60 * 1000
@@ -95,11 +96,9 @@ export function GiftButton({ variant = 'icon' }: { variant?: 'icon' | 'row' | 'r
           to="/invite"
           onClick={() => hint && dismiss()}
           aria-label={label}
-          className={`lift flex h-11 w-11 flex-none items-center justify-center rounded-full border bg-surface text-fg-secondary hover:text-fg ${
-            hint ? 'border-accent text-accent-strong ring-2 ring-accent-line-soft' : 'border-tint/[0.08]'
-          }`}
+          className={`${ICON_BUTTON} ${hint ? 'text-accent-strong! ring-2 ring-accent-line' : ''}`}
         >
-          <IconGift size={20} />
+          <IconGift size={24} />
         </AppLink>
       ) : variant === 'rail' ? (
         <AppLink

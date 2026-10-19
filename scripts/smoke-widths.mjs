@@ -198,7 +198,10 @@ async function sidePanel(page) {
   check('1440: панель 440 справа сдвигает колонку, без дымки', !!p && p.kind === 'push' && px(p.width) === 440 && px(p.right) === g.vw && p.hazeLeft === null, JSON.stringify(p))
   check('1440: колонка ушла левее панели и стоит по центру оставшегося места', g.main.right <= g.vw - 440 && centered(g, 440).ok, `${px(before.left)}→${px(g.main.left)}, ${centered(g, 440).text}`)
   await page.keyboard.press('Escape')
-  await sleep(500)
+  // шторка уходит анимацией и снимается таймером (shared/lib/motion); в фоновой
+  // вкладке таймеры сдвинуты к целой секунде — ждём, а не паузу
+  await page.waitForFunction(() => !document.querySelector('[role="dialog"][data-panel]'), { polling: 250, timeout: 3000 }).catch(() => {})
+  await sleep(300)
   g = await shell(page)
   check('1440: Escape закрыл панель, колонка вернулась', !(await page.$('[role="dialog"][data-panel]')) && px(g.main.left) === px(before.left), `${px(g.main.left)} / ${px(before.left)}`)
 

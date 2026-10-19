@@ -82,21 +82,10 @@ export function PlacementSection({
       </p>
 
       <div className="flex flex-wrap items-center gap-2">
-        <Button
-          className="px-4 py-2.5 text-sm"
-          loading={busy === mine}
-          disabled={pendingIn(mine)}
-          onClick={() => assign(mine)}
-        >
+        <Button size="sm" loading={busy === mine} disabled={pendingIn(mine)} onClick={() => assign(mine)}>
           {pendingIn(mine) ? `${LANG_LABEL[mine]} — ждём` : `Назначить · ${LANG_LABEL[mine]}`}
         </Button>
-        <Button
-          variant="ghost"
-          className="min-h-11 px-3 py-2 text-sm"
-          loading={busy === other}
-          disabled={pendingIn(other)}
-          onClick={() => assign(other)}
-        >
+        <Button size="sm" variant="ghost" loading={busy === other} disabled={pendingIn(other)} onClick={() => assign(other)}>
           {pendingIn(other) ? `${LANG_LABEL[other]} — ждём` : `Другой язык · ${LANG_LABEL[other]}`}
         </Button>
       </div>

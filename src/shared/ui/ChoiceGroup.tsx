@@ -4,18 +4,19 @@
 // radiogroup: скринридер говорит «выбрано», а не «вкладка» (вкладки — TabPicker).
 //
 // Два вида:
-//   chips — короткие подписи в ряд (Настройки): подложка и обводка
-//           control-line (граница элемента ≥ 3:1 в обеих темах, лист s2),
-//           выбранный — акцентная мягкая подложка и обводка
-//           control-line-active (цвет фокуса); в светлой — ещё тень. Обводка
-//           — ring, а не border: рамка прибавила бы чипу 2 px и сдвинула ряд
-//           уровней; ring рисуется тенью и места не занимает;
+//   chips — чипы листа s3 («Длительность»): высота 44, радиус полный, рамка
+//           control-line (граница элемента ≥ 3:1 в обеих темах); выбранный
+//           отличается не только цветом — галочка, рамка accent и мягкая
+//           подложка; нажатый — дымка; выключенный — рамка line, текст
+//           fg-faint. Рамка — ring, а не border: border прибавил бы чипу 2 px
+//           и сдвинул ряд уровней;
 //   cards — карточки столбиком: кружок выбора, подпись, пояснение и правый
 //           слот (цена). Выбор, где у варианта есть что объяснить (макет t9,
 //           тарифы). Выбранная обведена акцентом в обеих темах: без рамки в
 //           тёмной теме её отличала бы только подложка.
 // ============================================================================
 import type { ReactNode } from 'react'
+import { IconCheck } from './icons'
 
 export interface ChoiceOption<T extends string> {
   id: T
@@ -26,6 +27,8 @@ export interface ChoiceOption<T extends string> {
   hint?: string
   /** Правый слот карточки — цена, счётчик (только вид cards). */
   trailing?: ReactNode
+  /** Вариант виден, но не выбирается (только вид chips). */
+  disabled?: boolean
 }
 
 export function ChoiceGroup<T extends string>({
@@ -93,15 +96,19 @@ export function ChoiceGroup<T extends string>({
             type="button"
             role="radio"
             aria-checked={on}
+            disabled={o.disabled}
             onClick={() => onChange(o.id)}
-            className={`min-h-11 rounded-xl font-medium shadow-card transition-colors ${
-              stretch ? 'flex-1 px-3' : 'px-4'
-            } ${o.className ?? 'text-sm'} ${
+            className={`inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full font-medium tabular-nums transition-colors duration-(--dur-1) ease-out ${
+              stretch ? 'flex-1 px-3' : on ? 'pl-3 pr-4' : 'px-4'
+            } ${o.className ?? 'text-body'} ${
               on
-                ? 'bg-accent-soft text-accent-soft-fg ring-2 ring-control-line-active'
-                : 'bg-tint/[0.06] text-fg-muted ring-1 ring-control-line'
+                ? 'bg-accent-soft text-accent-soft-fg ring-1 ring-accent'
+                : o.disabled
+                  ? 'cursor-not-allowed text-fg-faint ring-1 ring-line'
+                  : 'text-fg ring-1 ring-control-line active:bg-ghost-press data-press:bg-ghost-press'
             }`}
           >
+            {on && <IconCheck size={18} className="flex-none" />}
             {o.label}
           </button>
         )

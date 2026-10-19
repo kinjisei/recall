@@ -13,6 +13,8 @@
 // меняется как раньше. Ломаться нечему.
 // ============================================================================
 
+import { prefersReducedMotion } from './motion'
+
 interface ViewTransition {
   /** Снимок готов, анимация вот-вот пойдёт. Отклоняется, если переход прерван. */
   ready: Promise<void>
@@ -25,8 +27,8 @@ type DocWithVT = Document & {
   startViewTransition?: (cb: () => void | Promise<void>) => ViewTransition
 }
 
-/** Заход внутрь или возврат наружу — от этого зависит, куда едет экран. */
-export type TransitionDirection = 'in' | 'out'
+/** Заход внутрь, возврат наружу или соседняя вкладка (проявление без сдвига, s4). */
+export type TransitionDirection = 'in' | 'out' | 'fade'
 
 /**
  * Проглотить отказ промиса перехода.
@@ -45,14 +47,6 @@ function ignore(p: Promise<unknown>): void {
   p.catch(() => {})
 }
 
-/** Настройка «уменьшить движение» — читаем при каждом переходе: её меняют на ходу. */
-function prefersReducedMotion(): boolean {
-  return (
-    typeof window !== 'undefined' &&
-    typeof window.matchMedia === 'function' &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  )
-}
 
 /**
  * Дождаться, пока страница действительно перерисуется.
@@ -102,7 +96,8 @@ function domSettled(quiet = 50, cap = 260): Promise<void> {
  * Выполнить смену экрана с переходом.
  *
  * @param direction 'in' — вперёд (новый экран приезжает справа),
- *                  'out' — назад (приезжает слева)
+ *                  'out' — назад (приезжает слева),
+ *                  'fade' — соседняя вкладка (проявляется за 150 мс на месте)
  * @param update    само изменение состояния (navigate, setSearchParams…)
  *
  * ⚠️ Направление кладём на <html> атрибутом, а не в CSS-переменную: правила

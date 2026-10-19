@@ -5,10 +5,12 @@
 // Раньше вёл только на прогресс, а вход в режим преподавателя был лишь
 // карточкой внизу Главной — теперь всё «служебное» собрано в одном месте.
 //
-// Вид — по месту в каркасе (макеты s4, d4-v2, d2): кружок в шапке телефона
+// Вид — по месту в каркасе (макеты s4, d4-v2, d2): аватар 36 в шапке телефона
 // (меню вниз); карточка с именем и строкой под ним внизу меню 240 (меню вверх):
-// ученику — «Английский · B1», репетитору — тариф и срок или пробный; кружок в
-// рельсе 72 (меню вправо).
+// ученику — «Английский · B1», репетитору — тариф и срок или пробный; аватар в
+// рельсе 72 (меню вправо). Аватар — общий (shared/ui/Avatar). Меню
+// раскрывается из аватара — scale .96 → 1 и прозрачность за 180 мс, угол у
+// аватара — точка роста; уходит обратно за 140 мс (лист s4, «Движение»).
 // ============================================================================
 import { useEffect, useRef, useState } from 'react'
 import { IconChart, IconTeacher, IconGear, IconSignOut, IconCards, IconBadgeCheck, IconThumbsUp } from '../../shared/ui/icons'
@@ -22,28 +24,31 @@ import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { getEsLevel } from '../../lib/esLevel'
 import { getCachedEnLevel } from '../../lib/profile'
+import { Avatar } from '../../shared/ui/Avatar'
 import { HoverTip } from '../../shared/ui/HoverTip'
+import { LEAVE_MS, useLeave } from '../../shared/lib/motion'
 import { useMyRole } from './useMyRole'
 
 type Variant = 'circle' | 'row' | 'rail'
 /** Куда раскрывается меню: из шапки — вниз, из карточки — вверх, из рельса — вправо. */
 const MENU_AT: Record<Variant, string> = {
-  circle: 'right-0 top-11',
-  row: 'bottom-full left-0 mb-2',
-  rail: 'bottom-0 left-full ml-3',
+  circle: 'right-0 top-11 origin-top-right',
+  row: 'bottom-full left-0 mb-2 origin-bottom-left',
+  rail: 'bottom-0 left-full ml-3 origin-bottom-left',
 }
 
 export function AvatarMenu({ variant = 'circle' }: { variant?: Variant }) {
   const { user, signOut } = useAuth()
   const { lang } = useLanguage()
   const [open, setOpen] = useState(false)
+  // уход меню — анимацией к аватару, потом снять
+  const { leaving, leave } = useLeave(() => setOpen(false), LEAVE_MS.menu)
   const [feedback, setFeedback] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const [plan, setPlan] = useState<MyPlan | null>(null)
   const boxRef = useRef<HTMLDivElement>(null)
 
   const name = (user?.user_metadata?.display_name as string | undefined) ?? user?.email ?? '?'
-  const initial = name.trim().charAt(0).toUpperCase() || '?'
   // в карточке меню — имя, как в макетах d4-v2 и d2; полностью — в самом меню
   const firstName = name.trim().split(/\s+/)[0] || name
 
@@ -76,16 +81,16 @@ export function AvatarMenu({ variant = 'circle' }: { variant?: Variant }) {
   useEffect(() => {
     if (!open) return
     const onDown = (e: MouseEvent) => {
-      if (!boxRef.current?.contains(e.target as Node)) setOpen(false)
+      if (!boxRef.current?.contains(e.target as Node)) leave()
     }
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && leave()
     document.addEventListener('mousedown', onDown)
     document.addEventListener('keydown', onKey)
     return () => {
       document.removeEventListener('mousedown', onDown)
       document.removeEventListener('keydown', onKey)
     }
-  }, [open])
+  }, [open, leave])
 
   const trial = isTeacher && plan ? teacherTrialStatus(plan) : null
   const trialText = !trial
@@ -103,23 +108,23 @@ export function AvatarMenu({ variant = 'circle' }: { variant?: Variant }) {
     ? (trialText ?? (now?.kind === 'paid' ? `${planShortTitle(now.plan)} · до ${dayLabel(now.until)}` : null))
     : `${lang === 'es' ? 'Испанский' : 'Английский'}${level ? ` · ${level}` : ''}`
 
+  const toggle = () => (open ? leave() : setOpen(true))
+
   const itemCls =
-    'flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-fg-secondary hover:bg-tint/[0.06] hover:text-fg'
+    'flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-fg-secondary hover:bg-row-press hover:text-fg active:bg-row-press'
 
   return (
     <div className="relative" ref={boxRef}>
       {variant === 'row' ? (
         <button
-          onClick={() => setOpen((v) => !v)}
+          onClick={toggle}
           aria-haspopup="menu"
           aria-expanded={open}
           aria-label="Меню профиля"
           data-profile-card
-          className="flex w-full items-center gap-2.5 rounded-2xl border border-line p-2 text-left transition-colors hover:bg-tint/[0.04]"
+          className="flex w-full items-center gap-2.5 rounded-2xl border border-line p-2 text-left transition-colors hover:bg-row-press active:bg-row-press"
         >
-          <span className="flex size-9 flex-none items-center justify-center rounded-full bg-accent-soft text-sm font-semibold text-accent-soft-fg">
-            {initial}
-          </span>
+          <Avatar name={name} size={36} />
           <span className="min-w-0 flex-1">
             <span className="block truncate text-body font-semibold text-fg">{firstName}</span>
             {line && <span className="block truncate text-xs text-fg-muted">{line}</span>}
@@ -127,13 +132,13 @@ export function AvatarMenu({ variant = 'circle' }: { variant?: Variant }) {
         </button>
       ) : (
         <button
-          onClick={() => setOpen((v) => !v)}
+          onClick={toggle}
           aria-haspopup="menu"
           aria-expanded={open}
           aria-label="Меню профиля"
-          className="lift group relative flex h-11 w-11 items-center justify-center rounded-full border border-tint/[0.08] bg-surface text-sm font-medium text-accent-soft-fg"
+          className="group relative flex size-11 items-center justify-center rounded-full transition-colors active:bg-ghost-press"
         >
-          {initial}
+          <Avatar name={name} size={36} />
           {variant === 'rail' && !open && <HoverTip label={firstName} />}
         </button>
       )}
@@ -141,7 +146,7 @@ export function AvatarMenu({ variant = 'circle' }: { variant?: Variant }) {
       {open && (
         <div
           role="menu"
-          className={`animate-fade-up absolute z-30 w-56 overflow-hidden rounded-2xl border border-tint/[0.10] bg-surface/96 py-1 shadow-raised backdrop-blur-xl ${MENU_AT[variant]}`}
+          className={`${leaving ? 'animate-menu-out' : 'animate-menu-in'} absolute z-30 w-56 overflow-hidden rounded-2xl border border-line bg-surface py-1 shadow-raised ${MENU_AT[variant]}`}
         >
           <p className="truncate px-4 pb-2 pt-1.5 text-xs text-fg-muted">{name}</p>
           {trialText && (
@@ -149,7 +154,7 @@ export function AvatarMenu({ variant = 'circle' }: { variant?: Variant }) {
               <IconTimer size={13} className="mt-px flex-none" /> <span>{trialText}</span>
             </p>
           )}
-          <AppLink to="/progress" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
+          <AppLink to="/progress" role="menuitem" className={itemCls} onClick={leave}>
             <IconChart size={17} /> Мой прогресс
           </AppLink>
           {/* не-преподавателю — вход в режим: до A1 попасть в студию
@@ -157,22 +162,22 @@ export function AvatarMenu({ variant = 'circle' }: { variant?: Variant }) {
               У репетитора студия — вкладки меню (Ф2.10, макет t1-2), пункт
               здесь повторял бы вкладку «Ученики». */}
           {!isTeacher && (
-            <AppLink to="/teacher" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
+            <AppLink to="/teacher" role="menuitem" className={itemCls} onClick={leave}>
               <IconTeacher size={17} /> Я веду учеников
             </AppLink>
           )}
           {/* репетитору — сразу «Как оплатить» (макет t9-1), остальным — тарифы */}
           {isTeacher ? (
-            <AppLink to="/pay" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
+            <AppLink to="/pay" role="menuitem" className={itemCls} onClick={leave}>
               <IconCards size={17} /> Тариф
               {!paidTeacher && <span className="ml-auto text-xs font-medium text-accent-strong">Выбрать</span>}
             </AppLink>
           ) : (
-            <AppLink to="/pricing" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
+            <AppLink to="/pricing" role="menuitem" className={itemCls} onClick={leave}>
               <IconCards size={17} /> Тарифы
             </AppLink>
           )}
-          <AppLink to="/settings" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
+          <AppLink to="/settings" role="menuitem" className={itemCls} onClick={leave}>
             <IconGear size={17} /> Настройки
           </AppLink>
           {/* Отзыв — прямо в меню: до этого сообщить нам что-либо было НЕЧЕМ,
@@ -180,7 +185,7 @@ export function AvatarMenu({ variant = 'circle' }: { variant?: Variant }) {
           <button
             role="menuitem"
             onClick={() => {
-              setOpen(false)
+              leave()
               setFeedback(true)
             }}
             className={itemCls}
@@ -188,7 +193,7 @@ export function AvatarMenu({ variant = 'circle' }: { variant?: Variant }) {
             <IconThumbsUp size={17} /> Оставить отзыв
           </button>
           {isAdmin && (
-            <AppLink to="/admin" role="menuitem" className={itemCls} onClick={() => setOpen(false)}>
+            <AppLink to="/admin" role="menuitem" className={itemCls} onClick={leave}>
               <IconBadgeCheck size={17} /> Админка
             </AppLink>
           )}

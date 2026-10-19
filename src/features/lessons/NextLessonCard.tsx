@@ -38,7 +38,7 @@ export function NextLessonCard({ lesson, urgent, now }: { lesson: MyLesson; urge
       <p className="mt-0.5 text-lg font-semibold tracking-tight text-fg">{myLessonWhen(lesson, now)}</p>
       <p className="truncate text-sm text-fg-secondary">{whoLabel(lesson)}</p>
       <div className={`mt-3 flex gap-2 ${urgent ? 'flex-col items-stretch' : 'items-center'}`}>
-        {link && <JoinLink href={link} primary={urgent} className={urgent ? 'min-h-12 w-full' : 'flex-1'} />}
+        {link && <JoinLink href={link} primary={urgent} className={urgent ? 'w-full' : 'flex-1'} />}
         <AppLink
           to="/lessons"
           className="inline-flex min-h-11 select-none items-center justify-center gap-1 rounded-xl px-3 text-sm font-semibold text-accent-strong hover:underline"

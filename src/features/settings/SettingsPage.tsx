@@ -152,7 +152,7 @@ export function SettingsPage() {
 
         {error && <p className="mt-3 text-sm text-danger-strong">{error}</p>}
 
-        <Button className="mt-4 w-full py-2.5 text-sm" onClick={saveProfile}>
+        <Button size="sm" className="mt-4 w-full" onClick={saveProfile}>
           {saved ? (
             <>
               <IconCheck size={16} /> Сохранено

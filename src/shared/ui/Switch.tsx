@@ -1,7 +1,9 @@
 // ============================================================================
-// Тумблер «вкл / выкл» (опись интерфейса §6.1; макет t3 — «Повторять», дальше
-// u4 — «Напоминать о скором уроке»). Вся строка нажимается, а не только
-// ползунок: палец попадает в подпись чаще, чем в 48 px дорожки.
+// Тумблер «вкл / выкл» (лист s3; макеты t3 — «Повторять», u4 — «Напоминать о
+// скором уроке»). Включает настройку сразу, без «Сохранить»; главный сигнал —
+// положение ручки, а не только цвет. Дорожка 52 × 32: включён — цвет главной
+// кнопки, выключен — подложка input с рамкой control-line; ручка 26, белая.
+// Вся строка нажимается, а не только ползунок: палец попадает в подпись чаще.
 // role="switch" — скринридер говорит «включено / выключено», а не «флажок».
 // ============================================================================
 import type { ReactNode } from 'react'
@@ -29,21 +31,21 @@ export function Switch({
       aria-checked={checked}
       disabled={disabled}
       onClick={() => onChange(!checked)}
-      className={`flex min-h-11 w-full items-center gap-3 text-left disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+      className={`flex min-h-13 w-full items-center gap-3 text-left disabled:cursor-not-allowed ${className}`}
     >
       <span className="flex min-w-0 flex-1 flex-col">
-        <span className="text-sm font-semibold text-fg">{label}</span>
+        <span className={`text-body ${disabled ? 'text-fg-faint' : 'text-fg'}`}>{label}</span>
         {hint && <span className="text-note text-fg-muted">{hint}</span>}
       </span>
       <span
         aria-hidden
-        className={`relative inline-flex h-7 w-12 flex-none items-center rounded-full p-0.5 transition-colors ${
-          checked ? 'bg-accent' : 'bg-tint/[0.16] ring-1 ring-control-line'
-        }`}
+        className={`relative h-8 w-13 flex-none rounded-full border transition-colors duration-200 ${
+          checked ? 'border-primary bg-primary' : 'border-control-line bg-input'
+        } ${disabled ? 'opacity-45' : ''}`}
       >
         <span
-          className={`size-6 rounded-full shadow-card transition-transform duration-200 motion-reduce:transition-none ${
-            checked ? 'translate-x-5 bg-accent-fg' : 'translate-x-0 bg-fg-muted'
+          className={`absolute left-0.5 top-0.5 size-6.5 rounded-full bg-knob shadow-sm transition-transform duration-200 ease-out motion-reduce:transition-none ${
+            checked ? 'translate-x-5' : 'translate-x-0'
           }`}
         />
       </span>

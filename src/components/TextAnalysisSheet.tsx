@@ -17,6 +17,7 @@ import {
   clearCachedTextAnalysis,
 } from '../lib/textAnalysisCache'
 import type { AppLang } from '../types'
+import { Bolt } from '../shared/ui/Bolt'
 
 export function TextAnalysisSheet({
   text,
@@ -79,7 +80,9 @@ export function TextAnalysisSheet({
                   которого нигде на экране нет (находка ревью 2В). */}
               <p className="text-sm leading-relaxed text-fg-secondary">
                 Разберу весь текст: уровень, ключевую лексику, фразовые глаголы и
-                грамматику. Спишется примерно <b>{cost} ⚡</b> из дневной энергии.
+                грамматику. Спишется примерно <b>
+                  {cost} <Bolt />
+                </b> из дневной энергии.
               </p>
               <div className="flex gap-2">
                 <Button className="flex-1" onClick={run}>

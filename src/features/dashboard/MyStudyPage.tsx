@@ -58,7 +58,7 @@ function StreakCard({ activity, lang }: { activity: HomeActivity; lang: AppLang 
         </span>
       </div>
       {/* куда вести — решаем ДО перехода (как на Главной, StartButton) */}
-      <Button className="relative h-14 w-full rounded-2xl text-lg" onClick={() => void startGuidedRoute(lang).then((r) => navigate(r))}>
+      <Button size="lg" className="relative w-full" onClick={() => void startGuidedRoute(lang).then((r) => navigate(r))}>
         Начать занятие <IconArrowRight size={22} aria-hidden />
       </Button>
       <span className="relative text-center text-note text-fg-secondary">~15 минут · слова → чтение → речь</span>

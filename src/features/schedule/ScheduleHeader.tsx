@@ -114,7 +114,7 @@ export function ScheduleHeader({
         <span className="flex-1" />
         <div className="w-56">{switcher}</div>
         <LayoutToggle layout={layout} onLayout={onLayout} />
-        <Button className="min-h-11 px-4 py-2 text-sm" onClick={onNew} disabled={!canWrite}>
+        <Button size="sm" onClick={onNew} disabled={!canWrite}>
           <IconPlus size={18} /> Новый урок
         </Button>
       </header>

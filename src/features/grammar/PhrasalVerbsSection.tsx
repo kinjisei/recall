@@ -23,6 +23,7 @@ import { RowsSkeleton } from '../../shared/ui/Loading'
 import { useAsyncData } from '../../shared/lib/useAsyncData'
 import { LoadError } from '../../shared/ui/LoadError'
 import { Reveal } from '../../shared/ui/Reveal'
+import { RevealHeader } from '../../shared/ui/Disclosure'
 
 const ROUND_SIZE = 10
 
@@ -104,16 +105,12 @@ function Reference({ entries }: { entries: PhrasalEntry[] }) {
         const isOpen = q !== '' || open === e.verb
         return (
           <div key={e.verb}>
-            <button
-              onClick={() => setOpen((cur) => (cur === e.verb ? null : e.verb))}
-              className="flex min-h-[44px] w-full items-center justify-between rounded-lg bg-tint/[0.06] px-3 py-2 text-left"
-            >
-              <span className="text-sm font-bold">
-                {e.verb}{' '}
-                <span className="font-normal text-fg-muted">· {e.items.length}</span>
-              </span>
-              <span className="text-fg-muted">{isOpen ? '▾' : '▸'}</span>
-            </button>
+            <RevealHeader
+              open={isOpen}
+              onToggle={() => setOpen((cur) => (cur === e.verb ? null : e.verb))}
+              title={e.verb}
+              meta={`· ${e.items.length}`}
+            />
 
             <Reveal open={isOpen}>
               <Card className="mt-2 flex flex-col gap-3">
@@ -243,9 +240,9 @@ function Trainer({ entries }: { entries: PhrasalEntry[] }) {
                 <span className="font-semibold">{w.item.phrase}</span> — {w.item.ru}
               </p>
             ))}
-            <Button
+            <Button size="sm"
               variant="secondary"
-              className="mt-1 self-start px-3 py-2 text-sm"
+              className="mt-1 self-start"
               onClick={() => restart(shuffle(wrong))}
             >
               Раунд из ошибок ({wrong.length})

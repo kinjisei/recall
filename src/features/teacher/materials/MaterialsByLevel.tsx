@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { Card } from '../../../shared/ui/Card'
 import { Reveal } from '../../../shared/ui/Reveal'
 import type { Material } from '../../../types'
+import { RevealHeader } from '../../../shared/ui/Disclosure'
 
 export function MaterialsByLevel({
   materials,
@@ -27,18 +28,13 @@ export function MaterialsByLevel({
     <div className="flex flex-col gap-2">
       {groups.map(({ level, items }) => (
         <div key={level}>
-          <button
-            onClick={() => setClosed((c) => ({ ...c, [level]: !c[level] }))}
-            className="flex min-h-[44px] w-full items-center justify-between px-1 text-left"
-          >
-            <span className="text-sm font-semibold text-fg-secondary">
-              {level}
-              <span className="ml-2 text-xs font-normal text-fg-muted">
-                {items.length}
-              </span>
-            </span>
-            <span className="text-fg-muted">{closed[level] ? '▸' : '▾'}</span>
-          </button>
+          <RevealHeader
+            plain
+            open={!closed[level]}
+            onToggle={() => setClosed((c) => ({ ...c, [level]: !c[level] }))}
+            title={level}
+            meta={`· ${items.length}`}
+          />
           <Reveal open={!closed[level]}>
             <div className="flex flex-col gap-2">
               {items.map((m) => (

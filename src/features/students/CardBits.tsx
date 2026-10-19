@@ -1,47 +1,43 @@
 // ============================================================================
-// Мелкие части карточки ученика (макет t6): аватар-инициалы, бейдж статуса,
-// «в приложении» / «без приложения».
+// Мелкие части карточки ученика (макет t6): аватар, бейдж статуса,
+// «в приложении» / «без приложения». Вид — общие Avatar и Badge (лист s3);
+// здесь — что значат статусы ученика.
 // ============================================================================
-import { initials, STATUS_LABEL, type CardStatus } from '../../domains/students'
-import { IconSmartphone } from '../../shared/ui/icons'
+import { STATUS_LABEL, type CardStatus } from '../../domains/students'
+import { Avatar as AvatarView } from '../../shared/ui/Avatar'
+import { Badge, type BadgeTone } from '../../shared/ui/Badge'
+import { IconArchive, IconPause, IconSmartphone, IconSpark, type IconLike } from '../../shared/ui/icons'
 
 /**
- * Аватар: у ученика в приложении — заливка, без приложения — пунктир (макет
- * t6-1). Маленький — в сетке недели расписания (Ф2.7).
+ * Аватар ученика: в приложении — заливка, без приложения — пунктир (макет
+ * t6-1). Маленький — в сетке недели расписания (Ф2.7), крупный — шапка карточки.
  */
 export function Avatar({ name, inApp, large = false, small = false }: { name: string; inApp: boolean; large?: boolean; small?: boolean }) {
-  const size = large ? 'size-16 text-xl' : small ? 'size-7 text-caption' : 'size-10 text-sm'
-  const look = inApp
-    ? 'bg-accent-soft text-accent-soft-fg'
-    : 'border border-dashed border-tint/[0.28] text-fg-secondary'
-  return (
-    <span aria-hidden className={`flex flex-none items-center justify-center rounded-full font-bold ${size} ${look}`}>
-      {initials(name)}
-    </span>
-  )
+  return <AvatarView name={name} size={large ? 64 : small ? 28 : 40} cardOnly={!inApp} />
 }
 
-const BADGE: Record<CardStatus, string> = {
-  trial: 'bg-accent-soft text-accent-soft-fg',
-  active: 'bg-success-soft text-success-soft-fg',
-  paused: 'bg-tint/[0.08] text-fg-secondary',
-  archived: 'bg-tint/[0.08] text-fg-secondary',
+/** Статус — цвет + значок + слово (s3): пробный, занимается, пауза, архив. */
+const BADGE: Record<CardStatus, { tone: BadgeTone; Icon?: IconLike; dot?: boolean }> = {
+  trial: { tone: 'accent', Icon: IconSpark },
+  active: { tone: 'success', dot: true },
+  paused: { tone: 'neutral', Icon: IconPause },
+  archived: { tone: 'outline', Icon: IconArchive },
 }
 
 export function StatusBadge({ status }: { status: CardStatus }) {
+  const { tone, Icon, dot } = BADGE[status]
   return (
-    <span className={`inline-flex flex-none items-center rounded-full px-2 py-0.5 text-xs font-semibold ${BADGE[status]}`}>
+    <Badge tone={tone} Icon={Icon} dot={dot}>
       {STATUS_LABEL[status]}
-    </span>
+    </Badge>
   )
 }
 
 /** «в приложении» / «без приложения» — бейджем в шапке карточки. */
 export function AppBadge({ inApp }: { inApp: boolean }) {
   return (
-    <span className="inline-flex flex-none items-center gap-1 rounded-full bg-tint/[0.06] px-2 py-0.5 text-xs font-semibold text-fg-secondary">
-      {inApp && <IconSmartphone size={13} />}
+    <Badge tone="neutral" Icon={inApp ? IconSmartphone : undefined}>
       {inApp ? 'в приложении' : 'без приложения'}
-    </span>
+    </Badge>
   )
 }

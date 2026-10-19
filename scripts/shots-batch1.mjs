@@ -74,7 +74,7 @@ const report = []
 /** Снимок + проверка, что экран тот: expect — регэксп по тексту страницы. */
 async function snap(page, name, width, expect, { fullPage = true } = {}) {
   // экран мог ещё не открыться (список карточек, переход): ждём нужный текст до 15 с
-  await page.waitForFunction((src) => new RegExp(src).test(document.body.innerText) && !document.querySelector('main :is(div, span).animate-pulse'), { polling: 250, timeout: 15000 }, expect.source).catch(() => {})
+  await page.waitForFunction((src) => new RegExp(src).test(document.body.innerText) && !document.querySelector('main :is(div, span):is(.animate-pulse, .animate-skeleton)'), { polling: 250, timeout: 15000 }, expect.source).catch(() => {})
   await sleep(500)
   const look = () => text(page).catch(async () => { await sleep(1500); return text(page) })
   const wrong = (s) => /Не удалось загрузить|Нет связи/.test(s) || !expect.test(s)

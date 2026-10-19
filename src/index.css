@@ -114,21 +114,10 @@ a,
   animation: fade-in 0.22s ease-out;
 }
 
-/* Волна от точки нажатия (Button её создаёт на pointerdown). */
-@keyframes ripple {
+@keyframes fade-out {
   to {
-    transform: scale(1);
     opacity: 0;
   }
-}
-.ripple {
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-  background: currentColor;
-  opacity: 0.3;
-  transform: scale(0);
-  animation: ripple 0.55s ease-out forwards;
 }
 
 /* ==========================================================================
@@ -172,24 +161,133 @@ a,
   }
 }
 
-/* Правая панель на компьютере (shared/ui/Sheet) выезжает справа налево:
-   translateX(100%) → 0 за 280 мс, кривая ease-sheet (макеты s4, d0 — правило 8).
-   Дымка под ней проявляется параллельно. Уход — мгновенный: шторку закрывает
-   её владелец, снимая с экрана (уход за 220 мс — со стадией «Движение»,
-   PLAN.md Ф2.17-3). */
+/* ==========================================================================
+   Движение по листу s4: появление / уход. Что выехало снизу — уходит вниз,
+   панель справа — вправо, меню — обратно к кнопке; уход быстрее появления.
+   Длительности ухода повторены в shared/lib/motion.ts (компонент ждёт конца
+   анимации, прежде чем исчезнуть) — пару сверяет scripts/test-tokens.mjs.
+   Появление — fill backwards: после конца анимация не держит transform, и
+   шторка тянется за пальцем (transform в style). Уход — forwards: элемент
+   стоит в конечном виде до снятия с экрана.
+   ========================================================================== */
+/* Шторка телефона: снизу вверх 320 мс, уходит вниз 240 мс — от того места,
+   куда её дотянули пальцем (--drag ставит shared/ui/Sheet). */
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes sheet-out {
+  from {
+    transform: translateY(var(--drag, 0px));
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+.animate-sheet-in {
+  animation: sheet-in 320ms var(--ease-sheet) backwards;
+}
+.animate-sheet-out {
+  animation: sheet-out 240ms var(--ease-in) forwards;
+}
+/* затемнение под шторкой: 200 мс параллельно, уходит вместе с ней */
+.animate-scrim-in {
+  animation: fade-in 200ms var(--ease-out) backwards;
+}
+.animate-scrim-out {
+  animation: fade-out 240ms var(--ease-in) forwards;
+}
+
+/* Правая панель на компьютере (макеты s4, d0 — правило 8): справа налево
+   280 мс, уходит вправо 220 мс; дымка под ней — параллельно. */
 @keyframes panel-in {
   from {
     transform: translateX(100%);
   }
+}
+@keyframes panel-out {
   to {
-    transform: none;
+    transform: translateX(100%);
   }
 }
 .animate-panel-in {
-  animation: panel-in 0.28s cubic-bezier(0.32, 0.72, 0, 1) both;
+  animation: panel-in 280ms var(--ease-sheet) backwards;
+}
+.animate-panel-out {
+  animation: panel-out 220ms var(--ease-in) forwards;
 }
 .animate-haze-in {
-  animation: fade-in 0.2s ease-out both;
+  animation: fade-in 200ms var(--ease-out) backwards;
+}
+.animate-haze-out {
+  animation: fade-out 220ms var(--ease-in) forwards;
+}
+
+/* Тост «Вернуть»: снизу над панелью вкладок, 200 мс; уходит вниз 160 мс. */
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@keyframes toast-out {
+  to {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+.animate-toast-in {
+  animation: toast-in 200ms var(--ease-out) backwards;
+}
+.animate-toast-out {
+  animation: toast-out 160ms var(--ease-in) forwards;
+}
+
+/* Меню профиля — из аватара (transform-origin — угол у аватара ставит
+   app/shell/AvatarMenu): 180 мс, обратно к аватару 140 мс. */
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+@keyframes menu-out {
+  to {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+.animate-menu-in {
+  animation: menu-in 180ms var(--ease-out) backwards;
+}
+.animate-menu-out {
+  animation: menu-out 140ms var(--ease-in) forwards;
+}
+
+/* Раскрытие списка (план дня, s4): новые строки проявляются со сдвигом 4 px
+   сверху вниз по 30 мс между строками; номер строки — style={{'--i': n}}.
+   Схлопывание — без задержек (строки просто снимаются). */
+@keyframes stagger-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+.animate-stagger-in {
+  animation: stagger-in 200ms var(--ease-out) backwards;
+  animation-delay: calc(var(--i, 0) * 30ms);
+}
+
+/* Скелетон списка (s3): мягко пульсирует; при «уменьшить движение» —
+   статичный (общее правило ниже гасит анимацию). */
+@keyframes skeleton-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+.animate-skeleton {
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
 }
 
 /* Аврора экрана входа: дрейф пятен и медленный блик. */
@@ -232,11 +330,6 @@ a,
 @keyframes grow-bar {
   from { transform: scaleX(0); }
   to { transform: scaleX(1); }
-}
-/* Сколько осталось до ухода тоста «Вернуть» (shared/ui/UndoToast) */
-@keyframes shrink-x {
-  from { transform: scaleX(1); }
-  to { transform: scaleX(0); }
 }
 @keyframes pulse-ring {
   0%, 100% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--color-accent) 12%, transparent); }
@@ -342,6 +435,10 @@ html[data-vt='in']::view-transition-old(root) { animation-name: vt-out-left; }
 html[data-vt='in']::view-transition-new(root) { animation-name: vt-in-right; }
 html[data-vt='out']::view-transition-old(root) { animation-name: vt-out-right; }
 html[data-vt='out']::view-transition-new(root) { animation-name: vt-in-left; }
+/* Переключение вкладки (s4): новый экран проявляется за 150 мс без сдвига —
+   вкладки стоят рядом, а не вложены друг в друга. */
+html[data-vt='fade']::view-transition-old(root) { animation: fade-out 150ms var(--ease-out) both; }
+html[data-vt='fade']::view-transition-new(root) { animation: fade-in 150ms var(--ease-out) both; }
 
 /* Уважаем настройку «уменьшить движение». */
 @media (prefers-reduced-motion: reduce) {
@@ -351,6 +448,28 @@ html[data-vt='out']::view-transition-new(root) { animation-name: vt-in-left; }
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
+  }
+
+  /* Шторка, панель, тост и меню (s4, столбец «Уменьшить движение»): без
+     сдвига и масштаба — только прозрачность за 150 мс. Класс сильнее `*`,
+     поэтому перебивает общее правило выше. */
+  .animate-sheet-in,
+  .animate-scrim-in,
+  .animate-panel-in,
+  .animate-haze-in,
+  .animate-toast-in,
+  .animate-menu-in {
+    animation-name: fade-in !important;
+    animation-duration: 150ms !important;
+  }
+  .animate-sheet-out,
+  .animate-scrim-out,
+  .animate-panel-out,
+  .animate-haze-out,
+  .animate-toast-out,
+  .animate-menu-out {
+    animation-name: fade-out !important;
+    animation-duration: 150ms !important;
   }
 
   /* Псевдоэлементы перехода живут вне дерева документа, под `*` не попадают —
@@ -379,6 +498,12 @@ html[data-vt='out']::view-transition-new(root) { animation-name: vt-in-left; }
   &::-webkit-scrollbar {
     display: none;
   }
+}
+
+/* Пунктир аватара «только карточка» — ученик без приложения (лист s3):
+   1,5 px, цвет рамки управления. Дробной толщины у border-* в Tailwind нет. */
+@utility border-dashed-avatar {
+  border: 1.5px dashed var(--color-control-line);
 }
 
 /* Штриховка «поздняя отмена» (макеты t2-3, d1): урок отменён, но списан —

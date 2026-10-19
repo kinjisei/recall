@@ -175,7 +175,7 @@ export function CardForm({
             </div>
 
             <div className="border-t border-tint/[0.06] px-5 py-3">
-              <Button type="submit" className="w-full py-3" disabled={!form.name.trim()} loading={busy}>
+              <Button type="submit" className="w-full" disabled={!form.name.trim()} loading={busy}>
                 {card ? 'Сохранить' : 'Добавить'}
               </Button>
             </div>

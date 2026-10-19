@@ -5,6 +5,7 @@
 import { useLocation } from 'react-router-dom'
 import { useWaitingCount } from '../../features/teacher'
 import { activeTabIndex, tabsFor, type NavTab } from '../navigation'
+import { leaveByTab } from './tabScroll'
 import { useRoleState } from './useMyRole'
 
 export interface NavTabsState {
@@ -39,7 +40,10 @@ export function useNavTabs(): NavTabsState {
       // «в никуда», поэтому шлём событие — экран сам сбросится к хабу.
       if (pathname === to) {
         window.dispatchEvent(new CustomEvent('recall:reset-tab', { detail: to }))
+        return
       }
+      // прокрутка вкладки запоминается (s4) — вернёмся сюда вкладкой
+      leaveByTab(pathname, to)
     },
   }
 }

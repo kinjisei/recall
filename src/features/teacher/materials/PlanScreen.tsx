@@ -192,7 +192,7 @@ function PlanWords({
             onChange={(e) => setTyped(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && add()}
           />
-          <Button variant="secondary" className="shrink-0 px-3 py-1.5 text-sm" onClick={add} disabled={disabled || !typed.trim()}>
+          <Button size="sm" variant="secondary" className="shrink-0" onClick={add} disabled={disabled || !typed.trim()}>
             Добавить
           </Button>
         </div>

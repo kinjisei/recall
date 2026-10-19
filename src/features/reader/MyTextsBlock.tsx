@@ -42,7 +42,7 @@ export function MyTextsList({
         <p className="text-xs font-semibold uppercase tracking-wide text-fg-muted">
           Мои тексты
         </p>
-        <Button variant="secondary" className="px-3 py-1.5 text-sm" onClick={onAdd}>
+        <Button size="sm" variant="secondary" onClick={onAdd}>
           <IconPlus size={15} /> Свой текст
         </Button>
       </div>
@@ -151,15 +151,10 @@ export function AddTextForm({
       {err && <p className="text-sm text-danger-strong">{err}</p>}
 
       <div className="flex flex-wrap gap-2">
-        <Button className="px-4 py-2 text-sm" loading={busy} onClick={save}>
+        <Button size="sm" loading={busy} onClick={save}>
           Сохранить и читать
         </Button>
-        <Button
-          variant="secondary"
-          className="px-3 py-2 text-sm"
-          disabled={busy}
-          onClick={() => fileRef.current?.click()}
-        >
+        <Button size="sm" variant="secondary" disabled={busy} onClick={() => fileRef.current?.click()}>
           {busy ? 'Читаю файл…' : 'Из файла (PDF / DOCX / TXT)'}
         </Button>
         <input

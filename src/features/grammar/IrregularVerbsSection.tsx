@@ -25,6 +25,7 @@ import type {
   IrregularGroup,
   IrregularVerb,
 } from '../../data/english/irregular'
+import { RevealHeader } from '../../shared/ui/Disclosure'
 
 const ROUND_SIZE = 10
 
@@ -108,16 +109,12 @@ function Reference({ groups }: { groups: IrregularGroup[] }) {
         const isOpen = q !== '' || open === g.title
         return (
           <div key={g.title}>
-            <button
-              onClick={() => setOpen((cur) => (cur === g.title ? null : g.title))}
-              className="flex w-full items-center justify-between rounded-lg bg-surface px-3 py-2 text-left"
-            >
-              <span className="text-sm font-bold">
-                {g.title}{' '}
-                <span className="font-normal text-fg-muted">· {g.verbs.length}</span>
-              </span>
-              <span className="text-fg-muted">{isOpen ? '▾' : '▸'}</span>
-            </button>
+            <RevealHeader
+              open={isOpen}
+              onToggle={() => setOpen((cur) => (cur === g.title ? null : g.title))}
+              title={g.title}
+              meta={`· ${g.verbs.length}`}
+            />
 
             <Reveal open={isOpen}>
               <Card className="mt-2 overflow-x-auto p-0">

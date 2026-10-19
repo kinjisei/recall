@@ -1,7 +1,7 @@
 // ============================================================================
-// Пустое состояние: иконка, фраза, что сделать (опись интерфейса §6.1; макет
-// t2-4 — «Пока нет уроков · Добавить первого ученика · Новый урок»).
-// Пусто — это не ошибка и не загрузка: экран говорит, с чего начать.
+// Пустое состояние (лист s3; макет t2-4 — «Пока нет уроков»): иконка в круге
+// 64, одна фраза, что здесь будет, и одно действие. Пусто — это не ошибка и
+// не загрузка: экран говорит, с чего начать.
 // ⚠️ Сбой загрузки пустым состоянием не показывать — для него LoadError
 // (PLAN.md Ф1.13: «квестов нет» вместо «нет связи» хуже любой ошибки).
 // ============================================================================
@@ -19,20 +19,20 @@ export function EmptyState({
   title: string
   /** Пояснение под заголовком. */
   children?: ReactNode
-  /** Кнопки — во всю ширину, столбиком. */
+  /** Действие (по листу — одно), по центру. */
   actions?: ReactNode
   className?: string
 }) {
   return (
-    <div className={`flex flex-col items-center rounded-2xl border border-tint/[0.08] bg-surface px-5 py-8 text-center shadow-card ${className}`}>
+    <div className={`flex flex-col items-center gap-2.5 rounded-card bg-surface px-5 py-7 text-center shadow-card ${className}`}>
       {Icon && (
-        <span aria-hidden className="mb-3 flex size-12 items-center justify-center rounded-2xl bg-accent-soft text-accent-soft-fg">
-          <Icon size={24} />
+        <span aria-hidden className="flex size-16 items-center justify-center rounded-full bg-accent-soft text-accent-soft-fg">
+          <Icon size={30} />
         </span>
       )}
-      <h2 className="text-base font-semibold text-fg">{title}</h2>
-      {children && <p className="mt-1 max-w-sm text-sm text-fg-secondary">{children}</p>}
-      {actions && <div className="mt-5 flex w-full max-w-sm flex-col gap-2">{actions}</div>}
+      <h2 className="text-lg font-semibold text-fg">{title}</h2>
+      {children && <p className="max-w-sm text-body text-balance text-fg-secondary">{children}</p>}
+      {actions && <div className="mt-1.5 flex flex-col items-center gap-2">{actions}</div>}
     </div>
   )
 }

@@ -15,8 +15,9 @@ for (const f of files) {
 }
 const header = `// ============================================================================
 // Фирменный icon-набор Recall (${files.length} шт.), сгенерирован из handoff/icons/*.svg
-// (Claude Design). Единый стиль: viewBox 0 0 24 24, stroke 1.75px (2px у *-fill),
-// currentColor. Меняем весь набор здесь — приложение подхватит.
+// (Claude Design). Единый стиль: viewBox 0 0 24 24, stroke 1.75px, currentColor;
+// *-fill (активная вкладка) залиты целиком, вырезы — цветом подложки вкладки
+// (--icon-cut, по умолчанию accent-soft; лист s4). Меняем весь набор здесь.
 //   НЕ РЕДАКТИРОВАТЬ ВРУЧНУЮ: перегенерировать из SVG.
 // ============================================================================
 import type { CSSProperties, ComponentType } from 'react'

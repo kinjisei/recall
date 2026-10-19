@@ -267,8 +267,13 @@ async function sheet(page, tag) {
   }
   await shot(page, `${tag}-sheet`)
   await page.keyboard.press('Escape')
-  await sleep(400)
-  check(`${tag}: Escape закрывает шторку`, !(await rect(page, '[role="dialog"]')))
+  // шторка уходит анимацией и снимается таймером (shared/lib/motion), а
+  // фоновой вкладке браузер сдвигает таймеры к целой секунде — ждём, а не паузу
+  const closed = await page
+    .waitForFunction(() => !document.querySelector('[role="dialog"]'), { polling: 250, timeout: 3000 })
+    .then(() => true)
+    .catch(() => false)
+  check(`${tag}: Escape закрывает шторку`, closed)
 }
 
 // ── 3. раскладки ──────────────────────────────────────────────────────────────
@@ -341,7 +346,11 @@ async function reveal(page) {
   const inPage = () => page.evaluate(() => document.body.innerText.includes('монтируется, только пока открыто'))
   check('раскрывашка: закрыта — содержимого в странице нет', !(await inPage()))
   await clickText(page, 'Как это работает?')
-  await sleep(500)
+  // разворачивается следующим кадром или таймером 60 мс (shared/ui/Reveal), а
+  // фоновой вкладке без окна браузер сдвигает таймеры к целой секунде — ждём
+  await page
+    .waitForFunction(() => document.querySelector('.reveal')?.getAttribute('data-open') === 'true', { polling: 250, timeout: 3000 })
+    .catch(() => {})
   const opened = await page.evaluate(() => document.querySelector('.reveal')?.getAttribute('data-open'))
   check('раскрывашка: открыли — содержимое есть и развёрнуто', (await inPage()) && opened === 'true', `data-open=${opened}`)
   await clickText(page, 'Как это работает?')

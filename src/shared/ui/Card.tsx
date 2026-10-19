@@ -3,19 +3,21 @@ import type { ReactNode } from 'react'
 /** Статус карточки: обычная, предупреждение (жёлтая), ошибка (красная). */
 export type CardTone = 'default' | 'warning' | 'danger'
 
-// Фон и рамка по статусу. В тёмной теме статусная карточка — та же обычная
-// поверхность (токены *-surface/*-line там равны surface и рамке карточки,
-// статус говорит цветом текста); в светлой — тёплый или розовый фон с
-// цветной рамкой. Цвет текста внутри задаёт экран (text-warning-soft-fg…).
+// Лист s3: карточка — surface, радиус 24, отступ 16, тень только в светлой
+// (в тёмной уровни держит тон). Статусная — фон и рамка статуса (-surface и
+// -line, с оттенком в обеих темах), радиус 20; внутри — иконка, текст
+// -strong и одно действие (цвет текста задаёт экран). Рамка у обычной —
+// прозрачная: размер тот же, что у статусной, а цвет рамки экран может
+// поставить сам (border-accent-line!).
 //
 // ⚠️ Фон и рамку статуса — только через tone, не className: два класса фона
 // на одном элементе решает порядок в CSS (по алфавиту), а не порядок в
 // строке. Так янтарные bg-/border- у плашек преподавателя годами не
 // показывались: их перебивали bg-surface и border-tint карточки.
 const TONES: Record<CardTone, string> = {
-  default: 'border-tint/[0.08] bg-surface',
-  warning: 'border-warning-line bg-warning-surface',
-  danger: 'border-danger-line bg-danger-surface',
+  default: 'rounded-card border-transparent bg-surface p-4',
+  warning: 'rounded-row border-warning-line bg-warning-surface px-4 py-3.5',
+  danger: 'rounded-row border-danger-line bg-danger-surface px-4 py-3.5',
 }
 
 /**
@@ -33,9 +35,7 @@ export function Card({
   interactive?: boolean
   tone?: CardTone
 }) {
-  // Поверхность + тонкая рамка; тень — только в светлой теме (shadow-card:
-  // в тёмной она нулевая, уровни держит тон, лист s2).
-  const base = `rounded-2xl border ${TONES[tone]} p-5 text-fg shadow-card`
-  const press = interactive ? 'lift hover:border-tint/[0.14]' : ''
+  const base = `border ${TONES[tone]} text-fg shadow-card`
+  const press = interactive ? 'lift' : ''
   return <div className={`${base} ${press} ${className}`}>{children}</div>
 }

@@ -1,8 +1,9 @@
 # Иконки Recall (93 шт.)
 
 Единый набор: viewBox 0 0 24 24, поле 20x20, stroke 1.75px, round caps/joins,
-stroke="currentColor", fill только в *-fill вариантах (currentColor, opacity .32, stroke 2px — активная вкладка)
-для активных вкладок. spinner вращать через CSS (animation: spin 1s linear infinite).
+stroke="currentColor", fill только в *-fill вариантах для активных вкладок: залиты currentColor
+целиком, вырезы — цветом подложки вкладки `var(--icon-cut, var(--color-accent-soft))`
+(лист s4, Ф2.17-3; 17 иконок s4 перерисованы по листу). spinner вращать через CSS (animation: spin 1s linear infinite).
 
 Интеграция: завести все в src/components/icons.tsx как React-компоненты
 (имя файла -> PascalCase, например speaker-slow.svg -> IconSpeakerSlow),

@@ -150,7 +150,10 @@ async function run(page, userId) {
   })()
   check('в базе отмечено прочитанным', readInDb)
   await page.keyboard.press('Escape')
-  await sleep(500)
+  // шторка уходит анимацией и снимается таймером (shared/lib/motion); в фоновой
+  // вкладке таймеры сдвинуты к целой секунде — ждём, а не паузу
+  await page.waitForFunction(() => !document.querySelector('[role="dialog"]'), { polling: 250, timeout: 3000 }).catch(() => {})
+  await sleep(300)
   bell = await bellState(page)
   check('цифра ушла, колокольчик остался', !!bell && bell.label === 'Уведомления', bell?.label)
 

@@ -120,10 +120,10 @@ export function ConfirmPayment({
       {error && <p className="text-sm text-danger-strong">{error}</p>}
 
       <div className="flex flex-wrap gap-2">
-        <Button onClick={submit} loading={busy} disabled={!amountOk} className="min-h-11 px-4 text-sm">
+        <Button size="sm" onClick={submit} loading={busy} disabled={!amountOk}>
           Подтвердить оплату {amountOk ? `${amount.toLocaleString('ru-RU')} ₸` : ''}
         </Button>
-        <Button variant="ghost" onClick={onCancel} className="min-h-11 px-4 text-sm">
+        <Button size="sm" variant="ghost" onClick={onCancel}>
           Отмена
         </Button>
       </div>

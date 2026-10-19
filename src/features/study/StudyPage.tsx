@@ -470,11 +470,7 @@ function WordsStudy({ onBack }: { onBack: () => void }) {
       <BackHeader onBack={onBack} title="Мой словарь" />
 
       <div className="flex gap-2">
-        <Button
-          variant="secondary"
-          className="px-3 py-2 text-sm"
-          onClick={() => setSheet(sheet === 'packs' ? null : 'packs')}
-        >
+        <Button size="sm" variant="secondary" onClick={() => setSheet(sheet === 'packs' ? null : 'packs')}>
           {sheet === 'packs' ? (
             'Закрыть'
           ) : (
@@ -483,11 +479,7 @@ function WordsStudy({ onBack }: { onBack: () => void }) {
             </>
           )}
         </Button>
-        <Button
-          variant="secondary"
-          className="px-3 py-2 text-sm"
-          onClick={() => setSheet(sheet === 'add' ? null : 'add')}
-        >
+        <Button size="sm" variant="secondary" onClick={() => setSheet(sheet === 'add' ? null : 'add')}>
           {sheet === 'add' ? (
             'Закрыть'
           ) : (

@@ -43,7 +43,7 @@ function NewStudent({ kind, onCreated, onCancel }: { kind: LessonKind; onCreated
       <input className={input} value={name} onChange={(e) => setName(e.target.value)} placeholder="Имя и фамилия" aria-label="Имя ученика" maxLength={80} />
       <input className={input} value={contact} onChange={(e) => setContact(e.target.value)} placeholder="Телефон или ник в Telegram" aria-label="Телефон или ник в Telegram" maxLength={80} />
       {error && <p role="alert" className="text-sm text-danger-soft-fg">{error}</p>}
-      <Button variant="secondary" className="min-h-11 py-2 text-sm" disabled={!name.trim()} loading={busy} onClick={() => void add()}>
+      <Button size="sm" variant="secondary" disabled={!name.trim()} loading={busy} onClick={() => void add()}>
         Добавить ученика
       </Button>
     </div>

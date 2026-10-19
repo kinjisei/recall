@@ -152,7 +152,7 @@ export function MarksBlock({
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-fg-secondary">{group ? 'Кто был' : 'Был ли на уроке'}</h3>
         {group && unmarked.length > 1 && canWrite && (
-          <Button variant="ghost" className="min-h-11 px-3 py-1 text-sm" disabled={busy} onClick={onAllPresent}>
+          <Button size="sm" variant="ghost" disabled={busy} onClick={onAllPresent}>
             Все были
           </Button>
         )}

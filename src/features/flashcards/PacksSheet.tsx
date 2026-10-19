@@ -12,6 +12,7 @@ import {
   type PackWord,
 } from '../../lib/wordPacks'
 import { Loading } from '../../shared/ui/Loading'
+import { RevealHeader } from '../../shared/ui/Disclosure'
 
 const LEVEL_ORDER = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const
 
@@ -138,18 +139,12 @@ export function PacksSheet({ lang, onAdded }: { lang: AppLang; onAdded: () => vo
               const isOpen = q.length > 0 || openLevel === key
               return (
                 <div key={key}>
-                  <button
-                    onClick={() => setOpenLevel((cur) => (cur === key ? null : key))}
-                    className="flex w-full items-center justify-between rounded-lg bg-surface px-3 py-2 text-left"
-                  >
-                    <span className="text-sm font-bold">
-                      Уровень {level}{' '}
-                      <span className="font-normal text-fg-muted">
-                        · {topics.length} тем
-                      </span>
-                    </span>
-                    <span className="text-fg-muted">{isOpen ? '▾' : '▸'}</span>
-                  </button>
+                  <RevealHeader
+                    open={isOpen}
+                    onToggle={() => setOpenLevel((cur) => (cur === key ? null : key))}
+                    title={`Уровень ${level}`}
+                    meta={`· ${topics.length} тем`}
+                  />
 
                   <Reveal open={isOpen}>
                     <div className="mt-2 flex flex-col gap-2">
@@ -170,9 +165,9 @@ export function PacksSheet({ lang, onAdded }: { lang: AppLang; onAdded: () => vo
                                 {note}
                               </span>
                             ) : (
-                              <Button
+                              <Button size="sm"
                                 variant="secondary"
-                                className="shrink-0 px-3 py-1.5 text-sm"
+                                className="shrink-0"
                                 onClick={() => addTopic(t.id)}
                                 disabled={busyTopic !== null}
                               >

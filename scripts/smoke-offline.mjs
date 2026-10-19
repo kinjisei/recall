@@ -98,7 +98,7 @@ const probe = (page) =>
     }
     return {
       text: document.body.innerText,
-      pulses: [...document.querySelectorAll('.animate-pulse')].filter(vis).length,
+      pulses: [...document.querySelectorAll('.animate-pulse, .animate-skeleton')].filter(vis).length,
       retry: [...document.querySelectorAll('button')].some((x) => x.textContent.trim() === 'Повторить'),
     }
   })

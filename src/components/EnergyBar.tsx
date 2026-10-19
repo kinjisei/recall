@@ -8,7 +8,7 @@
 // Показывает эффективный остаток: для соло — свой бюджет; для ученика студии —
 // её под-кап, но не больше остатка общего пула. У админа и без данных — не рисуем.
 // ============================================================================
-import { IconSparkle } from '../shared/ui/icons'
+import { IconBolt } from '../shared/ui/icons'
 import { useCountUp } from '../lib/useCountUp'
 import type { MyPlan } from '../lib/billing'
 
@@ -36,7 +36,7 @@ export function EnergyBar({ plan, className = '' }: { plan: MyPlan; className?: 
     <div className={`rounded-2xl border border-tint/[0.08] bg-surface px-4 py-3 ${className} shadow-card`}>
       <div className="flex items-center justify-between text-sm">
         <span className="flex items-center gap-1.5 font-medium">
-          <IconSparkle size={16} className={low ? 'text-warning' : 'text-accent-strong'} />
+          <IconBolt size={16} className={low ? 'text-warning' : 'text-accent-strong'} />
           Энергия AI
         </span>
         <span className={low ? 'text-warning' : 'text-fg-secondary'}>

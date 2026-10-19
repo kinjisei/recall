@@ -147,7 +147,7 @@ function StudioFooter({
       {error && <p className="text-sm text-danger">{error}</p>}
       {seatsKnown && (
         <div>
-          <Button variant="ghost" className="min-h-11 px-3 py-2 text-sm" loading={seatBusy} onClick={() => void setSeat(!covered)}>
+          <Button size="sm" variant="ghost" loading={seatBusy} onClick={() => void setSeat(!covered)}>
             {covered ? 'Убрать из тарифа' : 'Включить в тариф'}
           </Button>
           {covered && (
@@ -157,7 +157,7 @@ function StudioFooter({
           )}
         </div>
       )}
-      <Button variant="ghost" className="min-h-11 self-start px-3 py-2 text-sm text-danger-soft-fg" loading={unlinking} onClick={() => void unlink()}>
+      <Button size="sm" variant="ghost" className="self-start text-danger-soft-fg" loading={unlinking} onClick={() => void unlink()}>
         Отвязать
       </Button>
       {toast && (

@@ -22,6 +22,7 @@ import type {
   MaterialAssignment,
   ReviewItem,
 } from '../../types'
+import { RevealLink } from '../../shared/ui/Disclosure'
 
 const kindLabel = { comprehension: 'понимание', grammar: 'грамматика', vocab: 'словарь' } as const
 
@@ -122,12 +123,9 @@ export function ReviewScreen({
       </div>
       {draft.restored && <DraftRestored onClear={draft.clear} />}
 
-      <button
-        onClick={() => setShowBody((s) => !s)}
-        className="self-start text-sm font-medium text-accent-strong hover:underline"
-      >
-        {showBody ? '▾ Скрыть текст материала' : '▸ Текст материала'}
-      </button>
+      <RevealLink open={showBody} onToggle={() => setShowBody((s) => !s)}>
+        {showBody ? 'Скрыть текст материала' : 'Текст материала'}
+      </RevealLink>
       <Reveal open={showBody}>
         <Card>
           <p className="whitespace-pre-wrap text-sm leading-relaxed text-fg-secondary">
@@ -163,7 +161,7 @@ export function ReviewScreen({
         <Card tone="danger">
           <p className="text-sm text-danger-soft-fg">{error}</p>
           {!review && (
-            <Button variant="secondary" className="mt-2 px-3 py-1.5 text-sm" onClick={runAiReview}>
+            <Button size="sm" variant="secondary" className="mt-2" onClick={runAiReview}>
               Повторить разбор
             </Button>
           )}

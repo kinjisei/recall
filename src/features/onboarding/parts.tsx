@@ -4,10 +4,12 @@
 import { useState } from 'react'
 import { setSelfReportedSource } from '../../lib/analytics'
 
-// Главные кнопки онбординга крупнее обычных: скругление 16 и вес 500. «!» —
-// потому что обычный класс проиграл бы базе Button (rounded-xl, font-semibold)
-// по порядку в CSS, а не по порядку в строке.
-export const ONBOARDING_CTA = 'rounded-2xl! font-medium! disabled:opacity-40!'
+// Главные кнопки онбординга: скругление 16 и вес 500. «!» — потому что
+// обычный класс проиграл бы базе Button (rounded-control, font-semibold) по
+// порядку в CSS, а не по порядку в строке. Выключенный вид — общий у Button
+// (подложка input, текст fg-faint, лист s3): своя прозрачность поверх него
+// сделала бы подпись нечитаемой.
+export const ONBOARDING_CTA = 'rounded-2xl! font-medium!'
 
 export function Heading({
   title,

@@ -44,11 +44,11 @@ export function KaspiTransfer({ amount, code }: { amount: number; code: string }
       </div>
 
       <div className="mt-3 grid grid-cols-2 gap-2">
-        <Button variant="secondary" className="min-h-11 text-sm" onClick={() => copyOne('phone', KASPI.phone.replace(/\s/g, ''))}>
+        <Button size="sm" variant="secondary" onClick={() => copyOne('phone', KASPI.phone.replace(/\s/g, ''))}>
           {copied === 'phone' ? <IconCheck size={16} /> : <IconCopy size={16} />}
           {copied === 'phone' ? 'Скопирован' : 'Номер'}
         </Button>
-        <Button variant="secondary" className="min-h-11 text-sm" onClick={() => copyOne('code', code)}>
+        <Button size="sm" variant="secondary" onClick={() => copyOne('code', code)}>
           {copied === 'code' ? <IconCheck size={16} /> : <IconCopy size={16} />}
           {copied === 'code' ? 'Скопирован' : 'Код'}
         </Button>

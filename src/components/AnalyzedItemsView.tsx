@@ -148,7 +148,7 @@ export function AnalyzedItemsView({
       })()}
 
       {addable.length > 1 && (
-        <Button className="mt-4 w-full py-2.5 text-sm" onClick={() => addable.forEach(add)}>
+        <Button size="sm" className="mt-4 w-full" onClick={() => addable.forEach(add)}>
           <IconPlus size={16} /> Добавить всё в Мои слова
         </Button>
       )}

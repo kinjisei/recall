@@ -300,7 +300,7 @@ export function ProgressPage() {
       {/* Настоящая кнопка, а не текст в рамке: в светлой теме прежняя рамка
           на белом не читалась как кнопка (правка владельца 30.09.2026) */}
       <Button
-        variant="danger-outline"
+        variant="danger"
         onClick={signOut}
         className="animate-fade-up mt-2 w-full"
         style={{ animationDelay: '.36s' }}

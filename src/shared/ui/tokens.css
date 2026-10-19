@@ -81,10 +81,32 @@
   --color-ring: #8a82c6;
 
   /* --- Главная кнопка (Button primary) — одна на экран. press — нажатая
-     (вместе со scale .97, PLAN.md Ф2.17-3). --- */
+     (вместе со scale .97, лист s3). --- */
   --color-primary: #a99eea;
   --color-primary-fg: #161826;
   --color-primary-press: #8c80d0;
+
+  /* --- Нажатое и служебные поверхности компонентов (лист s3; значения —
+     с листа обеих палитр). Нажатие — на касание (pointerdown), без наведения:
+       accent-soft-press  нажатая вторичная кнопка (подложка accent-soft);
+       danger-soft-press  нажатая «опасная» (подложка danger-soft);
+       ghost-press        нажатая тихая кнопка, иконка 44, чип — дымка 6–8 %;
+       row-press          нажатая строка списка — подложка на всю строку;
+       segment            выбранный вариант сегмента («День · Неделя», EN/ES);
+       toast · toast-fg · toast-action  тост «Вернуть»: тёмная плашка в
+                          обеих темах, «Вернуть» — светлым акцентом;
+       skeleton           серые строки ожидания списка;
+       knob               ручка тумблера — белая во всех вариантах. --- */
+  --color-accent-soft-press: #3a3170;
+  --color-danger-soft-press: #4c2430;
+  --color-ghost-press: rgba(255, 255, 255, 0.08);
+  --color-row-press: #262939;
+  --color-segment: #3a3d52;
+  --color-toast: #34374d;
+  --color-toast-fg: #e9e9ed;
+  --color-toast-action: #cfc8f0;
+  --color-skeleton: #2a2d40;
+  --color-knob: #ffffff;
 
   /* --- Карточка-герой (серия дней): радиальный градиент из левого верхнего
      угла hero → hero-mid → hero-edge, размытое пятно hero-glow справа
@@ -202,6 +224,8 @@
   --shadow-card: var(--elevation-card);
   --shadow-raised: var(--elevation-raised);
   --shadow-sheet: var(--elevation-sheet);
+  /* выбранный вариант сегмента приподнят (s3) — тоже только в светлой */
+  --shadow-segment: var(--elevation-segment);
 
   /* --- Радиусы (s2): кнопка и чип теперь разные. Правило кнопки — радиус
      ≈ 30 % высоты; full (rounded-full) — чип, сегмент, панель вкладок,
@@ -218,30 +242,53 @@
      офлайн; покрытие проверяет scripts/test-font-coverage.mjs. --- */
   --font-sans: 'Rubik Variable', 'Rubik', system-ui, sans-serif;
 
-  /* --- Шкала текста (s2). Размеры Tailwind (xs 12 · sm 14 · base 16 · lg 18 ·
-     xl 20 · 2xl 24 · 3xl 30) — как на листе; трекинг по листу:
-     отрицательный — только от 18 px. Высоты строк листа (16/22, 18/24,
-     20/26, 24/30) — в PLAN.md Ф2.17-3 вместе с высотами кнопок и полей:
-     сейчас у многих кнопок высоту держит строка, и они стали бы ниже 44 px
-     (решение владельца 19.10.2026). --- */
+  /* --- Шкала текста (s2): размер / строка. Размеры Tailwind (xs 12/16 ·
+     sm 14/20 · base 16/22 · lg 18/24 · xl 20/26 · 2xl 24/30 · 3xl 30/36) —
+     как на листе; трекинг по листу: отрицательный — только от 18 px. Высоты
+     строк — множителем, чтобы утилита работала и на другом размере. Строки
+     листа включены вместе с высотами кнопок и полей (Ф2.17-3, решение
+     владельца 19.10.2026): высоту кнопки держит Button (size), а не строка. --- */
+  --text-base--line-height: 1.375;
+  --text-lg--line-height: calc(24 / 18);
   --text-lg--letter-spacing: -0.005em;
+  --text-xl--line-height: 1.3;
   --text-xl--letter-spacing: -0.01em;
+  --text-2xl--line-height: 1.25;
   --text-2xl--letter-spacing: -0.015em;
   --text-3xl--letter-spacing: -0.02em;
-  /* Размеры вне шкалы Tailwind. Высоту строки не задают — как и прежние
-     text-[15px] (кроме новой ступени display). */
-  --text-micro: 0.625rem; /* 10 — метка капсом над группой */
+  /* Размеры вне шкалы Tailwind */
+  --text-micro: 0.625rem; /* 10/14 — метка капсом над группой */
+  --text-micro--line-height: 1.4;
   --text-micro--letter-spacing: 0.06em;
-  --text-caption: 0.6875rem; /* 11 — сноска, цифра на значке */
+  --text-caption: 0.6875rem; /* 11/16 — сноска, цифра на значке */
+  --text-caption--line-height: calc(16 / 11);
   --text-caption--letter-spacing: 0.01em;
-  --text-note: 0.8125rem; /* 13 — подпись строки списка */
-  --text-body: 0.9375rem; /* 15 — заголовок строки, основной текст карточек */
+  --text-note: 0.8125rem; /* 13/18 — подпись строки списка */
+  --text-note--line-height: calc(18 / 13);
+  --text-body: 0.9375rem; /* 15/22 — основной текст карточек */
+  --text-body--line-height: calc(22 / 15);
   /* 40 — крупная цифра: серия у ученика, остаток уроков у репетитора. Одна
      на экран, всегда tabular-nums. */
   --text-display: 2.5rem;
   --text-display--line-height: 1;
   --text-display--letter-spacing: -0.02em;
   --text-display--font-weight: 700;
+
+  /* --- Движение (лист s4, «Движение»): только transform и opacity. Что
+     выехало снизу — уходит вниз, панель справа — вправо, меню — обратно к
+     кнопке; уход всегда быстрее появления. Кривые — утилиты Tailwind
+     (ease-out, ease-in, ease-sheet), длительности — переменные:
+       press 80 · 1 — 160 · 2 — 240 · 3 — 320 мс;
+       шторка 320 / 240, панель 280 / 220, тост 200 / 160, меню профиля
+       180 / 140 (появление / уход) — в src/index.css рядом с keyframes.
+     «Уменьшить движение» — только прозрачность, 150 мс (index.css). --- */
+  --dur-press: 80ms;
+  --dur-1: 160ms;
+  --dur-2: 240ms;
+  --dur-3: 320ms;
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
 
   /* --- Точки перехода по ширине ОКНА (журнал п.46, п.55; макет d0). JS
      читает те же числа из breakpoints.ts — сверяет тест.
@@ -287,6 +334,7 @@
   --elevation-card: 0 0 #0000;
   --elevation-raised: 0 0 #0000;
   --elevation-sheet: 0 0 #0000;
+  --elevation-segment: 0 0 #0000;
   --scrim-sheet: 55%;
 }
 
@@ -301,6 +349,7 @@
   --elevation-card: 0 1px 2px rgba(26, 28, 43, 0.05), 0 6px 16px rgba(26, 28, 43, 0.05);
   --elevation-raised: 0 8px 24px rgba(26, 28, 43, 0.08);
   --elevation-sheet: 0 -8px 32px rgba(26, 28, 43, 0.12);
+  --elevation-segment: 0 1px 2px rgba(26, 28, 43, 0.12);
   --scrim-sheet: 40%;
 
   --color-page: #f4f3f9;
@@ -330,6 +379,17 @@
   --color-primary: #6b5ccc;
   --color-primary-fg: #ffffff;
   --color-primary-press: #5747b8;
+
+  --color-accent-soft-press: #dcd6f6;
+  --color-danger-soft-press: #f7d3d3;
+  --color-ghost-press: rgba(26, 28, 43, 0.06);
+  --color-row-press: #f1f0f7;
+  --color-segment: #ffffff;
+  --color-toast: #1a1c2b;
+  --color-toast-fg: #f4f3f9;
+  --color-toast-action: #b9b0e8;
+  --color-skeleton: #e7e5f0;
+  --color-knob: #ffffff;
 
   --color-hero: #efebfd;
   --color-hero-mid: #f8f6fe;
@@ -416,6 +476,17 @@
   --color-primary-fg: #21100a;
   --color-primary-press: #db7642;
 
+  --color-accent-soft-press: #4e3020;
+  --color-danger-soft-press: #4e2430;
+  --color-ghost-press: rgba(255, 255, 255, 0.08);
+  --color-row-press: #302823;
+  --color-segment: #4a3d35;
+  --color-toast: #3b322c;
+  --color-toast-fg: #f4ede8;
+  --color-toast-action: #ffc9a8;
+  --color-skeleton: #352c26;
+  --color-knob: #ffffff;
+
   --color-hero: #4a2a1a;
   --color-hero-mid: #2e211b;
   --color-hero-edge: #241c17;
@@ -489,6 +560,7 @@
   --elevation-card: 0 1px 2px rgba(42, 31, 26, 0.05), 0 6px 16px rgba(42, 31, 26, 0.06);
   --elevation-raised: 0 8px 24px rgba(42, 31, 26, 0.1);
   --elevation-sheet: 0 -8px 32px rgba(42, 31, 26, 0.12);
+  --elevation-segment: 0 1px 2px rgba(42, 31, 26, 0.12);
   --scrim-sheet: 40%;
 
   --color-page: #f6f1ed;
@@ -518,6 +590,17 @@
   --color-primary: #ee6a2c;
   --color-primary-fg: #2a1206;
   --color-primary-press: #dd5e20;
+
+  --color-accent-soft-press: #fad6c0;
+  --color-danger-soft-press: #f6d1d9;
+  --color-ghost-press: rgba(42, 31, 26, 0.06);
+  --color-row-press: #f6f0eb;
+  --color-segment: #ffffff;
+  --color-toast: #2a1f1a;
+  --color-toast-fg: #f6f1ed;
+  --color-toast-action: #f7a87e;
+  --color-skeleton: #efe7e1;
+  --color-knob: #ffffff;
 
   --color-hero: #fde3d2;
   --color-hero-mid: #fef0e7;

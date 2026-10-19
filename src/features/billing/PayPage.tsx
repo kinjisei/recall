@@ -133,7 +133,7 @@ function PayForm({ info, requested }: { info: PayInfo; requested: string | null 
         <SentCard claim={claim} />
       ) : (
         <div>
-          <Button className="min-h-12 w-full" loading={busy} onClick={report}>
+          <Button className="w-full" loading={busy} onClick={report}>
             Оплата отправлена
           </Button>
           {error && <p className="mt-2 text-sm text-danger-strong">{error}</p>}

@@ -95,7 +95,7 @@ export function HistorySheet({
         <div className="flex items-center justify-between gap-3 rounded-2xl border border-tint/[0.08] px-4 py-3">
           <span className="text-sm font-semibold">{balanceLabel(balance)}</span>
           {canWrite && (
-            <Button variant="secondary" className="min-h-11 flex-none px-3 py-2 text-sm" onClick={onPay}>
+            <Button size="sm" variant="secondary" className="flex-none" onClick={onPay}>
               Отметить оплату
             </Button>
           )}

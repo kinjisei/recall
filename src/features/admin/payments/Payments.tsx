@@ -109,10 +109,10 @@ function Claim({ claim, onChanged }: { claim: ClaimRow; onChanged: () => void })
         />
       ) : (
         <div className="mt-2 flex flex-wrap gap-2">
-          <Button onClick={() => setOpen(true)} className="min-h-11 px-4 text-sm">
+          <Button size="sm" onClick={() => setOpen(true)}>
             Подтвердить
           </Button>
-          <Button variant="ghost" onClick={dismiss} loading={busy} className="min-h-11 px-4 text-sm">
+          <Button size="sm" variant="ghost" onClick={dismiss} loading={busy}>
             Не пришло
           </Button>
         </div>

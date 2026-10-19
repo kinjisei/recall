@@ -20,6 +20,7 @@ import { ReviewScreen } from '../ReviewScreen'
 import { PrintSheet } from '../PrintSheet'
 import { AppLink } from '../../../shared/ui/AppLink'
 import { RowsSkeleton } from '../../../shared/ui/Loading'
+import { RevealLink } from '../../../shared/ui/Disclosure'
 
 export function MaterialDetail({
   material,
@@ -134,30 +135,19 @@ export function MaterialDetail({
           {material.lang.toUpperCase()} · {material.level} · {material.format} ·{' '}
           {material.length_range} слов · {material.exercises.length} упр.
         </p>
-        <button
-          onClick={() => setShowBody((s) => !s)}
-          className="mt-2 text-sm font-medium text-accent-strong hover:underline"
-        >
-          {showBody ? '▾ Скрыть текст' : '▸ Показать текст'}
-        </button>
+        <RevealLink open={showBody} onToggle={() => setShowBody((s) => !s)} className="mt-1">
+          {showBody ? 'Скрыть текст' : 'Показать текст'}
+        </RevealLink>
         <Reveal open={showBody}>
           <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-fg-secondary">
             {material.body}
           </p>
         </Reveal>
         <div className="mt-3 flex flex-wrap gap-2">
-          <Button
-            variant="secondary"
-            className="px-3 py-1.5 text-sm"
-            onClick={() => setPrintMode('student')}
-          >
+          <Button size="sm" variant="secondary" onClick={() => setPrintMode('student')}>
             <IconPrinter size={16} /> Для ученика
           </Button>
-          <Button
-            variant="secondary"
-            className="px-3 py-1.5 text-sm"
-            onClick={() => setPrintMode('teacher')}
-          >
+          <Button size="sm" variant="secondary" onClick={() => setPrintMode('teacher')}>
             <IconPrinter size={16} /> С ответами
           </Button>
         </div>
@@ -212,19 +202,11 @@ export function MaterialDetail({
                 </div>
                 <div className="flex shrink-0 gap-1.5">
                   {a && a.status !== 'assigned' && (
-                    <Button
-                      className="px-3 py-1.5 text-sm"
-                      onClick={() => setReviewing({ a, name })}
-                    >
+                    <Button size="sm" onClick={() => setReviewing({ a, name })}>
                       {a.status === 'submitted' ? 'Проверить' : 'Разбор'}
                     </Button>
                   )}
-                  <Button
-                    variant={a ? 'ghost' : 'secondary'}
-                    className="px-3 py-1.5 text-sm"
-                    disabled={busyStudent !== null}
-                    onClick={() => toggle(s.profile.id)}
-                  >
+                  <Button size="sm" variant={a ? 'ghost' : 'secondary'} disabled={busyStudent !== null} onClick={() => toggle(s.profile.id)}>
                     {busyStudent === s.profile.id ? '…' : a ? 'Убрать ✓' : 'Назначить'}
                   </Button>
                 </div>
@@ -235,9 +217,9 @@ export function MaterialDetail({
         {error && <p className="text-sm text-danger">{error}</p>}
       </Card>
 
-      <Button
+      <Button size="sm"
         variant="ghost"
-        className="self-start text-sm text-danger"
+        className="self-start text-danger"
         onClick={remove}
         loading={deleting}
       >

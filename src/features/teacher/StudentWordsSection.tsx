@@ -25,6 +25,7 @@ import { IconTrash } from '../../shared/ui/icons'
 import { deleteStudentCards } from '../../lib/teacher'
 import { WordPicker } from './WordPicker'
 import { RowsSkeleton } from '../../shared/ui/Loading'
+import { DisclosureIcon } from '../../shared/ui/Disclosure'
 
 // цвета — общий WORD_STATUS_CLS (тот же, что видит ученик); подписи от 3-го лица
 const statusChip = {
@@ -145,7 +146,10 @@ export function StudentWordsSection({
                         {okCount}/{c.card_ids.length}
                       </span>
                       {wrong.length > 0 && (
-                        <span className="text-fg-muted"> · показать провалы {openCheck === c.id ? '▾' : '▸'}</span>
+                        <span className="inline-flex items-center gap-1 text-fg-muted">
+                          {' · показать провалы'}
+                          <DisclosureIcon open={openCheck === c.id} size={14} />
+                        </span>
                       )}
                     </button>
                     <Reveal open={openCheck === c.id}>
@@ -252,19 +256,10 @@ export function StudentWordsSection({
             </span>
           </p>
           <div className="mt-2 flex gap-2">
-            <Button
-              variant="danger"
-              className="px-3 py-1.5 text-sm"
-              loading={busy}
-              onClick={() => void removeCard(toDelete)}
-            >
+            <Button size="sm" variant="danger-solid" loading={busy} onClick={() => void removeCard(toDelete)}>
               Удалить
             </Button>
-            <Button
-              variant="ghost"
-              className="px-3 py-1.5 text-sm"
-              onClick={() => setToDelete(null)}
-            >
+            <Button size="sm" variant="ghost" onClick={() => setToDelete(null)}>
               Отмена
             </Button>
           </div>

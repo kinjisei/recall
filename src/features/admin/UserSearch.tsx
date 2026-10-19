@@ -69,7 +69,7 @@ export function UserSearch({ onPaid }: { onPaid: () => void }) {
           placeholder="Email, его часть или код из перевода"
           className="h-11 flex-1 rounded-xl border border-tint/[0.10] bg-input px-3.5 text-sm outline-none focus:border-accent-line"
         />
-        <Button onClick={runSearch} loading={searching} className="px-4 py-0">
+        <Button size="sm" onClick={runSearch} loading={searching}>
           <IconSearch size={18} /> Найти
         </Button>
       </div>
@@ -158,7 +158,7 @@ function UserRow({
           onCancel={() => setPaying(false)}
         />
       ) : (
-        <Button onClick={() => setPaying(true)} className="mt-3 min-h-11 px-4 text-sm">
+        <Button size="sm" onClick={() => setPaying(true)} className="mt-3">
           Подтвердить оплату
         </Button>
       )}
@@ -194,7 +194,7 @@ function UserRow({
           />
         )}
 
-        <Button onClick={apply} loading={busy} variant="secondary" className="px-4 py-2.5 text-sm">
+        <Button size="sm" onClick={apply} loading={busy} variant="secondary">
           {applied ? 'Применено' : 'Применить'}
         </Button>
       </div>

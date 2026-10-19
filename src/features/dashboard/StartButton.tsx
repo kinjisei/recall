@@ -19,9 +19,10 @@ export function StartButton({ lang, afterLesson }: { lang: AppLang; afterLesson:
       {/* Куда вести — решаем ДО перехода, иначе хаб «Практика» открывается
           зря и через несколько секунд сам меняется под пальцем (замер ревью 1А). */}
       <Button
-        variant={afterLesson ? 'soft' : 'primary'}
+        variant={afterLesson ? 'secondary' : 'primary'}
+        size={afterLesson ? 'md' : 'lg'}
         onClick={() => void startGuidedRoute(lang).then((r) => navigate(r))}
-        className={afterLesson ? 'h-13 rounded-control!' : 'h-15 rounded-control-lg! text-lg!'}
+        className={afterLesson ? 'h-13' : 'h-15'}
       >
         Начать занятие
         <IconArrowRight size={22} />

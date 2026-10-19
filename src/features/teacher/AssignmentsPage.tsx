@@ -253,18 +253,10 @@ function ReviewedView({
       </Card>
 
       <div className="flex flex-wrap gap-2">
-        <Button
-          variant="secondary"
-          className="min-h-[44px] px-4 text-sm"
-          onClick={() => setShowBody((s) => !s)}
-        >
+        <Button size="sm" variant="secondary" onClick={() => setShowBody((s) => !s)}>
           {showBody ? 'Скрыть текст' : 'Перечитать текст'}
         </Button>
-        <Button
-          variant="ghost"
-          className="min-h-[44px] px-4 text-sm"
-          onClick={onRetry}
-        >
+        <Button size="sm" variant="ghost" onClick={onRetry}>
           Пройти упражнения заново
         </Button>
       </div>

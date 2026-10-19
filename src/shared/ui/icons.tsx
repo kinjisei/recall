@@ -1,7 +1,8 @@
 // ============================================================================
-// Фирменный icon-набор Recall (93 шт.), сгенерирован из handoff/icons/*.svg
-// (Claude Design). Единый стиль: viewBox 0 0 24 24, stroke 1.75px (2px у *-fill),
-// currentColor. Меняем весь набор здесь — приложение подхватит.
+// Фирменный icon-набор Recall (99 шт.), сгенерирован из handoff/icons/*.svg
+// (Claude Design). Единый стиль: viewBox 0 0 24 24, stroke 1.75px, currentColor;
+// *-fill (активная вкладка) залиты целиком, вырезы — цветом подложки вкладки
+// (--icon-cut, по умолчанию accent-soft; лист s4). Меняем весь набор здесь.
 //   НЕ РЕДАКТИРОВАТЬ ВРУЧНУЮ: перегенерировать из SVG.
 // ============================================================================
 import type { CSSProperties, ComponentType } from 'react'
@@ -42,6 +43,12 @@ function icon(inner: string, strokeWidth = '1.75') {
   }
 }
 
+export const IconAlert = icon(
+  '<circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5v5.5M12 16.2v.3"></path>',
+)
+export const IconArchive = icon(
+  '<rect x="3.5" y="4.5" width="17" height="4.5" rx="1.5"></rect><path d="M5 9v9.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V9M10 13h4"></path>',
+)
 export const IconArrowRight = icon(
   '<path d="M4 12h15.5"></path><path d="M13.5 5.5 20 12l-6.5 6.5"></path>',
 )
@@ -49,7 +56,7 @@ export const IconArrowUp = icon(
   '<path d="M12 20V4.5"></path><path d="M5.5 11 12 4.5 18.5 11"></path>',
 )
 export const IconBack = icon(
-  '<path d="M14.5 5.5 8 12l6.5 6.5"></path>',
+  '<path d="M15 5.5 8.5 12l6.5 6.5"></path>',
 )
 export const IconBadgeCheck = icon(
   '<path d="M12 3.5l1.9 1.4 2.3-.3 1 2.2 2.2 1-.3 2.3 1.4 1.9-1.4 1.9.3 2.3-2.2 1-1 2.2-2.3-.3-1.9 1.4-1.9-1.4-2.3.3-1-2.2-2.2-1 .3-2.3L3.5 12l1.4-1.9-.3-2.3 2.2-1 1-2.2 2.3.3Z"></path><path d="M9.2 12.2l2 2 3.6-4"></path>',
@@ -58,16 +65,16 @@ export const IconBars = icon(
   '<path d="M4 19V13M10 19V9M16 19V5"></path>',
 )
 export const IconBell = icon(
-  '<path d="M6 10.5a6 6 0 0 1 12 0v3.2l1.5 2.6a.7.7 0 0 1-.6 1H5.1a.7.7 0 0 1-.6-1L6 13.7Z"></path><path d="M9.8 20a2.3 2.3 0 0 0 4.4 0"></path>',
+  '<path d="M5.5 17h13l-1.5-2.2v-4.3a5 5 0 0 0-10 0v4.3z"></path><path d="M10 20.2c.5.6 1.2.9 2 .9s1.5-.3 2-.9"></path>',
 )
 export const IconBolt = icon(
-  '<path d="M13.5 3 5.5 13.5h6l-1 7.5 8-10.5h-6l1-7.5Z"></path>',
+  '<path d="M13 3 5.5 13.5H11l-1 7.5 7.5-10.5H12z"></path>',
 )
 export const IconBook = icon(
   '<path d="M12 6.5C10.2 5.2 7.8 4.5 4 4.5v13c3.8 0 6.2.7 8 2 1.8-1.3 4.2-2 8-2v-13c-3.8 0-6.2.7-8 2Z"></path><path d="M12 6.5v13"></path>',
 )
 export const IconCalendarFill = icon(
-  '<rect x="3.5" y="5" width="17" height="15.5" rx="2.5" fill="currentColor" fill-opacity=".32"></rect><path d="M3.5 10h17M8 3v4M16 3v4"></path>', '2',
+  '<rect x="3.5" y="5" width="17" height="15.5" rx="2.5" fill="currentColor"></rect><path d="M3.5 10h17" stroke-linecap="butt" style="stroke: var(--icon-cut, var(--color-accent-soft))"></path><path d="M8 3v4M16 3v4"></path>',
 )
 export const IconCalendarPlus = icon(
   '<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"></rect><path d="M3.5 10h17M8 3v4M16 3v4M12 13.5v4M10 15.5h4"></path>',
@@ -85,7 +92,7 @@ export const IconChart = icon(
   '<path d="M4 4.5v14A1.5 1.5 0 0 0 5.5 20H20"></path><path d="M7.5 15.5 11.5 11l2.8 2.8 5.2-5.3"></path><path d="M15.5 8.5h4v4"></path>',
 )
 export const IconCheck = icon(
-  '<path d="M5 12.8 9.8 17.5 19 7"></path>',
+  '<path d="m5 12.5 4.5 4.5L19 7.5"></path>',
 )
 export const IconChevronLeft = icon(
   '<path d="M15 5.5 8.5 12l6.5 6.5"></path>',
@@ -97,10 +104,10 @@ export const IconClipboardCheck = icon(
   '<rect x="5" y="4.5" width="14" height="16" rx="2.5"></rect><rect x="9" y="3" width="6" height="3.2" rx="1"></rect><path d="M9.2 13.2l2 2 3.6-4"></path>',
 )
 export const IconClipboardFill = icon(
-  '<rect x="5" y="4.5" width="14" height="16" rx="2.5" fill="currentColor" fill-opacity=".32"></rect><rect x="9" y="3" width="6" height="3.2" rx="1"></rect><path d="M9 11h6M9 15h4"></path>', '2',
+  '<rect x="5" y="4.5" width="14" height="16.5" rx="2.5" fill="currentColor"></rect><rect x="9" y="3" width="6" height="3.5" rx="1.2" fill="currentColor" stroke-width="1.2" style="stroke: var(--icon-cut, var(--color-accent-soft))"></rect><path d="M9 11h6M9 15h4" style="stroke: var(--icon-cut, var(--color-accent-soft))"></path>',
 )
 export const IconClipboard = icon(
-  '<rect x="5" y="4.5" width="14" height="16" rx="2.5"></rect><rect x="9" y="3" width="6" height="3.2" rx="1"></rect><path d="M9 11h6M9 15h4"></path>',
+  '<rect x="5" y="4.5" width="14" height="16.5" rx="2.5"></rect><rect x="9" y="3" width="6" height="3.5" rx="1.2"></rect><path d="M9 11h6M9 15h4"></path>',
 )
 export const IconClockAuto = icon(
   '<path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"></path><path d="M19.5 4.5v4h-4"></path><path d="M12 8.5V12l2.5 1.5"></path>',
@@ -118,10 +125,10 @@ export const IconCopy = icon(
   '<rect x="8.5" y="8.5" width="11.5" height="11.5" rx="2.2"></rect><path d="M15.5 8.5V6.2A2.2 2.2 0 0 0 13.3 4H6.2A2.2 2.2 0 0 0 4 6.2v7.1a2.2 2.2 0 0 0 2.2 2.2h2.3"></path>',
 )
 export const IconDialogFill = icon(
-  '<path d="M7.5 4.5h9A3.5 3.5 0 0 1 20 8v4.5a3.5 3.5 0 0 1-3.5 3.5h-6.3l-3.9 3.2a.8.8 0 0 1-1.3-.6V8a3.5 3.5 0 0 1 3.5-3.5Z" fill="currentColor" fill-opacity=".32"></path>', '2',
+  '<path d="M7 4.5h10a3.5 3.5 0 0 1 3.5 3.5v5a3.5 3.5 0 0 1-3.5 3.5h-7l-4.5 3.5v-3.6A3.5 3.5 0 0 1 3.5 13V8A3.5 3.5 0 0 1 7 4.5z" fill="currentColor"></path>',
 )
 export const IconDialog = icon(
-  '<path d="M7.5 4.5h9A3.5 3.5 0 0 1 20 8v4.5a3.5 3.5 0 0 1-3.5 3.5h-6.3l-3.9 3.2a.8.8 0 0 1-1.3-.6V8a3.5 3.5 0 0 1 3.5-3.5Z"></path>',
+  '<path d="M7 4.5h10a3.5 3.5 0 0 1 3.5 3.5v5a3.5 3.5 0 0 1-3.5 3.5h-7l-4.5 3.5v-3.6A3.5 3.5 0 0 1 3.5 13V8A3.5 3.5 0 0 1 7 4.5z"></path>',
 )
 export const IconDocument = icon(
   '<path d="M5 4.5h10.5L19 8v11.5H5z"></path><path d="M8.5 11h7M8.5 15h5"></path>',
@@ -157,10 +164,10 @@ export const IconHint = icon(
   '<path d="M12 3.5a6 6 0 0 0-3.6 10.8c.9.7 1.6 1.7 1.6 2.7h4c0-1 .7-2 1.6-2.7A6 6 0 0 0 12 3.5Z"></path><path d="M10 20.5h4"></path>',
 )
 export const IconHomeFill = icon(
-  '<path d="M4 10.8 12 4.5l8 6.3"></path><path d="M6 9.5 12 4.8l6 4.7V18a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 18Z" fill="currentColor" fill-opacity=".32"></path><path d="M10 19.5v-4.5h4v4.5"></path>', '2',
+  '<path d="M4 10.4 12 4l8 6.4V19a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19z" fill="currentColor"></path><path d="M10.2 20.5v-4.3h3.6v4.3" stroke="none" style="fill: var(--icon-cut, var(--color-accent-soft))"></path>',
 )
 export const IconHome = icon(
-  '<path d="M4 10.8 12 4.5l8 6.3"></path><path d="M6 9.5V18a1.5 1.5 0 0 0 1.5 1.5h9A1.5 1.5 0 0 0 18 18V9.5"></path><path d="M10 19.5v-4.5h4v4.5"></path>',
+  '<path d="M4 10.4 12 4l8 6.4V19a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19z"></path><path d="M10.2 20.5v-4.3h3.6v4.3"></path>',
 )
 export const IconInfinity = icon(
   '<path d="M7 9a3 3 0 1 0 0 6c2.5 0 3.5-2 5-3s2.5-3 5-3a3 3 0 1 1 0 6c-2.5 0-3.5-2-5-3s-2.5-3-5-3z"></path>',
@@ -195,8 +202,14 @@ export const IconMic = icon(
 export const IconMinusCircle = icon(
   '<circle cx="12" cy="12" r="8.5"></circle><path d="M8.5 12h7"></path>',
 )
+export const IconMore = icon(
+  '<circle cx="6" cy="12" r="1.6" fill="currentColor" stroke="none"></circle><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"></circle><circle cx="18" cy="12" r="1.6" fill="currentColor" stroke="none"></circle>',
+)
 export const IconPackage = icon(
   '<path d="M12 3.5 20 7.5v9L12 20.5 4 16.5v-9Z"></path><path d="M4 7.5 12 11.5l8-4"></path><path d="M12 11.5v9"></path><path d="M8 5.5l8 4"></path>',
+)
+export const IconPause = icon(
+  '<rect x="6.5" y="5" width="4" height="14" rx="1.3" fill="currentColor" stroke="none"></rect><rect x="13.5" y="5" width="4" height="14" rx="1.3" fill="currentColor" stroke="none"></rect>',
 )
 export const IconPencil = icon(
   '<path d="M4.5 19.5l3.9-.9L18.7 8.3a2.05 2.05 0 0 0-2.9-2.9L5.4 15.6l-.9 3.9Z"></path><path d="M13.9 7.3l2.9 2.9"></path>',
@@ -205,13 +218,13 @@ export const IconPhone = icon(
   '<path d="M5.5 4h3l1.5 4-2 1.3a10 10 0 0 0 6.7 6.7l1.3-2 4 1.5v3a1.5 1.5 0 0 1-1.6 1.5A15.5 15.5 0 0 1 4 5.6 1.5 1.5 0 0 1 5.5 4Z"></path>',
 )
 export const IconPlus = icon(
-  '<path d="M12 5v14"></path><path d="M5 12h14"></path>',
+  '<path d="M12 5v14M5 12h14"></path>',
 )
 export const IconPracticeFill = icon(
-  '<rect x="6" y="7" width="3" height="10" rx="1.5" fill="currentColor" fill-opacity=".32"></rect><rect x="15" y="7" width="3" height="10" rx="1.5" fill="currentColor" fill-opacity=".32"></rect><path d="M9 12h6"></path><path d="M3 12h3M18 12h3"></path>', '2',
+  '<path d="M2.5 12h19"></path><rect x="6.5" y="6" width="4.5" height="12" rx="2.25" fill="currentColor" stroke="none"></rect><rect x="13" y="6" width="4.5" height="12" rx="2.25" fill="currentColor" stroke="none"></rect>',
 )
 export const IconPractice = icon(
-  '<rect x="6" y="7" width="3" height="10" rx="1.5"></rect><rect x="15" y="7" width="3" height="10" rx="1.5"></rect><path d="M9 12h6"></path><path d="M3 12h3M18 12h3"></path>',
+  '<path d="M2.5 12H7M10.5 12h3M17 12h4.5"></path><rect x="7" y="6.5" width="3.5" height="11" rx="1.75"></rect><rect x="13.5" y="6.5" width="3.5" height="11" rx="1.75"></rect>',
 )
 export const IconPrinter = icon(
   '<path d="M7 8V4.5h10V8"></path><path d="M7 16H5a1.5 1.5 0 0 1-1.5-1.5v-5A1.5 1.5 0 0 1 5 8h14a1.5 1.5 0 0 1 1.5 1.5v5A1.5 1.5 0 0 1 19 16h-2"></path><path d="M7 13h10v6.5H7Z"></path><path d="M17 10.7h.2"></path>',
@@ -226,7 +239,7 @@ export const IconRefresh = icon(
   '<path d="M19.5 12a7.5 7.5 0 1 1-7.5-7.5c2.1 0 4.1.9 5.6 2.4l1.9 1.8"></path><path d="M19.5 4.2v4.5H15"></path>',
 )
 export const IconRepeat = icon(
-  '<path d="M4 11V9.5A3.5 3.5 0 0 1 7.5 6H19m0 0-3-3m3 3-3 3"></path><path d="M20 13v1.5a3.5 3.5 0 0 1-3.5 3.5H5m0 0 3 3m-3-3 3-3"></path>',
+  '<path d="M4 11V9.5A3.5 3.5 0 0 1 7.5 6H19M16 3l3 3-3 3M20 13v1.5a3.5 3.5 0 0 1-3.5 3.5H5M8 21l-3-3 3-3"></path>',
 )
 export const IconReschedule = icon(
   '<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"></rect><path d="M3.5 10h17M8 3v4M16 3v4M9 15h6m-2-2 2 2-2 2"></path>',
@@ -241,7 +254,7 @@ export const IconSend = icon(
   '<path d="M20.5 3.5 3.5 9.8l6.2 2.5 2.5 6.2Z"></path><path d="M20.5 3.5 9.7 12.3"></path>',
 )
 export const IconShare = icon(
-  '<path d="M12 4v11M8 8l4-4 4 4"></path><path d="M5 13v5.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V13"></path>',
+  '<path d="M12 14.5V3.5M8 7.5l4-4 4 4"></path><path d="M7 10.5H6A2 2 0 0 0 4 12.5v6.5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6.5a2 2 0 0 0-2-2h-1"></path>',
 )
 export const IconShuffle = icon(
   '<path d="M3.5 7H7l10 10h2.5"></path><path d="M17 14.5 19.5 17 17 19.5"></path><path d="M3.5 17H7l3.2-3.2"></path><path d="M13.8 10.2 17 7h2.5"></path><path d="M17 4.5 19.5 7 17 9.5"></path>',
@@ -254,6 +267,9 @@ export const IconSmartphoneOff = icon(
 )
 export const IconSmartphone = icon(
   '<rect x="7" y="3" width="10" height="18" rx="2.5"></rect><path d="M11 17.5h2"></path>',
+)
+export const IconSpark = icon(
+  '<path d="m12 3.5 1.9 5.1 5.1 1.9-5.1 1.9L12 17.5l-1.9-5.1L5 10.5l5.1-1.9z"></path>',
 )
 export const IconSparkle = icon(
   '<path d="M11 4.5l1.6 4.2 4.2 1.6-4.2 1.6L11 16.1l-1.6-4.2-4.2-1.6 4.2-1.6Z"></path><path d="M17.8 14.5l.9 2.3 2.3.9-2.3.9-.9 2.3-.9-2.3-2.3-.9 2.3-.9Z"></path>',
@@ -271,10 +287,10 @@ export const IconStop = icon(
   '<rect x="6.5" y="6.5" width="11" height="11" rx="2"></rect>',
 )
 export const IconStudyFill = icon(
-  '<rect x="4" y="4" width="14" height="4.6" rx="1.5" fill="currentColor" fill-opacity=".32"></rect><rect x="6" y="9.7" width="14" height="4.6" rx="1.5" fill="currentColor" fill-opacity=".32"></rect><rect x="4.5" y="15.4" width="13" height="4.6" rx="1.5" fill="currentColor" fill-opacity=".32"></rect>', '2',
+  '<rect x="4.5" y="3" width="15" height="6" rx="3" fill="currentColor" stroke="none"></rect><rect x="4.5" y="9" width="15" height="6" rx="3" fill="currentColor" stroke-width="1.2" style="stroke: var(--icon-cut, var(--color-accent-soft))"></rect><rect x="4.5" y="15" width="15" height="6" rx="3" fill="currentColor" stroke-width="1.2" style="stroke: var(--icon-cut, var(--color-accent-soft))"></rect>',
 )
 export const IconStudy = icon(
-  '<rect x="4" y="4" width="14" height="4.6" rx="1.5"></rect><rect x="6" y="9.7" width="14" height="4.6" rx="1.5"></rect><rect x="4.5" y="15.4" width="13" height="4.6" rx="1.5"></rect>',
+  '<rect x="5" y="3.5" width="14" height="5" rx="2.5"></rect><rect x="5" y="9.5" width="14" height="5" rx="2.5"></rect><rect x="5" y="15.5" width="14" height="5" rx="2.5"></rect>',
 )
 export const IconTeacher = icon(
   '<rect x="4" y="4.5" width="16" height="10.5" rx="1.5"></rect><path d="M8 8.2h5.5"></path><path d="M8 11.2h8"></path><path d="M12 15v2"></path><path d="M8 20.5l4-3.5 4 3.5"></path>',
@@ -303,14 +319,17 @@ export const IconTray = icon(
 export const IconTrophy = icon(
   '<path d="M8 4.5h8v5.5a4 4 0 0 1-8 0Z"></path><path d="M8 6.5H5a3 3 0 0 0 3.2 3M16 6.5h3a3 3 0 0 1-3.2 3"></path><path d="M12 14v3"></path><path d="M8.5 20.5h7"></path><path d="M10.5 17.5h3"></path>',
 )
+export const IconUserPlus = icon(
+  '<circle cx="10" cy="8.5" r="3.5"></circle><path d="M3.5 19.5a6.5 6.5 0 0 1 13 0"></path><path d="M19 8v6M16 11h6"></path>',
+)
 export const IconUser = icon(
   '<circle cx="12" cy="8.5" r="3.5"></circle><path d="M5 20a7 7 0 0 1 14 0"></path>',
 )
 export const IconUsersFill = icon(
-  '<circle cx="9" cy="8.5" r="3" fill="currentColor" fill-opacity=".32"></circle><path d="M3.5 19a5.5 5.5 0 0 1 11 0Z" fill="currentColor" fill-opacity=".32"></path><path d="M15.5 5.6a3 3 0 0 1 0 5.8M17.5 14.4a5.3 5.3 0 0 1 3 4.6"></path>', '2',
+  '<circle cx="9" cy="8.5" r="3.3" fill="currentColor" stroke="none"></circle><path d="M3.5 19.5a5.5 5.5 0 0 1 11 0z" fill="currentColor" stroke-width="1.5"></path><path d="M15.5 5.6a3 3 0 0 1 0 5.8M17.5 14.4a5.3 5.3 0 0 1 3 4.6"></path>',
 )
 export const IconUsers = icon(
-  '<circle cx="9" cy="8.5" r="3"></circle><path d="M3.5 19a5.5 5.5 0 0 1 11 0M15.5 5.6a3 3 0 0 1 0 5.8M17.5 14.4a5.3 5.3 0 0 1 3 4.6"></path>',
+  '<circle cx="9" cy="8.5" r="3"></circle><path d="M3.5 19a5.5 5.5 0 0 1 11 0"></path><path d="M15.5 5.6a3 3 0 0 1 0 5.8"></path><path d="M17.5 14.4a5.3 5.3 0 0 1 3 4.6"></path>',
 )
 export const IconVideo = icon(
   '<rect x="3" y="6.5" width="12.5" height="11" rx="2.5"></rect><path d="m15.5 10.5 5.5-3v9l-5.5-3"></path>',

@@ -175,7 +175,7 @@ function JoinTeacherBlock() {
               maxLength={6}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
             />
-            <Button type="submit" className="px-3 py-2 text-sm" disabled={busy || !code.trim()}>
+            <Button size="sm" type="submit" disabled={busy || !code.trim()}>
               {busy ? '…' : 'Привязать'}
             </Button>
           </form>

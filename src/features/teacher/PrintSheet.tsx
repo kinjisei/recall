@@ -27,10 +27,10 @@ export function PrintSheet({
   return createPortal(
     <div data-theme="light" className="print-sheet fixed inset-0 z-50 overflow-auto bg-surface px-8 py-6 text-fg">
       <div className="no-print mb-5 flex items-center gap-2 border-b border-line pb-4">
-        <Button className="px-4 py-2 text-sm" onClick={() => window.print()}>
+        <Button size="sm" onClick={() => window.print()}>
           <IconPrinter size={16} /> Печать / Сохранить в PDF
         </Button>
-        <Button variant="secondary" className="px-4 py-2 text-sm" onClick={onClose}>
+        <Button size="sm" variant="secondary" onClick={onClose}>
           Закрыть
         </Button>
         <span className="text-xs text-fg-muted">

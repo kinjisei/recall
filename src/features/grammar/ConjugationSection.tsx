@@ -24,6 +24,7 @@ import type {
   ConjugationTense,
   EndingsExercise,
 } from '../../types'
+import { RevealHeader } from '../../shared/ui/Disclosure'
 
 const LEVELS = ['A1', 'A2', 'B1', 'B2'] as const
 
@@ -144,16 +145,12 @@ function ReferenceView({ reference }: { reference: ConjugationReference }) {
         const isOpen = openLevel === level
         return (
           <div key={level}>
-            <button
-              onClick={() => setOpenLevel((cur) => (cur === level ? null : level))}
-              className="flex w-full items-center justify-between rounded-lg bg-surface px-3 py-2 text-left"
-            >
-              <span className="text-sm font-bold">
-                Уровень {level}{' '}
-                <span className="font-normal text-fg-muted">· {list.length} времён</span>
-              </span>
-              <span className="text-fg-muted">{isOpen ? '▾' : '▸'}</span>
-            </button>
+            <RevealHeader
+              open={isOpen}
+              onToggle={() => setOpenLevel((cur) => (cur === level ? null : level))}
+              title={`Уровень ${level}`}
+              meta={`· ${list.length} времён`}
+            />
 
             <Reveal open={isOpen}>
               <div className="mt-2 flex flex-col gap-2">

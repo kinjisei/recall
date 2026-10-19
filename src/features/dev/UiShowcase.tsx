@@ -13,17 +13,16 @@ import { BackHeader } from '../../shared/ui/BackButton'
 import { Button } from '../../shared/ui/Button'
 import { Card } from '../../shared/ui/Card'
 import { HowItWorks } from '../../shared/ui/HowItWorks'
-import { IconCards, IconGraduation, IconMaterials, IconTeacher } from '../../shared/ui/icons'
-import { LoadError } from '../../shared/ui/LoadError'
-import { Loading, RowsSkeleton } from '../../shared/ui/Loading'
+import { Loading } from '../../shared/ui/Loading'
 import { Picker } from '../../shared/ui/Picker'
 import { RowCard } from '../../shared/ui/RowCard'
 import { Sheet } from '../../shared/ui/Sheet'
-import { TabPicker } from '../../shared/ui/TabPicker'
 import { ThemePicker } from '../../shared/ui/ThemePicker'
 import { Thinking } from '../../shared/ui/Thinking'
 import { ExerciseView } from '../../components/exercises'
 import { LAYOUTS, LayoutDemo, type LayoutId } from './ShowcaseLayouts'
+import { ShowcaseS3 } from './ShowcaseS3'
+import { ShowcaseS4 } from './ShowcaseS4'
 
 // Классы — строками целиком: Tailwind находит утилиты по тексту исходника.
 const SWATCHES = [
@@ -75,7 +74,6 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 
 export function UiShowcase() {
   const [layout, setLayout] = useUrlState('l', (v) => LAYOUTS.some((l) => l.id === v))
-  const [tab, setTab] = useState<'a' | 'b' | 'c'>('a')
   const [pick, setPick] = useState<'x' | 'y'>('x')
   const [sheet, setSheet] = useState(false)
   const [answered, setAnswered] = useState(0)
@@ -109,45 +107,18 @@ export function UiShowcase() {
         </Card>
       </Section>
 
-      <Section title="Кнопки">
-        <div className="flex flex-wrap gap-2">
-          <Button>Главная</Button>
-          <Button variant="secondary">Вторичная</Button>
-          <Button variant="soft">Мягкая</Button>
-          <Button variant="ghost">Тихая</Button>
-          <Button variant="danger">Удалить</Button>
-          <Button loading>Жду</Button>
-        </div>
+      <Section title="Лист s3 · компоненты">
+        <ShowcaseS3 />
       </Section>
 
-      <Section title="Карточки и строки">
-        <RowCard Icon={IconMaterials} title="Строка списка" desc="Подпись строки" onClick={() => {}} />
-        <RowCard Icon={IconCards} title="Активная" desc="Акцентная подложка иконки" active onClick={() => {}} />
-        <RowCard Icon={IconTeacher} title="Предложение" desc="Пунктирная рамка" dashed onClick={() => {}} />
-        <RowCard Icon={IconGraduation} title="Сделано" desc="Приглушённая" muted onClick={() => {}} />
+      <Section title="Лист s4 · иконки и движение">
+        <ShowcaseS4 />
       </Section>
 
-      <Section title="Переключатели">
-        <TabPicker
-          ariaLabel="Вкладки"
-          value={tab}
-          onChange={setTab}
-          options={[
-            { id: 'a', label: 'Первая' },
-            { id: 'b', label: 'Вторая' },
-            { id: 'c', label: 'Третья' },
-          ]}
-        />
-        <TabPicker
-          ariaLabel="Сегмент"
-          variant="segment"
-          value={tab}
-          onChange={setTab}
-          options={[
-            { id: 'a', label: 'Чат' },
-            { id: 'b', label: 'Письмо' },
-          ]}
-        />
+      <Section title="Ожидание и пояснение">
+        <HowItWorks>Свёрнутое пояснение раскрывается плавно и монтируется, только пока открыто.</HowItWorks>
+        <Thinking label="AI думает" />
+        <Loading label="Готовим" />
         <Picker
           label="Выбор из списка"
           value={pick}
@@ -157,14 +128,6 @@ export function UiShowcase() {
             { id: 'y', label: 'Вариант Y', hint: 'с подсказкой' },
           ]}
         />
-      </Section>
-
-      <Section title="Состояния">
-        <HowItWorks>Свёрнутое пояснение раскрывается плавно и монтируется, только пока открыто.</HowItWorks>
-        <Thinking label="AI думает" />
-        <Loading label="Готовим" />
-        <RowsSkeleton count={2} />
-        <LoadError message="Не удалось загрузить" onRetry={() => {}} />
       </Section>
 
       <Section title="Шторка">
