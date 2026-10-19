@@ -83,7 +83,9 @@ function Hint({ onClose, placement }: { onClose: () => void; placement: keyof ty
  */
 export function GiftButton({ variant = 'icon' }: { variant?: 'icon' | 'row' | 'rail' }) {
   const [hint, dismiss] = useReferralHint()
-  const label = 'Пригласи коллегу'
+  // подпись пункта меню — «Пригласить», как в макетах меню (s4, d2, d13;
+  // решение владельца 19.10.2026); экран, куда он ведёт, — «Пригласи коллегу»
+  const label = 'Пригласить коллегу'
 
   return (
     // data-gift — для смоука: подарок есть и подсвечен ли он

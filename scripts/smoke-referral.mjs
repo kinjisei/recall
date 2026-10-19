@@ -158,7 +158,7 @@ async function run(browser, ids) {
   check('закрыл подсказку — после перезагрузки подарок без подсветки', (await gift(a)) === 'plain')
 
   // ── 2. «Пригласи коллегу» ───────────────────────────────────────────────────
-  await a.click('header a[aria-label="Пригласи коллегу"]')
+  await a.click('header a[aria-label="Пригласить коллегу"]')
   await a.waitForFunction(() => location.pathname === '/invite', { timeout: 10000 })
   check('подарок ведёт на «Пригласи коллегу»; пока никого — «Пока никого»', (await waitText(a, 'Пока никого')) && (await waitText(a, '+7 дней')))
   const shown = await a.evaluate(() => ({
@@ -231,7 +231,7 @@ async function run(browser, ids) {
     const nav = document.querySelector('nav[aria-label="Разделы"]')?.getBoundingClientRect()
     return { text: el?.textContent?.trim(), inside: !!r && !!nav && r.left >= nav.left && r.right <= nav.right }
   })
-  check('1280: подарок строкой «Пригласи коллегу» в боковой панели', row.text === 'Пригласи коллегу' && row.inside, JSON.stringify(row))
+  check('1280: подарок строкой «Пригласить коллегу» в боковой панели', row.text === 'Пригласить коллегу' && row.inside, JSON.stringify(row))
   const col = await a.evaluate(() => document.querySelector('main')?.getBoundingClientRect().width ?? 0)
   check('1280: экран — колонка, без горизонтальной прокрутки', col > 0 && col <= 700 && (await noHScroll(a)), `${Math.round(col)} px`)
   await shot(a, 'referral-invite-1280')
