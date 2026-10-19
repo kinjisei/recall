@@ -25,7 +25,12 @@ export type ScheduleLayout = 'cols' | 'list'
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/
 
-export function useScheduleUrl(today: string, desktop: boolean) {
+/**
+ * desktop — меню слева (окно от 720): по умолчанию неделя, а не день; cols —
+ * неделе хватает места колонками (содержимое от 700, правило d0): иначе
+ * по умолчанию — списком.
+ */
+export function useScheduleUrl(today: string, desktop: boolean, cols: boolean) {
   const [params, setParams] = useSearchParams()
 
   const rawView = params.get('view')
@@ -33,7 +38,7 @@ export function useScheduleUrl(today: string, desktop: boolean) {
   const rawDay = params.get('day')
   const day = rawDay && DAY.test(rawDay) && !Number.isNaN(Date.parse(rawDay)) ? rawDay : today
   const rawLayout = params.get('layout')
-  const layout: ScheduleLayout = rawLayout === 'cols' || rawLayout === 'list' ? rawLayout : desktop ? 'cols' : 'list'
+  const layout: ScheduleLayout = rawLayout === 'cols' || rawLayout === 'list' ? rawLayout : desktop && cols ? 'cols' : 'list'
   const lessonId = params.get('lesson')
 
   const patch = useCallback(

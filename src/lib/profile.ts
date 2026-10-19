@@ -151,6 +151,10 @@ const DEVICE_PREF_KEYS = new Set([
   'recall.lang',
   'recall.settings',
   'recall.chunk_reload_at',
+  // тема и свёрнутое меню — выбор этого устройства, а не аккаунта
+  // (shared/ui/theme, app/shell/useShellMode): выход их не стирает
+  'recall.theme',
+  'recall.menu',
 ])
 
 /**

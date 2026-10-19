@@ -19,10 +19,11 @@ import {
   trialQuestions,
 } from '../../domains/schedule'
 import { addDays, weekStart } from '../../shared/lib/days'
-import { usePageWidth } from '../../shared/lib/screenWidth'
+import { useContentAtLeast, usePageWidth } from '../../shared/lib/screenWidth'
 import { useShellInsets } from '../../shared/lib/shellInsets'
 import { useIsDesktop } from '../../shared/lib/useMediaQuery'
 import { useNow } from '../../shared/lib/useNow'
+import { AREA, COLUMN_NEED } from '../../shared/ui/breakpoints'
 import { Button } from '../../shared/ui/Button'
 import { EmptyState } from '../../shared/ui/EmptyState'
 import { IconCalendarPlus, IconPlus } from '../../shared/ui/icons'
@@ -41,13 +42,19 @@ import { WeekGrid } from './WeekGrid'
 import { DayLessons, WeekList } from './WeekList'
 
 export function ScheduleScreen({ base, version, refresh }: { base: ScheduleBase; version: number; refresh: () => void }) {
+  // desktop — меню слева (окно от 720): кнопка «Новый урок» в шапке, а не
+  // плавающая; cols — неделе хватает места колонками (содержимое от 700, d0)
   const desktop = useIsDesktop()
-  usePageWidth(desktop)
+  const cols = useContentAtLeast(AREA.week)
   const insets = useShellInsets()
   const navigate = useNavigate()
   const now = useNow()
   const today = almatyDay(now)
-  const url = useScheduleUrl(today, desktop)
+  const url = useScheduleUrl(today, desktop, cols)
+  // неделя колонками — широкий экран до 1600 и нужно ей от 700 (d0); день и
+  // список — обычная ширина страницы, как было
+  const weekCols = url.view === 'week' && url.layout === 'cols'
+  usePageWidth(desktop ? (weekCols ? 'wide' : 'page') : null, weekCols ? AREA.week : COLUMN_NEED)
   const monday = weekStart(url.day)
   const query = useLessons(monday, today, version, true)
   const [answering, setAnswering] = useState(false)
@@ -102,7 +109,7 @@ export function ScheduleScreen({ base, version, refresh }: { base: ScheduleBase;
     )
   else if (url.view === 'day')
     body = (
-      // день на компьютере — колонкой: ленте на 1100 px нечего показать сбоку
+      // день на компьютере — колонкой: ленте на всю ширину нечего показать сбоку
       <div className={`flex flex-col gap-4 ${desktop ? 'mx-auto w-full max-w-column' : ''}`}>
         <DayStrip
           monday={monday}
@@ -120,7 +127,7 @@ export function ScheduleScreen({ base, version, refresh }: { base: ScheduleBase;
     )
   else if (url.layout === 'cols')
     body = (
-      <WeekGrid monday={monday} today={today} days={days} now={now} compact={!desktop} inApp={inApp} onOpen={url.openLesson} onDay={(d) => url.goTo(d, 'day')} />
+      <WeekGrid monday={monday} today={today} days={days} now={now} compact={!cols} inApp={inApp} onOpen={url.openLesson} onDay={(d) => url.goTo(d, 'day')} />
     )
   else body = <WeekList monday={monday} today={today} days={days} now={now} nextId={nextId} inApp={inApp} onOpen={url.openLesson} onDay={(d) => url.goTo(d, 'day')} />
 

@@ -24,8 +24,7 @@ import { AttentionPanel, BalanceCount } from '../schedule'
 import { CardForm, StudentsList, useLeavingLessons } from '../students'
 import { useAsyncData } from '../../shared/lib/useAsyncData'
 import { useUrlState } from '../../shared/lib/useUrlState'
-import { useIsDesktop } from '../../shared/lib/useMediaQuery'
-import { ListDetail } from '../../shared/ui/layouts'
+import { ListDetail, useListDetailSplit } from '../../shared/ui/layouts'
 import { RowsSkeleton } from '../../shared/ui/Loading'
 import { UndoToast } from '../../shared/ui/UndoToast'
 import { byAttention, needAttention, studentSignal, type StudentSignal } from '../../lib/studentSignals'
@@ -65,7 +64,8 @@ export function StudentsTab({
   extras: ReactNode
   onChanged: () => void
 }) {
-  const desktop = useIsDesktop()
+  // список и карточка рядом (содержимое от 880, d0) — тот же ответ, что у ListDetail
+  const desktop = useListDetailSplit()
   // Выбранная карточка — в адресе: свайп-назад в PWA возвращает к списку.
   // Старые ссылки вели по id аккаунта ученика — их тоже понимаем.
   const [openId, setOpenId] = useUrlState('student')

@@ -1,19 +1,20 @@
-// Витрина: три общие раскладки на примерах (только в разработке, см. UiShowcase).
+// Витрина: общие раскладки на примерах (только в разработке, см. UiShowcase).
 import { useState } from 'react'
 import { useUrlState } from '../../shared/lib/useUrlState'
 import { BackHeader } from '../../shared/ui/BackButton'
 import { Button } from '../../shared/ui/Button'
 import { Card } from '../../shared/ui/Card'
-import { IconMaterials, IconPuzzle, IconRows, type IconLike } from '../../shared/ui/icons'
-import { CenterColumn, ListDetail, ReadingColumn } from '../../shared/ui/layouts'
+import { IconHome, IconMaterials, IconPuzzle, IconRows, type IconLike } from '../../shared/ui/icons'
+import { CenterColumn, ListDetail, MainAside, ReadingColumn } from '../../shared/ui/layouts'
 import { RowCard } from '../../shared/ui/RowCard'
 
-export type LayoutId = 'center' | 'reading' | 'list'
+export type LayoutId = 'center' | 'reading' | 'list' | 'main'
 
 export const LAYOUTS: { id: LayoutId; title: string; desc: string; Icon: IconLike }[] = [
   { id: 'center', title: 'Колонка по центру', desc: 'Упражнения, игры', Icon: IconPuzzle },
   { id: 'reading', title: 'Колонка чтения', desc: 'Текст + перевод слова сбоку', Icon: IconMaterials },
   { id: 'list', title: 'Список + подробности', desc: 'Ученики, материалы', Icon: IconRows },
+  { id: 'main', title: 'Главная + правая', desc: 'Главная ученика, «Моя учёба»', Icon: IconHome },
 ]
 
 const TEXT =
@@ -29,13 +30,17 @@ export function LayoutDemo({ id, onBack }: { id: LayoutId; onBack: () => void })
       {id === 'center' && <CenterDemo />}
       {id === 'reading' && <ReadingDemo />}
       {id === 'list' && <ListDemo />}
+      {id === 'main' && <MainDemo />}
     </div>
   )
 }
 
 function CenterDemo() {
   return (
-    <CenterColumn>
+    <CenterColumn
+      left={<p data-demo="progress">Шаг 3 из 8</p>}
+      right={<p data-demo="keys">1–4 — ответ · Enter — дальше · Esc — выйти</p>}
+    >
       <div data-demo="center">
         <Card className="flex flex-col gap-3">
           <p className="text-lg font-medium">Выбери перевод: «river»</p>
@@ -100,4 +105,27 @@ function ListDemo() {
     </div>
   )
   return <ListDetail list={list} detail={detail || null} empty="Выбери ученика слева" />
+}
+
+function MainDemo() {
+  return (
+    <MainAside
+      main={
+        <div data-demo="main">
+          <Card className="flex flex-col gap-3">
+            <p className="text-lg font-medium">Начать занятие</p>
+            <p className="text-sm text-fg-muted">Главное действие экрана — в главной колонке.</p>
+          </Card>
+        </div>
+      }
+      aside={
+        <div data-demo="aside">
+          <Card className="flex flex-col gap-2">
+            <p className="font-medium">Ближайший урок</p>
+            <p className="text-sm text-fg-muted">То, что сверяют, а не делают.</p>
+          </Card>
+        </div>
+      }
+    />
+  )
 }

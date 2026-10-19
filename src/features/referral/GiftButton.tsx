@@ -11,6 +11,7 @@
 // ============================================================================
 import { useEffect, useState } from 'react'
 import { AppLink } from '../../shared/ui/AppLink'
+import { HoverTip } from '../../shared/ui/HoverTip'
 import { IconClose, IconGift } from '../../shared/ui/icons'
 import { dismissReferralHint, loadReferralHint } from '../../domains/billing'
 
@@ -47,13 +48,17 @@ function useReferralHint(): [boolean, () => void] {
   return [hint, dismiss]
 }
 
-function Hint({ onClose, placement }: { onClose: () => void; placement: 'below' | 'above' }) {
+const HINT_AT = {
+  below: 'right-0 top-full mt-2',
+  above: 'bottom-full left-0 mb-2',
+  side: 'bottom-0 left-full ml-3',
+} as const
+
+function Hint({ onClose, placement }: { onClose: () => void; placement: keyof typeof HINT_AT }) {
   return (
     <div
       role="status"
-      className={`animate-fade-up absolute z-40 flex w-64 items-start gap-2 rounded-2xl border border-accent-line bg-surface p-3 text-sm text-fg-secondary shadow-raised ${
-        placement === 'below' ? 'right-0 top-full mt-2' : 'bottom-full left-0 mb-2'
-      }`}
+      className={`animate-fade-up absolute z-40 flex w-64 items-start gap-2 rounded-2xl border border-accent-line bg-surface p-3 text-sm text-fg-secondary shadow-raised ${HINT_AT[placement]}`}
     >
       <p className="flex-1 leading-snug">
         <b className="font-medium text-fg">Подарок за коллег.</b> Пригласи коллегу: за его первую оплату к твоему тарифу
@@ -72,11 +77,11 @@ function Hint({ onClose, placement }: { onClose: () => void; placement: 'below' 
 }
 
 /**
- * icon — круглая кнопка в шапке телефона (подсказка вниз); row — строка над
- * нижней полосой боковой панели компьютера (подсказка вверх): четвёртая
- * круглая кнопка рядом с аватаром, колокольчиком и EN/ES в 15rem не влезает.
+ * icon — круглая кнопка в шапке телефона (подсказка вниз); row — строка
+ * «Пригласить коллегу» в меню 240 (подсказка вверх); rail — иконка в рельсе
+ * 72 с подписью при наведении (подсказка вправо). Макеты s4, d0.
  */
-export function GiftButton({ variant = 'icon' }: { variant?: 'icon' | 'row' }) {
+export function GiftButton({ variant = 'icon' }: { variant?: 'icon' | 'row' | 'rail' }) {
   const [hint, dismiss] = useReferralHint()
   const label = 'Пригласи коллегу'
 
@@ -94,19 +99,31 @@ export function GiftButton({ variant = 'icon' }: { variant?: 'icon' | 'row' }) {
         >
           <IconGift size={20} />
         </AppLink>
+      ) : variant === 'rail' ? (
+        <AppLink
+          to="/invite"
+          onClick={() => hint && dismiss()}
+          aria-label={label}
+          className={`group relative flex size-12 items-center justify-center rounded-2xl border transition-colors hover:bg-tint/[0.06] ${
+            hint ? 'border-accent-line text-accent-strong' : 'border-transparent text-fg-muted hover:text-fg-secondary'
+          }`}
+        >
+          <IconGift size={22} />
+          <HoverTip label={label} />
+        </AppLink>
       ) : (
         <AppLink
           to="/invite"
           onClick={() => hint && dismiss()}
-          className={`flex h-11 items-center gap-3 rounded-2xl border px-3 text-sm font-medium transition-colors ${
-            hint ? 'border-accent-line text-accent-strong' : 'border-transparent text-fg-muted hover:text-fg-secondary'
+          className={`flex h-11 items-center gap-3 rounded-2xl border px-3 text-body font-semibold transition-colors ${
+            hint ? 'border-accent-line text-accent-strong' : 'border-transparent text-fg-secondary hover:text-fg'
           }`}
         >
           <IconGift size={22} />
           <span>{label}</span>
         </AppLink>
       )}
-      {hint && <Hint onClose={dismiss} placement={variant === 'icon' ? 'below' : 'above'} />}
+      {hint && <Hint onClose={dismiss} placement={variant === 'icon' ? 'below' : variant === 'rail' ? 'side' : 'above'} />}
     </div>
   )
 }

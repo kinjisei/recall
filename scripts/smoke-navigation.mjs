@@ -484,23 +484,22 @@ async function main() {
 
   // «Задания»: хаб → разбор сданной работы → назад
   await tap(page, 'Задания', 'nav.vt-nav a')
-  await sleep(1500)
-  check('«Задания»: хаб с «Проверкой работ» и тем, кто сдал', path() === '/tasks' && (await seen(page, 'Проверка работ')) && (await seen(page, 'Әсел Навигация')), path())
-  check('«Задания»: «2 ждут»', await seen(page, '2 ждут'))
+  // данные хаба приходят с базы: фиксированной паузы то хватает, то нет —
+  // ждём текст (appears), как после F5
+  check('«Задания»: хаб с «Проверкой работ» и тем, кто сдал', path() === '/tasks' && (await appears(page, 'Проверка работ')) && (await appears(page, 'Әсел Навигация')), path())
+  check('«Задания»: «2 ждут»', await appears(page, '2 ждут'))
   check('«Задания»: разделы «Материалы», «Письменные задания», «Методичка»', (await seen(page, 'Собрать материал')) && (await seen(page, 'Письменные задания')) && (await seen(page, 'Методичка')))
   await tap(page, 'Методичка')
   await sleep(1500)
   check('«Задания» → «Методичка» по адресу', path() === '/tasks?tab=guide', path())
   await page.goBack({ waitUntil: 'networkidle2' }).catch(() => {})
-  await sleep(1500)
+  await appears(page, '«Материал для смоука навигации»')
   await tap(page, '«Материал для смоука навигации»')
-  await sleep(1800)
-  check('«Задания»: строка открывает разбор этой работы', path() === `/tasks?work=${work.id}` && (await seen(page, 'Проверка работы: Әсел Навигация')), path())
+  check('«Задания»: строка открывает разбор этой работы', (await appears(page, 'Проверка работы: Әсел Навигация')) && path() === `/tasks?work=${work.id}`, path())
   await page.reload({ waitUntil: 'networkidle2' })
   check('«Задания»: F5 оставляет в разборе', await appears(page, 'Проверка работы: Әсел Навигация'), path())
   await page.goBack({ waitUntil: 'networkidle2' }).catch(() => {})
-  await sleep(1800)
-  check('«Задания»: «назад» из разбора — в хаб', path() === '/tasks' && (await seen(page, 'Проверка работ')), path())
+  check('«Задания»: «назад» из разбора — в хаб', (await appears(page, 'Проверка работ')) && path() === '/tasks', path())
   await page.goto(`${BASE}/tasks?work=00000000-0000-0000-0000-000000000000`, { waitUntil: 'networkidle2' })
   await sleep(2000)
   check('«Задания»: уже проверенная работа — «больше не ждёт», а не пустой экран', await seen(page, 'больше не ждёт'), path())
@@ -527,8 +526,7 @@ async function main() {
   check('Материалы: несуществующий материал показывает список', await seen(page, 'Создать материал'), path())
   // старые ссылки на вкладки студии (до Ф2.10) ведут во «Задания»
   await page.goto(`${BASE}/teacher?tab=writing`, { waitUntil: 'networkidle2' })
-  await sleep(2000)
-  check('старая ссылка /teacher?tab=writing → «Задания», письменные', path() === '/tasks?tab=writing' && (await seen(page, 'Nav smoke essay')), path())
+  check('старая ссылка /teacher?tab=writing → «Задания», письменные', (await appears(page, 'Nav smoke essay')) && path() === '/tasks?tab=writing', path())
   check('на «Заданиях» подсвечены «Задания»', (await activeTab()) === 'Задания', await activeTab())
 
   // «Ученики»: студия без ряда вкладок
@@ -583,7 +581,14 @@ async function main() {
   await page.setViewport({ width: 1280, height: 800 })
   await page.goto(`${BASE}/schedule`, { waitUntil: 'networkidle2' })
   await sleep(2000)
-  const side = await page.evaluate(() => [...document.querySelectorAll('nav[aria-label="Разделы"] a[href]')].map((a) => a.querySelector('span')?.textContent?.trim()).filter(Boolean))
+  // вкладки — ссылки с aria-current или подписью; знак Recall и «Пригласи
+  // коллегу» — тоже ссылки меню, их отбрасываем
+  const side = await page.evaluate(() =>
+    [...document.querySelectorAll('nav[aria-label="Разделы"] a[href]')]
+      .filter((a) => !['/', '/invite'].includes(a.getAttribute('href') ?? ''))
+      .map((a) => (a.textContent || '').trim().replace(/\d+$/, ''))
+      .filter(Boolean),
+  )
   check('1280: меню слева — Расписание · Ученики · Задания · Моя учёба', side.slice(0, 4).join(' · ') === 'Расписание · Ученики · Задания · Моя учёба', side.join(' · '))
   await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2 })
 

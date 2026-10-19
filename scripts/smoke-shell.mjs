@@ -7,12 +7,13 @@
  *      только владельцу», владелец — админку. Открытые страницы (тарифы,
  *      оферта, политика, лендинг) гость видит без меню, вошедший — в общей
  *      рамке с вкладками и без второй рамки страницы;
- *   2. раскладка по ширине (журнал п.45–46): телефон и планшет — как было
- *      (шапка сверху, плавающая панель снизу); компьютер (от 1024 px) — меню
- *      слева на всю высоту, EN/ES и аватар внизу панели, экраны остаются
- *      колонкой 640 px по центру свободного места; закреплённая панель ввода
- *      чата — в колонке; в раунде меню прячется; смена ширины окна
- *      переключает раскладку без перезагрузки.
+ *   2. раскладка по ширине (журнал п.45–46, п.55): уже 720 — как было
+ *      (шапка сверху, плавающая панель снизу); от 1280 — меню 240 слева на
+ *      всю высоту, EN/ES и аватар внизу панели, экраны остаются колонкой
+ *      640 px по центру свободного места; закреплённая панель ввода чата — в
+ *      колонке; в раунде меню прячется; смена ширины окна переключает
+ *      раскладку без перезагрузки. Рельс 72 на 720–1279, поля, пределы,
+ *      раскладки по ширине содержимого и правая панель — smoke-widths.mjs.
  *
  * Запуск: `npm run dev:test` (5174, тестовая база), затем
  * `node scripts/smoke-shell.mjs [--shots <папка>]` — со скриншотами 1280 и 390.
@@ -129,14 +130,20 @@ const geometry = (page) =>
     }
   })
 
+/** Экран внутри рамки отрисован. Вошедшему сначала «Проверяем вход» — ответ
+ *  Supabase о сессии бывает дольше любой фиксированной паузы (19.10.2026:
+ *  красное на рабочем коде), поэтому ждём сам <main>. */
+const ready = (page, selector = 'main') => page.waitForSelector(selector, { timeout: 15000 }).catch(() => {})
+
 const TABS = ['Главная', 'Учёба', 'Практика', 'Диалог']
 const hasTabs = (g) => TABS.every((t) => g.tabs.some((x) => x.includes(t)))
 const px = (n) => Math.round(n)
 
-/** Телефон и планшет: как было — шапка сверху, плавающая панель снизу, колонка ≤ 640. */
+/** Уже 720: как было — шапка сверху, плавающая панель снизу, колонка ≤ 640. */
 async function phoneLayout(page, width, height, name) {
   await page.setViewport({ width, height, deviceScaleFactor: 1 })
   await page.goto(`${BASE}/`, { waitUntil: 'networkidle2' })
+  await ready(page)
   await sleep(1500)
   const g = await geometry(page)
   check(`${name}: шапка сверху`, !!g.header && px(g.header.top) === 0)
@@ -145,16 +152,17 @@ async function phoneLayout(page, width, height, name) {
   check(`${name}: колонка не шире 640`, !!g.main && g.main.width <= 640, g.main ? `${px(g.main.width)}px` : 'нет')
 }
 
-/** Компьютер (от 1024 px): меню слева, колонка 640 по центру оставшегося места. */
+/** Компьютер (от 1280 px): меню 240 слева, колонка 640 по центру оставшегося места. */
 async function desktopLayout(page) {
   await page.setViewport({ width: 1280, height: 800, deviceScaleFactor: 1 })
   await page.goto(`${BASE}/`, { waitUntil: 'networkidle2' })
+  await ready(page)
   await sleep(1500)
   let g = await geometry(page)
   check('компьютер: шапки сверху нет — всё в панели слева', !g.header)
   check(
     'компьютер: меню слева на всю высоту',
-    !!g.nav && px(g.nav.left) === 0 && px(g.nav.top) === 0 && px(g.nav.height) === g.vh && g.nav.width >= 200 && g.nav.width <= 280,
+    !!g.nav && px(g.nav.left) === 0 && px(g.nav.top) === 0 && px(g.nav.height) === g.vh && px(g.nav.width) === 240,
     g.nav ? `x ${px(g.nav.left)}, ширина ${px(g.nav.width)}, высота ${px(g.nav.height)} из ${g.vh}` : 'нет',
   )
   check('компьютер: четыре вкладки в меню', hasTabs(g), g.tabs.join(' · '))
@@ -191,6 +199,7 @@ async function desktopLayout(page) {
 
   // закреплённая панель ввода чата стоит в колонке, а не по центру окна
   await page.goto(`${BASE}/conversation`, { waitUntil: 'networkidle2' })
+  await ready(page, 'form input[aria-label^="Сообщение"]')
   await sleep(1500)
   const chat = await page.evaluate(() => {
     const bar = document.querySelector('form input[aria-label^="Сообщение"]')?.closest('div.fixed')
@@ -206,6 +215,7 @@ async function desktopLayout(page) {
 
   // режим раунда: на время игры меню прячется, как нижняя панель на телефоне
   await page.goto(`${BASE}/practice?m=translate`, { waitUntil: 'networkidle2' })
+  await ready(page)
   await sleep(1500)
   g = await geometry(page)
   const gl = g.main ? g.main.left : -1
@@ -215,6 +225,7 @@ async function desktopLayout(page) {
 
   // окно сузили — раскладка переключилась без перезагрузки
   await page.goto(`${BASE}/`, { waitUntil: 'networkidle2' })
+  await ready(page)
   await sleep(1000)
   await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 })
   // Изменение медиа-запроса браузер рассылает на шаге отрисовки кадра, а в
@@ -224,7 +235,7 @@ async function desktopLayout(page) {
   await sleep(800)
   g = await geometry(page)
   const diag = await page.evaluate(() => ({
-    desktop: matchMedia('(min-width: 64rem)').matches,
+    menuLeft: matchMedia('(min-width: 45rem)').matches,
     ih: innerHeight,
     vvh: Math.round(visualViewport?.height ?? -1),
   }))
@@ -261,6 +272,7 @@ async function openPages(page, signedIn) {
   for (const p of OPEN_PAGES) {
     await page.goto(`${BASE}${p}`, { waitUntil: 'networkidle2' })
     await sleep(300)
+    if (signedIn) await ready(page, 'nav.vt-nav')
     const g = await geometry(page)
     if (signedIn) {
       const mains = await page.evaluate(() => document.querySelectorAll('main').length)
@@ -315,7 +327,7 @@ async function run(browser, userId) {
 
   // ── 2. раскладка по ширине экрана ───────────────────────────────────────
   await phoneLayout(page, 390, 844, 'телефон')
-  await phoneLayout(page, 820, 1180, 'планшет')
+  await phoneLayout(page, 700, 1000, 'узкое окно 700')
   await desktopLayout(page)
   if (SHOTS) await screenshots(page)
 

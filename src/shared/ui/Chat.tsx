@@ -40,7 +40,7 @@ export const ChatWindow = forwardRef<HTMLDivElement, { height: number | null; ch
 export function ChatBubble({ mine, children }: { mine: boolean; children: ReactNode }) {
   return (
     <div
-      className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-body leading-relaxed text-fg ${
+      className={`max-w-[min(85%,var(--container-bubble))] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-body leading-relaxed text-fg ${
         mine
           ? 'self-end rounded-br-md border border-accent-line bg-accent/18'
           : 'self-start rounded-bl-md border border-tint/[0.08] bg-surface shadow-card'

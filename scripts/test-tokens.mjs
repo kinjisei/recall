@@ -218,14 +218,39 @@ for (const t of ['card', 'raised']) {
   check(`светлая: --elevation-${t} задана`, /\d+px/.test(light[`--elevation-${t}`] ?? ''), light[`--elevation-${t}`])
 }
 
-// ── 3. точки перехода: CSS = JS ─────────────────────────────────────────────
+// ── 3. точки перехода и пороги раскладок: CSS = JS ──────────────────────────
 for (const [cssName, tsName] of [
   ['--breakpoint-sm', 'TABLET_MIN'],
+  ['--breakpoint-rail', 'RAIL_MIN'],
   ['--breakpoint-lg', 'DESKTOP_MIN'],
+  ['--breakpoint-menu', 'MENU_MIN'],
 ]) {
   const inCss = dark[cssName]
   const inTs = bpTs.match(new RegExp(`${tsName}\\s*=\\s*'([^']+)'`))?.[1]
   check(`точка перехода ${cssName} = ${tsName}`, !!inCss && inCss === inTs, `${inCss} / ${inTs}`)
+}
+
+// Пороги по ширине содержимого (d0): контейнерный запрос в CSS и AREA / SIDE_PX
+// в JS. Разойдутся — колонки встанут по CSS при одной ширине, а JS
+// (сдвиг панели, «список или подробности») решит по другой.
+const tsNum = (re) => Number(bpTs.match(re)?.[1])
+const rem = (v) => (/^[\d.]+rem$/.test(v ?? '') ? parseFloat(v) * 16 : NaN)
+for (const [cssName, px, label] of [
+  ['--container-week', tsNum(/\bweek: (\d+)/), 'AREA.week'],
+  ['--container-split', tsNum(/\bsplit: (\d+)/), 'AREA.split'],
+  ['--container-reading-split', tsNum(/\breadingSplit: (\d+)/), 'AREA.readingSplit'],
+  ['--container-home-split', tsNum(/\bhomeSplit: (\d+)/), 'AREA.homeSplit'],
+  ['--container-exercise-sides', tsNum(/\bexerciseSides: (\d+)/), 'AREA.exerciseSides'],
+  ['--container-side', tsNum(/SIDE_PX = (\d+)/), 'SIDE_PX'],
+  ['--container-list', 352, 'список 352 (d0, правило 4)'],
+  ['--container-page', 1200, 'предел 1200 (d0, правило 3)'],
+  ['--container-wide', 1600, 'предел 1600 (d0, правило 3)'],
+  ['--container-bubble', 480, 'пузырь сообщения 480 (d0, правило 5)'],
+  ['--container-reading', 680, 'чтение 680 (d0, правило 4)'],
+  ['--container-exercise', 600, 'упражнение 600 (d0, правило 4)'],
+]) {
+  const inCss = rem(dark[cssName])
+  check(`порог ${cssName} = ${label}`, Number.isFinite(px) && inCss === px, `${inCss} / ${px}`)
 }
 
 console.log(`\nИтог: ${total - fails}/${total}`)

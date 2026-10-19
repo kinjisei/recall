@@ -93,6 +93,12 @@ async function openAs(b, email, width = 390) {
   return page
 }
 const go = (page, path) => page.goto(`${APP_URL}${path}`, { waitUntil: 'networkidle2' })
+/** Неделя колонками дорисовалась: 7 шапок дней. Уроки приходят с базы — после
+ *  networkidle2 бывает ещё секунда-три (замер 19.10.2026), поэтому ждём, а не считаем сразу. */
+const weekHeads = (page) =>
+  page
+    .waitForFunction(() => document.querySelectorAll('button[aria-label$="Открыть день"]').length === 7, { polling: 250, timeout: 10000 })
+    .then(() => true, () => false)
 const text = (page) => page.evaluate(() => document.body.innerText)
 const waitText = (page, re, timeout = 15000) =>
   page.waitForFunction((src) => new RegExp(src).test(document.body.innerText), { polling: 250, timeout }, re.source).then(() => true, () => false)
@@ -305,7 +311,7 @@ try {
   check('неделя списком: все 7 дней', ['пн,', 'вт,', 'ср,', 'чт,', 'пт,', 'сб,', 'вс,'].every((d) => weekText.includes(d)))
   await shot(te, 'week-list-390')
   await go(te, '/schedule?view=week&layout=cols')
-  check('неделя колонками: 7 шапок дней', (await te.$$eval('button[aria-label$="Открыть день"]', (x) => x.length)) === 7)
+  check('неделя колонками: 7 шапок дней', await weekHeads(te))
   await shot(te, 'week-cols-390')
   await clickSel(te, 'button[aria-label$="Открыть день"]')
   check('шапка дня открывает день', new URL(te.url()).searchParams.get('view') === 'day')
@@ -334,14 +340,14 @@ try {
   const [fresh] = await timurAhead()
   await go(te, `/schedule?view=day&day=${dayOf(fresh.starts_at)}&lesson=${fresh.lesson_id}`)
   check('строка t9-3 «расписание только для просмотра»', await waitText(te, /расписание только для просмотра/))
-  check('в шторке: «продли тариф», действия выключены', /продли тариф/.test(await text(te)) && (await te.evaluate(() => [...document.querySelectorAll('[role="dialog"] button')].find((x) => x.textContent.includes('Перенести'))?.disabled)) === true)
+  check('в шторке: «продли тариф», действия выключены', (await waitText(te, /продли тариф/)) && (await te.evaluate(() => [...document.querySelectorAll('[role="dialog"] button')].find((x) => x.textContent.includes('Перенести'))?.disabled)) === true)
   await shot(te, 'read-only-390')
   await admin.from('profiles').update({ plan_expires_at: new Date(Date.now() + 20 * 864e5).toISOString() }).eq('id', tId)
 
   // ── 8. компьютер 1280 ───────────────────────────────────────────────────────────
   const desk = await openAs(b, TEACHER, 1280)
   await go(desk, '/schedule')
-  check('компьютер: по умолчанию неделя колонками', await desk.waitForSelector('[data-schedule-view="week"]', { timeout: 10000 }).then(() => true, () => false) && (await desk.$$eval('button[aria-label$="Открыть день"]', (x) => x.length)) === 7)
+  check('компьютер: по умолчанию неделя колонками', await desk.waitForSelector('[data-schedule-view="week"]', { timeout: 10000 }).then(() => true, () => false) && (await weekHeads(desk)))
   await shot(desk, 'week-1280')
   await go(desk, '/schedule?view=day')
   check('компьютер: день по умолчанию таблицей (лента часов), «Списком» рядом', !!(await desk.waitForSelector('ol[aria-label="Уроки дня"]', { timeout: 10000 }).catch(() => null)) && !!(await desk.$('button[aria-label="Списком"]')))

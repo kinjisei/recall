@@ -215,8 +215,8 @@ async function layouts(page, tag) {
   const c = await rect(page, '[data-demo="center"]')
   const m = await rect(page, 'main')
   check(
-    `${tag}: «колонка по центру» не шире 576 и по центру`,
-    !!c && !!m && c.width <= 577 && Math.abs(c.left - m.left - (m.right - c.right)) <= 2,
+    `${tag}: «колонка по центру» не шире 600 (d0) и по центру`,
+    !!c && !!m && c.width <= 601 && Math.abs(c.left - m.left - (m.right - c.right)) <= 2,
     c && m ? `ширина ${px(c.width)}, поля ${px(c.left - m.left)}/${px(m.right - c.right)}` : 'нет',
   )
 

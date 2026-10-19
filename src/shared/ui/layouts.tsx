@@ -1,32 +1,67 @@
 // ============================================================================
-// Общие раскладки экранов (журнал п.46; архитектура §5). Раздел не придумывает
-// свою раскладку, а берёт одну из этих:
+// Общие раскладки экранов (журнал п.46, п.55; правила d0; архитектура §5).
+// Раздел не придумывает свою раскладку, а берёт одну из этих:
 //
-//   CenterColumn  — упражнение, игра: узкая колонка по центру (576 px), чтобы
-//                   глазу не бегать по широкому экрану;
-//   ReadingColumn — чтение: строка удобной длины (~70 знаков, 672 px), рядом на
-//                   компьютере — панель (перевод слова), место под неё держим
-//                   всегда; на телефоне панель открывается шторкой снизу;
-//   ListDetail    — список слева, подробности справа (ученики, материалы); на
-//                   телефоне — или список, или подробности; с `fill` на
-//                   компьютере занимает окно до низа, и список с подробностями
-//                   прокручиваются каждый сам, а страница — нет (макет d3).
+//   CenterColumn  — упражнение, игра: узкая колонка по центру (600 px), чтобы
+//                   глазу не бегать по широкому экрану; от 1120 — тихие поля
+//                   по бокам: прогресс раунда и клавиши;
+//   ReadingColumn — чтение: строка удобной длины (680 px ≈ 60 знаков), рядом —
+//                   панель 320 (перевод слова), место под неё держим всегда;
+//                   содержимое уже 912 — панель открывается шторкой;
+//   ListDetail    — список 352 слева, подробности справа (ученики, материалы);
+//                   содержимое уже 880 — или список, или подробности; с `fill`
+//                   занимает окно до низа, и список с подробностями
+//                   прокручиваются каждый сам, а страница — нет (макет d3);
+//   MainAside     — главная колонка 720 + правая 352 (Главная ученика, «Моя
+//                   учёба»): справа то, что сверяют, а не делают; содержимое
+//                   уже 936 — одна колонка, правая уходит под главную.
 //
-// Раскладкам с панелью мало колонки 640 px: они сами просят у каркаса ширину
-// страницы (shared/lib/screenWidth) — экран об этом не думает. Одна такая
-// раскладка на экран.
-//
-// Ширины — токены tokens.css (--container-*). Точка «компьютер» — та же, что у
-// меню слева (useIsDesktop): раскладка и каркас переключаются вместе.
+// Вид выбирается по ширине СОДЕРЖИМОГО, а не окна (d0, правило 6): каркас
+// меряет его и отдаёт через shared/lib/screenWidth — одинаково при меню 240,
+// рельсе 72 и окне в пол-экрана. Пороги — AREA (shared/ui/breakpoints).
+// Раскладкам мало колонки 640 px: они сами просят у каркаса ширину страницы и
+// говорят, сколько им нужно (по этому числу правая панель решает, сдвинуть
+// содержимое или лечь поверх) — экран об этом не думает. Одна такая раскладка
+// на экран.
 // ============================================================================
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
-import { usePageWidth } from '../lib/screenWidth'
-import { useIsDesktop } from '../lib/useMediaQuery'
+import { useContentAtLeast, usePageWidth } from '../lib/screenWidth'
+import { AREA } from './breakpoints'
 import { Sheet } from './Sheet'
 
-/** Колонка по центру: упражнения, игры. */
-export function CenterColumn({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <div className={`mx-auto w-full max-w-exercise ${className}`}>{children}</div>
+/**
+ * Колонка по центру: упражнения, игры. Поля по бокам не пустые, но тихие
+ * (макет d0-3): слева — прогресс раунда, справа — подсказка клавиш; только
+ * когда содержимому хватает места (от 1120), уже — экран показывает прогресс
+ * сверху, как на телефоне.
+ */
+export function CenterColumn({
+  children,
+  className = '',
+  left,
+  right,
+}: {
+  children: ReactNode
+  className?: string
+  /** Тихое поле слева (прогресс раунда) — только на широком содержимом. */
+  left?: ReactNode
+  /** Тихое поле справа (подсказка клавиш) — только на широком содержимом. */
+  right?: ReactNode
+}) {
+  const asks = !!(left || right)
+  const wide = useContentAtLeast(AREA.exerciseSides)
+  const sides = asks && wide
+  // без боковых полей колонке ширина страницы не нужна — и чужую не сбрасываем
+  usePageWidth(asks ? (sides ? 'page' : null) : undefined, AREA.exerciseSides)
+  const column = <div className={`mx-auto w-full max-w-exercise ${className}`}>{children}</div>
+  if (!sides) return column
+  return (
+    <div className="grid grid-cols-[minmax(0,1fr)_var(--container-exercise)_minmax(0,1fr)] items-start gap-6">
+      <aside className="sticky top-8 text-sm text-fg-muted">{left}</aside>
+      {column}
+      <aside className="sticky top-8 text-sm text-fg-muted">{right}</aside>
+    </div>
+  )
 }
 
 /**
@@ -51,10 +86,10 @@ export function ReadingColumn({
    *  иначе текст прыгал бы при первом тапе по слову. */
   asideHint?: ReactNode
 }) {
-  const desktop = useIsDesktop()
-  usePageWidth()
+  const split = useContentAtLeast(AREA.readingSplit)
+  usePageWidth('page', AREA.readingSplit)
 
-  if (!desktop) {
+  if (!split) {
     return (
       <div className="mx-auto w-full max-w-reading">
         {children}
@@ -80,7 +115,16 @@ export function ReadingColumn({
 }
 
 /**
- * Список + подробности: на компьютере рядом, на телефоне — одно из двух
+ * Рядом ли список и подробности (содержимое от 880 px). Экрану, который
+ * держит выбранный пункт, нужен тот же ответ — например, «назад» к списку
+ * только когда они не рядом.
+ */
+export function useListDetailSplit(): boolean {
+  return useContentAtLeast(AREA.split)
+}
+
+/**
+ * Список + подробности: рядом, когда хватает места, иначе — одно из двух
  * (выбранный пункт открывает подробности на весь экран, «назад» — к списку;
  * что выбрано, экран держит в адресе, useUrlState).
  */
@@ -101,12 +145,13 @@ export function ListDetail({
    */
   fill?: boolean
 }) {
-  const desktop = useIsDesktop()
-  usePageWidth()
+  const split = useListDetailSplit()
+  // по очереди — колонкой, как на телефоне: список на 800 px шириной ни к чему
+  usePageWidth(split ? 'page' : null, AREA.split)
   const fillRef = useRef<HTMLDivElement>(null)
-  const height = useFillHeight(fillRef, desktop && fill)
+  const height = useFillHeight(fillRef, split && fill)
 
-  if (!desktop) return <>{detail ?? list}</>
+  if (!split) return <>{detail ?? list}</>
   const pane = fill ? 'h-full min-h-0 overflow-y-auto overscroll-contain px-1 pb-4 -mx-1' : ''
   return (
     <div
@@ -126,6 +171,31 @@ export function ListDetail({
           </div>
         )}
       </section>
+    </div>
+  )
+}
+
+/**
+ * Главная колонка + правая (макеты d0-3, d4-v2): главная до 720, правая 352 —
+ * липкая при прокрутке. Содержимое уже 936 — одна колонка: сначала главная,
+ * под ней правая. Одно главное действие экрана — в главной колонке (d0,
+ * правило 10), правая его не дублирует.
+ */
+export function MainAside({ main, aside }: { main: ReactNode; aside: ReactNode }) {
+  const split = useContentAtLeast(AREA.homeSplit)
+  usePageWidth('page', AREA.homeSplit)
+  if (!split) {
+    return (
+      <div className="mx-auto flex w-full max-w-main flex-col gap-4">
+        {main}
+        {aside}
+      </div>
+    )
+  }
+  return (
+    <div className="grid grid-cols-[minmax(0,var(--container-main))_var(--container-list)] justify-center gap-6">
+      <div className="min-w-0">{main}</div>
+      <aside className="sticky top-8 flex flex-col gap-4 self-start">{aside}</aside>
     </div>
   )
 }

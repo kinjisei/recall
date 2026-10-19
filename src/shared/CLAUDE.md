@@ -16,7 +16,7 @@ AI — с человеческими текстами ошибок вместо 
 |---|---|
 | `api/` | `supabase` — единственный клиент базы; `database.types` — типы базы (генерируются, руками не правятся); `errors` — ошибка базы → текст для человека (`dbError`, `describeDbError`) и `AppError` с кодом причины; `connection` — «это связь?»: `isConnectionError` (нет сети, сервер не ответил вовремя, вход не обновился без сети, запрос к базе не дошёл — `AppError` с кодом `NETWORK`, раздел не скачан), `isChunkLoadError` и текст «раздел ещё не скачан»; `ai` — клиент `/api/gemini` (`chat`, `chatStream`, `onAiRequest`); `aiTypes` — протокол AI (`AiTask`, `ChatTurn`), общий с сервером |
 | `ui/` | дизайн-система: общие компоненты без предметной логики — `Button`, `Card`, `Sheet` (и `SHEET_BODY` — тело шторки с прокруткой, где дети не сжимаются), `Picker`, `TabPicker`, `RowCard`, `Switch`, `DatePicker`, `TimeWheel`, `FieldButton`, `EmptyState`, `Reveal`, `HowItWorks` (и вариант значком (?): `HintButton` + `HintPanel` + `useHint` — раскрыто при первом заходе), `ShareLink` (кнопка «поделиться»; строка кнопок — `SHARE_ROW`), `layouts` (`CenterColumn`, `ReadingColumn`, `ListDetail` — с `fill` на компьютере у списка и подробностей своя прокрутка), `Loading`/`RowsSkeleton`, `LoadError`, `Thinking`, `BackButton`/`BackHeader` (одна кнопка «назад»: `onClick` или `fallback` — назад по истории; `TabHeading` — заголовок хаба ученика, у учителя с «назад» в «Мою учёбу»), `AppLink`, `Brand`, `Confetti`, `icons` |
-| `lib/` | утилиты: `morph` (плитка «вырастает» в экран), `storage` (localStorage без падений), `useUrlState` (адрес = «где я»), `viewTransition` (плавная смена экрана), `useAsyncData` (загрузка: «пусто» ≠ «ошибка», предел ожидания 12 с), `settleAll` (несколько источников экрана разом: что пришло, а что нет; `withTimeout`, `LOAD_TIMEOUT_MS`), `drafts` + `useDraft`/`useDraftForm` (черновик набранного: переживает перезагрузку, свой у каждого, кто вошёл, до отправки и не дольше 7 дней), `plural` (числительные), `days` (дни строками «YYYY-MM-DD» без часов и поясов: неделя, месяц, сетка месяца, названия дней и месяцев, «ЧЧ:ММ»; календарь месяца и расписание, Ф2.7), `contacts` (связь с поддержкой: почта, ссылки на WhatsApp с готовым первым сообщением и на Telegram; кнопки — `ui/ContactLinks`), `focusMode` (режим раунда: экран включает, каркас прячет шапку и навигацию), `routePreload` (прогрев экранов для `AppLink`: реестр регистрирует каркас), `shellInsets` (сколько места занимает каркас: меню слева, навигация снизу — для закреплённых элементов экранов; `useInShell` — экран внутри общей рамки, для открытых страниц), `screenWidth` (раскладке нужна ширина страницы — каркас раздвигает колонку), `shellUp` (куда «наверх» с экранов ученика у этой роли: `tab` — «назад» у хаба, учителю в «Мою учёбу»; `home` — главная учёбы: ученику Главная, учителю «Моя учёба»; Ф2.18), `share` («поделиться»: ссылки WhatsApp / Telegram с готовым текстом и системное окно — сообщение уходит со своего номера человека, Ф1.5), `useCopy` («Скопировать» с отметкой «Скопировано»; буфер недоступен — `false`, экран просит скопировать руками), `useMediaQuery` (`useIsDesktop` — компьютер от 1024 px; числа — `ui/breakpoints`), `useNow` («сейчас», которое само обновляется раз в полминуты и при возврате во вкладку: линия времени и «через 50 мин» расписания), `useOnReturn` (человек вернулся в приложение после ≥ 30 с в фоне — перечитать список: «Ученики», расписание, «Проверка работ», «Мои уроки»), `push` (push в браузере без предметной логики: умеет ли устройство — по возможностям, iPhone во вкладке — «сначала на экран Домой», готов ли service worker, подписаться и отписаться; кому и о чём писать — `domains/notifications`, Ф2.9) |
+| `lib/` | утилиты: `morph` (плитка «вырастает» в экран), `storage` (localStorage без падений), `useUrlState` (адрес = «где я»), `viewTransition` (плавная смена экрана), `useAsyncData` (загрузка: «пусто» ≠ «ошибка», предел ожидания 12 с), `settleAll` (несколько источников экрана разом: что пришло, а что нет; `withTimeout`, `LOAD_TIMEOUT_MS`), `drafts` + `useDraft`/`useDraftForm` (черновик набранного: переживает перезагрузку, свой у каждого, кто вошёл, до отправки и не дольше 7 дней), `plural` (числительные), `days` (дни строками «YYYY-MM-DD» без часов и поясов: неделя, месяц, сетка месяца, названия дней и месяцев, «ЧЧ:ММ»; календарь месяца и расписание, Ф2.7), `contacts` (связь с поддержкой: почта, ссылки на WhatsApp с готовым первым сообщением и на Telegram; кнопки — `ui/ContactLinks`), `focusMode` (режим раунда: экран включает, каркас прячет шапку и навигацию), `routePreload` (прогрев экранов для `AppLink`: реестр регистрирует каркас), `shellInsets` (сколько места занимает каркас: меню слева, навигация снизу — для закреплённых элементов экранов; `useInShell` — экран внутри общей рамки, для открытых страниц), `screenWidth` (раскладка просит ширину страницы — обычную до 1200 или широкую до 1600 — и говорит, сколько ей нужно; `useContentWidth`/`useContentAtLeast` — сколько места досталось содержимому, по нему раскладки выбирают вид, правила d0), `shellGeometry` (числа каркаса d0 без DOM: какое меню у окна, поля 24 · 32 · 40, ширина содержимого, сдвинет ли правая панель содержимое; чистый тест `test-shell-geometry`), `sidePanel` (правая панель ↔ каркас: влезет ли сдвиг, где начинается дымка, «панель со сдвигом открыта»), `shellUp` (куда «наверх» с экранов ученика у этой роли: `tab` — «назад» у хаба, учителю в «Мою учёбу»; `home` — главная учёбы: ученику Главная, учителю «Моя учёба»; Ф2.18), `share` («поделиться»: ссылки WhatsApp / Telegram с готовым текстом и системное окно — сообщение уходит со своего номера человека, Ф1.5), `useCopy` («Скопировать» с отметкой «Скопировано»; буфер недоступен — `false`, экран просит скопировать руками), `useMediaQuery` (`useIsDesktop` — окно от 720 px: меню слева вместо шапки, шторка панелью; раскладкам внутри каркаса — не окно, а `useContentAtLeast`; числа — `ui/breakpoints`), `useNow` («сейчас», которое само обновляется раз в полминуты и при возврате во вкладку: линия времени и «через 50 мин» расписания), `useOnReturn` (человек вернулся в приложение после ≥ 30 с в фоне — перечитать список: «Ученики», расписание, «Проверка работ», «Мои уроки»), `push` (push в браузере без предметной логики: умеет ли устройство — по возможностям, iPhone во вкладке — «сначала на экран Домой», готов ли service worker, подписаться и отписаться; кому и о чём писать — `domains/notifications`, Ф2.9) |
 
 ## Правила, которые нельзя нарушить
 
@@ -48,17 +48,25 @@ AI — с человеческими текстами ошибок вместо 
 - **Ошибка базы — через `dbError`**: человеку — что случилось и что делать,
   подробность — в консоль. Наш русский текст из RPC не заменяется общим.
 - **Договор с каркасом — здесь, выполняет каркас.** `focusMode`,
-  `screenWidth`, `routePreload`, `shellInsets` и `shellUp` — не утилиты, а
-  «розетки»: экран, раскладка и `AppLink` зовут их, а `app/` подключает (режим
-  раунда, ширину страницы, геометрию и «наверх» по роли даёт `Layout`, реестр
-  экранов регистрирует `app/routeChunks`). Так экран не импортирует каркас и
+  `screenWidth`, `sidePanel`, `routePreload`, `shellInsets` и `shellUp` — не
+  утилиты, а «розетки»: экран, раскладка, шторка и `AppLink` зовут их, а
+  `app/` подключает (режим раунда, ширину страницы и содержимого, сдвиг
+  правой панелью, геометрию и «наверх» по роли даёт `Layout`, реестр экранов
+  регистрирует `app/routeChunks`). Так экран не импортирует каркас и
   не проверяет роль сам.
 - **Закреплённый (`fixed`) элемент экрана берёт отступы из `shellInsets`**, а
   не заводит свои «88 px под навигацию»: на компьютере навигации снизу нет, а
   слева меню. Значение по умолчанию — телефонное, до символа прежнее.
-- **Компьютер — `useIsDesktop()`** (от 1024 px, `DESKTOP_QUERY`), одна точка
-  на всё приложение. Сами числа точек перехода — `ui/breakpoints.ts` в паре с
-  `ui/tokens.css` (равенство сверяет `scripts/test-tokens.mjs`).
+- **Меню слева или шапка — `useIsDesktop()`** (окно от 720 px, `RAIL_QUERY`),
+  одна точка на всё приложение. **Вид раскладки — по ширине содержимого**
+  (`useContentAtLeast(AREA.…)`, `screenWidth`), а не окна: на окне 1000 при
+  рельсе содержимому 856 px, и «список + подробности» там по очереди. Числа —
+  `ui/breakpoints.ts` в паре с `ui/tokens.css` (равенство сверяет
+  `scripts/test-tokens.mjs`).
+- **Область — от ширины окна, а не от замера блока** (`app/shell/useAreaSize`):
+  полоса прокрутки Windows (15 px) иначе давала на 1280 поля 24 вместо 32, а
+  панель, удлинившая страницу, включала полосу и переключала «сдвиг / поверх»
+  по кругу.
 - **Значок в кнопке не сжимается**: у кнопок «поделиться» (`SHARE_BUTTON`)
   любой svg — `flex-none`, строка — контейнер (`SHARE_ROW`), уже 19rem значок
   встаёт над подписью. В строке из трёх кнопок на 390 px значок WhatsApp
@@ -147,8 +155,14 @@ AI — с человеческими текстами ошибок вместо 
 - `node scripts/check-types-drift.mjs` — типы базы совпадают со схемой
   тестовой базы.
 - `node scripts/smoke-shell.mjs` — `shellInsets` и `useIsDesktop` в деле:
-  раскладка на 390 / 820 / 1280, панель ввода «Диалога» в колонке у низа
+  раскладка на 390 / 700 / 1280, панель ввода «Диалога» в колонке у низа
   окна, смена ширины окна переключает раскладку.
+- `node scripts/test-shell-geometry.mjs` (чистый, в CI) — `shellGeometry` по
+  кадрам d0, d2, d3-4: 1280 → содержимое 976, 1440 → 1120, окно 720 → 600;
+  на 1440 «Новый урок» сдвигает неделю, «Отметить оплату» — поверх.
+- `node scripts/smoke-widths.mjs` — правила d0 в живом каркасе (`npm run
+  dev:test`): рельс и меню 240, «свернуть» помнится, поля 24 · 32 · 40,
+  раскладки витрины по ширине содержимого, панель со сдвигом и поверх.
 
 ## Решения и почему
 
@@ -177,7 +191,7 @@ AI — с человеческими текстами ошибок вместо 
 <!-- Пишет `npm run gen:docs` (scripts/gen/module-docs.mjs) по коду — руками не править. -->
 ## Из кода (сгенерировано)
 
-- **Файлы:** `api/ai.ts`, `api/aiTypes.ts`, `api/connection.ts`, `api/database.types.ts`, `api/errors.ts`, `api/supabase.ts`, `lib/contacts.ts`, `lib/days.ts`, `lib/drafts.ts`, `lib/focusMode.ts`, `lib/morph.ts`, `lib/plural.ts`, `lib/push.ts`, `lib/routePreload.ts`, `lib/screenWidth.ts`, `lib/settleAll.ts`, `lib/share.ts`, `lib/shellInsets.ts`, `lib/shellUp.ts`, `lib/storage.ts`, `lib/useAsyncData.ts`, `lib/useCopy.ts`, `lib/useDraft.ts`, `lib/useMediaQuery.ts`, `lib/useNow.ts`, `lib/useOnReturn.ts`, `lib/useUrlState.ts`, `lib/viewTransition.ts`
+- **Файлы:** `api/ai.ts`, `api/aiTypes.ts`, `api/connection.ts`, `api/database.types.ts`, `api/errors.ts`, `api/supabase.ts`, `lib/contacts.ts`, `lib/days.ts`, `lib/drafts.ts`, `lib/focusMode.ts`, `lib/morph.ts`, `lib/plural.ts`, `lib/push.ts`, `lib/routePreload.ts`, `lib/screenWidth.ts`, `lib/settleAll.ts`, `lib/share.ts`, `lib/shellGeometry.ts`, `lib/shellInsets.ts`, `lib/shellUp.ts`, `lib/sidePanel.ts`, `lib/storage.ts`, `lib/useAsyncData.ts`, `lib/useCopy.ts`, `lib/useDraft.ts`, `lib/useMediaQuery.ts`, `lib/useNow.ts`, `lib/useOnReturn.ts`, `lib/useUrlState.ts`, `lib/viewTransition.ts`
 - **localStorage:** `recall.draft.`
 - **Кто использует (импортом):** `api`, `app`, `components`, `context`, `domains/ai`, `domains/billing`, `domains/notifications`, `domains/schedule`, `domains/students`, `features/admin`, `features/auth`, `features/billing`, `features/conversation`, `features/dashboard`, `features/dev`, `features/flashcards`, `features/grammar`, `features/homework`, `features/landing`, `features/legal`, `features/lessons`, `features/notifications`, `features/onboarding`, `features/practice`, `features/program`, `features/progress`, `features/pronunciation`, `features/quests`, `features/reader`, `features/referral`, `features/schedule`, `features/settings`, `features/students`, `features/study`, `features/teacher`, `features/writing`, `lib`, `shared/ui`, `types`
 <!-- generated:end -->

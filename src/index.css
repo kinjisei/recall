@@ -148,19 +148,24 @@ a,
   }
 }
 
-/* Боковая панель шторки на компьютере (shared/ui/Sheet) выезжает справа. */
-@keyframes slide-in-right {
+/* Правая панель на компьютере (shared/ui/Sheet) выезжает справа налево:
+   translateX(100%) → 0 за 280 мс, кривая ease-sheet (макеты s4, d0 — правило 8).
+   Дымка под ней проявляется параллельно. Уход — мгновенный: шторку закрывает
+   её владелец, снимая с экрана (уход за 220 мс — со стадией «Движение»,
+   PLAN.md Ф2.17-3). */
+@keyframes panel-in {
   from {
-    opacity: 0;
-    transform: translateX(24px);
+    transform: translateX(100%);
   }
   to {
-    opacity: 1;
     transform: none;
   }
 }
-.animate-slide-in-right {
-  animation: slide-in-right 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+.animate-panel-in {
+  animation: panel-in 0.28s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+.animate-haze-in {
+  animation: fade-in 0.2s ease-out both;
 }
 
 /* Аврора экрана входа: дрейф пятен и медленный блик. */

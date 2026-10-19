@@ -11,6 +11,10 @@
 // Цифра — непрочитанные. Открыл ленту — всё отмечается прочитанным (новые в
 // этот раз ещё выделены). Счёт обновляется при возвращении в приложение и раз
 // в 5 минут, пока окно видно.
+//
+// Вид — по месту в каркасе (макеты s4, d0): круглая кнопка в шапке телефона,
+// строка «Уведомления» со счётчиком в меню 240, иконка с подписью при
+// наведении в рельсе 72. Где стоит — решает каркас.
 // ============================================================================
 import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
@@ -18,12 +22,13 @@ import { notificationCounts } from '../../domains/notifications'
 import { plural } from '../../shared/lib/plural'
 import { readRaw, writeRaw } from '../../shared/lib/storage'
 import { CountBadge } from '../../shared/ui/CountBadge'
+import { HoverTip } from '../../shared/ui/HoverTip'
 import { IconBell } from '../../shared/ui/icons'
 import { NotificationFeed } from './NotificationFeed'
 
 const REFRESH_MS = 5 * 60 * 1000
 
-export function NotificationBell() {
+export function NotificationBell({ variant = 'icon' }: { variant?: 'icon' | 'row' | 'rail' }) {
   const { user } = useAuth()
   const key = user ? `recall.notifications.present.${user.id}` : null
   // состояние — вместе с ключом: сменился человек на устройстве — начинаем с
@@ -62,17 +67,44 @@ export function NotificationBell() {
 
   if (!state.present) return null
   const { unread } = state
+  const label = unread ? `Уведомления: ${unread} ${plural(unread, 'новое', 'новых', 'новых')}` : 'Уведомления'
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        aria-label={unread ? `Уведомления: ${unread} ${plural(unread, 'новое', 'новых', 'новых')}` : 'Уведомления'}
-        className="lift relative flex h-11 w-11 flex-none items-center justify-center rounded-full border border-tint/[0.08] bg-surface text-fg-secondary hover:text-fg"
-      >
-        <IconBell size={20} />
-        <CountBadge n={unread} className="-right-0.5 -top-0.5" />
-      </button>
+      {variant === 'row' ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label={label}
+          className="flex h-11 w-full items-center gap-3 rounded-2xl px-3 text-body font-semibold text-fg-secondary transition-colors hover:text-fg"
+        >
+          <IconBell size={22} />
+          <span className="flex-1 text-left">Уведомления</span>
+          <CountBadge n={unread} inline />
+        </button>
+      ) : variant === 'rail' ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label={label}
+          className="group relative flex size-12 items-center justify-center rounded-2xl text-fg-muted transition-colors hover:bg-tint/[0.06] hover:text-fg-secondary"
+        >
+          <span className="relative flex">
+            <IconBell size={22} />
+            <CountBadge n={unread} className="-right-2.5 -top-2" />
+          </span>
+          <HoverTip label="Уведомления" />
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label={label}
+          className="lift relative flex h-11 w-11 flex-none items-center justify-center rounded-full border border-tint/[0.08] bg-surface text-fg-secondary hover:text-fg"
+        >
+          <IconBell size={20} />
+          <CountBadge n={unread} className="-right-0.5 -top-0.5" />
+        </button>
+      )}
       {open && (
         <NotificationFeed
           onClose={() => setOpen(false)}

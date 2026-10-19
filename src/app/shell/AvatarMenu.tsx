@@ -5,22 +5,37 @@
 // Раньше вёл только на прогресс, а вход в режим преподавателя был лишь
 // карточкой внизу Главной — теперь всё «служебное» собрано в одном месте.
 //
-// Стоит в шапке телефона (меню раскрывается вниз) и внизу боковой панели
-// компьютера (раскрывается вверх — `opensUp`).
+// Вид — по месту в каркасе (макеты s4, d4-v2, d2): кружок в шапке телефона
+// (меню вниз); карточка с именем и строкой под ним внизу меню 240 (меню вверх):
+// ученику — «Английский · B1», репетитору — тариф и срок или пробный; кружок в
+// рельсе 72 (меню вправо).
 // ============================================================================
 import { useEffect, useRef, useState } from 'react'
 import { IconChart, IconTeacher, IconGear, IconSignOut, IconCards, IconBadgeCheck, IconThumbsUp } from '../../shared/ui/icons'
 import { FeedbackSheet } from '../../components/FeedbackSheet'
 import { AppLink } from '../../shared/ui/AppLink'
 import { getMyPlan, type MyPlan } from '../../lib/billing'
-import { teacherTrialStatus } from '../../domains/billing'
+import { dayLabel, planNow, planShortTitle, teacherTrialStatus } from '../../domains/billing'
 import { plural } from '../../shared/lib/plural'
 import { IconTimer } from '../../shared/ui/icons'
 import { useAuth } from '../../context/AuthContext'
+import { useLanguage } from '../../context/LanguageContext'
+import { getEsLevel } from '../../lib/esLevel'
+import { getCachedEnLevel } from '../../lib/profile'
+import { HoverTip } from '../../shared/ui/HoverTip'
 import { useMyRole } from './useMyRole'
 
-export function AvatarMenu({ opensUp = false }: { opensUp?: boolean }) {
+type Variant = 'circle' | 'row' | 'rail'
+/** Куда раскрывается меню: из шапки — вниз, из карточки — вверх, из рельса — вправо. */
+const MENU_AT: Record<Variant, string> = {
+  circle: 'right-0 top-11',
+  row: 'bottom-full left-0 mb-2',
+  rail: 'bottom-0 left-full ml-3',
+}
+
+export function AvatarMenu({ variant = 'circle' }: { variant?: Variant }) {
   const { user, signOut } = useAuth()
+  const { lang } = useLanguage()
   const [open, setOpen] = useState(false)
   const [feedback, setFeedback] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
@@ -29,6 +44,8 @@ export function AvatarMenu({ opensUp = false }: { opensUp?: boolean }) {
 
   const name = (user?.user_metadata?.display_name as string | undefined) ?? user?.email ?? '?'
   const initial = name.trim().charAt(0).toUpperCase() || '?'
+  // в карточке меню — имя, как в макетах d4-v2 и d2; полностью — в самом меню
+  const firstName = name.trim().split(/\s+/)[0] || name
 
   // роль — общим хуком каркаса: перечитывается после смены роли (стал
   // репетитором — «Тариф» и метка пробного без перезагрузки)
@@ -79,28 +96,52 @@ export function AvatarMenu({ opensUp = false }: { opensUp?: boolean }) {
         ? 'Пробный · последний день'
         : `Пробный · осталось ${trial.days} ${plural(trial.days, 'день', 'дня', 'дней')}`
   const paidTeacher = !!plan?.plan.startsWith('teacher_') && !!plan.plan_expires_at && new Date(plan.plan_expires_at) > new Date()
+  // строка под именем в карточке меню 240 (макеты d4-v2, d2)
+  const now = plan ? planNow(plan) : null
+  const level = lang === 'es' ? getEsLevel() : (getCachedEnLevel() ?? null)
+  const line = isTeacher
+    ? (trialText ?? (now?.kind === 'paid' ? `${planShortTitle(now.plan)} · до ${dayLabel(now.until)}` : null))
+    : `${lang === 'es' ? 'Испанский' : 'Английский'}${level ? ` · ${level}` : ''}`
 
   const itemCls =
     'flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-fg-secondary hover:bg-tint/[0.06] hover:text-fg'
 
   return (
     <div className="relative" ref={boxRef}>
-      <button
-        onClick={() => setOpen((v) => !v)}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-label="Меню профиля"
-        className="lift flex h-11 w-11 items-center justify-center rounded-full border border-tint/[0.08] bg-surface text-sm font-medium text-accent-soft-fg"
-      >
-        {initial}
-      </button>
+      {variant === 'row' ? (
+        <button
+          onClick={() => setOpen((v) => !v)}
+          aria-haspopup="menu"
+          aria-expanded={open}
+          aria-label="Меню профиля"
+          data-profile-card
+          className="flex w-full items-center gap-2.5 rounded-2xl border border-line p-2 text-left transition-colors hover:bg-tint/[0.04]"
+        >
+          <span className="flex size-9 flex-none items-center justify-center rounded-full bg-accent-soft text-sm font-semibold text-accent-soft-fg">
+            {initial}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-body font-semibold text-fg">{firstName}</span>
+            {line && <span className="block truncate text-xs text-fg-muted">{line}</span>}
+          </span>
+        </button>
+      ) : (
+        <button
+          onClick={() => setOpen((v) => !v)}
+          aria-haspopup="menu"
+          aria-expanded={open}
+          aria-label="Меню профиля"
+          className="lift group relative flex h-11 w-11 items-center justify-center rounded-full border border-tint/[0.08] bg-surface text-sm font-medium text-accent-soft-fg"
+        >
+          {initial}
+          {variant === 'rail' && !open && <HoverTip label={firstName} />}
+        </button>
+      )}
 
       {open && (
         <div
           role="menu"
-          className={`animate-fade-up absolute z-30 w-56 overflow-hidden rounded-2xl border border-tint/[0.10] bg-surface/96 py-1 shadow-raised backdrop-blur-xl ${
-            opensUp ? 'bottom-full left-0 mb-2' : 'right-0 top-11'
-          }`}
+          className={`animate-fade-up absolute z-30 w-56 overflow-hidden rounded-2xl border border-tint/[0.10] bg-surface/96 py-1 shadow-raised backdrop-blur-xl ${MENU_AT[variant]}`}
         >
           <p className="truncate px-4 pb-2 pt-1.5 text-xs text-fg-muted">{name}</p>
           {trialText && (
