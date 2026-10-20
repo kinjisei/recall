@@ -112,12 +112,12 @@ try {
 
   // ⚠️ Старые разделы — плитками, а не раскрытыми на карточке (Ф2.11б-2): если
   // они снова окажутся на виду, экран вернётся к пяти раскрывашкам подряд.
-  check('разделы — плитками, содержимое не на карточке', (await page.$('[data-section-tiles]')) !== null && !(await seen(page, 'Дней с занятиями')))
+  check('разделы — плитками, содержимое не на карточке', (await page.$('[data-section-tiles]')) !== null && !(await seen(page, 'Динамика за месяц')))
 
   // ---- 2. разделы адресуемые ------------------------------------------------
   await page.goto(`${BASE}/teacher?student=${sId}&sec=diag`, { waitUntil: 'networkidle2', timeout: 30000 })
-  // заголовки диагностики набраны капсом — innerText видит их так; ждём строку динамики
-  check('?sec=diag открывает диагностику сразу', await waitText(page, 'Дней с занятиями'))
+  // ждём заголовок динамики — его нет на карточке, только в разделе (d10-2)
+  check('?sec=diag открывает диагностику сразу', await waitText(page, 'Динамика за месяц'))
 
   // ---- 3. сборка домашки шторкой --------------------------------------------
   await page.goto(`${BASE}/teacher?student=${sId}`, { waitUntil: 'networkidle2', timeout: 30000 })
@@ -308,6 +308,10 @@ try {
     cards.map((c) => ({ user_id: sId, card_id: c.id, state: 'review', due: now, last_review: now, reps: 1, stability: 2, difficulty: 5 })),
   )
   await page.reload({ waitUntil: 'networkidle2', timeout: 30000 })
+  // пункты — под «Показать задания» (d10-1, t6-2): на карточке только счёт
+  await waitText(page, 'Показать задания')
+  check('пункты домашки свёрнуты под «Показать задания»', !(await seen(page, 'засчитано по занятиям')))
+  await tap(page, 'Показать задания')
   check('пункт закрылся по занятиям', await waitText(page, 'засчитано по занятиям'))
   const overclaims = await seen(page, 'проверено')
   check(
@@ -361,8 +365,9 @@ try {
 
   // ---- ⬜ класс закрыт: серого нативного <select> нет и в других разделах ----
   // Композер выше — одно из пяти мест. Здесь убеждаемся, что миграция дошла до
-  // Квестов и Программы: нативного <select> нет, выбор — пикер. Красит, если
-  // раздел откатить на <select>. (Делаем ДО входа учеником — тут ещё учитель.)
+  // Квестов и Программы: нативного <select> нет, выбор — пикер или радиокнопки
+  // (в «Квестах» язык, уровень и сценарий — полосы и плитки, d10-4). Красит,
+  // если раздел откатить на <select>. (Делаем ДО входа учеником — тут ещё учитель.)
   // ⚠️ Ждём МАРКЕР формы, а не фиксированную паузу: разделы грузят данные через
   // useAsyncData, и на 800 мс Программа ещё показывала скелетон — пикера в нём
   // нет, и проверка краснела на исправном коде.
@@ -378,9 +383,9 @@ try {
     const nativeSelects = await page.evaluate(() => document.querySelectorAll('select').length)
     check(`«${name}»: нативного <select> нет`, nativeSelects === 0, `select: ${nativeSelects}`)
     const hasPicker = await page.evaluate(
-      () => !!document.querySelector('button[aria-haspopup="listbox"]'),
+      () => !!document.querySelector('button[aria-haspopup="listbox"], [role="radiogroup"] [role="radio"]'),
     )
-    check(`«${name}»: выбор — пикер`, hasPicker)
+    check(`«${name}»: выбор — пикер или радиокнопки`, hasPicker)
   }
 
   // Вход учеником — в ОТДЕЛЬНОМ контексте браузера.

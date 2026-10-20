@@ -9,14 +9,16 @@
 import { initials } from '../lib/initials'
 import { IconUsers, type IconLike } from './icons'
 
-/** Размер, px → классы (s3: 56/20, 40/15, 32/13; шапка s4 — 36/15). */
+/** Размер, px → классы (s3: 56/20, 40/15, 32/13; шапка s4 — 36/15; карточка ученика d10 — 60, t6-2 — 72). */
 const SIZES = {
   28: 'size-7 text-caption',
   32: 'size-8 text-note',
   36: 'size-9 text-body',
   40: 'size-10 text-body',
   56: 'size-14 text-xl',
+  60: 'size-15 text-xl',
   64: 'size-16 text-xl',
+  72: 'size-18 text-2xl',
 } as const
 
 export type AvatarSize = keyof typeof SIZES

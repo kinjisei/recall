@@ -124,6 +124,8 @@ export function studio(prefix) {
     const cards = must(await t.client.rpc('get_my_student_cards'), 'карточки')
     const cardOf = (u) => cards.find((c) => c.user_id === u.id)?.id
     const [ca, cs, cm] = [cardOf(a), cardOf(s), cardOf(m)]
+    // у Айгерим есть номер — строка контактов в шапке карточки, как в d10-1 и t6-2
+    must(await t.client.rpc('update_student_card', { p_card: ca, p_name: 'Айгерим Нурланова', p_contact: '+7 701 555 12 34' }), 'контакт Айгерим')
     const plain = [['Нұрсұлтан Ахметов', 'trial', '+7 705 220 11 90'], ['Камила Оспан', 'active', '+7 707 334 56 12'], ['Тимур Ким', 'active', '@timur_kim'], ['Алина Ли', 'active', '+7 701 888 02 45'], ['Данияр Беков', 'paused', '+7 747 100 20 30']]
     const card = {}
     for (const [name, status, contact] of plain) {
@@ -225,7 +227,7 @@ export function studio(prefix) {
       ],
     }).select('id').single(), 'сданное задание')
     await admin.from('material_assignments').insert({ material_id: mats[2].id, student_id: a.id, status: 'assigned' })
-    return { t, a, s, m, solo, nw, ca, wa: wa.id, ma: ma.id }
+    return { t, a, s, m, solo, nw, ca, card, wa: wa.id, ma: ma.id }
   }
 
   async function cleanup() {

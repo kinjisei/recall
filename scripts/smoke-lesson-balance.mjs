@@ -132,7 +132,7 @@ try {
   await shot(te, 'pay-390')
   await click(te, 'Отметить')
   // остаток в карточке приходит после перечитывания — ждём, а не проверяем мгновенно
-  check('«Отмечено: +8», остаток 8', await waitText(te, /Отмечено: \+8/) && await waitText(te, /Оплачено, осталось 8 уроков/))
+  check('«Отмечено: +8», остаток 8', await waitText(te, /Отмечено: \+8/) && await waitText(te, /Оплачено, осталось\s+8\s+уроков/))
   const [{ paid_on }] = await sql(`select paid_on::text from public.paid_lessons where card_id = '${timur}'`)
   check('база: дата оплаты — вчера', paid_on === yesterday, paid_on)
 

@@ -4,8 +4,9 @@
 // Раньше карточка была пятью текстовыми раскрывашками подряд, и по ней нельзя
 // было ответить ни на один вопрос, который задают перед уроком: что задано,
 // что сделано, о чём говорить сегодня. Теперь домашка стоит первой и сразу
-// показывает счёт — как в макете t6-2: «3 из 5 заданий · осталось 2», срок
-// той же подписью, что в строке списка (dueShort), под счётом — пункты.
+// показывает счёт — как в макетах t6-2 и d10-1: «3 из 5 заданий · осталось
+// 2», срок той же подписью, что в строке списка (dueShort), полоса и «Собрать
+// домашку»; пункты — под «Показать задания».
 //
 // ⚠️ Пометка «засчитано» / «отметил сам» — не украшение. Пункт, закрытый
 // сервером по факту занятий, и пункт, отмеченный галочкой, значат разное, и
@@ -13,6 +14,10 @@
 // занятиям», а не «проверено»: расписание повторений пишет клиент, и обещать
 // больше мы не имеем права (см. lib/homework.ts).
 // ============================================================================
+import { useState } from 'react'
+import { Button } from '../../shared/ui/Button'
+import { RevealLink } from '../../shared/ui/Disclosure'
+import { Reveal } from '../../shared/ui/Reveal'
 import { RowsSkeleton } from '../../shared/ui/Loading'
 import { LoadError } from '../../shared/ui/LoadError'
 import { useAsyncData } from '../../shared/lib/useAsyncData'
@@ -97,6 +102,7 @@ export function HomeworkSection({
     [studentId, reloadKey],
     'Не удалось прочитать домашку',
   )
+  const [items, setItems] = useState(false)
 
   if (error) {
     return <LoadError message={error} onRetry={reload} />
@@ -104,7 +110,8 @@ export function HomeworkSection({
   // сборка не выдана, а черновик жив — кнопка зовёт его продолжить (Ф1.14)
   const composing = readDraft(composerDraft(studentId)) !== null
 
-  const block = 'flex flex-col gap-3 rounded-2xl border border-tint/[0.08] bg-surface p-4 shadow-card'
+  // карточка блока d10-1: радиус 24, тянется на высоту колонки, кнопка — внизу
+  const block = 'flex flex-1 flex-col justify-between gap-3 rounded-card bg-surface p-4 shadow-card'
   if (loading) {
     return (
       <section className={block}>
@@ -119,7 +126,7 @@ export function HomeworkSection({
 
   return (
     <section className={block} aria-label="Домашка на неделю" data-homework>
-      <h3 className="flex items-baseline justify-between gap-2 font-semibold">
+      <h3 className="flex items-baseline justify-between gap-2 text-lg font-semibold text-fg">
         Домашка на неделю
         {hw && (
           <small className={`text-note font-medium ${overdue ? 'text-warning-strong' : 'text-fg-muted'}`}>{dueShort(hw.due_at)}</small>
@@ -127,14 +134,14 @@ export function HomeworkSection({
       </h3>
       {!hw ? (
         <>
-          <p className="text-[15px] text-fg-secondary">Пока не задана.</p>
+          <p className="text-body text-fg-secondary">Пока не задана.</p>
           <ComposeButton onClick={onCompose} label={composing ? 'Продолжить сборку' : 'Собрать домашку'} />
         </>
       ) : (
         <>
-          <div className="flex items-baseline justify-between gap-2 text-[15px] tabular-nums">
+          <div className="flex items-baseline justify-between gap-2 text-body tabular-nums">
             <span>
-              <b className="font-semibold">
+              <b className="text-xl font-semibold">
                 {done} из {total}
               </b>{' '}
               {plural(total, 'задания', 'заданий', 'заданий')}
@@ -145,24 +152,26 @@ export function HomeworkSection({
           {/* Полоса — тем же приёмом, что EnergyBar: масштабируем, а не меняем
               ширину. Так анимация идёт на transform и не вызывает пересчёт
               раскладки. */}
-          <div className="h-2 overflow-hidden rounded-full bg-tint/[0.08]">
+          <div className="h-2 overflow-hidden rounded-full bg-input">
             <div
               style={{ transform: `scaleX(${ratio})` }}
               className="h-full w-full origin-left rounded-full bg-accent transition-transform duration-500 [transition-timing-function:cubic-bezier(.22,1,.36,1)]"
             />
           </div>
 
-          <ul className="flex flex-col divide-y divide-tint/[0.05]">
-            {homeworkRows(hw).map((row) => (
-              <ItemRow key={row.items[0]!.id} row={row} />
-            ))}
-          </ul>
-
-          {hw.note && (
-            <p className="rounded-xl bg-tint/[0.04] px-3 py-2 text-sm text-fg-secondary">
-              {hw.note}
-            </p>
-          )}
+          {/* В макете (d10-1, t6-2) — только счёт; что именно задано и как
+              засчитано — под тихой ссылкой, чтобы не терять перед уроком */}
+          <RevealLink open={items} onToggle={() => setItems((v) => !v)} className="self-start">
+            {items ? 'Скрыть задания' : 'Показать задания'}
+          </RevealLink>
+          <Reveal open={items}>
+            <ul className="flex flex-col divide-y divide-line">
+              {homeworkRows(hw).map((row) => (
+                <ItemRow key={row.items[0]!.id} row={row} />
+              ))}
+            </ul>
+            {hw.note && <p className="mt-2 rounded-control bg-input px-3 py-2 text-sm text-fg-secondary">{hw.note}</p>}
+          </Reveal>
 
           <ComposeButton onClick={onCompose} label={composing ? 'Продолжить сборку' : 'Собрать домашку'} />
         </>
@@ -171,14 +180,11 @@ export function HomeworkSection({
   )
 }
 
-/** Главное действие карточки — кнопка одна, на всю ширину (мягкая, как в макете t6-2). */
+/** Главное действие карточки — кнопка одна, на всю ширину: мягкая 52 (t6-2, d10-1). */
 function ComposeButton({ onClick, label }: { onClick: () => void; label: string }) {
   return (
-    <button
-      onClick={onClick}
-      className="lift flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-accent-soft px-4 text-base font-semibold text-accent-soft-fg transition-[filter,transform] hover:brightness-105 active:scale-[0.99]"
-    >
+    <Button variant="secondary" onClick={onClick} className="h-13 w-full font-semibold!">
       {label}
-    </button>
+    </Button>
   )
 }

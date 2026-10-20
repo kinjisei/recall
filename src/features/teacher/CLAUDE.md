@@ -55,15 +55,16 @@
 | `BecomeTeacher.tsx` | приглашение «Ведёшь учеников?» — его показывает проверка роли маршрута (`app/RoleGate`), лениво |
 | `TeacherBlock.tsx` | на Главной самоучки: строка «Занимаешься с преподавателем?» (макеты u1-3, d4-v2-3) → код и «Привязать», по ссылке-приглашению — открыта с кодом в поле; преподавателей грузит Главная; `loadAssignmentCounts` для плана дня (при сбое бросает) |
 | `GuideSection.tsx` | «Методичка» (`/tasks?tab=guide`), контент — `src/data/teacher-guide.ts` |
-| `CardDetail.tsx` | карточка справа (на телефоне — экраном): шапка, блок «Уроки» (`features/schedule`, Ф2.8), студия или приглашение; открытый раздел — экраном вместо карточки; диагностика ученика грузится здесь (её берут плашки, плитки, разделы, отчёт) |
+| `CardDetail.tsx` | карточка справа (на телефоне — экраном; на компьютере — своя рамка во всю высоту, d10-1): шапка, студия или приглашение, блок «Уроки» (`features/schedule`, Ф2.8); открытый раздел — экраном вместо карточки; диагностика ученика грузится здесь (её берут плашки, плитки, разделы, отчёт), последнее занятие для раздела — `lastLessonOf` |
 | `StudentsTab.tsx` | вкладка «Ученики»: уроки ±2 недели и группы (вторая строка, порядок, «Группы», «Требуют внимания» — одни данные), «Требуют внимания» на компьютере, пока никто не выбран (Ф2.8, d3-3); ?remind=1 из уведомления открывает «Напомнить»; выбранная карточка (в адресе `?student=`), смена статуса с тостом «Вернуть»; перед паузой и архивом — сколько уроков уйдёт (`useLeavingLessons`, Ф2.7); список и карточка — `ListDetail fill` |
 | `roster.tsx`, `StudentRowBits.tsx` | строки списка: ближайший урок, бейдж домашки, остаток, порядок и его выбор (`useRosterSort`), «Группы»; сводка «Нужно внимание» |
-| `StudentStudio.tsx` | ученик в приложении под шапкой карточки: домашка, три плашки, плитки разделов, «Убрать из тарифа» / «Включить в тариф» с тостом «Вернуть», отвязка |
-| `StudioTiles.tsx`, `studioSections.ts`, `StudioSection.tsx` | плашки и шесть плиток (t6-2) с короткой строкой состояния; список разделов и открытый раздел в адресе; экран раздела с «‹ Имя» |
+| `StudentStudio.tsx` | ученик в приложении под шапкой карточки (d10-1, t6-2): «Уроки» и рядом домашка с тремя плашками (от 672 px контейнера — две колонки), ниже «Разделы», «Убрать из тарифа» / «Включить в тариф» с тостом «Вернуть», отвязка |
+| `StudioTiles.tsx`, `studioSections.ts`, `StudioSection.tsx` | плашки и плитки «Разделов» (t6-2, d10-1) с короткой строкой состояния; список разделов и открытый раздел в адресе; экран раздела (d10-2…4): «‹ (АН) Айгерим / Диагностика», справа уровень и «осталось 3 урока», под ней вкладки разделов и «Отчёт»; на компьютере шапка держится сверху панели |
+| `sectionBits.tsx` | общие куски разделов (d10-2…4): карточка раздела, метка статуса, сведение с «i», подвал с главным действием — держится снизу панели, на телефоне над навигацией |
 | `topicTitles.ts` | названия тем грамматики по номеру — плашке «Слабая тема», диагностике, отчёту |
 | `HomeworkSection.tsx`, `HomeworkComposer.tsx` | домашка в карточке и её сборка (правила — `features/homework/CLAUDE.md`) |
-| `StudentWordsSection.tsx`, `WordPicker.tsx` | раздел «Слова» карточки: статус, выдача паков и своих наборов, удаление, перепроверка |
-| `DiagnosticsSection.tsx`, `ProgramSection.tsx`, `PlacementSection.tsx`, `QuestSection.tsx`, `DailyPlanSection.tsx` | экраны плиток: диагностика, программа (и под ней план дня), тест уровня (главная кнопка — язык студии), квесты |
+| `StudentWordsSection.tsx`, `WordPicker.tsx` | раздел «Слова» карточки (d10-3): список с галочками, откуда слово и статус, «+ Выдать слова» (паки и свои наборы), удаление через диалог, подвал «Выбрано 3 · уйдут Айгерим в приложение» → перепроверка; прошлые перепроверки |
+| `DiagnosticsSection.tsx`, `ProgramSection.tsx`, `PlacementSection.tsx`, `QuestSection.tsx`, `DailyPlanSection.tsx` | экраны плиток: диагностика (d10-2: динамика «было → стало», три числа, слова, задания со статусом — письма ученика, материалы, домашка, — слабые темы, последнее занятие), программа (и под ней план дня), тест уровня (главная кнопка — язык студии), квесты (d10-4: назначенные с перепиской, «Новый квест» — язык и уровень полосами, сценарий плитками: «В аэропорту», «В отеле», «Собеседование» или свой, порог ползунком) |
 | `MaterialsSection.tsx`, `materials/*` | материалы: заявка, план (слова правятся руками), предпросмотр, по уровням; шаги мастера и «назад/вперёд» без потерь — `materials/wizard.ts`; «Для кого» — `ForWhom.tsx`, его правила (уровень, группы, предупреждение) — `audience.ts` |
 | `formHints.ts` | подсказки-примеры форм студии (материал, письмо, квест) на языке формы |
 | `WritingSection.tsx`, `ReviewScreen.tsx` | письменные работы и проверка |
@@ -203,8 +204,9 @@
 **Карточка ученика**
 
 - **Построена вокруг домашки** (`StudentStudio` + `HomeworkSection`,
-  `HomeworkComposer`): сверху срок и счёт, под ним «Собрать домашку», ниже три
-  плашки, остальное — плитками (t6-2). Числа плашек и плиток — из общей
+  `HomeworkComposer`): рядом с «Уроками» — срок и счёт «3 из 5 заданий»,
+  полоса и «Собрать домашку» (пункты — под «Показать задания»), под ней три
+  плашки, ниже — плитки «Разделов» (t6-2, d10-1). Числа плашек и плиток — из общей
   `lib/diagnostics`, второго счёта рядом нет; срок домашки — той же
   подписью, что в строке списка (`dueShort`).
 - **Плитка — одна кнопка** (решение владельца 10.10.2026): значок, название и
@@ -219,8 +221,13 @@
   свайп-назад — единственный способ вернуться. Раздел открывается с начала
   экрана (на компьютере — панели), «назад» возвращает прокрутку к плиткам;
   диагностика после раздела перечитывается, не стираясь с экрана.
-- **«Отчёт родителям» — своя плитка**, не кнопка внутри диагностики: лист
-  поверх, «Закрыть» — к карточке.
+- **«Отчёт родителям» — своя плитка** и вкладка «Отчёт» справа в шапке
+  раздела, не кнопка внутри диагностики: лист поверх, «Закрыть» — к карточке.
+- **Главное действие раздела — в подвале** (`SectionFooter`, d10-3, d10-4):
+  «Назначить перепроверку (3)», «Назначить квест» держатся снизу панели, пока
+  листаешь длинный список; подпись слева говорит, куда уйдёт («уйдут Айгерим
+  в приложение»), уже 448 px — над кнопкой во всю ширину. Необратимое (удалить слово, снять квест) — через
+  `useConfirm`, не `window.confirm`.
 - **«Убрать из тарифа» / «Включить в тариф»** (журнал п.71, 9) — тихой
   строкой внизу карточки с пояснением; убрал — тост «Вернуть», а не вопрос
   заранее.
@@ -237,8 +244,8 @@
   выданное в копию не попадало ни в прогресс, ни в перепроверку — это тихо
   ломало полпродукта.
 - `cards.source = 'teacher'` — происхождение. Ученик видит «от
-  преподавателя» в «Моём словаре», учитель — «выдал я» / «ученик» перед
-  удалением.
+  преподавателя» в «Моём словаре», учитель — «от тебя» / «из чтения» /
+  «добавлено учеником» в строке слова перед удалением.
 
 **Задания под учеников** (журнал п.71 (10), Ф2.11б-3)
 
@@ -347,7 +354,7 @@
 <!-- Пишет `npm run gen:docs` (scripts/gen/module-docs.mjs) по коду — руками не править. -->
 ## Из кода (сгенерировано)
 
-- **Файлы:** `AssignmentsPage.tsx`, `BecomeTeacher.tsx`, `CardDetail.tsx`, `DailyPlanSection.tsx`, `DiagnosticsSection.tsx`, `formHints.ts`, `GuideSection.tsx`, `HomeworkComposer.tsx`, `HomeworkSection.tsx`, `index.ts`, `innerScreen.ts`, `materials/audience.ts`, `materials/ForWhom.tsx`, `materials/MaterialDetail.tsx`, `materials/MaterialsByLevel.tsx`, `materials/PlanScreen.tsx`, `materials/PreviewScreen.tsx`, `materials/RequestForm.tsx`, `materials/shared.ts`, `materials/wizard.ts`, `MaterialsSection.tsx`, `PlacementSection.tsx`, `PrintSheet.tsx`, `ProgramSection.tsx`, `QuestSection.tsx`, `ReportSheet.tsx`, `ReviewScreen.tsx`, `roster.tsx`, `StudentRowBits.tsx`, `StudentsTab.tsx`, `StudentStudio.tsx`, `StudentWordsSection.tsx`, `StudioEnergy.tsx`, `StudioSection.tsx`, `studioSections.ts`, `StudioTiles.tsx`, `TasksHub.tsx`, `TasksPage.tsx`, `TeacherBlock.tsx`, `TeacherPage.tsx`, `topicTitles.ts`, `useAnswerDraft.ts`, `useComposerDraft.ts`, `useReviewDraft.ts`, `useWritingTaskDraft.ts`, `waitingCount.ts`, `waitingWorks.ts`, `WordPicker.tsx`, `WritingSection.tsx`
+- **Файлы:** `AssignmentsPage.tsx`, `BecomeTeacher.tsx`, `CardDetail.tsx`, `DailyPlanSection.tsx`, `DiagnosticsSection.tsx`, `formHints.ts`, `GuideSection.tsx`, `HomeworkComposer.tsx`, `HomeworkSection.tsx`, `index.ts`, `innerScreen.ts`, `materials/audience.ts`, `materials/ForWhom.tsx`, `materials/MaterialDetail.tsx`, `materials/MaterialsByLevel.tsx`, `materials/PlanScreen.tsx`, `materials/PreviewScreen.tsx`, `materials/RequestForm.tsx`, `materials/shared.ts`, `materials/wizard.ts`, `MaterialsSection.tsx`, `PlacementSection.tsx`, `PrintSheet.tsx`, `ProgramSection.tsx`, `QuestSection.tsx`, `ReportSheet.tsx`, `ReviewScreen.tsx`, `roster.tsx`, `sectionBits.tsx`, `StudentRowBits.tsx`, `StudentsTab.tsx`, `StudentStudio.tsx`, `StudentWordsSection.tsx`, `StudioEnergy.tsx`, `StudioSection.tsx`, `studioSections.ts`, `StudioTiles.tsx`, `TasksHub.tsx`, `TasksPage.tsx`, `TeacherBlock.tsx`, `TeacherPage.tsx`, `topicTitles.ts`, `useAnswerDraft.ts`, `useComposerDraft.ts`, `useReviewDraft.ts`, `useWritingTaskDraft.ts`, `waitingCount.ts`, `waitingWorks.ts`, `WordPicker.tsx`, `WritingSection.tsx`
 - **Вне папки (указатель «Описание:» в начале файла):** `src/lib/activityDays.ts`, `src/lib/diagnosticsBrief.ts`, `src/lib/materialExercises.ts`, `src/lib/studentSignals.ts`, `src/lib/wordChecks.ts`
 - **Адреса:** `/teacher`, `/tasks`, `/assignments`
 - **Таблицы:** `cards`, `decks`, `review_states`, `word_checks`

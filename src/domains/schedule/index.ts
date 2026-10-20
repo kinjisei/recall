@@ -25,6 +25,7 @@ export {
   groupLessonPath,
   groupLine,
   lessonLine,
+  lastLessonOf,
   nextLessonOf,
   rosterWindow,
   studioGroups,

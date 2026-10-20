@@ -25,6 +25,20 @@ export function nextLessonOf(lessons: Lesson[], cardId: string, now: Date): Less
 }
 
 /**
+ * Последнее занятие карточки (раздел «Диагностика», d10-2): уже закончилось,
+ * не отменено и ученик на нём не отмечен «не был», самое позднее.
+ */
+export function lastLessonOf(lessons: Lesson[], cardId: string, now: Date): Lesson | null {
+  let best: Lesson | null = null
+  for (const l of lessons) {
+    if (l.status === 'cancelled' || new Date(l.endsAt) > now) continue
+    if (!l.participants.some((p) => p.cardId === cardId && p.attended !== false)) continue
+    if (!best || l.startsAt > best.startsAt) best = l
+  }
+  return best
+}
+
+/**
  * Когда урок — коротко, для строки списка: «сегодня 17:00», «завтра 9:30»,
  * в пределах недели — «пн 16:00», дальше — «21 окт 16:00». День — по Алматы.
  */

@@ -308,16 +308,6 @@
       "count": 1
     }
   },
-  "src/features/teacher/DiagnosticsSection.tsx": {
-    "react-hooks/set-state-in-effect": {
-      "count": 1
-    }
-  },
-  "src/features/teacher/StudentWordsSection.tsx": {
-    "react-hooks/set-state-in-effect": {
-      "count": 1
-    }
-  },
   "src/features/teacher/TeacherPage.tsx": {
     "react-hooks/set-state-in-effect": {
       "count": 1

@@ -1,11 +1,13 @@
 // ============================================================================
-// Студия ученика в приложении — под шапкой и «Уроками» карточки (макет t6-2):
-// домашка на неделю, три плашки, «Ещё» — шесть плиток разделов, внизу место
-// тарифа и отвязка. Имя, статус, уровень и связь — в шапке (features/students),
+// Студия ученика в приложении — под шапкой карточки (макеты t6-2, d10-1;
+// PLAN.md Ф2.17-4б-2): «Уроки» (блок расписания, его даёт карточка) и рядом
+// домашка на неделю с тремя плашками — в две колонки, когда карточке хватает
+// ширины (контейнер @2xl, 672), иначе столбиком; ниже «Разделы» — шесть
+// плиток, внизу место тарифа и отвязка. Имя, статус, уровень и связь — в шапке (features/students),
 // здесь их нет. Раздел открывается экраном вместо карточки (CardDetail,
 // StudioSection) — раскрывашек под «Ещё» больше нет (PLAN.md Ф2.11б-2).
 // ============================================================================
-import { useState, type Ref } from 'react'
+import { useState, type ReactNode, type Ref } from 'react'
 import { Button } from '../../shared/ui/Button'
 import { UndoToast } from '../../shared/ui/UndoToast'
 import { useLanguage } from '../../context/LanguageContext'
@@ -19,6 +21,7 @@ import type { StudioSection } from './studioSections'
 export function StudentStudio({
   student,
   name,
+  lessons,
   diag,
   diagLoading,
   tilesRef,
@@ -30,6 +33,8 @@ export function StudentStudio({
   student: StudentInfo
   /** Имя из карточки — подпись учителя. */
   name: string
+  /** Блок «Уроки» (features/schedule) — левая колонка. */
+  lessons: ReactNode
   /** Общая диагностика (lib/diagnostics) — её же берут плашки, плитки и разделы. */
   diag: StudentDiagnostics | null
   diagLoading: boolean
@@ -49,14 +54,19 @@ export function StudentStudio({
   const p = student.profile
 
   return (
-    <div className="flex flex-col gap-3">
-      {/* 1. Домашка — первой: единственное, что нужно и до урока, и после. */}
-      <HomeworkSection studentId={p.id} reloadKey={hwVersion} onCompose={() => setComposing(true)} />
+    <div className="flex flex-col gap-4">
+      <div className="grid gap-4 @2xl:grid-cols-2">
+        {/* «Уроки» тянутся на высоту ряда, как в d10-1 */}
+        <div className="flex min-w-0 flex-col [&>section]:flex-1">{lessons}</div>
+        <div className="flex min-w-0 flex-col gap-4">
+          {/* Домашка — единственное, что нужно и до урока, и после. */}
+          <HomeworkSection studentId={p.id} reloadKey={hwVersion} onCompose={() => setComposing(true)} />
+          {/* Три числа, за которыми преподаватель и приходит. */}
+          <StatTiles diag={diag} loading={diagLoading} onOpen={onOpen} />
+        </div>
+      </div>
 
-      {/* 2. Три числа, за которыми преподаватель и приходит. */}
-      <StatTiles diag={diag} loading={diagLoading} onOpen={onOpen} />
-
-      {/* 3. Остальное — плитками: нужно раз в месяц, но видно сразу, что внутри. */}
+      {/* Остальное — плитками: нужно раз в месяц, но видно сразу, что внутри. */}
       <div ref={tilesRef} className="flex flex-col gap-3">
         <SectionTiles
           studentId={p.id}

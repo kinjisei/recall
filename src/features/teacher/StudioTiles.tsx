@@ -1,13 +1,17 @@
 // ============================================================================
-// Плашки и плитки карточки ученика (макет t6-2; PLAN.md Ф2.11б-2).
+// Плашки и плитки карточки ученика (макеты t6-2, d10-1; PLAN.md Ф2.11б-2,
+// Ф2.17-4б-2).
 //
 // Три плашки под домашкой — то, за чем преподаватель и приходит: буксующие
 // слова, слабая тема, сколько дней ученик занимался. Нажатие — в раздел, где
 // это видно подробно.
 //
-// Ниже «Ещё» — шесть плиток вместо раскрывашек: значок, название и короткая
-// строка — состояние («B1 · 3 окт», «неделя 2 из 8») или, если в разделе
-// пусто, главное действие акцентом («Назначить», «Составить»). Плитка —
+// Ниже «Разделы» — шесть плиток вместо раскрывашек: значок в мягком
+// квадрате, название и короткая строка — состояние («9 из 14 дней»,
+// «3 буксуют», «неделя 2 из 8») или, если в разделе пусто, главное действие
+// акцентом («Назначить», «Составить»). Колонок две, в широкой карточке — три
+// (контейнер карточки, а не окно); в узкой (телефон, t6-2) значок без
+// квадрата и название в две строки — квадрат съедал ширину плитки 175 px. Плитка —
 // одна кнопка: две цели в маленькой плитке — промах пальцем; само действие —
 // на экране раздела. Решение владельца 10.10.2026.
 //
@@ -25,7 +29,8 @@ import type { AppLang } from '../../types'
 import { STUDIO_SECTIONS, type StudioSection } from './studioSections'
 import { topicTitle, useTopicTitles } from './topicTitles'
 
-const surface = 'lift rounded-2xl border border-tint/[0.08] bg-surface text-left shadow-card'
+/** Поверхность плашки и плитки (d10-1): без рамки, тень только в светлой. */
+const surface = 'bg-surface text-left shadow-card transition-colors active:bg-row-press'
 
 /** Три плашки (t6-2): подпись сверху, значение снизу. diag = null после загрузки — «—». */
 export function StatTiles({
@@ -50,7 +55,7 @@ export function StatTiles({
     {
       label: 'Слабая тема',
       to: 'diag',
-      value: !diag ? '—' : top ? <span className="block text-sm leading-tight">{topicTitle(titles, top.lang, top.topicId)}</span> : <Soft block>после диагностики</Soft>,
+      value: !diag ? '—' : top ? <span className="block text-body font-semibold leading-tight">{topicTitle(titles, top.lang, top.topicId)}</span> : <Soft block>пока нет</Soft>,
     },
     {
       // ⚠️ Ровно то же окно и число, что в строке списка (activeDays7):
@@ -72,11 +77,11 @@ export function StatTiles({
           key={t.label}
           type="button"
           onClick={() => onOpen(t.to)}
-          className={`${surface} flex min-h-25 min-w-0 flex-col justify-between gap-1.5 p-3`}
+          className={`${surface} flex min-h-25 min-w-0 flex-col justify-between gap-1.5 rounded-control-lg p-3`}
         >
           <span className="text-xs leading-tight text-fg-muted">{t.label}</span>
           <span className="break-words text-2xl font-semibold leading-tight tabular-nums">
-            {loading ? <span className="inline-block h-6 w-8 animate-pulse rounded bg-tint/[0.08]" /> : t.value}
+            {loading ? <span className="animate-skeleton inline-block h-6 w-8 rounded bg-skeleton" /> : t.value}
           </span>
         </button>
       ))}
@@ -88,7 +93,7 @@ export function StatTiles({
 function Soft({ children, block = false }: { children: React.ReactNode; block?: boolean }) {
   // 14 px, а не 15, как в макете: шрифт приложения шире, и «диагностики» в
   // плашке на 390 px переносилось по слогам
-  return <span className={`${block ? 'block ' : ''}text-sm font-medium leading-tight text-fg-muted`}>{children}</span>
+  return <span className={`${block ? 'block ' : ''}text-body font-medium leading-tight text-fg-muted`}>{children}</span>
 }
 
 type TileState = { text: string; action?: boolean } | 'loading' | 'error'
@@ -117,25 +122,30 @@ export function SectionTiles({
   const fromDiag = (make: (d: StudentDiagnostics) => TileState): TileState =>
     diag ? make(diag) : diagLoading ? 'loading' : 'error'
   const states: Record<StudioSection, TileState> = {
-    diag: fromDiag((d) => ({ text: d.avgPercent !== null ? `средний балл ${d.avgPercent}%` : 'данных пока мало' })),
+    // «9 из 14 дней» с занятиями — окно 14 дней, как у диагностики (в d10-1 «… активна»: пол ученика мы не знаем)
+    diag: fromDiag((d) => ({ text: `${d.activeDays14} из 14 дней` })),
     program: program.error ? 'error' : program.loading ? 'loading' : programState(program.data),
     words: fromDiag((d) =>
-      d.words.total ? { text: `${d.words.total} ${plural(d.words.total, 'слово', 'слова', 'слов')}` } : { text: 'Выдать', action: true },
+      !d.words.total
+        ? { text: 'Выдать', action: true }
+        : d.words.struggling.length
+          ? { text: `${d.words.struggling.length} ${plural(d.words.struggling.length, 'буксует', 'буксуют', 'буксуют')}` }
+          : { text: `${d.words.total} ${plural(d.words.total, 'слово', 'слова', 'слов')}` },
     ),
     placement: placements.error ? 'error' : placements.loading ? 'loading' : placementState(placements.data ?? [], level),
     quests: fromDiag((d) => {
       const active = d.quests.filter((q) => q.status === 'assigned').length
       const done = d.quests.length - active
       if (active) return { text: `${active} в процессе` }
-      return done ? { text: `пройдено ${done}` } : { text: 'Назначить', action: true }
+      return done ? { text: `пройдено ${done}` } : { text: 'Назначить первый', action: true }
     }),
-    report: { text: 'Составить', action: true },
+    report: { text: 'лист для печати' },
   }
 
   return (
     <>
-      <p className="-mb-1 mt-2 px-1 text-note font-medium text-fg-muted">Ещё</p>
-      <div className="grid grid-cols-2 gap-2 lg:grid-cols-3" data-section-tiles>
+      <p className="-mb-1 mt-2 px-1 text-note font-medium text-fg-muted">Разделы</p>
+      <div className="grid grid-cols-2 gap-2 @2xl:grid-cols-3" data-section-tiles>
         {STUDIO_SECTIONS.map(({ id, title, Icon }) => {
           const st = states[id]
           return (
@@ -144,16 +154,18 @@ export function SectionTiles({
               type="button"
               onClick={() => onOpen(id)}
               data-tile={id}
-              className={`${surface} flex min-h-15 min-w-0 items-center gap-2 px-2.5 py-2`}
+              className={`${surface} flex min-h-18 min-w-0 items-center gap-2 rounded-control px-3 py-2.5 @lg:gap-3 @lg:px-3.5`}
             >
-              <Icon size={20} className="flex-none text-accent-strong" aria-hidden />
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-medium">{title}</span>
+              <span className="flex flex-none items-center justify-center text-accent-strong @lg:size-10 @lg:rounded-xl @lg:bg-accent-soft">
+                <Icon size={20} aria-hidden />
+              </span>
+              <span className="flex min-w-0 flex-1 flex-col gap-0.5 leading-snug">
+                <span className="break-words text-body font-semibold text-fg @lg:truncate">{title}</span>
                 {st === 'loading' ? (
-                  <span className="mt-1 block h-3 w-16 animate-pulse rounded bg-tint/[0.08]" />
+                  <span className="animate-skeleton mt-1 block h-3 w-16 rounded bg-skeleton" />
                 ) : (
                   <span
-                    className={`block truncate text-xs ${st !== 'error' && st.action ? 'font-semibold text-accent-strong' : 'text-fg-muted'}`}
+                    className={`truncate text-note ${st !== 'error' && st.action ? 'font-medium text-accent-strong' : 'text-fg-muted'}`}
                   >
                     {st === 'error' ? '—' : st.text}
                   </span>

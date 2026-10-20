@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode, Ref } from 'react'
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'danger-solid'
+type Variant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'danger-solid'
 type Size = 'sm' | 'md' | 'lg'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -16,6 +16,9 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 //   primary   — главная, одна на экран: primary, нажатая — primary-press;
 //   secondary — вторичная: мягкая подложка accent-soft («Перенести», «Начать
 //               занятие» перед уроком, макет u1-2), нажатая — accent-soft-press;
+//   outline   — вторичная рядом с заголовком карточки на компьютере: фон
+//               поверхности и тонкая рамка line («+ Выдать слова», макет
+//               d10-3), нажатая — дымка строки;
 //   ghost     — тихая: только текст accent-strong, нажатая — дымка;
 //   danger    — опасная: только там, где действие что-то отменяет — мягкая
 //               danger-soft с текстом danger-strong;
@@ -32,6 +35,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 const VARIANTS: Record<Variant, string> = {
   primary: 'bg-primary font-semibold text-primary-fg shadow-card active:bg-primary-press',
   secondary: 'bg-accent-soft font-medium text-accent-soft-fg active:bg-accent-soft-press',
+  outline: 'bg-surface font-medium text-fg inset-ring inset-ring-line active:bg-row-press',
   ghost: 'bg-transparent font-medium text-accent-strong active:bg-ghost-press',
   danger: 'bg-danger-soft font-medium text-danger-strong active:bg-danger-soft-press',
   'danger-solid': 'bg-danger font-semibold text-danger-fg shadow-card active:brightness-90',
@@ -41,6 +45,7 @@ const VARIANTS: Record<Variant, string> = {
 const PRESSED: Record<Variant, string> = {
   primary: 'data-press:bg-primary-press',
   secondary: 'data-press:bg-accent-soft-press',
+  outline: 'data-press:bg-row-press',
   ghost: 'data-press:bg-ghost-press',
   danger: 'data-press:bg-danger-soft-press',
   'danger-solid': 'data-press:brightness-90',
@@ -62,6 +67,7 @@ const OFF = 'cursor-not-allowed font-medium text-fg-faint'
 const OFF_BG: Record<Variant, string> = {
   primary: 'bg-input',
   secondary: 'bg-input',
+  outline: 'bg-surface inset-ring inset-ring-line',
   ghost: 'bg-transparent',
   danger: 'bg-input',
   'danger-solid': 'bg-input',

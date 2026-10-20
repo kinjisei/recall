@@ -314,7 +314,7 @@ async function main() {
   // ---- удаление ------------------------------------------------------------
   await page.goto(`${BASE}/teacher?student=${studentId}&sec=words`, { waitUntil: 'networkidle2' })
   const sawOrigin = await page
-    .waitForFunction(() => (document.body.innerText || '').includes('выдал я'), {
+    .waitForFunction(() => (document.body.innerText || '').includes('от тебя'), {
       timeout: 20000,
       polling: 250,
     })

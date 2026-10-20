@@ -3,7 +3,10 @@
 // Активный вариант везде — акцент (`accent-soft` / `accent-soft-fg`); отличались только
 // форма и hover. Два варианта формы:
 //   tabs    — строка кнопок rounded-lg (грамматика, глаголы, читалки) — дефолт;
-//   segment — капсула rounded-full с фоном-контейнером (Диалог: Чат/Письмо).
+//   segment — капсула rounded-full с фоном-контейнером (Диалог: Чат/Письмо);
+//   line    — вкладки с подчёркиванием 2 px цветом фокуса (разделы карточки
+//             ученика, макет d10-2): строка не переносится, лишнее — прокруткой
+//             вбок; `trailing` — справа в той же строке («Отчёт ↗»).
 // (Выбор значения — уровень, скорость, размер текста в «Настройках» — это не
 //  вкладки, а ChoiceGroup: radiogroup, rounded-xl, размер шрифта в самих
 //  кнопках.)
@@ -23,17 +26,46 @@ export function TabPicker<T extends string>({
   variant = 'tabs',
   ariaLabel,
   stretch = false,
+  trailing,
   className = '',
 }: {
   options: TabOption<T>[]
   value: T
   onChange: (id: T) => void
-  variant?: 'tabs' | 'segment'
+  variant?: 'tabs' | 'segment' | 'line'
   ariaLabel?: string
   /** Варианты делят ширину поровну: «День / Неделя», «Индивидуальный / Группа / Пробный». */
   stretch?: boolean
+  /** Только line: элемент справа в строке вкладок. */
+  trailing?: React.ReactNode
   className?: string
 }) {
+  if (variant === 'line') {
+    return (
+      <div className={`flex items-end gap-0.5 overflow-x-auto scrollbar-none ${className}`}>
+        <div role="tablist" aria-label={ariaLabel} className="flex flex-none gap-0.5">
+          {options.map((o) => {
+            const isActive = o.id === value
+            return (
+              <button
+                key={o.id}
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => onChange(o.id)}
+                className={`relative flex min-h-11 flex-none items-center gap-1.5 whitespace-nowrap rounded-t-lg px-2.5 text-body transition-colors duration-(--dur-1) ${
+                  isActive ? 'font-semibold text-accent-soft-fg after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:rounded-full after:bg-focus' : 'font-medium text-fg-secondary hover:text-fg'
+                }`}
+              >
+                {o.Icon && <o.Icon size={16} />}
+                {o.label}
+              </button>
+            )
+          })}
+        </div>
+        {trailing && <div className="ml-auto flex flex-none">{trailing}</div>}
+      </div>
+    )
+  }
   const segment = variant === 'segment'
   // tabs: обводка ring-control-line — граница элемента в обеих темах (лист
   // s2): подложка на белом теряется. ring, а не border — рамка сдвинула бы ряд.

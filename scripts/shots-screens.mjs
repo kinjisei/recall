@@ -11,7 +11,13 @@
  * Заход 4б-1 — список «Учеников» (макеты t6-1, d3-1, d3-3, d3-5):
  *   students      — никто не выбран (на компьютере справа «Требуют внимания»);
  *   students-sort — меню сортировки открыто;
- *   students-card — выбрана Айгерим (только компьютер).
+ *   students-card — выбрана Айгерим (d10-1, t6-2);
+ * Заход 4б-2 — карточка ученика (макеты d10-1, t6-2…t6-4):
+ *   students-card-menu  — у Айгерим открыто меню «⋯» (t6-3);
+ *   students-card-noapp — Тимур без приложения: «Пригласить в Recall» (t6-4);
+ *   students-diag       — раздел «Диагностика» Айгерим (d10-2);
+ *   students-words      — «Слова», отмечены три (d10-3);
+ *   students-quests     — «Квесты»: пусто и форма (d10-4).
  * Ширины 390 и 1280 — в четырёх вариантах вида («Сумерки» и «Закат» ×
  * светлая и тёмная), 1440 — светлые «Сумерки». Имя файла —
  * `<экран>-<палитра>-<тема>-<ширина>.png`. На каждом снимке — UX-аудит
@@ -19,7 +25,8 @@
  * красная строка в итоге. Телефон снимается окном во всю высоту страницы.
  *
  * Запуск: npm run dev:test, затем node scripts/shots-screens.mjs [папка]
- * [--only home|students] (по умолчанию shots-screens/, все экраны). ~6 мин.
+ * [--only home|students] [--name экран,экран] (по умолчанию shots-screens/,
+ * все экраны; --name — только эти снимки, для быстрой сверки). ~10 мин.
  */
 import { spawn } from 'node:child_process'
 import { mkdirSync } from 'node:fs'
@@ -37,6 +44,7 @@ if (process.argv.includes('--prod')) {
 const EDGE = 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'
 const DIR = process.argv[2] && !process.argv[2].startsWith('--') ? process.argv[2] : 'shots-screens'
 const ONLY = process.argv.includes('--only') ? process.argv[process.argv.indexOf('--only') + 1] : null
+const NAMES = process.argv.includes('--name') ? process.argv[process.argv.indexOf('--name') + 1].split(',') : null
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 const st = studio('shots-scr')
 
@@ -80,9 +88,14 @@ async function signIn(page, email) {
 /**
  * Один экран во всех вариантах вида на этой ширине; expect — текст, по
  * которому видно, что экран тот; prepare — что сделать перед снимком
- * (открыть меню); wait — чего дождаться сверх expect (слово дня).
+ * (открыть меню); wait — чего дождаться сверх expect (слово дня); tall —
+ * высота окна компьютера, если кадр макета снят выше 800 (d10-2 — «во всю
+ * высоту»: панель раздела прокручивается внутри, снимок страницы её не
+ * удлинит).
  */
-async function shoot(page, name, path, width, expect, looks, { prepare, wait } = {}) {
+async function shoot(page, name, path, width, expect, looks, { prepare, wait, tall } = {}) {
+  const base = page.viewport()
+  if (tall && width >= 600) await page.setViewport({ ...base, height: tall })
   for (const [palette, theme] of looks) {
     await page.evaluate((p, t) => {
       localStorage.setItem('recall.palette', p)
@@ -117,6 +130,7 @@ async function shoot(page, name, path, width, expect, looks, { prepare, wait } =
     report.push(`${issues.length ? '✗' : '✓'} UX ${file}: ${issues.length ? JSON.stringify(issues.slice(0, 3)) : '0 замечаний'}`)
     console.log(`${ok ? 'снимок' : 'НЕ ТОТ ЭКРАН'} ${file}${issues.length ? ` — UX: ${issues.length}` : ''}`)
   }
+  if (tall && width >= 600) await page.setViewport(base)
 }
 
 /** Экран на 390 и 1280 в четырёх вариантах, 1440 — светлые «Сумерки». */
@@ -125,11 +139,24 @@ async function screen(email, shots) {
     const page = await newPage(width)
     await signIn(page, email)
     for (const s of shots) {
-      if (s.wide && width < 600) continue
+      if ((s.wide && width < 600) || (NAMES && !NAMES.includes(s.name))) continue
       await shoot(page, s.name, s.path, width, s.expect, width === 1440 ? LOOKS.slice(0, 1) : LOOKS, s)
     }
     await page.browserContext().close()
   }
+}
+
+/** Открыть меню «⋯» карточки ученика (t6-3). */
+const openCardMenu = async (page) => {
+  await page.evaluate(() => document.querySelector('[aria-label="Действия с учеником"]')?.click())
+  await page.waitForSelector('[role="menu"]', { timeout: 3000 }).catch(() => {})
+  await sleep(300)
+}
+
+/** Отметить три первых слова в разделе «Слова» (d10-3). */
+const pickThreeWords = async (page) => {
+  await page.evaluate(() => [...document.querySelectorAll('[data-studio-section="words"] input[type=checkbox]')].slice(0, 3).forEach((b) => b.click()))
+  await sleep(300)
 }
 
 /** Открыть меню сортировки «Учеников» (d3-5, t6-1). */
@@ -142,7 +169,7 @@ const openSort = async (page) => {
 try {
   mkdirSync(DIR, { recursive: true })
   console.log('── студия')
-  const { t, a, solo, ca } = await st.seed()
+  const { t, a, solo, ca, card } = await st.seed()
   const PORT = 9700 + Math.floor(Math.random() * 200)
   spawn(EDGE, ['--headless=new', '--disable-gpu', `--remote-debugging-port=${PORT}`, `--user-data-dir=${profileDir('shots-screens')}`, '--no-first-run', 'about:blank'], { detached: true, stdio: 'ignore' }).unref()
   for (let i = 0; i < 30 && !browser; i++) {
@@ -156,7 +183,12 @@ try {
     await screen(t.email, [
       { name: 'students', path: '/teacher', expect: /Ученики · \d/ },
       { name: 'students-sort', path: '/teacher', expect: /Ученики · \d/, prepare: openSort },
-      { name: 'students-card', path: `/teacher?student=${ca}`, expect: /Айгерим Нурланова[\s\S]*Уроки/, wide: true },
+      { name: 'students-card', path: `/teacher?student=${ca}`, expect: /Айгерим Нурланова[\s\S]*Домашка на неделю/ },
+      { name: 'students-card-menu', path: `/teacher?student=${ca}`, expect: /Айгерим Нурланова[\s\S]*Домашка на неделю/, prepare: openCardMenu },
+      { name: 'students-card-noapp', path: `/teacher?student=${card['Тимур']}`, expect: /Тимур Ким[\s\S]*Пригласить в Recall/ },
+      { name: 'students-diag', path: `/teacher?student=${ca}&sec=diag`, expect: /Динамика за месяц[\s\S]*Последнее занятие/, wait: /Письмо IELTS/, tall: 1160 },
+      { name: 'students-words', path: `/teacher?student=${ca}&sec=words`, expect: /Отметь слова для перепроверки/, prepare: pickThreeWords },
+      { name: 'students-quests', path: `/teacher?student=${ca}&sec=quests`, expect: /Квестов пока нет[\s\S]*Новый квест/ },
     ])
   }
   if (!ONLY || ONLY === 'home') {

@@ -12,7 +12,7 @@
  *     имени, обратный порядок переворачивает только ключ.
  * Чистый: без сети и базы. Запуск: node scripts/test-student-roster.mjs
  */
-import { groupLessonPath, groupLine, lessonLine, nextLessonOf, studioGroups, whenShort } from '../src/domains/schedule/roster.ts'
+import { groupLessonPath, groupLine, lastLessonOf, lessonLine, nextLessonOf, studioGroups, whenShort } from '../src/domains/schedule/roster.ts'
 import { sortRoster } from '../src/domains/students/model.ts'
 
 let fail = 0
@@ -49,6 +49,14 @@ check('урок группы — ближайший и для её участн�
 check('идущий урок — ещё ближайший', nextLessonOf([aigerim], 'aigerim', new Date('2026-10-15T14:30:00Z'))?.id, 'aig')
 check('закончился — уже нет', nextLessonOf([aigerim], 'aigerim', new Date('2026-10-15T15:00:00Z')), null)
 check('чужой урок — не мой', nextLessonOf(all, 'nobody', NOW), null)
+
+// ── последнее занятие (d10-2) ──────────────────────────────────────────────────
+const older = lesson('older', '2026-10-13T14:00:00Z', ['aigerim'], { status: 'done' })
+const missed = lesson('missed', '2026-10-15T09:00:00Z', [], { status: 'done', participants: [{ cardId: 'aigerim', attended: false }] })
+check('последнее — вчерашнее: сегодняшнее ещё впереди, отменённое и раннее не в счёт', lastLessonOf([...all, older], 'aigerim', NOW)?.id, 'past')
+check('«не был» — не занятие', lastLessonOf([past, missed], 'aigerim', NOW)?.id, 'past')
+check('закончившийся сегодня — уже последнее', lastLessonOf(all, 'aigerim', new Date('2026-10-15T15:00:00Z'))?.id, 'aig')
+check('прошедших нет — null', lastLessonOf(all, 'alina', NOW), null)
 
 // ── вторая строка ───────────────────────────────────────────────────────────────
 check('сегодня — «сегодня 17:00 · IELTS вечер» у группы, «сегодня 19:00» у индивидуального', [lessonLine(ielts, NOW), lessonLine(aigerim, NOW)], ['сегодня 17:00 · IELTS вечер', 'сегодня 19:00'])

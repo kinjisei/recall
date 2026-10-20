@@ -172,7 +172,7 @@ try {
     )
     const trendOk = await page.evaluate(
       () =>
-        document.body.textContent.includes('Дней с занятиями') &&
+        document.body.textContent.includes('Дни с занятиями') &&
         document.body.textContent.includes('Новых ошибок грамматики'),
     )
     check('блок «Динамика за месяц» отрисован', trendOk)

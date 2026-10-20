@@ -187,6 +187,8 @@ export function StudentsTab({
       info={selected.info}
       plan={plan}
       balance={balances.get(selected.card.id) ?? null}
+      lessons={around.data}
+      series={series.data}
       canWrite={canWrite}
       busy={busy}
       actionError={actionError}
