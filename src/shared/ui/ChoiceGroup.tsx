@@ -10,10 +10,12 @@
 //           подложка; нажатый — дымка; выключенный — рамка line, текст
 //           fg-faint. Рамка — ring, а не border: border прибавил бы чипу 2 px
 //           и сдвинул ряд уровней;
-//   cards — карточки столбиком: кружок выбора, подпись, пояснение и правый
-//           слот (цена). Выбор, где у варианта есть что объяснить (макет t9,
-//           тарифы). Выбранная обведена акцентом в обеих темах: без рамки в
-//           тёмной теме её отличала бы только подложка;
+//   cards — карточки столбиком (`.rad` макетов t5-2 и t9 — «списать или
+//           нет», тарифы): кружок 22, подпись 16 полужирным, пояснение и
+//           правый слот (цена); поле 14, радиус 16, черта line. Выбранная —
+//           мягкий акцент и рамка цвета фокуса 2 px в обеих темах (без рамки
+//           в тёмной её отличала бы только подложка), кружок — толстое кольцо
+//           цвета главной кнопки;
 //   segment — короткие варианты одной полосой на подложке поля (язык и
 //           уровень квеста, макет d10-4): высота 44, радиус 12, выбранный —
 //           белая «таблетка» с тенью сегмента и жирным текстом; подпись в
@@ -124,21 +126,15 @@ export function ChoiceGroup<T extends string>({
               role="radio"
               aria-checked={on}
               onClick={() => onChange(o.id)}
-              className={`flex min-h-14 items-center gap-3 rounded-2xl border px-4 py-3 text-left shadow-card transition-colors ${
-                on ? 'border-accent-line bg-accent-soft' : 'border-tint/[0.08] bg-surface hover:bg-tint/[0.04]'
+              className={`flex items-start gap-3 rounded-control p-3.5 text-left transition-colors duration-(--dur-1) ease-out ${
+                on ? 'bg-accent-soft inset-ring-2 inset-ring-focus' : 'inset-ring inset-ring-line active:bg-row-press'
               }`}
             >
-              <span
-                aria-hidden="true"
-                className={`flex h-5 w-5 flex-none items-center justify-center rounded-full border-2 ${
-                  on ? 'border-accent' : 'border-fg-faint'
-                }`}
-              >
-                {on && <span className="h-2.5 w-2.5 rounded-full bg-accent" />}
-              </span>
+              {/* кружок как у плиток: выбранный — толстое кольцо цвета главной кнопки */}
+              <span aria-hidden className={`mt-px size-5.5 flex-none rounded-full bg-surface ${on ? 'inset-ring-6 inset-ring-primary' : 'inset-ring-2 inset-ring-fg-faint'}`} />
               <span className="flex min-w-0 flex-1 flex-col">
-                <span className={`font-medium ${on ? 'text-accent-soft-fg' : 'text-fg'} ${o.className ?? ''}`}>{o.label}</span>
-                {o.hint && <span className="text-note text-fg-muted">{o.hint}</span>}
+                <span className={`text-base font-semibold ${on ? 'text-accent-soft-fg' : 'text-fg'} ${o.className ?? ''}`}>{o.label}</span>
+                {o.hint && <span className={`mt-0.5 text-note ${on ? 'text-accent-soft-fg' : 'text-fg-secondary'}`}>{o.hint}</span>}
               </span>
               {o.trailing && <span className="flex-none text-right">{o.trailing}</span>}
             </button>

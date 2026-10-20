@@ -9,6 +9,7 @@ import { useDraftForm } from '../../shared/lib/useDraft'
 import { DraftRestored } from '../../shared/ui/DraftRestored'
 import { Card } from '../../shared/ui/Card'
 import { Button } from '../../shared/ui/Button'
+import { useConfirm } from '../../shared/ui/ConfirmDialog'
 import { BackHeader } from '../../shared/ui/BackButton'
 import { IconCheck, IconClose } from '../../shared/ui/icons'
 import { finishWritingReview, reassignWriting } from '../../lib/writing'
@@ -68,8 +69,17 @@ export function WritingReviewScreen({
     }
   }
 
+  const { ask, dialog } = useConfirm()
   const reassign = async () => {
-    const note = prompt('Комментарий ученику «на что обратить внимание» (необязательно):') ?? ''
+    // системный prompt путал «Отмену» с пустым комментарием — работа уходила на доработку и так
+    const note = await ask({
+      title: 'Вернуть на доработку?',
+      body: 'Ученик поправит работу поверх прошлого текста и сдаст снова; эта попытка уйдёт в историю.',
+      field: { label: 'На что обратить внимание', placeholder: 'Необязательно' },
+      action: 'На доработку',
+      danger: false,
+    })
+    if (note === null) return
     setBusy('reassign')
     setError(null)
     try {
@@ -189,6 +199,7 @@ export function WritingReviewScreen({
           <WritingHistory attempts={assignment.attempts} />
         </Card>
       )}
+      {dialog}
     </div>
   )
 }

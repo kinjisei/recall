@@ -39,6 +39,16 @@ const config = defineConfig([
     languageOptions: { globals: globals.browser },
   },
   {
+    // Системные окна браузера (window.confirm / alert / prompt) — нельзя: только
+    // наш диалог по центру, shared/ui/ConfirmDialog — useConfirm() (Ф2.17-4б-3).
+    // Системное окно не знает темы, в PWA выглядит чужим, а prompt путал
+    // «Отмену» с пустым ответом. Правило понимает область видимости:
+    // `const { confirm } = useConfirm()` — не нарушение, а `confirm(…)` без
+    // него и `window.confirm(…)` — нарушение.
+    files: ['src/**/*.{ts,tsx}'],
+    rules: { 'no-alert': 'error' },
+  },
+  {
     files: ['api/**', 'vite.config.ts', 'eslint.config.js', '.github/scripts/**', 'docs/**/*.mjs'],
     languageOptions: { globals: globals.node },
   },

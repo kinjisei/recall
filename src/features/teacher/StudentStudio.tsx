@@ -9,6 +9,7 @@
 // ============================================================================
 import { useState, type ReactNode, type Ref } from 'react'
 import { Button } from '../../shared/ui/Button'
+import { useConfirm } from '../../shared/ui/ConfirmDialog'
 import { UndoToast } from '../../shared/ui/UndoToast'
 import { useLanguage } from '../../context/LanguageContext'
 import { setStudentSeat, unlinkStudent, type StudentInfo } from '../../lib/teacher'
@@ -121,6 +122,7 @@ function StudioFooter({
   const [unlinking, setUnlinking] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<number | null>(null)
+  const { confirm, dialog } = useConfirm()
 
   const setSeat = async (on: boolean) => {
     setSeatBusy(true)
@@ -137,9 +139,11 @@ function StudioFooter({
   }
 
   const unlink = async () => {
-    const ok = window.confirm(
-      `Отвязать ${name} от приложения? Аккаунт и прогресс останутся у ученика, карточка — в твоём списке, но ты перестанешь видеть занятия и не сможешь назначать задания.`,
-    )
+    const ok = await confirm({
+      title: 'Отвязать от приложения?',
+      body: `${name} сохранит аккаунт и прогресс, карточка останется в твоём списке. Но ты перестанешь видеть занятия и не сможешь назначать задания.`,
+      action: 'Отвязать',
+    })
     if (!ok) return
     setUnlinking(true)
     setError(null)
@@ -178,6 +182,7 @@ function StudioFooter({
           onClose={() => setToast(null)}
         />
       )}
+      {dialog}
     </div>
   )
 }

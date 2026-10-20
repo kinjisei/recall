@@ -3,6 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom'
 import { useCopy } from '../../shared/lib/useCopy'
 import { Card } from '../../shared/ui/Card'
 import { Button } from '../../shared/ui/Button'
+import { useConfirm } from '../../shared/ui/ConfirmDialog'
 import { HintButton, HintPanel, useHint } from '../../shared/ui/HowItWorks'
 import { IconPlus, IconRefresh } from '../../shared/ui/icons'
 import { useOnReturn } from '../../shared/lib/useOnReturn'
@@ -62,6 +63,7 @@ function StudentsScreen() {
   const [inner, setInner] = useState(false)
   const [adding, setAdding] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
+  const { confirm, dialog } = useConfirm()
   // шапки (и пояснения) нет, пока на телефоне открыта карточка
   const hint = useHint()
 
@@ -102,11 +104,16 @@ function StudentsScreen() {
   }
 
   // Перевыпуск кода: старый сразу перестаёт работать, уже привязанные ученики
-  // остаются. Спрашиваем подтверждение — действие необратимое.
+  // остаются. Спрашиваем подтверждение — действие необратимое (диалог по центру).
   // Выключение режима: возвращает обычную роль. Учеников не трогает — если они
   // есть, база откажет с понятным текстом (кнопку в этом случае и не показываем).
   const stopTeach = async () => {
-    if (!confirm('Выключить режим преподавателя? Студия и код приглашения пропадут. Твои собственные занятия останутся как есть.')) return
+    const ok = await confirm({
+      title: 'Выключить режим преподавателя?',
+      body: 'Студия и код приглашения пропадут. Твои собственные занятия останутся как есть.',
+      action: 'Выключить',
+    })
+    if (!ok) return
     setStopping(true)
     setError(null)
     try {
@@ -122,9 +129,12 @@ function StudentsScreen() {
   }
 
   const changeCode = async () => {
-    if (!confirm('Выдать новый код? Старый перестанет работать сразу. Уже привязанные ученики останутся.')) {
-      return
-    }
+    const ok = await confirm({
+      title: 'Выдать новый код?',
+      body: 'Старый код перестанет работать сразу. Уже привязанные ученики останутся.',
+      action: 'Выдать новый',
+    })
+    if (!ok) return
     setRegenerating(true)
     setError(null)
     try {
@@ -211,6 +221,7 @@ function StudentsScreen() {
           />
         )}
       </div>
+      {dialog}
     </InnerScreenContext.Provider>
   )
 }

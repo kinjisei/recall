@@ -6,6 +6,7 @@
 // ============================================================================
 import { useCallback, useState } from 'react'
 import { Button } from '../../shared/ui/Button'
+import { useConfirm } from '../../shared/ui/ConfirmDialog'
 import { useLanguage } from '../../context/LanguageContext'
 import { LoadError } from '../../shared/ui/LoadError'
 import { Picker } from '../../shared/ui/Picker'
@@ -112,10 +113,11 @@ function ActivePlanView({
   const [err, setErr] = useState<string | null>(null)
   const [archiving, setArchiving] = useState(false)
   const week = currentWeekIndex(plan)
+  const { confirm, dialog } = useConfirm()
 
   const remove = async () => {
     if (archiving) return
-    if (!confirm('Снять программу? Ученик перестанет её видеть.')) return
+    if (!(await confirm({ title: 'Снять программу?', body: 'Ученик перестанет её видеть, программа уйдёт в архив.', action: 'Снять' }))) return
     setArchiving(true)
     try {
       await archivePlan(plan.id)
@@ -147,6 +149,7 @@ function ActivePlanView({
           Снять программу
         </Button>
       </div>
+      {dialog}
     </div>
   )
 }
@@ -178,8 +181,9 @@ function PlanForm({
   const { level, weeks, goal, feedback, preview, editing } = form
   const [setLevel, setWeeks, setGoal] = [field('level'), field('weeks'), field('goal')]
   const [setFeedback, setPreview, setEditing] = [field('feedback'), field('preview'), field('editing')]
-  const cancel = () => {
-    if (preview && !window.confirm('Выбросить программу, которую составил AI?')) return
+  const { confirm, dialog } = useConfirm()
+  const cancel = async () => {
+    if (preview && !(await confirm({ title: 'Выбросить программу?', body: 'Программа, которую составил AI, пропадёт.', action: 'Выбросить', cancel: 'Оставить' }))) return
     draft.clear()
     onCancel?.()
   }
@@ -204,7 +208,7 @@ function PlanForm({
 
   const save = async () => {
     if (!preview) return
-    if (hasActive && !confirm('Прошлая программа уйдёт в архив. Сохранить новую?')) return
+    if (hasActive && !(await confirm({ title: 'Заменить программу?', body: 'Прошлая программа уйдёт в архив — ученик будет видеть новую.', action: 'Сохранить новую', danger: false }))) return
     setBusy('save')
     setErr(null)
     try {
@@ -268,7 +272,7 @@ function PlanForm({
               {busy === 'gen' ? 'Составляю (до минуты)…' : preview ? 'Составить заново' : 'Составить программу'}
             </Button>
             {onCancel && (
-              <Button size="sm" variant="ghost" onClick={cancel}>
+              <Button size="sm" variant="ghost" onClick={() => void cancel()}>
                 Отмена
               </Button>
             )}
@@ -306,6 +310,7 @@ function PlanForm({
           </div>
         </>
       )}
+      {dialog}
     </div>
   )
 }

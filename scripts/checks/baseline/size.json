@@ -15,7 +15,7 @@
     "src/features/teacher/HomeworkComposer.tsx#HomeworkComposer": 281,
     "src/features/teacher/ReviewScreen.tsx#ReviewScreen": 258,
     "src/features/teacher/WordPicker.tsx": 489,
-    "src/features/teacher/WritingSection.tsx": 520,
+    "src/features/teacher/WritingSection.tsx": 505,
     "src/features/words/MyWords.tsx": 466,
     "src/lib/homeworkRules.ts": 535,
     "src/lib/materials.ts": 618,

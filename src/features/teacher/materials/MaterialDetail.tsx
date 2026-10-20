@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Card } from '../../../shared/ui/Card'
 import { Reveal } from '../../../shared/ui/Reveal'
 import { Button } from '../../../shared/ui/Button'
+import { useConfirm } from '../../../shared/ui/ConfirmDialog'
 import { BackHeader } from '../../../shared/ui/BackButton'
 import { LoadError } from '../../../shared/ui/LoadError'
 import { IconPrinter, IconTrash } from '../../../shared/ui/icons'
@@ -54,6 +55,7 @@ export function MaterialDetail({
     initialReview ?? null,
   )
   const [printMode, setPrintMode] = useState<'student' | 'teacher' | null>(null)
+  const { confirm, dialog } = useConfirm()
 
   const reload = useCallback(() => {
     setLoadError(null)
@@ -74,13 +76,12 @@ export function MaterialDetail({
     // историю попыток — и делает это без возврата. Спрашиваем подтверждение
     // (у назначенной, но не начатой, терять нечего — снимаем сразу).
     if (cur && cur.status !== 'assigned') {
-      if (
-        !window.confirm(
-          'Убрать эту работу? Ответы ученика, баллы и проверка удалятся без возможности вернуть.',
-        )
-      ) {
-        return
-      }
+      const ok = await confirm({
+        title: 'Убрать работу?',
+        body: 'Ответы ученика, баллы и проверка удалятся — вернуть их будет нельзя.',
+        action: 'Убрать',
+      })
+      if (!ok) return
     }
     setBusyStudent(studentId)
     setError(null)
@@ -99,7 +100,12 @@ export function MaterialDetail({
 
   const remove = async () => {
     if (deleting) return
-    if (!window.confirm('Удалить материал? Назначения учеников тоже удалятся.')) return
+    const ok = await confirm({
+      title: 'Удалить материал?',
+      body: 'Назначения учеников и их ответы удалятся вместе с ним.',
+      action: 'Удалить',
+    })
+    if (!ok) return
     setDeleting(true)
     setError(null)
     try {
@@ -225,6 +231,7 @@ export function MaterialDetail({
       >
         <IconTrash size={16} /> Удалить материал
       </Button>
+      {dialog}
     </div>
   )
 }

@@ -1,11 +1,13 @@
 // ============================================================================
-// Мелкие части урока (макеты t2–t4): метка состояния и аватар. Одни и те же
+// Мелкие части урока (макеты t2–t5): метка состояния, аватар, строка «кто и
+// когда» и «… получит уведомление» в шторках переноса и отмены. Одни и те же
 // в дне, неделе, списке и шторке — иначе урок в разных видах выглядел бы
 // по-разному. Что написать в метке, решает domains/schedule (lessonBadge).
 // ============================================================================
-import { isTrialLesson, type BadgeIcon, type BadgeTone, type Lesson, type LessonBadge } from '../../domains/schedule'
+import { dayShort, isTrialLesson, lessonDay, lessonName, notifiedLine, timeRange, type BadgeIcon, type BadgeTone, type Lesson, type LessonBadge } from '../../domains/schedule'
+import { firstName } from '../../domains/students'
 import { Avatar } from '../students'
-import { IconArrowRight, IconCheck, IconClockAuto, IconSparkle, IconUsers, IconWarning, IconXCircle, type IconLike } from '../../shared/ui/icons'
+import { IconArrowRight, IconBell, IconCheck, IconClockAuto, IconSparkle, IconUsers, IconWarning, IconXCircle, type IconLike } from '../../shared/ui/icons'
 
 const TONE: Record<BadgeTone, string> = {
   success: 'bg-success-soft text-success-soft-fg',
@@ -69,4 +71,33 @@ export function lessonLook(lesson: Lesson): string {
   if (lesson.kind === 'group') return 'border border-accent-line bg-accent-soft text-accent-soft-fg'
   if (isTrialLesson(lesson)) return 'border border-dashed border-accent-line bg-surface text-fg'
   return 'border border-tint/[0.08] bg-surface text-fg shadow-card'
+}
+
+/** Подпись над выбором в шторках переноса и отмены (t5-1, t5-2): 13, средний, на 4 px внутрь от карточек. */
+export const CHOICE_LABEL = 'px-1 text-note font-medium text-fg-muted'
+
+/** Кто и когда — под заголовком шторок переноса и отмены (t5-1, t5-2, d2-2): аватар, имя, «чт, 22 окт, 19:00–20:00». */
+export function LessonWho({ lesson, inApp }: { lesson: Lesson; inApp: (cardId: string) => boolean }) {
+  return (
+    <div className="flex items-center gap-2.5 px-1">
+      <LessonAvatar lesson={lesson} inApp={inApp} small />
+      <p className="flex min-w-0 flex-col">
+        <span className="truncate text-body text-fg">{lessonName(lesson)}</span>
+        <span className="text-note text-fg-muted tabular-nums">
+          {dayShort(lessonDay(lesson))}, {timeRange(lesson)}
+        </span>
+      </p>
+    </div>
+  )
+}
+
+/** «Айгерим получит уведомление» — кому Recall напишет сам (reached — до карточки достаёт); никому — ничего. */
+export function NotifyLine({ lesson, reached }: { lesson: Lesson; reached: (cardId: string) => boolean }) {
+  const line = notifiedLine(lesson.participants.filter((p) => reached(p.cardId)).map((p) => firstName(p.name)))
+  return line ? (
+    <p className="-mt-1 flex items-center gap-2 px-1 text-sm text-fg-secondary">
+      <IconBell size={18} aria-hidden className="flex-none text-fg-muted" />
+      {line}
+    </p>
+  ) : null
 }

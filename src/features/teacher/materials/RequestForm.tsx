@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Card } from '../../../shared/ui/Card'
 import { Button } from '../../../shared/ui/Button'
+import { useConfirm } from '../../../shared/ui/ConfirmDialog'
 import { useLanguage } from '../../../context/LanguageContext'
 import {
   MATERIAL_FORMATS,
@@ -66,9 +67,10 @@ export function RequestForm({
   const [setFormat, setLengthRange, setVocabulary] = [field('format'), field('lengthRange'), field('vocabulary')]
   const [setGrammar, setBody, setStudentIds] = [field('grammar'), field('body'), field('studentIds')]
   const hints = FORM_HINTS[lang]
-  const cancel = () => {
+  const { confirm, dialog } = useConfirm()
+  const cancel = async () => {
     // «Отмена» выбрасывает и готовое впереди — то, что уже стоило генерации AI
-    if (resumeLabel && !window.confirm('Выбросить материал? То, что уже составил AI, пропадёт.')) return
+    if (resumeLabel && !(await confirm({ title: 'Выбросить материал?', body: 'То, что уже составил AI, пропадёт.', action: 'Выбросить', cancel: 'Оставить' }))) return
     draft.clear()
     onCancel()
   }
@@ -254,10 +256,11 @@ export function RequestForm({
             {submitLabel(true, busy, !!resumeLabel)}
           </Button>
         )}
-        <Button variant="ghost" onClick={cancel} disabled={busy}>
+        <Button variant="ghost" onClick={() => void cancel()} disabled={busy}>
           Отмена
         </Button>
       </div>
+      {dialog}
     </Card>
   )
 }

@@ -12,7 +12,6 @@ import { useAsyncData } from '../../shared/lib/useAsyncData'
 import {
   createWritingTask,
   listMyWritingTasks,
-  deleteWritingTask,
   assignWritingTask,
   unassignWritingTask,
   listWritingAssignments,
@@ -31,6 +30,7 @@ import { readDraft } from '../../shared/lib/drafts'
 import { DraftRestored } from '../../shared/ui/DraftRestored'
 import { WRITING_TASK_DRAFT, useWritingTaskDraft } from './useWritingTaskDraft'
 import { useInnerScreen } from './innerScreen'
+import { WritingDeleteButton } from './WritingDeleteButton'
 
 const CHART_KINDS: { id: ChartSpec['kind']; label: string }[] = [
   { id: 'bar', label: 'Столбцы' },
@@ -386,7 +386,6 @@ function WritingDetail({
     'Не удалось загрузить назначения',
   )
   const [busyStudent, setBusyStudent] = useState<string | null>(null)
-  const [deleting, setDeleting] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const [reviewing, setReviewing] = useState<{ a: WritingTaskAssignment; name: string } | null>(null)
 
@@ -418,18 +417,6 @@ function WritingDetail({
       setErr(e instanceof Error ? e.message : 'Ошибка')
     } finally {
       setBusyStudent(null)
-    }
-  }
-
-  const remove = async () => {
-    if (!confirm('Удалить это задание? Назначения ученикам тоже пропадут.')) return
-    setDeleting(true)
-    try {
-      await deleteWritingTask(task.id)
-      onDeleted()
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : 'Не удалось удалить')
-      setDeleting(false)
     }
   }
 
@@ -512,9 +499,7 @@ function WritingDetail({
         {err && <p className="text-sm text-danger">{err}</p>}
       </Card>
 
-      <Button size="sm" variant="ghost" className="self-start text-danger" onClick={remove} loading={deleting}>
-        Удалить задание
-      </Button>
+      <WritingDeleteButton taskId={task.id} onDeleted={onDeleted} onError={setErr} />
     </div>
   )
 }

@@ -18,6 +18,14 @@
  *   students-diag       — раздел «Диагностика» Айгерим (d10-2);
  *   students-words      — «Слова», отмечены три (d10-3);
  *   students-quests     — «Квесты»: пусто и форма (d10-4).
+ * Заход 4б-3 — отмена урока и диалог по центру (макеты t5-2, d2-2, s3):
+ *   cancel          — «Отменить урок» Айгерим: серия «вт и чт» 19:00,
+ *                     остаток 3, уведомления включены — как в кадре t5-2;
+ *   cancel-confirm  — «Этот и все следующие» → «Отменить уроки?»;
+ *   material-delete — «Удалить материал?» в «Материалах»;
+ *   reassign        — «Вернуть на доработку?» с полем (был window.prompt).
+ * Аудит у них — по шторке или диалогу (`audit`), а не по <main> под
+ * затемнением; снимок — ровно окном (`overlay`), как кадры t5-2 и d2-2.
  * Ширины 390 и 1280 — в четырёх вариантах вида («Сумерки» и «Закат» ×
  * светлая и тёмная), 1440 — светлые «Сумерки». Имя файла —
  * `<экран>-<палитра>-<тема>-<ширина>.png`. На каждом снимке — UX-аудит
@@ -25,7 +33,7 @@
  * красная строка в итоге. Телефон снимается окном во всю высоту страницы.
  *
  * Запуск: npm run dev:test, затем node scripts/shots-screens.mjs [папка]
- * [--only home|students] [--name экран,экран] (по умолчанию shots-screens/,
+ * [--only home|students|cancel] [--name экран,экран] (по умолчанию shots-screens/,
  * все экраны; --name — только эти снимки, для быстрой сверки). ~10 мин.
  */
 import { spawn } from 'node:child_process'
@@ -33,7 +41,7 @@ import { mkdirSync } from 'node:fs'
 import puppeteer from 'puppeteer-core'
 import { profileDir } from './_profile.mjs'
 import { APP_URL } from './_env.mjs'
-import { PASS, studio, must } from './_seed-studio.mjs'
+import { PASS, admin, must, sql, studio } from './_seed-studio.mjs'
 import { settleAnimations, settledScreenshot, waitForData } from './_shots.mjs'
 import { auditPage } from './_ux-audit-page.mjs'
 
@@ -91,9 +99,11 @@ async function signIn(page, email) {
  * (открыть меню); wait — чего дождаться сверх expect (слово дня); tall —
  * высота окна компьютера, если кадр макета снят выше 800 (d10-2 — «во всю
  * высоту»: панель раздела прокручивается внутри, снимок страницы её не
- * удлинит).
+ * удлинит); audit — где искать замечания (по умолчанию <main>); overlay —
+ * шторка или диалог поверх экрана: снимок ровно окном, как кадр макета (на
+ * всю страницу закреплённая шторка висела бы вверху длинной картинки).
  */
-async function shoot(page, name, path, width, expect, looks, { prepare, wait, tall } = {}) {
+async function shoot(page, name, path, width, expect, looks, { prepare, wait, tall, audit = 'main', overlay = false } = {}) {
   const base = page.viewport()
   if (tall && width >= 600) await page.setViewport({ ...base, height: tall })
   for (const [palette, theme] of looks) {
@@ -114,18 +124,19 @@ async function shoot(page, name, path, width, expect, looks, { prepare, wait, ta
     // урок» 3,3 : 1 вместо 5 : 1 — прогон 20.10.2026)
     await waitForData(page)
     await settleAnimations(page)
-    const issues = await page.evaluate(auditPage, 'main')
+    const issues = await page.evaluate(auditPage, audit)
     const file = `${DIR}/${name}-${palette}-${theme}-${width}.png`
     // телефон — окном во всю высоту страницы: при снимке fullPage закреплённая
     // панель вкладок висит посреди картинки, а не внизу, как у человека
     const vp = page.viewport()
-    if (width < 600) {
+    const stretch = width < 600 && !overlay
+    if (stretch) {
       const h = await page.evaluate(() => document.documentElement.scrollHeight)
       await page.setViewport({ ...vp, height: Math.max(vp.height, h) })
       await sleep(400)
     }
-    await settledScreenshot(page, { path: file, fullPage: width >= 600 })
-    if (width < 600) await page.setViewport(vp)
+    await settledScreenshot(page, { path: file, fullPage: width >= 600 && !overlay })
+    if (stretch) await page.setViewport(vp)
     report.push(`${ok ? '✓' : '✗'} ${file}`)
     report.push(`${issues.length ? '✗' : '✓'} UX ${file}: ${issues.length ? JSON.stringify(issues.slice(0, 3)) : '0 замечаний'}`)
     console.log(`${ok ? 'снимок' : 'НЕ ТОТ ЭКРАН'} ${file}${issues.length ? ` — UX: ${issues.length}` : ''}`)
@@ -166,10 +177,33 @@ const openSort = async (page) => {
   await sleep(300)
 }
 
+/** Нажать кнопку с подписью — последнюю в документе (шторка поверх экрана). */
+const press = async (page, label) => {
+  await page.evaluate((l) => [...document.querySelectorAll('button')].reverse().find((b) => b.textContent.trim() === l && !b.disabled)?.click(), label)
+  await sleep(500)
+}
+const askOpen = (page) => page.waitForSelector('[role="alertdialog"]', { timeout: 5000 }).catch(() => {})
+/** Шторка «Отменить урок» из шторки урока (t5-2). */
+const openCancel = async (page) => {
+  await press(page, 'Отменить урок')
+  await page.waitForFunction(() => /Списать урок\?/.test(document.body.innerText), { polling: 250, timeout: 5000 }).catch(() => {})
+}
+/** «Этот и все следующие» → «Отменить уроки» → диалог по центру. */
+const openSeriesAsk = async (page) => {
+  await openCancel(page)
+  await press(page, 'Этот и все следующие')
+  await press(page, 'Отменить уроки')
+  await askOpen(page)
+}
+const askOn = (label) => async (page) => {
+  await press(page, label)
+  await askOpen(page)
+}
+
 try {
   mkdirSync(DIR, { recursive: true })
   console.log('── студия')
-  const { t, a, solo, ca, card } = await st.seed()
+  const { t, a, solo, ca, card, wa } = await st.seed()
   const PORT = 9700 + Math.floor(Math.random() * 200)
   spawn(EDGE, ['--headless=new', '--disable-gpu', `--remote-debugging-port=${PORT}`, `--user-data-dir=${profileDir('shots-screens')}`, '--no-first-run', 'about:blank'], { detached: true, stdio: 'ignore' }).unref()
   for (let i = 0; i < 30 && !browser; i++) {
@@ -189,6 +223,29 @@ try {
       { name: 'students-diag', path: `/teacher?student=${ca}&sec=diag`, expect: /Динамика за месяц[\s\S]*Последнее занятие/, wait: /Письмо IELTS/, tall: 1160 },
       { name: 'students-words', path: `/teacher?student=${ca}&sec=words`, expect: /Отметь слова для перепроверки/, prepare: pickThreeWords },
       { name: 'students-quests', path: `/teacher?student=${ca}&sec=quests`, expect: /Квестов пока нет[\s\S]*Новый квест/ },
+    ])
+  }
+  if (!ONLY || ONLY === 'cancel') {
+    // как в кадре t5-2: у Айгерим не разовые уроки, а серия «вт и чт» в 19:00
+    // (разовые впереди убираем — иначе два урока в один час), остаток 3 и
+    // включённые уведомления — «Айгерим получит уведомление»
+    await sql(`delete from public.lessons l where l.teacher_id = '${t.id}' and l.series_id is null and l.starts_at > now()
+      and exists (select 1 from public.lesson_participants p where p.lesson_id = l.id and p.card_id = '${ca}')`)
+    const [{ today }] = await sql(`select (now() at time zone 'Asia/Almaty')::date::text as today`)
+    const ser = must(await t.client.rpc('create_series', { p_kind: 'individual', p_weekdays: [2, 4], p_time: '19:00', p_minutes: 60, p_every_weeks: 1, p_starts_on: today, p_cards: [ca] }), 'серия Айгерим')
+    await sql(`insert into public.push_subscriptions (endpoint, user_id, p256dh, auth)
+      values ('https://fcm.googleapis.com/fcm/send/shots-${a.id}', '${a.id}', '${'B'.repeat(87)}', '${'A'.repeat(22)}') on conflict do nothing`)
+    const rows = must(await t.client.rpc('get_schedule', { p_from: new Date().toISOString(), p_to: new Date(Date.now() + 14 * 864e5).toISOString() }), 'расписание')
+    const next = rows.filter((r) => r.series_id === ser && r.status === 'planned').sort((x, y) => x.starts_at.localeCompare(y.starts_at))[0]
+    const day = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Almaty' }).format(new Date(next.starts_at))
+    const [mat] = must(await admin.from('materials').select('id').eq('teacher_id', t.id).eq('title', 'My morning routine'), 'материал')
+    const lesson = `/schedule?view=day&day=${day}&lesson=${next.lesson_id}`
+    console.log('── отмена урока и диалоги')
+    await screen(t.email, [
+      { name: 'cancel', path: lesson, expect: /Перенести[\s\S]*Отменить урок/, prepare: openCancel, audit: '[role="dialog"]', overlay: true },
+      { name: 'cancel-confirm', path: lesson, expect: /Перенести[\s\S]*Отменить урок/, prepare: openSeriesAsk, audit: '[role="alertdialog"]', overlay: true },
+      { name: 'material-delete', path: `/tasks?tab=materials&mat=${mat.id}`, expect: /Удалить материал/, prepare: askOn('Удалить материал'), audit: '[role="alertdialog"]', overlay: true },
+      { name: 'reassign', path: `/tasks?work=${wa}`, expect: /На доработку/, prepare: askOn('На доработку'), audit: '[role="alertdialog"]', overlay: true },
     ])
   }
   if (!ONLY || ONLY === 'home') {

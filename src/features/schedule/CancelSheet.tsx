@@ -1,10 +1,14 @@
 // ============================================================================
 // «Отменить урок» (макет t5-2; журнал п.27): «Не списывать» или «Списать —
 // поздняя отмена» с остатком после, «Только этот урок» или «Этот и все
-// следующие». Кнопка — отдельно от выбора: случайное касание варианта урок
-// не отменяет. Один урок — потом «Урок отменён · Вернуть»; серия — без
-// возврата (уроки после удаляются), поэтому об этом сказано до нажатия.
-// Пробный не списывается и при поздней отмене — выбора нет (п.30).
+// следующие», кому Recall напишет сам. Кнопка — сплошной красный отдельно от
+// выбора, под чертой внизу: случайное касание варианта урок не отменяет. Один
+// урок — потом «Урок отменён · Вернуть» (база при возврате снимает и
+// списание), поэтому без лишнего вопроса. Серия — без возврата (уроки после
+// удаляются): это сказано до нажатия и ещё раз спрошено диалогом по центру
+// (лист s3 «необратимое ещё и подтверждается», d0 правило 8; решение
+// владельца 20.10.2026 — диалог только у серии). Пробный не списывается и при
+// поздней отмене — выбора нет (п.30). На компьютере — правая панель (d2-2).
 // ============================================================================
 import { useState } from 'react'
 import {
@@ -13,14 +17,12 @@ import {
   cancelledMessage,
   cancelSeriesFrom,
   canFollowing,
-  dayShort,
+  dateShort,
   isCharged,
   isTrialLesson,
   lessonDay,
-  lessonName,
   restoreLesson,
   seriesCancelledMessage,
-  timeRange,
   weekdaysList,
   type Lesson,
   type LessonBalance,
@@ -28,10 +30,12 @@ import {
 } from '../../domains/schedule'
 import { Button } from '../../shared/ui/Button'
 import { ChoiceGroup } from '../../shared/ui/ChoiceGroup'
-import { IconClose, IconInfo, IconWarning } from '../../shared/ui/icons'
-import { Sheet, SHEET_BODY } from '../../shared/ui/Sheet'
+import { useConfirm } from '../../shared/ui/ConfirmDialog'
+import { IconInfo, IconWarning, IconXCircle } from '../../shared/ui/icons'
+import { Sheet, SHEET_BODY, SheetFooter } from '../../shared/ui/Sheet'
+import { SheetHeader } from '../../shared/ui/SheetHeader'
 import { TabPicker } from '../../shared/ui/TabPicker'
-import { LessonAvatar } from './LessonParts'
+import { CHOICE_LABEL, LessonWho, NotifyLine } from './LessonParts'
 import type { Done } from './types'
 
 export function CancelSheet({
@@ -40,6 +44,7 @@ export function CancelSheet({
   balance,
   now,
   inApp,
+  reached,
   onClose,
   onDone,
 }: {
@@ -49,6 +54,8 @@ export function CancelSheet({
   balance: LessonBalance | null
   now: Date
   inApp: (cardId: string) => boolean
+  /** До карточки Recall достаёт сам — «… получит уведомление». */
+  reached: (cardId: string) => boolean
   onClose: () => void
   onDone: (done: Done) => void
 }) {
@@ -56,6 +63,7 @@ export function CancelSheet({
   const [scope, setScope] = useState<'one' | 'following'>('one')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { confirm, dialog } = useConfirm()
   const trial = isTrialLesson(lesson) && lesson.kind !== 'group'
   const seriesCancel = series && canFollowing(lesson, now) ? series : null
   const following = seriesCancel !== null && scope === 'following'
@@ -63,15 +71,24 @@ export function CancelSheet({
   const was = p ? isCharged(p.charge) : false
   const after = (willCharge: boolean) => (balance && balance.paid > 0 ? balanceAfter(balance.balance, was, willCharge) : undefined)
   const cardIds = lesson.participants.map((x) => x.cardId)
+  const from = lesson.seriesDate ?? lessonDay(lesson)
 
   const submit = async () => {
+    if (following && seriesCancel) {
+      const ok = await confirm({
+        title: 'Отменить уроки?',
+        body: `Уроки по ${weekdaysList(seriesCancel.weekdays)} после ${dateShort(from)} удалятся — вернуть их можно будет только новой серией.`,
+        action: 'Отменить уроки',
+        cancel: 'Оставить',
+      })
+      if (!ok) return
+    }
     setBusy(true)
     setError(null)
     const yes = charge === 'yes' && !trial
     try {
       if (following && seriesCancel) {
         await cancelSeriesFrom(lesson.id, yes)
-        const from = lesson.seriesDate ?? lessonDay(lesson)
         onDone({
           toast: 'Уроки отменены',
           tell: { title: 'Уроки отменены', cardIds, text: (who) => seriesCancelledMessage(who, seriesCancel.weekdays, from), url: lesson.link },
@@ -92,32 +109,17 @@ export function CancelSheet({
 
   return (
     <Sheet onClose={onClose} labelledBy="cancel-title">
+      <SheetHeader id="cancel-title" title="Отменить урок" />
       <div className={SHEET_BODY}>
-        <div className="flex items-center justify-between gap-3">
-          <h2 id="cancel-title" className="text-lg font-semibold">
-            Отменить урок
-          </h2>
-          <button type="button" aria-label="Закрыть" onClick={onClose} className="flex size-11 flex-none items-center justify-center rounded-xl text-fg-muted hover:bg-tint/[0.06]">
-            <IconClose size={20} />
-          </button>
-        </div>
-        <div className="flex items-center gap-3">
-          <LessonAvatar lesson={lesson} inApp={inApp} />
-          <p className="min-w-0 text-sm">
-            <span className="block truncate font-semibold">{lessonName(lesson)}</span>
-            <span className="text-fg-muted">
-              {dayShort(lessonDay(lesson))}, {timeRange(lesson)}
-            </span>
-          </p>
-        </div>
+        <LessonWho lesson={lesson} inApp={inApp} />
 
         {trial ? (
-          <p className="flex items-center gap-1.5 text-note text-fg-muted">
-            <IconInfo size={15} aria-hidden className="flex-none" /> Пробный урок не списывается — и при поздней отмене
+          <p className="flex items-center gap-1.5 px-1 text-note text-fg-muted">
+            <IconInfo size={16} aria-hidden className="flex-none" /> Пробный урок не списывается — и при поздней отмене
           </p>
         ) : (
           <section aria-label="Списать урок?" className="flex flex-col gap-1.5">
-            <span className="text-note text-fg-muted">Списать урок?</span>
+            <span className={CHOICE_LABEL}>Списать урок?</span>
             <ChoiceGroup<'no' | 'yes'>
               variant="cards"
               label="Списать урок?"
@@ -136,12 +138,13 @@ export function CancelSheet({
         )}
 
         {seriesCancel && (
-          <section aria-label="Что отменить" className="flex flex-col gap-1.5">
-            <span className="text-note text-fg-muted">Что отменить</span>
+          <section aria-label="Что изменить" className="flex flex-col gap-1.5">
+            <span className={CHOICE_LABEL}>Что изменить</span>
             <TabPicker
               variant="segment"
               stretch
-              ariaLabel="Что отменить"
+              small
+              ariaLabel="Что изменить"
               value={scope}
               onChange={setScope}
               options={[
@@ -149,8 +152,8 @@ export function CancelSheet({
                 { id: 'following', label: 'Этот и все следующие' },
               ]}
             />
-            <p className={`flex items-start gap-1.5 text-note ${following ? 'text-warning-strong' : 'text-fg-muted'}`}>
-              {following ? <IconWarning size={15} aria-hidden className="mt-0.5 flex-none" /> : <IconInfo size={15} aria-hidden className="mt-0.5 flex-none" />}
+            <p className={`mt-0.5 flex items-start gap-1.5 px-1 text-note ${following ? 'text-warning-strong' : 'text-fg-muted'}`}>
+              {following ? <IconWarning size={16} aria-hidden className="mt-px flex-none" /> : <IconInfo size={16} aria-hidden className="mt-px flex-none" />}
               {following
                 ? 'Уроки после этого удалятся, вернуть их можно будет только новой серией.'
                 : `Остальные уроки по ${weekdaysList(seriesCancel.weekdays)} останутся как были.`}
@@ -158,17 +161,21 @@ export function CancelSheet({
           </section>
         )}
 
+        <NotifyLine lesson={lesson} reached={reached} />
+
         {error && (
           <p role="alert" className="text-sm text-danger-soft-fg">
             {error}
           </p>
         )}
-        {/* сплошной красный (макет t5-2) — с редизайном: белое на danger в тёмной
-            теме 4,4:1, ниже нормы для текста (test-tokens.mjs, Ф2.17) */}
-        <Button variant="danger" className="w-full" onClick={() => void submit()} loading={busy}>
+      </div>
+      <SheetFooter>
+        <Button variant="danger-solid" className="w-full" onClick={() => void submit()} loading={busy}>
+          <IconXCircle size={20} aria-hidden />
           {following ? 'Отменить уроки' : 'Отменить урок'}
         </Button>
-      </div>
+      </SheetFooter>
+      {dialog}
     </Sheet>
   )
 }

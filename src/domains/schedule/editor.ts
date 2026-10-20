@@ -317,6 +317,19 @@ export function whoToTell<P extends { cardId: string }>(participants: P[], reach
   return APP_TELLS_STUDENTS ? participants.filter((p) => !reached(p.cardId)) : participants
 }
 
+/**
+ * Строка шторки над кнопкой (макеты t5-1, t5-2, d2-2): кому Recall сам
+ * напишет об изменении — по именам, без падежей: «Айгерим получит
+ * уведомление», «Айгерим и Дана получат…», от трёх — «3 ученика получат…».
+ * Никому — null: тем, до кого Recall не достаёт, учитель напишет сам после.
+ */
+export function notifiedLine(names: string[]): string | null {
+  if (!APP_TELLS_STUDENTS || !names.length) return null
+  if (names.length === 1) return `${names[0]} получит уведомление`
+  const who = names.length === 2 ? names.join(' и ') : `${names.length} ${plural(names.length, 'ученик', 'ученика', 'учеников')}`
+  return `${who} получат уведомление`
+}
+
 /** «в ср» · «во вт» */
 const onDay = (day: string): string => `${isoWeekday(day) === 2 ? 'во' : 'в'} ${dayShort(day)}`
 const at = (iso: string): string => `${dayShort(lessonDay({ startsAt: iso }))}, ${almatyTime(iso)}`

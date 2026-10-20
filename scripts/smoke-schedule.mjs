@@ -14,10 +14,18 @@
  *   4. «Изменить» урока раньше перенесённого → «Этот и все следующие» →
  *      предупреждение «впереди 1 урок, перенесённых отдельно»;
  *   5. отмена с поздним списанием: «Станет 3 урока» → отменён, списан,
- *      остаток 3 → «Вернуть» → остаток 4 → снова отмена;
+ *      остаток 3 → «Вернуть» → остаток 4 → снова отмена; кнопка — сплошной
+ *      красный, один урок — без диалога (есть «Вернуть»);
+ *   5в. серия Даны «этот и все следующие» → диалог по центру «Отменить
+ *      уроки?» (Ф2.17-4б-3): Escape закрывает только его, «Оставить» — уроки
+ *      на месте, «Отменить уроки» — урок отменён, уроки после удалены;
+ *      пробный — «не списывается», без выбора и без диалога, в базе не списан;
  *   6. неделя видна целиком: список и колонки (7 дней), шапка дня ведёт в день;
  *   7. без тарифа: строка «только для просмотра», действия выключены;
  *   8. компьютер 1280: по умолчанию неделя колонками, «Новый урок» — панелью.
+ *
+ * Системное окно браузера (window.confirm и т.п.) на любом шаге — красная
+ * строка: подтверждения — только нашим диалогом.
  *
  * Запуск: npm run dev:test, затем node scripts/smoke-schedule.mjs
  *         [--shots <папка>] — скриншоты 390 и 1280; [--theme light] — в светлой
@@ -77,6 +85,11 @@ async function openAs(b, email, width = 390) {
   const ctx = await b.createBrowserContext()
   const page = await ctx.newPage()
   page.on('pageerror', (e) => console.log('  ошибка страницы:', e.message))
+  // подтверждения — только нашим диалогом по центру; системное окно — ошибка
+  page.on('dialog', (d) => {
+    check(`системного окна браузера нет (было: «${d.message()}»)`, false)
+    void d.dismiss()
+  })
   await page.setViewport({ width, height: width > 600 ? 860 : 844 })
   await page.goto(`${APP_URL}/login`, { waitUntil: 'networkidle2' })
   await page.evaluate((th) => {
@@ -111,6 +124,24 @@ async function click(page, label, timeout = 15000) {
   await sleep(500)
   return ok
 }
+/** Текст нашего диалога по центру (useConfirm) или null, если его нет. */
+const askText = (page) => page.evaluate(() => document.querySelector('[role="alertdialog"]')?.textContent ?? null)
+/** Нажать кнопку в диалоге по центру — не в шторке под ним с той же подписью. */
+async function inAsk(page, label) {
+  await page.evaluate((l) => [...document.querySelectorAll('[role="alertdialog"] button')].find((x) => x.textContent.trim() === l)?.click(), label)
+  await sleep(500)
+}
+/** Главная кнопка шторки отмены — сплошной красный (t5-2): фон как у bg-danger. */
+const solidRed = (page, label) =>
+  page.evaluate((l) => {
+    const btn = [...document.querySelectorAll('[role="dialog"] button')].reverse().find((x) => x.textContent.trim() === l)
+    const probe = document.createElement('div')
+    probe.className = 'bg-danger'
+    document.body.append(probe)
+    const want = getComputedStyle(probe).backgroundColor
+    probe.remove()
+    return !!btn && getComputedStyle(btn).backgroundColor === want
+  }, label)
 const clickSel = async (page, sel) => {
   const ok = await page.waitForSelector(sel, { visible: true, timeout: 10000 }).then(() => true, () => false)
   if (ok) await page.evaluate((s) => [...document.querySelectorAll(s)].pop()?.click(), sel)
@@ -276,12 +307,14 @@ try {
     await click(te, 'Списать — поздняя отмена')
     if (name) await shot(te, name)
     const hint = /Станет 3 урока/.test(await text(te))
+    if (name) check('«Отменить урок» — сплошной красный (t5-2)', await solidRed(te, 'Отменить урок'))
     await click(te, 'Отменить урок')
     return hint
   }
   // тост живёт 6 секунд: сперва «Вернуть» сразу, потом отмена насовсем и сверка с базой
   check('выбор показывает остаток: «Станет 3 урока»', await cancelThird('cancel-390'))
   check('тост «Урок отменён · Вернуть»', await waitText(te, /Урок отменён[\s\S]*Вернуть/))
+  check('один урок — без диалога: вернуть можно тостом', (await askText(te)) === null)
   await click(te, 'Готово')
   await click(te, 'Вернуть', 3000)
   await sleep(1500)
@@ -292,6 +325,52 @@ try {
   row = (await schedule()).find((r) => r.lesson_id === third.lesson_id)
   check('база: отменён, поздняя отмена, остаток 3', row?.status === 'cancelled' && row?.charge === 'late_cancel' && (await balance(timur.id)).balance === 3, JSON.stringify({ s: row?.status, c: row?.charge }))
   await click(te, 'Готово')
+
+  // ── 5в. серия «этот и все следующие» — диалог по центру; пробный — без него ──────
+  // своя серия у Даны: уроки Тимура нужны паузе (6б) и «только просмотру» (7)
+  const isoDay = (d) => ((new Date(`${d}T00:00:00Z`).getUTCDay() + 6) % 7) + 1
+  const dana = (await cardsNow()).find((c) => c.name === 'Дана Омарова')
+  const danaSeries = must(await tc.rpc('create_series', {
+    p_kind: 'individual', p_weekdays: [...new Set([isoDay(day(1)), isoDay(day(3))])], p_time: '15:00', p_minutes: 60, p_every_weeks: 1, p_starts_on: day(1), p_cards: [dana.id],
+  }), 'серия Даны')
+  const danaPlanned = async () => (await schedule()).filter((r) => r.series_id === danaSeries && r.status === 'planned').sort((x, y) => x.starts_at.localeCompare(y.starts_at))
+  const danaRows = await danaPlanned()
+  const target = danaRows[1]
+  await go(te, `/schedule?view=day&day=${dayOf(target.starts_at)}&lesson=${target.lesson_id}`)
+  await click(te, 'Отменить урок')
+  await click(te, 'Этот и все следующие')
+  check('«Этот и все следующие»: предупреждение и «Отменить уроки» сплошным красным', /Уроки после этого удалятся/.test(await text(te)) && (await solidRed(te, 'Отменить уроки')))
+  await shot(te, 'cancel-following-390')
+  await click(te, 'Отменить уроки')
+  const asked = await askText(te)
+  check('серия спрашивает диалогом по центру: «Отменить уроки?» и что удалится', !!asked && /Отменить уроки\?/.test(asked) && /удалятся/.test(asked), asked ?? 'диалога нет')
+  await shot(te, 'cancel-following-confirm-390')
+  await te.keyboard.press('Escape')
+  await sleep(600)
+  check('Escape закрывает только диалог — шторка отмены остаётся', (await askText(te)) === null && /Что изменить/.test(await text(te)))
+  await click(te, 'Отменить уроки')
+  await inAsk(te, 'Оставить')
+  check('«Оставить» — диалог закрыт, уроки серии на месте', (await askText(te)) === null && (await danaPlanned()).length === danaRows.length)
+  await click(te, 'Отменить уроки')
+  await inAsk(te, 'Отменить уроки')
+  check('тост «Уроки отменены»', await waitText(te, /Уроки отменены/))
+  const afterSeries = await danaPlanned()
+  const targetNow = (await schedule()).find((r) => r.lesson_id === target.lesson_id)
+  check('база: урок отменён, уроки серии после него удалены', targetNow?.status === 'cancelled' && afterSeries.length === 1 && afterSeries[0].lesson_id === danaRows[0].lesson_id, JSON.stringify({ s: targetNow?.status, left: afterSeries.length, was: danaRows.length }))
+  await click(te, 'Готово', 3000)
+
+  const erlan = must(await tc.rpc('create_student_card', { p_name: 'Ерлан Сапаров', p_status: 'trial' }), 'карточка пробного')
+  // 14:00 по Алматы послезавтра — мимо уроков Тимура (10:00) и группы (17:00)
+  const trialLesson = must(await tc.rpc('create_lesson', { p_kind: 'trial', p_starts_at: new Date(Date.parse(`${day(2)}T09:00:00Z`)).toISOString(), p_minutes: 45, p_cards: [erlan] }), 'пробный урок')
+  await go(te, `/schedule?view=day&day=${day(2)}&lesson=${trialLesson}`)
+  await click(te, 'Отменить урок')
+  const trialSheet = await text(te)
+  check('пробный: «не списывается — и при поздней отмене», выбора «Списать» нет', /Пробный урок не списывается — и при поздней отмене/.test(trialSheet) && !/Списать — поздняя отмена/.test(trialSheet))
+  await click(te, 'Отменить урок')
+  check('пробный отменён без диалога', (await waitText(te, /Урок отменён/)) && (await askText(te)) === null)
+  const trialCancelled = (await schedule()).find((r) => r.lesson_id === trialLesson)
+  check('база: пробный отменён и не списан', trialCancelled?.status === 'cancelled' && trialCancelled?.charge === 'not_charged', JSON.stringify({ s: trialCancelled?.status, c: trialCancelled?.charge }))
+  await click(te, 'Готово', 3000)
 
   // ── 5б. таблица или список — у дня тоже (правка владельца 05.10.2026, Ф2.10) ───
   await go(te, '/schedule')

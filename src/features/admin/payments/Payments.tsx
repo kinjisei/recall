@@ -6,6 +6,7 @@
 // ============================================================================
 import { useState } from 'react'
 import { Button } from '../../../shared/ui/Button'
+import { useConfirm } from '../../../shared/ui/ConfirmDialog'
 import { LoadError } from '../../../shared/ui/LoadError'
 import { RowsSkeleton } from '../../../shared/ui/Loading'
 import { useAsyncData } from '../../../shared/lib/useAsyncData'
@@ -75,9 +76,15 @@ function Claim({ claim, onChanged }: { claim: ClaimRow; onChanged: () => void })
   const [error, setError] = useState<string | null>(null)
   const name = claim.display_name || claim.email
   const plan = isPaidPlan(claim.claim_plan) ? claim.claim_plan : 'teacher_mini'
+  const { confirm, dialog } = useConfirm()
 
   const dismiss = async () => {
-    if (!confirm(`Убрать заявку ${name}? Деньги не нашлись — человек сможет отправить её заново.`)) return
+    const ok = await confirm({
+      title: 'Убрать заявку?',
+      body: `${name}: деньги не нашлись. Заявка пропадёт из списка — человек сможет отправить её заново.`,
+      action: 'Убрать',
+    })
+    if (!ok) return
     setBusy(true)
     setError(null)
     try {
@@ -117,6 +124,7 @@ function Claim({ claim, onChanged }: { claim: ClaimRow; onChanged: () => void })
           </Button>
         </div>
       )}
+      {dialog}
     </div>
   )
 }

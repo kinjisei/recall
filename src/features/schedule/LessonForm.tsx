@@ -179,6 +179,7 @@ export function LessonForm({
             <TabPicker
               variant="segment"
               stretch
+              small
               ariaLabel="Что изменить"
               value={scope}
               onChange={setScope}

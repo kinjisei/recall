@@ -85,7 +85,17 @@ export function SchedulePanels({
         />
       )}
       {p?.kind === 'move' && (
-        <MoveSheet lesson={p.lesson} series={seriesOf(p.lesson)} defaultLink={defaultLink} today={today} now={now} inApp={inApp} onClose={close} onDone={act.done} />
+        <MoveSheet
+          lesson={p.lesson}
+          series={seriesOf(p.lesson)}
+          defaultLink={defaultLink}
+          today={today}
+          now={now}
+          inApp={inApp}
+          reached={act.reached}
+          onClose={close}
+          onDone={act.done}
+        />
       )}
       {p?.kind === 'cancel' && (
         <CancelSheet
@@ -94,6 +104,7 @@ export function SchedulePanels({
           balance={p.lesson.kind === 'group' ? null : (balances.get(p.lesson.participants[0]?.cardId ?? '') ?? null)}
           now={now}
           inApp={inApp}
+          reached={act.reached}
           onClose={close}
           onDone={act.done}
         />

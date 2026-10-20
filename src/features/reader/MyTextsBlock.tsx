@@ -9,6 +9,7 @@ import { useDraft } from '../../shared/lib/useDraft'
 import { DraftRestored } from '../../shared/ui/DraftRestored'
 import { Card } from '../../shared/ui/Card'
 import { Button } from '../../shared/ui/Button'
+import { useConfirm } from '../../shared/ui/ConfirmDialog'
 import { BackHeader } from '../../shared/ui/BackButton'
 import { MarkableText } from '../../components/MarkableText'
 import { IconPlus, IconTrash } from '../../shared/ui/icons'
@@ -35,6 +36,17 @@ export function MyTextsList({
 }) {
   const [texts, setTexts] = useState<MyText[]>(() => listMyTexts(lang))
   const refresh = () => setTexts(listMyTexts(lang))
+  const { confirm, dialog } = useConfirm()
+  const remove = async (t: MyText) => {
+    const ok = await confirm({
+      title: 'Удалить текст?',
+      body: `«${t.title}» пропадёт с этого устройства — текст хранится только на нём.`,
+      action: 'Удалить',
+    })
+    if (!ok) return
+    removeMyText(lang, t.id)
+    refresh()
+  }
 
   return (
     <div className="flex flex-col gap-2">
@@ -59,12 +71,7 @@ export function MyTextsList({
                 </Card>
               </button>
               <button
-                onClick={() => {
-                  if (confirm(`Удалить «${t.title}»?`)) {
-                    removeMyText(lang, t.id)
-                    refresh()
-                  }
-                }}
+                onClick={() => void remove(t)}
                 aria-label={`Удалить ${t.title}`}
                 className="flex h-11 w-11 flex-none items-center justify-center rounded-xl border border-tint/[0.08] text-fg-muted"
               >
@@ -74,6 +81,7 @@ export function MyTextsList({
           ))}
         </div>
       )}
+      {dialog}
     </div>
   )
 }

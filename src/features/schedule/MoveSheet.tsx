@@ -3,7 +3,8 @@
 // не рвётся, потом «Урок перенесён · Вернуть». «Этот и все следующие» — день
 // урока в серии меняется на новый («вт и чт», чт → пт = «вт и пт»), время у
 // серии одно на все дни; заранее видно, как будет дальше и сколько отдельно
-// перенесённых уроков впереди встанет по новому расписанию.
+// перенесённых уроков впереди встанет по новому расписанию. Под выбором —
+// кому Recall напишет сам, «Перенести» — внизу под чертой (t5-1, d2-2).
 // ============================================================================
 import { useState } from 'react'
 import {
@@ -16,7 +17,6 @@ import {
   firstSeriesDay,
   lessonDay,
   lessonMinutes,
-  lessonName,
   lessonsCount,
   movedMessage,
   movedWeekdays,
@@ -25,7 +25,6 @@ import {
   rebuildCount,
   repeatLabel,
   seriesChangedMessage,
-  timeRange,
   toLessonInput,
   updateLesson,
   updateSeriesFrom,
@@ -34,10 +33,11 @@ import {
   type Series,
 } from '../../domains/schedule'
 import { Button } from '../../shared/ui/Button'
-import { IconArrowRight, IconClose, IconInfo, IconWarning } from '../../shared/ui/icons'
-import { Sheet, SHEET_BODY } from '../../shared/ui/Sheet'
+import { IconArrowRight, IconInfo, IconWarning } from '../../shared/ui/icons'
+import { Sheet, SHEET_BODY, SheetFooter } from '../../shared/ui/Sheet'
+import { SheetHeader } from '../../shared/ui/SheetHeader'
 import { TabPicker } from '../../shared/ui/TabPicker'
-import { LessonAvatar } from './LessonParts'
+import { CHOICE_LABEL, LessonWho, NotifyLine } from './LessonParts'
 import type { Done } from './types'
 import { useDayLessons, useLessonsAhead } from './useScheduleData'
 import { WhenFields } from './WhenFields'
@@ -49,6 +49,7 @@ export function MoveSheet({
   today,
   now,
   inApp,
+  reached,
   onClose,
   onDone,
 }: {
@@ -58,6 +59,8 @@ export function MoveSheet({
   today: string
   now: Date
   inApp: (cardId: string) => boolean
+  /** До карточки Recall достаёт сам — «… получит уведомление». */
+  reached: (cardId: string) => boolean
   onClose: () => void
   onDone: (done: Done) => void
 }) {
@@ -111,36 +114,22 @@ export function MoveSheet({
 
   return (
     <Sheet onClose={onClose} labelledBy="move-title">
+      <SheetHeader id="move-title" title="Перенести урок" />
       <div className={SHEET_BODY}>
-        <div className="flex items-center justify-between gap-3">
-          <h2 id="move-title" className="text-lg font-semibold">
-            Перенести урок
-          </h2>
-          <button type="button" aria-label="Закрыть" onClick={onClose} className="flex size-11 flex-none items-center justify-center rounded-xl text-fg-muted hover:bg-tint/[0.06]">
-            <IconClose size={20} />
-          </button>
-        </div>
-        <div className="flex items-center gap-3">
-          <LessonAvatar lesson={lesson} inApp={inApp} />
-          <p className="min-w-0 text-sm">
-            <span className="block truncate font-semibold">{lessonName(lesson)}</span>
-            <span className="text-fg-muted">
-              {dayShort(lessonDay(lesson))}, {timeRange(lesson)}
-            </span>
-          </p>
-        </div>
+        <LessonWho lesson={lesson} inApp={inApp} />
 
         <section aria-label="Новая дата и время" className="flex flex-col gap-1.5">
-          <span className="text-note text-fg-muted">Новая дата и время</span>
+          <span className={CHOICE_LABEL}>Новая дата и время</span>
           <WhenFields day={day} time={time} minutes={minutes} today={today} clashes={clashes} onDay={setDay} onTime={setTime} />
         </section>
 
         {seriesMove && (
           <section aria-label="Что изменить" className="flex flex-col gap-1.5">
-            <span className="text-note text-fg-muted">Что изменить</span>
+            <span className={CHOICE_LABEL}>Что изменить</span>
             <TabPicker
               variant="segment"
               stretch
+              small
               ariaLabel="Что изменить"
               value={scope}
               onChange={setScope}
@@ -175,15 +164,18 @@ export function MoveSheet({
             </span>
           </p>
         )}
+        <NotifyLine lesson={lesson} reached={reached} />
         {error && (
           <p role="alert" className="text-sm text-danger-soft-fg">
             {error}
           </p>
         )}
+      </div>
+      <SheetFooter>
         <Button className="w-full" onClick={() => void submit()} disabled={same && !following} loading={busy}>
           Перенести
         </Button>
-      </div>
+      </SheetFooter>
     </Sheet>
   )
 }

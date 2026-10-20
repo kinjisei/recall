@@ -80,6 +80,7 @@ export {
   movedMessage,
   movedWeekdays,
   newDraft,
+  notifiedLine,
   overlaps,
   rebuildCount,
   reminderMessage,

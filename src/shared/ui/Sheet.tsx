@@ -51,9 +51,23 @@ const FLICK_MIN = 64
  * сжимаются (*:shrink-0). Без этого длинное содержимое не прокручивалось, а
  * сплющивало кнопки и строки: «Готово» в «Напомнить об уроке» при трёх
  * учениках — 24 px в высоту (нашлось UX-аудитом в Ф2.9; класс был скопирован
- * в девять шторок расписания).
+ * в девять шторок расписания). На компьютере поля панели — 24 (макет d2-2).
  */
-export const SHEET_BODY = 'flex min-h-0 flex-col gap-4 overflow-y-auto px-5 pb-5 pt-1 *:shrink-0'
+export const SHEET_BODY = 'flex min-h-0 flex-col gap-4 overflow-y-auto px-5 pb-5 pt-1 *:shrink-0 group-data-panel/panel:px-6'
+
+/**
+ * Подвал шторки — главное действие отдельно от выбора, под чертой (макеты
+ * t5-2 «кнопка отдельно, внизу» и d2-2): тело над ним прокручивается, кнопка
+ * видна всегда. На телефоне черта — в полях шторки, на компьютере — во всю
+ * ширину панели, и подвал прижат к её низу.
+ */
+export function SheetFooter({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="mt-auto shrink-0 px-5 pb-5 group-data-panel/panel:border-t group-data-panel/panel:border-line group-data-panel/panel:px-6 group-data-panel/panel:pt-3.5">
+      <div className="border-t border-line pt-5 group-data-panel/panel:border-t-0 group-data-panel/panel:pt-0">{children}</div>
+    </div>
+  )
+}
 
 // Стек открытых шторок. Нужен, когда одна поверх другой (Picker внутри
 // композера): Escape и системная «назад» должны закрывать ТОЛЬКО верхнюю, иначе
@@ -161,7 +175,7 @@ export function Sheet({
         aria-label={label}
         aria-labelledby={labelledBy}
         data-panel={push ? 'push' : 'over'}
-        className={`${leaving ? 'animate-panel-out' : 'animate-panel-in'} flex h-full w-side max-w-full flex-col border-l border-line bg-surface pt-5 ${
+        className={`${leaving ? 'animate-panel-out' : 'animate-panel-in'} group/panel flex h-full w-side max-w-full flex-col border-l border-line bg-surface pt-5 ${
           push ? 'fixed inset-y-0 right-0 z-40 shadow-raised' : ''
         } ${className}`}
         onClick={(e) => e.stopPropagation()}

@@ -59,12 +59,14 @@ export function useScheduleActions({
   const leaving = useLeavingLessons()
 
   const say = (text: string, actionLabel?: string, action?: () => void) => setToast({ id: Date.now(), text, actionLabel, action })
+  /** До карточки Recall достаёт сам: ученик в приложении и с уведомлениями. */
+  const reached = (id: string) => cards.get(id)?.inApp === true && push.get(id) === true
 
   /** Кому и что написать — по карточкам урока. */
   const tellOf = (t: NonNullable<Done['tell']>): Tell | null => {
     const people = whoToTell(
       t.cardIds.map((cardId) => ({ cardId, card: cards.get(cardId) })),
-      (id) => cards.get(id)?.inApp === true && push.get(id) === true,
+      reached,
     ).filter((x): x is { cardId: string; card: StudentCard } => !!x.card)
     if (!people.length) return null
     return {
@@ -114,6 +116,8 @@ export function useScheduleActions({
     toast,
     closeToast: () => setToast(null),
     say,
+    /** Шторкам переноса и отмены — для «… получит уведомление» (t5-1, t5-2). */
+    reached,
     busy,
     error,
     done,
