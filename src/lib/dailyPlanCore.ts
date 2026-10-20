@@ -2,7 +2,7 @@
 // План дня: какие пункты ученик видит на Главной каждый день.
 // Настройка учителя хранится в teacher_students.daily_plan (jsonb, через RPC
 // set_daily_plan); NULL — умный дефолт из 3 пунктов (решение владельца):
-//   1) Слова (всегда — ядро FSRS);
+//   1) Повторение слов (всегда — ядро FSRS);
 //   2) приоритетный: несданное задание → активный квест → ротация;
 //   3) ротация по дню недели (Чтение → Речь → Диалог → Грамматика).
 // «Идеальный день» = выполнены ВСЕ пункты плана; серию (стрик) по-прежнему
@@ -32,7 +32,7 @@ export interface TodayPlanItem {
 }
 
 const KIND_ITEMS: Record<PlanKind, Omit<TodayPlanItem, 'key'>> = {
-  words: { to: '/practice', title: 'Слова', desc: 'Повторить и потренировать', types: ['flashcards', 'practice'] },
+  words: { to: '/practice', title: 'Повторение', desc: 'Повторить и потренировать', types: ['flashcards', 'practice'] },
   reader: { to: '/study?view=reader', title: 'Чтение', desc: 'Текст и новые слова', types: ['reader'] },
   grammar: { to: '/grammar', title: 'Грамматика', desc: 'Урок или тренажёр', types: ['grammar'] },
   pronunciation: { to: '/pronunciation', title: 'Речь', desc: 'Произношение вслух', types: ['pronunciation'] },

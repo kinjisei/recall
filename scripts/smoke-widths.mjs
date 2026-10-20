@@ -10,10 +10,13 @@
  *      экрана — по центру области;
  *   3. раскладки витрины /dev/ui по порогам содержимого: «список + подробности»
  *      рядом на 1024 (содержимое 904) и по очереди на 960 (840); «Главная +
- *      правая» рядом на 1280 (976) и одной колонкой на 1024 (904); поля
- *      упражнения на 1440 (1120) есть, на 1280 — нет;
+ *      правая» рядом на 1280 (976) и одной колонкой на 1024 (904); «Две
+ *      равные колонки» Главной ученика (d4-v2) — по 478 и пара одной высоты
+ *      на 1280, одной колонкой на 1024; поля упражнения на 1440 (1120) есть,
+ *      на 1280 — нет;
  *   4. правая панель («Оставить отзыв» из меню профиля): на 1440 сдвигает
- *      колонку без дымки; на 1100 (рельс, 1028 − 440 < 600) ложится поверх,
+ *      колонку «Прогресса» без дымки, а у Главной в две колонки (ей нужно
+ *      936) ложится поверх; на 1100 (рельс, 1028 − 440 < 600) — поверх,
  *      дымка начинается справа от рельса; Escape закрывает, колонка
  *      возвращается.
  *
@@ -165,6 +168,20 @@ async function layouts(page) {
   await at(page, 1024, '/dev/ui?l=main')
   r = await sideBySide('main', 'aside')
   check('1024 (904): Главная одной колонкой', r.both && !r.side, JSON.stringify(r))
+  // две равные колонки Главной ученика (d4-v2): пара одной высоты, стопки рядом
+  const even = () =>
+    page.evaluate(() => {
+      const r = (x) => document.querySelector(`[data-demo="${x}"]`)?.getBoundingClientRect()
+      const [a, b, l, rt] = ['pair-left', 'pair-right', 'left', 'right'].map(r)
+      if (!a || !b || !l || !rt) return { all: false }
+      return { all: true, w: [a.width, b.width].map(Math.round), h: [a.height, b.height].map(Math.round), side: b.left >= a.right && rt.left >= l.right, stacked: a.left === b.left && l.left === rt.left }
+    })
+  await at(page, 1280, '/dev/ui?l=even')
+  r = await even()
+  check('1280 (976): Главная ученика — две равные колонки по 478, пара одной высоты', r.all && r.side && r.w[0] === 478 && r.w[1] === 478 && r.h[0] === r.h[1], JSON.stringify(r))
+  await at(page, 1024, '/dev/ui?l=even')
+  r = await even()
+  check('1024 (904): Главная ученика одной колонкой', r.all && r.stacked, JSON.stringify(r))
   await at(page, 1440, '/dev/ui?l=center', 900)
   r = await sideBySide('progress', 'center')
   check('1440 (1120): у упражнения поле прогресса слева', r.both && r.side, JSON.stringify(r))
@@ -190,7 +207,9 @@ async function openFeedback(page) {
 }
 
 async function sidePanel(page) {
-  await at(page, 1440, '/', 900)
+  // «Прогресс» — колонка старого экрана (до переезда, Ф3): ей хватает места
+  // после панели. Главная с Ф2.17-4а — две колонки, ей нужно 936.
+  await at(page, 1440, '/progress', 900)
   let g = await shell(page)
   const before = g.main
   let p = await openFeedback(page)
@@ -205,7 +224,14 @@ async function sidePanel(page) {
   g = await shell(page)
   check('1440: Escape закрыл панель, колонка вернулась', !(await page.$('[role="dialog"][data-panel]')) && px(g.main.left) === px(before.left), `${px(g.main.left)} / ${px(before.left)}`)
 
-  await at(page, 1100, '/')
+  // Главная в две колонки (d4-v2): после панели остаётся 1200 − 440 = 760 < 936 — поверх
+  await at(page, 1440, '/', 900)
+  p = await openFeedback(page)
+  check('1440: Главная в две колонки — панель поверх с дымкой (760 < 936)', !!p && p.kind === 'over' && p.hazeLeft !== null, JSON.stringify(p))
+  await page.keyboard.press('Escape')
+  await page.waitForFunction(() => !document.querySelector('[role="dialog"][data-panel]'), { polling: 250, timeout: 3000 }).catch(() => {})
+
+  await at(page, 1100, '/progress')
   p = await openFeedback(page)
   check('1100: панель поверх с дымкой, дымка справа от рельса', !!p && p.kind === 'over' && p.hazeLeft !== null && px(p.hazeLeft) === 72, JSON.stringify(p))
   await page.keyboard.press('Escape')

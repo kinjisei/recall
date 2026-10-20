@@ -260,7 +260,7 @@
   },
   "src/features/dashboard/DashboardPage.tsx": {
     "react-hooks/set-state-in-effect": {
-      "count": 2
+      "count": 1
     }
   },
   "src/features/flashcards/DeckReview.tsx": {

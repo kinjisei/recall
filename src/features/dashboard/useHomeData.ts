@@ -21,6 +21,8 @@ import { getMyDailyPlanConfig, type DailyPlanConfig } from '../../lib/dailyPlan'
 import { listMyQuests } from '../../lib/quests'
 import { getMyPlans, isProgramSeen } from '../../lib/studyPlan'
 import { getMyPlan, type MyPlan } from '../../lib/billing'
+import { getHomework, type Homework } from '../../lib/homework'
+import { getMyTeachers } from '../../lib/teacher'
 import { settleAll } from '../../shared/lib/settleAll'
 import { loadAssignmentCounts, type AssignmentCounts } from '../teacher'
 import { HOME_LESSONS_AHEAD_DAYS, loadMyLessons, type MyLesson } from '../../domains/schedule'
@@ -53,6 +55,11 @@ export interface HomeData {
   newProgram: StudyPlan | null
   /** Уроки на ближайшие две недели; null — не загрузились (карточки нет, плашка о связи). */
   lessons: MyLesson[] | null
+  /** Домашка на неделю (макет u1-1); null — нет или не загрузилась. */
+  homework: Homework | null
+  /** Преподаватели ученика: имя в домашке, строка «Занимаешься с
+   *  преподавателем?» — только без них; null — не загрузились. */
+  teachers: Profile[] | null
 }
 
 export interface HomeLoad {
@@ -89,6 +96,8 @@ export function useHomeData(userId: string | undefined): HomeLoad {
       plan: () => getMyPlan(),
       programs: () => getMyPlans(),
       lessons: homeLessons,
+      homework: () => getHomework(),
+      teachers: () => getMyTeachers(),
     }).then(({ values: v, failed: lost }) => {
       if (!alive) return
       const planOk = !lost.includes('dailyCfg') && !lost.includes('quests') && !lost.includes('assignments')
@@ -109,6 +118,8 @@ export function useHomeData(userId: string | undefined): HomeLoad {
             }
           }) ?? null,
         lessons: v.lessons,
+        homework: v.homework,
+        teachers: v.teachers,
       }
       window.clearTimeout(guard)
       setResult({ key, data, failed: lost.length })

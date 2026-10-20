@@ -4,17 +4,18 @@ import { useUrlState } from '../../shared/lib/useUrlState'
 import { BackHeader } from '../../shared/ui/BackButton'
 import { Button } from '../../shared/ui/Button'
 import { Card } from '../../shared/ui/Card'
-import { IconHome, IconMaterials, IconPuzzle, IconRows, type IconLike } from '../../shared/ui/icons'
-import { CenterColumn, ListDetail, MainAside, ReadingColumn } from '../../shared/ui/layouts'
+import { IconColumns, IconHome, IconMaterials, IconPuzzle, IconRows, type IconLike } from '../../shared/ui/icons'
+import { CenterColumn, EvenColumns, ListDetail, MainAside, ReadingColumn } from '../../shared/ui/layouts'
 import { RowCard } from '../../shared/ui/RowCard'
 
-export type LayoutId = 'center' | 'reading' | 'list' | 'main'
+export type LayoutId = 'center' | 'reading' | 'list' | 'main' | 'even'
 
 export const LAYOUTS: { id: LayoutId; title: string; desc: string; Icon: IconLike }[] = [
   { id: 'center', title: 'Колонка по центру', desc: 'Упражнения, игры', Icon: IconPuzzle },
   { id: 'reading', title: 'Колонка чтения', desc: 'Текст + перевод слова сбоку', Icon: IconMaterials },
   { id: 'list', title: 'Список + подробности', desc: 'Ученики, материалы', Icon: IconRows },
-  { id: 'main', title: 'Главная + правая', desc: 'Главная ученика, «Моя учёба»', Icon: IconHome },
+  { id: 'main', title: 'Главная + правая', desc: '«Моя учёба»', Icon: IconHome },
+  { id: 'even', title: 'Две равные колонки', desc: 'Главная ученика', Icon: IconColumns },
 ]
 
 const TEXT =
@@ -31,6 +32,7 @@ export function LayoutDemo({ id, onBack }: { id: LayoutId; onBack: () => void })
       {id === 'reading' && <ReadingDemo />}
       {id === 'list' && <ListDemo />}
       {id === 'main' && <MainDemo />}
+      {id === 'even' && <EvenDemo />}
     </div>
   )
 }
@@ -128,4 +130,20 @@ function MainDemo() {
       }
     />
   )
+}
+
+function EvenDemo() {
+  const card = (demo: string, title: string, desc: string) => (
+    <div key={demo} data-demo={demo}>
+      <Card className="flex h-full flex-col gap-2">
+        <p className="font-medium">{title}</p>
+        <p className="text-sm text-fg-muted">{desc}</p>
+      </Card>
+    </div>
+  )
+  const streak = card('pair-left', 'Серия дней подряд', 'Пара первого ряда — одной высоты.')
+  const lesson = card('pair-right', 'Ближайший урок', 'Высоту ряда держит большая карточка.')
+  const plan = card('left', '«Начать занятие» и план', 'Левая стопка — своей высоты.')
+  const side = card('right', 'Домашка, слово дня, энергия', 'Правая стопка — своей высоты.')
+  return <EvenColumns pair={[streak, lesson]} left={plan} right={side} stack={[lesson, plan, streak, side]} />
 }

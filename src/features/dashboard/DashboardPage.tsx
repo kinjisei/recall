@@ -1,20 +1,25 @@
 // ============================================================================
-// Главная в теме «Nocturne».
-// Порядок: приветствие → ближайший урок (Ф2.9, макет u1) → стрик-герой (с
-// неделей) → новое задание учителя → «Начать занятие» → план на сегодня →
-// слово дня → сданное задание/учитель. За 10 минут до урока и во время него
-// главное — «Войти в урок», «Начать занятие» становится второстепенной (u1-2).
-// Данные берём из уже существующих источников: activity_log (стрик, неделя,
-// сделанное сегодня) и FSRS (карточки к повторению, слово дня).
+// Главная ученика (макеты u1 — телефон, d4-v2 — компьютер, вариант 1б).
+// Телефон и содержимое уже 936 — одна колонка: приветствие → ближайший урок
+// → домашка → «Начать занятие» → серия → план → слово дня → энергия (за 10
+// минут до урока: урок первым, «Начать занятие» — тихой, сразу под ним, u1-2).
+// Компьютер — две равные колонки (EvenColumns): ряд пары — серия и урок (за
+// 10 минут урок встаёт слева), ниже слева «Начать занятие» с планом одной
+// карточкой, справа то, что сверяют: домашка, слово дня, энергия. Без урока —
+// пары нет: серия уходит в правую колонку. Данные — из того, что уже есть:
+// activity_log (серия, неделя, сделанное сегодня), FSRS (к повторению, слово
+// дня), домашка, уроки (useHomeData — одним кадром).
 // ============================================================================
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import {
-  IconGap,
-  IconCheck,
-  IconMic,
-  IconDialog,
-  IconHint,
+  IconBook,
   IconCards,
+  IconClipboard,
+  IconClipboardCheck,
+  IconDialog,
+  IconFlag,
+  IconHint,
+  IconMic,
   IconRows,
   type IconLike,
 } from '../../shared/ui/icons'
@@ -22,33 +27,37 @@ import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { logActivity } from '../../lib/activity'
 import { buildTodayPlan, isPerfectDay } from '../../lib/dailyPlan'
-import { countDueCards } from '../../lib/fsrs'
-import { cachedWordOfDay, newWordOfDay, type PoolItem } from '../../lib/wordPool'
-import { countMyWords } from '../../lib/cards'
 import { getEsLevel } from '../../lib/esLevel'
+import { dueShort, homeworkProgress } from '../../lib/homework'
+import { plural } from '../../shared/lib/plural'
 import { EnergyBar } from '../../components/EnergyBar'
 import { RowCard } from '../../shared/ui/RowCard'
-import { HowItWorks } from '../../shared/ui/HowItWorks'
-import { HOW_IT_WORKS } from '../../data/howItWorks'
-import { AssignmentsNotice, TeacherBlock } from '../teacher'
+import { EvenColumns, useEvenColumnsSplit } from '../../shared/ui/layouts'
+import { TeacherBlock } from '../teacher'
 import { LoadError } from '../../shared/ui/LoadError'
 import { LessonPushAsk, NextLessonCard, useNextLesson } from '../lessons'
-import { useHomeData } from './useHomeData'
+import { useHomeData, type HomeData } from './useHomeData'
+import { useHomeWords } from './useHomeWords'
 import { StreakHero } from './StreakHero'
 import { WordOfDay } from './WordOfDay'
 import { StartButton } from './StartButton'
+import { PlanList, type PlanRow } from './PlanList'
+import { HomeSkeleton } from './HomeSkeleton'
 import type { ActivityType } from '../../types'
 
 /** Иконки пунктов плана дня (сами пункты строит lib/dailyPlan). */
 const PLAN_ICONS: Record<string, IconLike> = {
   words: IconCards,
-  reader: IconGap,
+  reader: IconBook,
   grammar: IconHint,
   pronunciation: IconMic,
   conversation: IconDialog,
-  assignment: IconGap,
-  quest: IconHint,
+  assignment: IconClipboard,
+  quest: IconFlag,
 }
+
+/** Имя без фамилии: «Мадина · до воскресенья» (имена не склоняем, журнал п.68). */
+const firstName = (name: string | null | undefined) => name?.trim().split(/\s+/)[0] || null
 
 export function DashboardPage() {
   const { user } = useAuth()
@@ -57,11 +66,10 @@ export function DashboardPage() {
   const { data: home, ready, failed, reload } = useHomeData(user?.id)
   // ближайший урок ученика (Ф2.9): за 10 минут до начала — главное на экране
   const next = useNextLesson(home?.lessons ?? null)
+  const { dueCount, wordCount, wordOfDay, wordPending } = useHomeWords(user?.id, lang)
+  const wide = useEvenColumnsSplit()
   const profile = home?.profile ?? null
-  const assignments = home?.assignments ?? null
   const planInputs = home?.planInputs ?? null
-  /** Слово дня ещё считается: место под него держим, чтобы низ не прыгал. */
-  const [wordPending, setWordPending] = useState(true)
   // сделанное сегодня — из activity_log, плюс «идеальный день», отмеченный здесь
   const [markedPerfect, setMarkedPerfect] = useState(false)
   const doneToday = useMemo(() => {
@@ -69,81 +77,15 @@ export function DashboardPage() {
     if (markedPerfect) done.add('perfect')
     return done
   }, [home, markedPerfect])
-  const [dueCount, setDueCount] = useState<number | null>(null)
-  // сколько всего своих слов: 0 — колода пуста, новичка не путаем «Всё повторено»
-  const [wordCount, setWordCount] = useState<number | null>(null)
-  const [wordOfDay, setWordOfDay] = useState<PoolItem | null>(null)
-
-  useEffect(() => {
-    if (!user) return
-    // alive: при быстром переключении EN/ES ответ по старому языку не должен
-    // перетирать данные нового
-    let alive = true
-    setDueCount(null)
-    setWordCount(null)
-    setWordOfDay(null)
-    // счётчик — лёгкие count-запросы, без выкачивания строк карточек
-    countDueCards(lang)
-      .then((n) => alive && setDueCount(Math.min(n, 99)))
-      .catch(() => {})
-    countMyWords(lang)
-      .then((n) => alive && setWordCount(n))
-      .catch(() => {})
-
-    // Слово дня — НОВОЕ слово из пака уровня с кнопкой «В колоду».
-    // Кэш на день читаем сразу; полный расчёт тянет ленивый чанк словаря
-    // (ES ~836 КБ), поэтому первую загрузку откладываем до простоя браузера,
-    // чтобы не конкурировать с первым рендером Главной.
-    const cached = cachedWordOfDay(lang)
-    let idleId = 0
-    let usedIdle = false
-    setWordPending(true)
-    if (cached !== undefined) {
-      setWordOfDay(cached)
-      setWordPending(false)
-    } else {
-      const load = () => {
-        newWordOfDay(lang)
-          .then((w) => alive && setWordOfDay(w))
-          .catch(() => {})
-          .finally(() => alive && setWordPending(false))
-      }
-      if (typeof requestIdleCallback === 'function') {
-        usedIdle = true
-        idleId = requestIdleCallback(load, { timeout: 3000 })
-      } else {
-        idleId = window.setTimeout(load, 1500)
-      }
-    }
-    return () => {
-      alive = false
-      if (idleId) {
-        if (usedIdle) cancelIdleCallback(idleId)
-        else window.clearTimeout(idleId)
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, lang])
-
-  const name = profile?.display_name || user?.email?.split('@')[0] || 'друг'
-  const esLevel = lang === 'es' ? getEsLevel() : null
-  // ⚠️ Не подставляем B1: раньше приложение уверенно писало уровень, которого
-  // никто не измерял (умолчание колонки в базе). Не знаем — не говорим.
-  const level = lang === 'es' ? esLevel : (profile?.level ?? null)
-  const didToday = doneToday.size > 0
 
   // план на сегодня — ТОЛЬКО когда все входы загружены (иначе null)
   const todayPlan = planInputs
     ? buildTodayPlan(planInputs.dailyCfg, {
-        pendingAssignments: assignments?.pending ?? 0,
+        pendingAssignments: home?.assignments?.pending ?? 0,
         activeQuests: planInputs.activeQuests,
         weekday: new Date().getDay(),
       })
     : null
-  const doneCount = todayPlan
-    ? todayPlan.filter((p) => p.types.some((t) => doneToday.has(t))).length
-    : 0
-  const allDone = todayPlan !== null && doneCount === todayPlan.length
   const perfect = todayPlan !== null && isPerfectDay(todayPlan, doneToday)
 
   // «идеальный день»: фиксируем один раз и только по ПОЛНОМУ плану
@@ -155,169 +97,144 @@ export function DashboardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [perfect])
 
-  // Пустая колода ≠ «всё повторено»: новичку без единого слова предлагаем
-  // добавить первые (плитка ведёт в «Учёбу», где живут паки и добавление).
-  const emptyDeck = wordCount === 0
-  const dueLabel = emptyDeck
-    ? 'Добавь первые слова'
-    : dueCount === null
-      ? 'Повторить и потренировать'
-      : dueCount === 0
-        ? 'Всё повторено'
-        : `К повторению: ${dueCount}${dueCount >= 99 ? '+' : ''}`
-
   if (!ready) return <HomeSkeleton />
 
+  // Пустая колода ≠ «всё повторено»: новичку без единого слова предлагаем
+  // добавить первые (пункт ведёт в «Учёбу», где живут паки и добавление).
+  const emptyDeck = wordCount === 0
+  const wordsDetail = emptyDeck
+    ? 'добавь первые слова'
+    : dueCount
+      ? `${dueCount}${dueCount >= 99 ? '+' : ''} ${plural(dueCount, 'слово', 'слова', 'слов')}`
+      : undefined
+  const rows: PlanRow[] | null = todayPlan?.map((p) => ({
+    key: p.key,
+    title: p.title,
+    detail: p.key === 'words' ? wordsDetail : p.key === 'assignment' || p.key === 'quest' ? p.desc : undefined,
+    to: p.key === 'words' && emptyDeck ? '/study' : p.to,
+    done: p.types.some((t) => doneToday.has(t)),
+    Icon: PLAN_ICONS[p.key] ?? IconRows,
+  })) ?? null
+  const doneCount = rows?.filter((r) => r.done).length ?? 0
+
+  // ⚠️ Не подставляем B1: раньше приложение уверенно писало уровень, которого
+  // никто не измерял (умолчание колонки в базе). Не знаем — не говорим.
+  const level = lang === 'es' ? getEsLevel() : (profile?.level ?? null)
+  // «Привет, Айгерим» — по имени, без фамилии (u1, d4-v2)
+  const name = firstName(profile?.display_name) || user?.email?.split('@')[0] || 'друг'
+  const urgent = next.urgent
+
+  const hello = (
+    <header key="hello" className={`animate-fade-up flex flex-col gap-0.5 px-1 ${wide ? '' : 'pt-1'}`}>
+      <h1 className="text-greeting font-semibold text-fg">Привет, {name}</h1>
+      <p className="text-body text-fg-muted">
+        {lang === 'es' ? 'Испанский' : 'Английский'}
+        {level ? ` · ${level}` : ''}
+      </p>
+    </header>
+  )
+  // Не всё пришло — говорим о связи, а не рисуем «0» (Ф1.13)
+  const lost = failed > 0 && (
+    <LoadError
+      key="lost"
+      message="Часть главной не загрузилась — похоже, пропала связь. Слова, тексты и грамматика работают и без интернета."
+      onRetry={reload}
+    />
+  )
+  const lesson = next.lesson && <NextLessonCard key="lesson" lesson={next.lesson} urgent={urgent} now={next.now} fill={wide} />
+  const pushAsk = <LessonPushAsk key="push" hasLessons={next.lesson !== null} />
+  // серии нет, если не пришёл журнал: «0» был бы выдумкой
+  const streak = home?.activity && (
+    <StreakHero key="streak" streak={home.activity.streak} week={home.activity.week} perfect={perfect} compact={wide} />
+  )
+  const start = <StartButton key="start" lang={lang} afterLesson={urgent} compact={wide} />
+  // входы плана не пришли — плана нет: дефолт мог бы разойтись с учительским
+  const plan = rows && (
+    <PlanList key="plan" rows={rows} pill={perfect ? 'Идеальный день ✦' : `${doneCount} из ${rows.length}`} compact={wide} />
+  )
+  const homework = homeworkRow(home)
+  const program = home?.newProgram && (
+    <RowCard
+      key="program"
+      Icon={IconRows}
+      active
+      title="Тебе назначили программу обучения"
+      desc={`${home.newProgram.lang.toUpperCase()} · ${home.newProgram.weeks.length} нед. — посмотри план на эту неделю`}
+      to="/program"
+      className="animate-fade-up"
+    />
+  )
+  // слово дня считается отдельно (ленивый чанк словаря) — место держим
+  const word = wordOfDay ? (
+    <WordOfDay key="word" word={wordOfDay} lang={lang} compact={wide} />
+  ) : wordPending ? (
+    <div key="word" aria-hidden className={`animate-skeleton rounded-card bg-skeleton ${wide ? 'h-25' : 'h-29'}`} />
+  ) : null
+  const energy = home?.myPlan && <EnergyBar key="energy" plan={home.myPlan} compact={wide} />
+  const join = <TeacherBlock key="join" profile={profile} teachers={home?.teachers ?? null} compact={wide} />
+
+  // компьютер: «Начать занятие» и план — одной карточкой (d4-v2, вариант 1б)
+  const startCard = (
+    <section className="flex flex-col gap-2.5 rounded-card bg-surface p-4.5 shadow-card">
+      {start}
+      {plan && <div aria-hidden className="mb-0.5 mt-1.5 h-px bg-line" />}
+      {plan}
+    </section>
+  )
+  const pair: readonly [ReactNode, ReactNode] | null = lesson ? (urgent ? [lesson, streak] : [streak, lesson]) : null
+  // телефон — порядок u1: за 10 минут до урока приветствия нет, «Начать
+  // занятие» — сразу под уроком (u1-2)
+  const head = urgent ? [lost, lesson, pushAsk, start, homework, program] : [hello, lost, lesson, pushAsk, homework, program, start]
+  const columns = (
+    <EvenColumns
+      pair={pair}
+      left={startCard}
+      right={[pair ? null : streak, homework, program, word, energy, join, pushAsk]}
+      stack={[...head, streak, plan, word, energy, join]}
+    />
+  )
+  if (!wide) return columns
   return (
-    <div className="flex flex-col gap-6">
-      {/* 1. Приветствие */}
-      <header className="animate-fade-up">
-        <h1 className="text-2xl font-medium tracking-tight">Привет, {name}</h1>
-        <p className="mt-1 text-sm text-fg-muted">
-          {lang === 'es' ? 'Испанский' : 'Английский'}
-          {level ? ` · ${level}` : ''} ·{' '}
-          {didToday ? 'сегодня уже занимался' : 'готов к практике?'}
-        </p>
-        <div className="mt-2">
-          <HowItWorks>{HOW_IT_WORKS.dashboard}</HowItWorks>
-        </div>
-      </header>
-
-      {/* 1б. Не всё пришло — говорим о связи, а не рисуем «0» (Ф1.13) */}
-      {failed > 0 && (
-        <LoadError
-          message="Часть главной не загрузилась — похоже, пропала связь. Слова, тексты и грамматика работают и без интернета."
-          onRetry={reload}
-        />
-      )}
-
-      {/* 1в. Ближайший урок и просьба включить уведомления (Ф2.9, макеты u1, u3) */}
-      {next.lesson && <NextLessonCard lesson={next.lesson} urgent={next.urgent} now={next.now} />}
-      <LessonPushAsk hasLessons={next.lesson !== null} />
-
-      {/* 2. Стрик-герой (скелетон, пока не пришёл activity_log — чтобы не мигать «0»;
-          не пришёл совсем — героя нет: серию мы не знаем) */}
-      {!home ? (
-        <div
-          aria-hidden
-          className="h-[196px] animate-pulse rounded-3xl border border-accent-line bg-tint/[0.04]"
-        />
-      ) : home.activity && (
-        <StreakHero streak={home.activity.streak} week={home.activity.week} didToday={didToday} perfect={perfect} />
-      )}
-
-      {/* 2б. Энергия AI (E3): дневной запас на разговоры с ИИ */}
-      {home?.myPlan && <EnergyBar plan={home.myPlan} className="animate-fade-up" />}
-
-      {/* 3. Новое задание от преподавателя */}
-      <AssignmentsNotice placement="top" counts={assignments} />
-
-      {/* 3б. Новая программа обучения (гаснет после открытия /program) */}
-      {home?.newProgram && (
-        <RowCard
-          Icon={IconRows}
-          title="Тебе назначили программу обучения"
-          desc={`${home.newProgram.lang.toUpperCase()} · ${home.newProgram.weeks.length} нед. — посмотри план на эту неделю`}
-          to="/program"
-          active
-          className="animate-fade-up"
-        />
-      )}
-
-      {/* 4. Начать занятие — за 10 минут до урока второстепенная (u1-2) */}
-      <StartButton lang={lang} afterLesson={next.urgent} />
-
-      {/* 5. План на сегодня: пункты от учителя или умный дефолт (lib/dailyPlan).
-          Входы не пришли — плана не показываем: дефолт мог бы разойтись с учительским. */}
-      {(!home || planInputs) && <section className="animate-fade-up" style={{ animationDelay: '.18s' }}>
-        <div className="mb-3 flex items-baseline justify-between">
-          <h2 className="text-lg font-medium tracking-tight">План на сегодня</h2>
-          {todayPlan && (
-            <span className={`text-sm ${perfect ? 'font-medium text-warning-strong' : allDone ? 'text-accent-strong' : 'text-fg-muted'}`}>
-              {perfect ? 'Идеальный день ✦' : `${doneCount} из ${todayPlan.length} готово`}
-            </span>
-          )}
-        </div>
-        {todayPlan === null ? (
-          // скелетоны, пока грузятся входы плана (настройка/задания/квесты)
-          <div className="flex flex-col gap-2.5" aria-hidden>
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="h-[74px] animate-pulse rounded-2xl bg-tint/[0.04]" />
-            ))}
-          </div>
-        ) : (
-        <div className="flex flex-col gap-2.5">
-          {todayPlan.map((p, i) => {
-            const done = p.types.some((t) => doneToday.has(t))
-            const isWords = p.key === 'words'
-            return (
-              <RowCard
-                key={p.key}
-                Icon={PLAN_ICONS[p.key] ?? IconGap}
-                title={p.title}
-                desc={done ? 'Готово · засчитано в серию' : isWords ? dueLabel : p.desc}
-                to={isWords && emptyDeck ? '/study' : p.to}
-                muted={done}
-                active={!done && i === 0}
-                trailing={
-                  done ? (
-                    <IconCheck
-                      size={20}
-                      className="flex-none text-accent"
-                    />
-                  ) : undefined
-                }
-                className="animate-fade-up"
-                style={{ animationDelay: `${0.2 + i * 0.06}s` }}
-              />
-            )
-          })}
-        </div>
-        )}
-      </section>}
-
-      {/* 6. Слово дня — новое слово уровня, можно сразу добавить в колоду.
-          Считается отдельно: тянет ленивый чанк словаря (в ES ~836 КБ), поэтому
-          ждать его в общем кадре нельзя. Но место под него держим — иначе
-          через пару секунд оно раздвигает низ экрана под пальцем. */}
-      {wordOfDay ? (
-        <WordOfDay word={wordOfDay} lang={lang} />
-      ) : wordPending ? (
-        <div aria-hidden className="h-[104px] animate-pulse rounded-2xl bg-tint/[0.04]" />
-      ) : null}
-
-      {/* 7. Сданное задание уезжает вниз + блок преподавателя */}
-      <AssignmentsNotice placement="bottom" counts={assignments} />
-      <TeacherBlock profile={profile} />
+    <div className="flex flex-col gap-5">
+      {hello}
+      {lost}
+      {columns}
     </div>
   )
 }
 
-// ---------------------------------------------------------------------------
-
-/**
- * Скелетон Главной — повторяет РАСКЛАДКУ, а не просто «что-то серое».
- * Смысл в том, чтобы после загрузки ничего не сдвинулось: высоты блоков здесь
- * те же, что у настоящих (герой 196, кнопка 58, строки плана 74).
- */
-function HomeSkeleton() {
+/** «Домашка на неделю» (u1-1, d4-v2); без домашки, но с заданиями-материалами — они. */
+function homeworkRow(home: HomeData | null): ReactNode {
+  const hw = home?.homework
+  const { done, total } = homeworkProgress(hw ?? null)
+  if (hw && total > 0) {
+    const teacher = home?.teachers?.length === 1 ? firstName(home.teachers[0]!.display_name) : null
+    return (
+      <RowCard
+        key="homework"
+        Icon={IconClipboardCheck}
+        active
+        title="Домашка на неделю"
+        value={`${done} из ${total}`}
+        progress={done / total}
+        desc={[teacher, dueShort(hw.due_at)].filter(Boolean).join(' · ')}
+        to="/assignments"
+        className="animate-fade-up"
+      />
+    )
+  }
+  const pending = home?.assignments?.pending ?? 0
+  if (pending === 0) return null
   return (
-    <div className="flex flex-col gap-6" aria-busy="true" aria-label="Загружаем главную">
-      <header>
-        <div className="h-7 w-44 animate-pulse rounded-lg bg-tint/[0.06]" />
-        <div className="mt-2 h-4 w-60 animate-pulse rounded bg-tint/[0.04]" />
-      </header>
-      <div className="h-[196px] animate-pulse rounded-3xl border border-accent-line bg-tint/[0.04]" />
-      <div className="h-[86px] animate-pulse rounded-2xl bg-tint/[0.04]" />
-      <div className="h-[58px] animate-pulse rounded-2xl border border-accent-line bg-tint/[0.04]" />
-      <section>
-        <div className="mb-3 h-6 w-40 animate-pulse rounded bg-tint/[0.06]" />
-        <div className="flex flex-col gap-2.5">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="h-[74px] animate-pulse rounded-2xl bg-tint/[0.04]" />
-          ))}
-        </div>
-      </section>
-    </div>
+    <RowCard
+      key="homework"
+      Icon={IconClipboard}
+      active
+      title="Задания от преподавателя"
+      value={pending}
+      desc={plural(pending, 'ждёт выполнения', 'ждут выполнения', 'ждут выполнения')}
+      to="/assignments"
+      className="animate-fade-up"
+    />
   )
 }

@@ -112,11 +112,14 @@
      угла hero → hero-mid → hero-edge, размытое пятно hero-glow справа
      сверху, рамка 1 px hero-line. Тот же градиент — у «билета» рефералки
      (макет t8). Градиентные токены — в rgba/hex, а не accent долей: цвет из
-     color-mix браузер ведёт через oklab. --- */
+     color-mix браузер ведёт через oklab. hero-glow-soft — пятно серии на
+     Главной ученика: у макетов u1 и d4-v2 оно мягче листа s2 (~0,2 во всех
+     четырёх вариантах), а градиент уходит в surface. --- */
   --color-hero: #2b2c55;
   --color-hero-mid: #1c1d38;
   --color-hero-edge: #171830;
   --color-hero-glow: rgba(145, 132, 217, 0.45);
+  --color-hero-glow-soft: rgba(169, 158, 234, 0.22);
   --color-hero-line: rgba(145, 132, 217, 0.3);
   /* «Аврора» — фон входа, регистрации и смены пароля (features/auth/authUi):
      основа — радиальный градиент aurora → aurora-mid → aurora-edge, сверху
@@ -267,6 +270,11 @@
   --text-note--line-height: calc(18 / 13);
   --text-body: 0.9375rem; /* 15/22 — основной текст карточек */
   --text-body--line-height: calc(22 / 15);
+  /* 28 — приветствие Главной ученика (макеты u1, d4-v2): крупнее заголовка
+     экрана 24, но не цифра 30 */
+  --text-greeting: 1.75rem;
+  --text-greeting--line-height: 1.15;
+  --text-greeting--letter-spacing: -0.015em;
   /* 40 — крупная цифра: серия у ученика, остаток уроков у репетитора. Одна
      на экран, всегда tabular-nums. */
   --text-display: 2.5rem;
@@ -395,6 +403,7 @@
   --color-hero-mid: #f8f6fe;
   --color-hero-edge: #ffffff;
   --color-hero-glow: rgba(107, 92, 204, 0.2);
+  --color-hero-glow-soft: rgba(107, 92, 204, 0.22);
   --color-hero-line: rgba(107, 92, 204, 0.3);
   --color-aurora: #ebe7fb;
   --color-aurora-mid: #f5f4fb;
@@ -491,6 +500,7 @@
   --color-hero-mid: #2e211b;
   --color-hero-edge: #241c17;
   --color-hero-glow: rgba(240, 138, 85, 0.35);
+  --color-hero-glow-soft: rgba(240, 138, 85, 0.2);
   --color-hero-line: rgba(240, 138, 85, 0.28);
   --color-aurora: #3a2116;
   --color-aurora-mid: #16100d;
@@ -606,6 +616,7 @@
   --color-hero-mid: #fef0e7;
   --color-hero-edge: #ffffff;
   --color-hero-glow: rgba(238, 106, 44, 0.22);
+  --color-hero-glow-soft: rgba(238, 106, 44, 0.22);
   --color-hero-line: rgba(238, 106, 44, 0.28);
   --color-aurora: #fde7da;
   --color-aurora-mid: #faf3ee;

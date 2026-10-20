@@ -230,7 +230,7 @@ try {
   check('ссылка → на Главной код уже в поле', prefilled)
   await shot(st, 'student-join-390')
   await click(st, 'Привязать')
-  check('ученик привязался — на Главной его преподаватель', await waitText(st, /Преподаватель:\s*Мадина Смоук/))
+  check('ученик привязался — на Главной его преподаватель', await waitText(st, /Твой преподаватель:\s*Мадина Смоук/))
   const left = await st.evaluate(() => localStorage.getItem('recall.pending_join'))
   check('код из ссылки больше не подставляется', left === null, String(left))
 

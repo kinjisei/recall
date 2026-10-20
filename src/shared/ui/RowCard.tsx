@@ -19,6 +19,10 @@ export interface RowCardProps {
   lead?: ReactNode
   title: ReactNode
   desc?: ReactNode
+  /** Значение справа в строке заголовка: «3 из 5» (домашка, макет u1-1). */
+  value?: ReactNode
+  /** Полоса прогресса под заголовком, 0–1 (домашка, макет u1-1). */
+  progress?: number
   /** Ведёт по ссылке (Link) или вызывает обработчик (button). */
   to?: string
   onClick?: () => void
@@ -26,6 +30,9 @@ export interface RowCardProps {
   active?: boolean
   /** Пунктирная рамка — для «предложений» вроде «Определи свой уровень». */
   dashed?: boolean
+  /** Тонкая рамка без подложки — тихое предложение («Занимаешься с
+   *  преподавателем?» на телефоне, макет u1-3). */
+  outline?: boolean
   /** Правый слот: счётчик, галочка, бейдж. */
   trailing?: ReactNode
   /** Приглушить (например, выполненный пункт). */
@@ -45,10 +52,13 @@ export function RowCard({
   lead,
   title,
   desc,
+  value,
+  progress,
   to,
   onClick,
   active = false,
   dashed = false,
+  outline = false,
   trailing,
   muted = false,
   flat = false,
@@ -72,10 +82,19 @@ export function RowCard({
           </span>
         ))}
 
-      <span className="flex min-w-0 flex-1 flex-col text-left">
-        <span className={`truncate text-base font-medium ${muted ? 'line-through opacity-70' : ''}`}>
-          {title}
+      <span className={`flex min-w-0 flex-1 flex-col text-left ${progress === undefined ? '' : 'gap-1.5'}`}>
+        <span className={`flex items-baseline justify-between gap-2 text-base font-medium ${muted ? 'line-through opacity-70' : ''}`}>
+          <span className="truncate">{title}</span>
+          {value !== undefined && <span className="flex-none text-body font-semibold tabular-nums">{value}</span>}
         </span>
+        {progress !== undefined && (
+          <span aria-hidden className="h-1.5 overflow-hidden rounded-full bg-input">
+            <span
+              className="block h-full w-full origin-left rounded-full bg-accent transition-transform duration-500 ease-out"
+              style={{ transform: `scaleX(${Math.min(Math.max(progress, 0), 1)})` }}
+            />
+          </span>
+        )}
         {desc && (
           <span className="truncate text-note tabular-nums text-fg-muted">{desc}</span>
         )}
@@ -91,7 +110,11 @@ export function RowCard({
   const look = flat
     ? `${current ? 'bg-accent-soft/60' : 'hover:bg-row-press active:bg-row-press data-press:bg-row-press'} transition-colors duration-(--dur-1)`
     : `rounded-row border transition-colors duration-(--dur-1) ${
-        dashed ? 'border-dashed border-accent-line bg-transparent active:bg-ghost-press' : 'border-transparent bg-surface shadow-card hover:bg-row-press active:bg-row-press'
+        dashed
+          ? 'border-dashed border-accent-line bg-transparent active:bg-ghost-press'
+          : outline
+            ? 'border-line bg-transparent active:bg-ghost-press'
+            : 'border-transparent bg-surface shadow-card hover:bg-row-press active:bg-row-press'
       }`
   const cls = `flex min-h-16 w-full items-center gap-3 py-2.5 pl-4 pr-3.5 text-fg disabled:cursor-not-allowed disabled:opacity-50 ${look} ${muted ? 'opacity-75' : ''} ${className}`
 

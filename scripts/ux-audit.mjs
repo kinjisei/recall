@@ -18,6 +18,7 @@ import puppeteer from 'puppeteer-core'
 import { profileDir } from './_profile.mjs'
 import { APP_URL, scriptEnv } from './_env.mjs'
 import { auditPage } from './_ux-audit-page.mjs'
+import { settleAnimations } from './_shots.mjs'
 
 const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
 const BASE = process.env.AUDIT_BASE_URL || APP_URL
@@ -146,6 +147,9 @@ const main = async () => {
         currentLang = wantLang
       }
       await new Promise((r) => setTimeout(r, 1200)) // ленивые чанки + анимации входа
+      // анимации входа — доиграть: без кадров они стоят в начале, а аудит
+      // умножает прозрачность родителей (ложный контраст)
+      await settleAnimations(page)
       const issues = await page.evaluate(auditPage)
       results.push({ screen: s.name, path: s.path, issues })
       console.log(`${s.name} (${s.path}): ${issues.length} замечаний`)

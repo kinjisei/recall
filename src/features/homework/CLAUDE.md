@@ -159,5 +159,5 @@
 - **Таблицы:** `profiles`
 - **RPC:** `choose_homework_item`, `complete_homework_item`, `create_homework`, `get_homework`, `get_homework_many`
 - **AI-задачи:** `homework`
-- **Кто использует (импортом):** `features/study`, `features/teacher`
+- **Кто использует (импортом):** `features/dashboard`, `features/study`, `features/teacher`
 <!-- generated:end -->

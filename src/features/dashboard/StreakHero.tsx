@@ -1,89 +1,77 @@
 // ============================================================================
-// Серия дней подряд на Главной: число, неделя полосками, «Мой прогресс».
-// Вынесено из DashboardPage.tsx без правок поведения (PLAN.md Ф2.9 — Главная
-// не растёт).
+// Серия дней подряд на Главной (макеты u1-1, d4-v2): пламя в круге, число,
+// неделя кружками — занимался — залит с галочкой, нет — пунктир, сегодня
+// обведён, — и «Мой прогресс». На компьютере (`compact`, d4-v2) карточка
+// плотнее: пламя 48 и число 36, на телефоне — 56 и 40.
 // ============================================================================
-import { IconArrowRight, IconFlame } from '../../shared/ui/icons'
+import { IconArrowRight, IconCheck, IconFlame } from '../../shared/ui/icons'
 import { AppLink } from '../../shared/ui/AppLink'
 import type { WeekDay } from '../../lib/activity'
+
+/** Фон карточки-героя Главной: из левого верхнего угла hero → hero-mid → surface. */
+export const HOME_HERO = 'bg-radial-[130%_120%_at_0%_0%] from-hero via-hero-mid via-55% to-surface'
 
 export function StreakHero({
   streak,
   week,
-  didToday,
   perfect = false,
+  compact = false,
 }: {
   streak: number
   week: WeekDay[]
-  didToday: boolean
   /** Все пункты плана дня выполнены — пламя «золотое». */
   perfect?: boolean
+  compact?: boolean
 }) {
-  const hint = perfect
-    ? 'Идеальный день: весь план выполнен ✦'
-    : didToday
-    ? 'Сегодня засчитано — так держать!'
-    : streak > 0
-      ? 'Позанимайся, чтобы не потерять серию'
-      : 'Занимайся каждый день — серия растёт'
-
+  const done = week.filter((d) => d.active).map((d) => d.label)
   return (
-    // Фон и пятно — токены hero-* (в тёмной — прежние цвета, в светлой —
-    // бледно-лавандовая карточка с тенью); форма градиента та же, что была.
-    <div
-      className="animate-fade-up relative overflow-hidden rounded-3xl border border-accent/25 bg-radial-[140%_160%_at_15%_0%] from-hero via-hero-mid via-55% to-hero-edge p-5 shadow-card"
-      style={{ animationDelay: '.06s' }}
+    <section
+      aria-label="Серия дней подряд"
+      className={`animate-fade-up relative flex h-full flex-col overflow-hidden rounded-card inset-ring inset-ring-hero-line ${HOME_HERO} ${compact ? 'gap-3 px-5 pb-1.5 pt-4.5' : 'gap-4 px-5 pb-2 pt-5'}`}
     >
-      {/* размытое акцентное пятно справа-сверху */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -right-10 -top-14 h-40 w-40 rounded-full bg-radial-[circle] from-hero-glow to-transparent to-70% blur-3xl"
+      <span
+        aria-hidden
+        className="pointer-events-none absolute -right-17.5 -top-20 size-60 rounded-full bg-radial-[circle] from-hero-glow-soft to-transparent to-70%"
       />
-
-      <div className="relative flex items-start justify-between gap-3">
-        <div>
-          <p className="text-sm text-fg-tertiary">Серия дней подряд</p>
-          <p className="mt-1.5 flex items-center gap-2.5">
-            <IconFlame
-              size={34}
-              className={`animate-flame ${perfect ? 'text-warning-strong' : 'text-accent-soft-fg'}`}
-            />
-            <span className="animate-pop-in text-4xl font-medium tabular-nums">{streak}</span>
-          </p>
-        </div>
-        <p className="max-w-[48%] pt-1 text-right text-sm leading-snug text-fg-tertiary">
-          {hint}
-        </p>
+      <div className="relative flex items-center gap-3.5">
+        <span
+          className={`flex flex-none items-center justify-center rounded-full ${perfect ? 'bg-warning text-warning-fg' : 'bg-accent text-accent-fg'} ${compact ? 'size-12' : 'size-14'}`}
+        >
+          <IconFlame size={compact ? 24 : 28} aria-hidden className="animate-flame" />
+        </span>
+        <span className="flex flex-col">
+          <span className={`animate-pop-in font-bold leading-none tabular-nums ${compact ? 'text-4xl tracking-tight' : 'text-display'}`}>
+            {streak}
+          </span>
+          <span className="text-body text-accent-soft-fg">Серия дней подряд</span>
+        </span>
       </div>
 
-      {/* неделя: 7 полосок */}
-      <div className="relative mt-5 flex items-end gap-1.5">
+      <div
+        role="img"
+        aria-label={done.length ? `На этой неделе занимался: ${done.join(', ')}` : 'На этой неделе ещё не занимался'}
+        className="relative grid grid-cols-7 gap-1"
+      >
         {week.map((d, i) => (
-          <div key={d.day} className="flex flex-1 flex-col items-center gap-1.5">
+          <div key={d.day} className="flex flex-col items-center gap-1.5 text-xs text-accent-soft-fg">
             <span
-              className={`animate-grow-bar h-1.5 w-full rounded-full ${
-                d.active ? 'bg-accent' : 'bg-tint/[0.09]'
-              } ${d.isToday && !d.active ? 'ring-1 ring-accent-line' : ''}`}
               // заметный каскад слева направо: пн → вт → ср → …
-              style={{ animationDelay: `${0.2 + i * 0.12}s` }}
-            />
-            <span
-              className={`text-micro ${
-                d.isToday ? 'text-accent-strong' : 'text-fg-muted'
-              }`}
+              style={{ animationDelay: `${0.15 + i * 0.06}s` }}
+              className={`animate-pop-in flex size-8.5 items-center justify-center rounded-full ${d.active ? 'bg-accent text-accent-fg' : 'border-dashed-ring'} ${d.isToday ? 'ring-2 ring-fg ring-offset-2 ring-offset-hero' : ''}`}
             >
-              {d.label}
+              {d.active && <IconCheck size={16} aria-hidden />}
             </span>
+            {d.isToday ? <b className="font-semibold">{d.label}</b> : d.label}
           </div>
         ))}
       </div>
 
       <AppLink
         to="/progress"
-        className="relative mt-3 inline-flex min-h-11 items-center gap-1 text-sm text-accent-strong hover:underline"
+        className="relative flex min-h-11 items-center gap-1.5 self-start text-body font-semibold text-accent-soft-fg hover:underline"
       >
-        Мой прогресс <IconArrowRight size={14} />
+        Мой прогресс <IconArrowRight size={16} aria-hidden />
       </AppLink>
-    </div>
+    </section>
   )
 }

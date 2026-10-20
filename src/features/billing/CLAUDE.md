@@ -37,7 +37,7 @@ Telegram · Почта (`shared/ui/ContactLinks`).
 | `AccessEndedBanner.tsx`, `index.ts` | плашка «Тариф закончился · Всё сохранено · Продлить» / «Пробный период закончился · Выбрать тариф» (макет t9-3, PLAN.md Ф2.4). Ставит каркас над стартовым экраном и студией (`app/navigation.ts` `showsAccessBanner`); текст и «кончился ли» — `accessEndedNotice` (`domains/billing`). Тариф перечитывает при каждом показе и при возврате в приложение; конец наступил при открытом экране — появляется в тот же момент. Дверь `index.ts` отдаёт только плашку: экраны грузятся лениво |
 | `src/domains/billing` | каталог тарифов (цены и тексты), реквизиты Kaspi — `domains/billing/CLAUDE.md` |
 | `src/lib/billing.ts` | свой тариф: `getMyPlan()` (одновременные вызовы делят один запрос, кэша нет — энергия всегда свежая), тип `MyPlan` |
-| `src/components/EnergyBar.tsx` | полоска ⚡ |
+| `src/components/EnergyBar.tsx` | тихая строка ⚡ на Главной: «Энергия на AI-задания», полоса, «9 из 14» (макеты u1, d4-v2) |
 | база | `energy_source` (откуда энергия и сколько), `spend_energy` / `refund_ai_call` (списание и возврат — их зовёт сервер, `api/CLAUDE.md`), `get_my_plan`, `teacher_seats_effective`, `covering_teacher`, `become_teacher`, `stop_teaching`, `admin_set_plan` |
 
 ## Правила, которые нельзя нарушить

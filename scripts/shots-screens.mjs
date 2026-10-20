@@ -1,0 +1,154 @@
+/**
+ * Снимки экранов по макетам компьютера (PLAN.md Ф2.17-4) для приёмки
+ * владельцем: свои снимки кладутся рядом с кадрами макетов. Данные — студия
+ * Мадины Сейткали (`_seed-studio.mjs`), AI не вызывается, наружу ничего не
+ * уходит, аккаунты удаляются сами.
+ *
+ * Заход 4а — Главная ученика (макеты u1, d4-v2):
+ *   home      — Айгерим: урок в 19:00, домашка 1 из 4, серия, слова к повторению;
+ *   home-soon — она же, урок через 5 минут (u1-2, d4-v2-2);
+ *   home-solo — самоучка Диас (u1-3, d4-v2-3).
+ * Ширины 390 и 1280 — в четырёх вариантах вида («Сумерки» и «Закат» ×
+ * светлая и тёмная), 1440 — светлые «Сумерки» (d4-v2-4). Имя файла —
+ * `<экран>-<палитра>-<тема>-<ширина>.png`. На каждом снимке — UX-аудит
+ * `<main>` (`_ux-audit-page`: контраст, цели касания, подписи): замечание —
+ * красная строка в итоге. Телефон снимается окном во всю высоту страницы.
+ *
+ * Запуск: npm run dev:test, затем node scripts/shots-screens.mjs [папка]
+ * (по умолчанию shots-screens/). ~4 мин.
+ */
+import { spawn } from 'node:child_process'
+import { mkdirSync } from 'node:fs'
+import puppeteer from 'puppeteer-core'
+import { profileDir } from './_profile.mjs'
+import { APP_URL } from './_env.mjs'
+import { PASS, studio, must } from './_seed-studio.mjs'
+import { settleAnimations, settledScreenshot, waitForData } from './_shots.mjs'
+import { auditPage } from './_ux-audit-page.mjs'
+
+if (process.argv.includes('--prod')) {
+  console.error('Снимки заводят аккаунты — только тестовая база (npm run dev:test).')
+  process.exit(1)
+}
+const EDGE = 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'
+const DIR = process.argv[2] && !process.argv[2].startsWith('--') ? process.argv[2] : 'shots-screens'
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+const st = studio('shots-scr')
+
+const LOOKS = [
+  ['twilight', 'light'],
+  ['twilight', 'dark'],
+  ['sunset', 'light'],
+  ['sunset', 'dark'],
+]
+
+let browser = null
+const report = []
+
+async function newPage(width) {
+  const ctx = await browser.createBrowserContext()
+  const page = await ctx.newPage()
+  // высота окна — как у кадров макетов: телефон 844, 1280 × 800, 1440 × 900
+  await page.setViewport(width < 600 ? { width, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true } : { width, height: width >= 1440 ? 900 : 800 })
+  await page.evaluateOnNewDocument(() => {
+    try {
+      localStorage.setItem('recall.lang', 'en')
+      localStorage.setItem('recall.onboarded', '1')
+    } catch {
+      /* about:blank */
+    }
+  })
+  return page
+}
+
+async function signIn(page, email) {
+  await page.goto(`${APP_URL}/login`, { waitUntil: 'networkidle2' })
+  await page.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Войти')?.click())
+  await sleep(600)
+  await page.type('#f-email', email)
+  await page.type('#f-password', PASS)
+  await page.click('button[type="submit"]')
+  await page.waitForFunction(() => location.pathname !== '/login', { timeout: 30000, polling: 250 })
+  await sleep(1200)
+}
+
+/** Один экран во всех вариантах вида на этой ширине; expect — текст, по которому видно, что экран тот. */
+async function shoot(page, name, path, width, expect, looks) {
+  for (const [palette, theme] of looks) {
+    await page.evaluate((p, t) => {
+      localStorage.setItem('recall.palette', p)
+      localStorage.setItem('recall.theme', t)
+    }, palette, theme)
+    await page.goto(`${APP_URL}${path}`, { waitUntil: 'networkidle2' })
+    const ok = await page
+      .waitForFunction((src) => new RegExp(src).test(document.body.innerText), { polling: 250, timeout: 15000 }, expect.source)
+      .then(() => true, () => false)
+    // слово дня считается в простое браузера — ждём его, а не паузу
+    await page.waitForFunction(() => /Слово дня/.test(document.body.innerText), { polling: 250, timeout: 8000 }).catch(() => {})
+    await sleep(600)
+    // контраст и цели касания (правила ui-ux-pro-max) — в каждом варианте вида.
+    // ДО снимка и после доигранных анимаций: снимок всей страницы меняет окно и
+    // перезапускает появление, и аудит ловил полупрозрачный текст («Войти в
+    // урок» 3,3 : 1 вместо 5 : 1 — прогон 20.10.2026)
+    await waitForData(page)
+    await settleAnimations(page)
+    const issues = await page.evaluate(auditPage, 'main')
+    const file = `${DIR}/${name}-${palette}-${theme}-${width}.png`
+    // телефон — окном во всю высоту страницы: при снимке fullPage закреплённая
+    // панель вкладок висит посреди картинки, а не внизу, как у человека
+    const vp = page.viewport()
+    if (width < 600) {
+      const h = await page.evaluate(() => document.documentElement.scrollHeight)
+      await page.setViewport({ ...vp, height: Math.max(vp.height, h) })
+      await sleep(400)
+    }
+    await settledScreenshot(page, { path: file, fullPage: width >= 600 })
+    if (width < 600) await page.setViewport(vp)
+    report.push(`${ok ? '✓' : '✗'} ${file}`)
+    report.push(`${issues.length ? '✗' : '✓'} UX ${file}: ${issues.length ? JSON.stringify(issues.slice(0, 3)) : '0 замечаний'}`)
+    console.log(`${ok ? 'снимок' : 'НЕ ТОТ ЭКРАН'} ${file}${issues.length ? ` — UX: ${issues.length}` : ''}`)
+  }
+}
+
+/** Главная ученика: 390 и 1280 в четырёх вариантах, 1440 — светлые «Сумерки». */
+async function home(email, name, expect) {
+  for (const width of [390, 1280, 1440]) {
+    const page = await newPage(width)
+    await signIn(page, email)
+    await shoot(page, name, '/', width, expect, width === 1440 ? LOOKS.slice(0, 1) : LOOKS)
+    await page.browserContext().close()
+  }
+}
+
+try {
+  mkdirSync(DIR, { recursive: true })
+  console.log('── студия')
+  const { t, a, solo, ca } = await st.seed()
+  const PORT = 9700 + Math.floor(Math.random() * 200)
+  spawn(EDGE, ['--headless=new', '--disable-gpu', `--remote-debugging-port=${PORT}`, `--user-data-dir=${profileDir('shots-screens')}`, '--no-first-run', 'about:blank'], { detached: true, stdio: 'ignore' }).unref()
+  for (let i = 0; i < 30 && !browser; i++) {
+    await sleep(500)
+    browser = await puppeteer.connect({ browserURL: `http://127.0.0.1:${PORT}`, defaultViewport: null, protocolTimeout: 180000 }).catch(() => null)
+  }
+  if (!browser) throw new Error('Edge не поднялся')
+
+  console.log('── Главная ученицы')
+  await home(a.email, 'home', /Ближайший урок/)
+  console.log('── Главная самоучки')
+  await home(solo.email, 'home-solo', /Занимаешься с преподавателем/)
+  // урок через 5 минут: карточка урока становится главной (u1-2, d4-v2-2)
+  const soon = new Date(Date.now() + 5 * 60_000).toISOString()
+  must(await t.client.rpc('create_lesson', { p_kind: 'individual', p_starts_at: soon, p_minutes: 45, p_cards: [ca] }), 'урок через 5 минут')
+  console.log('── Главная за 10 минут до урока')
+  await home(a.email, 'home-soon', /Урок через/)
+} catch (e) {
+  console.error('СБОЙ:', e.message)
+  report.push(`✗ сбой: ${e.message}`)
+} finally {
+  await browser?.close().catch(() => {})
+  await st.cleanup()
+  console.log('\n' + report.join('\n'))
+  const bad = report.filter((r) => r.startsWith('✗')).length
+  console.log(`\nИтог: ${report.length - bad}/${report.length}`)
+  process.exit(bad ? 1 : 0)
+}

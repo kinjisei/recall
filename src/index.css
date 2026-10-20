@@ -506,6 +506,12 @@ html[data-vt='fade']::view-transition-new(root) { animation: fade-in 150ms var(-
   border: 1.5px dashed var(--color-control-line);
 }
 
+/* Пунктирный круг дня без занятия в серии (макеты u1, d4-v2): 1,5 px, токен
+   ring — ≥ 3:1 к hero. */
+@utility border-dashed-ring {
+  border: 1.5px dashed var(--color-ring);
+}
+
 /* Штриховка «поздняя отмена» (макеты t2-3, d1): урок отменён, но списан —
    отличается от обычной отмены и без цветового зрения. Цвет — токен. */
 @utility bg-hatch-warning {

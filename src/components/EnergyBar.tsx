@@ -23,7 +23,12 @@ export function energyLeft(plan: MyPlan): { left: number; cap: number; studio: b
   return { left, cap, studio }
 }
 
-export function EnergyBar({ plan, className = '' }: { plan: MyPlan; className?: string }) {
+/**
+ * Тихая строка энергии на Главной (макеты u1-1, d4-v2): ⚡, «Энергия на
+ * AI-задания», полоса, «9 из 14». Мало осталось — полоса и число цветом
+ * предупреждения. Высота 44 на телефоне, 32 на компьютере (`compact`).
+ */
+export function EnergyBar({ plan, compact = false }: { plan: MyPlan; compact?: boolean }) {
   const e = energyLeft(plan)
   // ⚠️ хук зовём ДО раннего выхода: порядок хуков должен быть одинаковым при
   // каждом рендере, иначе React упадёт, когда полоска то показывается, то нет
@@ -33,29 +38,21 @@ export function EnergyBar({ plan, className = '' }: { plan: MyPlan; className?: 
   const low = e.left <= Math.max(1, Math.round(e.cap * 0.2))
 
   return (
-    <div className={`rounded-2xl border border-tint/[0.08] bg-surface px-4 py-3 ${className} shadow-card`}>
-      <div className="flex items-center justify-between text-sm">
-        <span className="flex items-center gap-1.5 font-medium">
-          <IconBolt size={16} className={low ? 'text-warning' : 'text-accent-strong'} />
-          Энергия AI
-        </span>
-        <span className={low ? 'text-warning' : 'text-fg-secondary'}>
-          {shownLeft} из {e.cap}
-        </span>
-      </div>
-      <div className="mt-2 h-2 overflow-hidden rounded-full bg-tint/[0.07]">
-        <div
-          className={`h-full w-full origin-left rounded-full transition-transform duration-500 [transition-timing-function:cubic-bezier(.22,1,.36,1)] ${low ? 'bg-warning' : 'bg-accent'}`}
+    <section
+      aria-label={`Энергия на AI-задания: ${e.left} из ${e.cap}${e.left === 0 ? ', вернётся утром' : ''}`}
+      className={`flex items-center gap-2.5 text-note text-fg-muted ${compact ? 'min-h-8 px-1.5' : 'min-h-11 px-1'}`}
+    >
+      <IconBolt size={16} aria-hidden className={`flex-none ${low ? 'text-warning-strong' : 'text-accent-strong'}`} />
+      <span className="whitespace-nowrap">Энергия на AI-задания</span>
+      <span aria-hidden className="h-1.5 flex-1 overflow-hidden rounded-full bg-input">
+        <span
+          className={`block h-full w-full origin-left rounded-full transition-transform duration-500 ease-out ${low ? 'bg-warning' : 'bg-accent'}`}
           style={{ transform: `scaleX(${pct / 100})` }}
         />
-      </div>
-      <p className="mt-1.5 text-xs text-fg-muted">
-        {e.left === 0
-          ? 'На сегодня всё — вернётся утром. Слова, тексты и игры работают без энергии.'
-          : e.studio
-            ? 'Общая энергия студии на разговоры с AI. Пополняется утром.'
-            : 'Тратится на Диалог, письмо и квесты. Переводы и произношение — бесплатно.'}
-      </p>
-    </div>
+      </span>
+      <span aria-hidden className={`whitespace-nowrap tabular-nums ${low ? 'text-warning-strong' : ''}`}>
+        {shownLeft} из {e.cap}
+      </span>
+    </section>
   )
 }

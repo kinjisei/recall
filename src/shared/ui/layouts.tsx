@@ -12,9 +12,12 @@
 //                   содержимое уже 880 — или список, или подробности; с `fill`
 //                   занимает окно до низа, и список с подробностями
 //                   прокручиваются каждый сам, а страница — нет (макет d3);
-//   MainAside     — главная колонка 720 + правая 352 (Главная ученика, «Моя
-//                   учёба»): справа то, что сверяют, а не делают; содержимое
-//                   уже 936 — одна колонка, правая уходит под главную.
+//   MainAside     — главная колонка 720 + правая 352 («Моя учёба»): справа
+//                   то, что сверяют, а не делают; содержимое уже 936 — одна
+//                   колонка, правая уходит под главную;
+//   EvenColumns   — две равные колонки (Главная ученика, макет d4-v2): ряд
+//                   пары одной высоты, под ним две стопки; уже 936 — одна
+//                   колонка в порядке телефона.
 //
 // Вид выбирается по ширине СОДЕРЖИМОГО, а не окна (d0, правило 6): каркас
 // меряет его и отдаёт через shared/lib/screenWidth — одинаково при меню 240,
@@ -176,7 +179,7 @@ export function ListDetail({
 }
 
 /**
- * Главная колонка + правая (макеты d0-3, d4-v2): главная до 720, правая 352 —
+ * Главная колонка + правая (макет d0-3): главная до 720, правая 352 —
  * липкая при прокрутке. Содержимое уже 936 — одна колонка: сначала главная,
  * под ней правая. Одно главное действие экрана — в главной колонке (d0,
  * правило 10), правая его не дублирует.
@@ -196,6 +199,46 @@ export function MainAside({ main, aside }: { main: ReactNode; aside: ReactNode }
     <div className="grid grid-cols-[minmax(0,var(--container-main))_var(--container-list)] justify-center gap-6">
       <div className="min-w-0">{main}</div>
       <aside className="sticky top-8 flex flex-col gap-4 self-start">{aside}</aside>
+    </div>
+  )
+}
+
+/** Две ли колонки (содержимое от 936 px): экрану — тот же ответ, что раскладке. */
+export function useEvenColumnsSplit(): boolean {
+  return useContentAtLeast(AREA.homeSplit)
+}
+
+/**
+ * Две равные колонки (макет d4-v2: «6 + 6 из 12», 478 на 1280, 550 на 1440).
+ * Первый ряд — пара одной высоты (`pair`), под ним — левая и правая стопки,
+ * каждая своей высоты: подгонять по высоте нужно только первый ряд. Содержимое
+ * уже 936 — одна колонка (`stack`) в порядке экрана телефона (u1): порядок у
+ * колонки свой, не «левая, потом правая», поэтому экран отдаёт его отдельно.
+ */
+export function EvenColumns({
+  pair,
+  left,
+  right,
+  stack,
+}: {
+  pair?: readonly [ReactNode, ReactNode] | null
+  left: ReactNode
+  right: ReactNode
+  stack: ReactNode
+}) {
+  const split = useEvenColumnsSplit()
+  usePageWidth('page', AREA.homeSplit)
+  if (!split) return <div className="mx-auto flex w-full max-w-main flex-col gap-4.5">{stack}</div>
+  return (
+    <div className="grid grid-cols-2 gap-5" data-even-columns>
+      {/* обёртка-сетка растягивает карточку пары на высоту ряда */}
+      {pair?.map((cell, i) => (
+        <div key={i} className="grid min-w-0">
+          {cell}
+        </div>
+      ))}
+      <div className="flex min-w-0 flex-col gap-3 self-start">{left}</div>
+      <div className="flex min-w-0 flex-col gap-3 self-start">{right}</div>
     </div>
   )
 }

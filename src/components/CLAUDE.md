@@ -22,7 +22,7 @@
 | `RoundResult.tsx`, `RoundReview.tsx` | итог раунда — один на все игры; разбор с «Почему?» (лёгкая модель, ⚡ не стоит) |
 | `WordSheet.tsx`, `MarkableText.tsx` | шторка слова для всех читалок; текст, где тап по слову открывает шторку, и «Выделить фразу» |
 | `AnalysisSheet.tsx`, `TextAnalysisSheet.tsx`, `PhraseSheet.tsx`, `AnalyzedItemsView.tsx` | разбор предложения, всего текста, выделенной фразы |
-| `EnergyBar.tsx` | полоска ⚡ (правила энергии — `features/billing/CLAUDE.md`) |
+| `EnergyBar.tsx` | строка ⚡ на Главной (правила энергии — `features/billing/CLAUDE.md`) |
 | `GuidedNext.tsx` | баннер «дальше» ведомой сессии (`features/dashboard/CLAUDE.md`) |
 | `FeedbackSheet.tsx` | шторка «Расскажи, как тебе» |
 | `ChartView.tsx` | график для письма IELTS Task 1 — рисуется из данных, без зависимостей |

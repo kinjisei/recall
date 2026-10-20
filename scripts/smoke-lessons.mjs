@@ -35,7 +35,7 @@ import { profileDir } from './_profile.mjs'
 import { APP_URL, dbTarget, runSql, scriptEnv } from './_env.mjs'
 import { deleteTestUser } from './_users.mjs'
 import { auditPage } from './_ux-audit-page.mjs'
-import { settledScreenshot } from './_shots.mjs'
+import { settleAnimations, settledScreenshot } from './_shots.mjs'
 
 const env = scriptEnv()
 const sql = (q) => runSql(dbTarget([]), q)
@@ -106,7 +106,11 @@ async function shot(page, name) {
 }
 /** UX-аудит части экрана (контраст, тач-цели, подписи) — 0 замечаний. */
 async function audit(page, name, sel) {
-  await sleep(500) // шторки и появление — до полной непрозрачности
+  await sleep(500)
+  // шторки и появление — до полной непрозрачности: в headless-вкладке без
+  // кадров анимация стоит в начале, и пауза не помогает (аудит умножает
+  // прозрачность родителей — полупрозрачная карточка давала ложный контраст)
+  await settleAnimations(page)
   const issues = await page.evaluate(auditPage, sel)
   check(`UX (${THEME}): ${name} — 0 замечаний`, issues.length === 0, JSON.stringify(issues.slice(0, 4)))
 }

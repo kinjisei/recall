@@ -19,6 +19,7 @@ import { profileDir } from './_profile.mjs'
 import { APP_URL, dbTarget, runSql, scriptEnv } from './_env.mjs'
 import { deleteTestUser } from './_users.mjs'
 import { auditPage } from './_ux-audit-page.mjs'
+import { settleAnimations } from './_shots.mjs'
 
 if (process.argv.includes('--prod')) {
   console.error('Аудит заводит аккаунт и уроки — только тестовая база (npm run dev:test).')
@@ -132,6 +133,8 @@ try {
       await sleep(1200)
       if (act) await act(page)
       await sleep(700) // шторка въезжает — дождаться полной непрозрачности
+      // и доиграть: без кадров анимация стоит в начале (ложный контраст)
+      await settleAnimations(page)
       const issues = await page.evaluate(auditPage, dialog ? '[role="dialog"]' : undefined)
       results.push({ screen: `${name} · ${width}`, path, issues })
       console.log(`${name} · ${width}: ${issues.length} замечаний`)

@@ -1,19 +1,21 @@
 // ============================================================================
-// «Слово дня» на Главной: новое слово уровня, окно со словом, «В колоду».
-// Вынесено из DashboardPage.tsx без правок поведения (PLAN.md Ф2.9 — Главная
-// не растёт).
+// «Слово дня» на Главной (макеты u1-1, d4-v2): метка, слово 26, перевод и
+// «Послушать» сразу на карточке. Тап по слову — шторка с примером и
+// «В колоду» (новое слово уровня можно сразу добавить в повторение).
 // ============================================================================
 import { useState } from 'react'
-import { createPortal } from 'react-dom'
-import { IconArrowRight, IconCheck, IconClose, IconHint, IconPlus, IconSpeaker } from '../../shared/ui/icons'
+import { IconCheck, IconPlus, IconSpeaker } from '../../shared/ui/icons'
 import { Button } from '../../shared/ui/Button'
+import { SHEET_BODY, Sheet } from '../../shared/ui/Sheet'
+import { SheetHeader } from '../../shared/ui/SheetHeader'
 import { addCard } from '../../lib/cards'
 import { speak } from '../../lib/speech'
 import type { PoolItem } from '../../lib/wordPool'
 
-export function WordOfDay({ word, lang }: { word: PoolItem; lang: 'en' | 'es' }) {
+export function WordOfDay({ word, lang, compact = false }: { word: PoolItem; lang: 'en' | 'es'; compact?: boolean }) {
   const [open, setOpen] = useState(false)
   const [state, setState] = useState<'idle' | 'busy' | 'added' | 'error'>('idle')
+  const listen = () => speak(word.term, { lang })
 
   const add = async () => {
     if (state === 'busy' || state === 'added') return
@@ -34,88 +36,61 @@ export function WordOfDay({ word, lang }: { word: PoolItem; lang: 'en' | 'es' })
 
   return (
     <>
-      {/* Вся строка — кнопка: тап открывает окно со словом (стрелка-подсказка) */}
-      <button
-        onClick={() => setOpen(true)}
-        className="lift animate-fade-up flex w-full items-center gap-3.5 rounded-2xl border border-tint/[0.08] bg-surface px-4 py-3.5 text-left shadow-card"
-        style={{ animationDelay: '.45s' }}
+      <section
+        aria-label="Слово дня"
+        className={`animate-fade-up flex justify-between gap-3 rounded-card bg-surface p-4.5 shadow-card ${compact ? 'items-center' : 'items-end'}`}
+        style={{ animationDelay: '.3s' }}
       >
-        <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-accent-soft text-accent-soft-fg">
-          <IconHint size={20} />
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-micro uppercase tracking-wider text-fg-muted">
-            Слово дня
-          </p>
-          <p className="truncate text-body font-medium">
-            {word.term}
-            <span className="text-fg-muted"> — {word.translation}</span>
-          </p>
-        </div>
-        <IconArrowRight size={18} className="flex-none text-fg-muted" />
-      </button>
+        {/* слово — кнопка: шторка с примером и «В колоду» */}
+        <button type="button" onClick={() => setOpen(true)} className="flex min-w-0 flex-col items-start gap-1.5 text-left">
+          <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-semibold text-accent-soft-fg">Слово дня</span>
+          <span className="flex min-w-0 flex-col">
+            <span lang={lang} className="truncate text-2xl font-semibold leading-tight tracking-normal">
+              {word.term}
+            </span>
+            <span className="text-body text-fg-secondary">{word.translation}</span>
+          </span>
+        </button>
+        <Button variant="secondary" size="sm" onClick={listen} className="flex-none px-3.5! text-body! font-semibold!">
+          <IconSpeaker size={18} aria-hidden /> Послушать
+        </Button>
+      </section>
 
-      {open &&
-        createPortal(
-          <div
-            className="fixed inset-0 z-50 flex items-end justify-center bg-scrim/60 sm:items-center"
-            onClick={() => setOpen(false)}
-          >
-            <div
-              className="animate-fade-up w-full rounded-t-3xl border border-tint/[0.08] bg-surface p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] sm:max-w-sm sm:rounded-3xl sm:pb-5"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-start justify-between">
-                <p className="text-micro uppercase tracking-wider text-fg-muted">
-                  Слово дня
-                </p>
-                <button
-                  onClick={() => setOpen(false)}
-                  aria-label="Закрыть"
-                  className="lift -mr-2 -mt-2 flex h-11 w-11 items-center justify-center rounded-full text-fg-muted"
-                >
-                  <IconClose size={20} />
-                </button>
-              </div>
-              <p className="mt-1 text-2xl font-semibold">{word.term}</p>
-              <p className="text-fg-secondary">{word.translation}</p>
-              {word.example && (
-                <p className="mt-3 rounded-xl bg-tint/[0.04] px-3 py-2 text-sm italic leading-relaxed text-fg-secondary">
-                  {word.example}
-                </p>
-              )}
-              <div className="mt-4 flex gap-2">
-                <Button
-                  variant="secondary"
-                  className="flex-1"
-                  onClick={() => speak(word.term, { lang })}
-                >
-                  <IconSpeaker size={18} /> Послушать
-                </Button>
-                <Button
-                  className="flex-1"
-                  onClick={add}
-                  loading={state === 'busy'}
-                  disabled={state === 'added'}
-                >
-                  {state === 'added' ? (
-                    <>
-                      <IconCheck size={18} /> В колоде
-                    </>
-                  ) : (
-                    <>
-                      <IconPlus size={18} /> В колоду
-                    </>
-                  )}
-                </Button>
-              </div>
-              {state === 'error' && (
-                <p className="mt-2 text-xs text-danger-strong">Не удалось добавить — попробуй ещё раз</p>
-              )}
+      {open && (
+        <Sheet onClose={() => setOpen(false)} labelledBy="word-of-day">
+          <SheetHeader id="word-of-day" title="Слово дня" />
+          <div className={SHEET_BODY}>
+            <div>
+              <p lang={lang} className="text-2xl font-semibold">
+                {word.term}
+              </p>
+              <p className="text-body text-fg-secondary">{word.translation}</p>
             </div>
-          </div>,
-          document.body,
-        )}
+            {word.example && (
+              <p lang={lang} className="rounded-control bg-input px-3 py-2 text-sm italic leading-relaxed text-fg-secondary">
+                {word.example}
+              </p>
+            )}
+            <div className="flex gap-2">
+              <Button variant="secondary" className="flex-1" onClick={listen}>
+                <IconSpeaker size={18} aria-hidden /> Послушать
+              </Button>
+              <Button className="flex-1" onClick={add} loading={state === 'busy'} disabled={state === 'added'}>
+                {state === 'added' ? (
+                  <>
+                    <IconCheck size={18} aria-hidden /> В колоде
+                  </>
+                ) : (
+                  <>
+                    <IconPlus size={18} aria-hidden /> В колоду
+                  </>
+                )}
+              </Button>
+            </div>
+            {state === 'error' && <p className="text-sm text-danger-strong">Не удалось добавить — попробуй ещё раз</p>}
+          </div>
+        </Sheet>
+      )}
     </>
   )
 }

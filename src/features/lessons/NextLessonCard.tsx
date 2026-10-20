@@ -1,10 +1,13 @@
 // ============================================================================
 // «Ближайший урок» на Главной ученика (PLAN.md Ф2.9; макеты u1-1, u1-2, d4-v2):
 // когда, с кем, «Войти в урок», «Все уроки». За 10 минут до начала и во
-// время урока карточка становится главной: акцентная рамка, «Войти в урок» —
-// главная кнопка, а «Начать занятие» Главная делает второстепенной
-// (useNextLesson → urgent). Остаток оплаченных уроков здесь не показываем
-// никогда (журнал п.33) — только тихой строкой в «Моих уроках».
+// время урока карточка становится главной: фон героя и рамка 2 px цветом
+// фокуса, «Войти в урок» — главная кнопка во всю ширину, «Все уроки» — под
+// ней по центру; «Начать занятие» Главная делает второстепенной
+// (useNextLesson → urgent). На компьютере карточка стоит в ряду с серией и
+// тянется на его высоту (`fill`): кнопки — внизу. Остаток оплаченных уроков
+// здесь не показываем никогда (журнал п.33) — только тихой строкой в «Моих
+// уроках». С кем — имя преподавателя без падежей (журнал п.68).
 // ============================================================================
 import { canJoin, cardPhase, cardTitle, myLessonWhen, nextLesson, whoLabel, type MyLesson } from '../../domains/schedule'
 import { useNow } from '../../shared/lib/useNow'
@@ -26,26 +29,41 @@ export function useNextLesson(lessons: MyLesson[] | null): NextLessonState {
   return { lesson, urgent: !!lesson && cardPhase(lesson, now) !== 'later', now }
 }
 
-export function NextLessonCard({ lesson, urgent, now }: { lesson: MyLesson; urgent: boolean; now: Date }) {
+/** Фон героя (как у серии на Главной): из левого верхнего угла hero → hero-mid → surface. */
+const HERO = 'bg-radial-[130%_120%_at_0%_0%] from-hero via-hero-mid via-55% to-surface inset-ring-2 inset-ring-focus'
+
+export function NextLessonCard({ lesson, urgent, now, fill = false }: { lesson: MyLesson; urgent: boolean; now: Date; fill?: boolean }) {
   const link = canJoin(lesson, now) ? lesson.link : null
+  const all = (
+    <AppLink
+      to="/lessons"
+      className={`inline-flex min-h-11 select-none items-center gap-1 px-1.5 text-body font-medium whitespace-nowrap text-accent-strong hover:underline ${urgent ? 'self-center' : ''}`}
+    >
+      Все уроки <IconChevronRight size={16} aria-hidden />
+    </AppLink>
+  )
   return (
     <section
       data-next-lesson
       aria-label="Ближайший урок"
-      className={`animate-fade-up rounded-2xl border bg-surface p-4 shadow-card ${urgent ? 'border-accent ring-1 ring-accent' : 'border-tint/[0.08]'}`}
+      className={`animate-fade-up flex flex-col gap-3.5 rounded-card p-4.5 ${fill ? 'h-full justify-between' : ''} ${urgent ? HERO : 'bg-surface shadow-card'}`}
     >
-      <p className={`text-note ${urgent ? 'font-semibold text-accent-strong' : 'text-fg-muted'}`}>{cardTitle(lesson, now)}</p>
-      <p className="mt-0.5 text-lg font-semibold tracking-tight text-fg">{myLessonWhen(lesson, now)}</p>
-      <p className="truncate text-sm text-fg-secondary">{whoLabel(lesson)}</p>
-      <div className={`mt-3 flex gap-2 ${urgent ? 'flex-col items-stretch' : 'items-center'}`}>
-        {link && <JoinLink href={link} primary={urgent} className={urgent ? 'w-full' : 'flex-1'} />}
-        <AppLink
-          to="/lessons"
-          className="inline-flex min-h-11 select-none items-center justify-center gap-1 rounded-xl px-3 text-sm font-semibold text-accent-strong hover:underline"
-        >
-          Все уроки <IconChevronRight size={16} aria-hidden />
-        </AppLink>
-      </div>
+      <span className="flex flex-col gap-0.5">
+        <span className={`text-note ${urgent ? 'font-semibold text-accent-soft-fg' : 'text-fg-muted'}`}>{cardTitle(lesson, now)}</span>
+        <span className="text-xl font-semibold tabular-nums tracking-normal text-fg">{myLessonWhen(lesson, now)}</span>
+        <span className="truncate text-body text-fg-secondary">{whoLabel(lesson)}</span>
+      </span>
+      {urgent ? (
+        <span className="flex flex-col gap-3.5">
+          {link && <JoinLink href={link} primary large className="w-full" />}
+          {all}
+        </span>
+      ) : (
+        <span className="flex items-center gap-2">
+          {link && <JoinLink href={link} large className="flex-1" />}
+          {all}
+        </span>
+      )}
     </section>
   )
 }
