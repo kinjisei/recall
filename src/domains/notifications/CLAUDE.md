@@ -172,5 +172,5 @@
 - **Таблицы:** `notification_prefs`, `notifications`
 - **RPC:** `delete_push_subscription`, `get_students_push`, `mark_notifications_read`, `save_push_subscription`, `set_lesson_reminders`
 - **localStorage:** `recall.push.asked`
-- **Кто использует (импортом):** `api`, `app`, `context`, `features/lessons`, `features/notifications`, `features/schedule`, `features/settings`, `features/teacher`
+- **Кто использует (импортом):** `api`, `app`, `context`, `features/lessons`, `features/notifications`, `features/schedule`, `features/settings`
 <!-- generated:end -->

@@ -338,6 +338,8 @@ for (const [cssName, px, label] of [
   ['--container-bubble', 480, 'пузырь сообщения 480 (d0, правило 5)'],
   ['--container-reading', 680, 'чтение 680 (d0, правило 4)'],
   ['--container-exercise', 600, 'упражнение 600 (d0, правило 4)'],
+  ['--container-essay', 640, 'текст ученика 640 (d7-4)'],
+  ['--container-panel', 412, 'панель проверки 412 (d7-3)'],
 ]) {
   const inCss = rem(dark[cssName])
   check(`порог ${cssName} = ${label}`, Number.isFinite(px) && inCss === px, `${inCss} / ${px}`)

@@ -86,6 +86,19 @@ export const dayShort = (day: string): string => `${weekdayName(isoWeekday(day))
 /** «15 окт» — без дня недели */
 export const dateShort = (day: string): string => `${dd(day)} ${MONTHS_SHORT[mm(day)]}`
 
+/**
+ * Когда это было — «сегодня, 15:40» / «вчера, 9:10» / «чт, 15 окт», по
+ * Алматы: когда ученик сдал работу (хаб «Заданий», проверка, диагностика).
+ */
+export function whenDone(at: string | null | undefined, now: Date = new Date()): string {
+  if (!at) return ''
+  const day = almatyDay(new Date(at))
+  const ago = daysBetween(day, almatyDay(now))
+  if (ago === 0) return `сегодня, ${almatyTime(at)}`
+  if (ago === 1) return `вчера, ${almatyTime(at)}`
+  return dayShort(day)
+}
+
 const NEAR_DAYS = ['Вчера', 'Сегодня', 'Завтра']
 
 /** «Сегодня, чт 15 октября» · «Завтра, …» · «Вчера, …» · «чт, 22 октября» (шторка урока, t4). */

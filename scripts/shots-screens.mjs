@@ -24,6 +24,12 @@
  *   cancel-confirm  — «Этот и все следующие» → «Отменить уроки?»;
  *   material-delete — «Удалить материал?» в «Материалах»;
  *   reassign        — «Вернуть на доработку?» с полем (был window.prompt).
+ * Заход 4в-1 — «Задания» (макеты d7-1…d7-4, t1-3):
+ *   tasks          — хаб: Айгерим сдала письмо сегодня, Әсел — задание вчера;
+ *   tasks-material — проверка задания Әсел (d7-2);
+ *   tasks-writing  — проверка письма Айгерим (d7-3, d7-4): правка 1 выбрана
+ *                    (нажата в тексте), последняя убрана;
+ *   tasks-empty    — проверять нечего (схема d7-1): работы проверены.
  * Аудит у них — по шторке или диалогу (`audit`), а не по <main> под
  * затемнением; снимок — ровно окном (`overlay`), как кадры t5-2 и d2-2.
  * Ширины 390 и 1280 — в четырёх вариантах вида («Сумерки» и «Закат» ×
@@ -33,7 +39,7 @@
  * красная строка в итоге. Телефон снимается окном во всю высоту страницы.
  *
  * Запуск: npm run dev:test, затем node scripts/shots-screens.mjs [папка]
- * [--only home|students|cancel] [--name экран,экран] (по умолчанию shots-screens/,
+ * [--only home|students|cancel|tasks] [--name экран,экран] (по умолчанию shots-screens/,
  * все экраны; --name — только эти снимки, для быстрой сверки). ~10 мин.
  */
 import { spawn } from 'node:child_process'
@@ -177,6 +183,25 @@ const openSort = async (page) => {
   await sleep(300)
 }
 
+/** Проверка письма как в кадре d7-3: правка 1 выбрана (нажата в тексте), последняя убрана. */
+const pickFixes = async (page) => {
+  // черновик прошлого варианта вида — сбросить: в кадре его нет
+  await press(page, 'Очистить')
+  await page.evaluate(() => {
+    const rows = [...document.querySelectorAll('[data-fix]')]
+    rows.at(-1)?.querySelectorAll('[role="radio"]')[1]?.click()
+  })
+  await sleep(200)
+  // правку 1 нажимаем в тексте, как в кадре; текст и окно — снова к началу
+  await page.evaluate(() => [...document.querySelectorAll('[data-mark]')].find((m) => m.querySelector('sup')?.textContent === '1')?.click())
+  await sleep(700)
+  await page.evaluate(() => {
+    window.scrollTo(0, 0)
+    document.querySelector('[data-text-pane]')?.scrollTo(0, 0)
+  })
+  await sleep(300)
+}
+
 /** Нажать кнопку с подписью — последнюю в документе (шторка поверх экрана). */
 const press = async (page, label) => {
   await page.evaluate((l) => [...document.querySelectorAll('button')].reverse().find((b) => b.textContent.trim() === l && !b.disabled)?.click(), label)
@@ -203,7 +228,7 @@ const askOn = (label) => async (page) => {
 try {
   mkdirSync(DIR, { recursive: true })
   console.log('── студия')
-  const { t, a, solo, ca, card, wa } = await st.seed()
+  const { t, a, solo, ca, card, wa, ma } = await st.seed()
   const PORT = 9700 + Math.floor(Math.random() * 200)
   spawn(EDGE, ['--headless=new', '--disable-gpu', `--remote-debugging-port=${PORT}`, `--user-data-dir=${profileDir('shots-screens')}`, '--no-first-run', 'about:blank'], { detached: true, stdio: 'ignore' }).unref()
   for (let i = 0; i < 30 && !browser; i++) {
@@ -247,6 +272,19 @@ try {
       { name: 'material-delete', path: `/tasks?tab=materials&mat=${mat.id}`, expect: /Удалить материал/, prepare: askOn('Удалить материал'), audit: '[role="alertdialog"]', overlay: true },
       { name: 'reassign', path: `/tasks?work=${wa}`, expect: /На доработку/, prepare: askOn('На доработку'), audit: '[role="alertdialog"]', overlay: true },
     ])
+  }
+  if (!ONLY || ONLY === 'tasks') {
+    console.log('── «Задания»')
+    await screen(t.email, [
+      { name: 'tasks', path: '/tasks', expect: /Проверка работ[\s\S]*Проверить/ },
+      { name: 'tasks-material', path: `/tasks?work=${ma}`, expect: /AI предлагает засчитать/ },
+      // окном 1800 — кадр d7-3 «во всю высоту»: закреплённые кнопки встают в конце панели
+      { name: 'tasks-writing', path: `/tasks?work=${wa}`, expect: /Твоя проверка/, prepare: pickFixes, tall: 1800 },
+    ])
+    // проверять нечего: обе работы проверены — строка «Всё проверено · последняя работа — …»
+    must(await admin.from('writing_task_assignments').update({ status: 'reviewed' }).eq('id', wa), 'письмо проверено')
+    must(await admin.from('material_assignments').update({ status: 'reviewed' }).eq('id', ma), 'задание проверено')
+    await screen(t.email, [{ name: 'tasks-empty', path: '/tasks', expect: /Всё проверено/ }])
   }
   if (!ONLY || ONLY === 'home') {
     const word = /Слово дня/

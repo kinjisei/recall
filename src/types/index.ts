@@ -425,7 +425,7 @@ export interface WritingGrade {
   targetWords?: { w: string; used: boolean }[]
   targetGrammar?: { t: string; used: boolean }[]
   // общее
-  errors?: { was: string; fix: string; type?: string }[]
+  errors?: { was: string; fix: string; type?: string; why?: string }[] // вид и «почему» — lib/writingGrade ERROR_KINDS
   strengths?: string[]
   improve?: string[]
   topics?: string[]

@@ -18,6 +18,7 @@ import {
   generateIeltsQuestion,
   generateChartTask,
 } from '../../lib/writing'
+import { ieltsTaskLabel } from '../../lib/writingLabels'
 import type { StudentInfo } from '../../lib/teacher'
 import type { ChartSpec, WritingSettings, WritingTask, WritingTaskAssignment } from '../../types'
 import { LEVELS, chip as chipCls, inputClass } from './materials/shared'
@@ -107,9 +108,7 @@ export function WritingSection({ students }: { students: StudentInfo[] }) {
               <p className="truncate text-sm font-medium">{t.prompt}</p>
               <p className="text-xs text-fg-muted">
                 {t.mode === 'ielts'
-                  ? `IELTS · ${t.settings?.ieltsTask === 'gt1' ? 'GT Task 1' : 'Task 2'}${
-                      t.settings?.targetBand ? ` · band ${t.settings.targetBand}` : ''
-                    }`
+                  ? `IELTS · ${ieltsTaskLabel(t.settings?.ieltsTask)}${t.settings?.targetBand ? ` · band ${t.settings.targetBand}` : ''}`
                   : `Эссе · ${t.lang === 'es' ? 'ES' : 'EN'} · ${t.level}`}
               </p>
             </div>
@@ -395,6 +394,7 @@ function WritingDetail({
         task={task}
         assignment={reviewing.a}
         studentName={reviewing.name}
+        backLabel="Задание"
         onBack={() => setReviewing(null)}
         onDone={() => {
           setReviewing(null)
@@ -428,7 +428,7 @@ function WritingDetail({
       <Card>
         <p className="text-xs text-fg-muted">
           {task.mode === 'ielts'
-            ? `IELTS · ${s?.ieltsTask === 'gt1' ? 'GT Task 1' : 'Task 2'}${s?.targetBand ? ` · целевой band ${s.targetBand}` : ''}`
+            ? `IELTS · ${ieltsTaskLabel(s?.ieltsTask)}${s?.targetBand ? ` · целевой band ${s.targetBand}` : ''}`
             : `Обычное эссе · ${task.lang === 'es' ? 'испанский' : 'английский'} · ${task.level}`}
         </p>
         <p className="mt-2 whitespace-pre-wrap leading-relaxed">{task.prompt}</p>

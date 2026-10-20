@@ -12,9 +12,12 @@
 //                   содержимое уже 880 — или список, или подробности; с `fill`
 //                   занимает окно до низа, и список с подробностями
 //                   прокручиваются каждый сам, а страница — нет (макет d3);
-//   MainAside     — главная колонка 720 + правая 352 («Моя учёба»): справа
+//   MainAside     — главная колонка 720 + правая 352 («Моя учёба», хаб
+//                   «Заданий»; `narrow` — 320, итог проверки d7-2): справа
 //                   то, что сверяют, а не делают; содержимое уже 936 — одна
 //                   колонка, правая уходит под главную;
+//   TextPanel     — текст ученика до 640 + панель проверки от 412 (d7-3,
+//                   d7-4): текст держится в окне; уже 936 — одна колонка;
 //   EvenColumns   — две равные колонки (Главная ученика, макет d4-v2): ряд
 //                   пары одной высоты, под ним две стопки; уже 936 — одна
 //                   колонка в порядке телефона.
@@ -184,7 +187,19 @@ export function ListDetail({
  * под ней правая. Одно главное действие экрана — в главной колонке (d0,
  * правило 10), правая его не дублирует.
  */
-export function MainAside({ main, aside }: { main: ReactNode; aside: ReactNode }) {
+export function MainAside({
+  main,
+  aside,
+  narrow = false,
+  label,
+}: {
+  main: ReactNode
+  aside: ReactNode
+  /** Правая 320, а не 352: итог проверки рядом с работой (макет d7-2). */
+  narrow?: boolean
+  /** Подпись правой колонки для читалки. */
+  label?: string
+}) {
   const split = useContentAtLeast(AREA.homeSplit)
   usePageWidth('page', AREA.homeSplit)
   if (!split) {
@@ -195,10 +210,50 @@ export function MainAside({ main, aside }: { main: ReactNode; aside: ReactNode }
       </div>
     )
   }
+  const cols = narrow
+    ? 'grid-cols-[minmax(0,var(--container-main))_var(--container-aside)]'
+    : 'grid-cols-[minmax(0,var(--container-main))_var(--container-list)]'
   return (
-    <div className="grid grid-cols-[minmax(0,var(--container-main))_var(--container-list)] justify-center gap-6">
+    <div className={`grid ${cols} justify-center gap-6`}>
       <div className="min-w-0">{main}</div>
-      <aside className="sticky top-8 flex flex-col gap-4 self-start">{aside}</aside>
+      <aside aria-label={label} className="sticky top-8 flex flex-col gap-3.5 self-start">
+        {aside}
+      </aside>
+    </div>
+  )
+}
+
+/** Две колонки ли у MainAside и TextPanel (содержимое от 936 px): экрану — тот же ответ, что раскладке. */
+export function useAsideSplit(): boolean {
+  return useContentAtLeast(AREA.homeSplit)
+}
+
+/**
+ * Текст + рабочая панель (проверка письма, макеты d7-3 и d7-4): слева текст
+ * ученика колонкой до 640 — он держится в окне и прокручивается сам, пока
+ * справа листаешь правки; справа — разбор и решение учителя, не уже 412
+ * (на 1280 текст сжимается до 540). Уже 936 — одна колонка: текст, под ним
+ * панель.
+ */
+export function TextPanel({ text, panel, label }: { text: ReactNode; panel: ReactNode; label?: string }) {
+  const split = useAsideSplit()
+  usePageWidth('page', AREA.homeSplit)
+  if (!split) {
+    return (
+      <div className="mx-auto flex w-full max-w-main flex-col gap-3.5">
+        {text}
+        {panel}
+      </div>
+    )
+  }
+  return (
+    <div className="grid grid-cols-[minmax(0,var(--container-essay))_minmax(var(--container-panel),1fr)] gap-6">
+      <div data-text-pane className="sticky top-8 max-h-[calc(100dvh-4rem)] min-w-0 self-start overflow-y-auto overscroll-contain rounded-card">
+        {text}
+      </div>
+      <section aria-label={label} className="flex min-w-0 flex-col gap-3.5">
+        {panel}
+      </section>
     </div>
   )
 }

@@ -34,23 +34,26 @@ Secondly, cars are a main source of pollution. In Almaty, for example, the air i
 
 However, some people argue that new roads are necessary because not every district have a metro station. This is true in some cases, but I think a better solution is to connect these districts with bus lines, which is faster and cheaper than building a highway.
 
-In conclusion, I believe that public transport should be the priority for governments. It saves time and money, and it protects the environment for the future generations.`
+As a conclusion, I believe that public transport should be the priority for governments. It saves time and money, and it protects the environment for the future generations.`
 
 const AI_REVIEW = {
   band: 6.5,
   criteria: { task: 6.5, coherence: 7, lexis: 6.5, grammar: 6 },
+  // как отвечает AI после Ф2.17-4в-1: у правки вид и короткое «почему» (d7-3),
+  // пояснения — по-русски
   focus: [
-    { type: 'Subject-verb agreement', why: 'With plural subjects the verb must stay plural, and with singular ones it takes -s.', examples: [{ was: 'a lot of children has problems', fix: 'a lot of children have problems' }, { was: 'not every district have a metro station', fix: 'not every district has a metro station' }] },
-    { type: 'Articles', why: 'Abstract plural nouns usually need no article.', examples: [{ was: 'for the future generations', fix: 'for future generations' }] },
+    { type: 'Согласование подлежащего и сказуемого', why: 'Читатель спотыкается: глагол не сходится с тем, кто действует.', examples: [{ was: 'a lot of children has problems', fix: 'a lot of children have problems' }, { was: 'not every district have a metro station', fix: 'not every district has a metro station' }] },
+    { type: 'Артикли', why: 'Лишний артикль делает общее утверждение частным.', examples: [{ was: 'for the future generations', fix: 'for future generations' }] },
   ],
   errors: [
-    { was: 'a lot of children has problems with breathing', fix: 'a lot of children have problems with breathing', type: 'grammar' },
-    { was: 'not every district have a metro station', fix: 'not every district has a metro station', type: 'grammar' },
-    { was: 'for the future generations', fix: 'for future generations', type: 'article' },
-    { was: 'people who earn little money', fix: 'low-income people', type: 'lexis' },
+    { was: 'a lot of children has problems', fix: 'a lot of children have problems', type: 'grammar', why: 'Согласование: children — have' },
+    { was: 'not every district have a metro station', fix: 'not every district has a metro station', type: 'grammar', why: 'Согласование: every district — has' },
+    { was: 'for the future generations', fix: 'for future generations', type: 'grammar', why: 'Без артикля: поколения вообще' },
+    { was: 'As a conclusion', fix: 'In conclusion', type: 'coherence', why: 'Устойчивая связка' },
+    { was: 'people who earn little money', fix: 'low-income people', type: 'vocab', why: 'Короче и точнее' },
   ],
-  strengths: ['Clear position stated in the introduction and repeated in the conclusion', 'Good linking words (Firstly, Moreover, However)', 'A concrete example from the local context (Almaty)'],
-  improve: ['Add a more developed counter-argument in paragraph 4', 'Use a wider range of complex sentences'],
+  strengths: ['Чёткая позиция во вступлении и выводе', 'Связки между абзацами: Firstly, Moreover, However', 'Пример из жизни города — Алматы'],
+  improve: ['Развернуть контраргумент в четвёртом абзаце', 'Больше сложных предложений'],
   rewrites: [{ was: 'It saves time and money', better: 'It reduces both journey times and household expenses' }],
 }
 

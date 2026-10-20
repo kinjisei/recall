@@ -15,7 +15,7 @@
 // ============================================================================
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { IconBack } from './icons'
+import { IconBack, IconChevronLeft } from './icons'
 import { takeMorphName } from '../lib/morph'
 import { useShellUp } from '../lib/shellUp'
 
@@ -83,6 +83,73 @@ export function BackHeader({
       <BackButton onClick={onBack} label={label} />
       <h1 className="min-w-0 flex-1 truncate text-xl font-medium tracking-tight">{title}</h1>
       {trailing}
+    </div>
+  )
+}
+
+/**
+ * «Назад» ссылкой — «‹ Задания», «‹ Материалы» (макеты d7–d9, раздел карточки
+ * ученика d10-2): шеврон и куда, цветом ссылки. Тот же «назад», что
+ * `BackButton`, только видом: в строке с длинным заголовком квадрат не
+ * говорит, куда ведёт. `children` — своя подпись (аватар с именем),
+ * `label` — тогда для читалки.
+ */
+export function BackLink({
+  label,
+  children,
+  data,
+  ...target
+}: BackTarget & {
+  label: string
+  children?: React.ReactNode
+  /** Признак для смоуков (`data-section-back`). */
+  data?: Record<`data-${string}`, string>
+}) {
+  const smart = useSmartBack(target.fallback ?? '/')
+  // своя подпись (аватар с именем) сжимается вместе со строкой; слово — нет
+  const fit = children ? 'gap-2 pl-1 pr-2' : 'flex-none gap-0.5 pl-0.5 pr-2.5'
+  return (
+    <button
+      type="button"
+      onClick={target.onClick ?? smart}
+      aria-label={children ? label : undefined}
+      {...data}
+      className={`-ml-1 flex min-h-11 min-w-0 items-center rounded-control-sm text-body font-medium text-accent-strong active:bg-ghost-press ${fit}`}
+    >
+      <IconChevronLeft size={20} aria-hidden className="flex-none" />
+      {children ?? <span className="truncate">{label}</span>}
+    </button>
+  )
+}
+
+/**
+ * Шапка внутреннего экрана на компьютере (макеты d7–d9 `.d7top`): «‹ Задания»,
+ * заголовок 20 с подписью под ним, справа — своё (листалка «Работа 2 из 2 ‹ ›»,
+ * главная кнопка). На телефоне правое уходит под заголовок.
+ */
+export function ScreenTop({
+  back,
+  title,
+  subtitle,
+  trailing,
+}: {
+  back: { label: string; onClick: () => void }
+  title: React.ReactNode
+  subtitle?: React.ReactNode
+  trailing?: React.ReactNode
+}) {
+  return (
+    <div className="@container flex flex-col gap-2">
+      <div className="flex min-h-11 items-center gap-3">
+        <BackLink onClick={back.onClick} label={back.label} />
+        <header className="flex min-w-0 flex-1 flex-col leading-tight">
+          {/* узко — в две строки, а не «Айгерим Нурланова · IE…» */}
+          <h1 className="text-xl font-semibold text-balance text-fg @2xl:truncate">{title}</h1>
+          {subtitle && <span className="truncate text-note text-fg-muted">{subtitle}</span>}
+        </header>
+        {trailing && <div className="hidden flex-none @2xl:block">{trailing}</div>}
+      </div>
+      {trailing && <div className="flex justify-end @2xl:hidden">{trailing}</div>}
     </div>
   )
 }

@@ -1,30 +1,26 @@
 // ============================================================================
-// Проверка сданной работы преподавателем: AI делает первичный разбор,
-// преподаватель по каждому упражнению соглашается или ставит свой вердикт
-// с комментарием, затем завершает проверку (статус reviewed).
+// Проверка сданного задания по материалу (макет d7-2, PLAN.md Ф2.17-4в-1): AI
+// делает первичный разбор, преподаватель по каждому упражнению соглашается
+// или ставит свой вердикт с комментарием и завершает проверку (статус
+// reviewed). Слева — текст материала свёрнутой строкой и упражнения, справа —
+// итог «1 из 2», «Завершить проверку» и что откроется дальше; уже 936 —
+// итог под упражнениями. Из «Проверки работ» сверху листалка «Работа 2 из 2».
 // ============================================================================
-import { useEffect, useRef, useState } from 'react'
-import { DraftRestored } from '../../shared/ui/DraftRestored'
-import { useReviewDraft } from './useReviewDraft'
-import { BackButton } from '../../shared/ui/BackButton'
-import { Reveal } from '../../shared/ui/Reveal'
-import { Card } from '../../shared/ui/Card'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { whenDone } from '../../domains/schedule'
+import { firstName } from '../../domains/students'
+import { finishReview, generateAiReview, reassignAssignment, saveAiReview } from '../../lib/materials'
+import { correctAnswerText } from '../../lib/text'
+import type { Material, MaterialAssignment, ReviewItem } from '../../types'
+import { ScreenTop } from '../../shared/ui/BackButton'
 import { Button } from '../../shared/ui/Button'
-import { IconCheck, IconClose } from '../../shared/ui/icons'
-import {
-  finishReview,
-  generateAiReview,
-  reassignAssignment,
-  saveAiReview,
-} from '../../lib/materials'
-import type {
-  Material,
-  MaterialAssignment,
-  ReviewItem,
-} from '../../types'
-import { RevealLink } from '../../shared/ui/Disclosure'
-
-const kindLabel = { comprehension: 'понимание', grammar: 'грамматика', vocab: 'словарь' } as const
+import { Card } from '../../shared/ui/Card'
+import { useConfirm } from '../../shared/ui/ConfirmDialog'
+import { DraftRestored } from '../../shared/ui/DraftRestored'
+import { MainAside } from '../../shared/ui/layouts'
+import { Thinking } from '../../shared/ui/Thinking'
+import { AiBanner, AnswerBox, ExerciseCard, MaterialText, ReviewSummary, Verdict } from './reviewBits'
+import { useReviewDraft } from './useReviewDraft'
 
 export function ReviewScreen({
   material,
@@ -32,25 +28,30 @@ export function ReviewScreen({
   studentName,
   onDone,
   onBack,
+  backLabel = 'Назад',
+  pager,
+  next,
 }: {
   material: Material
   assignment: MaterialAssignment
   studentName: string
   onDone: () => void
   onBack: () => void
+  /** Куда «назад»: «Задания» из хаба, «Материал» из библиотеки. */
+  backLabel?: string
+  /** Листалка «Работа 2 из 2 ‹ ›» — из «Проверки работ». */
+  pager?: ReactNode
+  /** Что откроется после «Завершить»: «Айгерим Нурланова · IELTS Task 2». */
+  next?: string | null
 }) {
   const alreadyReviewed = assignment.status === 'reviewed'
-  const [base, setReview] = useState<ReviewItem[] | null>(
-    alreadyReviewed ? assignment.teacher_review : assignment.ai_review,
-  )
-  // правки учителя и записка переживают перезагрузку до сохранения (Ф1.14)
-  const { review, setItem, note: reassignNote, setNote: setReassignNote, draft } = useReviewDraft(assignment.id, base)
+  const [base, setReview] = useState<ReviewItem[] | null>(alreadyReviewed ? assignment.teacher_review : assignment.ai_review)
+  // правки учителя переживают перезагрузку до сохранения (Ф1.14)
+  const { review, setItem, draft } = useReviewDraft(assignment.id, base)
   const [aiBusy, setAiBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
-  const [showBody, setShowBody] = useState(false)
-  const [reassignOpen, setReassignOpen] = useState(false)
-  const [reassignBusy, setReassignBusy] = useState(false)
+  const { ask, dialog } = useConfirm()
 
   // Первичный AI-разбор (один раз). requestedRef защищает от двойного вызова
   // Gemini в StrictMode/dev; runAiReview можно вызвать повторно как ретрай.
@@ -67,7 +68,6 @@ export function ReviewScreen({
       .catch((e) => setError(e instanceof Error ? e.message : 'Ошибка AI-разбора'))
       .finally(() => setAiBusy(false))
   }
-
   useEffect(() => {
     if (review !== null || requestedRef.current) return
     requestedRef.current = true
@@ -76,7 +76,10 @@ export function ReviewScreen({
   }, [])
 
   const answers = assignment.answers ?? []
+  const total = material.exercises.length
   const okCount = (review ?? []).filter((r) => r.ok).length
+  const who = firstName(studentName)
+  const title = material.title ?? material.topic
 
   const finish = async () => {
     if (!review) return
@@ -93,69 +96,35 @@ export function ReviewScreen({
   }
 
   const reassign = async () => {
-    setReassignBusy(true)
+    const note = await ask({
+      title: 'Переназначить материал?',
+      body: `${who} сделает задание ещё раз; этот результат останется в истории.`,
+      field: { label: 'На что обратить внимание', placeholder: 'Необязательно' },
+      action: 'Переназначить',
+      danger: false,
+    })
+    if (note === null) return
+    setSaving(true)
     setError(null)
     try {
-      await reassignAssignment(assignment, reassignNote)
+      await reassignAssignment(assignment, note)
       draft.forget()
       onDone()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Не удалось переназначить')
-      setReassignBusy(false)
+      setSaving(false)
     }
   }
 
   const attempts = assignment.attempts ?? []
-
-  return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-3">
-        <BackButton onClick={onBack} />
-        <div className="min-w-0">
-          <p className="truncate font-semibold">
-            {alreadyReviewed ? 'Разбор работы' : 'Проверка работы'}: {studentName}
-          </p>
-          <p className="text-xs text-fg-muted">
-            {material.title ?? material.topic} · авто-результат {assignment.auto_score}/
-            {assignment.auto_total}
-          </p>
-        </div>
-      </div>
+  const main = (
+    <div className="flex flex-col gap-3.5">
+      <MaterialText title={title} body={material.body} lang={material.lang} />
       {draft.restored && <DraftRestored onClear={draft.clear} />}
-
-      <RevealLink open={showBody} onToggle={() => setShowBody((s) => !s)}>
-        {showBody ? 'Скрыть текст материала' : 'Текст материала'}
-      </RevealLink>
-      <Reveal open={showBody}>
-        <Card>
-          <p className="whitespace-pre-wrap text-sm leading-relaxed text-fg-secondary">
-            {material.body}
-          </p>
-        </Card>
-      </Reveal>
-
-      {attempts.length > 0 && (
-        <Card>
-          <p className="text-sm font-semibold">Прошлые попытки</p>
-          {attempts.map((at, i) => {
-            const tOk = (at.teacher_review ?? []).filter((r) => r.ok).length
-            return (
-              <p key={i} className="mt-1 text-sm text-fg-muted">
-                {i + 1}-я: авто {at.auto_score}/{at.auto_total}
-                {at.teacher_review ? ` · учитель ${tOk}/${at.auto_total}` : ''}
-                {at.submitted_at
-                  ? ` · ${new Date(at.submitted_at).toLocaleDateString('ru-RU')}`
-                  : ''}
-              </p>
-            )
-          })}
-        </Card>
-      )}
-
       {aiBusy && (
-        <Card>
-          <p className="text-sm text-fg-muted">🤖 AI разбирает работу…</p>
-        </Card>
+        <p className="rounded-control bg-accent-soft px-4 py-3 text-body text-accent-soft-fg">
+          <Thinking label="AI разбирает работу" className="text-accent-soft-fg" />
+        </p>
       )}
       {error && (
         <Card tone="danger">
@@ -167,120 +136,84 @@ export function ReviewScreen({
           )}
         </Card>
       )}
-
       {review && (
-        <>
-          <p className="text-sm text-fg-muted">
-            {alreadyReviewed
-              ? `Итог проверки: ${okCount} из ${material.exercises.length}.`
-              : `AI предлагает засчитать ${okCount} из ${material.exercises.length}. Проверь вердикты — каждый можно изменить.`}
-          </p>
-
-          {material.exercises.map((ex, i) => {
-            const item = review.find((r) => r.index === i)
-            const given = answers.find((a) => a.index === i)?.given ?? '(нет ответа)'
-            const correct =
-              ex.type === 'mcq' ? ex.options[ex.answer] : ex.type === 'fill' ? ex.answer : ''
-            if (!item) return null
-            return (
-              <Card key={i} className="flex flex-col gap-2">
-                <p className="text-xs text-fg-muted">
-                  {i + 1} · {kindLabel[ex.kind] ?? ex.kind}
-                </p>
-                <p className="text-sm font-medium">{ex.prompt}</p>
-                <p className="text-sm">
-                  Ответ ученика:{' '}
-                  <span className={item.ok ? 'font-semibold text-success-strong' : 'font-semibold text-danger'}>
-                    {given}
-                  </span>
-                  {!item.ok && correct && (
-                    <span className="text-fg-muted"> · правильно: {correct}</span>
-                  )}
-                </p>
-
-                {alreadyReviewed ? (
-                  item.comment && (
-                    <p className="rounded-lg bg-surface px-3 py-2 text-sm text-fg-faint">
-                      {item.comment}
-                    </p>
-                  )
-                ) : (
-                  <>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setItem(i, { ok: true })}
-                        className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors active:scale-[0.97] ${
-                          item.ok
-                            ? 'bg-success text-success-fg'
-                            : 'bg-tint/[0.07] text-fg-secondary'
-                        }`}
-                      >
-                        <IconCheck size={16} /> Правильно
-                      </button>
-                      <button
-                        onClick={() => setItem(i, { ok: false })}
-                        className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors active:scale-[0.97] ${
-                          !item.ok
-                            ? 'bg-danger text-danger-fg'
-                            : 'bg-tint/[0.07] text-fg-secondary'
-                        }`}
-                      >
-                        <IconClose size={16} /> Ошибка
-                      </button>
-                    </div>
+        <AiBanner>
+          {alreadyReviewed ? `Проверено: ${okCount} из ${total}` : `AI предлагает засчитать ${okCount} из ${total} — проверь вердикты`}
+        </AiBanner>
+      )}
+      {review &&
+        material.exercises.map((ex, i) => {
+          const item = review.find((r) => r.index === i)
+          if (!item) return null
+          const given = answers.find((a) => a.index === i)?.given ?? '(нет ответа)'
+          return (
+            <ExerciseCard key={i} n={i + 1} prompt={ex.prompt}>
+              <AnswerBox who={who} given={given} correct={correctAnswerText(ex)} ok={item.ok} lang={material.lang} />
+              {alreadyReviewed ? (
+                item.comment && <p className="rounded-control-sm bg-input px-3 py-2.5 text-sm text-fg-secondary">{item.comment}</p>
+              ) : (
+                <>
+                  <Verdict ok={item.ok} onChange={(ok) => setItem(i, { ok })} />
+                  <label className="flex flex-col gap-1">
+                    <small className="text-xs text-fg-muted">Комментарий · AI, можно править</small>
                     <textarea
-                      className="min-h-[120px] w-full rounded-lg border border-tint/[0.10] bg-input px-3 py-2 text-sm leading-relaxed outline-none focus:border-accent-line"
+                      className="field-sizing-content min-h-11 resize-none w-full rounded-control-sm bg-surface px-3 py-2.5 text-sm leading-relaxed text-fg inset-ring-1 inset-ring-line outline-none placeholder:text-fg-muted focus:inset-ring-2 focus:inset-ring-focus"
                       placeholder="Комментарий для ученика: что не так и как правильно…"
                       value={item.comment}
                       onChange={(e) => setItem(i, { comment: e.target.value })}
                     />
-                  </>
-                )}
-              </Card>
-            )
-          })}
-
-          {!alreadyReviewed && (
-            <Button onClick={finish} loading={saving}>
-              {saving
-                ? 'Сохраняю…'
-                : `Завершить проверку (${okCount}/${material.exercises.length})`}
-            </Button>
-          )}
-
-          {alreadyReviewed && (
-            <Card className="flex flex-col gap-2">
-              {!reassignOpen ? (
-                <button
-                  onClick={() => setReassignOpen(true)}
-                  className="text-left text-sm font-medium text-accent-strong hover:underline"
-                >
-                  ↻ Переназначить этот материал (текущий результат сохранится в истории)
-                </button>
-              ) : (
-                <>
-                  <p className="text-sm font-semibold">Переназначить материал</p>
-                  <textarea
-                    className="min-h-[100px] w-full rounded-lg border border-tint/[0.10] bg-input px-3 py-2 text-sm leading-relaxed outline-none focus:border-accent-line"
-                    placeholder="Комментарий для ученика: на что обратить внимание в этот раз…"
-                    value={reassignNote}
-                    onChange={(e) => setReassignNote(e.target.value)}
-                    disabled={reassignBusy}
-                  />
-                  <div className="flex gap-2">
-                    <Button className="flex-1" onClick={reassign} disabled={reassignBusy}>
-                      {reassignBusy ? 'Переназначаю…' : '↻ Переназначить'}
-                    </Button>
-                    <Button variant="ghost" onClick={() => setReassignOpen(false)} disabled={reassignBusy}>
-                      Отмена
-                    </Button>
-                  </div>
+                  </label>
                 </>
               )}
-            </Card>
-          )}
-        </>
+            </ExerciseCard>
+          )
+        })}
+      {attempts.length > 0 && (
+        <Card className="flex flex-col gap-1">
+          <p className="text-sm font-semibold">Прошлые попытки</p>
+          {attempts.map((at, i) => {
+            const tOk = (at.teacher_review ?? []).filter((r) => r.ok).length
+            return (
+              <p key={i} className="text-sm text-fg-muted">
+                {i + 1}-я: авто {at.auto_score}/{at.auto_total}
+                {at.teacher_review ? ` · учитель ${tOk}/${at.auto_total}` : ''}
+                {at.submitted_at ? ` · ${whenDone(at.submitted_at)}` : ''}
+              </p>
+            )
+          })}
+        </Card>
       )}
+    </div>
+  )
+  const aside = review && (
+    <ReviewSummary
+      ok={okCount}
+      total={total}
+      next={alreadyReviewed ? null : next}
+      action={
+        alreadyReviewed ? (
+          <Button variant="secondary" className="w-full" onClick={reassign} loading={saving}>
+            Переназначить
+          </Button>
+        ) : (
+          <Button className="w-full" onClick={finish} loading={saving}>
+            Завершить проверку ({okCount}/{total})
+          </Button>
+        )
+      }
+    />
+  )
+
+  return (
+    <div className="flex flex-col gap-4">
+      <ScreenTop
+        back={{ label: backLabel, onClick: onBack }}
+        title={`${studentName} · «${title}»`}
+        subtitle={['задание по материалу', whenDone(assignment.submitted_at)].filter(Boolean).join(' · ')}
+        trailing={pager}
+      />
+      <MainAside narrow label="Итог проверки" main={main} aside={aside} />
+      {dialog}
     </div>
   )
 }

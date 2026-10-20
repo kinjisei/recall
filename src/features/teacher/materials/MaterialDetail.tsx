@@ -123,6 +123,7 @@ export function MaterialDetail({
         material={material}
         assignment={reviewing.a}
         studentName={reviewing.name}
+        backLabel="Материал"
         onDone={() => {
           setReviewing(null)
           reload()

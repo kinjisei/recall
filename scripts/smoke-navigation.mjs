@@ -456,6 +456,8 @@ async function main() {
       answers: [{ index: 0, given: 'no', auto_ok: false }],
       auto_score: 0,
       auto_total: 1,
+      // готовый разбор: без него экран проверки сам зовёт AI
+      ai_review: [{ index: 0, ok: false, comment: 'Правильно: yes' }],
     })
     .select('id')
     .single()
@@ -495,11 +497,17 @@ async function main() {
   await page.goBack({ waitUntil: 'networkidle2' }).catch(() => {})
   await appears(page, '«Материал для смоука навигации»')
   await tap(page, '«Материал для смоука навигации»')
-  check('«Задания»: строка открывает разбор этой работы', (await appears(page, 'Проверка работы: Әсел Навигация')) && path() === `/tasks?work=${work.id}`, path())
+  const matTitle = 'Әсел Навигация · «Материал для смоука навигации»'
+  check('«Задания»: строка открывает разбор этой работы', (await appears(page, matTitle)) && path() === `/tasks?work=${work.id}`, path())
+  // очередь — новые сверху (t1-3, d7-1): письмо сдано сейчас, задание — час назад
+  check('«Задания»: листалка «Работа 2 из 2»', await appears(page, 'Работа 2 из 2'))
   await page.reload({ waitUntil: 'networkidle2' })
-  check('«Задания»: F5 оставляет в разборе', await appears(page, 'Проверка работы: Әсел Навигация'), path())
+  check('«Задания»: F5 оставляет в разборе', await appears(page, matTitle), path())
+  // «›» — к соседней работе заменой в истории: «назад» после листания — в хаб, а не к прошлой работе
+  await page.evaluate(() => document.querySelector('[aria-label="Следующая работа"]')?.click())
+  check('«Задания»: «›» открывает письмо — по кругу, «Работа 1 из 2»', (await appears(page, 'Твоя проверка')) && (await appears(page, 'Работа 1 из 2')) && path().startsWith('/tasks?work=') && path() !== `/tasks?work=${work.id}`, path())
   await page.goBack({ waitUntil: 'networkidle2' }).catch(() => {})
-  check('«Задания»: «назад» из разбора — в хаб', (await appears(page, 'Проверка работ')) && path() === '/tasks', path())
+  check('«Задания»: «назад» после листания — в хаб', (await appears(page, 'Проверка работ')) && path() === '/tasks', path())
   await page.goto(`${BASE}/tasks?work=00000000-0000-0000-0000-000000000000`, { waitUntil: 'networkidle2' })
   await sleep(2000)
   check('«Задания»: уже проверенная работа — «больше не ждёт», а не пустой экран', await seen(page, 'больше не ждёт'), path())

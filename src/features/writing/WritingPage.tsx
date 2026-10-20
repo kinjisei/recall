@@ -15,6 +15,7 @@ import { HowItWorks } from '../../shared/ui/HowItWorks'
 import { HOW_IT_WORKS } from '../../data/howItWorks'
 import { useScrollTop } from '../../lib/useScrollTop'
 import { getMyWritingAssignments, startOwnWriting, submitWriting } from '../../lib/writing'
+import { ieltsTaskLabel } from '../../lib/writingLabels'
 import { useLanguage } from '../../context/LanguageContext'
 import { getUserLevel } from '../../lib/level'
 import { promptsFor, type WritingPrompt } from '../../data/writingPrompts'
@@ -169,7 +170,7 @@ export function WritingPage() {
                 <p className="truncate text-sm font-medium">{r.task.prompt}</p>
                 <p className="text-xs text-fg-muted">
                   {r.task.mode === 'ielts'
-                    ? `IELTS · ${r.task.settings?.ieltsTask === 'gt1' ? 'GT Task 1' : 'Task 2'}`
+                    ? `IELTS · ${ieltsTaskLabel(r.task.settings?.ieltsTask)}`
                     : `Эссе · ${r.task.level}`}{' '}
                   · {st}
                 </p>
@@ -230,9 +231,7 @@ function WritingRunner({
       <Card>
         <p className="text-xs text-fg-muted">
           {task.mode === 'ielts'
-            ? `IELTS · ${task.settings?.ieltsTask === 'gt1' ? 'GT Task 1' : 'Task 2'}${
-                task.settings?.targetBand ? ` · цель band ${task.settings.targetBand}` : ''
-              }`
+            ? `IELTS · ${ieltsTaskLabel(task.settings?.ieltsTask)}${task.settings?.targetBand ? ` · цель band ${task.settings.targetBand}` : ''}`
             : `Эссе · ${task.lang === 'es' ? 'испанский' : 'английский'} · ${task.level}`}
         </p>
         <p className="mt-2 whitespace-pre-wrap leading-relaxed">{task.prompt}</p>

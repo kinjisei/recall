@@ -1,12 +1,12 @@
 // ============================================================================
 // Число «ждут проверки» на вкладке «Задания» учителя (PLAN.md Ф2.10, макет
-// t1). Живёт в стартовом коде каркаса, поэтому лёгкое: запрос писем
-// (lib/writing) подгружается при первом пересчёте — у ученика не грузится
-// вовсе. Список работ — waitingWorks.ts; при загрузке он обновляет и число.
+// t1). Живёт в стартовом коде каркаса, поэтому лёгкое: запросы — из
+// lib/reviewQueue (без AI и разбора), у ученика их не зовут вовсе. Список
+// работ — waitingWorks.ts; при загрузке он обновляет и число.
 // Перечитывается при входе учителя и при возврате в приложение.
 // ============================================================================
 import { useEffect, useSyncExternalStore } from 'react'
-import { countSubmittedWorks } from '../../lib/materials'
+import { countSubmittedWorks, countSubmittedWriting } from '../../lib/reviewQueue'
 
 let count = 0
 const listeners = new Set<() => void>()
@@ -27,7 +27,7 @@ function subscribe(l: () => void) {
 
 /** Перечитать число. Сбой связи — прежнее: выдуманный «0» хуже (Ф1.13). */
 export function refreshWaitingCount(): void {
-  Promise.all([import('../../lib/writing').then((m) => m.countSubmittedWriting()), countSubmittedWorks()])
+  Promise.all([countSubmittedWriting(), countSubmittedWorks()])
     .then(([a, b]) => publishWaitingCount(a + b))
     .catch(() => {})
 }

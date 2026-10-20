@@ -1,7 +1,7 @@
 // ============================================================================
-// Адрес /tasks — «Задания» учителя (PLAN.md Ф2.10, макет t1-3): хаб, разделы
-// студии (?tab=materials|writing|guide) и проверка сданной работы из хаба
-// (?work=<id назначения>). Всё в адресе: «назад» возвращает на шаг, F5
+// Адрес /tasks — «Задания» учителя (PLAN.md Ф2.10, макеты t1-3 и d7): хаб,
+// разделы студии (?tab=materials|writing|guide) и проверка сданной работы из
+// хаба (?work=<id назначения>). Всё в адресе: «назад» возвращает на шаг, F5
 // оставляет на месте. Раньше разделы были вкладками студии (/teacher?tab=…);
 // старые ссылки ведут сюда (TeacherPage). Кто сюда пускается — таблица
 // маршрутов (роль teacher), экран сам роль не проверяет.
@@ -9,12 +9,14 @@
 import { useState } from 'react'
 import { HOW_IT_WORKS } from '../../data/howItWorks'
 import { getMyStudents } from '../../lib/teacher'
+import { writingKind } from '../../lib/writingLabels'
 import { useAsyncData } from '../../shared/lib/useAsyncData'
 import { useUrlState } from '../../shared/lib/useUrlState'
-import { BackHeader } from '../../shared/ui/BackButton'
-import { HowItWorks } from '../../shared/ui/HowItWorks'
+import { BackHeader, ScreenTop } from '../../shared/ui/BackButton'
+import { HintButton, HintPanel, useHint } from '../../shared/ui/HowItWorks'
 import { LoadError } from '../../shared/ui/LoadError'
 import { Loading } from '../../shared/ui/Loading'
+import { Pager } from '../../shared/ui/Pager'
 import { WritingReviewScreen } from '../writing'
 import { GuideSection } from './GuideSection'
 import { InnerScreenContext } from './innerScreen'
@@ -22,7 +24,7 @@ import { MaterialsSection } from './MaterialsSection'
 import { ReviewScreen } from './ReviewScreen'
 import { TasksHub, type TaskSection } from './TasksHub'
 import { refreshWaitingCount } from './waitingCount'
-import { loadWaitingWorks } from './waitingWorks'
+import { loadWaitingWorks, queuePlace, type WaitingWork } from './waitingWorks'
 import { WritingSection } from './WritingSection'
 
 const TITLES: Record<TaskSection, string> = {
@@ -41,8 +43,9 @@ export function TasksPage() {
   const [startForm, setStartForm] = useState(false)
   // внутренний экран раздела со своей шапкой «назад» — шапку раздела прячем (innerScreen.ts)
   const [inner, setInner] = useState(false)
+  const hint = useHint()
 
-  if (workId) return <WaitingReview id={workId} onClose={() => setWorkId(null)} />
+  if (workId) return <WaitingReview id={workId} onClose={() => setWorkId(null)} onOpen={(id) => setWorkId(id, { side: true })} />
   if (tab) {
     return (
       <InnerScreenContext.Provider value={setInner}>
@@ -55,8 +58,13 @@ export function TasksPage() {
   }
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-bold">Задания</h1>
-      <HowItWorks>{HOW_IT_WORKS.tasks}</HowItWorks>
+      <div>
+        <div className="flex min-h-11 items-center gap-1">
+          <h1 className="text-2xl font-semibold tracking-tight">Задания</h1>
+          <HintButton open={hint.open} onToggle={hint.toggle} />
+        </div>
+        <HintPanel open={hint.open}>{HOW_IT_WORKS.tasks}</HintPanel>
+      </div>
       <TasksHub
         onSection={(s, form = false) => {
           setStartForm(form)
@@ -81,28 +89,54 @@ function StudentsSection({ tab, startForm }: { tab: 'materials' | 'writing'; sta
   )
 }
 
+/** «Айгерим Нурланова · IELTS Task 2» — что откроется следующим (d7-2 «Дальше откроется»). */
+const workTitle = (w: WaitingWork) => `${w.studentName} · ${w.kind === 'writing' ? writingKind(w.task) : `«${w.material.title ?? w.material.topic}»`}`
+
 /**
  * Разбор сданной работы прямо из «Проверки работ». Работу ищем среди ждущих:
  * уже проверенная (в другой вкладке, по старой ссылке) — возвращаемся в хаб,
- * а не показываем пустой экран.
+ * а не показываем пустой экран. Листалка «Работа 2 из 2 ‹ ›» — по той же
+ * очереди, что в хабе (новые сверху), по кругу; «Завершить» открывает
+ * следующую, последняя — возвращает в хаб.
  */
-function WaitingReview({ id, onClose }: { id: string; onClose: () => void }) {
+function WaitingReview({ id, onClose, onOpen }: { id: string; onClose: () => void; onOpen: (id: string) => void }) {
   const { data, error, reload } = useAsyncData(loadWaitingWorks, [id], 'Не удалось открыть работу')
   if (error) return <LoadError message={error} onRetry={reload} />
   if (!data) return <Loading label="Открываем работу" />
   const w = data.find((x) => x.assignment.id === id)
   if (!w) return <Gone onClose={onClose} />
+  const { index, prev, next } = queuePlace(data, id)
+  const pager = data.length > 1 && (
+    <Pager
+      label={`Работа ${index + 1} из ${data.length}`}
+      onPrev={prev && (() => onOpen(prev.assignment.id))}
+      onNext={next && (() => onOpen(next.assignment.id))}
+      prevLabel="Предыдущая работа"
+      nextLabel="Следующая работа"
+    />
+  )
+  const done = () => (next ? onOpen(next.assignment.id) : onClose())
   return w.kind === 'writing' ? (
-    <WritingReviewScreen task={w.task} assignment={w.assignment} studentName={w.studentName} onBack={onClose} onDone={onClose} />
+    <WritingReviewScreen key={id} task={w.task} assignment={w.assignment} studentName={w.studentName} backLabel="Задания" pager={pager} onBack={onClose} onDone={done} />
   ) : (
-    <ReviewScreen material={w.material} assignment={w.assignment} studentName={w.studentName} onBack={onClose} onDone={onClose} />
+    <ReviewScreen
+      key={id}
+      material={w.material}
+      assignment={w.assignment}
+      studentName={w.studentName}
+      backLabel="Задания"
+      pager={pager}
+      next={next && workTitle(next)}
+      onBack={onClose}
+      onDone={done}
+    />
   )
 }
 
 function Gone({ onClose }: { onClose: () => void }) {
   return (
     <div className="flex flex-col gap-4">
-      <BackHeader onBack={onClose} title="Проверка работ" label="Задания" />
+      <ScreenTop back={{ label: 'Задания', onClick: onClose }} title="Проверка работ" />
       <p className="text-sm text-fg-muted">Эту работу уже проверили — она больше не ждёт.</p>
     </div>
   )

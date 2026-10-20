@@ -16,7 +16,8 @@ import type { StudentDiagnostics } from '../../lib/diagnostics'
 import type { StudentInfo } from '../../lib/teacher'
 import { plural } from '../../shared/lib/plural'
 import { Avatar } from '../../shared/ui/Avatar'
-import { IconChevronLeft, IconPrinter } from '../../shared/ui/icons'
+import { BackLink } from '../../shared/ui/BackButton'
+import { IconPrinter } from '../../shared/ui/icons'
 import { LoadError } from '../../shared/ui/LoadError'
 import { TabPicker } from '../../shared/ui/TabPicker'
 import { DailyPlanSection } from './DailyPlanSection'
@@ -84,17 +85,10 @@ export function StudioSectionScreen({
     <section aria-label={title} data-studio-section={section} className="flex flex-1 flex-col">
       <header className={`z-10 flex flex-col gap-2.5 border-b border-line ${wide ? 'sticky top-0 bg-surface px-4 pt-3.5' : ''}`}>
         <div className="flex min-w-0 items-center gap-2.5">
-          <button
-            type="button"
-            onClick={onBack}
-            data-section-back
-            aria-label={`Назад к карточке: ${name}`}
-            className="-ml-1 flex min-h-11 min-w-0 items-center gap-2 rounded-control-sm pl-1 pr-2 text-body font-medium text-accent-strong active:bg-ghost-press"
-          >
-            <IconChevronLeft size={20} aria-hidden className="flex-none" />
+          <BackLink onClick={onBack} label={`Назад к карточке: ${name}`} data={{ 'data-section-back': '' }}>
             <Avatar name={name} size={32} />
             <span className="truncate">{firstName(name)}</span>
-          </button>
+          </BackLink>
           <span aria-hidden className="text-lg text-fg-faint">
             /
           </span>

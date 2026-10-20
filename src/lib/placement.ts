@@ -70,20 +70,18 @@ export async function listDonePlacements(studentIds: string[]): Promise<Placemen
  * null, если теста никто не назначал.
  */
 export async function myPendingPlacement(lang: AppLang): Promise<PlacementRequest | null> {
-  try {
-    const userId = await requireUserId()
-    const { data, error } = await supabase
-      .from('placement_requests')
-      .select('*')
-      .eq('student_id', userId)
-      .eq('lang', lang)
-      .eq('status', 'assigned')
-      .limit(1)
-    if (error) return null
-    return ((data ?? [])[0] as PlacementRequest) ?? null
-  } catch {
-    return null
-  }
+  // сбой — исключение, а не «теста нет»: «Учёба» (settleAll) скажет, что раздел
+  // не загрузился, а не спрячет назначенный тест (Ф1.13, Ф2.17-4в-1)
+  const userId = await requireUserId()
+  const { data, error } = await supabase
+    .from('placement_requests')
+    .select('*')
+    .eq('student_id', userId)
+    .eq('lang', lang)
+    .eq('status', 'assigned')
+    .limit(1)
+  if (error) throw error
+  return ((data ?? [])[0] as PlacementRequest) ?? null
 }
 
 /**

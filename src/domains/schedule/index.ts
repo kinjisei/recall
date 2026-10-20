@@ -57,6 +57,7 @@ export {
   weekdayName,
   weekdaysList,
   weekTitle,
+  whenDone,
   type Placed,
   type TrialQuestion,
 } from './calendar'

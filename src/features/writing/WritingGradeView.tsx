@@ -125,22 +125,12 @@ export function WritingGradeView({ grade, mode }: { grade: WritingGrade; mode: W
           {grade.focus?.length ? (
             <FullList>
               <div className="mt-2 flex flex-col gap-1.5">
-                {grade.errors.map((e, i) => (
-                  <div key={i} className="rounded-xl border border-danger/25 px-3 py-2 text-sm">
-                    <p className="text-danger-soft-fg line-through decoration-danger/60">{e.was}</p>
-                    <p className="text-success-soft-fg">→ {e.fix}</p>
-                  </div>
-                ))}
+                {grade.errors.map((e, i) => <ErrorItem key={i} e={e} />)}
               </div>
             </FullList>
           ) : (
             <div className="flex flex-col gap-1.5">
-              {grade.errors.map((e, i) => (
-                <div key={i} className="rounded-xl border border-danger/25 px-3 py-2 text-sm">
-                  <p className="text-danger-soft-fg line-through decoration-danger/60">{e.was}</p>
-                  <p className="text-success-soft-fg">→ {e.fix}</p>
-                </div>
-              ))}
+              {grade.errors.map((e, i) => <ErrorItem key={i} e={e} />)}
             </div>
           )}
         </Section>
@@ -200,5 +190,16 @@ function Chip({ label, ok }: { label: string; ok: boolean }) {
       {ok ? <IconCheck size={12} /> : <IconClose size={12} />}
       {label}
     </span>
+  )
+}
+
+/** Правка «было → стало» и, если есть, почему («Предлог: at home», Ф2.17-4в-1). */
+function ErrorItem({ e }: { e: NonNullable<WritingGrade['errors']>[number] }) {
+  return (
+    <div className="rounded-xl border border-danger/25 px-3 py-2 text-sm">
+      <p className="text-danger-soft-fg line-through decoration-danger/60">{e.was}</p>
+      <p className="text-success-soft-fg">→ {e.fix}</p>
+      {e.why && <p className="mt-0.5 text-note text-fg-muted">{e.why}</p>}
+    </div>
   )
 }

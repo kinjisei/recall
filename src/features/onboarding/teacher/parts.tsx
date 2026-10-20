@@ -3,7 +3,8 @@
 // кадров макета; цвета — токенами (новая палитра придёт с Ф2.17).
 import type { ReactNode } from 'react'
 import { setSelfReportedSource } from '../../../lib/analytics'
-import { IconCheck, IconChevronLeft } from '../../../shared/ui/icons'
+import { BackLink } from '../../../shared/ui/BackButton'
+import { IconCheck } from '../../../shared/ui/icons'
 
 /**
  * Полоски шагов без текста (журнал п.71): заполнены отвеченные. Сегмент
@@ -96,17 +97,12 @@ export function Choice({
   )
 }
 
-/** «‹ Назад» над вопросом — на компьютере; на телефоне «Назад» — стрелка у полосок. */
-export function BackLink({ onClick }: { onClick: () => void }) {
+/** «‹ Назад» над вопросом — на компьютере; на телефоне «Назад» — стрелка у полосок. Сама ссылка — общий `BackLink`. */
+export function StepBack({ onClick }: { onClick: () => void }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="-my-0.5 mb-4 hidden h-11 items-center gap-1 self-start rounded-xl pl-0.5 pr-2.5 text-body font-medium text-accent-strong lg:inline-flex"
-    >
-      <IconChevronLeft size={20} />
-      Назад
-    </button>
+    <div className="-my-0.5 mb-4 hidden self-start lg:block">
+      <BackLink onClick={onClick} label="Назад" />
+    </div>
   )
 }
 

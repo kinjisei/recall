@@ -9,20 +9,20 @@
 // родителям — вкладкой «Отчёт» в шапке раздела.
 // ============================================================================
 import type { ReactNode } from 'react'
-import { almatyDay, almatyTime, dayShort, lessonDay, timeRange, type Lesson } from '../../domains/schedule'
+import { dayShort, lessonDay, timeRange, whenDone, type Lesson } from '../../domains/schedule'
 import { firstName } from '../../domains/students'
 import { getStudentDiagnostics, type StudentDiagnostics } from '../../lib/diagnostics'
 import type { MetricDelta } from '../../lib/dynamics'
 import { dueShort, getHomework, homeworkProgress } from '../../lib/homework'
-import { listSubmittedWriting } from '../../lib/writing'
-import { daysBetween } from '../../shared/lib/days'
+import { listSubmittedWriting } from '../../lib/reviewQueue'
+import { writingName } from '../../lib/writingLabels'
 import { useAsyncData } from '../../shared/lib/useAsyncData'
 import { IconArrowUp, IconClock } from '../../shared/ui/icons'
 import { LoadError } from '../../shared/ui/LoadError'
 import { RowsSkeleton } from '../../shared/ui/Loading'
 import { InfoBox, Pill, SectionCard } from './sectionBits'
 import { useTopicTitles } from './topicTitles'
-import type { AppLang, WritingTask } from '../../types'
+import type { AppLang } from '../../types'
 
 const LANG_FLAG: Record<AppLang, string> = { en: 'EN', es: 'ES' }
 
@@ -54,23 +54,6 @@ function TrendRow({ label, d, unit = '', moreIsBetter = true }: { label: string;
       </span>
     </div>
   )
-}
-
-/** «Письмо IELTS Task 2» — как называть письмо в списке. */
-function writingName(task: WritingTask): string {
-  if (task.mode !== 'ielts') return 'Письмо'
-  const t = task.settings?.ieltsTask
-  return `Письмо IELTS ${t === 'task2' ? 'Task 2' : t === 'gt1' ? 'GT Task 1' : t === 'academic1' ? 'Task 1' : ''}`.trim()
-}
-
-/** «сегодня, 15:40» / «вчера, 9:10» / «чт, 15 окт» — когда сдано, по Алматы. */
-function submittedLabel(at: string | null): string {
-  if (!at) return ''
-  const day = almatyDay(new Date(at))
-  const ago = daysBetween(day, almatyDay(new Date()))
-  if (ago === 0) return `сегодня, ${almatyTime(at)}`
-  if (ago === 1) return `вчера, ${almatyTime(at)}`
-  return dayShort(day)
 }
 
 export function DiagnosticsSection({
@@ -176,7 +159,7 @@ export function DiagnosticsSection({
         {extra.error && <LoadError message={extra.error} onRetry={extra.reload} />}
         <div className="flex flex-col divide-y divide-line">
           {extra.data?.writing.map(({ assignment: a, task }) => (
-            <TaskRow key={a.id} title={writingName(task)} meta={`сдано ${submittedLabel(a.submitted_at)}`} pill={<Pill tone="wait">Ждёт проверки</Pill>} />
+            <TaskRow key={a.id} title={writingName(task)} meta={`сдано ${whenDone(a.submitted_at)}`} pill={<Pill tone="wait">Ждёт проверки</Pill>} />
           ))}
           {diag.assignments.map((a) => (
             <TaskRow

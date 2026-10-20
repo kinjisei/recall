@@ -10,7 +10,6 @@ import { correctAnswerText } from './text'
 import { validExercises } from './materialExercises'
 import { groupBriefBlock } from './diagnosticsBrief'
 import { track } from './analytics'
-import { displayNames } from './profile'
 import type {
   AppLang,
   AssignmentAnswer,
@@ -467,56 +466,6 @@ export async function submitAssignment(
 // ---------------------------------------------------------------------------
 // Фаза B: проверка работ (AI-разбор → вердикты преподавателя).
 // ---------------------------------------------------------------------------
-
-/** Ждут проверки (вкладка «Задания»): мои материалы, не мои работы — RLS отдаёт и те, где я ученик. Сбой — бросает. */
-export async function countSubmittedWorks(): Promise<number> {
-  const userId = await requireUserId()
-  const { count, error } = await supabase
-    .from('material_assignments')
-    .select('id, materials!inner(teacher_id)', { count: 'exact', head: true })
-    .eq('status', 'submitted')
-    .eq('materials.teacher_id', userId)
-    .neq('student_id', userId)
-  if (error) throw error
-  return count ?? 0
-}
-
-/** Сданная работа для списка «На проверку»: кто, какой материал, когда. */
-export interface SubmittedWork {
-  assignment: MaterialAssignment
-  material: Material
-  studentName: string
-}
-
-/**
- * Все сданные работы преподавателя разом (для блока «На проверку» во вкладке
- * «Материалы»). Раньше бейдж показывал только число — преподаватель не видел,
- * КТО сдал и ЧТО именно проверять, пока не откроет каждый материал вручную.
- */
-export async function listSubmittedWorks(): Promise<SubmittedWork[]> {
-  const userId = await requireUserId()
-  const { data, error } = await supabase
-    .from('material_assignments')
-    .select('*, materials!inner(*)')
-    .eq('status', 'submitted')
-    .eq('materials.teacher_id', userId)
-    .neq('student_id', userId)
-    .order('submitted_at', { ascending: true })
-  if (error) throw error
-
-  const rows = (data ?? []) as (MaterialAssignment & { materials: Material | null })[]
-  if (rows.length === 0) return []
-
-  const names = await displayNames([...new Set(rows.map((r) => r.student_id))])
-
-  return rows
-    .filter((r) => r.materials)
-    .map(({ materials, ...assignment }) => ({
-      assignment,
-      material: materials as Material,
-      studentName: names.get(assignment.student_id) ?? 'Ученик',
-    }))
-}
 
 /** AI-разбор сданной работы: вердикт и комментарий по каждому упражнению. */
 export async function generateAiReview(

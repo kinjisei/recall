@@ -25,7 +25,7 @@ import { becomeTeacher } from '../../../lib/teacher'
 import { BrandMark } from '../../../shared/ui/Brand'
 import { IconChevronLeft } from '../../../shared/ui/icons'
 import type { AppLang } from '../../../types'
-import { BackLink, StepBars } from './parts'
+import { StepBack, StepBars } from './parts'
 import { PlanPanel } from './PlanPanel'
 import { StepDone, StepLang, StepStudents } from './steps'
 
@@ -137,7 +137,7 @@ export function TeacherOnboarding({
         </div>
 
         <div key={shown} className={`flex flex-1 flex-col lg:my-auto lg:w-full lg:max-w-120 lg:flex-none lg:px-4 ${slide}`}>
-          {back && <BackLink onClick={back} />}
+          {back && <StepBack onClick={back} />}
           {shown === 0 && (
             <StepLang
               picked={lang}

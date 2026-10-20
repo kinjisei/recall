@@ -32,26 +32,30 @@ import { withViewTransition } from './viewTransition'
  *   const [view, setView] = useUrlState('view', (v) => v === 'reader')
  *   setView('reader')        // заход внутрь — «назад» вернёт в хаб
  *   setView(null)            // возврат кареткой — лишней записи не остаётся
+ *   setWork(id, { side: true }) // к соседнему (следующая работа) — заменой:
+ *                               // «назад» ведёт туда же, откуда пришли
  */
 export function useUrlState(
   key: string,
   valid?: (value: string) => boolean,
-): [string | null, (next: string | null) => void] {
+): [string | null, (next: string | null, opts?: { side?: boolean }) => void] {
   const [params, setParams] = useSearchParams()
 
   const raw = params.get(key)
   const value = raw !== null && (!valid || valid(raw)) ? raw : null
 
   const set = useCallback(
-    (next: string | null) => {
+    (next: string | null, opts?: { side?: boolean }) => {
       const nextParams = new URLSearchParams(params)
       if (next === null) nextParams.delete(key)
       else nextParams.set(key, next)
       // заход внутрь — новая запись в истории; возврат — замена текущей.
       // Без этого «назад» после выхода кареткой возвращал обратно внутрь.
       // Направление перехода берём отсюда же: null — выход наружу.
-      withViewTransition(next === null ? 'out' : 'in', () => {
-        setParams(nextParams, { replace: next === null })
+      // Вбок (к соседней работе в очереди) — замена на месте: «назад» после
+      // листания и проверки ведёт в хаб, а не к уже проверенной работе.
+      withViewTransition(opts?.side ? 'fade' : next === null ? 'out' : 'in', () => {
+        setParams(nextParams, { replace: next === null || !!opts?.side })
       })
     },
     [params, setParams, key],

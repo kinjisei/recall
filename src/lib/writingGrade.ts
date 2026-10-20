@@ -28,6 +28,41 @@ const FOCUS_RULE = [
   'Остальные ошибки всё равно перечисли в errors — но фокус не раздувай: больше трёх типов не возвращай.',
 ].join('\n')
 
+/**
+ * Виды правок — по ним проверка учителя группирует правки (макет d7-3:
+ * «Грамматика · 2», «Связность · 1», «Лексика · 1»), в этом порядке. У правки
+ * ещё короткое «почему» (`why`, «Предлог: at home»); у работ до 21.10.2026
+ * его нет, а вид бывает и другим словом — `errorKind` сводит.
+ */
+export const ERROR_KINDS = [
+  { id: 'grammar', label: 'Грамматика' },
+  { id: 'coherence', label: 'Связность' },
+  { id: 'vocab', label: 'Лексика' },
+  { id: 'spelling', label: 'Орфография' },
+] as const
+export type ErrorKind = (typeof ERROR_KINDS)[number]['id']
+
+/**
+ * Вид правки из того, что прислала модель (или лежит в старой работе): модель
+ * пишет и «article», «lexis», «linking» — без сведения они ушли бы в «Другое».
+ */
+export function errorKind(type: string | undefined): ErrorKind | null {
+  const t = (type ?? '').toLowerCase()
+  if (/gramm|article|tense|preposition|agreement/.test(t)) return 'grammar'
+  if (/coher|cohes|link|connect|discourse/.test(t)) return 'coherence'
+  if (/vocab|lexi|word|colloc/.test(t)) return 'vocab'
+  if (/spell|punct|orthog/.test(t)) return 'spelling'
+  return null
+}
+
+/** Одна инструкция про правки для обоих режимов — «почему» и виды не разойдутся. */
+const ERRORS_RULE = [
+  'errors — каждая правка: was — точная цитата из текста ученика (ровно как написано, чтобы её можно было найти в тексте), fix — исправление,',
+  'type — grammar (грамматика, артикли, предлоги), coherence (связки и логика между предложениями: «On the other hand», «However»), vocab (слово или сочетание), spelling (орфография, пунктуация);',
+  'why — 2-6 слов по-русски: правило или подсказка, а не пересказ правки («Предлог: at home», «Согласование: it — gives», «Устойчивая связка»).',
+].join('\n')
+const ERRORS_SHAPE = '"errors":[{"was":"цитата из текста","fix":"исправление","type":"grammar|coherence|vocab|spelling","why":"почему, 2-6 слов"}],'
+
 function asStr(v: unknown): string {
   return typeof v === 'string' ? v : ''
 }
@@ -48,7 +83,12 @@ function parseGrade(raw: string, mode: 'ielts' | 'regular'): WritingGrade {
   const errors = (Array.isArray(o.errors) ? o.errors : [])
     .map((x) => {
       const it = (x ?? {}) as Record<string, unknown>
-      return { was: asStr(it.was), fix: asStr(it.fix), type: asStr(it.type) || undefined }
+      return {
+        was: asStr(it.was),
+        fix: asStr(it.fix),
+        type: errorKind(asStr(it.type)) ?? (asStr(it.type) || undefined),
+        why: asStr(it.why).trim().slice(0, 80) || undefined,
+      }
     })
     .filter((x) => x.was && x.fix)
     .slice(0, 30)
@@ -145,12 +185,13 @@ export async function gradeWriting(
       'Верни ТОЛЬКО валидный JSON без markdown:',
       '{"band":0-9,"criteria":{"task":0-9,"coherence":0-9,"lexis":0-9,"grammar":0-9},' +
         '"focus":[{"type":"тип повторяющейся ошибки","why":"чем мешает, по-русски","examples":[{"was":"цитата","fix":"как надо"}]}],' +
-        '"errors":[{"was":"цитата из текста","fix":"исправление","type":"grammar|vocab|spelling"}],' +
+        ERRORS_SHAPE +
         '"strengths":["сильная сторона"],"improve":["что подтянуть"],' +
         '"topics":["тема грамматики для повторения"],"words":["полезное слово"],' +
         '"rewrites":[{"was":"слабое предложение","better":"улучшенный вариант"}]}',
       'band и criteria — по шкале 0-9 (допускается .5). Считай РЕАЛЬНЫЕ ошибки, не выдумывай.',
       FOCUS_RULE,
+      ERRORS_RULE,
       // те же правила, что в «Диалоге» (lib/correctionRules): не сдвигать время
       // в исправлении и не выдумывать ошибок — здесь тот же разбор чужого текста
       ...CORRECTION_RULES,
@@ -179,12 +220,13 @@ export async function gradeWriting(
     '{"level":"A1..C1 — уровень текста","targetWords":[{"w":"слово","used":true|false}],' +
       '"targetGrammar":[{"t":"структура","used":true|false}],' +
       '"focus":[{"type":"тип повторяющейся ошибки","why":"чем мешает, по-русски","examples":[{"was":"цитата","fix":"как надо"}]}],' +
-      '"errors":[{"was":"цитата","fix":"исправление","type":"grammar|vocab|spelling"}],' +
+      ERRORS_SHAPE +
       '"strengths":["сильная сторона"],"improve":["что подтянуть"],' +
       '"topics":["тема для повторения"],"words":["полезное слово"],' +
       '"rewrites":[{"was":"слабое предложение","better":"лучше"}]}',
     'targetWords/targetGrammar — по КАЖДОМУ целевому слову/структуре из списков выше: реально ли ученик его употребил (used). Ошибки реальные, не выдумывай. Пояснения по-русски, целевые слова/фразы — на изучаемом языке.',
     FOCUS_RULE,
+    ERRORS_RULE,
     ...CORRECTION_RULES,
   ].join('\n')
   const raw = await chat([{ role: 'user', content: `Задание:\n${task.prompt}\n\nТекст ученика:\n${essay}` }], {
