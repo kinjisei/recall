@@ -109,6 +109,13 @@ async function click(page, label, timeout = 15000) {
   await sleep(600)
   return true
 }
+/** Меню «⋯» карточки — общая кнопка-иконка с подписью (shared/ui/Menu, Ф2.17-4б-1). */
+async function openCardMenu(page) {
+  await page.waitForSelector('[aria-label="Действия с учеником"]', { timeout: 15000 }).catch(() => {})
+  await page.evaluate(() => document.querySelector('[aria-label="Действия с учеником"]')?.click())
+  await page.waitForSelector('[role="menu"]', { timeout: 5000 }).catch(() => {})
+  await sleep(300)
+}
 /** Нажать элемент как палец: сперва в середину экрана — у края его закрывает плавающее меню. */
 async function tap(page, sel) {
   await page.waitForSelector(sel, { visible: true, timeout: 15000 })
@@ -156,7 +163,8 @@ try {
   await go(te, '/teacher')
   check('список: ученик в приложении', await waitText(te, /Айгерим Нурланова/))
   let txt = await text(te)
-  check('строка отвечает «кем заняться»: домашка и регулярность', /Домашка не выдана/.test(txt) && /занимался/.test(txt))
+  // вторая строка — ближайший урок (Ф2.17-4б-1, t6-1); у ученика без уроков так и написано
+  check('вторая строка — ближайший урок: «уроков нет», а не домашка', /уроков нет/.test(txt) && !/Домашка не выдана/.test(txt))
   check('тихая строка мест: 1 из 5', /В приложении 1 из 5 мест тарифа/.test(txt), (txt.match(/В приложении[^\n]*/) || [''])[0])
   const head = await te.evaluate(() => {
     const h = document.querySelector('main header')
@@ -205,13 +213,13 @@ try {
   await shot(te, 'invite-390')
 
   // ── 3. меню: архив и откат, правка ─────────────────────────────────────────────
-  await click(te, '⋯')
+  await openCardMenu(te)
   await click(te, 'В архив')
   check('тост «в архиве» с «Вернуть»', await waitText(te, /Тимур Ким — в архиве/))
   check('в архиве — приглашения нет', await waitText(te, /Ученик в архиве/))
   await click(te, 'Вернуть')
   check('«Вернуть» вернул статус и приглашение', await waitSel(te, '[data-invite-code]'))
-  await click(te, '⋯')
+  await openCardMenu(te)
   await click(te, 'Изменить данные')
   await waitText(te, /Изменить данные/)
   await typeInto(te, 'textarea', 'IELTS, цель 7.0')

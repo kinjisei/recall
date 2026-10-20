@@ -12,7 +12,7 @@
 // раскрывается из аватара — scale .96 → 1 и прозрачность за 180 мс, угол у
 // аватара — точка роста; уходит обратно за 140 мс (лист s4, «Движение»).
 // ============================================================================
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { IconChart, IconTeacher, IconGear, IconSignOut, IconCards, IconBadgeCheck, IconThumbsUp } from '../../shared/ui/icons'
 import { FeedbackSheet } from '../../components/FeedbackSheet'
 import { AppLink } from '../../shared/ui/AppLink'
@@ -26,7 +26,7 @@ import { getEsLevel } from '../../lib/esLevel'
 import { getCachedEnLevel } from '../../lib/profile'
 import { Avatar } from '../../shared/ui/Avatar'
 import { HoverTip } from '../../shared/ui/HoverTip'
-import { LEAVE_MS, useLeave } from '../../shared/lib/motion'
+import { useMenu } from '../../shared/ui/Menu'
 import { useMyRole } from './useMyRole'
 
 type Variant = 'circle' | 'row' | 'rail'
@@ -40,13 +40,11 @@ const MENU_AT: Record<Variant, string> = {
 export function AvatarMenu({ variant = 'circle' }: { variant?: Variant }) {
   const { user, signOut } = useAuth()
   const { lang } = useLanguage()
-  const [open, setOpen] = useState(false)
-  // уход меню — анимацией к аватару, потом снять
-  const { leaving, leave } = useLeave(() => setOpen(false), LEAVE_MS.menu)
+  // открыть, уйти анимацией к аватару, закрыть кликом мимо и Escape — общее меню (shared/ui/Menu)
+  const { open, leaving, close: leave, toggle, box } = useMenu()
   const [feedback, setFeedback] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const [plan, setPlan] = useState<MyPlan | null>(null)
-  const boxRef = useRef<HTMLDivElement>(null)
 
   const name = (user?.user_metadata?.display_name as string | undefined) ?? user?.email ?? '?'
   // в карточке меню — имя, как в макетах d4-v2 и d2; полностью — в самом меню
@@ -77,21 +75,6 @@ export function AvatarMenu({ variant = 'circle' }: { variant?: Variant }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
-  // закрытие по клику мимо меню и по Escape
-  useEffect(() => {
-    if (!open) return
-    const onDown = (e: MouseEvent) => {
-      if (!boxRef.current?.contains(e.target as Node)) leave()
-    }
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && leave()
-    document.addEventListener('mousedown', onDown)
-    document.addEventListener('keydown', onKey)
-    return () => {
-      document.removeEventListener('mousedown', onDown)
-      document.removeEventListener('keydown', onKey)
-    }
-  }, [open, leave])
-
   const trial = isTeacher && plan ? teacherTrialStatus(plan) : null
   const trialText = !trial
     ? null
@@ -108,13 +91,11 @@ export function AvatarMenu({ variant = 'circle' }: { variant?: Variant }) {
     ? (trialText ?? (now?.kind === 'paid' ? `${planShortTitle(now.plan)} · до ${dayLabel(now.until)}` : null))
     : `${lang === 'es' ? 'Испанский' : 'Английский'}${level ? ` · ${level}` : ''}`
 
-  const toggle = () => (open ? leave() : setOpen(true))
-
   const itemCls =
     'flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-fg-secondary hover:bg-row-press hover:text-fg active:bg-row-press'
 
   return (
-    <div className="relative" ref={boxRef}>
+    <div className="relative" ref={box}>
       {variant === 'row' ? (
         <button
           onClick={toggle}

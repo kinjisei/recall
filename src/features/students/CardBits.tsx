@@ -24,10 +24,11 @@ const BADGE: Record<CardStatus, { tone: BadgeTone; Icon?: IconLike; dot?: boolea
   archived: { tone: 'outline', Icon: IconArchive },
 }
 
-export function StatusBadge({ status }: { status: CardStatus }) {
+export function StatusBadge({ status, small = false }: { status: CardStatus; small?: boolean }) {
   const { tone, Icon, dot } = BADGE[status]
+  // в строке списка — маленький и без значка (t6-1, d3): «Пробный», «Пауза»
   return (
-    <Badge tone={tone} Icon={Icon} dot={dot}>
+    <Badge tone={tone} Icon={small ? undefined : Icon} dot={!small && dot} small={small}>
       {STATUS_LABEL[status]}
     </Badge>
   )

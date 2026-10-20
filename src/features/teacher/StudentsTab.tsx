@@ -4,35 +4,46 @@
 // ученика в приложении под шапкой — его студия (домашка, плашки, «Ещё»), у
 // карточки без приложения — «Пригласить в Recall».
 //
-// Строка ученика в приложении по-прежнему отвечает «кем заняться»: домашка,
-// регулярность, последнее занятие (lib/studentSignals); сортировка — сперва
-// те, кому нужно внимание. Держит ли ученик место тарифа — ответ базы
-// (holds_seat), экран «первых N» сам не считает.
+// Строка ученика (Ф2.17-4б-1, макеты d3-1, d3-5, t6-1): вторая строка —
+// ближайший урок, справа остаток, порядок — «Ближайший урок» или «Осталось
+// уроков» с ↑↓, пробный «остаётся?» — сверху; ниже — «Группы». Сверх макета
+// (журнал п.76 (5)) — бейдж домашки рядом с именем и сводка «Нужно внимание»
+// над строками (lib/studentSignals). Держит ли ученик место тарифа — ответ
+// базы (holds_seat), экран «первых N» сам не считает.
 // ============================================================================
 import { useState, type ReactNode } from 'react'
-import { balanceShort, loadLessonBalances } from '../../domains/schedule'
+import { dayBounds, loadLessonBalances, loadMySeries, loadSchedule, rosterWindow } from '../../domains/schedule'
 import {
   ACTION_STATUS,
-  outsideSeats,
   setCardStatus,
   STATUS_LABEL,
   type CardAction,
   type CardStatus,
   type StudentCard,
 } from '../../domains/students'
-import { AttentionPanel, BalanceCount } from '../schedule'
+import { AttentionPanel } from '../schedule'
 import { CardForm, StudentsList, useLeavingLessons } from '../students'
 import { useAsyncData } from '../../shared/lib/useAsyncData'
+import { useNow } from '../../shared/lib/useNow'
+import { useOnReturn } from '../../shared/lib/useOnReturn'
 import { useUrlState } from '../../shared/lib/useUrlState'
 import { ListDetail, useListDetailSplit } from '../../shared/ui/layouts'
+import { LoadError } from '../../shared/ui/LoadError'
 import { RowsSkeleton } from '../../shared/ui/Loading'
 import { UndoToast } from '../../shared/ui/UndoToast'
-import { byAttention, needAttention, studentSignal, type StudentSignal } from '../../lib/studentSignals'
+import { needAttention, studentSignal, type StudentSignal } from '../../lib/studentSignals'
 import type { StudentInfo } from '../../lib/teacher'
-import { AttentionSummary, RowDetail, type StudentRow } from './StudentRowBits'
+import { AttentionSummary, type StudentRow } from './StudentRowBits'
 import type { Homework } from '../../lib/homework'
 import type { MyPlan } from '../../lib/billing'
 import { CardDetail } from './CardDetail'
+import { rosterGroups, rosterRows, useRosterSort } from './roster'
+
+/** Уроки две недели назад (пробные для вопроса «остаётся?») и вперёд (ближайшие). */
+async function loadRosterLessons() {
+  const w = rosterWindow(new Date())
+  return loadSchedule(dayBounds(w.from).from, dayBounds(w.to).from)
+}
 
 export function StudentsTab({
   cards,
@@ -84,21 +95,33 @@ export function StudentsTab({
   const seatsLimited = typeof plan?.seats === 'number' && !plan.is_admin
   const canWrite = plan?.can_write !== false
 
+  // уроки и группы: вторая строка, порядок «Ближайший урок», «Группы», «Требуют внимания»
+  const [lessonsVersion, setLessonsVersion] = useState(0)
+  const reloadLessons = () => setLessonsVersion((v) => v + 1)
+  const around = useAsyncData(loadRosterLessons, [lessonsVersion], 'Не удалось загрузить уроки')
+  const series = useAsyncData(loadMySeries, [lessonsVersion], 'Не удалось загрузить группы')
+  // учитель вернулся в приложение — уроки могли перенести (как список, Ф2.11б-2)
+  useOnReturn(reloadLessons)
+  const now = useNow()
+  const sort = useRosterSort()
+
   const infoByUser = new Map(students.map((s) => [s.profile.id, s]))
   const rows: StudentRow[] = cards.map((card) => {
     const info = card.userId ? (infoByUser.get(card.userId) ?? null) : null
     return { card, info, signal: info ? studentSignal(info, homeworks.get(info.profile.id) ?? null) : null }
   })
-  // В приложении — по дате привязки (byAttention держит её внутри группы, чтобы
-  // список не перескакивал), сперва те, кому нужно внимание; без приложения — по имени.
-  const inApp = rows
-    .filter((r) => r.signal)
-    .sort((a, b) => (a.card.linkedAt ?? '').localeCompare(b.card.linkedAt ?? ''))
-  const noApp = rows.filter((r) => !r.signal).sort((a, b) => a.card.name.localeCompare(b.card.name, 'ru'))
-  const ordered = [...byAttention(inApp, (r) => r.signal as StudentSignal), ...noApp]
-  const rowById = new Map(rows.map((r) => [r.card.id, r]))
-  // На паузе и в архиве не занимаются по договорённости — внимания не просят
-  const watched = inApp.filter((r) => r.card.status === 'active' || r.card.status === 'trial')
+  const roster = rosterRows({
+    cards,
+    signals: new Map(rows.map((r) => [r.card.id, r.signal])),
+    balances,
+    lessons: around.data,
+    sort,
+    seatsLimited,
+    canWrite,
+    now,
+  })
+  // «Нужно внимание» — по домашке и регулярности; на паузе и в архиве внимания не просят
+  const watched = rows.filter((r) => r.signal && (r.card.status === 'active' || r.card.status === 'trial'))
   const attention = needAttention(watched.map((r) => r.signal as StudentSignal))
 
   const selected =
@@ -116,6 +139,8 @@ export function StudentsTab({
     try {
       await setCardStatus(card.id, next)
       onChanged()
+      // пауза и архив убирают будущие уроки — вторая строка и «Группы» тоже
+      reloadLessons()
       if (next === 'archived') {
         setToast({
           id: Date.now(),
@@ -135,20 +160,24 @@ export function StudentsTab({
   const list = loading ? (
     <RowsSkeleton count={3} />
   ) : (
-    <div className="flex flex-col gap-4">
-      <StudentsList
-        cards={ordered.map((r) => r.card)}
-        detailOf={(c) => <RowDetail row={rowById.get(c.id)} card={c} />}
-        outsideOf={(c) => outsideSeats(c, seatsLimited)}
-        trailingOf={(c) => (balanceShort(balances.get(c.id)) ? <BalanceCount balance={balances.get(c.id)} /> : null)}
-        attention={<AttentionSummary watched={watched} count={attention} />}
-        seats={plan}
-        selectedId={selected?.card.id ?? null}
-        canWrite={canWrite}
-        onOpen={(id) => setOpenId(id)}
-      />
-      {extras}
-    </div>
+    <StudentsList
+      rows={roster}
+      groups={rosterGroups(series.data, around.data, now)}
+      sort={sort}
+      attention={
+        <>
+          {/* уроки не пришли — во второй строке пусто, а не «уроков нет» (Ф1.13) */}
+          {around.error && <LoadError message={around.error} onRetry={reloadLessons} />}
+          <AttentionSummary watched={watched} count={attention} />
+        </>
+      }
+      footer={extras}
+      seats={plan}
+      selectedId={selected?.card.id ?? null}
+      canWrite={canWrite}
+      wide={desktop}
+      onOpen={(id) => setOpenId(id)}
+    />
   )
 
   const detail = selected ? (
@@ -172,9 +201,9 @@ export function StudentsTab({
     // никто не выбран — кого стоит не забыть (макет d3-3)
     <AttentionPanel
       cards={cards}
+      lessons={around.data}
       balances={balances}
       canWrite={canWrite}
-      empty="Выбери ученика слева — карточка откроется здесь."
       onOpen={(id) => setOpenId(id)}
     />
   ) : null

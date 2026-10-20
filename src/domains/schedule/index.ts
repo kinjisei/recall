@@ -22,6 +22,16 @@ export {
 } from './api'
 export { loadMyLessonBalances, loadMyLessons } from './api.student'
 export {
+  groupLessonPath,
+  groupLine,
+  lessonLine,
+  nextLessonOf,
+  rosterWindow,
+  studioGroups,
+  whenShort,
+  type StudioGroup,
+} from './roster'
+export {
   almatyInstant,
   almatyMinutes,
   almatyTime,

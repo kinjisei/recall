@@ -174,9 +174,14 @@ export function CardLessons({
 export function BalanceCount({ balance }: { balance: LessonBalance | null | undefined }) {
   const text = balanceShort(balance)
   if (!text) return null
-  const tone = (balance?.balance ?? 0) < 0 ? 'text-danger-strong' : balanceLow(balance) ? 'text-warning-strong' : 'text-fg-secondary'
+  // макеты t6-1, d3-1: число 18 полужирным; минус — жёлтой «таблеткой» (его видит только учитель, п.29)
+  const negative = (balance?.balance ?? 0) < 0
   return (
-    <span className={`flex-none text-sm font-bold tabular-nums ${tone}`} title="Осталось оплаченных уроков" data-balance-count>
+    <span
+      className={`flex-none font-semibold tabular-nums ${negative ? 'rounded-full bg-warning-soft px-2.25 py-0.5 text-base text-warning-soft-fg' : 'min-w-7 text-right text-lg'}`}
+      title="Осталось оплаченных уроков"
+      data-balance-count
+    >
       {text}
     </span>
   )

@@ -4,7 +4,6 @@
 // пауза, архив, вернуть. На телефоне сверху «‹ Ученики»: карточка — отдельный
 // экран, свайп-назад возвращает к списку (выбор — в адресе).
 // ============================================================================
-import { useEffect, useRef, useState } from 'react'
 import {
   ACTION_LABEL,
   cardActions,
@@ -12,7 +11,9 @@ import {
   type CardAction,
   type StudentCard,
 } from '../../domains/students'
-import { IconBack, IconDialog, IconPencil, IconPhone, IconSend } from '../../shared/ui/icons'
+import { IconBack, IconDialog, IconMore, IconPencil, IconPhone, IconSend } from '../../shared/ui/icons'
+import { IconButton } from '../../shared/ui/IconButton'
+import { MenuItem, MenuPanel, useMenu } from '../../shared/ui/Menu'
 import { AppBadge, Avatar, StatusBadge } from './CardBits'
 
 // Телефон (t6-2): значок над подписью, три кнопки на всю ширину — влезают и на
@@ -125,7 +126,7 @@ export function CardHead({
   )
 }
 
-/** Меню «⋯»: закрывается вторым нажатием, кликом мимо и Escape. */
+/** Меню «⋯» (общее меню, shared/ui/Menu): закрывается вторым нажатием, кликом мимо и Escape. */
 function CardMenu({
   actions,
   busy,
@@ -135,59 +136,27 @@ function CardMenu({
   busy: boolean
   onPick: (action: CardAction) => void
 }) {
-  const [open, setOpen] = useState(false)
-  const box = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!open) return
-    const onDown = (e: PointerEvent) => {
-      if (!box.current?.contains(e.target as Node)) setOpen(false)
-    }
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false)
-    }
-    document.addEventListener('pointerdown', onDown)
-    document.addEventListener('keydown', onKey)
-    return () => {
-      document.removeEventListener('pointerdown', onDown)
-      document.removeEventListener('keydown', onKey)
-    }
-  }, [open])
-
+  const { open, leaving, close, trigger, box } = useMenu()
   return (
     <div ref={box} className="relative">
-      <button
-        type="button"
-        aria-label="Действия с учеником"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        disabled={busy}
-        onClick={() => setOpen((v) => !v)}
-        className="flex size-11 items-center justify-center rounded-xl text-xl font-bold text-fg-secondary hover:bg-tint/[0.06] disabled:opacity-50"
-      >
-        ⋯
-      </button>
+      <IconButton label="Действия с учеником" disabled={busy} {...trigger} className="text-fg-secondary">
+        <IconMore size={22} />
+      </IconButton>
       {open && (
-        <div
-          role="menu"
-          className="absolute right-0 top-12 z-30 min-w-56 animate-pop-in overflow-hidden rounded-2xl border border-tint/[0.08] bg-surface py-1 shadow-card"
-        >
+        <MenuPanel leaving={leaving} label="Действия с учеником" className="right-0 top-12 w-56 origin-top-right">
           {actions.map((a) => (
-            <button
+            <MenuItem
               key={a}
-              type="button"
-              role="menuitem"
-              onClick={() => {
-                setOpen(false)
+              Icon={a === 'edit' ? IconPencil : undefined}
+              onSelect={() => {
+                close()
                 onPick(a)
               }}
-              className="flex min-h-12 w-full items-center gap-3 px-4 text-left text-sm hover:bg-tint/[0.05]"
             >
-              {a === 'edit' && <IconPencil size={18} className="text-fg-muted" />}
               {ACTION_LABEL[a]}
-            </button>
+            </MenuItem>
           ))}
-        </div>
+        </MenuPanel>
       )}
     </div>
   )

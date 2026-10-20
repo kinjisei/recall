@@ -8,14 +8,18 @@
  *   home      — Айгерим: урок в 19:00, домашка 1 из 4, серия, слова к повторению;
  *   home-soon — она же, урок через 5 минут (u1-2, d4-v2-2);
  *   home-solo — самоучка Диас (u1-3, d4-v2-3).
+ * Заход 4б-1 — список «Учеников» (макеты t6-1, d3-1, d3-3, d3-5):
+ *   students      — никто не выбран (на компьютере справа «Требуют внимания»);
+ *   students-sort — меню сортировки открыто;
+ *   students-card — выбрана Айгерим (только компьютер).
  * Ширины 390 и 1280 — в четырёх вариантах вида («Сумерки» и «Закат» ×
- * светлая и тёмная), 1440 — светлые «Сумерки» (d4-v2-4). Имя файла —
+ * светлая и тёмная), 1440 — светлые «Сумерки». Имя файла —
  * `<экран>-<палитра>-<тема>-<ширина>.png`. На каждом снимке — UX-аудит
  * `<main>` (`_ux-audit-page`: контраст, цели касания, подписи): замечание —
  * красная строка в итоге. Телефон снимается окном во всю высоту страницы.
  *
  * Запуск: npm run dev:test, затем node scripts/shots-screens.mjs [папка]
- * (по умолчанию shots-screens/). ~4 мин.
+ * [--only home|students] (по умолчанию shots-screens/, все экраны). ~6 мин.
  */
 import { spawn } from 'node:child_process'
 import { mkdirSync } from 'node:fs'
@@ -32,6 +36,7 @@ if (process.argv.includes('--prod')) {
 }
 const EDGE = 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'
 const DIR = process.argv[2] && !process.argv[2].startsWith('--') ? process.argv[2] : 'shots-screens'
+const ONLY = process.argv.includes('--only') ? process.argv[process.argv.indexOf('--only') + 1] : null
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 const st = studio('shots-scr')
 
@@ -72,8 +77,12 @@ async function signIn(page, email) {
   await sleep(1200)
 }
 
-/** Один экран во всех вариантах вида на этой ширине; expect — текст, по которому видно, что экран тот. */
-async function shoot(page, name, path, width, expect, looks) {
+/**
+ * Один экран во всех вариантах вида на этой ширине; expect — текст, по
+ * которому видно, что экран тот; prepare — что сделать перед снимком
+ * (открыть меню); wait — чего дождаться сверх expect (слово дня).
+ */
+async function shoot(page, name, path, width, expect, looks, { prepare, wait } = {}) {
   for (const [palette, theme] of looks) {
     await page.evaluate((p, t) => {
       localStorage.setItem('recall.palette', p)
@@ -83,9 +92,9 @@ async function shoot(page, name, path, width, expect, looks) {
     const ok = await page
       .waitForFunction((src) => new RegExp(src).test(document.body.innerText), { polling: 250, timeout: 15000 }, expect.source)
       .then(() => true, () => false)
-    // слово дня считается в простое браузера — ждём его, а не паузу
-    await page.waitForFunction(() => /Слово дня/.test(document.body.innerText), { polling: 250, timeout: 8000 }).catch(() => {})
+    if (wait) await page.waitForFunction((src) => new RegExp(src).test(document.body.innerText), { polling: 250, timeout: 8000 }, wait.source).catch(() => {})
     await sleep(600)
+    if (prepare) await prepare(page)
     // контраст и цели касания (правила ui-ux-pro-max) — в каждом варианте вида.
     // ДО снимка и после доигранных анимаций: снимок всей страницы меняет окно и
     // перезапускает появление, и аудит ловил полупрозрачный текст («Войти в
@@ -110,14 +119,24 @@ async function shoot(page, name, path, width, expect, looks) {
   }
 }
 
-/** Главная ученика: 390 и 1280 в четырёх вариантах, 1440 — светлые «Сумерки». */
-async function home(email, name, expect) {
+/** Экран на 390 и 1280 в четырёх вариантах, 1440 — светлые «Сумерки». */
+async function screen(email, shots) {
   for (const width of [390, 1280, 1440]) {
     const page = await newPage(width)
     await signIn(page, email)
-    await shoot(page, name, '/', width, expect, width === 1440 ? LOOKS.slice(0, 1) : LOOKS)
+    for (const s of shots) {
+      if (s.wide && width < 600) continue
+      await shoot(page, s.name, s.path, width, s.expect, width === 1440 ? LOOKS.slice(0, 1) : LOOKS, s)
+    }
     await page.browserContext().close()
   }
+}
+
+/** Открыть меню сортировки «Учеников» (d3-5, t6-1). */
+const openSort = async (page) => {
+  await page.evaluate(() => document.querySelector('[data-roster-head] button[aria-haspopup="menu"]')?.click())
+  await page.waitForSelector('[role="menu"]', { timeout: 3000 }).catch(() => {})
+  await sleep(300)
 }
 
 try {
@@ -132,15 +151,26 @@ try {
   }
   if (!browser) throw new Error('Edge не поднялся')
 
-  console.log('── Главная ученицы')
-  await home(a.email, 'home', /Ближайший урок/)
-  console.log('── Главная самоучки')
-  await home(solo.email, 'home-solo', /Занимаешься с преподавателем/)
-  // урок через 5 минут: карточка урока становится главной (u1-2, d4-v2-2)
-  const soon = new Date(Date.now() + 5 * 60_000).toISOString()
-  must(await t.client.rpc('create_lesson', { p_kind: 'individual', p_starts_at: soon, p_minutes: 45, p_cards: [ca] }), 'урок через 5 минут')
-  console.log('── Главная за 10 минут до урока')
-  await home(a.email, 'home-soon', /Урок через/)
+  if (!ONLY || ONLY === 'students') {
+    console.log('── «Ученики»')
+    await screen(t.email, [
+      { name: 'students', path: '/teacher', expect: /Ученики · \d/ },
+      { name: 'students-sort', path: '/teacher', expect: /Ученики · \d/, prepare: openSort },
+      { name: 'students-card', path: `/teacher?student=${ca}`, expect: /Айгерим Нурланова[\s\S]*Уроки/, wide: true },
+    ])
+  }
+  if (!ONLY || ONLY === 'home') {
+    const word = /Слово дня/
+    console.log('── Главная ученицы')
+    await screen(a.email, [{ name: 'home', path: '/', expect: /Ближайший урок/, wait: word }])
+    console.log('── Главная самоучки')
+    await screen(solo.email, [{ name: 'home-solo', path: '/', expect: /Занимаешься с преподавателем/, wait: word }])
+    // урок через 5 минут: карточка урока становится главной (u1-2, d4-v2-2)
+    const soon = new Date(Date.now() + 5 * 60_000).toISOString()
+    must(await t.client.rpc('create_lesson', { p_kind: 'individual', p_starts_at: soon, p_minutes: 45, p_cards: [ca] }), 'урок через 5 минут')
+    console.log('── Главная за 10 минут до урока')
+    await screen(a.email, [{ name: 'home-soon', path: '/', expect: /Урок через/, wait: word }])
+  }
 } catch (e) {
   console.error('СБОЙ:', e.message)
   report.push(`✗ сбой: ${e.message}`)

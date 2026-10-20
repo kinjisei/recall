@@ -56,8 +56,8 @@
 | `TeacherBlock.tsx` | на Главной самоучки: строка «Занимаешься с преподавателем?» (макеты u1-3, d4-v2-3) → код и «Привязать», по ссылке-приглашению — открыта с кодом в поле; преподавателей грузит Главная; `loadAssignmentCounts` для плана дня (при сбое бросает) |
 | `GuideSection.tsx` | «Методичка» (`/tasks?tab=guide`), контент — `src/data/teacher-guide.ts` |
 | `CardDetail.tsx` | карточка справа (на телефоне — экраном): шапка, блок «Уроки» (`features/schedule`, Ф2.8), студия или приглашение; открытый раздел — экраном вместо карточки; диагностика ученика грузится здесь (её берут плашки, плитки, разделы, отчёт) |
-| `StudentsTab.tsx` | вкладка «Ученики»: остаток числом в строке и «Требуют внимания» на компьютере, пока никто не выбран (Ф2.8); ?remind=1 из уведомления открывает «Напомнить»; выбранная карточка (в адресе `?student=`), смена статуса с тостом «Вернуть»; перед паузой и архивом — сколько уроков уйдёт (`useLeavingLessons`, Ф2.7); список и карточка — `ListDetail fill` |
-| `StudentRowBits.tsx` | вторая строка ученика «кем заняться» и сводка «Нужно внимание» |
+| `StudentsTab.tsx` | вкладка «Ученики»: уроки ±2 недели и группы (вторая строка, порядок, «Группы», «Требуют внимания» — одни данные), «Требуют внимания» на компьютере, пока никто не выбран (Ф2.8, d3-3); ?remind=1 из уведомления открывает «Напомнить»; выбранная карточка (в адресе `?student=`), смена статуса с тостом «Вернуть»; перед паузой и архивом — сколько уроков уйдёт (`useLeavingLessons`, Ф2.7); список и карточка — `ListDetail fill` |
+| `roster.tsx`, `StudentRowBits.tsx` | строки списка: ближайший урок, бейдж домашки, остаток, порядок и его выбор (`useRosterSort`), «Группы»; сводка «Нужно внимание» |
 | `StudentStudio.tsx` | ученик в приложении под шапкой карточки: домашка, три плашки, плитки разделов, «Убрать из тарифа» / «Включить в тариф» с тостом «Вернуть», отвязка |
 | `StudioTiles.tsx`, `studioSections.ts`, `StudioSection.tsx` | плашки и шесть плиток (t6-2) с короткой строкой состояния; список разделов и открытый раздел в адресе; экран раздела с «‹ Имя» |
 | `topicTitles.ts` | названия тем грамматики по номеру — плашке «Слабая тема», диагностике, отчёту |
@@ -91,19 +91,29 @@
 - Разбор из хаба ищет работу среди ждущих: уже проверенная — «больше не
   ждёт», а не пустой экран.
 
-**Список учеников: кому нужно внимание**
+**Список учеников: кто следующий и кому нужно внимание** (Ф2.17-4б-1,
+макеты d3, t6-1; журнал п.76 (5))
 
-- Строка ученика отвечает на вопрос «кем заняться» без открытия карточки:
-  домашка («1 из 2 · до вторника» / «не начал» / «просрочена»), регулярность
-  («занимался 5 из 7») и срок последнего занятия. Сортировка — сперва те, кому
-  нужно внимание: просрочка → пропал → не начал → начал → всё хорошо.
+- Вторая строка — ближайший урок («сегодня 17:00 · IELTS вечер», «уроков
+  нет»), справа — остаток уроков (минус — жёлтой «таблеткой»). Порядок
+  выбирает учитель: «Ближайший урок» или «Осталось уроков», ↑↓ (выбор помнится
+  на устройстве, `roster.tsx`); пробный «Пробный прошёл — остаётся?» —
+  всегда сверху; у кого нет урока или учёта — в конце в обе стороны (правило
+  — `domains/students` `sortRoster`). Ниже — «Группы» (групповые серии с
+  ближайшим уроком; нажал — урок в расписании).
+- **Сверх макета — домашка видна без карточки** (решение владельца
+  20.10.2026): бейдж «просрочена» / «не начата» рядом с именем и сводка
+  «Нужно внимание» над строками — кто просрочил домашку или пропал (неделя
+  без занятий). Счёт «3 из 5» и «занимался 5 из 7» — в карточке.
 - **Регулярность, а не объём.** «120 карточек» — это один просиженный вечер;
-  частота занятий говорит о прогрессе больше, чем сумма. Поэтому в строке дни,
-  а не карточки.
+  частота занятий говорит о прогрессе больше, чем сумма. Поэтому в сводке и
+  карточке дни, а не карточки.
+- Уроки не пришли — во второй строке пусто и плашка «Повторить», а не «уроков
+  нет» (Ф1.13).
 - **Числа считаются в ОДНОМ месте.** Счёт домашки — `homeworkProgress`
   (`lib/homeworkView.ts`), тот же, что рисует карточку и экран ученика; дни
   занятий — `activeDaysIn` (`lib/activityDays.ts`), и плашка карточки
-  показывает то же окно в 7 дней, что и строка. Сборка подписей и порядок —
+  показывает то же окно в 7 дней, что и сводка. Сборка подписей домашки —
   `lib/studentSignals.ts`. Разъедутся два числа про одно и то же —
   преподаватель перестанет верить обоим, а не тому, которое ошиблось.
 - **Держит ли ученик место тарифа — ответ базы** (`holds_seat` в
@@ -271,7 +281,14 @@
 - `node scripts/test-student-signals.mjs` (чистый, в CI) — краснеет, если
   перевернуть порядок, выключить сортировку или посчитать группы «на выбор» по
   отдельности.
-- `node scripts/smoke-lost-students.mjs` — список учеников на живом экране.
+- `node scripts/test-student-roster.mjs` (чистый, в CI) — ближайший урок,
+  «сегодня 17:00 · IELTS вечер» по Алматы, группы, порядок: пробный сверху,
+  «пустые» в конце в обе стороны, обратный — только ключ.
+- `node scripts/smoke-lost-students.mjs` — список учеников на живом экране:
+  сводка «Нужно внимание», бейдж «просрочена», вторая строка — урок, порядок.
+- `node scripts/shots-screens.mjs --only students` — снимки списка по d3 и
+  t6-1 (никто не выбран, меню сортировки, выбранная карточка) в четырёх
+  вариантах с UX-аудитом.
 - `node scripts/smoke-teacher-path.mjs` — путь нового репетитора целиком
   (Ф2.11): лендинг → регистрация → онбординг → первый ученик и урок →
   приглашение; плитки, тест уровня на языке студии, «назад» в программе и
@@ -330,10 +347,11 @@
 <!-- Пишет `npm run gen:docs` (scripts/gen/module-docs.mjs) по коду — руками не править. -->
 ## Из кода (сгенерировано)
 
-- **Файлы:** `AssignmentsPage.tsx`, `BecomeTeacher.tsx`, `CardDetail.tsx`, `DailyPlanSection.tsx`, `DiagnosticsSection.tsx`, `formHints.ts`, `GuideSection.tsx`, `HomeworkComposer.tsx`, `HomeworkSection.tsx`, `index.ts`, `innerScreen.ts`, `materials/audience.ts`, `materials/ForWhom.tsx`, `materials/MaterialDetail.tsx`, `materials/MaterialsByLevel.tsx`, `materials/PlanScreen.tsx`, `materials/PreviewScreen.tsx`, `materials/RequestForm.tsx`, `materials/shared.ts`, `materials/wizard.ts`, `MaterialsSection.tsx`, `PlacementSection.tsx`, `PrintSheet.tsx`, `ProgramSection.tsx`, `QuestSection.tsx`, `ReportSheet.tsx`, `ReviewScreen.tsx`, `StudentRowBits.tsx`, `StudentsTab.tsx`, `StudentStudio.tsx`, `StudentWordsSection.tsx`, `StudioEnergy.tsx`, `StudioSection.tsx`, `studioSections.ts`, `StudioTiles.tsx`, `TasksHub.tsx`, `TasksPage.tsx`, `TeacherBlock.tsx`, `TeacherPage.tsx`, `topicTitles.ts`, `useAnswerDraft.ts`, `useComposerDraft.ts`, `useReviewDraft.ts`, `useWritingTaskDraft.ts`, `waitingCount.ts`, `waitingWorks.ts`, `WordPicker.tsx`, `WritingSection.tsx`
+- **Файлы:** `AssignmentsPage.tsx`, `BecomeTeacher.tsx`, `CardDetail.tsx`, `DailyPlanSection.tsx`, `DiagnosticsSection.tsx`, `formHints.ts`, `GuideSection.tsx`, `HomeworkComposer.tsx`, `HomeworkSection.tsx`, `index.ts`, `innerScreen.ts`, `materials/audience.ts`, `materials/ForWhom.tsx`, `materials/MaterialDetail.tsx`, `materials/MaterialsByLevel.tsx`, `materials/PlanScreen.tsx`, `materials/PreviewScreen.tsx`, `materials/RequestForm.tsx`, `materials/shared.ts`, `materials/wizard.ts`, `MaterialsSection.tsx`, `PlacementSection.tsx`, `PrintSheet.tsx`, `ProgramSection.tsx`, `QuestSection.tsx`, `ReportSheet.tsx`, `ReviewScreen.tsx`, `roster.tsx`, `StudentRowBits.tsx`, `StudentsTab.tsx`, `StudentStudio.tsx`, `StudentWordsSection.tsx`, `StudioEnergy.tsx`, `StudioSection.tsx`, `studioSections.ts`, `StudioTiles.tsx`, `TasksHub.tsx`, `TasksPage.tsx`, `TeacherBlock.tsx`, `TeacherPage.tsx`, `topicTitles.ts`, `useAnswerDraft.ts`, `useComposerDraft.ts`, `useReviewDraft.ts`, `useWritingTaskDraft.ts`, `waitingCount.ts`, `waitingWorks.ts`, `WordPicker.tsx`, `WritingSection.tsx`
 - **Вне папки (указатель «Описание:» в начале файла):** `src/lib/activityDays.ts`, `src/lib/diagnosticsBrief.ts`, `src/lib/materialExercises.ts`, `src/lib/studentSignals.ts`, `src/lib/wordChecks.ts`
 - **Адреса:** `/teacher`, `/tasks`, `/assignments`
 - **Таблицы:** `cards`, `decks`, `review_states`, `word_checks`
 - **RPC:** `assign_word_check`, `submit_word_check`
+- **localStorage:** `recall.students.sort`
 - **Кто использует (импортом):** `app`, `features/dashboard`, `features/flashcards`, `features/homework`, `features/progress`, `features/words`, `lib`
 <!-- generated:end -->

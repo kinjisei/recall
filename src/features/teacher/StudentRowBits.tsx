@@ -1,13 +1,12 @@
 // ============================================================================
-// Вторая строка ученика в списке и сводка «Нужно внимание» (вкладка
-// «Ученики», StudentsTab): ответ на вопрос «кем заняться» без открытия
-// карточки. Вынесено из StudentsTab — вкладка упиралась в предел размера.
-// Подписи и порядок — lib/studentSignals.
+// Сводка «Нужно внимание» над списком «Учеников» (StudentsTab): кто
+// просрочил домашку или пропал — без открытия карточки (журнал п.76 (5)).
+// Вторая строка ученика с Ф2.17-4б-1 — ближайший урок (roster.tsx).
+// Подписи — lib/studentSignals.
 // ============================================================================
 import type { StudentCard } from '../../domains/students'
 import { byAttention, type StudentSignal } from '../../lib/studentSignals'
 import type { StudentInfo } from '../../lib/teacher'
-import { Card } from '../../shared/ui/Card'
 
 export interface StudentRow {
   card: StudentCard
@@ -24,43 +23,19 @@ export function lastSeen(s: StudentInfo): string {
   return `не заходил ${d} ${d < 5 ? 'дня' : 'дней'}`
 }
 
-/** Вторая строка: у ученика в приложении — домашка и регулярность, без приложения — контакт. */
-export function RowDetail({ row, card }: { row: StudentRow | undefined; card: StudentCard }) {
-  if (row?.info && row.signal) {
-    const s = row.signal
-    return (
-      <>
-        {/* Домашка — первое, что нужно перед уроком: «3 из 5 · до вторника». */}
-        <span className={`block truncate text-sm ${s.overdue ? 'text-warning-soft-fg' : 'text-fg-secondary'}`}>
-          {s.homeworkText ? `${s.homeworkText} · ${s.dueText}` : 'Домашка не выдана'}
-        </span>
-        {/* ⚠️ Регулярность, а не объём: «занимался 5 дней из 7» — привычка. */}
-        <span className="block truncate text-sm text-fg-muted">
-          занимался {s.regularity} · <span className={s.lost ? 'text-warning-soft-fg' : ''}>{lastSeen(row.info)}</span>
-        </span>
-      </>
-    )
-  }
-  return <span className="block truncate text-sm text-fg-muted">{card.contact || 'без приложения'}</span>
-}
-
 /** «Нужно внимание: N» над списком — кто просрочил домашку или пропал. */
 export function AttentionSummary({ watched, count }: { watched: StudentRow[]; count: number }) {
   if (count <= 0) return null
+  // компактно — сверх макета, над строками (журнал п.76 (5)): две строки, без пояснения
   return (
-    <Card tone="warning">
-      <p className="text-sm font-semibold text-warning-soft-fg">Нужно внимание: {count}</p>
-      <p className="mt-1 text-sm text-fg-secondary">
+    <div className="rounded-control bg-warning-surface px-3 py-2.5 ring-1 ring-inset ring-warning-line" data-attention-summary>
+      <p className="text-note font-semibold text-warning-soft-fg">Нужно внимание: {count}</p>
+      <p className="mt-0.5 line-clamp-2 text-note text-fg-secondary">
         {byAttention(watched, (r) => r.signal as StudentSignal)
           .filter((r) => r.signal?.attention === 'overdue' || r.signal?.attention === 'lost')
           .map((r) => `${r.card.name} — ${r.signal?.overdue ? 'домашка просрочена' : lastSeen(r.info as StudentInfo)}`)
           .join(' · ')}
       </p>
-      <p className="mt-2 text-xs text-fg-muted">
-        {watched.some((r) => r.signal?.lost)
-          ? 'Неделя без занятий — обычно момент, когда стоит написать самому.'
-          : 'Срок домашки прошёл, а сделано не всё.'}
-      </p>
-    </Card>
+    </div>
   )
 }

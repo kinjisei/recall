@@ -206,6 +206,40 @@ export function cardInviteLink(origin: string, code: string): string {
   return `${origin.replace(/\/+$/, '')}/login?join=${encodeURIComponent(code)}`
 }
 
+/** Сортировка списка «Учеников» (макеты d3-5, t6-1). */
+export type RosterSort = 'next' | 'left'
+
+export const ROSTER_SORTS: readonly { id: RosterSort; label: string; hint: string }[] = [
+  { id: 'next', label: 'Ближайший урок', hint: 'сначала тот, у кого урок раньше' },
+  { id: 'left', label: 'Осталось уроков', hint: 'сначала у кого меньше — кому пора платить' },
+]
+
+/**
+ * Порядок строк списка: закреплённые (пробный прошёл — «остаётся?») всегда
+ * сверху; дальше по ключу в выбранном направлении (`desc` — обратный); у кого
+ * ключа нет (уроков нет, оплаты не отмечаются) — в конце в обе стороны:
+ * «пустые» наверху при обратном порядке выглядели бы самыми срочными. Равные —
+ * по имени, чтобы список не перескакивал между открытиями.
+ */
+export function sortRoster<T>(
+  items: readonly T[],
+  { key, desc, pinned, name }: { key: (t: T) => number | null; desc: boolean; pinned: (t: T) => boolean; name: (t: T) => string },
+): T[] {
+  return [...items].sort((a, b) => {
+    const pa = pinned(a)
+    const pb = pinned(b)
+    if (pa !== pb) return pa ? -1 : 1
+    const ka = key(a)
+    const kb = key(b)
+    if (ka !== kb) {
+      if (ka === null) return 1
+      if (kb === null) return -1
+      return desc ? kb - ka : ka - kb
+    }
+    return name(a).localeCompare(name(b), 'ru')
+  })
+}
+
 /** Код как его удобно продиктовать: «K7M 2PX». */
 export function spacedCode(code: string): string {
   return code.length === 6 ? `${code.slice(0, 3)} ${code.slice(3)}` : code

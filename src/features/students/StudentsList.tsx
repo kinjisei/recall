@@ -1,211 +1,318 @@
 // ============================================================================
-// Список «Ученики» (макеты t6-1, d3): фильтр по статусу, поиск, тихая строка
-// мест тарифа, строки карточек. «+ Ученик» — в шапке экрана, одной строкой с
-// заголовком (Ф2.11б-2). Порядок строк и их вторую строку («кем
-// заняться») даёт студия — у ученика в приложении это домашка и регулярность
-// (features/teacher), у карточки без приложения — контакт.
+// Список «Ученики» (макеты t6-1 — телефон, d3-1, d3-3, d3-5 — компьютер;
+// PLAN.md Ф2.17-4б-1): поиск, фильтр по статусу, тихая строка мест тарифа,
+// «Ученики · N» с сортировкой «Ближайший урок / Осталось уроков» и ↑↓,
+// строки карточек и раздел «Группы». «+ Ученик» — в шапке экрана (Ф2.11б-2).
+// Строка: имя, «в приложении», бейджи статуса и домашки; вторая строка —
+// ближайший урок («сегодня 17:00 · IELTS вечер»), справа — остаток уроков.
+// Что во второй строке, порядок и бейдж домашки даёт студия (features/teacher).
+// На компьютере (список рядом с карточкой) — одна карточка во всю высоту:
+// шапка с поиском и фильтром стоит, остальное прокручивается; «/» — к поиску,
+// ↑ ↓ — по ученикам.
 // ============================================================================
-import { useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import {
   CARD_FILTERS,
   matchesFilter,
   matchesQuery,
+  ROSTER_SORTS,
   seatsLine,
   type CardFilter,
+  type RosterSort,
   type SeatsState,
   type StudentCard,
 } from '../../domains/students'
 import { useUrlState } from '../../shared/lib/useUrlState'
 import { Card } from '../../shared/ui/Card'
-import { IconSearch, IconSmartphone } from '../../shared/ui/icons'
+import { ChoiceGroup } from '../../shared/ui/ChoiceGroup'
+import { IconArrowUp, IconCaretDown, IconSearch, IconSmartphone, IconSparkle } from '../../shared/ui/icons'
+import { MenuPanel, MenuRadio, useMenu } from '../../shared/ui/Menu'
 import { RowCard } from '../../shared/ui/RowCard'
 import { Avatar, StatusBadge } from './CardBits'
+import { Avatar as AvatarView } from '../../shared/ui/Avatar'
+import { Badge } from '../../shared/ui/Badge'
 
-/** Поиск появляется, когда учеников столько, что глазами уже долго. */
-const SEARCH_FROM = 7
+/**
+ * Поиск — на компьютере всегда (d3: восемь учеников и поиск), на телефоне —
+ * когда учеников столько, что глазами уже долго (t6-1: восемь — без поиска).
+ */
+const SEARCH_FROM_PHONE = 12
+
+export interface RosterRow {
+  card: StudentCard
+  /** Вторая строка: ближайший урок или вопрос «остаётся?». */
+  line: ReactNode
+  /** Пробный прошёл — строка закреплена сверху, аватар с искрой, строка акцентом. */
+  trialAsk: boolean
+  /** Бейдж домашки рядом с именем («просрочена», «не начата»). */
+  mark: string | null
+  /** Справа — остаток уроков; нет — ничего. */
+  trailing: ReactNode
+  /** Ученик в приложении без места тарифа. */
+  outside: boolean
+}
+
+export interface RosterGroup {
+  id: string
+  title: string
+  line: string
+  to: string
+}
 
 export function StudentsList({
-  cards,
-  detailOf,
-  outsideOf,
-  trailingOf,
+  rows,
+  groups,
+  sort,
   attention,
+  footer,
   seats,
   selectedId,
   canWrite,
+  wide,
   onOpen,
 }: {
-  /** Карточки в порядке показа. */
-  cards: StudentCard[]
-  /** Вторая строка карточки — «кем заняться». */
-  detailOf: (card: StudentCard) => ReactNode
-  /** Ученик в приложении без места тарифа. */
-  outsideOf: (card: StudentCard) => boolean
-  /** Справа в строке — остаток уроков (расписание, Ф2.8); нет — стрелка. */
-  trailingOf?: (card: StudentCard) => ReactNode
+  /** Строки в порядке показа. */
+  rows: RosterRow[]
+  groups: RosterGroup[]
+  sort: { by: RosterSort; desc: boolean; onBy: (by: RosterSort) => void; onFlip: () => void }
   /** Сводка «Нужно внимание» над строками. */
   attention?: ReactNode
+  /** Под строками и группами: строка общего кода (Ф2.11б-2). */
+  footer?: ReactNode
   seats: SeatsState | null
   selectedId: string | null
   /** Без тарифа после пробного — только просмотр (журнал п.41). */
   canWrite: boolean
+  /** Список рядом с карточкой (содержимое от 880): одна карточка во всю высоту. */
+  wide: boolean
   onOpen: (id: string) => void
 }) {
   const [rawFilter, setRawFilter] = useUrlState('filter', (v) => CARD_FILTERS.some((f) => f.id === v))
   const filter = (rawFilter as CardFilter | null) ?? 'all'
   const [query, setQuery] = useState('')
-  const shown = cards.filter((c) => matchesFilter(c, filter) && matchesQuery(c, query))
-  const line = seatsLine(seats)
-  const used = seats?.seats_used ?? 0
-  const total = typeof seats?.seats === 'number' ? seats.seats : 0
+  const shown = rows.filter((r) => matchesFilter(r.card, filter) && matchesQuery(r.card, query))
+  const search = useRef<HTMLInputElement>(null)
+  const many = wide || rows.length >= SEARCH_FROM_PHONE
 
-  return (
-    <div className="flex flex-col gap-3">
-      {!canWrite && (
-        <p className="text-sm text-fg-muted">
-          Тариф закончился — ученики только для просмотра. Пригласить в приложение можно.
-        </p>
-      )}
+  // компьютер: «/» — к поиску, ↑ ↓ — по ученикам (d3-1, d3-3)
+  useEffect(() => {
+    if (!wide) return
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+      if (e.key === '/' && search.current) {
+        e.preventDefault()
+        search.current.focus()
+      } else if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && shown.length) {
+        e.preventDefault()
+        const at = shown.findIndex((r) => r.card.id === selectedId)
+        const next = at === -1 ? 0 : Math.min(Math.max(at + (e.key === 'ArrowDown' ? 1 : -1), 0), shown.length - 1)
+        onOpen(shown[next]!.card.id)
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [wide, shown, selectedId, onOpen])
 
-      {cards.length >= SEARCH_FROM && (
-        <label className="flex min-h-11 items-center gap-2 rounded-xl border border-tint/[0.08] bg-input px-3">
-          <IconSearch size={18} className="flex-none text-fg-muted" />
+  const head = (
+    <>
+      {!canWrite && <p className="text-sm text-fg-muted">Тариф закончился — ученики только для просмотра. Пригласить в приложение можно.</p>}
+      {many && (
+        <label className="flex min-h-11 items-center gap-2 rounded-control-sm bg-input pl-3 pr-2 text-fg-muted ring-1 ring-control-line">
+          <IconSearch size={18} className="flex-none" aria-hidden />
           <input
+            ref={search}
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Найти ученика"
             aria-label="Найти ученика"
-            className="min-w-0 flex-1 bg-transparent py-2 text-sm outline-none"
+            className="min-h-11 min-w-0 flex-1 bg-transparent text-body text-fg outline-none placeholder:text-fg-muted"
           />
+          {wide && (
+            <kbd aria-hidden className="flex h-5 min-w-5 items-center justify-center rounded-md bg-surface px-1.5 font-sans text-caption font-semibold text-fg-muted">
+              /
+            </kbd>
+          )}
         </label>
       )}
+      {/* Телефон — одна строка с прокруткой вбок (t6-1): край строки — до края
+          экрана, видно, что там есть ещё. Компьютер — перенос (d3). */}
+      <ChoiceGroup
+        label="Статус"
+        options={CARD_FILTERS.map((f) => ({ id: f.id, label: f.label }))}
+        value={filter}
+        onChange={(id) => setRawFilter(id === 'all' ? null : id)}
+        className={wide ? '' : '-mx-4 flex-nowrap! overflow-x-auto px-4 scrollbar-none'}
+      />
+    </>
+  )
 
-      {/* Телефон — одна строка с прокруткой вбок (t6-1): перенос давал две
-          полупустые строки над списком; край строки — до края экрана, видно, что
-          там есть ещё. Компьютер — перенос внутри колонки списка (d3). */}
-      <div
-        role="radiogroup"
-        aria-label="Статус"
-        className="-mx-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none] lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0"
-      >
-        {CARD_FILTERS.map((f) => (
-          <button
-            key={f.id}
-            type="button"
-            role="radio"
-            aria-checked={filter === f.id}
-            onClick={() => setRawFilter(f.id === 'all' ? null : f.id)}
-            className={`min-h-11 flex-none rounded-full border px-4 text-sm font-semibold ${
-              filter === f.id
-                ? 'border-accent-line bg-accent-soft text-accent-soft-fg'
-                : 'border-tint/[0.10] text-fg-secondary'
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
-
-      {line && (
-        <p className="flex items-center gap-2 text-sm text-fg-muted" data-seats-line>
-          <IconSmartphone size={15} />
-          <span className="flex-1">{line}</span>
-          <span aria-hidden className="h-1.5 w-14 overflow-hidden rounded-full bg-tint/[0.08]">
-            <span
-              className="block h-full rounded-full bg-accent"
-              style={{ width: `${total ? Math.min(100, (used / total) * 100) : 0}%` }}
-            />
-          </span>
+  const body =
+    rows.length === 0 ? (
+      <Card className="text-center">
+        <p className="font-semibold">Пока ни одного ученика</p>
+        <p className="mt-1 text-sm text-fg-muted">
+          Добавь ученика — карточку можно вести и без приложения, а пригласить в Recall потом, когда понадобится.
         </p>
-      )}
-
-      {attention}
-
-      {cards.length === 0 ? (
-        <Card className="text-center">
-          <p className="font-semibold">Пока ни одного ученика</p>
-          <p className="mt-1 text-sm text-fg-muted">
-            Добавь ученика — карточку можно вести и без приложения, а пригласить в Recall
-            потом, когда понадобится.
-          </p>
-        </Card>
-      ) : shown.length === 0 ? (
-        <p className="py-6 text-center text-sm text-fg-muted">
-          {query ? 'Никого не нашлось' : 'Здесь пока никого'}
-        </p>
-      ) : (
-        <div className="overflow-hidden rounded-2xl border border-tint/[0.08] bg-surface shadow-card">
-          <p className="border-b border-tint/[0.06] px-4 py-2 text-xs font-semibold text-fg-muted">
-            Ученики · {shown.length}
-          </p>
-          <ul className="divide-y divide-tint/[0.06]">
-            {shown.map((c) => (
-              <li key={c.id} data-card-row={c.id}>
-                <CardRow
-                  card={c}
-                  detail={detailOf(c)}
-                  outside={outsideOf(c)}
-                  trailing={trailingOf?.(c)}
-                  selected={c.id === selectedId}
-                  onOpen={() => onOpen(c.id)}
-                />
+      </Card>
+    ) : (
+      <>
+        <Seats seats={seats} />
+        {attention}
+        <div className="flex items-center justify-between gap-2 pl-1" data-roster-head>
+          <span className="text-note font-medium text-fg-muted">Ученики · {shown.length}</span>
+          <SortControl {...sort} />
+        </div>
+        {shown.length === 0 ? (
+          <p className="py-6 text-center text-sm text-fg-muted">{query ? 'Никого не нашлось' : 'Здесь пока никого'}</p>
+        ) : (
+          <ul className={wide ? '-mx-3.5 divide-y divide-line' : 'divide-y divide-line overflow-hidden rounded-row bg-surface shadow-card'}>
+            {shown.map((r) => (
+              <li key={r.card.id} data-card-row={r.card.id}>
+                <Row row={r} selected={r.card.id === selectedId} onOpen={() => onOpen(r.card.id)} />
               </li>
             ))}
           </ul>
-        </div>
+        )}
+        {groups.length > 0 && filter === 'all' && !query && (
+          <>
+            <p className="mt-2 pl-1 text-note font-medium text-fg-muted">Группы · {groups.length}</p>
+            <ul className={wide ? '-mx-3.5 divide-y divide-line' : 'divide-y divide-line overflow-hidden rounded-row bg-surface shadow-card'} data-roster-groups>
+              {groups.map((g) => (
+                <li key={g.id}>
+                  <RowCard flat to={g.to} lead={<AvatarView name={g.title} group strong />} title={g.title} desc={g.line} />
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+        {footer}
+      </>
+    )
+
+  if (!wide) {
+    return (
+      <div className="flex flex-col gap-3">
+        {head}
+        {body}
+      </div>
+    )
+  }
+  // компьютер: карточка во всю высоту — шапка стоит, строки прокручиваются (d3-1)
+  return (
+    <section aria-label="Ученики" className="relative flex h-full flex-col overflow-hidden rounded-row bg-surface shadow-card">
+      <div className="flex flex-none flex-col gap-2.5 border-b border-line p-3.5 pb-2.5">{head}</div>
+      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain px-3.5 pb-8 pt-2.5">{body}</div>
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-linear-to-b from-transparent to-surface" />
+    </section>
+  )
+}
+
+/** «В приложении 3 из 5 мест тарифа» и полоска по местам (t6-1). */
+function Seats({ seats }: { seats: SeatsState | null }) {
+  const line = seatsLine(seats)
+  if (!line) return null
+  const used = seats?.seats_used ?? 0
+  const total = typeof seats?.seats === 'number' ? seats.seats : 0
+  return (
+    <p className="flex items-center gap-2 px-1 text-note text-fg-secondary" data-seats-line>
+      <IconSmartphone size={15} aria-hidden className="flex-none text-fg-muted" />
+      <span className="flex-1">{line}</span>
+      {total > 0 && total <= 10 ? (
+        // по одной черточке на место — до 10 мест (Mini 5); больше — сплошная полоса
+        <span aria-hidden className="flex flex-none gap-0.75">
+          {Array.from({ length: total }, (_, i) => (
+            <i key={i} className={`h-1.5 w-3.5 rounded-full ${i < used ? 'bg-accent' : 'bg-line'}`} />
+          ))}
+        </span>
+      ) : (
+        <span aria-hidden className="h-1.5 w-14 flex-none overflow-hidden rounded-full bg-line">
+          <span className="block h-full rounded-full bg-accent" style={{ width: `${total ? Math.min(100, (used / total) * 100) : 0}%` }} />
+        </span>
+      )}
+    </p>
+  )
+}
+
+/** «Ближайший урок ⌄» — меню из двух порядков (d3-5) и ↑↓ — направление. */
+function SortControl({ by, desc, onBy, onFlip }: { by: RosterSort; desc: boolean; onBy: (by: RosterSort) => void; onFlip: () => void }) {
+  const { open, leaving, close, trigger, box } = useMenu()
+  const current = ROSTER_SORTS.find((s) => s.id === by) ?? ROSTER_SORTS[0]!
+  return (
+    <div ref={box} className="relative flex items-center gap-1">
+      <button
+        type="button"
+        {...trigger}
+        className={`inline-flex min-h-11 items-center gap-0.5 whitespace-nowrap rounded-control-sm pl-2.5 pr-1.5 text-sm font-semibold transition-colors duration-(--dur-1) ${
+          open ? 'bg-accent-soft text-accent-soft-fg' : 'text-accent-strong active:bg-ghost-press'
+        }`}
+      >
+        {current.label}
+        <IconCaretDown size={18} aria-hidden />
+      </button>
+      <button
+        type="button"
+        onClick={onFlip}
+        aria-label={`${current.label}, ${desc ? 'по убыванию' : 'по возрастанию'}. Нажми, чтобы сменить`}
+        className="flex size-11 items-center justify-center rounded-control-sm bg-accent-soft text-accent-soft-fg active:bg-accent-soft-press"
+      >
+        <IconArrowUp size={20} aria-hidden className={`transition-transform duration-(--dur-2) ${desc ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <MenuPanel leaving={leaving} title="Сортировать" className="right-0 top-full mt-1 w-68 origin-top-right">
+          {ROSTER_SORTS.map((s) => (
+            <MenuRadio
+              key={s.id}
+              checked={s.id === by}
+              label={s.label}
+              hint={s.hint}
+              onSelect={() => {
+                onBy(s.id)
+                close()
+              }}
+            />
+          ))}
+        </MenuPanel>
       )}
     </div>
   )
 }
 
-/**
- * Строка ученика (общий RowCard в списке): инициалы, имя, значок «в
- * приложении», бейдж не-«занимается» и вторая строка от студии.
- */
-function CardRow({
-  card,
-  detail,
-  outside,
-  trailing,
-  selected,
-  onOpen,
-}: {
-  card: StudentCard
-  detail: ReactNode
-  outside: boolean
-  trailing?: ReactNode
-  selected: boolean
-  onOpen: () => void
-}) {
+/** Строка ученика (общий RowCard в списке): аватар, имя, бейджи, урок, остаток. */
+function Row({ row, selected, onOpen }: { row: RosterRow; selected: boolean; onOpen: () => void }) {
+  const { card } = row
   return (
     <RowCard
       flat
       current={selected}
       onClick={onOpen}
-      lead={<Avatar name={card.name} inApp={card.inApp} />}
-      trailing={trailing ?? undefined}
+      lead={row.trialAsk ? <AvatarView name={card.name} cardOnly Icon={IconSparkle} /> : <Avatar name={card.name} inApp={card.inApp} />}
+      trailing={row.trailing ?? <span aria-hidden />}
       title={
         <span className="flex min-w-0 items-center gap-1.5">
-          <span className="truncate font-semibold">{card.name}</span>
-          {card.inApp && (
-            <span title="В приложении" className="flex-none text-fg-muted">
-              <IconSmartphone size={14} />
+          <span className="truncate">{card.name}</span>
+          {card.inApp && <IconSmartphone size={14} aria-label="в приложении" className="flex-none text-fg-muted" />}
+          {card.status !== 'active' && <StatusBadge status={card.status} small />}
+          {row.mark && (
+            <span title={`Домашка ${row.mark}`} className="flex-none">
+              <Badge tone="warning" small>
+                {row.mark}
+              </Badge>
             </span>
           )}
-          {card.status !== 'active' && <StatusBadge status={card.status} />}
         </span>
       }
       desc={
         <>
-          {detail}
-          {outside && (
-            <span className="mt-1 inline-block rounded-lg bg-warning/10 px-2 py-0.5 text-xs text-warning-soft-fg">
-              Вне мест тарифа
-            </span>
+          <span className={row.trialAsk ? 'font-medium text-accent-strong' : ''}>{row.line}</span>
+          {row.outside && (
+            <span className="mt-1 block w-fit rounded-lg bg-warning-soft px-2 py-0.5 text-xs text-warning-soft-fg">Вне мест тарифа</span>
           )}
         </>
       }
     />
   )
 }
+

@@ -96,7 +96,7 @@ export function RowCard({
           </span>
         )}
         {desc && (
-          <span className="truncate text-note tabular-nums text-fg-muted">{desc}</span>
+          <span className={`truncate text-note tabular-nums ${current ? 'text-accent-soft-fg' : 'text-fg-muted'}`}>{desc}</span>
         )}
       </span>
 
@@ -107,8 +107,9 @@ export function RowCard({
   // тень — только у сплошной строки и только в светлой теме (shadow-card в
   // тёмной нулевая); пунктирное «предложение» лежит без подложки. Рамка
   // прозрачная у сплошной — чтобы строки с пунктиром и без стояли ровно.
+  // выбранная рядом с подробностями (d3-1): заливка accent-soft и полоска акцента 3 px слева
   const look = flat
-    ? `${current ? 'bg-accent-soft/60' : 'hover:bg-row-press active:bg-row-press data-press:bg-row-press'} transition-colors duration-(--dur-1)`
+    ? `${current ? 'relative bg-accent-soft before:absolute before:inset-y-0 before:left-0 before:w-0.75 before:bg-accent' : 'hover:bg-row-press active:bg-row-press data-press:bg-row-press'} transition-colors duration-(--dur-1)`
     : `rounded-row border transition-colors duration-(--dur-1) ${
         dashed
           ? 'border-dashed border-accent-line bg-transparent active:bg-ghost-press'
@@ -116,7 +117,7 @@ export function RowCard({
             ? 'border-line bg-transparent active:bg-ghost-press'
             : 'border-transparent bg-surface shadow-card hover:bg-row-press active:bg-row-press'
       }`
-  const cls = `flex min-h-16 w-full items-center gap-3 py-2.5 pl-4 pr-3.5 text-fg disabled:cursor-not-allowed disabled:opacity-50 ${look} ${muted ? 'opacity-75' : ''} ${className}`
+  const cls = `flex min-h-16 w-full items-center gap-3 py-2.5 pl-4 pr-3.5 ${current ? 'text-accent-soft-fg' : 'text-fg'} disabled:cursor-not-allowed disabled:opacity-50 ${look} ${muted ? 'opacity-75' : ''} ${className}`
 
   if (to) {
     return (

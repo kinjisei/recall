@@ -10,19 +10,21 @@
 import type { ReactNode } from 'react'
 import type { IconLike } from './icons'
 
-export type BadgeTone = 'accent' | 'success' | 'neutral' | 'outline'
+export type BadgeTone = 'accent' | 'success' | 'neutral' | 'outline' | 'warning'
 
 const TONES: Record<BadgeTone, string> = {
   accent: 'bg-accent-soft text-accent-soft-fg',
   success: 'bg-success-soft text-success-strong',
   neutral: 'bg-input text-fg-secondary',
   outline: 'ring-1 ring-inset ring-control-line text-fg-muted',
+  warning: 'bg-warning-soft text-warning-soft-fg',
 }
 
 export function Badge({
   tone = 'neutral',
   Icon,
   dot = false,
+  small = false,
   children,
   className = '',
 }: {
@@ -31,12 +33,14 @@ export function Badge({
   Icon?: IconLike
   /** Точка цветом текста вместо значка («занимается»). */
   dot?: boolean
+  /** Маленький — в строке списка (t6-1, d3): высота 22, текст 12. */
+  small?: boolean
   children: ReactNode
   className?: string
 }) {
   return (
     <span
-      className={`inline-flex h-7 flex-none items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 text-note font-medium ${TONES[tone]} ${className}`}
+      className={`inline-flex flex-none items-center gap-1.5 whitespace-nowrap rounded-full font-medium ${small ? 'h-5.5 px-2 text-xs' : 'h-7 px-2.5 text-note'} ${TONES[tone]} ${className}`}
     >
       {dot && <span aria-hidden className="size-2 rounded-full bg-current" />}
       {Icon && <Icon size={14} />}

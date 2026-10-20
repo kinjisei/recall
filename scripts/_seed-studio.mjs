@@ -125,9 +125,11 @@ export function studio(prefix) {
     const cardOf = (u) => cards.find((c) => c.user_id === u.id)?.id
     const [ca, cs, cm] = [cardOf(a), cardOf(s), cardOf(m)]
     const plain = [['Нұрсұлтан Ахметов', 'trial', '+7 705 220 11 90'], ['Камила Оспан', 'active', '+7 707 334 56 12'], ['Тимур Ким', 'active', '@timur_kim'], ['Алина Ли', 'active', '+7 701 888 02 45'], ['Данияр Беков', 'paused', '+7 747 100 20 30']]
+    const card = {}
     for (const [name, status, contact] of plain) {
       const id = must(await t.client.rpc('create_student_card', { p_name: name, p_status: status === 'paused' ? 'active' : status, p_contact: contact }), name)
       if (status === 'paused') must(await t.client.rpc('set_student_card_status', { p_card: id, p_status: 'paused' }), 'пауза')
+      card[name.split(' ')[0]] = id
     }
 
     // уроки Айгерим: прошлые (списаны), ближайший и ещё два на неделе.
@@ -150,6 +152,31 @@ export function studio(prefix) {
     must(await t.client.rpc('create_lesson', { p_kind: 'individual', p_starts_at: atNext(1, -2), p_minutes: 60, p_cards: [cs] }), 'урок Әсел')
     must(await t.client.rpc('add_paid_lessons', { p_card: cs, p_count: 4 }), 'оплата Әсел')
     must(await t.client.rpc('add_paid_lessons', { p_card: cm, p_count: 1 }), 'оплата Мейір')
+
+    // Как в общем контексте макетов d3, t6 (Ф2.17-4б-1): группы «IELTS вечер»
+    // (Әсел, Мейір, Камила, 17:00 — сегодня и через день) и «Разговорный клуб»
+    // (сб 11:00), пробный Нұрсұлтана прошёл вчера — «остаётся?», у Тимура
+    // оплачен 1 урок, у Алины минус 2, у Камилы 8.
+    const day0 = local.toISOString().slice(0, 10)
+    const iso = ((local.getUTCDay() + 6) % 7) + 1
+    must(await t.client.rpc('create_series', {
+      p_kind: 'group', p_weekdays: [iso, ((iso + 1) % 7) + 1], p_time: '17:00', p_minutes: 90, p_every_weeks: 1,
+      p_starts_on: day0, p_cards: [cs, cm, card['Камила']], p_title: 'IELTS вечер',
+    }), 'группа IELTS вечер')
+    must(await t.client.rpc('create_series', {
+      p_kind: 'group', p_weekdays: [6], p_time: '11:00', p_minutes: 60, p_every_weeks: 1,
+      p_starts_on: day0, p_cards: [ca, card['Тимур'], card['Алина'], card['Камила']], p_title: 'Разговорный клуб',
+    }), 'группа Разговорный клуб')
+    must(await t.client.rpc('create_lesson', { p_kind: 'trial', p_starts_at: atNext(-1, -3), p_minutes: 45, p_cards: [card['Нұрсұлтан']] }), 'пробный')
+    must(await t.client.rpc('add_paid_lessons', { p_card: card['Тимур'], p_count: 1 }), 'оплата Тимура')
+    must(await t.client.rpc('create_lesson', { p_kind: 'individual', p_starts_at: atNext(5, -9), p_minutes: 60, p_cards: [card['Тимур']] }), 'урок Тимура')
+    must(await t.client.rpc('add_paid_lessons', { p_card: card['Алина'], p_count: 2 }), 'оплата Алины')
+    for (const d of [-6, -5, -4, -3]) {
+      const l = must(await t.client.rpc('create_lesson', { p_kind: 'individual', p_starts_at: atNext(d, -3), p_minutes: 60, p_cards: [card['Алина']] }), 'прошлый урок Алины')
+      must(await t.client.rpc('mark_lesson_participant', { p_lesson: l, p_card: card['Алина'], p_outcome: 'present' }), 'отметка Алины')
+    }
+    must(await t.client.rpc('create_lesson', { p_kind: 'individual', p_starts_at: atNext(4, -3), p_minutes: 60, p_cards: [card['Алина']] }), 'урок Алины')
+    must(await t.client.rpc('add_paid_lessons', { p_card: card['Камила'], p_count: 8 }), 'оплата Камилы')
 
     // домашка Айгерим: слова (частично), чтение, письмо, свободный пункт (сделан)
     const due = new Date(Date.parse(now) + 5 * 86400_000).toISOString()
