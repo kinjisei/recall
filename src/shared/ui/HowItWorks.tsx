@@ -17,12 +17,11 @@
 // Вариант значком (?) — для экрана, где заголовок, значок и действия стоят
 // одной строкой («Ученики», PLAN.md Ф2.11б-2): строка «Как это работает?»
 // отдельно занимала место над списком. Значок — в строке заголовка
-// (HintButton), пояснение — под ней (HintPanel); раскрыто один раз, при
-// первом заходе на экран (useHint): тому, кто пришёл впервые, объяснение
-// нужно сразу, дальше оно ждёт за значком. Запоминаем только «уже видел».
+// (HintButton), пояснение — под ней (HintPanel); по умолчанию свёрнуто и
+// открывается только значком (useHint; решение владельца 20.10.2026:
+// раскрытое при первом заходе пояснение занимало пол-экрана над списком).
 // ============================================================================
-import { useEffect, useState, type ReactNode } from 'react'
-import { readRaw, writeRaw } from '../lib/storage'
+import { useState, type ReactNode } from 'react'
 import { IconHint, IconCaretDown } from './icons'
 import { Reveal } from './Reveal'
 import { BoltText } from './Bolt'
@@ -57,21 +56,9 @@ export function HowItWorks({
   )
 }
 
-/**
- * Раскрыто ли пояснение экрана `screen`: при первом заходе — да, дальше — по
- * нажатию. «Уже видел» запоминается, когда пояснение побыло на экране
- * (`shown`) секунду: пришёл по ссылке сразу в карточку ученика, где шапки
- * нет, — пояснение дождётся первого захода в сам список. Секунда — потому
- * что экран узнаёт «шапки нет» уже после первой отрисовки.
- */
-export function useHint(screen: string, shown = true): { open: boolean; toggle: () => void } {
-  const key = `recall.hint-seen.${screen}`
-  const [open, setOpen] = useState(() => readRaw(key) === null)
-  useEffect(() => {
-    if (!shown) return
-    const t = setTimeout(() => writeRaw(key, '1'), 1000)
-    return () => clearTimeout(t)
-  }, [key, shown])
+/** Раскрыто ли пояснение за значком (?): свёрнуто, пока не нажали; как у HowItWorks, не запоминаем. */
+export function useHint(): { open: boolean; toggle: () => void } {
+  const [open, setOpen] = useState(false)
   return { open, toggle: () => setOpen((v) => !v) }
 }
 

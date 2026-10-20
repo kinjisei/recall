@@ -88,10 +88,9 @@ try {
     await page.type('#f-password', PASS)
     await page.click('button[type="submit"]')
     await page.waitForFunction(() => location.pathname === '/schedule', { timeout: 30000, polling: 250 })
-    // «Ученики» дважды: первый заход — с раскрытым «Как это работает?»
-    // (Ф2.11б-2), второй — как дальше всегда, пояснение за значком (?)
+    // «Ученики» — пояснение за значком (?), закрыто (решение владельца 20.10.2026)
     // 6–8 — хабы ученика из «Моей учёбы»: «назад» у заголовка (Ф2.18)
-    for (const [name, path] of [['1-schedule', '/schedule'], ['2-tasks', '/tasks'], ['3-materials', '/tasks?tab=materials'], ['4b-students-first', '/teacher'], ['4-students', '/teacher'], ['5-learn', '/learn'], ['6-study', '/study'], ['7-practice', '/practice'], ['8-conversation', '/conversation']]) {
+    for (const [name, path] of [['1-schedule', '/schedule'], ['2-tasks', '/tasks'], ['3-materials', '/tasks?tab=materials'], ['4-students', '/teacher'], ['5-learn', '/learn'], ['6-study', '/study'], ['7-practice', '/practice'], ['8-conversation', '/conversation']]) {
       await page.goto(`${APP_URL}${path}`, { waitUntil: 'networkidle2' })
       await sleep(2500)
       const file = `${DIR}/${name}-${width}-${theme}.png`

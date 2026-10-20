@@ -173,7 +173,12 @@ try {
     return { tops, oneRow: tops.every((t) => t !== null && Math.abs(t - tops[0]) <= 6) }
   })
   check('шапка одной строкой: «Ученики (?) ↻ + Ученик»', head.oneRow, JSON.stringify(head.tops))
-  check('«Как это работает?» раскрыто при первом заходе', /Здесь все твои ученики/.test(txt))
+  // пояснение — только по значку (?): раскрытое при первом заходе занимало
+  // пол-экрана над списком (решение владельца 20.10.2026)
+  check('«Как это работает?» закрыто, пока не нажал (?)', !/Здесь все твои ученики/.test(txt))
+  await te.evaluate(() => document.querySelector('main header [aria-label="Как это работает?"]')?.click())
+  check('…(?) раскрывает пояснение', await waitText(te, /Здесь все твои ученики/))
+  await te.evaluate(() => document.querySelector('main header [aria-label="Как это работает?"]')?.click())
   const filterRows = await te.evaluate(() => new Set([...document.querySelectorAll('[aria-label="Статус"] [role="radio"]')].map((r) => r.offsetTop)).size)
   check('фильтры — одной строкой (прокрутка вбок)', filterRows === 1, `строк: ${filterRows}`)
   const generalCode = await te.$eval('[data-general-code]', (el) => el.getAttribute('data-general-code')).catch(() => null)

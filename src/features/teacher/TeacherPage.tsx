@@ -63,7 +63,7 @@ function StudentsScreen() {
   const [adding, setAdding] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   // шапки (и пояснения) нет, пока на телефоне открыта карточка
-  const hint = useHint('teacher-students', !inner)
+  const hint = useHint()
 
   // «Загрузка…» только при первом открытии: при обновлениях список остаётся
   // на экране, иначе раскрытые колоды учеников схлопываются при каждом действии.

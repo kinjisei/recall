@@ -94,7 +94,8 @@ export function StudentsList({
   const search = useRef<HTMLInputElement>(null)
   const many = wide || rows.length >= SEARCH_FROM_PHONE
 
-  // компьютер: «/» — к поиску, ↑ ↓ — по ученикам (d3-1, d3-3)
+  // компьютер: «/» — к поиску (значка в поле нет — решение владельца
+  // 20.10.2026), ↑ ↓ — по ученикам (d3-1, d3-3)
   useEffect(() => {
     if (!wide) return
     const onKey = (e: KeyboardEvent) => {
@@ -130,21 +131,19 @@ export function StudentsList({
             aria-label="Найти ученика"
             className="min-h-11 min-w-0 flex-1 bg-transparent text-body text-fg outline-none placeholder:text-fg-muted"
           />
-          {wide && (
-            <kbd aria-hidden className="flex h-5 min-w-5 items-center justify-center rounded-md bg-surface px-1.5 font-sans text-caption font-semibold text-fg-muted">
-              /
-            </kbd>
-          )}
         </label>
       )}
       {/* Телефон — одна строка с прокруткой вбок (t6-1): край строки — до края
-          экрана, видно, что там есть ещё. Компьютер — перенос (d3). */}
+          экрана, видно, что там есть ещё. Компьютер — перенос (d3). Строка с
+          прокруткой режет и по высоте, а рамка чипа — кольцо снаружи кнопки:
+          py-1 даёт ей место (иначе верх и низ рамки срезаны), -my-1 оставляет
+          отступы как были. */}
       <ChoiceGroup
         label="Статус"
         options={CARD_FILTERS.map((f) => ({ id: f.id, label: f.label }))}
         value={filter}
         onChange={(id) => setRawFilter(id === 'all' ? null : id)}
-        className={wide ? '' : '-mx-4 flex-nowrap! overflow-x-auto px-4 scrollbar-none'}
+        className={wide ? '' : '-mx-4 -my-1 flex-nowrap! overflow-x-auto px-4 py-1 scrollbar-none'}
       />
     </>
   )
