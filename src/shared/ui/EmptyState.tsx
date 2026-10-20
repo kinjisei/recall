@@ -19,7 +19,7 @@ export function EmptyState({
   title: string
   /** Пояснение под заголовком. */
   children?: ReactNode
-  /** Действие (по листу — одно), по центру. */
+  /** Действие (по листу — одно), по центру; несколько — столбиком одной ширины, по самой длинной. */
   actions?: ReactNode
   className?: string
 }) {
@@ -32,7 +32,8 @@ export function EmptyState({
       )}
       <h2 className="text-lg font-semibold text-fg">{title}</h2>
       {children && <p className="max-w-sm text-body text-balance text-fg-secondary">{children}</p>}
-      {actions && <div className="mt-1.5 flex flex-col items-center gap-2">{actions}</div>}
+      {/* сетка в одну колонку: кнопки тянутся до самой длинной («Новый урок» — шириной «Добавить первого ученика») */}
+      {actions && <div className="mt-1.5 grid gap-2">{actions}</div>}
     </div>
   )
 }

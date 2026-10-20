@@ -5,7 +5,10 @@
 //   tabs    — строка кнопок rounded-lg (грамматика, глаголы, читалки) — дефолт;
 //   segment — капсула rounded-full с фоном-контейнером (Диалог: Чат/Письмо);
 //             `stretch` — поровну на всю ширину, поля 8, а не 16: ячейки и так
-//             делят ширину; `small` — длинные подписи 14 (`.seg2` макетов t5-2
+//             делят ширину. Поровну, пока слова влезают; не влезает — вкладка
+//             не уже своего слова (min-w-min), остальные делят остаток
+//             («Индивидуальный» на 390 — ~131 / 110 / 110; решение владельца
+//             20.10.2026: раньше слово вылезало за капсулу). `small` — длинные подписи 14 (`.seg2` макетов t5-2
 //             и d2-2: «Только этот урок / Этот и все следующие» — при 15 на 390
 //             вторая переносилась на две строки; на 320 перенос остаётся —
 //             лучше двух строк, чем подписи за краем капсулы);
@@ -97,8 +100,8 @@ export function TabPicker<T extends string>({
             role="tab"
             aria-selected={isActive}
             onClick={() => onChange(o.id)}
-            className={`relative flex min-h-11 items-center justify-center gap-1.5 transition-colors duration-(--dur-1) ease-out ${stretch ? 'flex-1 px-2' : 'px-4'} ${
-              segment ? `min-w-27.5 rounded-full ${small ? 'text-sm' : 'text-body'}` : 'rounded-lg text-sm'
+            className={`relative flex min-h-11 items-center justify-center gap-1.5 transition-colors duration-(--dur-1) ease-out ${stretch ? 'min-w-min flex-1 px-2' : 'px-4'} ${
+              segment ? `${stretch ? '' : 'min-w-27.5'} rounded-full ${small ? 'text-sm' : 'text-body'}` : 'rounded-lg text-sm'
             } ${isActive ? active : inactive}`}
           >
             {segment && isActive && <span aria-hidden className="absolute inset-0.75 rounded-full bg-segment shadow-segment" />}

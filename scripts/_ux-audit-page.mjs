@@ -1,8 +1,9 @@
 // ============================================================================
 // Проверка страницы для UX-аудитов (scripts/ux-audit.mjs — экраны ученика,
 // scripts/ux-audit-schedule.mjs — расписание учителя): контраст текста,
-// тач-цели ≥44×44, подписи у полей и кнопок-иконок. Функция уходит в
-// страницу целиком (page.evaluate) — снаружи ничего не берёт.
+// тач-цели ≥44×44, подписи у полей и кнопок-иконок, текст не шире своей
+// кнопки. Функция уходит в страницу целиком (page.evaluate) — снаружи ничего
+// не берёт.
 // ============================================================================
 
 /**
@@ -164,6 +165,38 @@ export function auditPage(rootSel) {
     const labelled = el.getAttribute('aria-label') || el.getAttribute('aria-labelledby') || el.title
     if (!hasText && !labelled)
       issues.push({ type: 'label', detail: `кнопка-иконка без aria-label: <${el.tagName.toLowerCase()} class="${(el.className || '').toString().slice(0, 50)}">` })
+  }
+
+  // ---- 4. Текст не вылезает из своей кнопки ----
+  // Вкладка «Индивидуальный» в «Новом уроке» на 390 была уже своего слова:
+  // текст выходил за капсулу, а контраст и цели касания этого не видят
+  // (Ф2.17-4б-3, замечание владельца по снимкам). Мерим сам текст (Range), а
+  // не scrollWidth: счётчик сбоку кнопки стоит снаружи нарочно (absolute), а
+  // обрезка с многоточием (overflow ≠ visible) — тоже нарочно.
+  for (const el of root.querySelectorAll('button, a, [role="button"], [role="tab"], [role="radio"]')) {
+    if (!visible(el) || getComputedStyle(el).display === 'inline') continue
+    const box = el.getBoundingClientRect()
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT)
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+      if (!n.textContent.trim()) continue
+      let skip = false
+      for (let p = n.parentElement; p; p = p.parentElement) {
+        const cs = getComputedStyle(p)
+        if (cs.overflowX !== 'visible') skip = true
+        if (p === el || skip) break
+        if (cs.position === 'absolute' || cs.position === 'fixed') skip = true
+      }
+      if (skip) continue
+      const range = document.createRange()
+      range.selectNodeContents(n)
+      const r = range.getBoundingClientRect()
+      if (r.width < 1 || (r.left >= box.left - 1 && r.right <= box.right + 1)) continue
+      issues.push({
+        type: 'overflow',
+        detail: `текст шире кнопки на ${Math.round(Math.max(box.left - r.left, r.right - box.right))} px — <${el.tagName.toLowerCase()}> «${snippet(el)}» (${Math.round(box.width)} px)`,
+      })
+      break
+    }
   }
 
   return issues
