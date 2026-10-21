@@ -19,6 +19,7 @@
 // второй тест поверх ждущего. Числа — из общей диагностики (lib/diagnostics),
 // второго счёта рядом нет.
 // ============================================================================
+import { dateAt } from '../../domains/schedule'
 import type { StudentDiagnostics } from '../../lib/diagnostics'
 import { listPlacements, type PlacementRequest } from '../../lib/placement'
 import { currentWeekIndex, getActivePlan } from '../../lib/studyPlan'
@@ -189,7 +190,7 @@ function placementState(rows: PlacementRequest[], level: string | null): TileSta
   if (rows.some((r) => r.status === 'assigned')) return { text: 'ждём результат' }
   const done = rows.find((r) => r.status === 'done' && r.result_level)
   if (done) {
-    const date = done.completed_at && new Date(done.completed_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
+    const date = done.completed_at && dateAt(done.completed_at)
     return { text: date ? `${done.result_level} · ${date}` : `${done.result_level}` }
   }
   if (level) return { text: level }

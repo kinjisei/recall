@@ -37,7 +37,23 @@ export const ChatWindow = forwardRef<HTMLDivElement, { height: number | null; ch
 )
 
 /** Пузырь реплики: свой — справа, акцентом; ответ — слева, поверхностью. */
-export function ChatBubble({ mine, children }: { mine: boolean; children: ReactNode }) {
+/**
+ * Реплика. `inCard` — превью переписки внутри карточки (d12, «Диалог» на
+ * «Моей учёбе»): на поверхности карточки пузырь AI — подложкой поля, свой —
+ * мягким акцентом, без рамок и тени, поля плотнее.
+ */
+export function ChatBubble({ mine, inCard = false, children }: { mine: boolean; inCard?: boolean; children: ReactNode }) {
+  if (inCard) {
+    return (
+      <div
+        className={`max-w-[88%] whitespace-pre-wrap rounded-control px-3 py-2.25 text-body ${
+          mine ? 'self-end rounded-br-md bg-accent-soft text-accent-soft-fg' : 'self-start rounded-bl-md bg-input text-fg'
+        }`}
+      >
+        {children}
+      </div>
+    )
+  }
   return (
     <div
       className={`max-w-[min(85%,var(--container-bubble))] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-body leading-relaxed text-fg ${

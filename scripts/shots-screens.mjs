@@ -49,6 +49,9 @@
  *   writing-new — «Новое письмо» панелью, вопрос придумал AI (d9-2; вопрос —
  *                 черновиком, AI не зовётся);
  *   guide       — методичка, прокручена до раздела 2 (d9-3), снимок окном.
+ * Заход 4г-1 — тест уровня и программа (d11), «Моя учёба» (d12): экраны и
+ * данные — `_shots-4g.mjs` (placement, placement-empty, program-form,
+ * program-draft, program-saved, program-student, learn, learn-empty).
  * Аудит у них — по шторке или диалогу (`audit`), а не по <main> под
  * затемнением; снимок — ровно окном (`overlay`), как кадры t5-2 и d2-2.
  * Ширины 390 и 1280 — в четырёх вариантах вида («Сумерки» и «Закат» ×
@@ -58,7 +61,7 @@
  * красная строка в итоге. Телефон снимается окном во всю высоту страницы.
  *
  * Запуск: npm run dev:test, затем node scripts/shots-screens.mjs [папка]
- * [--only home|students|cancel|tasks|materials|wizard|writing] [--name экран,экран] (по умолчанию shots-screens/,
+ * [--only home|students|cancel|tasks|materials|wizard|writing|program|learn] [--name экран,экран] (по умолчанию shots-screens/,
  * все экраны; --name — только эти снимки, для быстрой сверки). ~10 мин.
  */
 import { spawn } from 'node:child_process'
@@ -69,6 +72,7 @@ import { APP_URL } from './_env.mjs'
 import { PASS, admin, must, sql, studio } from './_seed-studio.mjs'
 import { settleAnimations, settledScreenshot, waitForData } from './_shots.mjs'
 import { auditPage } from './_ux-audit-page.mjs'
+import { shotsLearn, shotsProgram } from './_shots-4g.mjs'
 
 if (process.argv.includes('--prod')) {
   console.error('Снимки заводят аккаунты — только тестовая база (npm run dev:test).')
@@ -98,15 +102,21 @@ async function newPage(width) {
   await page.setViewport(width < 600 ? { width, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true } : { width, height: width >= 1440 ? 900 : 800 })
   await page.evaluateOnNewDocument(() => {
     try {
-      localStorage.setItem('recall.lang', 'en')
+      // язык — английский студии, если снимок не попросил другой (shots.lang: «Моя учёба» на испанском)
+      localStorage.setItem('recall.lang', localStorage.getItem('shots.lang') || 'en')
       localStorage.setItem('recall.onboarded', '1')
     } catch {
       /* about:blank */
     }
-    // снимки мастера: AI не зовём — запрос висит, экран остаётся «AI пишет»
+    // AI не зовём: снимки мастера — запрос висит («AI пишет»); shots.aiReply —
+    // готовый ответ без сервера (черновик программы, 4г-1)
     const orig = window.fetch
-    window.fetch = (input, init) =>
-      String(input?.url ?? input).includes('/api/gemini') && localStorage.getItem('shots.aiHang') === '1' ? new Promise(() => {}) : orig(input, init)
+    window.fetch = (input, init) => {
+      if (!String(input?.url ?? input).includes('/api/gemini')) return orig(input, init)
+      const reply = localStorage.getItem('shots.aiReply')
+      if (reply) return Promise.resolve(new Response(JSON.stringify({ text: reply }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
+      return localStorage.getItem('shots.aiHang') === '1' ? new Promise(() => {}) : orig(input, init)
+    }
   })
   return page
 }
@@ -252,7 +262,7 @@ const askOn = (label) => async (page) => {
 try {
   mkdirSync(DIR, { recursive: true })
   console.log('── студия')
-  const { t, a, s, solo, ca, card, wa, ma, wt } = await st.seed()
+  const { t, a, s, solo, ca, cm, card, wa, ma, wt } = await st.seed()
   const PORT = 9700 + Math.floor(Math.random() * 200)
   spawn(EDGE, ['--headless=new', '--disable-gpu', `--remote-debugging-port=${PORT}`, `--user-data-dir=${profileDir('shots-screens')}`, '--no-first-run', 'about:blank'], { detached: true, stdio: 'ignore' }).unref()
   for (let i = 0; i < 30 && !browser; i++) {
@@ -394,6 +404,14 @@ try {
     must(await admin.from('writing_task_assignments').update({ status: 'reviewed' }).eq('id', wa), 'письмо проверено')
     must(await admin.from('material_assignments').update({ status: 'reviewed' }).eq('id', ma), 'задание проверено')
     await screen(t.email, [{ name: 'tasks-empty', path: '/tasks', expect: /Всё проверено/ }])
+  }
+  if (!ONLY || ONLY === 'program') {
+    console.log('── «Тест уровня» и «Программа»')
+    await shotsProgram({ screen, sql, must, t, a, ca, cm, sleep })
+  }
+  if (!ONLY || ONLY === 'learn') {
+    console.log('── «Моя учёба»')
+    await shotsLearn({ screen, sql, admin, must, t })
   }
   if (!ONLY || ONLY === 'home') {
     const word = /Слово дня/

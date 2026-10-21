@@ -1,53 +1,43 @@
 // ============================================================================
-// «План дня» — настройка ежедневных пунктов ученика (раскрывашка в карточке
-// ученика). Слова включены всегда (ядро FSRS); учитель добавляет 1-3 пункта;
-// переключатель «авто» подмешивает несданные задания и активные квесты.
-// Ничего не выбрано (null) — приложение строит умный дефолт из 3 пунктов.
-// Хранение: teacher_students.daily_plan через RPC set_daily_plan.
+// «План дня» — что ученик делает каждый день (карточка под программой, макет
+// d11-3): «Слова (повторение)» — всегда в плане (ядро FSRS); учитель добавляет
+// чтение, грамматику, речь, диалог; «Задания и квесты» сами подмешивают
+// несданные задания и активные квесты. Ничего не выбрано (null) — приложение
+// строит свой план из 3 пунктов («Вернуть план приложения»).
+// Вид — карточка раздела со строками-галочками и «Сохранить план» справа от
+// заголовка; подписи — что пункт делает сейчас (журнал п.76 (9)): с неделей
+// программы план дня не связан. Хранение: teacher_students.daily_plan через
+// RPC set_daily_plan.
 // ============================================================================
-import { useCallback, useState } from 'react'
-import { Button } from '../../shared/ui/Button'
-import { LoadError } from '../../shared/ui/LoadError'
+import { useState } from 'react'
+import { getStudentDailyPlan, setDailyPlan, type DailyPlanConfig, type PlanKind } from '../../lib/dailyPlan'
 import { useAsyncData } from '../../shared/lib/useAsyncData'
+import { Button } from '../../shared/ui/Button'
+import { IconCheck } from '../../shared/ui/icons'
+import { LoadError } from '../../shared/ui/LoadError'
 import { RowsSkeleton } from '../../shared/ui/Loading'
-import {
-  getStudentDailyPlan,
-  setDailyPlan,
-  type DailyPlanConfig,
-  type PlanKind,
-} from '../../lib/dailyPlan'
+import { SectionCard } from './sectionBits'
 
-const KIND_LABELS: { kind: PlanKind; label: string }[] = [
-  { kind: 'reader', label: 'Чтение' },
-  { kind: 'grammar', label: 'Грамматика' },
-  { kind: 'pronunciation', label: 'Речь' },
-  { kind: 'conversation', label: 'Диалог с AI' },
+const KINDS: { kind: PlanKind; label: string; hint: string }[] = [
+  { kind: 'reader', label: 'Чтение', hint: 'текст и новые слова' },
+  { kind: 'grammar', label: 'Грамматика', hint: 'урок или тренажёр' },
+  { kind: 'pronunciation', label: 'Речь', hint: 'произношение вслух' },
+  { kind: 'conversation', label: 'Диалог с AI', hint: 'разговор или письмо' },
 ]
 
-export function DailyPlanSection({ studentId }: { studentId: string }) {
-  const load = useCallback(() => getStudentDailyPlan(studentId), [studentId])
-  const { data, error, loading, reload } = useAsyncData<DailyPlanConfig | null>(
-    load,
-    [studentId],
-    'Не удалось загрузить план',
-  )
-
+export function DailyPlanSection({ studentId, name }: { studentId: string; name: string }) {
+  const { data, error, loading, reload } = useAsyncData<DailyPlanConfig | null>(() => getStudentDailyPlan(studentId), [studentId], 'Не удалось загрузить план дня')
+  // undefined — ещё не трогали (показываем сохранённое)
   const [draft, setDraft] = useState<DailyPlanConfig | null | undefined>(undefined)
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
 
-  if (loading) return <RowsSkeleton count={2} height={44} />
-  if (error) return <LoadError message={error} onRetry={reload} />
-
-  // draft: undefined — ещё не трогали (показываем сохранённое)
   const cfg = draft !== undefined ? draft : data
   const kinds = cfg?.kinds ?? []
   const auto = cfg?.auto !== false
-
-  const toggleKind = (k: PlanKind) => {
-    const next = kinds.includes(k) ? kinds.filter((x) => x !== k) : [...kinds, k]
-    setDraft({ kinds: next, auto })
+  const change = (next: DailyPlanConfig) => {
+    setDraft(next)
     setNotice(null)
   }
 
@@ -57,7 +47,7 @@ export function DailyPlanSection({ studentId }: { studentId: string }) {
     try {
       await setDailyPlan(studentId, value)
       setDraft(undefined)
-      setNotice(value ? 'План сохранён — ученик увидит его на Главной' : 'Вернулся умный план приложения')
+      setNotice(value ? 'План сохранён — ученик увидит его на Главной' : 'Вернулся план приложения')
       reload()
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Не удалось сохранить')
@@ -67,58 +57,77 @@ export function DailyPlanSection({ studentId }: { studentId: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-tint/[0.08] p-3">
-      <p className="text-xs text-fg-muted">
-        Что ученик делает каждый день. «Слова» включены всегда — это ядро
-        повторений. Выполнила весь план — получает «идеальный день» ✦ (виден в
-        диагностике и отчёте родителям); серия дней при этом растёт от любого
-        одного занятия, как раньше.
-      </p>
-
-      <label className="flex min-h-[44px] items-center gap-2.5 rounded-lg bg-tint/[0.04] px-3 text-sm text-fg-muted">
-        <input type="checkbox" checked disabled className="h-4 w-4 accent-accent" />
-        Слова (повторение) — всегда в плане
-      </label>
-      {KIND_LABELS.map(({ kind, label }) => (
-        <label
-          key={kind}
-          className="flex min-h-[44px] cursor-pointer items-center gap-2.5 rounded-lg px-3 text-sm hover:bg-tint/[0.04]"
-        >
-          <input
-            type="checkbox"
-            checked={kinds.includes(kind)}
-            onChange={() => toggleKind(kind)}
-            className="h-4 w-4 accent-accent"
-          />
-          {label}
-        </label>
-      ))}
-      <label className="flex min-h-[44px] cursor-pointer items-center gap-2.5 rounded-lg border-t border-tint/[0.06] px-3 pt-2 text-sm hover:bg-tint/[0.04]">
-        <input
-          type="checkbox"
-          checked={auto}
-          onChange={() => {
-            setDraft({ kinds, auto: !auto })
-            setNotice(null)
-          }}
-          className="h-4 w-4 accent-accent"
-        />
-        Задания и квесты сами попадают в план
-      </label>
-
-      {err && <p className="text-sm text-danger-strong">{err}</p>}
-      {notice && <p className="text-sm text-success-strong">{notice}</p>}
-
-      <div className="flex flex-wrap gap-2">
-        <Button size="sm" loading={busy} disabled={draft === undefined} onClick={() => save({ kinds, auto })}>
-          Сохранить план
-        </Button>
-        {(data || draft) && (
-          <Button size="sm" variant="ghost" disabled={busy} onClick={() => save(null)}>
-            Вернуть умный дефолт
+    <SectionCard
+      title="План дня"
+      note={`что ${name} делает каждый день`}
+      action={
+        !loading &&
+        !error && (
+          <Button variant="outline" loading={busy} disabled={draft === undefined} onClick={() => void save({ kinds, auto })}>
+            Сохранить план
           </Button>
-        )}
-      </div>
-    </div>
+        )
+      }
+    >
+      {error ? (
+        <LoadError message={error} onRetry={reload} />
+      ) : loading ? (
+        <RowsSkeleton count={3} height={52} />
+      ) : (
+        <>
+          <div className="flex flex-col divide-y divide-line" data-daily-plan>
+            <Row label="Слова (повторение)" hint="всегда в плане" on locked />
+            {KINDS.map(({ kind, label, hint }) => (
+              <Row
+                key={kind}
+                label={label}
+                hint={hint}
+                on={kinds.includes(kind)}
+                onToggle={() => change({ kinds: kinds.includes(kind) ? kinds.filter((k) => k !== kind) : [...kinds, kind], auto })}
+              />
+            ))}
+            <Row label="Задания и квесты" hint="сами попадают в план" on={auto} onToggle={() => change({ kinds, auto: !auto })} />
+          </div>
+          {err && (
+            <p role="alert" className="text-sm text-danger-strong">
+              {err}
+            </p>
+          )}
+          {notice && <p className="text-sm text-success-strong">{notice}</p>}
+          {(data || draft) && (
+            <Button variant="ghost" className="-ml-2 self-start px-2" disabled={busy} onClick={() => void save(null)}>
+              Вернуть план приложения
+            </Button>
+          )}
+        </>
+      )}
+    </SectionCard>
+  )
+}
+
+/** Строка-галочка (d11-3 `.dr11`): квадрат 22, подпись и пояснение; «всегда в плане» — серая и не нажимается. */
+function Row({ label, hint, on, locked = false, onToggle }: { label: string; hint: string; on: boolean; locked?: boolean; onToggle?: () => void }) {
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={on}
+      aria-disabled={locked || undefined}
+      onClick={locked ? undefined : onToggle}
+      className={`flex min-h-13 items-center gap-3 py-1 text-left ${locked ? 'cursor-default' : 'active:bg-row-press'}`}
+    >
+      <span
+        aria-hidden
+        className={`flex size-5.5 flex-none items-center justify-center rounded-md ${
+          locked ? 'bg-input text-fg-muted' : on ? 'bg-primary text-primary-fg' : 'bg-surface inset-ring-2 inset-ring-fg-faint'
+        }`}
+      >
+        {on && <IconCheck size={14} />}
+      </span>
+      <span className="flex min-w-0 flex-col leading-snug">
+        <span className="text-body text-fg">{label}</span>
+        <small className="text-note text-fg-muted">{hint}</small>
+      </span>
+    </button>
   )
 }

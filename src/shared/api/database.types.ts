@@ -1650,6 +1650,35 @@ export type Database = {
           },
         ]
       }
+      study_plan_marks: {
+        Row: {
+          done_at: string
+          item: number
+          plan_id: string
+          week: number
+        }
+        Insert: {
+          done_at?: string
+          item: number
+          plan_id: string
+          week: number
+        }
+        Update: {
+          done_at?: string
+          item?: number
+          plan_id?: string
+          week?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_plan_marks_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "study_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       study_plans: {
         Row: {
           created_at: string
@@ -2680,6 +2709,15 @@ export type Database = {
       }
       set_default_lesson_link: { Args: { p_link: string }; Returns: undefined }
       set_lesson_reminders: { Args: { p_on: boolean }; Returns: undefined }
+      set_plan_item_done: {
+        Args: {
+          p_done: boolean
+          p_item: number
+          p_plan_id: string
+          p_week: number
+        }
+        Returns: undefined
+      }
       set_student_card_status: {
         Args: { p_card: string; p_status: string }
         Returns: undefined

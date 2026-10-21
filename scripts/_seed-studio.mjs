@@ -251,7 +251,7 @@ export function studio(prefix) {
       ],
     }).select('id').single(), 'сданное задание')
     await admin.from('material_assignments').insert({ material_id: mats[2].id, student_id: a.id, status: 'assigned', created_at: new Date(Date.parse(now) - 2 * 86400_000).toISOString() })
-    return { t, a, s, m, solo, nw, ca, card, wa: wa.id, ma: ma.id, wt: task2.id }
+    return { t, a, s, m, solo, nw, ca, cs, cm, card, wa: wa.id, ma: ma.id, wt: task2.id }
   }
 
   async function cleanup() {

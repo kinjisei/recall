@@ -38,7 +38,10 @@ export async function getStudentDailyPlan(studentId: string): Promise<DailyPlanC
     .eq('teacher_id', teacherId)
     .eq('student_id', studentId)
     .maybeSingle()
-  if (error || !data?.daily_plan) return null
+  // сбой — исключение, а не «как у приложения»: иначе «Сохранить» затёр бы
+  // настройку учителя пустой (Ф1.13, 4г-1)
+  if (error) throw dbError(error, 'загрузить план дня')
+  if (!data?.daily_plan) return null
   const raw = data.daily_plan as { kinds?: PlanKind[]; auto?: boolean }
   return { kinds: raw.kinds ?? [], auto: raw.auto !== false }
 }

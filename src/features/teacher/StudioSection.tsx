@@ -5,9 +5,9 @@
 // вкладки всех разделов и «Отчёт» (лист для печати поверх). На компьютере
 // шапка держится сверху панели, пока прокручиваешь раздел, список слева
 // стоит. «‹» и свайп-назад возвращают к карточке (раздел в адресе,
-// studioSections). «План дня» — внутри «Программы» (решение владельца
-// 10.10.2026); «Отчёт родителям» — белым листом поверх, «Закрыть» — назад к
-// карточке.
+// studioSections). «План дня» — карточкой внутри «Программы», над её
+// подвалом (решение владельца 10.10.2026, макет d11-3); «Отчёт родителям» —
+// белым листом поверх, «Закрыть» — назад к карточке.
 // ============================================================================
 import type { ReactNode } from 'react'
 import { balanceShort, isTracked, type Lesson, type LessonBalance } from '../../domains/schedule'
@@ -23,7 +23,7 @@ import { TabPicker } from '../../shared/ui/TabPicker'
 import { DailyPlanSection } from './DailyPlanSection'
 import { DiagnosticsSection } from './DiagnosticsSection'
 import { PlacementSection } from './PlacementSection'
-import { ProgramSection } from './ProgramSection'
+import { ProgramSection } from './program/ProgramSection'
 import { QuestSection } from './QuestSection'
 import { ReportSheet } from './ReportSheet'
 import { StudentWordsSection } from './StudentWordsSection'
@@ -31,7 +31,7 @@ import { STUDIO_SECTIONS, type StudioSection } from './studioSections'
 import { topicTitle, useTopicTitles } from './topicTitles'
 
 /** Вкладки — все разделы, кроме отчёта: он справа, листом поверх. */
-const TABS = STUDIO_SECTIONS.filter((s) => s.id !== 'report').map(({ id, title }) => ({ id, label: title }))
+const TABS = STUDIO_SECTIONS.filter((s) => s.id !== 'report').map(({ id, title, Icon }) => ({ id, label: title, Icon }))
 
 /** «осталось 3 урока» в шапке раздела; учёт не ведётся — ничего. */
 function leftLabel(balance: LessonBalance | null): ReactNode {
@@ -106,6 +106,7 @@ export function StudioSectionScreen({
           value={section === 'report' ? 'diag' : section}
           onChange={onSection}
           ariaLabel="Разделы ученика"
+          iconsWide
           className="-mx-1"
           trailing={
             <button
@@ -121,14 +122,10 @@ export function StudioSectionScreen({
       </header>
 
       <div className={`flex flex-1 flex-col gap-3.5 ${wide ? 'p-4' : 'pt-4'}`}>
-        {section === 'placement' && <PlacementSection studentId={id} studentName={name} />}
+        {section === 'placement' && <PlacementSection studentId={id} />}
         {section === 'diag' && <DiagnosticsSection studentId={id} name={name} preloaded={diag} last={last} />}
         {section === 'program' && (
-          <>
-            <ProgramSection studentId={id} />
-            <h3 className="mt-2 font-semibold">План дня</h3>
-            <DailyPlanSection studentId={id} />
-          </>
+          <ProgramSection studentId={id} name={firstName(name)} studentLevel={level} daily={<DailyPlanSection studentId={id} name={firstName(name)} />} />
         )}
         {section === 'words' && <StudentWordsSection studentId={id} studentName={name} studentLevel={level} />}
         {section === 'quests' && <QuestSection studentId={id} studentName={name} />}

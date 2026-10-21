@@ -21,10 +21,10 @@ import {
   type ClaimRow,
   type PaymentRow,
 } from '../../../domains/billing'
+import { almatyTime, dateAt } from '../../../domains/schedule'
 import { ConfirmPayment } from './ConfirmPayment'
 
-const when = (iso: string) =>
-  new Date(iso).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+const when = (iso: string) => `${dateAt(iso)}, ${almatyTime(iso)}`
 
 /** version — внешний счётчик: подтвердили оплату из поиска — список перечитывается. */
 export function Payments({ version, onChanged }: { version: number; onChanged: () => void }) {

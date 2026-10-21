@@ -1,13 +1,13 @@
 // ============================================================================
-// Адрес /learn — «Моя учёба» учителя (PLAN.md Ф2.10, макет t1-4б; журнал
-// п.34): для репетитора, который сам учит язык. Сводка — язык и уровень, одна
-// карточка (серия дней, неделя кружками, «Начать занятие») — и три плитки в
-// разделы ученика: Учёба, Практика, Диалог. Сами разделы те же, что у
-// ученика, — не дублируются. Решение владельца 05.10.2026: только сводка и
-// плитки, без плана дня и слова дня (они остаются на Главной ученика).
-// На телефоне плитки — столбиком (Ф2.11б-2): втроём в строку на 390 px
-// подписи переносились по слову и плитки выходили разной высоты; компьютер —
-// тремя колонками (пустоты на нём — Ф2.19).
+// Адрес /learn — «Моя учёба» учителя (PLAN.md Ф2.10, Ф2.17-4г-1; журнал
+// п.34, п.76 (9)): для репетитора, который сам учит язык. Разделы те же, что у
+// ученика, — не дублируются.
+// Телефон и содержимое уже 936 — макет t1-4б (решение владельца 05.10.2026:
+// только сводка и плитки): язык и уровень, одна карточка (серия дней, неделя
+// кружками, «Начать занятие») и три плитки столбиком — Учёба, Практика,
+// Диалог (втроём в строку на 390 px подписи переносились по слову).
+// Компьютер — макет d12 (LearnDesk): сводка, плитки «Учёбы» и «Практики»,
+// «К повторению», карточка «Диалог» с последними репликами.
 // Кто сюда пускается — таблица маршрутов: не-учителя уводит на его Главную.
 // ============================================================================
 import { useNavigate } from 'react-router-dom'
@@ -23,7 +23,9 @@ import { AppLink } from '../../shared/ui/AppLink'
 import { Button } from '../../shared/ui/Button'
 import { LoadError } from '../../shared/ui/LoadError'
 import { IconArrowRight, IconChevronRight, IconDialog, IconFlame, IconPractice, IconStudy, type IconLike } from '../../shared/ui/icons'
+import { useAsideSplit } from '../../shared/ui/layouts'
 import type { AppLang } from '../../types'
+import { LearnDesk } from './LearnDesk'
 
 const TILES: { to: string; title: string; desc: string; Icon: IconLike }[] = [
   { to: '/study', title: 'Учёба', desc: 'Тексты, грамматика, словарь', Icon: IconStudy },
@@ -68,12 +70,16 @@ function StreakCard({ activity, lang }: { activity: HomeActivity; lang: AppLang 
 
 export function MyStudyPage() {
   const { user } = useAuth()
-  const { lang } = useLanguage()
+  const { lang, setLang } = useLanguage()
+  // компьютер (содержимое от 936) — d12; уже — телефонный t1-4б (журнал п.76 (9))
+  const desk = useAsideSplit()
   // серия — из activity_log; не пришла — не рисуем «0 дней», а говорим о связи (Ф1.13)
   const activity = useAsyncData(loadHomeActivity, [user?.id], 'Не удалось загрузить серию занятий')
   // уровень — подпись: не знаем — не пишем (умолчание базы — не измеренный уровень)
   const profile = useAsyncData(() => (user ? getProfile(user.id) : Promise.resolve(null)), [user?.id])
   const level = lang === 'es' ? getEsLevel() : (profile.data?.level ?? getCachedEnLevel() ?? null)
+
+  if (desk) return <LearnDesk lang={lang} setLang={setLang} level={level} activity={activity} />
 
   return (
     <div className="flex flex-col gap-4">
@@ -91,15 +97,15 @@ export function MyStudyPage() {
       ) : activity.data ? (
         <StreakCard activity={activity.data} lang={lang} />
       ) : (
-        <div aria-hidden className="h-52 animate-pulse rounded-3xl border border-accent-line bg-tint/[0.04]" />
+        <div aria-hidden className="animate-skeleton h-52 rounded-card bg-skeleton" />
       )}
 
-      <nav aria-label="Разделы учёбы" className="grid grid-cols-1 gap-2.5 lg:grid-cols-3" data-learn-tiles>
+      <nav aria-label="Разделы учёбы" className="flex flex-col gap-2.5" data-learn-tiles>
         {TILES.map(({ to, title, desc, Icon }) => (
           <AppLink
             key={to}
             to={to}
-            className="lift flex items-center gap-3.5 rounded-3xl bg-surface p-3.5 text-fg shadow-card ring-1 ring-tint/[0.06] lg:min-h-33 lg:flex-col lg:items-start lg:justify-between lg:gap-4"
+            className="lift flex items-center gap-3.5 rounded-card bg-surface p-3.5 text-fg shadow-card ring-1 ring-tint/[0.06]"
           >
             <span className="flex size-11 flex-none items-center justify-center rounded-full bg-accent-soft text-accent-soft-fg">
               <Icon size={22} />
@@ -108,7 +114,7 @@ export function MyStudyPage() {
               <span className="text-base font-semibold">{title}</span>
               <span className="text-xs leading-snug text-fg-muted">{desc}</span>
             </span>
-            <IconChevronRight size={18} aria-hidden className="flex-none text-fg-muted lg:hidden" />
+            <IconChevronRight size={18} aria-hidden className="flex-none text-fg-muted" />
           </AppLink>
         ))}
       </nav>

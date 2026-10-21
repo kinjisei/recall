@@ -615,6 +615,36 @@ async function main() {
       .filter(Boolean),
   )
   check('1280: меню слева — Расписание · Ученики · Задания · Моя учёба', side.slice(0, 4).join(' · ') === 'Расписание · Ученики · Задания · Моя учёба', side.join(' · '))
+
+  // «Моя учёба» на компьютере — макет d12 (Ф2.17-4г-1): сводка, шесть плиток
+  // «Учёбы», «Практика», карточка «Диалог». Написанное в карточке уходит в
+  // «Диалог» и отправляется там ровно один раз (AI не зовём — ответ подменён)
+  await page.goto(`${BASE}/learn`, { waitUntil: 'networkidle2' })
+  await page.waitForSelector('[data-learn-dialog] textarea', { timeout: 15000 }).catch(() => {})
+  const desk = await page.evaluate(() => ({
+    summary: !!document.querySelector('[data-learn-summary]'),
+    study: document.querySelectorAll('nav[aria-label="Учёба"] a').length,
+    review: !!document.querySelector('[data-learn-review]'),
+    dialog: !!document.querySelector('[data-learn-dialog]'),
+  }))
+  check('1280: «Моя учёба» по d12 — сводка, 6 плиток «Учёбы», «Практика», «Диалог»', desk.summary && desk.study === 6 && desk.review && desk.dialog, JSON.stringify(desk))
+  await page.evaluate(() => {
+    window.__asked = []
+    const orig = window.fetch
+    window.fetch = (input, init) => {
+      if (!String(input?.url ?? input).includes('/api/gemini')) return orig(input, init)
+      window.__asked.push(String(init?.body ?? ''))
+      return Promise.resolve(new Response(JSON.stringify({ error: 'смоук: AI не зовём' }), { status: 503, headers: { 'Content-Type': 'application/json' } }))
+    }
+  })
+  await page.type('[data-learn-dialog] textarea', 'Hola, ¿qué tal?')
+  await page.keyboard.press('Enter')
+  await page.waitForFunction(() => location.pathname === '/conversation' && window.__asked?.length > 0, { timeout: 15000, polling: 250 }).catch(() => {})
+  const sent = await page.evaluate(() => ({ asked: window.__asked ?? [], again: window.history.state?.usr?.sendDraft === true }))
+  check('«Диалог» с «Моей учёбы»: реплика ушла в «Диалоге» один раз', path() === '/conversation' && sent.asked.length === 1 && sent.asked[0].includes('Hola, ¿qué tal?'), `${path()} · запросов ${sent.asked.length}`)
+  check('…метка «отправить» снята — обновление страницы не отправит второй раз', !sent.again)
+  await sleep(1500)
+  check('…ответ не пришёл — текст вернулся в поле', await page.evaluate(() => [...document.querySelectorAll('input, textarea')].some((t) => t.value.includes('Hola, ¿qué tal?'))))
   await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2 })
 
   if (mat?.id) await admin.from('materials').delete().eq('id', mat.id)

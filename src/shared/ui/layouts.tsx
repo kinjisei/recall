@@ -15,7 +15,9 @@
 //   MainAside     — главная колонка 720 + правая 352 («Моя учёба», хаб
 //                   «Заданий»; `size="narrow"` — 320, итог проверки d7-2;
 //                   `size="work"` — работа до 680 и итог от 312, мастер
-//                   материала d8: 640 + 312 на 1280, 680 + 416 на 1440): справа
+//                   материала d8: 640 + 312 на 1280, 680 + 416 на 1440;
+//                   `size="fill"` — главная во всю ширину и правая 352, от 1120
+//                   содержимого — 400: «Моя учёба» с «Диалогом», d12): справа
 //                   то, что сверяют, а не делают; содержимое уже 936 — одна
 //                   колонка, правая уходит под главную;
 //   TextPanel     — текст ученика до 640 + панель проверки от 412 (d7-3,
@@ -201,13 +203,17 @@ export function MainAside({
    * Ширины: `list` — главная до 720 и правая 352; `narrow` — правая 320
    * (итог проверки рядом с работой, d7-2); `work` — работа до 680 и итог не
    * уже 312, остаток — итогу (мастер материала, d8-2…d8-4); `toc` — текст до
-   * 680 и оглавление 280 через 48, под закреплённой шапкой экрана (d9-3).
+   * 680 и оглавление 280 через 48, под закреплённой шапкой экрана (d9-3);
+   * `fill` — главная во всю ширину, правая 352, а от 1120 содержимого — 400
+   * («Моя учёба» и «Диалог»: d12-1 на 1280, d12-2 на 1440).
    */
-  size?: 'list' | 'narrow' | 'work' | 'toc'
+  size?: 'list' | 'narrow' | 'work' | 'toc' | 'fill'
   /** Подпись правой колонки для читалки. */
   label?: string
 }) {
   const split = useContentAtLeast(AREA.homeSplit)
+  // тот же порог 1120, что у полей упражнения: столько места у содержимого на 1440 с меню
+  const roomy = useContentAtLeast(AREA.exerciseSides)
   usePageWidth('page', AREA.homeSplit)
   if (!split) {
     return (
@@ -218,7 +224,9 @@ export function MainAside({
     )
   }
   const cols =
-    size === 'work'
+    size === 'fill'
+      ? `${roomy ? 'grid-cols-[minmax(0,1fr)_var(--container-dialog)]' : 'grid-cols-[minmax(0,1fr)_var(--container-list)]'} gap-6`
+      : size === 'work'
       ? 'grid-cols-[minmax(0,var(--container-reading))_minmax(var(--container-summary),1fr)] gap-6'
       : size === 'toc'
         ? 'grid-cols-[minmax(0,var(--container-reading))_var(--container-toc)] justify-center gap-12'

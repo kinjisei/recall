@@ -85,6 +85,12 @@ export const dayLong = (day: string): string => `${weekdayName(isoWeekday(day))}
 export const dayShort = (day: string): string => `${weekdayName(isoWeekday(day))}, ${dd(day)} ${MONTHS_SHORT[mm(day)]}`
 /** «15 окт» — без дня недели */
 export const dateShort = (day: string): string => `${dd(day)} ${MONTHS_SHORT[mm(day)]}`
+/**
+ * «15 окт» для момента (timestamptz) — день по Алматы, а не по часам браузера,
+ * и без точки, которую ставит toLocaleDateString (`окт.`): тест уровня,
+ * программа, оплаты в /admin.
+ */
+export const dateAt = (at: string): string => dateShort(almatyDay(new Date(at)))
 
 /**
  * Когда это было — «сегодня, 15:40» / «вчера, 9:10» / «чт, 15 окт», по

@@ -57,8 +57,15 @@ export function Pill({ tone, children }: { tone: 'wait' | 'ok' | 'plain'; childr
 /** Подвал раздела (d10-3 `.ft10`): «Выбрано 3 · уйдут Айгерим в приложение  [Назначить]». */
 export function SectionFooter({ text, children }: { text: ReactNode; children: ReactNode }) {
   const { bottom } = useShellInsets()
+  // на компьютере панель прокручивается сама и снизу у неё поле 16 px: закреплённый
+  // подвал встаёт на 16 px выше её края, и в просвете ехало содержимое — закрываем
+  // просвет фоном подвала (`after`); край карточки его обрезает (4г-1)
   return (
-    <div style={{ bottom }} data-section-footer className="@container sticky z-10 -mx-4 -mb-4 mt-auto border-t border-line bg-surface px-4 py-3">
+    <div
+      style={{ bottom }}
+      data-section-footer
+      className="@container sticky z-10 -mx-4 -mb-4 mt-auto border-t border-line bg-surface px-4 py-3 rail:after:absolute rail:after:inset-x-0 rail:after:top-full rail:after:h-4 rail:after:bg-surface"
+    >
       {/* уже 448 px (телефон) — подпись над кнопкой во всю ширину: рядом подпись шла в четыре строки */}
       <div className="flex flex-col gap-2 *:w-full @md:flex-row @md:items-center @md:gap-3 @md:*:w-auto">
         <span className="min-w-0 flex-1 text-sm text-fg-secondary">{text}</span>

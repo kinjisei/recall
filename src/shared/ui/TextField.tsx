@@ -41,6 +41,19 @@ export function FieldNote({ id, error, hint }: { id: string; error?: ReactNode; 
   ) : null
 }
 
+/**
+ * Подпись над выбором, который не поле ввода (полоса вариантов, число недель):
+ * тот же вид, что у подписи TextField. Квест (d10-4), программа (d11-2).
+ */
+export function Field({ label, children, className = '' }: { label: ReactNode; children: ReactNode; className?: string }) {
+  return (
+    <div className={`flex min-w-0 flex-col gap-1.5 ${className}`}>
+      <span className="text-sm font-medium text-fg-secondary">{label}</span>
+      {children}
+    </div>
+  )
+}
+
 export function TextField({
   label,
   hint,

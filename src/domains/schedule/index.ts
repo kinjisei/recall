@@ -37,6 +37,7 @@ export {
   almatyMinutes,
   almatyTime,
   byDay,
+  dateAt,
   dateShort,
   dayBounds,
   dayLong,

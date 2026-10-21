@@ -36,6 +36,7 @@ export function TabPicker<T extends string>({
   stretch = false,
   small = false,
   trailing,
+  iconsWide = false,
   className = '',
 }: {
   options: TabOption<T>[]
@@ -49,6 +50,12 @@ export function TabPicker<T extends string>({
   small?: boolean
   /** Только line: элемент справа в строке вкладок. */
   trailing?: React.ReactNode
+  /**
+   * Только line: значки вкладок — лишь когда контейнеру (`@container` выше)
+   * хватает 672 px: раздел карточки ученика на 1440 со значками, на 1280 без
+   * (d11-3 и d11-1).
+   */
+  iconsWide?: boolean
   className?: string
 }) {
   if (variant === 'line') {
@@ -67,7 +74,7 @@ export function TabPicker<T extends string>({
                   isActive ? 'font-semibold text-accent-soft-fg after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:rounded-full after:bg-focus' : 'font-medium text-fg-secondary hover:text-fg'
                 }`}
               >
-                {o.Icon && <o.Icon size={16} />}
+                {o.Icon && <o.Icon size={iconsWide ? 18 : 16} className={iconsWide ? `hidden @2xl:block ${isActive ? 'text-accent-strong' : 'text-fg-muted'}` : undefined} />}
                 {o.label}
               </button>
             )

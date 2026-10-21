@@ -30,7 +30,7 @@
 | Файл | Что там |
 |---|---|
 | `model.ts` | типы, сборка ответа базы в уроки (`groupSchedule`), отметка ↔ (был, списание) (`outcomeOf`), какие отметки можно сейчас (`allowedOutcomes`), фаза урока (`lessonPhase`), дни серии (`isSeriesSlot` — копия `series_slot`, `seriesDays` для превью), день по Алматы. Без базы — чистый тест |
-| `calendar.ts` | время по Алматы (момент ↔ день и «19:00»), подписи из макетов («чт, 15 октября», «12–18 октября», «1,5 ч», «через 50 мин», «Каждый вт и чт»; когда сдана работа — «сегодня, 15:40» / «вчера, 9:10», `whenDone`: хаб «Заданий», проверка, диагностика), раскладка дня по часам (`placeLessons` — пересекающиеся рядом), вопрос после пробного (`trialQuestions`) |
+| `calendar.ts` | время по Алматы (момент ↔ день и «19:00»), подписи из макетов («чт, 15 октября», «12–18 октября», «1,5 ч», «через 50 мин», «Каждый вт и чт»; когда сдана работа — «сегодня, 15:40» / «вчера, 9:10», `whenDone`: хаб «Заданий», проверка, диагностика; «15 окт» для момента — `dateAt`: день по Алматы и без точки `окт.` от `toLocaleDateString`, тест уровня, программа, оплаты в /admin, Ф2.17-4г-1), раскладка дня по часам (`placeLessons` — пересекающиеся рядом), вопрос после пробного (`trialQuestions`) |
 | `editor.ts` | шторки: черновик урока (`LessonDraft`) → вход `createLesson`/`createSeries`, почему «Создать» нельзя (`draftProblem` — копии проверок базы), сводка «… · 20 уроков», пересечения, «Изменить» (`draftFromLesson`), перенос «этот и все следующие» (`moveSeriesInput`, `rebuildCount`), что уйдёт при паузе и архиве (`leavingLessons` — копия `trg_card_lessons`), «Останется / Станет N», тексты ученику и кому писать самому (`whoToTell`, `APP_TELLS_STUDENTS`), кому Recall напишет сам — строка шторок переноса и отмены «Айгерим получит уведомление» (`notifiedLine`, t5-2) |
 | `ledger.ts` | учёт уроков на экране (Ф2.8): подпись остатка (`balanceLabel` — минус только учителю), число в строке, «требует внимания» (`balanceLow` — 1 и меньше при учёте), строки истории (`historyRow`), текст «Напомнить» без сумм (`paymentReminder`) |
 | `status.ts` | метка урока одним правилом для дня, недели и списка: автосписание, поздняя отмена, пробный, перенесён, не отмечен; строка под именем |
@@ -168,5 +168,5 @@
 
 - **Файлы:** `api.student.ts`, `api.ts`, `calendar.ts`, `editor.ts`, `index.ts`, `ledger.ts`, `model.ts`, `roster.ts`, `status.ts`, `student.ts`
 - **RPC:** `add_paid_lessons`, `cancel_lesson`, `cancel_series_from`, `create_lesson`, `create_series`, `get_card_history`, `get_lesson_balances`, `get_my_lesson_balances`, `get_my_lessons`, `get_my_series`, `get_schedule`, `get_schedule_settings`, `mark_lesson_participant`, `restore_lesson`, `send_card_message`, `set_cancel_charge`, `set_default_lesson_link`, `update_lesson`, `update_series_from`
-- **Кто использует (импортом):** `features/dashboard`, `features/lessons`, `features/schedule`, `features/settings`, `features/students`, `features/teacher`, `features/writing`
+- **Кто использует (импортом):** `features/admin`, `features/dashboard`, `features/lessons`, `features/schedule`, `features/settings`, `features/students`, `features/teacher`, `features/writing`
 <!-- generated:end -->

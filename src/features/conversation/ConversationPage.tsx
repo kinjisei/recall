@@ -1,11 +1,9 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useKeyboardInset } from '../../lib/useKeyboardInset'
 import { useChatList } from '../../lib/useChatList'
-import {
-  IconPencil,
-  IconCheck,
-  IconMaterials,
-} from '../../shared/ui/icons'
+import { markerOf } from './replyMarkers'
+import { MARKER_LOOK } from './markerLook'
+import { useSendOnArrival } from './useSendOnArrival'
 import { Card } from '../../shared/ui/Card'
 import { supabase } from '../../shared/api/supabase'
 import { getProfile } from '../../lib/profile'
@@ -154,29 +152,18 @@ function chatSystemPrompt(level: CEFRLevel, lang: AppLang, goal: LearningGoal | 
   ].join('\n')
 }
 
-/**
- * Служебные строки ответа AI помечаются текст-тегом в начале: [fix] —
- * исправление ошибки, [ok] — ошибок нет, [topic] — предложение темы. Тег
- * скрывается, вместо него — иконка и акцентная подсветка. Старые сохранённые
- * сообщения могли начинаться с эмодзи (✏️/✅/📚) — распознаём и их.
- */
-const MARKERS = [
-  { re: /^(?:✏️|\[fix\])\s*/i, Icon: IconPencil, cls: 'text-accent-strong' },
-  { re: /^(?:✅|\[ok\])\s*/i, Icon: IconCheck, cls: 'text-success-strong' },
-  { re: /^(?:📚|\[topic\])\s*/i, Icon: IconMaterials, cls: 'font-medium text-accent-strong' },
-] as const
-
+/** Служебная строка ответа ([fix], [ok], [topic] — replyMarkers): тег скрыт, вместо него — иконка и подсветка. */
 function AssistantText({ content }: { content: string }) {
   return (
     <>
       {content.split('\n').map((line, i) => {
-        const m = MARKERS.find((mk) => mk.re.test(line))
+        const m = markerOf(line)
         if (m) {
-          const Icon = m.Icon
+          const { Icon, cls } = MARKER_LOOK[m.kind]
           return (
-            <span key={i} className={m.cls}>
+            <span key={i} className={cls}>
               <Icon size={14} className="mr-1 inline align-[-2px]" />
-              {line.replace(m.re, '')}
+              {m.text}
               {'\n'}
             </span>
           )
@@ -302,6 +289,9 @@ function ChatSection({
       setStreaming(false)
     }
   }
+
+  // написали в карточке «Диалог» на «Моей учёбе» — отправляем, когда переписка поднялась
+  useSendOnArrival(!history.loading && !history.failed && !busy, () => void send())
 
   const reset = () => {
     setMsgs([])

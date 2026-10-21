@@ -6,7 +6,7 @@
 // внизу панели — «Квест придёт Айгерим в приложение» и «Назначить квест».
 // Пусто — «Квестов пока нет — назначь первый ниже».
 // ============================================================================
-import { useCallback, useState, type ReactNode } from 'react'
+import { useCallback, useState } from 'react'
 import { firstName } from '../../domains/students'
 import { Button } from '../../shared/ui/Button'
 import { ChoiceGroup } from '../../shared/ui/ChoiceGroup'
@@ -16,7 +16,7 @@ import { useLanguage } from '../../context/LanguageContext'
 import { Reveal } from '../../shared/ui/Reveal'
 import { LoadError } from '../../shared/ui/LoadError'
 import { Slider } from '../../shared/ui/Slider'
-import { TextField } from '../../shared/ui/TextField'
+import { Field, TextField } from '../../shared/ui/TextField'
 import { useAsyncData } from '../../shared/lib/useAsyncData'
 import { assignQuest, deleteQuest, listStudentQuests } from '../../lib/quests'
 import type { AppLang, GrammarQuest } from '../../types'
@@ -179,15 +179,6 @@ export function QuestSection({ studentId, studentName }: { studentId: string; st
 }
 
 /** Подпись над выбором (как у TextField) и сам выбор. */
-function Field({ label, children }: { label: ReactNode; children: ReactNode }) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1.5">
-      <span className="text-sm font-medium text-fg-secondary">{label}</span>
-      {children}
-    </div>
-  )
-}
-
 /** Назначенный квест: сценарий, тема и уровень, счёт; переписку можно раскрыть. */
 function QuestRow({ q, open, onChat, onRemove, removing }: { q: GrammarQuest; open: boolean; onChat: () => void; onRemove: () => void; removing: boolean }) {
   const chat = (q.messages ?? []).filter((m) => m.content !== '/start')

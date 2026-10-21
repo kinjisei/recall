@@ -512,6 +512,12 @@ html[data-vt='fade']::view-transition-new(root) { animation: fade-in 150ms var(-
   border: 1.5px dashed var(--color-ring);
 }
 
+/* Рамка-пунктир черновика AI, который ученик ещё не видит (макет d11-3:
+   программа до «Сохранить и назначить»): 1,5 px цвета предупреждения. */
+@utility border-dashed-warning {
+  border: 1.5px dashed var(--color-warning-strong);
+}
+
 /* Штриховка «поздняя отмена» (макеты t2-3, d1): урок отменён, но списан —
    отличается от обычной отмены и без цветового зрения. Цвет — токен. */
 @utility bg-hatch-warning {

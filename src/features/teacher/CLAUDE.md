@@ -16,7 +16,7 @@
 главное — домашка на неделю: срок, счёт «3 из 5 заданий» и кнопка «Собрать
 домашку». Под ней три плашки — буксующие слова, слабая тема, сколько дней
 ученик занимался. Ниже «Ещё» — шесть плиток по макету t6-2: Диагностика,
-Программа (в ней и «План дня»), Слова, Тест уровня, Квесты, Отчёт
+Программа (под ней — «План дня»), Слова, Тест уровня, Квесты, Отчёт
 родителям; на плитке — короткое состояние или главное действие
 («Назначить»). Плитка открывает экран раздела с «‹ Имя» (PLAN.md Ф2.11б-2).
 
@@ -76,7 +76,8 @@
 | `topicTitles.ts` | названия тем грамматики по номеру — плашке «Слабая тема», диагностике, отчёту |
 | `HomeworkSection.tsx`, `HomeworkComposer.tsx` | домашка в карточке и её сборка (правила — `features/homework/CLAUDE.md`) |
 | `StudentWordsSection.tsx`, `WordPicker.tsx` | раздел «Слова» карточки (d10-3): список с галочками, откуда слово и статус, «+ Выдать слова» (паки и свои наборы), удаление через диалог, подвал «Выбрано 3 · уйдут Айгерим в приложение» → перепроверка; прошлые перепроверки |
-| `DiagnosticsSection.tsx`, `ProgramSection.tsx`, `PlacementSection.tsx`, `QuestSection.tsx`, `DailyPlanSection.tsx` | экраны плиток: диагностика (d10-2: динамика «было → стало», три числа, слова, задания со статусом — письма ученика, материалы, домашка, — слабые темы, последнее занятие), программа (и под ней план дня), тест уровня (главная кнопка — язык студии), квесты (d10-4: назначенные с перепиской, «Новый квест» — язык и уровень полосами, сценарий плитками: «В аэропорту», «В отеле», «Собеседование» или свой, порог ползунком) |
+| `DiagnosticsSection.tsx`, `PlacementSection.tsx`, `QuestSection.tsx` | экраны плиток: диагностика (d10-2: динамика «было → стало», три числа, слова, задания со статусом — письма ученика, материалы, домашка, — слабые темы, последнее занятие), тест уровня (d11-1: «Тест появится у ученика в «Учёбе»…», «Назначить тест уровня» — главная кнопка на языке студии, второй язык тихой; пока тест ждёт — «Назначен 10 окт · ждёт» вместо кнопки; «История» — «…» или уровень, «назначен · пройден», «Снять» / «Убрать»; тестов не было — строка «Тестов пока не было»), квесты (d10-4: назначенные с перепиской, «Новый квест» — язык и уровень полосами, сценарий плитками: «В аэропорту», «В отеле», «Собеседование» или свой, порог ползунком) |
+| `program/ProgramSection.tsx`, `program/ProgramForm.tsx`, `program/programDraft.ts`, `DailyPlanSection.tsx` | «Программа» (d11-2, d11-3): форма «Новая программа» — язык и уровень полосами, «Недель» −/+ (`NumberStepper`), «Цель или пожелания», что учтёт AI; черновик AI — жёлтая плашка «ещё не назначен — Айгерим его не видит», недели в пунктирной рамке, внизу «К форме · Составить заново · Сохранить и назначить»; сохранённая — зелёная «Назначена 15 окт · неделя 1 из 4», пункты, которые ученик отметил «сделал» (миграция 0015), с галочкой, внизу «Изменить» (там же — «Снять программу»); программы на двух языках — выбор EN/ES над ней. Черновик — один на ученика, язык — его поле (`programDraft`; старый черновик по языку переносится). Под программой — «План дня» карточкой: галочки «Слова (повторение) — всегда в плане», чтение, грамматика, речь, диалог, «Задания и квесты сами попадают в план», «Сохранить план» справа от заголовка, «Вернуть план приложения»; вид недель — `features/program` `PlanView` |
 | `MaterialsSection.tsx`, `materials/*` | материалы: библиотека (d8-1 — шапка `ScreenTop`, `PendingWorks` «На проверку», `LibraryList` по уровням со строкой «Английский · A2 · рассказ · 1 на проверке», `MaterialDetail` рядом — `ListDetail fill`; на телефоне по очереди, у карточки «‹ Материалы»); мастер нового материала по d8-2…d8-5 — `MaterialWizard.tsx` (разводка шагов), `RequestForm` (заявка), `PlanScreen` (план и скелетон, пока AI пишет), `PreviewScreen` (текст готов); куски — `wizardBits.tsx` (шапка «‹ Материалы · Новый материал» с шагами «Заявка — План — Текст», карточка формы, «Итог»), `textBits.tsx` (статья, упражнения, «Назначится при сохранении», скелетон), `WordChips.tsx`, `markWords.ts` (слова плана в тексте), `useStudentLevels.ts` (уровни учеников — один запрос на мастер); шаги и «назад/вперёд» без потерь — `materials/wizard.ts`; «Для кого» — `ForWhom.tsx`, его правила (уровень, группы, предупреждение, подпись уровня в итоге) — `audience.ts` |
 | `materials/MaterialDetail.tsx`, `materials/detailParts.tsx` | карточка материала (d8-1): название, вид и «120 слов · 2 упражнения» (слова — по тексту), «Выдан: Әсел · вчера, 9:10 · ждёт проверки», текст абзацами, упражнения с ответом; ниже «Кому выдан» — «Выдать», «Убрать» (сданную — диалогом), «Проверить» ведёт в проверку `?work=`, «Разбор» — проверенная; печать, удаление |
 | `formHints.ts` | подсказки-примеры форм студии (материал, письмо, квест) на языке формы |
@@ -201,9 +202,25 @@
   бесплатным AI на любой текст. Правка слов руками — без генерации, право
   остаётся; свои слова уходят и в заявку (повтор их не потеряет), звёздочка
   «добавил AI» — у слов, которых нет в заявке.
-- «Программа»: «К форме» не стирает составленную программу —
-  «Вернуться к программе» (`editing` в черновике).
+- «Программа»: «К форме» не стирает черновик AI — «К черновику»
+  (`editing` в черновике); «К программе» из «Изменить» тоже его не
+  выбрасывает: следующее «Изменить» откроет его снова (внизу сохранённой —
+  «Есть черновик новой программы»), стереть — «Очистить» у «Черновик
+  восстановлен». Правки к черновику пишутся в «Цель или пожелания» (поле
+  «Правки» убрано в 4г-1: AI получал их тем же текстом).
 - «Отмена» при готовом впереди спрашивает, прежде чем выбросить.
+
+**«Сделал» в программе — отметка ученика** (миграция 0015, журнал п.76 (9))
+
+- Отмечает только сам ученик в «Моей программе» (`/program`,
+  `set_plan_item_done`: своя активная программа, номер недели и пункта — в
+  её границах); учитель галочку видит, но не ставит. Дата недели пункт
+  «пройденным» не делает: неделя прошла — не значит сделано.
+- Новая программа («Изменить» → «Сохранить и назначить») — новый id:
+  отметки прежней уходят в архив вместе с ней.
+- Отметки не загрузились — строка о сбое и недели без галочек, а не «ничего
+  не сделано» (Ф1.13). План дня не загрузился — так же: иначе «Сохранить
+  план» затёр бы настройку учителя пустой.
 
 **Язык по умолчанию — тот, что учитель преподаёт** (PLAN.md Ф2.11)
 
@@ -408,7 +425,7 @@
 <!-- Пишет `npm run gen:docs` (scripts/gen/module-docs.mjs) по коду — руками не править. -->
 ## Из кода (сгенерировано)
 
-- **Файлы:** `AssignmentsPage.tsx`, `BecomeTeacher.tsx`, `CardDetail.tsx`, `DailyPlanSection.tsx`, `DiagnosticsSection.tsx`, `formHints.ts`, `guideReading.ts`, `GuideSection.tsx`, `GuideToc.tsx`, `HomeworkComposer.tsx`, `HomeworkSection.tsx`, `index.ts`, `innerScreen.ts`, `materials/audience.ts`, `materials/detailParts.tsx`, `materials/ForWhom.tsx`, `materials/LibraryList.tsx`, `materials/markWords.ts`, `materials/MaterialDetail.tsx`, `materials/MaterialWizard.tsx`, `materials/PendingWorks.tsx`, `materials/PlanScreen.tsx`, `materials/PreviewScreen.tsx`, `materials/RequestForm.tsx`, `materials/shared.ts`, `materials/textBits.tsx`, `materials/useStudentLevels.ts`, `materials/wizard.ts`, `materials/wizardBits.tsx`, `materials/WordChips.tsx`, `MaterialsSection.tsx`, `PlacementSection.tsx`, `PrintSheet.tsx`, `ProgramSection.tsx`, `QuestSection.tsx`, `ReportSheet.tsx`, `reviewBits.tsx`, `ReviewScreen.tsx`, `roster.tsx`, `sectionBits.tsx`, `StudentRowBits.tsx`, `StudentsTab.tsx`, `StudentStudio.tsx`, `StudentWordsSection.tsx`, `StudioEnergy.tsx`, `StudioSection.tsx`, `studioSections.ts`, `StudioTiles.tsx`, `TasksHub.tsx`, `TasksPage.tsx`, `TeacherBlock.tsx`, `TeacherPage.tsx`, `topicTitles.ts`, `useAnswerDraft.ts`, `useComposerDraft.ts`, `useReviewDraft.ts`, `useWritingTaskDraft.ts`, `waitingCount.ts`, `waitingWorks.ts`, `WordPicker.tsx`, `writing/NewWritingPanel.tsx`, `writing/TaskDetail.tsx`, `writing/TaskList.tsx`, `writing/writingFacts.ts`, `writing/WritingSection.tsx`, `WritingDeleteButton.tsx`
+- **Файлы:** `AssignmentsPage.tsx`, `BecomeTeacher.tsx`, `CardDetail.tsx`, `DailyPlanSection.tsx`, `DiagnosticsSection.tsx`, `formHints.ts`, `guideReading.ts`, `GuideSection.tsx`, `GuideToc.tsx`, `HomeworkComposer.tsx`, `HomeworkSection.tsx`, `index.ts`, `innerScreen.ts`, `materials/audience.ts`, `materials/detailParts.tsx`, `materials/ForWhom.tsx`, `materials/LibraryList.tsx`, `materials/markWords.ts`, `materials/MaterialDetail.tsx`, `materials/MaterialWizard.tsx`, `materials/PendingWorks.tsx`, `materials/PlanScreen.tsx`, `materials/PreviewScreen.tsx`, `materials/RequestForm.tsx`, `materials/shared.ts`, `materials/textBits.tsx`, `materials/useStudentLevels.ts`, `materials/wizard.ts`, `materials/wizardBits.tsx`, `materials/WordChips.tsx`, `MaterialsSection.tsx`, `PlacementSection.tsx`, `PrintSheet.tsx`, `program/programDraft.ts`, `program/ProgramForm.tsx`, `program/ProgramSection.tsx`, `QuestSection.tsx`, `ReportSheet.tsx`, `reviewBits.tsx`, `ReviewScreen.tsx`, `roster.tsx`, `sectionBits.tsx`, `StudentRowBits.tsx`, `StudentsTab.tsx`, `StudentStudio.tsx`, `StudentWordsSection.tsx`, `StudioEnergy.tsx`, `StudioSection.tsx`, `studioSections.ts`, `StudioTiles.tsx`, `TasksHub.tsx`, `TasksPage.tsx`, `TeacherBlock.tsx`, `TeacherPage.tsx`, `topicTitles.ts`, `useAnswerDraft.ts`, `useComposerDraft.ts`, `useReviewDraft.ts`, `useWritingTaskDraft.ts`, `waitingCount.ts`, `waitingWorks.ts`, `WordPicker.tsx`, `writing/NewWritingPanel.tsx`, `writing/TaskDetail.tsx`, `writing/TaskList.tsx`, `writing/writingFacts.ts`, `writing/WritingSection.tsx`, `WritingDeleteButton.tsx`
 - **Вне папки (указатель «Описание:» в начале файла):** `src/lib/activityDays.ts`, `src/lib/diagnosticsBrief.ts`, `src/lib/materialExercises.ts`, `src/lib/materialLengths.ts`, `src/lib/reviewQueue.ts`, `src/lib/studentSignals.ts`, `src/lib/wordChecks.ts`
 - **Адреса:** `/teacher`, `/tasks`, `/assignments`
 - **Таблицы:** `cards`, `decks`, `material_assignments`, `review_states`, `word_checks`, `writing_task_assignments`

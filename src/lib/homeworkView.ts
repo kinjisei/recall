@@ -8,6 +8,7 @@
 // модуль не должен тянуть supabase: тот читает import.meta.env и вне Vite
 // просто не грузится.
 // ============================================================================
+import { MONTH_SHORT } from '../shared/lib/days.ts'
 import type { AppLang } from '../types'
 
 /** Чем закрывается пункт. 'free' — единственный, который сервер измерить не может. */
@@ -131,10 +132,6 @@ const WEEKDAY_TO = [
   'пятницы',
   'субботы',
 ]
-const MONTHS_SHORT = [
-  'янв', 'фев', 'мар', 'апр', 'мая', 'июн',
-  'июл', 'авг', 'сен', 'окт', 'ноя', 'дек',
-]
 
 /**
  * Короткий срок для строки списка: «до вторника».
@@ -164,7 +161,7 @@ export function dueShort(dueAt: string): string {
   if (days === 0) return 'сегодня'
   if (days === 1) return 'до завтра'
   if (days <= 6) return `до ${WEEKDAY_TO[due.getDay()]}`
-  return `до ${due.getDate()} ${MONTHS_SHORT[due.getMonth()]}`
+  return `до ${due.getDate()} ${MONTH_SHORT[due.getMonth()]}`
 }
 
 /**

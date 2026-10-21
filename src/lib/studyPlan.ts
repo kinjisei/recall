@@ -188,6 +188,44 @@ export async function getActivePlan(studentId: string, lang: AppLang): Promise<S
   return data ? rowToPlan(data) : null
 }
 
+/**
+ * Активные программы ученика у этого учителя — обоих языков одним запросом
+ * (раздел «Программа»: язык выбирается в форме, а не над экраном, d11-2).
+ */
+export async function getActivePlans(studentId: string): Promise<StudyPlan[]> {
+  const teacherId = await requireUserId()
+  const { data, error } = await supabase
+    .from('study_plans')
+    .select('*')
+    .match({ teacher_id: teacherId, student_id: studentId, status: 'active' })
+  if (error) throw dbError(error, 'загрузить программу')
+  return (data ?? []).map(rowToPlan)
+}
+
+/** Отмеченные пункты программы: ключ «неделя:пункт» (с нуля, как в weeks). */
+export type PlanMarks = ReadonlySet<string>
+export const markKey = (week: number, item: number): string => `${week}:${item}`
+
+/**
+ * Что ученик отметил «сделал» (миграция 0015) — по каждой программе. Видит
+ * тот, кому видна программа. Сбой бросает: «ничего не сделано» и «не знаем» —
+ * разное (Ф1.13).
+ */
+export async function loadPlanMarks(planIds: string[]): Promise<Map<string, PlanMarks>> {
+  const out = new Map<string, Set<string>>(planIds.map((id) => [id, new Set<string>()]))
+  if (planIds.length === 0) return out
+  const { data, error } = await supabase.from('study_plan_marks').select('plan_id, week, item').in('plan_id', planIds)
+  if (error) throw dbError(error, 'загрузить отметки программы')
+  for (const m of data ?? []) out.get(m.plan_id)?.add(markKey(m.week, m.item))
+  return out
+}
+
+/** Ученик отмечает пункт своей программы (или снимает отметку). Проверки — в базе. */
+export async function setPlanItemDone(planId: string, week: number, item: number, done: boolean): Promise<void> {
+  const { error } = await supabase.rpc('set_plan_item_done', { p_plan_id: planId, p_week: week, p_item: item, p_done: done })
+  if (error) throw dbError(error, 'отметить пункт программы')
+}
+
 /** Снять программу (в архив). */
 export async function archivePlan(id: string): Promise<void> {
   const { error } = await supabase.from('study_plans').update({ status: 'archived' }).eq('id', id)
