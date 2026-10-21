@@ -200,9 +200,10 @@ export function MainAside({
   /**
    * Ширины: `list` — главная до 720 и правая 352; `narrow` — правая 320
    * (итог проверки рядом с работой, d7-2); `work` — работа до 680 и итог не
-   * уже 312, остаток — итогу (мастер материала, d8-2…d8-4).
+   * уже 312, остаток — итогу (мастер материала, d8-2…d8-4); `toc` — текст до
+   * 680 и оглавление 280 через 48, под закреплённой шапкой экрана (d9-3).
    */
-  size?: 'list' | 'narrow' | 'work'
+  size?: 'list' | 'narrow' | 'work' | 'toc'
   /** Подпись правой колонки для читалки. */
   label?: string
 }) {
@@ -218,14 +219,17 @@ export function MainAside({
   }
   const cols =
     size === 'work'
-      ? 'grid-cols-[minmax(0,var(--container-reading))_minmax(var(--container-summary),1fr)]'
-      : size === 'narrow'
-        ? 'grid-cols-[minmax(0,var(--container-main))_var(--container-aside)] justify-center'
-        : 'grid-cols-[minmax(0,var(--container-main))_var(--container-list)] justify-center'
+      ? 'grid-cols-[minmax(0,var(--container-reading))_minmax(var(--container-summary),1fr)] gap-6'
+      : size === 'toc'
+        ? 'grid-cols-[minmax(0,var(--container-reading))_var(--container-toc)] justify-center gap-12'
+        : size === 'narrow'
+          ? 'grid-cols-[minmax(0,var(--container-main))_var(--container-aside)] justify-center gap-6'
+          : 'grid-cols-[minmax(0,var(--container-main))_var(--container-list)] justify-center gap-6'
   return (
-    <div className={`grid ${cols} gap-6`}>
+    <div className={`grid ${cols}`}>
       <div className="min-w-0">{main}</div>
-      <aside aria-label={label} className="sticky top-8 flex flex-col gap-3.5 self-start">
+      {/* у экрана с закреплённой шапкой (методичка) правая колонка держится под ней */}
+      <aside aria-label={label} className={`sticky flex flex-col gap-3.5 self-start ${size === 'toc' ? 'top-16' : 'top-8'}`}>
         {aside}
       </aside>
     </div>

@@ -23,6 +23,8 @@ export function useWritingTaskDraft() {
     chartTopic: '',
     chart: null as ChartSpec | null,
     prompt: '',
+    /** Вопрос, который придумал AI: пока поле совпадает с ним — «придумал AI · можно править» (d9-2). */
+    aiPrompt: '',
     targetWords: '',
     targetGrammar: '',
     minWords: '150',
@@ -38,6 +40,7 @@ export function useWritingTaskDraft() {
     setChartTopic: field('chartTopic'),
     setChart: field('chart'),
     setPrompt: field('prompt'),
+    setAiPrompt: field('aiPrompt'),
     setTargetWords: field('targetWords'),
     setTargetGrammar: field('targetGrammar'),
     setMinWords: field('minWords'),

@@ -291,7 +291,7 @@ try {
   await draftCase(te, 'письменное задание', {
     open: async () => {
       await go(te, '/teacher?tab=writing')
-      if (!(await has(te, 'textarea[placeholder^="Вставь или сгенерируй"]'))) await click(te, '+ Новое письмо')
+      if (!(await has(te, 'textarea[placeholder^="Вставь или сгенерируй"]'))) await click(te, 'Новое письмо')
     },
     field: 'textarea[placeholder^="Вставь или сгенерируй"]',
     value: 'Describe your favourite season.',

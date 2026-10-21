@@ -43,6 +43,12 @@
  *   wizard-plan    — план от AI, бесплатные повторы есть (d8-3);
  *   wizard-writing — «Новый текст →» нажат, AI пишет — скелетон (d8-5);
  *   wizard-text    — текст готов, слова плана подсвечены (d8-4, 1440).
+ * Заход 4в-3 — письменные задания и методичка (d9):
+ *   writing     — список и открытый Task 2: Айгерим сдала, Мейір проверен,
+ *                 Әсел назначено (d9-1);
+ *   writing-new — «Новое письмо» панелью, вопрос придумал AI (d9-2; вопрос —
+ *                 черновиком, AI не зовётся);
+ *   guide       — методичка, прокручена до раздела 2 (d9-3), снимок окном.
  * Аудит у них — по шторке или диалогу (`audit`), а не по <main> под
  * затемнением; снимок — ровно окном (`overlay`), как кадры t5-2 и d2-2.
  * Ширины 390 и 1280 — в четырёх вариантах вида («Сумерки» и «Закат» ×
@@ -52,7 +58,7 @@
  * красная строка в итоге. Телефон снимается окном во всю высоту страницы.
  *
  * Запуск: npm run dev:test, затем node scripts/shots-screens.mjs [папка]
- * [--only home|students|cancel|tasks|materials|wizard] [--name экран,экран] (по умолчанию shots-screens/,
+ * [--only home|students|cancel|tasks|materials|wizard|writing] [--name экран,экран] (по умолчанию shots-screens/,
  * все экраны; --name — только эти снимки, для быстрой сверки). ~10 мин.
  */
 import { spawn } from 'node:child_process'
@@ -246,7 +252,7 @@ const askOn = (label) => async (page) => {
 try {
   mkdirSync(DIR, { recursive: true })
   console.log('── студия')
-  const { t, a, s, solo, ca, card, wa, ma } = await st.seed()
+  const { t, a, s, solo, ca, card, wa, ma, wt } = await st.seed()
   const PORT = 9700 + Math.floor(Math.random() * 200)
   spawn(EDGE, ['--headless=new', '--disable-gpu', `--remote-debugging-port=${PORT}`, `--user-data-dir=${profileDir('shots-screens')}`, '--no-first-run', 'about:blank'], { detached: true, stdio: 'ignore' }).unref()
   for (let i = 0; i < 30 && !browser; i++) {
@@ -346,6 +352,34 @@ try {
       { name: 'wizard-plan', path: '/tasks?tab=materials', before: drafts(1), prepare: fresh, expect: /План от AI[\s\S]*Итог/ },
       { name: 'wizard-writing', path: '/tasks?tab=materials', before: drafts(1), prepare: writing, expect: /План от AI/ },
       { name: 'wizard-text', path: '/tasks?tab=materials', before: drafts(2), prepare: fresh, expect: /A long day at the airport/ },
+    ])
+  }
+  if (!ONLY || ONLY === 'writing') {
+    console.log('── «Письменные задания» и методичка')
+    const QUESTION = 'Many people believe that tourism does more harm than good to local communities. To what extent do you agree or disagree?'
+    // «Новое письмо» с вопросом от AI — черновиком формы (раздел с черновиком открывает панель сам)
+    const newDraft = async (page) =>
+      page.evaluate(
+        (uid, q) => {
+          localStorage.setItem(
+            `recall.draft.${uid}.writing-task`,
+            JSON.stringify({ v: { mode: 'ielts', lang: 'en', level: 'B1', ieltsTask: 'task2', targetBand: '6.5', chartKind: 'bar', chartTopic: '', chart: null, prompt: q, aiPrompt: q, targetWords: '', targetGrammar: '', minWords: '150' }, at: Date.now() }),
+          )
+        },
+        t.id,
+        QUESTION,
+      )
+    const noDraft = async (page) => page.evaluate((uid) => localStorage.removeItem(`recall.draft.${uid}.writing-task`), t.id)
+    // в макете форма открыта впервые — строки «Черновик восстановлен» нет (панель — вне <main>)
+    const freshAll = (page) => page.evaluate(() => [...document.querySelectorAll('p')].filter((p) => p.textContent.startsWith('Черновик восстановлен')).forEach((p) => p.remove()))
+    const toSection2 = async (page) => {
+      await page.evaluate(() => document.getElementById('guide-diagnostics')?.scrollIntoView({ block: 'start' }))
+      await sleep(800)
+    }
+    await screen(t.email, [
+      { name: 'writing', path: `/tasks?tab=writing&wt=${wt}`, before: noDraft, expect: /Назначить ученикам[\s\S]*Удалить задание/ },
+      { name: 'writing-new', path: `/tasks?tab=writing&wt=${wt}`, before: newDraft, prepare: freshAll, expect: /Новое письмо[\s\S]*Создать/, audit: '[role="dialog"]', overlay: true },
+      { name: 'guide', path: '/tasks?tab=guide', before: noDraft, prepare: toSection2, expect: /Методичка[\s\S]*Содержание/, overlay: true },
     ])
   }
   if (!ONLY || ONLY === 'tasks') {

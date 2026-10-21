@@ -547,6 +547,12 @@ async function main() {
   await page.goto(`${BASE}/teacher?tab=writing`, { waitUntil: 'networkidle2' })
   check('старая ссылка /teacher?tab=writing → «Задания», письменные', (await appears(page, 'Nav smoke essay')) && path() === '/tasks?tab=writing', path())
   check('на «Заданиях» подсвечены «Задания»', (await activeTab()) === 'Задания', await activeTab())
+  // письменное задание открыто в адресе (?wt=, d9-1): ссылка и «назад» работают, как у материала
+  await tap(page, 'Nav smoke essay', '[data-row]')
+  const wtOpen = await appears(page, 'Назначить ученикам')
+  check('Письменные: задание открыто по адресу', wtOpen && /^\/tasks\?tab=writing&wt=/.test(path()), path())
+  await page.goBack({ waitUntil: 'networkidle2' }).catch(() => {})
+  check('Письменные: «назад» — к списку без открытого задания', (await appears(page, 'Новое письмо')) && path() === '/tasks?tab=writing', path())
 
   // «Ученики»: студия без ряда вкладок
   await tap(page, 'Ученики', 'nav.vt-nav a')

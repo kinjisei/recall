@@ -205,7 +205,7 @@ try {
 
     await open(te, '/tasks?tab=writing')
     await shotT('d9-writing', /Письменные задания/)
-    await click(te, '+ Новое письмо')
+    await click(te, 'Новое письмо')
     await sleep(800)
     await shotT('d9-writing-new', /IELTS/)
     await dropDrafts(te, t.id, ['writing-task'])

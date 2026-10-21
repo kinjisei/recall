@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode, Ref } from 'react'
 
-type Variant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'danger-solid'
+type Variant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'danger-solid' | 'danger-outline'
 type Size = 'sm' | 'md' | 'lg'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -39,6 +39,8 @@ const VARIANTS: Record<Variant, string> = {
   ghost: 'bg-transparent font-medium text-accent-strong active:bg-ghost-press',
   danger: 'bg-danger-soft font-medium text-danger-strong active:bg-danger-soft-press',
   'danger-solid': 'bg-danger font-semibold text-danger-fg shadow-card active:brightness-90',
+  // необратимое, но не главное на экране: «Удалить задание» под чертой (d9-1)
+  'danger-outline': 'bg-transparent font-semibold text-danger-strong inset-ring inset-ring-danger active:bg-danger-soft-press',
 }
 
 /** Нажатое состояние без пальца — витрина /dev/ui показывает его рядом с обычным. */
@@ -49,6 +51,7 @@ const PRESSED: Record<Variant, string> = {
   ghost: 'data-press:bg-ghost-press',
   danger: 'data-press:bg-danger-soft-press',
   'danger-solid': 'data-press:brightness-90',
+  'danger-outline': 'data-press:bg-danger-soft-press',
 }
 
 // радиус ≈ 30 % высоты (s2): 14 · 16 · 18
@@ -71,6 +74,7 @@ const OFF_BG: Record<Variant, string> = {
   ghost: 'bg-transparent',
   danger: 'bg-input',
   'danger-solid': 'bg-input',
+  'danger-outline': 'bg-transparent inset-ring inset-ring-line',
 }
 
 /** Индикатор загрузки листа s3: кольцо и дуга, 0,9 с на оборот. */

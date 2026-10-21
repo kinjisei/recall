@@ -25,7 +25,7 @@ import { ReviewScreen } from './ReviewScreen'
 import { TasksHub, type TaskSection } from './TasksHub'
 import { refreshWaitingCount } from './waitingCount'
 import { loadWaitingWorks, queuePlace, type WaitingWork } from './waitingWorks'
-import { WritingSection } from './WritingSection'
+import { WritingSection } from './writing/WritingSection'
 
 const TITLES: Record<TaskSection, string> = {
   materials: 'Материалы',
@@ -52,7 +52,7 @@ export function TasksPage() {
       <InnerScreenContext.Provider value={setInner}>
         <div className="flex flex-col gap-4">
           {!inner && <BackHeader onBack={() => setTab(null)} title={TITLES[tab]} label="Задания" />}
-          {tab === 'guide' ? <GuideSection /> : <StudentsSection tab={tab} startForm={startForm} onExit={() => setTab(null)} />}
+          {tab === 'guide' ? <GuideSection onExit={() => setTab(null)} /> : <StudentsSection tab={tab} startForm={startForm} onExit={() => setTab(null)} />}
         </div>
       </InnerScreenContext.Provider>
     )
@@ -83,7 +83,7 @@ function StudentsSection({ tab, startForm, onExit }: { tab: 'materials' | 'writi
   if (error) return <LoadError message={error} onRetry={reload} />
   if (!students) return <Loading label="Открываем раздел" />
   return tab === 'writing' ? (
-    <WritingSection students={students} />
+    <WritingSection students={students} onExit={onExit} />
   ) : (
     // проверили или сняли сданную работу — число на вкладке «Задания» сходится
     <MaterialsSection students={students} startForm={startForm} onWorksChanged={refreshWaitingCount} onExit={onExit} />

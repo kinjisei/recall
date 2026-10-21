@@ -32,7 +32,7 @@ export interface ChoiceOption<T extends string> {
   label: string
   /** Классы подписи варианта (напр. размер шрифта у «Текст в чтении»). */
   className?: string
-  /** Вторая строка карточки (только вид cards). */
+  /** Вторая строка варианта (виды cards и tiles). */
   hint?: string
   /** Правый слот карточки — цена, счётчик (только вид cards). */
   trailing?: ReactNode
@@ -87,10 +87,12 @@ export function ChoiceGroup<T extends string>({
 
   if (variant === 'tiles') {
     // две колонки — от 384 px ширины самого выбора: на телефоне «Собеседование»
-    // в половину карточки не влезало
+    // в половину карточки не влезало; со второй строкой — всегда одна (d9-2:
+    // «Task 2 · эссе · от 250 слов · 40 минут» в половину не влезает)
+    const withHints = options.some((o) => o.hint)
     return (
       <div className={`@container ${className}`}>
-        <div role="radiogroup" aria-label={label} className="grid grid-cols-1 gap-2 @sm:grid-cols-2">
+        <div role="radiogroup" aria-label={label} className={`grid grid-cols-1 gap-2 ${withHints ? '' : '@sm:grid-cols-2'}`}>
           {options.map((o) => {
             const on = o.id === value
             return (
@@ -105,7 +107,10 @@ export function ChoiceGroup<T extends string>({
                 } ${o.className ?? ''}`}
               >
                 <span aria-hidden className={`size-5 flex-none rounded-full bg-surface ${on ? 'inset-ring-6 inset-ring-primary' : 'inset-ring-2 inset-ring-fg-faint'}`} />
-                <span className="min-w-0">{o.label}</span>
+                <span className="flex min-w-0 flex-col leading-snug">
+                  {o.label}
+                  {o.hint && <small className={`text-note font-normal ${on ? '' : 'text-fg-secondary'}`}>{o.hint}</small>}
+                </span>
               </button>
             )
           })}

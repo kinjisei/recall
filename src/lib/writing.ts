@@ -108,6 +108,14 @@ export async function listWritingAssignments(taskId: string): Promise<WritingTas
   return (data ?? []) as WritingTaskAssignment[]
 }
 
+/** Кому выданы задания и в каком они статусе — сводка «1 сдано · 1 проверено» в списке (d9-1); без текстов работ. */
+export async function listTaskStatuses(taskIds: string[]): Promise<Pick<WritingTaskAssignment, 'task_id' | 'status'>[]> {
+  if (taskIds.length === 0) return []
+  const { data, error } = await supabase.from('writing_task_assignments').select('task_id, status').in('task_id', taskIds)
+  if (error) throw dbError(error, 'загрузить выдачи писем')
+  return (data ?? []) as Pick<WritingTaskAssignment, 'task_id' | 'status'>[]
+}
+
 /** Письменные задания текущего ученика вместе с самим заданием. */
 export async function getMyWritingAssignments(): Promise<
   (WritingTaskAssignment & { task: WritingTask })[]

@@ -221,10 +221,21 @@ export function studio(prefix) {
       await admin.from('review_states').insert({ card_id: c.id, user_id: a.id, stability: 1.2, difficulty: 8, due: new Date(Date.parse(now) - 3600_000).toISOString(), last_review: new Date(Date.parse(now) - 86400_000).toISOString(), reps: 6 + i, lapses: i < 3 ? 4 - i : 0, state: i < 3 ? 'relearning' : 'review' })
     }
 
-    // письменные задания и сданные работы
+    // письменные задания и сданные работы; как в d9-1: GT Task 1 проверен у
+    // двоих, испанское эссе никому не назначено (вставлены раньше Task 2 —
+    // список свежими сверху, Task 2 первым)
+    const at = (h) => new Date(Date.parse(now) - h * 3600_000).toISOString()
+    const gt1 = must(await admin.from('writing_tasks').insert({ teacher_id: t.id, lang: 'en', mode: 'ielts', level: 'B2', prompt: 'Write a letter to your landlord about a broken heater in your flat.', settings: { ieltsTask: 'gt1', targetBand: 6 }, created_at: at(240) }).select('id').single(), 'письмо GT')
+    must(await admin.from('writing_tasks').insert({ teacher_id: t.id, lang: 'es', mode: 'regular', level: 'A2', prompt: 'Describe tu fin de semana ideal.', settings: { minWords: 80 }, created_at: at(320) }).select('id').single(), 'эссе ES')
+    for (const [u, band] of [[m, '6.0'], [s, '5.5']]) {
+      must(await admin.from('writing_task_assignments').insert({ task_id: gt1.id, student_id: u.id, status: 'reviewed', essay: ESSAY, band, created_at: at(230), submitted_at: at(220), reviewed_at: at(216) }), 'проверенное письмо GT')
+    }
     const task2 = must(await admin.from('writing_tasks').insert({ teacher_id: t.id, lang: 'en', mode: 'ielts', level: 'B2', prompt: 'Some people think that governments should spend money on public transport rather than on building new roads. To what extent do you agree or disagree?', settings: { ieltsTask: 'task2', targetBand: '6.5' } }).select('id').single(), 'письмо 1')
-    must(await admin.from('writing_tasks').insert({ teacher_id: t.id, lang: 'en', mode: 'regular', level: 'A2', prompt: 'Write an email to a friend about your weekend plans (80-100 words).', settings: { targetWords: ['weekend', 'plan', 'visit'], targetGrammar: ['going to'], minWords: 80 } }).select('id').single(), 'письмо 2')
+    must(await admin.from('writing_tasks').insert({ teacher_id: t.id, lang: 'en', mode: 'regular', level: 'A2', prompt: 'Write an email to a friend about your weekend plans (80-100 words).', settings: { targetWords: ['weekend', 'plan', 'visit'], targetGrammar: ['going to'], minWords: 80 }, created_at: at(300) }).select('id').single(), 'письмо 2')
     const wa = must(await admin.from('writing_task_assignments').insert({ task_id: task2.id, student_id: a.id, status: 'submitted', submitted_at: new Date(Date.parse(now) - 5 * 3600_000).toISOString(), essay: ESSAY, ai_review: AI_REVIEW }).select('id').single(), 'сданное письмо')
+    // у Task 2, как в d9-1: Мейір проверен (band 6.0), Әсел назначено вчера
+    must(await admin.from('writing_task_assignments').insert({ task_id: task2.id, student_id: m.id, status: 'reviewed', essay: ESSAY, band: '6.0', created_at: at(240), submitted_at: at(220), reviewed_at: at(216) }), 'проверенное письмо Мейір')
+    must(await admin.from('writing_task_assignments').insert({ task_id: task2.id, student_id: s.id, status: 'assigned', created_at: at(26) }), 'назначенное письмо Әсел')
 
     const mats = []
     for (const mt of MATERIALS) mats.push(must(await admin.from('materials').insert({ teacher_id: t.id, ...mt }).select('id').single(), 'материал'))
@@ -240,7 +251,7 @@ export function studio(prefix) {
       ],
     }).select('id').single(), 'сданное задание')
     await admin.from('material_assignments').insert({ material_id: mats[2].id, student_id: a.id, status: 'assigned', created_at: new Date(Date.parse(now) - 2 * 86400_000).toISOString() })
-    return { t, a, s, m, solo, nw, ca, card, wa: wa.id, ma: ma.id }
+    return { t, a, s, m, solo, nw, ca, card, wa: wa.id, ma: ma.id, wt: task2.id }
   }
 
   async function cleanup() {
