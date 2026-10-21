@@ -1,9 +1,10 @@
 /**
  * Мини-тест плана дня (lib/dailyPlanCore): умный дефолт из 3 пунктов,
- * приоритет задание > квест > ротация, настройка учителя, «идеальный день».
+ * приоритет задание > квест > ротация, настройка учителя, «идеальный день»;
+ * шаги «Начать занятие» и подпись под кнопкой — из плана (журнал п.76 (10)).
  * Запуск: node scripts/test-dailyplan.mjs (Node 22+, стрип типов).
  */
-import { buildTodayPlan, isPerfectDay } from '../src/lib/dailyPlanCore.ts'
+import { buildTodayPlan, isPerfectDay, sessionCaption, sessionSteps } from '../src/lib/dailyPlanCore.ts'
 
 const results = []
 const check = (name, ok, extra = '') => {
@@ -65,6 +66,18 @@ check(
   'реальное прохождение квеста закрывает пункт',
   isPerfectDay(withQuest, new Set(withQuest.flatMap((i) => i.types))),
 )
+
+// «Начать занятие» идёт по плану: шаги — несделанные пункты, подпись — из них.
+// Ожидания — литералами (подпись видит ученик)
+const teacherPlan = buildTodayPlan({ kinds: ['grammar', 'conversation'], auto: false }, { pendingAssignments: 0, activeQuests: 0, weekday: 0 })
+check('занятие по плану учителя: слова → грамматика → диалог', keys(sessionSteps(teacherPlan, new Set())) === 'words,grammar,conversation', keys(sessionSteps(teacherPlan, new Set())))
+check('подпись: «~15 минут · слова → грамматика → диалог»', sessionCaption(sessionSteps(teacherPlan, new Set())) === '~15 минут · слова → грамматика → диалог', sessionCaption(sessionSteps(teacherPlan, new Set())))
+check('сделанное сегодня в занятие не идёт', keys(sessionSteps(teacherPlan, new Set(['practice', 'grammar']))) === 'conversation', keys(sessionSteps(teacherPlan, new Set(['practice', 'grammar']))))
+check('письмо закрывает «Диалог» — как на Главной', keys(sessionSteps(teacherPlan, new Set(['writing']))) === 'words,grammar')
+check('всё сделано — занятие заново по всему плану', keys(sessionSteps(teacherPlan, new Set(['flashcards', 'grammar', 'conversation']))) === 'words,grammar,conversation')
+check('повторять нечего — без шага слов', keys(sessionSteps(teacherPlan, new Set(), { noReview: true })) === 'grammar,conversation')
+const withTask = buildTodayPlan(null, { pendingAssignments: 1, activeQuests: 0, weekday: 0 })
+check('задание — 10 минут: «~20 минут · слова → задание → …»', /^~20 минут · слова → задание → /.test(sessionCaption(sessionSteps(withTask, new Set()))), sessionCaption(sessionSteps(withTask, new Set())))
 
 const ok = results.filter(Boolean).length
 console.log(`\nИтог: ${ok}/${results.length}`)

@@ -10,6 +10,7 @@
 // ============================================================================
 import { supabase, currentUserId } from '../shared/api/supabase'
 import type { ActivityType } from '../types'
+import { noteGuidedActivity } from './guided'
 
 /** YYYY-MM-DD в местном времени (offsetDays: 0 — сегодня, -1 — вчера…). */
 function localDay(offsetDays = 0): string {
@@ -30,6 +31,9 @@ export async function logActivity(
   itemsDone = 1,
   durationSec = 0,
 ): Promise<void> {
+  // ведомое занятие: тип активности закрывает текущий шаг — плашка «Дальше»
+  // (до записи: сбой связи не должен держать человека на шаге, который он сделал)
+  noteGuidedActivity(type)
   try {
     // Запись идёт через RPC log_activity: прямая запись в activity_log клиенту
     // запрещена грантом (заход 21). День клиент шлёт местный (для корректного

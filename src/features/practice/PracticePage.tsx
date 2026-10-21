@@ -217,18 +217,18 @@ export function PracticePage() {
   }
 
   // Ведомая сессия («Начать занятие» на Главной): при входе без параметра
-  // открываем сразу повторение; если слов ещё нет — пропускаем пустой шаг и
-  // уводим сессию на чтение (skipReviewIfNoWords в lib/guided).
+  // открываем сразу повторение; повторять нечего — пропускаем пустой шаг и
+  // уводим сессию к следующему шагу плана (skipReviewIfNoWords в lib/guided).
   //
   // ⚠️ Уводим РОВНО ОДИН РАЗ. Правило спрашиваем у guided.ts, а не решаем
   // здесь: тот же перехват есть в «Учёбе», и два экземпляра условия разошлись
   // бы молча. Отметку ставим в момент самой навигации — см. shouldAutoOpen.
   useEffect(() => {
-    if (shouldAutoOpen('flashcards') && !searchParams.get('m')) {
+    if (shouldAutoOpen('words') && !searchParams.get('m')) {
       let alive = true
       void skipReviewIfNoWords(lang).then((route) => {
         if (!alive) return
-        markAutoOpened('flashcards')
+        markAutoOpened('words')
         if (route) navigate(route, { replace: true })
         else setSearchParams({ m: 'review' }, { replace: true })
       })

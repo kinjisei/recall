@@ -1,6 +1,6 @@
 ﻿import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react'
 import { Card } from '../../shared/ui/Card'
-import { GuidedNext } from '../../components/GuidedNext'
+import { GuidedDone } from '../dashboard'
 import { BackHeader } from '../../shared/ui/BackButton'
 import { TabPicker } from '../../shared/ui/TabPicker'
 import { MarkableText } from '../../components/MarkableText'
@@ -174,8 +174,8 @@ function Reader({ text, onBack }: { text: SampleText; onBack: () => void }) {
         <MarkableText text={text.body} lang="en" className={READER_CLASSES[getSettings().readerSize]} />
       </Card>
 
-      {/* ведомая сессия: после текста предложить следующий шаг */}
-      <GuidedNext step="reader" />
+      {/* ведомое занятие: текст открыт — шаг чтения сделан, «Дальше» покажет каркас под текстом */}
+      <GuidedDone step="reader" />
     </div>
   )
 }

@@ -162,7 +162,8 @@ try {
   check('Главная: «Урок через 5 мин» (или 4) и «Сегодня, …»', await waitText(sa, /Урок через [45] мин[\s\S]*Сегодня, \d\d:\d\d–\d\d:\d\d/))
   const join = await sa.$eval('[data-next-lesson] a[target="_blank"]', (e) => ({ text: e.textContent.trim(), href: e.href })).catch(() => null)
   check('«Войти в урок» — ссылка преподавателя', join?.text === 'Войти в урок' && join.href === LINK, JSON.stringify(join))
-  check('«Начать занятие» — второстепенное, «после урока» (u1-2)', /Начать занятие\s*~15 минут · после урока/.test(await text(sa)))
+  // минуты — из шагов плана дня (журнал п.76 (10)), а не всегда 15
+  check('«Начать занятие» — второстепенное, «после урока» (u1-2)', /Начать занятие\s*~\d+ минут · после урока/.test(await text(sa)))
   check('на Главной остатка оплаченных уроков нет (п.33)', !/Оплачено ещё|Оплаченные уроки/.test(await text(sa)))
   await shot(sa, 'home-soon-390')
   await audit(sa, 'карточка «Ближайший урок»', '[data-next-lesson]')

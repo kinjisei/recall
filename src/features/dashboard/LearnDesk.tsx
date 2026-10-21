@@ -23,7 +23,6 @@ import {
   IconCards,
   IconCheck,
   IconChevronRight,
-  IconFlame,
   IconGraduation,
   IconMic,
   IconPencil,
@@ -33,6 +32,8 @@ import {
   type IconLike,
 } from '../../shared/ui/icons'
 import { MainAside } from '../../shared/ui/layouts'
+import { sessionCaption, type TodayPlanItem } from '../../lib/dailyPlan'
+import { STREAK_HERO, StreakCount, StreakGlow, WeekDots } from './StudyStreak'
 import { LoadError } from '../../shared/ui/LoadError'
 import type { AppLang } from '../../types'
 import { LearnDialog } from './LearnDialog'
@@ -143,14 +144,16 @@ export function LearnDesk({
   setLang,
   level,
   activity,
+  steps,
 }: {
   lang: AppLang
   setLang: (l: AppLang) => void
   level: string | null
   activity: AsyncData<HomeActivity>
+  /** Шаги «Начать занятие» — план дня (useSessionSteps); null — ещё считаем. */
+  steps: TodayPlanItem[] | null
 }) {
   const navigate = useNavigate()
-  const streak = activity.data?.streak ?? null
   return (
     <div className="flex flex-col gap-4">
       <header className="flex min-h-10 flex-wrap items-center gap-3">
@@ -160,38 +163,42 @@ export function LearnDesk({
         </span>
       </header>
 
-      <section aria-label="Сводка" className="flex items-center gap-5 rounded-card bg-surface py-4 pl-5.5 pr-4.5 shadow-card" data-learn-summary>
-        <div className="flex flex-col gap-2">
+      {/* серия — как на телефоне (фон, пламя, неделя с днями), кнопка — справа (решение владельца 22.10) */}
+      <section aria-label="Сводка" className={`${STREAK_HERO} flex items-center gap-5 py-4 pl-5.5 pr-4.5`} data-learn-summary>
+        <StreakGlow />
+        <div className="relative flex flex-col gap-2">
           <b className="text-xl font-semibold tracking-tight">
             {LANG_NAME[lang]}
             {level ? ` · ${level}` : ''}
           </b>
           <ChoiceGroup variant="segment" label="Язык учёбы" options={[{ id: 'en', label: 'EN' }, { id: 'es', label: 'ES' }]} value={lang} onChange={setLang} />
         </div>
-        <div className="flex items-center gap-2.5 self-stretch border-x border-line px-5">
-          <span className="flex size-11 flex-none items-center justify-center rounded-control-sm bg-accent-soft text-accent-strong">
-            <IconFlame size={26} aria-hidden />
-          </span>
+        <div className="relative flex items-center gap-3.5 self-stretch border-x border-accent/20 px-5">
           {activity.error ? (
             <button type="button" onClick={activity.reload} className="flex min-h-11 flex-col items-start text-left text-note text-fg-secondary">
               серия не загрузилась
               <span className="font-medium text-accent-strong">Повторить</span>
             </button>
-          ) : streak === null ? (
-            <span className="animate-skeleton h-10 w-20 rounded-lg bg-skeleton" />
+          ) : activity.data ? (
+            <>
+              <StreakCount streak={activity.data.streak} />
+              <span className="ml-2">
+                <WeekDots week={activity.data.week} />
+              </span>
+            </>
           ) : (
-            <span className="flex flex-col">
-              <b className="text-2xl font-bold leading-none tabular-nums">{streak}</b>
-              <small className="text-note text-fg-secondary">{plural(streak, 'день подряд', 'дня подряд', 'дней подряд')}</small>
-            </span>
+            <span className="animate-skeleton h-12 w-64 rounded-lg bg-skeleton" />
           )}
         </div>
-        <div className="ml-auto flex min-w-65 flex-col gap-1.5">
-          {/* куда вести — решаем ДО перехода (как на Главной, StartButton) */}
-          <Button size="lg" onClick={() => void startGuidedRoute(lang).then((r) => navigate(r))}>
+        <div className="relative ml-auto flex min-w-65 flex-col gap-1.5">
+          {/* куда вести — решаем ДО перехода (как на Главной, StartButton); шаги — план дня */}
+          <Button size="lg" onClick={() => void startGuidedRoute(lang, steps ?? undefined).then((r) => navigate(r))}>
             Начать занятие
           </Button>
-          <small className="text-center text-note text-fg-secondary">~15 минут · слова → чтение → речь</small>
+          {/* подпись — из шагов плана дня: учитель поменял план — поменялась и она */}
+          <small className="min-h-4.5 text-center text-note text-fg-secondary" data-start-caption>
+            {steps ? sessionCaption(steps) : ''}
+          </small>
         </div>
       </section>
 

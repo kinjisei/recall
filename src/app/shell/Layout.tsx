@@ -30,6 +30,7 @@
 import { useMemo, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { AccessEndedBanner } from '../../features/billing'
+import { GuidedBar } from '../../features/dashboard'
 import { FocusModeContext } from '../../shared/lib/focusMode'
 import { ContentWidthContext, PageWidthContext, type PageWant } from '../../shared/lib/screenWidth'
 import { areaPad, menuWidth, panelPushes } from '../../shared/lib/shellGeometry'
@@ -108,6 +109,8 @@ export function Layout() {
               >
                 {banner && <AccessEndedBanner role={banner} />}
                 <Outlet />
+                {/* ведомое занятие: шаг сделан — «Дальше: …» под любым экраном */}
+                <GuidedBar />
               </main>
             </div>
           </div>

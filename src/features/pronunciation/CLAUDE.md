@@ -15,7 +15,7 @@
 
 | Файл | Что там |
 |---|---|
-| `PronunciationPage.tsx` | очередь фраз, запись, оценка |
+| `PronunciationPage.tsx` | очередь фраз, запись, оценка; финал раунда — конец шага речи ведомого занятия (`GuidedDone`, «Дальше» рисует каркас — `features/dashboard`) |
 | `src/lib/speech.ts` | озвучка (Web Speech API) и оценка `scorePronunciation` |
 | `src/lib/transcribe.ts` | запись и отправка на распознавание |
 

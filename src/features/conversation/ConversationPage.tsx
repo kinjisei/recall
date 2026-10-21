@@ -4,6 +4,7 @@ import { useChatList } from '../../lib/useChatList'
 import { markerOf } from './replyMarkers'
 import { MARKER_LOOK } from './markerLook'
 import { useSendOnArrival } from './useSendOnArrival'
+import { GuidedBar } from '../dashboard'
 import { Card } from '../../shared/ui/Card'
 import { supabase } from '../../shared/api/supabase'
 import { getProfile } from '../../lib/profile'
@@ -372,11 +373,15 @@ function ChatSection({
         label={lang === 'es' ? 'Сообщение по-испански' : 'Сообщение по-английски'}
         placeholder={lang === 'es' ? 'Escribe en español…' : 'Write in English…'}
         after={
-          msgs.length > 0 && (
-            <button onClick={reset} className="mx-auto mt-1.5 block px-3 py-0.5 text-xs text-fg-muted">
-              Новый диалог
-            </button>
-          )
+          <>
+            {/* ведомое занятие: ответ AI пришёл — «Дальше: …» под полем (лента стоит в окне) */}
+            <GuidedBar inline />
+            {msgs.length > 0 && (
+              <button onClick={reset} className="mx-auto mt-1.5 block px-3 py-0.5 text-xs text-fg-muted">
+                Новый диалог
+              </button>
+            )}
+          </>
         }
       />
     </div>

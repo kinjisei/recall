@@ -19,7 +19,7 @@ import { countMyWords } from '../../lib/cards'
 import { logActivity } from '../../lib/activity'
 import { getMyPendingWordChecks } from '../../lib/wordChecks'
 import { useLanguage } from '../../context/LanguageContext'
-import { GuidedNext } from '../../components/GuidedNext'
+import { GuidedDone } from '../dashboard'
 import { SwipeCard, SwipeTutorial } from './SwipeCard'
 import { WordCheckRunner } from './WordCheckRunner'
 import type { Card as CardType, WordCheck } from '../../types'
@@ -283,8 +283,8 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
               </Button>
             )}
           </Card>
-          {/* ведомая сессия: предложить следующий шаг */}
-          <GuidedNext step="flashcards" />
+          {/* ведомое занятие: повторение окончено (даже пустое) — «Дальше» покажет каркас */}
+          <GuidedDone step="words" />
         </>
       )}
     </div>

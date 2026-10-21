@@ -15,17 +15,19 @@ import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { loadHomeActivity, type HomeActivity } from '../../lib/activity'
 import { getEsLevel } from '../../lib/esLevel'
+import { sessionCaption, type TodayPlanItem } from '../../lib/dailyPlan'
 import { startGuidedRoute } from '../../lib/guided'
 import { getCachedEnLevel, getProfile } from '../../lib/profile'
-import { plural } from '../../shared/lib/plural'
 import { useAsyncData } from '../../shared/lib/useAsyncData'
 import { AppLink } from '../../shared/ui/AppLink'
 import { Button } from '../../shared/ui/Button'
 import { LoadError } from '../../shared/ui/LoadError'
-import { IconArrowRight, IconChevronRight, IconDialog, IconFlame, IconPractice, IconStudy, type IconLike } from '../../shared/ui/icons'
+import { IconArrowRight, IconChevronRight, IconDialog, IconPractice, IconStudy, type IconLike } from '../../shared/ui/icons'
 import { useAsideSplit } from '../../shared/ui/layouts'
 import type { AppLang } from '../../types'
 import { LearnDesk } from './LearnDesk'
+import { STREAK_HERO, StreakCount, StreakGlow, WeekDots } from './StudyStreak'
+import { useSessionSteps } from './useSessionSteps'
 
 const TILES: { to: string; title: string; desc: string; Icon: IconLike }[] = [
   { to: '/study', title: 'Учёба', desc: 'Тексты, грамматика, словарь', Icon: IconStudy },
@@ -33,37 +35,27 @@ const TILES: { to: string; title: string; desc: string; Icon: IconLike }[] = [
   { to: '/conversation', title: 'Диалог', desc: 'Разговор с AI', Icon: IconDialog },
 ]
 
-/** Серия, неделя кружками и «Начать занятие» — одной карточкой (t1-4б). */
-function StreakCard({ activity, lang }: { activity: HomeActivity; lang: AppLang }) {
+/** Серия, неделя кружками с днями и «Начать занятие» — одной карточкой (t1-4б). */
+function StreakCard({ activity, lang, steps }: { activity: HomeActivity; lang: AppLang; steps: TodayPlanItem[] | null }) {
   const navigate = useNavigate()
-  const { streak, week } = activity
-  const done = week.filter((d) => d.active).map((d) => d.label)
   return (
-    <section className="relative flex flex-col gap-3.5 overflow-hidden rounded-3xl border border-accent/30 bg-radial-[130%_120%_at_0%_0%] from-hero via-hero-mid via-55% to-hero-edge p-4.5">
-      <div aria-hidden className="pointer-events-none absolute -right-18 -top-20 size-60 rounded-full bg-radial-[circle] from-hero-glow to-transparent to-70%" />
-      <div className="relative flex items-center gap-3.5">
-        <span className="flex size-12 flex-none items-center justify-center rounded-full bg-accent text-accent-fg">
-          <IconFlame size={24} aria-hidden />
-        </span>
-        <span className="flex min-w-0 flex-1 flex-col">
-          <span className="text-3xl font-bold leading-none tabular-nums">{streak}</span>
-          <span className="text-sm text-accent-soft-fg">{plural(streak, 'день подряд', 'дня подряд', 'дней подряд')}</span>
-        </span>
-        <span
-          role="img"
-          aria-label={done.length ? `На этой неделе занимался: ${done.join(', ')}` : 'На этой неделе ещё не занимался'}
-          className="flex flex-none gap-1.5"
-        >
-          {week.map((d) => (
-            <i key={d.day} className={`size-3 rounded-full ${d.active ? 'bg-accent' : 'border-2 border-dashed border-accent/50'}`} />
-          ))}
+    <section className={`${STREAK_HERO} flex flex-col gap-3.5 p-4.5`}>
+      <StreakGlow />
+      {/* узкий телефон — неделя переносится под число, прижатая вправо */}
+      <div className="relative flex flex-wrap items-center gap-x-3.5 gap-y-3">
+        <StreakCount streak={activity.streak} />
+        <span className="ml-auto">
+          <WeekDots week={activity.week} />
         </span>
       </div>
-      {/* куда вести — решаем ДО перехода (как на Главной, StartButton) */}
-      <Button size="lg" className="relative w-full" onClick={() => void startGuidedRoute(lang).then((r) => navigate(r))}>
+      {/* куда вести — решаем ДО перехода (как на Главной, StartButton); шаги — план дня */}
+      <Button size="lg" className="relative w-full" onClick={() => void startGuidedRoute(lang, steps ?? undefined).then((r) => navigate(r))}>
         Начать занятие <IconArrowRight size={22} aria-hidden />
       </Button>
-      <span className="relative text-center text-note text-fg-secondary">~15 минут · слова → чтение → речь</span>
+      {/* подпись — из шагов плана дня; пока считаем — держим место */}
+      <span className="relative min-h-4.5 text-center text-note text-fg-secondary" data-start-caption>
+        {steps ? sessionCaption(steps) : ''}
+      </span>
     </section>
   )
 }
@@ -78,8 +70,10 @@ export function MyStudyPage() {
   // уровень — подпись: не знаем — не пишем (умолчание базы — не измеренный уровень)
   const profile = useAsyncData(() => (user ? getProfile(user.id) : Promise.resolve(null)), [user?.id])
   const level = lang === 'es' ? getEsLevel() : (profile.data?.level ?? getCachedEnLevel() ?? null)
+  // «Начать занятие» — по плану дня; серия не пришла — сделанного не знаем, план целиком
+  const steps = useSessionSteps(lang, activity.data?.todayTypes ?? (activity.error ? new Set() : null))
 
-  if (desk) return <LearnDesk lang={lang} setLang={setLang} level={level} activity={activity} />
+  if (desk) return <LearnDesk lang={lang} setLang={setLang} level={level} activity={activity} steps={steps} />
 
   return (
     <div className="flex flex-col gap-4">
@@ -95,7 +89,7 @@ export function MyStudyPage() {
       {activity.error ? (
         <LoadError message={activity.error} onRetry={activity.reload} />
       ) : activity.data ? (
-        <StreakCard activity={activity.data} lang={lang} />
+        <StreakCard activity={activity.data} lang={lang} steps={steps} />
       ) : (
         <div aria-hidden className="animate-skeleton h-52 rounded-card bg-skeleton" />
       )}

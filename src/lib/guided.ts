@@ -1,56 +1,105 @@
 // ============================================================================
 // Описание: src/features/dashboard/CLAUDE.md
-// «Начать занятие» — короткая ведомая сессия: колода → чтение → речь.
-// Намеренно без state-менеджера: шаг лежит в sessionStorage, каждый экран в
-// конце спрашивает peekNextStep() и, если сессия идёт, показывает кнопку
-// перехода к следующему шагу. Закрыл вкладку — сессия просто забылась.
+// «Начать занятие» — ведомая сессия по плану дня (журнал п.76 (10)): шаги —
+// пункты плана, которые сегодня ещё не сделаны (lib/dailyPlanCore
+// `sessionSteps`), подпись под кнопкой — из них же. Раньше занятие было
+// всегда «колода → чтение → речь», и план, который настроил учитель, на него
+// не влиял.
+// Намеренно без state-менеджера: шаги и текущий шаг лежат в sessionStorage.
+// Шаг сделан — когда записалась активность его типа (logActivity → тот же
+// признак, что отмечает пункт плана «Сделано» на Главной) или экран сам сказал
+// «конец» (`markGuidedDone`: прочитан текст, раунд повторения или речи
+// окончен — даже если повторять было нечего). Тогда внизу экрана плашка
+// «Дальше: …» (features/dashboard GuidedBar). Закрыл вкладку — сессия
+// просто забылась.
 // ============================================================================
 
-import { countMyWords } from './cards'
-import type { AppLang } from '../types'
+import { buildTodayPlan, type TodayPlanItem } from './dailyPlanCore'
+import type { ActivityType, AppLang } from '../types'
 
 const KEY = 'recall.guided'
+const STEPS_KEY = 'recall.guided.steps'
+/** Шаг, работа которого уже сделана: плашка «Дальше» показана. */
+const DONE_KEY = 'recall.guided.done'
 
 /**
  * Шаг, на который человека УЖЕ увели автоматически.
  *
  * ⚠️ Без этой отметки сессия превращалась в ловушку. Шаг переключается только
- * по нажатию на баннер (advanceGuided), то есть когда раунд доведён до конца и нажато
- * «Дальше». Бросил на середине — шаг навсегда остался прежним, и КАЖДЫЙ вход в
- * «Практику» снова кидал в повторение; нижней навигации в раунде нет, выйти
- * можно только кареткой. Человек, решивший заняться другим, упирался в это
- * бесконечно (жалоба владельца: «приходилось выходить, чтобы выбрать что-то
- * другое»). Симптом выглядел плавающим, потому что sessionStorage очищается
- * при закрытии вкладки.
+ * по нажатию «Дальше» (advanceGuided), то есть когда работа сделана. Бросил
+ * на середине — шаг навсегда остался прежним, и КАЖДЫЙ вход в «Практику»
+ * снова кидал в повторение; нижней навигации в раунде нет, выйти можно только
+ * кареткой. Человек, решивший заняться другим, упирался в это бесконечно
+ * (жалоба владельца: «приходилось выходить, чтобы выбрать что-то другое»).
  *
  * Теперь автоперехват срабатывает РОВНО ОДИН РАЗ на шаг — сразу после
- * «Начать занятие». Сама сессия живёт дальше: кнопка «Дальше» на экране
- * результата работает как раньше.
+ * «Начать занятие». Сама сессия живёт дальше: «Дальше» работает как раньше.
  */
 const OPENED_KEY = 'recall.guided.opened'
 
-/** Порядок шагов ведомой сессии. */
-export const GUIDED_STEPS = ['flashcards', 'reader', 'pronunciation'] as const
-export type GuidedStep = (typeof GUIDED_STEPS)[number]
+/** Событие окна: сессия изменилась — плашке «Дальше» перечитать состояние. */
+export const GUIDED_EVENT = 'recall:guided'
 
-const ROUTES: Record<GuidedStep, string> = {
-  flashcards: '/practice', // хаб «Практика» откроет повторение сам (guided-шаг)
-  reader: '/study?view=reader', // сразу к текстам, минуя хаб «Учёбы»
-  pronunciation: '/pronunciation',
+/** Шаг сессии — ключ пункта плана: words, reader, grammar, pronunciation, conversation, assignment, quest. */
+export type GuidedStep = string
+
+interface Step {
+  key: GuidedStep
+  to: string
+  types: ActivityType[]
 }
 
-const TITLES: Record<GuidedStep, string> = {
-  flashcards: 'повторение слов',
+/** «Дальше: грамматика» — как шаг называется в плашке (стрелка — значком). */
+const TITLES: Record<string, string> = {
+  words: 'повторение слов',
   reader: 'чтение',
+  grammar: 'грамматика',
   pronunciation: 'речь',
+  conversation: 'диалог',
+  assignment: 'задание',
+  quest: 'квест',
 }
 
-/** Начать сессию с первого шага. */
-export function startGuided(): string {
-  sessionStorage.setItem(KEY, GUIDED_STEPS[0])
-  // новая сессия — право на автопереход возвращается
+/** Сессия, начатая до занятия по плану (вкладка открыта с прошлой версии): прежние три шага. */
+const LEGACY: Step[] = [
+  { key: 'words', to: '/practice', types: ['flashcards', 'practice'] },
+  { key: 'reader', to: '/study?view=reader', types: ['reader'] },
+  { key: 'pronunciation', to: '/pronunciation', types: ['pronunciation'] },
+]
+
+const changed = () => {
+  try {
+    window.dispatchEvent(new Event(GUIDED_EVENT))
+  } catch {
+    /* вне браузера */
+  }
+}
+
+function steps(): Step[] {
+  try {
+    const raw = sessionStorage.getItem(STEPS_KEY)
+    if (raw) return JSON.parse(raw) as Step[]
+  } catch {
+    /* битая запись — как у прежней версии */
+  }
+  return LEGACY
+}
+
+/** План на сегодня без настроек учителя — когда экран не знает плана (онбординг). */
+function defaultPlan(): TodayPlanItem[] {
+  return buildTodayPlan(null, { pendingAssignments: 0, activeQuests: 0, weekday: new Date().getDay() })
+}
+
+/** Начать сессию с первого шага; вернуть, куда вести. */
+export function startGuided(plan: TodayPlanItem[]): string {
+  const list: Step[] = plan.map((p) => ({ key: p.key, to: p.to, types: p.types }))
+  sessionStorage.setItem(STEPS_KEY, JSON.stringify(list))
+  sessionStorage.setItem(KEY, list[0]!.key)
+  // новая сессия — право на автопереход возвращается, сделанного нет
   sessionStorage.removeItem(OPENED_KEY)
-  return ROUTES[GUIDED_STEPS[0]]
+  sessionStorage.removeItem(DONE_KEY)
+  changed()
+  return list[0]!.to
 }
 
 /**
@@ -59,57 +108,65 @@ export function startGuided(): string {
  * Раньше «Начать занятие» всегда уводило на хаб «Практика», и только там,
  * двумя запросами, выяснялось, что слов у человека нет и шаг надо пропустить.
  * Замер ревью 1А: ~5 секунд человек смотрел на меню из двенадцати плиток, а
- * потом экран менялся сам. Если за это время он успевал ткнуть в плитку —
- * его выкидывало.
+ * потом экран менялся сам. Теперь проверка идёт ДО навигации: повторять
+ * нечего (слов нет или ни одно не подошло) — шаг слов пропускаем. Сбой
+ * запроса не блокирует — ведём сессию как есть.
  *
- * Теперь проверка идёт ДО навигации: обещание «мы тебя проведём» выполняется
- * с первого экрана. Сбой запроса не блокирует — ведём сессию как обычно.
+ * @param plan шаги — `sessionSteps` плана дня; не знаем плана — план без
+ *             настроек учителя
  */
-export async function startGuidedRoute(lang: AppLang): Promise<string> {
-  startGuided()
-  try {
-    if ((await countMyWords(lang)) === 0) {
-      sessionStorage.setItem(KEY, 'reader')
-      return ROUTES.reader
+export async function startGuidedRoute(lang: AppLang, plan?: TodayPlanItem[]): Promise<string> {
+  let list = plan?.length ? plan : defaultPlan()
+  if (list[0]?.key === 'words' && list.length > 1) {
+    try {
+      // счётчик — лениво: плашку «Дальше» рисует каркас, а запросы к колоде ему ни к чему
+      const { countDueCards } = await import('./fsrs')
+      if ((await countDueCards(lang)) === 0) list = list.slice(1)
+    } catch {
+      /* не смогли проверить — обычный порядок шагов */
     }
-  } catch {
-    /* не смогли проверить — обычный порядок шагов */
   }
-  return ROUTES[GUIDED_STEPS[0]]
+  return startGuided(list)
 }
 
 /**
- * Guided-вход в «Практику»: у новичка без единого слова шаг «повторение»
- * пустой и только обескураживает — пропускаем его и начинаем сессию с чтения
- * (где слова как раз и собираются). Зовётся из PracticePage при guided-входе.
- * Возвращает маршрут чтения, если шаг пропущен, иначе null — идём в повторение.
+ * Guided-вход в «Практику» на шаге слов, а повторять нечего (сессию начали по
+ * старому плану): шаг пропускаем и ведём к следующему. Возвращает его маршрут
+ * или null — идём в повторение (или сессия на этом и кончается).
  */
 export async function skipReviewIfNoWords(lang: AppLang): Promise<string | null> {
-  if (currentGuidedStep() !== 'flashcards') return null
+  if (currentGuidedStep() !== 'words') return null
   try {
-    if ((await countMyWords(lang)) > 0) return null
+    const { countDueCards } = await import('./fsrs')
+    if ((await countDueCards(lang)) > 0) return null
   } catch {
     return null // не смогли проверить — ведём сессию как обычно
   }
-  sessionStorage.setItem(KEY, 'reader')
-  return ROUTES.reader
+  const next = peekNextStep('words')
+  if (!next) return null
+  advanceGuided('words')
+  return next.route
 }
 
 /** Идёт ли сессия и на каком шаге. */
 export function currentGuidedStep(): GuidedStep | null {
   const v = sessionStorage.getItem(KEY)
-  return (GUIDED_STEPS as readonly string[]).includes(v ?? '') ? (v as GuidedStep) : null
+  if (v === 'flashcards') return 'words' // шаг прежней версии
+  return v && steps().some((s) => s.key === v) ? v : null
 }
 
 export function stopGuided(): void {
   sessionStorage.removeItem(KEY)
+  sessionStorage.removeItem(STEPS_KEY)
   sessionStorage.removeItem(OPENED_KEY)
+  sessionStorage.removeItem(DONE_KEY)
+  changed()
 }
 
 /**
  * Надо ли экрану увести человека на свой guided-шаг.
  *
- * Спрашивают экраны («Практика» — про flashcards, «Учёба» — про reader), а
+ * Спрашивают экраны («Практика» — про words, «Учёба» — про reader), а
  * решает guided.ts: правило одно на все перехваты, иначе они разъедутся.
  *
  * ⚠️ Это ЧИСТЫЙ вопрос, отметку он не ставит. Отметку ставит markAutoOpened в
@@ -127,36 +184,83 @@ export function markAutoOpened(step: GuidedStep): void {
 }
 
 /**
+ * Работа шага сделана — экран сам знает свой конец: прочитан текст, раунд
+ * повторения окончен (даже пустой — «повторять нечего»), раунд речи пройден.
+ * Сессию не двигает: двигает только нажатие «Дальше».
+ */
+export function markGuidedDone(step: GuidedStep): void {
+  if (currentGuidedStep() !== step || sessionStorage.getItem(DONE_KEY) === step) return
+  sessionStorage.setItem(DONE_KEY, step)
+  changed()
+}
+
+/**
+ * Эти типы пишутся на каждой карточке, фразе и слове, а не в конце: «Дальше»
+ * посреди раунда только мешало бы. Конец таких шагов говорит сам экран
+ * (`markGuidedDone`: итог повторения, текст открыт, раунд речи пройден).
+ */
+const PER_ITEM: ReadonlySet<ActivityType> = new Set(['flashcards', 'pronunciation', 'reader'])
+
+/**
+ * Записалась активность (logActivity): её тип закрывает текущий шаг — шаг
+ * сделан. Тот же признак отмечает пункт плана «Сделано» на Главной
+ * (грамматика, игры, диалог, задание, квест).
+ */
+export function noteGuidedActivity(type: ActivityType): void {
+  if (PER_ITEM.has(type)) return
+  try {
+    const step = currentGuidedStep()
+    if (step && steps().find((s) => s.key === step)?.types.includes(type)) markGuidedDone(step)
+  } catch {
+    /* sessionStorage недоступен — сессии и нет */
+  }
+}
+
+/** Сделана ли работа текущего шага (плашке «Дальше» — показаться). */
+export function isGuidedDone(): boolean {
+  const step = currentGuidedStep()
+  return step !== null && sessionStorage.getItem(DONE_KEY) === step
+}
+
+/** «Шаг 2 из 3» для плашки. */
+export function guidedPosition(): { index: number; total: number } | null {
+  const step = currentGuidedStep()
+  if (!step) return null
+  const list = steps()
+  return { index: list.findIndex((s) => s.key === step) + 1, total: list.length }
+}
+
+/**
  * Что будет следующим шагом — БЕЗ изменения сессии.
  *
  * ⚠️ Чистая функция, и это принципиально. Раньше баннер звал nextGuidedStep()
  * прямо в инициализаторе useState, то есть сессия продвигалась САМИМ ФАКТОМ
  * отрисовки экрана результата. Последствия: человек, бросивший занятие, доходил
- * до конца любого раунда — и шаг молча уезжал на «чтение», после чего «Учёба»
- * один раз уводила его в читалку, о которой он не просил. Плюс в StrictMode
- * инициализатор вызывается дважды, и второй вызов видел уже сдвинутый шаг.
- * Это то же семейство, что и автоперехват входа: продукт вёл человека по
- * маршруту, от которого он отказался.
+ * до конца любого раунда — и шаг молча уезжал дальше, после чего «Учёба»
+ * один раз уводила его в читалку, о которой он не просил.
  */
-export function peekNextStep(
-  step: GuidedStep,
-): { route: string; title: string; label: string } | null {
+export function peekNextStep(step: GuidedStep): { route: string; title: string; label: string } | null {
   if (currentGuidedStep() !== step) return null
-  const next = GUIDED_STEPS[GUIDED_STEPS.indexOf(step) + 1]
+  const list = steps()
+  const next = list[list.findIndex((s) => s.key === step) + 1]
   if (!next) return null
-  return { route: ROUTES[next], title: TITLES[next], label: `Дальше: ${TITLES[next]} →` }
+  const title = TITLES[next.key] ?? next.key
+  return { route: next.to, title, label: `Дальше: ${title}` }
 }
 
 /**
- * Перейти к следующему шагу. Зовётся ПО НАЖАТИЮ на баннер — только так сессия
+ * Перейти к следующему шагу. Зовётся ПО НАЖАТИЮ «Дальше» — только так сессия
  * и должна двигаться. Последний шаг закрывает сессию.
  */
 export function advanceGuided(step: GuidedStep): void {
   if (currentGuidedStep() !== step) return
-  const next = GUIDED_STEPS[GUIDED_STEPS.indexOf(step) + 1]
+  const list = steps()
+  const next = list[list.findIndex((s) => s.key === step) + 1]
   if (!next) {
     stopGuided()
     return
   }
-  sessionStorage.setItem(KEY, next)
+  sessionStorage.setItem(KEY, next.key)
+  sessionStorage.removeItem(DONE_KEY)
+  changed()
 }

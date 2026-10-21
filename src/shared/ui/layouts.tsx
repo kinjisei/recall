@@ -162,7 +162,14 @@ export function ListDetail({
   const height = useFillHeight(fillRef, split && fill)
 
   if (!split) return <>{detail ?? list}</>
-  const pane = fill ? 'h-full min-h-0 overflow-y-auto overscroll-contain px-1 pb-4 -mx-1' : ''
+  // fill: панель прокручивается сама, и длинная карточка подробностей резалась
+  // её краем прямо, без скругления (раздел карточки ученика, материал, письмо;
+  // правка владельца 22.10.2026) — нижние углы панели скруглены. Карточки стоят
+  // на 4 px внутри (px-1 — место тени), поэтому радиус панели — радиус карточки
+  // 24 + 4 = 28 (`--radius-sheet`): у края карточки срез выходит ~24.
+  const pane = fill
+    ? 'h-full min-h-0 overflow-y-auto overscroll-contain px-1 pb-4 -mx-1 [clip-path:inset(0_round_0_0_var(--radius-sheet)_var(--radius-sheet))]'
+    : ''
   return (
     <div
       ref={fillRef}

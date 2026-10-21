@@ -26,7 +26,7 @@ import {
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { logActivity } from '../../lib/activity'
-import { buildTodayPlan, isPerfectDay } from '../../lib/dailyPlan'
+import { buildTodayPlan, isPerfectDay, sessionSteps } from '../../lib/dailyPlan'
 import { getEsLevel } from '../../lib/esLevel'
 import { dueShort, homeworkProgress } from '../../lib/homework'
 import { plural } from '../../shared/lib/plural'
@@ -116,6 +116,11 @@ export function DashboardPage() {
     Icon: PLAN_ICONS[p.key] ?? IconRows,
   })) ?? null
   const doneCount = rows?.filter((r) => r.done).length ?? 0
+  // «Начать занятие» — по плану дня: несделанные пункты; план не пришёл —
+  // план без настроек учителя; повторять нечего — без шага слов (журнал п.76 (10))
+  const steps = sessionSteps(todayPlan ?? buildTodayPlan(null, { pendingAssignments: 0, activeQuests: 0, weekday: new Date().getDay() }), doneToday, {
+    noReview: emptyDeck || dueCount === 0,
+  })
 
   // ⚠️ Не подставляем B1: раньше приложение уверенно писало уровень, которого
   // никто не измерял (умолчание колонки в базе). Не знаем — не говорим.
@@ -147,7 +152,7 @@ export function DashboardPage() {
   const streak = home?.activity && (
     <StreakHero key="streak" streak={home.activity.streak} week={home.activity.week} perfect={perfect} compact={wide} />
   )
-  const start = <StartButton key="start" lang={lang} afterLesson={urgent} compact={wide} />
+  const start = <StartButton key="start" lang={lang} steps={steps} afterLesson={urgent} compact={wide} />
   // входы плана не пришли — плана нет: дефолт мог бы разойтись с учительским
   const plan = rows && (
     <PlanList key="plan" rows={rows} pill={perfect ? 'Идеальный день ✦' : `${doneCount} из ${rows.length}`} compact={wide} />

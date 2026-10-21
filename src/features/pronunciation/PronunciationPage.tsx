@@ -4,7 +4,7 @@ import { BackButton } from '../../shared/ui/BackButton'
 import { Card } from '../../shared/ui/Card'
 import { Button } from '../../shared/ui/Button'
 import { RoundResult } from '../../components/RoundResult'
-import { GuidedNext } from '../../components/GuidedNext'
+import { GuidedDone } from '../dashboard'
 import { celebrate } from '../../shared/ui/Confetti'
 import {
   IconMic,
@@ -318,7 +318,7 @@ export function PronunciationPage() {
             </Button>
           </Card>
         )}
-        <GuidedNext step="pronunciation" />
+        <GuidedDone step="pronunciation" />
       </div>
     )
   }

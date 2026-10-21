@@ -9,8 +9,13 @@
  * очистился, и «сегодня уже не воспроизводится».
  *
  * Проверяем ровно то, что чинили: увести должно РОВНО ОДИН РАЗ — и в
- * «Практике» (шаг flashcards), и в «Учёбе» (шаг reader). Это один класс, и
+ * «Практике» (шаг words), и в «Учёбе» (шаг reader). Это один класс, и
  * разъехаться они не должны.
+ *
+ * Занятие идёт по плану дня (журнал п.76 (10)): у ученика преподаватель с
+ * планом «Грамматика · Диалог» — подпись под кнопкой «слова → грамматика →
+ * диалог»; шаг сделан — плашка «Дальше» каркаса ведёт к следующему, последний
+ * в «Диалоге» — «Занятие завершено» под полем ввода.
  *
  * Запуск: `npm run dev:test` (5174, тестовая база), затем `node scripts/smoke-guided.mjs`.
  */
@@ -23,6 +28,7 @@ import { APP_URL, scriptEnv } from './_env.mjs'
 const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
 const BASE = APP_URL
 const EMAIL = 'guided-smoke@recall.test'
+const TEACHER_EMAIL = 'guided-smoke-teacher@recall.test'
 const PASSWORD = 'Guided!2026'
 
 const env = scriptEnv()
@@ -82,10 +88,17 @@ async function main() {
     { deck_id: deck.id, front: 'whisper', back: 'шептать', source: 'manual' },
     { deck_id: deck.id, front: 'harvest', back: 'урожай', source: 'manual' },
   ])
+  // серия есть, но пункты плана сегодня не тронуты: квест в план без квестов не входит
   await admin.from('activity_log').upsert(
-    { user_id: userId, type: 'flashcards', day: new Date().toISOString().slice(0, 10), items_done: 1 },
+    { user_id: userId, type: 'quest', day: new Date().toISOString().slice(0, 10), items_done: 1 },
     { onConflict: 'user_id,type,day' },
   )
+  // преподаватель с планом дня «Грамматика · Диалог», без заданий и квестов
+  await admin.from('allowed_emails').upsert({ email: TEACHER_EMAIL, note: 'guided-smoke (временный)' })
+  const { data: tu, error: te } = await admin.auth.admin.createUser({ email: TEACHER_EMAIL, password: PASSWORD, email_confirm: true })
+  if (te && !/already/i.test(te.message)) throw new Error(te.message)
+  const teacherId = tu?.user?.id ?? (await admin.auth.admin.listUsers({ perPage: 1000 })).data.users.find((u) => (u.email ?? '').toLowerCase() === TEACHER_EMAIL)?.id
+  await admin.from('teacher_students').upsert({ teacher_id: teacherId, student_id: userId, daily_plan: { kinds: ['grammar', 'conversation'], auto: false } }, { onConflict: 'teacher_id,student_id' })
 
   const PORT = 9400 + Math.floor(Math.random() * 500)
   spawn(
@@ -122,7 +135,7 @@ async function main() {
   await page.keyboard.press('Enter')
   await sleep(4500)
 
-  // ---- 1. «Начать занятие» действительно уводит в повторение ---------------
+  // ---- 0. подпись под «Начать занятие» — по плану дня преподавателя --------
   await page.goto(`${BASE}/`, { waitUntil: 'networkidle2' })
   await page
     .waitForFunction(() => /Начать занятие/.test(document.body.innerText || ''), {
@@ -130,6 +143,13 @@ async function main() {
       polling: 300,
     })
     .catch(() => {})
+  const caption = await page
+    .waitForFunction(() => /~\d+ минут · [^\n]+/.exec(document.body.innerText || '')?.[0], { timeout: 10000, polling: 300 })
+    .then((h) => h.jsonValue())
+    .catch(() => null)
+  check('подпись — по плану преподавателя: «~15 минут · слова → грамматика → диалог»', caption === '~15 минут · слова → грамматика → диалог', String(caption))
+
+  // ---- 1. «Начать занятие» действительно уводит в повторение ---------------
   const started = await tap(page, 'Начать занятие')
   const gotReview = await page
     .waitForFunction(
@@ -181,6 +201,8 @@ async function main() {
   // ---- 3. тот же класс в «Учёбе»: шаг reader тоже уводит один раз ----------
   // Эмулируем продвинувшуюся сессию: шаг reader, право на автопереход есть.
   await page.evaluate(() => {
+    // сессия прежней версии (без списка шагов): слова → чтение → речь
+    sessionStorage.removeItem('recall.guided.steps')
     sessionStorage.setItem('recall.guided', 'reader')
     sessionStorage.removeItem('recall.guided.opened')
   })
@@ -222,8 +244,11 @@ async function main() {
     { onConflict: 'card_id,user_id' },
   )
   await page.evaluate(() => {
+    // сессия прежней версии (шаг flashcards, без списка шагов) — должна жить дальше
+    sessionStorage.removeItem('recall.guided.steps')
+    sessionStorage.removeItem('recall.guided.done')
     sessionStorage.setItem('recall.guided', 'flashcards')
-    sessionStorage.setItem('recall.guided.opened', 'flashcards')
+    sessionStorage.setItem('recall.guided.opened', 'words')
   })
   await page.goto(`${BASE}/practice?m=review`, { waitUntil: 'networkidle2' })
   const bannerShown = await page
@@ -251,7 +276,41 @@ async function main() {
     `шаг: ${stepAfterBanner}`,
   )
 
+  // ---- 3в. шаги плана без своего экрана итога: плашка «Дальше» каркаса ------
+  // Грамматика сделана (активность записалась) — под экраном «Дальше: диалог»;
+  // нажал — «Диалог», сессия на нём. Последний шаг сделан — «Занятие
+  // завершено» под полем ввода, сессия закрыта.
+  const plan = [
+    { key: 'grammar', to: '/grammar', types: ['grammar'] },
+    { key: 'conversation', to: '/conversation', types: ['conversation', 'writing'] },
+  ]
+  await page.evaluate((steps) => {
+    sessionStorage.setItem('recall.guided.steps', JSON.stringify(steps))
+    sessionStorage.setItem('recall.guided', 'grammar')
+    sessionStorage.setItem('recall.guided.done', 'grammar')
+  }, plan)
+  await page.goto(`${BASE}/grammar`, { waitUntil: 'networkidle2' })
+  const nextBar = await page
+    .waitForSelector('[data-guided-bar="next"]', { timeout: 10000 })
+    .then((el) => el.evaluate((e) => e.innerText))
+    .catch(() => '')
+  check('шаг «Грамматика» сделан — под экраном «Дальше: диалог»', /шаг 1 из 2 готов/i.test(nextBar) && /Дальше: диалог/.test(nextBar), nextBar.replace(/\s+/g, ' '))
+  await page.evaluate(() => document.querySelector('[data-guided-bar="next"]')?.click())
+  await page.waitForFunction(() => location.pathname === '/conversation', { timeout: 10000, polling: 250 }).catch(() => {})
+  const moved = await page.evaluate(() => [location.pathname, sessionStorage.getItem('recall.guided'), sessionStorage.getItem('recall.guided.done')])
+  check('«Дальше» → «Диалог», сессия на нём, сделанного нет', moved[0] === '/conversation' && moved[1] === 'conversation' && moved[2] === null, JSON.stringify(moved))
+  await page.evaluate(() => sessionStorage.setItem('recall.guided.done', 'conversation'))
+  await page.goto(`${BASE}/conversation`, { waitUntil: 'networkidle2' })
+  const finished = await page
+    .waitForSelector('[data-guided-bar="done"]', { timeout: 10000 })
+    .then(() => true)
+    .catch(() => false)
+  const closed = await page.evaluate(() => sessionStorage.getItem('recall.guided'))
+  check('последний шаг сделан — «Занятие завершено», сессия закрыта', finished && closed === null, `закрыта: ${closed === null}`)
+
   // ---- 4. новая сессия снова имеет право увести ----------------------------
+  // слова снова к повторению (в 3б расписание отодвигали) — иначе шаг слов законно пропускается
+  await admin.from('review_states').update({ due: new Date(Date.now() - 3600_000).toISOString() }).eq('user_id', userId)
   await page.goto(`${BASE}/`, { waitUntil: 'networkidle2' })
   await page
     .waitForFunction(() => /Начать занятие/.test(document.body.innerText || ''), {
@@ -277,6 +336,8 @@ async function main() {
   await browser.close()
   await admin.auth.admin.deleteUser(userId).catch(() => {})
   await admin.from('allowed_emails').delete().eq('email', EMAIL)
+  if (teacherId) await admin.auth.admin.deleteUser(teacherId).catch(() => {})
+  await admin.from('allowed_emails').delete().eq('email', TEACHER_EMAIL)
   console.log('Тестовый аккаунт удалён (колоды и карточки ушли каскадом).')
 
   const ok = results.filter(Boolean).length

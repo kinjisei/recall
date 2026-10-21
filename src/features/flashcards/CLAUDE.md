@@ -19,7 +19,7 @@
 
 | Файл | Что там |
 |---|---|
-| `DeckReview.tsx`, `SwipeCard.tsx` | повторение внутри хаба «Практика» |
+| `DeckReview.tsx`, `SwipeCard.tsx` | повторение внутри хаба «Практика»; итог раунда (и «повторять нечего») — конец шага слов ведомого занятия (`GuidedDone`, «Дальше» рисует каркас — `features/dashboard`) |
 | `PacksSheet.tsx` | шторка паков у ученика |
 | `WordCheckRunner.tsx` | прохождение перепроверки |
 | `src/lib/wordPacks.ts` | загрузка паков и `preparePacks()` — общие для ученика и учителя |

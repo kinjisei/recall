@@ -102,6 +102,45 @@ export function buildTodayPlan(cfg: DailyPlanConfig | null, ctx: PlanContext): T
   return out.slice(0, 3)
 }
 
+// ---------------------------------------------------------------------------
+// «Начать занятие» идёт по плану дня (журнал п.76 (10)): шаги — пункты
+// плана, которые ещё не сделаны сегодня; подпись под кнопкой — из тех же
+// шагов («~20 минут · слова → грамматика → диалог»). Сделан пункт — по тем же
+// типам активности, что отмечают его «Сделано» на Главной: план и занятие не
+// расходятся.
+// ---------------------------------------------------------------------------
+
+/** Сколько минут на шаг в подписи: задание и квест длиннее. */
+const STEP_MINUTES: Record<string, number> = { assignment: 10, quest: 10 }
+/** Шаг в подписи под «Начать занятие». */
+const STEP_NAME: Record<string, string> = {
+  words: 'слова',
+  reader: 'чтение',
+  grammar: 'грамматика',
+  pronunciation: 'речь',
+  conversation: 'диалог',
+  assignment: 'задание',
+  quest: 'квест',
+}
+
+/**
+ * Шаги занятия: пункты плана, которые сегодня ещё не сделаны, по порядку
+ * плана. Всё сделано — весь план заново (занятие можно пройти ещё раз).
+ * `noReview` — повторять нечего (слов нет или ни одно не подошло): шаг слов
+ * пропускаем, пустой раунд только обескураживает.
+ */
+export function sessionSteps(plan: TodayPlanItem[], doneToday: ReadonlySet<ActivityType>, { noReview = false } = {}): TodayPlanItem[] {
+  const usable = noReview && plan.length > 1 ? plan.filter((p) => p.key !== 'words') : plan
+  const left = usable.filter((p) => !p.types.some((t) => doneToday.has(t)))
+  return left.length ? left : usable
+}
+
+/** «~15 минут · слова → чтение → речь» — подпись под «Начать занятие». */
+export function sessionCaption(steps: TodayPlanItem[]): string {
+  const minutes = steps.reduce((sum, s) => sum + (STEP_MINUTES[s.key] ?? 5), 0)
+  return `~${minutes} минут · ${steps.map((s) => STEP_NAME[s.key] ?? s.title.toLowerCase()).join(' → ')}`
+}
+
 /** Все пункты выполнены? (по типам активности за сегодня) */
 export function isPerfectDay(plan: TodayPlanItem[], doneToday: Set<ActivityType>): boolean {
   return plan.length >= 2 && plan.every((p) => p.types.some((t) => doneToday.has(t)))

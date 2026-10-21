@@ -212,11 +212,6 @@
       "count": 1
     }
   },
-  "src/components/GuidedNext.tsx": {
-    "react-hooks/set-state-in-effect": {
-      "count": 1
-    }
-  },
   "src/components/PhraseSheet.tsx": {
     "react-hooks/set-state-in-effect": {
       "count": 1

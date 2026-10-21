@@ -23,7 +23,6 @@
 | `WordSheet.tsx`, `MarkableText.tsx` | шторка слова для всех читалок; текст, где тап по слову открывает шторку, и «Выделить фразу» |
 | `AnalysisSheet.tsx`, `TextAnalysisSheet.tsx`, `PhraseSheet.tsx`, `AnalyzedItemsView.tsx` | разбор предложения, всего текста, выделенной фразы |
 | `EnergyBar.tsx` | строка ⚡ на Главной (правила энергии — `features/billing/CLAUDE.md`) |
-| `GuidedNext.tsx` | баннер «дальше» ведомой сессии (`features/dashboard/CLAUDE.md`) |
 | `FeedbackSheet.tsx` | шторка «Расскажи, как тебе» |
 | `ChartView.tsx` | график для письма IELTS Task 1 — рисуется из данных, без зависимостей |
 | `src/lib/selfCorrect.ts` | правило второй попытки и тексты подсказок |
@@ -80,7 +79,7 @@
 
 - **Файлы:** `AnalysisSheet.tsx`, `AnalyzedItemsView.tsx`, `ChartView.tsx`, `exercises.tsx`, `FeedbackSheet.tsx`, `MarkableText.tsx`, `PhraseSheet.tsx`, `RoundResult.tsx`, `RoundReview.tsx`, `TextAnalysisSheet.tsx`, `useExerciseReview.ts`, `WordSheet.tsx`
 - **Вне папки (указатель «Описание:» в начале файла):** `src/lib/feedback.ts`, `src/lib/selfCorrect.ts`
-- **Описаны в другом модуле (указатель «Описание:»):** `EnergyBar.tsx → features/billing`, `GuidedNext.tsx → features/dashboard`
+- **Описаны в другом модуле (указатель «Описание:»):** `EnergyBar.tsx → features/billing`
 - **RPC:** `track_event`
 - **Кто использует (импортом):** `app`, `features/dev`, `features/flashcards`, `features/grammar`, `features/practice`, `features/pronunciation`, `features/reader`, `features/settings`, `features/teacher`, `features/words`, `features/writing`
 <!-- generated:end -->
