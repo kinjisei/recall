@@ -29,6 +29,10 @@ export interface TaskSpec {
   generation?: boolean
   /** Требует роли преподавателя (Pro-модели — только под генерацию учителю). */
   teacherOnly?: boolean
+  /** Оплаченный план материала: к ответу-плану — право на бесплатные повторы (api/_replan.ts). */
+  grantsReplans?: boolean
+  /** Повтор плана: вместо генерации тратит право (spend_replan), ответ — только план. */
+  replan?: boolean
 }
 
 export const AI_TASKS: Record<AiTask, TaskSpec> = {
@@ -47,6 +51,10 @@ export const AI_TASKS: Record<AiTask, TaskSpec> = {
 
   // Pro-модели: месячный лимит генераций (не энергия), только у преподавателя
   material: { tier: 'max', quota: 'heavy', energyCost: 0, generation: true, teacherOnly: true },
+  // план материала — та же генерация, и к нему 3 бесплатных повтора (d8-3,
+  // журнал п.76 (7)); повтор — без генерации, только пока есть право
+  material_plan: { tier: 'max', quota: 'heavy', energyCost: 0, generation: true, teacherOnly: true, grantsReplans: true },
+  material_replan: { tier: 'max', quota: 'heavy', energyCost: 0, teacherOnly: true, replan: true },
   program: { tier: 'max', quota: 'heavy', energyCost: 0, generation: true, teacherOnly: true },
   // Сборка домашки: состав набора считают ДАННЫЕ (lib/homeworkRules), модель
   // только переписывает заголовки и заметку — на это хватает обычной, а

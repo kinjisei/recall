@@ -7,7 +7,7 @@ import { whenDone } from '../../../domains/schedule'
 import { correctAnswerText } from '../../../lib/text'
 import { plural } from '../../../shared/lib/plural'
 import { Avatar } from '../../../shared/ui/Avatar'
-import type { Material, MaterialAssignment } from '../../../types'
+import type { GrammarExercise, Material, MaterialAssignment } from '../../../types'
 
 /** Подзаголовок карточки (d8-1 `.sh8`): «Текст», «Упражнения · 2». */
 export function DetailHead({ children }: { children: React.ReactNode }) {
@@ -63,18 +63,25 @@ export function MaterialBody({ material }: { material: Material }) {
         {plural(n, 'Упражнение', 'Упражнения', 'Упражнений')} · {n}
       </DetailHead>
       {material.exercises.map((ex, i) => (
-        <div key={i} className="flex gap-2.5 rounded-control-sm bg-input px-3 py-2.5 text-body leading-normal">
-          <span className="flex size-6 flex-none items-center justify-center rounded-lg bg-surface text-xs font-semibold text-fg-secondary">{i + 1}</span>
-          <span className="flex min-w-0 flex-col gap-0.5">
-            <span className="text-fg">{ex.prompt}</span>
-            <span className="text-sm font-medium text-success-strong">
-              <small className="text-sm font-normal text-fg-muted">Ответ: </small>
-              <span lang={material.lang}>{correctAnswerText(ex)}</span>
-            </span>
-          </span>
-        </div>
+        <ExerciseRow key={i} n={i + 1} ex={ex} lang={material.lang} />
       ))}
     </>
+  )
+}
+
+/** Упражнение с ответом (d8-1, d8-4 `.ex8`): «1 Why did Dana…? Ответ: Her flight had a delay.» */
+export function ExerciseRow({ n, ex, lang }: { n: number; ex: GrammarExercise; lang: string }) {
+  return (
+    <div className="flex gap-2.5 rounded-control-sm bg-input px-3 py-2.5 text-body leading-normal">
+      <span className="flex size-6 flex-none items-center justify-center rounded-lg bg-surface text-xs font-semibold text-fg-secondary">{n}</span>
+      <span className="flex min-w-0 flex-col gap-0.5">
+        <span className="text-fg">{ex.prompt}</span>
+        <span className="text-sm font-medium text-success-strong">
+          <small className="text-sm font-normal text-fg-muted">Ответ: </small>
+          <span lang={lang}>{correctAnswerText(ex)}</span>
+        </span>
+      </span>
+    </div>
   )
 }
 

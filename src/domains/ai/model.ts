@@ -151,6 +151,8 @@ export const TASK_LABELS: Record<string, string> = {
   quest: 'Квесты',
   review: 'Разбор работы',
   material: 'Материал ученику',
+  material_plan: 'План материала',
+  material_replan: 'План материала, повтор',
   program: 'Программа',
   homework: 'Домашка',
   self_material: 'Материал себе',

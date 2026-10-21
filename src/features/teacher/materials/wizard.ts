@@ -17,7 +17,8 @@ import type { MaterialPlan } from '../../../types'
 
 export type Step =
   | { name: 'form' }
-  | { name: 'plan'; req: MaterialRequest; plan: MaterialPlan }
+  // replan — право на бесплатные повторы плана, его выдал сервер (Ф2.17-4в-2б)
+  | { name: 'plan'; req: MaterialRequest; plan: MaterialPlan; replan?: { id: string; left: number } }
   // own: материал по своему тексту преподавателя (плана нет, назад — к форме)
   | { name: 'preview'; req: MaterialRequest; plan: MaterialPlan; content: MaterialContent; own?: boolean }
 

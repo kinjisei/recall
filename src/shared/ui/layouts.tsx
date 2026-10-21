@@ -13,7 +13,9 @@
 //                   занимает окно до низа, и список с подробностями
 //                   прокручиваются каждый сам, а страница — нет (макет d3);
 //   MainAside     — главная колонка 720 + правая 352 («Моя учёба», хаб
-//                   «Заданий»; `narrow` — 320, итог проверки d7-2): справа
+//                   «Заданий»; `size="narrow"` — 320, итог проверки d7-2;
+//                   `size="work"` — работа до 680 и итог от 312, мастер
+//                   материала d8: 640 + 312 на 1280, 680 + 416 на 1440): справа
 //                   то, что сверяют, а не делают; содержимое уже 936 — одна
 //                   колонка, правая уходит под главную;
 //   TextPanel     — текст ученика до 640 + панель проверки от 412 (d7-3,
@@ -190,13 +192,17 @@ export function ListDetail({
 export function MainAside({
   main,
   aside,
-  narrow = false,
+  size = 'list',
   label,
 }: {
   main: ReactNode
   aside: ReactNode
-  /** Правая 320, а не 352: итог проверки рядом с работой (макет d7-2). */
-  narrow?: boolean
+  /**
+   * Ширины: `list` — главная до 720 и правая 352; `narrow` — правая 320
+   * (итог проверки рядом с работой, d7-2); `work` — работа до 680 и итог не
+   * уже 312, остаток — итогу (мастер материала, d8-2…d8-4).
+   */
+  size?: 'list' | 'narrow' | 'work'
   /** Подпись правой колонки для читалки. */
   label?: string
 }) {
@@ -210,11 +216,14 @@ export function MainAside({
       </div>
     )
   }
-  const cols = narrow
-    ? 'grid-cols-[minmax(0,var(--container-main))_var(--container-aside)]'
-    : 'grid-cols-[minmax(0,var(--container-main))_var(--container-list)]'
+  const cols =
+    size === 'work'
+      ? 'grid-cols-[minmax(0,var(--container-reading))_minmax(var(--container-summary),1fr)]'
+      : size === 'narrow'
+        ? 'grid-cols-[minmax(0,var(--container-main))_var(--container-aside)] justify-center'
+        : 'grid-cols-[minmax(0,var(--container-main))_var(--container-list)] justify-center'
   return (
-    <div className={`grid ${cols} justify-center gap-6`}>
+    <div className={`grid ${cols} gap-6`}>
       <div className="min-w-0">{main}</div>
       <aside aria-label={label} className="sticky top-8 flex flex-col gap-3.5 self-start">
         {aside}

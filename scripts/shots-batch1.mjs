@@ -193,7 +193,7 @@ try {
     await putDraft(te, t.id, 'material-flow', flow(0))
     await open(te, '/tasks?tab=materials')
     await shotT('d8-material-form', /Новый материал|Для кого/)
-    const forWhom = await te.evaluate(() => [...document.querySelectorAll('[data-for-whom] button')].filter((x) => x.className.includes('bg-accent-soft')).map((x) => x.textContent.trim()).join(' | '))
+    const forWhom = await te.evaluate(() => [...document.querySelectorAll('[data-for-whom] button[aria-label^="Убрать "]')].map((x) => x.getAttribute('aria-label').slice(7)).join(' | '))
     console.log(`  «Для кого» отмечено: ${forWhom}`)
     await putDraft(te, t.id, 'material-flow', flow(1))
     await open(te, '/tasks?tab=materials')

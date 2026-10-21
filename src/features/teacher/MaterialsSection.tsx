@@ -22,15 +22,14 @@ import { ListDetail, useListDetailSplit } from '../../shared/ui/layouts'
 import type { Material, MaterialAssignment } from '../../types'
 import { LibraryList } from './materials/LibraryList'
 import { PendingWorks } from './materials/PendingWorks'
-import { REQUEST_DRAFT, RequestForm } from './materials/RequestForm'
+import { REQUEST_DRAFT } from './materials/RequestForm'
 import { useDraft } from '../../shared/lib/useDraft'
 import { clearDraft } from '../../shared/lib/drafts'
 import { DraftRestored } from '../../shared/ui/DraftRestored'
-import { PlanScreen } from './materials/PlanScreen'
-import { PreviewScreen } from './materials/PreviewScreen'
 import { MaterialDetail } from './materials/MaterialDetail'
+import { MaterialWizard } from './materials/MaterialWizard'
 import { RowsSkeleton } from '../../shared/ui/Loading'
-import { START, advance, ahead, back, current, forward, fromDraft, replace, type Flow } from './materials/wizard'
+import { START, current, fromDraft, type Flow } from './materials/wizard'
 import { useInnerScreen } from './innerScreen'
 import { ReviewScreen } from './ReviewScreen'
 
@@ -82,8 +81,13 @@ export function MaterialsSection({
   const [saved, setFlow, flowDraft] = useDraft<unknown>('material-flow', null)
   const flow = fromDraft(saved)
   const step = flow ? current(flow) : null
-  const next = flow ? ahead(flow) : undefined
   const go = (f: Flow | null) => setFlow(f)
+  // ответ AI приходит позже нажатия — шаг меняем от нынешнего черновика
+  const update = (next: (f: Flow) => Flow | null) =>
+    setFlow((raw: unknown) => {
+      const f = fromDraft(raw)
+      return f ? next(f) : raw
+    })
   const discard = () => {
     flowDraft.clear()
     clearDraft(REQUEST_DRAFT)
@@ -113,8 +117,10 @@ export function MaterialsSection({
   const [reviewing, setReviewing] = useState<{ a: MaterialAssignment; name: string } | undefined>()
   // сохранили, но кому-то назначить не вышло — скажет карточка этого материала
   const [notice, setNotice] = useState<{ id: string; text: string } | undefined>()
-  // остаток генераций (get_my_plan): показываем заранее, а не по факту отказа
+  // остаток генераций (get_my_plan): показываем заранее, а не по факту отказа;
+  // spent() — генерация могла списаться (план, текст), перечитать
   const [gens, setGens] = useState<{ left: number; limit: number } | null>(null)
+  const [gensTick, setGensTick] = useState(0)
   useEffect(() => {
     let alive = true
     getMyPlan()
@@ -126,7 +132,7 @@ export function MaterialsSection({
     return () => {
       alive = false
     }
-  }, [])
+  }, [gensTick])
   // ошибка RLS/сети не должна выглядеть как «материалов нет»
   const {
     data: materials,
@@ -141,9 +147,8 @@ export function MaterialsSection({
   // адрес — источник правды для «какой материал открыт»; материал ищем в уже
   // загруженном списке: чужой или удалённый id показывает список, а не пустой экран
   const openMaterial = matId ? (materials ?? []).find((m) => m.id === matId) : undefined
-  // у библиотеки, карточки, плана и предпросмотра своя шапка «назад» — шапку
-  // раздела прячем; у формы — пока шапка раздела (её вид — d8-2, следующий шаг)
-  useInnerScreen(!flow || step?.name === 'plan' || step?.name === 'preview')
+  // у библиотеки, карточки и шагов мастера своя шапка «назад» — шапку раздела прячем
+  useInnerScreen(true)
 
   if (reviewing && openMaterial) {
     return (
@@ -158,57 +163,28 @@ export function MaterialsSection({
     )
   }
 
-  if (flow && step?.name === 'form') {
+  if (flow) {
     return (
-      <RequestForm
+      <MaterialWizard
+        flow={flow}
+        update={update}
         students={students}
-        resumeLabel={next && (next.name === 'plan' ? 'Вернуться к плану' : 'Вернуться к упражнениям')}
-        onResume={() => go(forward(flow))}
-        onCancel={() => go(null)}
-        onPlanned={(req, plan) => go(advance(flow, { name: 'plan', req, plan }))}
-        onOwnGenerated={(req, plan, content) => go(advance(flow, { name: 'preview', req, plan, content, own: true }))}
+        gens={gens}
+        restored={restoredNote}
+        onSpent={() => setGensTick((t) => t + 1)}
+        onExit={() => {
+          discard()
+          setGensTick((t) => t + 1)
+        }}
+        onSaved={(material, failed) => {
+          // мастер закрыт: раньше он оставался на предпросмотре, и выход из
+          // карточки материала возвращал к «Сохранить» — второй экземпляр
+          discard()
+          reload()
+          setNotice(failed ? { id: material.id, text: failed } : undefined)
+          setMatId(material.id)
+        }}
       />
-    )
-  }
-  if (flow && step?.name === 'plan') {
-    return (
-      <>
-        {restoredNote}
-        <PlanScreen
-          req={step.req}
-          plan={step.plan}
-          students={students}
-          onBack={() => go(back(flow))}
-          onForward={next ? () => go(forward(flow)) : undefined}
-          onReplanned={(plan) => go(replace(flow, { ...step, plan }))}
-          onGenerated={(content) => go(advance(flow, { name: 'preview', req: step.req, plan: step.plan, content }))}
-        />
-      </>
-    )
-  }
-  if (flow && step?.name === 'preview') {
-    return (
-      <>
-        {restoredNote}
-        <PreviewScreen
-          req={step.req}
-          plan={step.plan}
-          content={step.content}
-          own={step.own}
-          students={students}
-          onRegenerated={(content) => go(replace(flow, { ...step, content }))}
-          onSaved={(material, failed) => {
-            // мастер закрыт: раньше он оставался на предпросмотре, и выход из
-            // карточки материала возвращал к «Сохранить» — второй экземпляр
-            flowDraft.clear()
-            clearDraft(REQUEST_DRAFT)
-            reload()
-            setNotice(failed ? { id: material.id, text: failed } : undefined)
-            setMatId(material.id)
-          }}
-          onBack={() => go(back(flow))}
-        />
-      </>
     )
   }
 

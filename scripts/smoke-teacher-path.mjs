@@ -16,9 +16,10 @@
  *      второй — «Другой язык»; «Программа»: «К форме» не выбрасывает
  *      составленную AI программу;
  *   6. «Материалы» (черновик мастера прежнего вида, без генераций AI):
- *      «К плану» и «К форме» не теряют готовое, «вперёд» без новой генерации
- *      (находка 3); после «Сохранить» и «назад» — список, а не снова
- *      «Сохранить»; «Энергия студии» — во «Заданиях», не над учениками (4);
+ *      «План» и «Заявка» в шагах мастера (d8) не теряют готовое, «вперёд» без
+ *      новой генерации (находка 3); шапка «назад» одна — «‹ Материалы»; после
+ *      «Сохранить» и «назад» — список, а не снова «Сохранить»; «Энергия
+ *      студии» — во «Заданиях», не над учениками (4);
  *   7. «Я преподаватель» на первом шаге онбординга без ссылки с лендинга —
  *      «Назад» уже на первом шаге, режим включает «В студию»;
  *   8. тот же репетитор на новом устройстве — экран репетитора, а не ученика;
@@ -423,36 +424,44 @@ try {
   await putDraft(te, tId, 'material-request', { source: 'generate', lang: 'es', level: 'A2', topic: req.topic, format: 'рассказ', lengthRange: '100-250', vocabulary: 'природа', grammar: '', body: '', studentIds: [sId] })
   await go(te, '/tasks?tab=materials')
   check('черновик прежнего вида: предпросмотр', await waitText(te, /Un fin de semana en la montaña/))
-  const backs = () => te.evaluate(() => [...document.querySelectorAll('button[aria-label]')].map((x) => x.getAttribute('aria-label')).filter((l) => ['Задания', 'К форме', 'К плану', 'К материалам'].includes(l)).join(','))
-  check('предпросмотр: одна шапка «назад» — своя', (await backs()) === 'К плану', await backs())
-  await click(te, 'К плану')
-  check('«К плану» → план и «Вернуться к готовому тексту»', await waitText(te, /Рассказ о выходных в горах[\s\S]*Вернуться к готовому тексту/))
+  // шаги мастера (d8): ссылки — пройденные шаги и готовый впереди; «назад» в шапке одна — «‹ Материалы»
+  // у готового шага впереди в кружке номер («3Текст») — сравниваем без него
+  const steps = () => te.evaluate(() => [...new Set([...document.querySelectorAll('ol[aria-label="Шаги"] button')].map((x) => x.textContent.trim().replace(/^\d+/, '')))].join(','))
+  const toStep = async (name) => {
+    await te.evaluate((n) => [...document.querySelectorAll('ol[aria-label="Шаги"] button')].find((x) => x.textContent.trim().replace(/^\d+/, '') === n)?.click(), name)
+    await sleep(600)
+  }
+  const backHeads = () => te.evaluate(() => [...document.querySelectorAll('main button')].map((b) => b.textContent.trim()).filter((t) => t === 'Задания' || t === 'Материалы').join(','))
+  check('текст: шаги назад — «Заявка» и «План»', (await steps()) === 'Заявка,План', await steps())
+  check('…одна шапка «назад» — «‹ Материалы»', (await backHeads()) === 'Материалы', await backHeads())
+  await toStep('План')
+  check('«План» → план и «Вернуться к готовому тексту»', await waitText(te, /Рассказ о выходных в горах[\s\S]*Вернуться к готовому тексту/))
   check('…генерация — «Новый текст», а не «Генерировать ✓»', /Новый текст/.test(await text(te)) && !/Генерировать ✓/.test(await text(te)))
-  check('…одна шапка «назад» — «К форме»', (await backs()) === 'К форме', await backs())
-  txt = await text(te)
-  check('план: для кого — Тимур, слова правятся (×)', /A2 · для: Тимур Ким/.test(txt) && !!(await te.$('[aria-label="Убрать «sendero»"]')), (txt.match(/A2 · [^\n]*/) ?? ['нет строки'])[0])
+  check('…в шагах «Заявка» и готовый «Текст»', (await steps()) === 'Заявка,Текст', await steps())
+  const planSum = await te.$eval('section[aria-label="Итог"]', (el) => el.innerText).catch(() => 'нет итога')
+  check('план: для кого — Тимур, A2, слова правятся (×)', /Тимур Ким/.test(planSum) && /Уровень\s+A2/.test(planSum) && !!(await te.$('[aria-label="Убрать «sendero»"]')), planSum.replace(/\n/g, ' ').slice(0, 160))
   await shot(te, '10-material-plan-back')
   await click(te, 'Вернуться к готовому тексту')
   check('…тот же текст, без новой генерации', await waitText(te, /Un fin de semana en la montaña/))
-  await click(te, 'К плану')
-  await click(te, 'К форме')
-  check('«К форме» → форма и «Вернуться к плану»', await waitText(te, /Новый материал[\s\S]*Вернуться к плану/))
+  await toStep('План')
+  await toStep('Заявка')
+  check('«Заявка» → форма и «Вернуться к плану»', await waitText(te, /Новый материал[\s\S]*Вернуться к плану/))
   check('…главная кнопка — «Новый план»', /Новый план →/.test(await text(te)))
-  check('…у формы шапка раздела «Задания»', (await backs()) === 'Задания', await backs())
-  const esChip = await te.evaluate(() => [...document.querySelectorAll('button')].find((x) => x.textContent.trim() === 'Испанский')?.className.includes('bg-accent-soft'))
+  check('…у формы своя шапка «‹ Материалы»', (await backHeads()) === 'Материалы', await backHeads())
+  const esChip = await te.evaluate(() => [...document.querySelectorAll('[role=radio][aria-checked="true"]')].some((x) => x.textContent.trim() === 'Испанский'))
   check('…язык материала по умолчанию — испанский, как в онбординге', esChip)
   const form = await te.evaluate(() => ({
-    tim: [...document.querySelectorAll('[data-for-whom] button')].find((x) => x.textContent.includes('Тимур Ким'))?.className.includes('bg-accent-soft'),
-    words: [...document.querySelectorAll('input')].map((x) => x.value).includes('природа'),
-    hints: [...document.querySelectorAll('input')].map((x) => x.placeholder).join(' | '),
+    tim: !!document.querySelector('[data-for-whom] button[aria-label="Убрать Тимур Ким"]'),
+    words: !!document.querySelector('[aria-label="Убрать «природа»"]'),
+    hints: [...document.querySelectorAll('input')].map((x) => x.placeholder).join(' | ') + ' | ' + document.querySelector('main').innerText,
   }))
-  check('…«Для кого» — Тимур, в поле слов — тема «природа»', form.tim && form.words, JSON.stringify(form).slice(0, 160))
-  check('…подсказки форм — испанские, а не «mountain» и «there is»', /montaña/.test(form.hints) && /hay \/ está/.test(form.hints) && !/mountain|there is/.test(form.hints), form.hints)
+  check('…«Для кого» — Тимур, в словах — тема «природа»', form.tim && form.words, JSON.stringify({ tim: form.tim, words: form.words }))
+  check('…подсказки форм — испанские, а не «mountain» и «there is»', /montaña/.test(form.hints) && /hay \/ está/.test(form.hints) && !/mountain|there is/.test(form.hints), form.hints.slice(0, 200))
   await shot(te, '11-material-form-back')
   await click(te, 'Вернуться к плану')
   await click(te, 'Вернуться к готовому тексту')
   check('вперёд дважды — тот же текст', await waitText(te, /Un fin de semana en la montaña/))
-  await click(te, 'Сохранить')
+  await click(te, 'Сохранить и выдать')
   const opened = await te.waitForFunction(() => location.search.includes('mat='), { polling: 250, timeout: 15000 }).then(() => true, () => false)
   check('«Сохранить» → материал открыт', opened && (await waitText(te, /Un fin de semana en la montaña/)))
   await sleep(1500)

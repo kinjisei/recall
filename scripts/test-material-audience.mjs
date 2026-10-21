@@ -12,15 +12,20 @@
  *   4. группы из расписания: только групповые серии, ученики в приложении,
  *      без архива, два дня одного состава — одна группа, кто вне приложения;
  *   5. нажатия: ученик и группа отмечаются и снимаются; черновик до
- *      Ф2.11б-3 (один studentId) читается как выбор одного.
+ *      Ф2.11б-3 (один studentId) читается как выбор одного;
+ *   6. подпись уровня в «Итоге» мастера (d8-2, d8-3): «под самого слабого —
+ *      Әсел» только при разных уровнях, «трудный для» — когда выбран выше;
+ *      «назначится обоим / всем при сохранении».
  *
  * ⚠️ Ожидания — литералами, а не из тех же функций.
  *
  * Запуск: node scripts/test-material-audience.mjs
  */
 import {
+  assignNote,
   levelIn,
   levelNote,
+  levelSummary,
   namesLine,
   pickedIds,
   scheduleGroups,
@@ -108,6 +113,20 @@ check('черновик до Ф2.11б-3: один studentId', eq(pickedIds({ stu
 check('черновик до Ф2.11б-3: studentId null — никто', eq(pickedIds({ studentId: null }), []))
 check('новый черновик — список', eq(pickedIds({ studentIds: ['u1', 'u2'], studentId: 'u9' }), ['u1', 'u2']))
 check('имена: больше трёх — «и ещё»', namesLine(['А', 'Б', 'В', 'Г', 'Д']) === 'А, Б, В и ещё 2', namesLine(['А', 'Б', 'В', 'Г', 'Д']))
+
+// 6. подпись уровня в итоге и «назначится …»
+const aigerim = { name: 'Айгерим Нурланова', level: 'B1' }
+const asel = { name: 'Әсел Жұмабаева', level: 'A2' }
+check('разные уровни, выбран слабый — «под самого слабого — Әсел»', levelSummary([aigerim, asel], 'A2') === 'под самого слабого — Әсел', levelSummary([aigerim, asel], 'A2'))
+check('выбран выше чьего-то — «трудный для: Әсел»', levelSummary([aigerim, asel], 'B1') === 'трудный для: Әсел', levelSummary([aigerim, asel], 'B1'))
+check('один ученик своего уровня — молчит', levelSummary([aigerim], 'B1') === undefined)
+check('двое одного уровня — молчит', levelSummary([asel, { name: 'Тимур', level: 'A2' }], 'A2') === undefined)
+check('выбран ниже всех — молчит', levelSummary([aigerim, asel], 'A1') === undefined)
+check('уровень не знаем — не «самый слабый»', levelSummary([aigerim, { name: 'Бека', level: null }], 'B1') === undefined)
+check('никого — «выдать можно потом»', assignNote(0) === 'выдать можно потом, из библиотеки')
+check('один — «назначится при сохранении»', assignNote(1) === 'назначится при сохранении')
+check('двое — «обоим»', assignNote(2) === 'назначится обоим при сохранении')
+check('трое — «всем»', assignNote(3) === 'назначится всем при сохранении')
 
 console.log(`\nИтог: ${pass}/${pass + fail}`)
 process.exitCode = fail ? 1 : 0

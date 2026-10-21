@@ -262,9 +262,9 @@ try {
   const content = { title: 'Camping', body: 'We sleep in a tent.', exercises: [{ kind: 'vocabulary', type: 'mcq', prompt: 'Where?', options: ['tent', 'car'], answer: 0 }] }
   const putFlow = (v) => te.evaluate((key, val) => localStorage.setItem(key, JSON.stringify({ v: val, at: Date.now() })), `recall.draft.${tId}.material-flow`, v)
   await putFlow({ name: 'plan', req, plan })
-  await draftCase(te, 'правки к плану материала', { open: () => go(te, '/teacher?tab=materials'), field: 'textarea[placeholder^="Правки к плану"]', value: 'Добавь вопросов' })
+  await draftCase(te, 'правки к плану материала', { open: () => go(te, '/teacher?tab=materials'), field: 'textarea[placeholder^="Например: добавь"]', value: 'Добавь вопросов' })
   await putFlow({ name: 'preview', req, plan, content })
-  await draftCase(te, 'правки к готовому материалу', { open: () => go(te, '/teacher?tab=materials'), field: 'textarea[placeholder^="Правки (необязательно)"]', value: 'Сделай текст проще' })
+  await draftCase(te, 'правки к готовому материалу', { open: () => go(te, '/teacher?tab=materials'), field: 'textarea[placeholder^="Например: проще"]', value: 'Сделай текст проще' })
   await click(te, 'Очистить')
   await go(te, '/teacher?tab=materials')
   check('мастер материала: «Очистить» — снова список', await click(te, 'Создать материал', 8000) && !(await text(te)).includes(NOTE))

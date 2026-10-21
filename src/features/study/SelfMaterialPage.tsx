@@ -19,14 +19,12 @@ import { useLanguage } from '../../context/LanguageContext'
 import { currentUserId } from '../../shared/api/supabase'
 import { getCachedEnLevel } from '../../lib/profile'
 import { createSelfMaterial, MATERIAL_FORMATS, MATERIAL_LENGTHS } from '../../lib/materials'
+import { LENGTH_LABEL } from '../../lib/materialLengths'
 import type { CEFRLevel } from '../../types'
 
 const LEVELS: CEFRLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1']
-const LEN_LABEL: Record<(typeof MATERIAL_LENGTHS)[number], string> = {
-  '50-100': 'короткий (50–100 слов)',
-  '100-250': 'средний (100–250)',
-  '250-350': 'длинный (250–350)',
-}
+// длина — те же «~120 слов / ~200 / ~300», что у учителя (lib/materialLengths)
+const LEN_LABEL = LENGTH_LABEL
 
 const inputCls =
   'w-full rounded-xl border border-tint/[0.10] bg-input px-3.5 py-2.5 text-sm outline-none focus:border-accent-line'
@@ -39,7 +37,7 @@ export function SelfMaterialPage() {
   const [level, setLevel] = useState<CEFRLevel>(cached && LEVELS.includes(cached) ? cached : 'A2')
   const [topic, setTopic] = useState('')
   const [format, setFormat] = useState<string>(MATERIAL_FORMATS[1]) // рассказ
-  const [len, setLen] = useState<(typeof MATERIAL_LENGTHS)[number]>('100-250')
+  const [len, setLen] = useState<(typeof MATERIAL_LENGTHS)[number]>('180-220')
   const [grammar, setGrammar] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)

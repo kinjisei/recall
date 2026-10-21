@@ -23,6 +23,9 @@ export interface ChatTurn {
  *   analyze — разбор выделенного фрагмента в читалке;
  *   dialog/writing/quest/review — разговорные и проверочные задачи;
  *   material/program/homework — генерация у преподавателя (только role='teacher');
+ *   material_plan — план материала: генерация, и сервер к ней выдаёт право на
+ *     3 бесплатных повтора; material_replan — такой повтор (без генерации,
+ *     ответ — только план по форме; PLAN.md Ф2.17-4в-2б, миграция 0014);
  *   self_material — материал, который ученик генерит СЕБЕ (режим самоучки):
  *     не teacherOnly, тратит СВОЙ месячный лимит генераций (energy_source), а не
  *     учительский; дешёвая standard-цепочка (одиночке хватит).
@@ -36,6 +39,8 @@ export type AiTask =
   | 'quest'
   | 'review'
   | 'material'
+  | 'material_plan'
+  | 'material_replan'
   | 'program'
   | 'homework'
   | 'self_material'

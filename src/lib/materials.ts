@@ -5,7 +5,8 @@
 // ============================================================================
 import { supabase, requireUserId, toJson } from '../shared/api/supabase'
 import { dbError } from '../shared/api/errors'
-import { chat } from '../shared/api/ai'
+import { chat, chatReply, type ReplanGrant } from '../shared/api/ai'
+import { comprehensionRange, lengthRangeOf, type MaterialLength } from './materialLengths'
 import { correctAnswerText } from './text'
 import { validExercises } from './materialExercises'
 import { groupBriefBlock } from './diagnosticsBrief'
@@ -27,7 +28,7 @@ export interface MaterialRequest {
   level: CEFRLevel
   topic: string
   format: string
-  lengthRange: '50-100' | '100-250' | '250-350'
+  lengthRange: MaterialLength
   vocabulary: string
   grammar: string
   /**
@@ -61,7 +62,7 @@ export const MATERIAL_FORMATS = [
   'интервью',
 ] as const
 
-export const MATERIAL_LENGTHS = ['50-100', '100-250', '250-350'] as const
+export { MATERIAL_LENGTHS, lengthRangeOf } from './materialLengths'
 
 /** Достаёт JSON из ответа модели (терпит ```-обёртки и болтовню вокруг). */
 function parseJson<T>(raw: string): T {
@@ -104,22 +105,16 @@ function requestDescription(req: MaterialRequest): string {
   ].join('\n')
 }
 
-function comprehensionRange(lengthRange: string): string {
-  if (lengthRange === '50-100') return '3-5'
-  if (lengthRange === '100-250') return '5-10'
-  return '7-12'
-}
 
-/** Длина-корзина по числу слов в теле текста (для «Мой текст»). */
-export function lengthRangeOf(body: string): MaterialRequest['lengthRange'] {
-  const n = body.split(/\s+/).filter(Boolean).length
-  return n < 100 ? '50-100' : n <= 250 ? '100-250' : '250-350'
-}
-
-/** Шаг 1: AI проверяет заявку и предлагает план материала. */
+/**
+ * Шаг 1: AI проверяет заявку и предлагает план материала. Учителю план —
+ * задача material_plan (генерация + право на 3 бесплатных повтора, его отдаёт
+ * onReplan); `replan` — повтор этим правом, без генерации (PLAN.md Ф2.17-4в-2б).
+ */
 export async function generateMaterialPlan(
   req: MaterialRequest,
   feedback?: string,
+  opts: { replan?: string; onReplan?: (g: ReplanGrant) => void } = {},
 ): Promise<MaterialPlan> {
   const system = [
     'Ты — опытный методист по иностранным языкам в приложении Recall.',
@@ -157,8 +152,9 @@ export async function generateMaterialPlan(
     feedback ? `\nПравки преподавателя к прошлому плану: ${feedback}` : '',
   ].join('\n')
 
-  // генерация материалов — сложная составная задача: Pro-уровень моделей
-  const raw = await chat([{ role: 'user', content: userMsg }], { system, task: genTask(req) })
+  const task = req.self ? 'self_material' : opts.replan ? 'material_replan' : 'material_plan'
+  const { text: raw, replan } = await chatReply([{ role: 'user', content: userMsg }], { system, task, replan: opts.replan })
+  if (replan) opts.onReplan?.(replan)
   const plan = parseJson<MaterialPlan>(raw)
   if (!Array.isArray(plan.exercise_plan) || !Array.isArray(plan.vocabulary)) {
     throw new Error('AI вернул неполный план. Попробуй ещё раз.')

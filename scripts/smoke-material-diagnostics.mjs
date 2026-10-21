@@ -79,16 +79,24 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
  * этом честно краснела — но на другом шаге, и причина была неочевидна.
  */
 /** Кнопка выбора подсвечена (класс выбранного чипа); exact — текст целиком (уровень «B1»). */
+/** Выбрано: кнопка-вариант (уровень) отмечена или ученик стоит чипом в «Для кого» (d8-2). */
 const chosen = (page, name, exact = false) =>
   page.evaluate(
     (n, ex) =>
-      [...document.querySelectorAll('button')].some(
-        (b) => (ex ? b.textContent.trim() === n : b.textContent.includes(n)) && b.className.includes('bg-accent-soft'),
-      ),
+      [...document.querySelectorAll('[role=radio][aria-checked="true"]')].some((b) => (ex ? b.textContent.trim() === n : b.textContent.includes(n))) ||
+      [...document.querySelectorAll('[data-for-whom] button[aria-label^="Убрать "]')].some((b) => b.getAttribute('aria-label') === `Убрать ${n}`),
     name,
     exact,
   )
 const studentChosen = (page) => chosen(page, STUDENT_NAME)
+/** «Для кого»: «Ученикам» → «+ Ученик» → строка меню (ученик или группа из расписания). */
+const pickFor = async (page, label) => {
+  await tap(page, 'Ученикам', '[role=radio]', true)
+  await sleep(300)
+  await tap(page, 'Ученик', '[data-for-whom] button[aria-haspopup]')
+  await sleep(400)
+  return tap(page, label, '[role=menuitem]')
+}
 const bodyText = (page) => page.evaluate(() => document.body.innerText || '')
 /** Ждём текст на экране (до 10 с). */
 const waitText = async (page, re, ms = 10000) => {
@@ -273,17 +281,15 @@ async function main() {
   check('в форме есть выбор ученика', hasPicker)
 
   // выбираем ученика и заполняем тему
-  const picked = await tap(page, STUDENT_NAME, 'button, a, [role=button]', true)
+  const picked = await pickFor(page, STUDENT_NAME)
+  await sleep(300)
   check('ученик выбран', picked && (await studentChosen(page)))
   check('уровень формы — уровень ученика (B2)', await chosen(page, 'B2', true))
-  const hint = await page.evaluate(() =>
-    (document.body.innerText || '').includes('где этот ученик ошибается'),
-  )
-  check('подпись объясняет, что даёт выбор', hint)
+  check('подпись: материал назначится при сохранении', /Материал назначится при сохранении/.test(await bodyText(page)))
 
   await page.type('input[placeholder*="Путешествие"]', 'Поход в горы')
   await sleep(300)
-  await tap(page, 'Составить план')
+  await tap(page, 'Новый план')
   await sleep(2500)
 
   const sent = await readCalls()
@@ -314,7 +320,7 @@ async function main() {
   check('новая заявка — без прошлого ученика', !(await studentChosen(page)))
   await page.type('input[placeholder*="Путешествие"]', 'Поход в горы')
   await sleep(300)
-  await tap(page, 'Составить план')
+  await tap(page, 'Новый план')
   await sleep(2500)
   const sent2 = await readCalls()
   const plain = sent2.join('\n')
@@ -332,8 +338,10 @@ async function main() {
   await tap(page, 'Очистить')
   await sleep(500)
   await tap(page, 'Создать')
-  await waitText(page, new RegExp(`Группа «${GROUP_TITLE}»`))
-  check('группа из расписания — кнопкой в «Для кого»', await tap(page, `Группа «${GROUP_TITLE}»`))
+  await waitText(page, /Для кого/)
+  await sleep(1500) // группы из расписания приходят с базы
+  check('группа из расписания — строкой в меню «Для кого»', await pickFor(page, `Группа «${GROUP_TITLE}»`))
+  await sleep(300)
   check('группа отметила обоих', (await chosen(page, STUDENT_NAME)) && (await chosen(page, SECOND_NAME)))
   check('уровень — самого слабого (B1, не B2 и не A2 по умолчанию)', await chosen(page, 'B1', true))
   const warn = await bodyText(page)
@@ -343,35 +351,39 @@ async function main() {
     (warn.match(/Уровни[^\n]*/) ?? ['нет строки'])[0],
   )
   check('подпись: материал назначится всем', /назначится всем/.test(warn))
+  const formSum = await page.$eval('section[aria-label="Итог"]', (el) => el.innerText).catch(() => 'нет итога')
+  check('итог заявки: «под самого слабого — …»', /под самого слабого — /.test(formSum), formSum.replace(/\n/g, ' ').slice(0, 200))
   await page.type('input[placeholder*="Путешествие"]', 'Поход в горы')
   await sleep(300)
-  await tap(page, 'Составить план')
-  check('план от AI на экране', await waitText(page, /План материала от AI[\s\S]*Общее слабое место группы/))
+  await tap(page, 'Новый план')
+  check('план от AI на экране', await waitText(page, /План от AI[\s\S]*Общее слабое место группы/))
   const groupBody = (await readCalls()).join('\n')
   check('в промпте — блок про нескольких учеников', /Что известно про этих учеников/.test(groupBody))
   check('…общее слабое место помечено «у 2 из 2»', groupBody.includes(`${HARD_WORD} (у 2 из 2)`), (groupBody.match(/Буксующие слова:[^\\]*/) ?? ['нет'])[0].slice(0, 120))
   check('…слабое место одного — тоже', groupBody.includes('borrow (у 1 из 2)'))
   check('в промпте — правило «тема → 6-8 слов»', /если указана тема — подбери 6-8 слов этой темы по уровню/.test(groupBody))
-  const planText = await bodyText(page)
-  const forLine = (planText.match(/B1 · для: [^\n]*/) ?? ['нет строки'])[0]
-  check('план: для кого и уровень', forLine.includes(STUDENT_NAME) && forLine.includes(SECOND_NAME), forLine)
+  const planSum = await page.$eval('section[aria-label="Итог"]', (el) => el.innerText).catch(() => 'нет итога')
+  check('план: для кого и уровень в итоге', planSum.includes(STUDENT_NAME) && planSum.includes(SECOND_NAME) && /Уровень\s+B1/.test(planSum), planSum.replace(/\n/g, ' ').slice(0, 200))
 
   // слова плана правятся руками, без новой генерации
   await page.evaluate(() => document.querySelector('[aria-label="Убрать «campfire»"]')?.click())
   await sleep(300)
   const wordInput = await page.$('input[aria-label="Своё слово в план"]')
-  if (wordInput) await wordInput.type('lantern')
-  await tap(page, 'Добавить')
+  if (wordInput) {
+    await wordInput.type('lantern')
+    await wordInput.press('Enter')
+  }
+  await sleep(300)
   const words = await page.$eval('[data-plan-words]', (el) => el.innerText).catch(() => 'нет правки слов')
   check('слово убрано и добавлено руками', /lantern/.test(words) && !/campfire/.test(words), words.replace(/\n/g, ' '))
   check('…без запроса к AI', (await readCalls()).length === 1, `запросов: ${(await readCalls()).length}`)
-  await tap(page, 'Генерировать')
-  check('предпросмотр текста', await waitText(page, /A Night on the Trail/))
+  await tap(page, 'Новый текст')
+  check('шаг «Текст»: готовый текст', await waitText(page, /A Night on the Trail/))
   const contentBody = (await readCalls())[1] ?? ''
   check('текст собран по поправленным словам', contentBody.includes('lantern') && !contentBody.includes('campfire'))
-  const previewText = await bodyText(page)
-  const toLine = (previewText.match(/Назначится при сохранении: [^\n]*/) ?? ['нет строки'])[0]
-  check('предпросмотр: кому назначится', toLine.includes(STUDENT_NAME) && toLine.includes(SECOND_NAME), toLine)
+  const toLine = await page.$eval('section[aria-label="Сохранение"]', (el) => el.innerText).catch(() => 'нет блока')
+  check('текст: кому назначится', /Назначится при сохранении/i.test(toLine) && toLine.includes(STUDENT_NAME) && toLine.includes(SECOND_NAME), toLine.replace(/\n/g, ' ').slice(0, 200))
+  check('…кнопка «Сохранить и выдать двоим»', /Сохранить и выдать двоим/.test(toLine))
   await tap(page, 'Сохранить')
   const savedOpen = await page
     .waitForFunction(() => location.search.includes('mat='), { polling: 250, timeout: 15000 })

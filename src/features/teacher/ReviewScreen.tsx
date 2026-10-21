@@ -212,7 +212,7 @@ export function ReviewScreen({
         subtitle={['задание по материалу', whenDone(assignment.submitted_at)].filter(Boolean).join(' · ')}
         trailing={pager}
       />
-      <MainAside narrow label="Итог проверки" main={main} aside={aside} />
+      <MainAside size="narrow" label="Итог проверки" main={main} aside={aside} />
       {dialog}
     </div>
   )

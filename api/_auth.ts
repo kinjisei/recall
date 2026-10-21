@@ -19,7 +19,8 @@ export type AuthResult =
   /** refundToken — серверный номер списания: по нему и только по нему его
    *  можно вернуть (refundAiCall) и записать итог вызова (api/_usage.ts). */
   | { ok: true; refundToken: string }
-  | { ok: false; status: number; error: string }
+  /** code — причина для клиента, когда ему нужно отличить отказ (повтор плана, 0014). */
+  | { ok: false; status: number; error: string; code?: string }
 
 /** Отказ авторизации — та ветка AuthResult, где есть код ответа и текст. */
 export type AuthDenied = Extract<AuthResult, { ok: false }>
@@ -50,7 +51,7 @@ export function authDenied(result: AuthResult): result is AuthDenied {
  */
 export type QuotaKind = 'heavy' | 'light' | 'speech'
 
-const DENIED: AuthDenied = { ok: false, status: 401, error: 'Требуется вход в приложение' }
+export const DENIED: AuthDenied = { ok: false, status: 401, error: 'Требуется вход в приложение' }
 
 /**
  * Supabase не ответил вовремя или связь оборвалась. Это НЕ «нужен вход» и не
@@ -214,6 +215,12 @@ const REFUSALS: [code: string, status: number, error: string][] = [
   ['RECALL_RATE_HOUR', 429, 'Слишком много запросов к ИИ подряд. Попробуй через несколько минут.'],
 ]
 
+/** Отказ базы (RECALL_*) → текст человеку; null — код незнакомый. Общий для spend_energy и spend_replan (api/_replan.ts). */
+export function refusalFor(text: string): AuthDenied | null {
+  const refusal = REFUSALS.find(([code]) => text.includes(code))
+  return refusal ? { ok: false, status: refusal[1], error: refusal[2] } : null
+}
+
 /** Пускает только вошедших, не заблокированных и не исчерпавших лимит.
  * cost — цена действия в ЭНЕРГИИ (heavy), generation — материал/программа
  * (месячный лимит вместо энергии). Списывает через spend_energy. */
@@ -252,8 +259,8 @@ export async function authorize(
   if (r.ok) return { ok: true, refundToken: nonce }
   if (r.status === 401 || r.status === 403 || r.text.includes('RECALL_NO_AUTH')) return DENIED
 
-  const refusal = REFUSALS.find(([code]) => r.text.includes(code))
-  if (refusal) return { ok: false, status: refusal[1], error: refusal[2] }
+  const refusal = refusalFor(r.text)
+  if (refusal) return refusal
 
   // Функции нет (404) или она упала с неизвестной ошибкой — AI ЗАКРЫТ.
   // Раньше отсутствие функции пропускало по одной валидности токена, «пока

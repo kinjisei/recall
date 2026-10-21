@@ -74,6 +74,16 @@ check('новый текст из плана заменяет прежний', w
 const replannedFromForm = advance(b2, { name: 'plan', req, plan: plan('P3') })
 check('новый план из формы убирает прежние план и текст', where(replannedFromForm) === 'plan:P3' && !ahead(replannedFromForm))
 
+// 3б. текст пришёл, когда учитель вернулся к плану (d8-5: «План» в шагах,
+// пока AI пишет) — MaterialWizard кладёт его шагом впереди: back(advance(…))
+const landed = back(advance(b1, { name: 'preview', req, plan: plan('P1'), content: content('C3') }))
+check('текст пришёл, пока смотрят план, — на экране план', where(landed) === 'plan:P1', where(landed))
+check('…а новый текст впереди («Вернуться к готовому тексту»)', ahead(landed)?.content?.title === 'C3')
+const granted = advance(START, { name: 'plan', req, plan: plan('G1'), replan: { id: 'g', left: 3 } })
+const edited = replace(granted, { ...current(granted), plan: plan('G1b') })
+check('правка слов в плане не теряет право на бесплатные повторы', current(edited).replan?.left === 3)
+check('…и право переживает черновик', fromDraft(JSON.parse(JSON.stringify(edited))) && current(fromDraft(JSON.parse(JSON.stringify(edited)))).replan?.id === 'g')
+
 // 4. «Мой текст»
 const own = advance(START, { name: 'preview', req, plan: plan('—'), content: content('O1'), own: true })
 check('«Мой текст»: «назад» — к форме', where(back(own)) === 'form')

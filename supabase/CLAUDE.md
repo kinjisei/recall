@@ -162,6 +162,14 @@
   человека, репетиторы и остальные отдельно. Таблицу событий не трогает.
   Правила — `src/features/admin/CLAUDE.md`, проверка —
   `check-onboarding-answers.mjs`.
+- **Бесплатные повторы плана материала** (миграция 0014, Ф2.17-4в-2б):
+  `material_replans` — право на 3 повтора за оплаченный план; выдаёт
+  `grant_material_replans(p_nonce)` только по номеру СВОЕЙ строки-генерации
+  в `ai_calls` не старше 10 минут (номер знает лишь сервер), тратит
+  `spend_replan(p_replan, p_nonce)` — строка `ai_calls` без генерации
+  (`replan_of`), почасовой потолок как у `spend_energy`, право не старше
+  2 дней; возврат — тем же `refund_ai_call`. Правила — `api/CLAUDE.md`,
+  проверка — `check-material-replans.mjs`.
 - **Ответ RPC — таблицей (`returns table`), а не `json`**, если его читает
   клиент: тогда `database.types.ts` даёт точный тип строки, и приведение
   `as unknown as` не нужно (архитектура §8). В `plpgsql` с `returns table`
@@ -208,6 +216,9 @@
 - `node scripts/check-onboarding-answers.mjs` — ответы онбординга (миграция
   0013): люди, а не события; последний ответ; роли; окно дней; только
   владельцу — `src/features/admin/CLAUDE.md`.
+- `node scripts/check-material-replans.mjs` — бесплатные повторы плана
+  (миграция 0014): право только по своей генерации, лимит 3, повтор не
+  тратит генерацию, возврат, чужое право — `api/CLAUDE.md`.
 - `node scripts/check-answermatches-sql.mjs` (вне CI, живая база) — сверка
   ответов в SQL (`norm_typed`) совпадает с клиентом (`lib/text.ts`).
 

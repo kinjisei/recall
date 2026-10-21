@@ -35,6 +35,14 @@
  *                    (на телефоне — список);
  *   materials-open — открыт «A trip that went wrong» с работой Әсел на
  *                    проверке (d8-1; на телефоне — экран материала).
+ * Заход 4в-2б — мастер нового материала (d8-2…d8-5), шаги — черновиком,
+ * как после перезагрузки (строку «Черновик восстановлен» перед снимком
+ * убираем — в макете мастер открыт впервые); AI не зовётся — запрос к
+ * /api/gemini висит:
+ *   wizard-form    — заявка: Айгерим и Әсел, A2, «Travel problems» (d8-2);
+ *   wizard-plan    — план от AI, бесплатные повторы есть (d8-3);
+ *   wizard-writing — «Новый текст →» нажат, AI пишет — скелетон (d8-5);
+ *   wizard-text    — текст готов, слова плана подсвечены (d8-4, 1440).
  * Аудит у них — по шторке или диалогу (`audit`), а не по <main> под
  * затемнением; снимок — ровно окном (`overlay`), как кадры t5-2 и d2-2.
  * Ширины 390 и 1280 — в четырёх вариантах вида («Сумерки» и «Закат» ×
@@ -44,7 +52,7 @@
  * красная строка в итоге. Телефон снимается окном во всю высоту страницы.
  *
  * Запуск: npm run dev:test, затем node scripts/shots-screens.mjs [папка]
- * [--only home|students|cancel|tasks|materials] [--name экран,экран] (по умолчанию shots-screens/,
+ * [--only home|students|cancel|tasks|materials|wizard] [--name экран,экран] (по умолчанию shots-screens/,
  * все экраны; --name — только эти снимки, для быстрой сверки). ~10 мин.
  */
 import { spawn } from 'node:child_process'
@@ -89,6 +97,10 @@ async function newPage(width) {
     } catch {
       /* about:blank */
     }
+    // снимки мастера: AI не зовём — запрос висит, экран остаётся «AI пишет»
+    const orig = window.fetch
+    window.fetch = (input, init) =>
+      String(input?.url ?? input).includes('/api/gemini') && localStorage.getItem('shots.aiHang') === '1' ? new Promise(() => {}) : orig(input, init)
   })
   return page
 }
@@ -114,7 +126,7 @@ async function signIn(page, email) {
  * шторка или диалог поверх экрана: снимок ровно окном, как кадр макета (на
  * всю страницу закреплённая шторка висела бы вверху длинной картинки).
  */
-async function shoot(page, name, path, width, expect, looks, { prepare, wait, tall, audit = 'main', overlay = false } = {}) {
+async function shoot(page, name, path, width, expect, looks, { before, prepare, wait, tall, audit = 'main', overlay = false } = {}) {
   const base = page.viewport()
   if (tall && width >= 600) await page.setViewport({ ...base, height: tall })
   for (const [palette, theme] of looks) {
@@ -122,6 +134,7 @@ async function shoot(page, name, path, width, expect, looks, { prepare, wait, ta
       localStorage.setItem('recall.palette', p)
       localStorage.setItem('recall.theme', t)
     }, palette, theme)
+    if (before) await before(page)
     await page.goto(`${APP_URL}${path}`, { waitUntil: 'networkidle2' })
     const ok = await page
       .waitForFunction((src) => new RegExp(src).test(document.body.innerText), { polling: 250, timeout: 15000 }, expect.source)
@@ -233,7 +246,7 @@ const askOn = (label) => async (page) => {
 try {
   mkdirSync(DIR, { recursive: true })
   console.log('── студия')
-  const { t, a, solo, ca, card, wa, ma } = await st.seed()
+  const { t, a, s, solo, ca, card, wa, ma } = await st.seed()
   const PORT = 9700 + Math.floor(Math.random() * 200)
   spawn(EDGE, ['--headless=new', '--disable-gpu', `--remote-debugging-port=${PORT}`, `--user-data-dir=${profileDir('shots-screens')}`, '--no-first-run', 'about:blank'], { detached: true, stdio: 'ignore' }).unref()
   for (let i = 0; i < 30 && !browser; i++) {
@@ -284,6 +297,55 @@ try {
     await screen(t.email, [
       { name: 'materials', path: '/tasks?tab=materials', expect: /На проверку[\s\S]*A trip that went wrong/ },
       { name: 'materials-open', path: `/tasks?tab=materials&mat=${trip.id}`, expect: /Выдан:[\s\S]*Упражнения/ },
+    ])
+  }
+  if (!ONLY || ONLY === 'wizard') {
+    console.log('── мастер материала')
+    const req = { lang: 'en', level: 'A2', topic: 'Travel problems', format: 'рассказ', lengthRange: '100-140', vocabulary: 'delay, luggage, boarding pass', grammar: 'Past Simple', studentIds: [a.id, s.id] }
+    const plan = {
+      comments: 'Рассказ: Дана летит из Алматы в Стамбул — рейс задерживают, она опаздывает на пересадку, а багаж теряется. Короткие предложения в Past Simple, слова — на уровне A2.',
+      vocabulary: ['delay', 'luggage', 'boarding pass', 'gate', 'miss a flight'],
+      grammar_focus: 'Past Simple',
+      exercise_plan: [
+        { kind: 'comprehension', type: 'fill', count: 2, note: 'Вопросы по сюжету: почему Дана ждала у выхода, что случилось в Стамбуле' },
+        { kind: 'vocab', type: 'mcq', count: 1, note: 'Сопоставить 4 целевых слова с переводом' },
+      ],
+    }
+    const content = {
+      title: 'A long day at the airport',
+      body: 'Last summer Dana flew from Almaty to Istanbul. She came to the airport early, but the screen said: “Delay — 3 hours”. Dana was not happy. She bought a coffee and waited near the gate.\n\nThe plane left very late, and in Istanbul Dana had only forty minutes for her next flight. She ran through the airport with her boarding pass in her hand. But the gate was already closed. She missed her flight!\n\nA woman at the desk was very kind. She gave Dana a ticket for the evening flight. Then Dana went to get her luggage, but her bag was not there. “Don’t worry,” the woman said. “It is on the next plane.” Dana laughed. What a day!',
+      exercises: [
+        { kind: 'comprehension', type: 'fill', prompt: 'Why did Dana wait near the gate for three hours?', answer: 'Her flight had a delay.' },
+        { kind: 'comprehension', type: 'fill', prompt: 'What happened when Dana got to the gate in Istanbul?', answer: 'It was closed — she missed her flight.' },
+        { kind: 'vocab', type: 'mcq', prompt: 'luggage — это…', options: ['багаж', 'выход на посадку', 'задержка', 'посадочный талон'], answer: 0 },
+      ],
+    }
+    const steps = [{ name: 'form' }, { name: 'plan', req, plan, replan: { id: '00000000-0000-4000-8000-000000000000', left: 3 } }, { name: 'preview', req, plan, content }]
+    const drafts = (at) => async (page) =>
+      page.evaluate(
+        (uid, flow, form) => {
+          const put = (k, v) => localStorage.setItem(`recall.draft.${uid}.${k}`, JSON.stringify({ v, at: Date.now() }))
+          for (const k of Object.keys(localStorage)) if (k.startsWith(`recall.draft.${uid}.material-`)) localStorage.removeItem(k)
+          put('material-flow', flow)
+          put('material-request', form)
+          localStorage.setItem('shots.aiHang', '1')
+        },
+        t.id,
+        { steps: steps.slice(0, at + 1), at },
+        { source: 'generate', ...req, body: '' },
+      )
+    // в макете мастер открыт впервые — строки «Черновик восстановлен» нет
+    const fresh = (page) => page.evaluate(() => [...document.querySelectorAll('main p')].filter((p) => p.textContent.startsWith('Черновик восстановлен')).forEach((p) => p.remove()))
+    const writing = async (page) => {
+      await fresh(page)
+      await press(page, 'Новый текст →')
+      await page.waitForFunction(() => document.body.innerText.includes('AI пишет текст'), { polling: 250, timeout: 5000 }).catch(() => {})
+    }
+    await screen(t.email, [
+      { name: 'wizard-form', path: '/tasks?tab=materials', before: drafts(0), prepare: fresh, expect: /Новый материал[\s\S]*Итог/ },
+      { name: 'wizard-plan', path: '/tasks?tab=materials', before: drafts(1), prepare: fresh, expect: /План от AI[\s\S]*Итог/ },
+      { name: 'wizard-writing', path: '/tasks?tab=materials', before: drafts(1), prepare: writing, expect: /План от AI/ },
+      { name: 'wizard-text', path: '/tasks?tab=materials', before: drafts(2), prepare: fresh, expect: /A long day at the airport/ },
     ])
   }
   if (!ONLY || ONLY === 'tasks') {

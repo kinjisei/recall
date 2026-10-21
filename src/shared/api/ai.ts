@@ -4,6 +4,7 @@
 // Контракт: chat(messages, opts) — сигнатуру не менять, расширять можно (её зовут разные разделы).
 // ============================================================================
 import type { AiTask, ChatTurn } from './aiTypes'
+import { AppError } from './errors.ts'
 import { supabase } from './supabase'
 
 /**
@@ -45,10 +46,28 @@ export function isNetworkError(e: unknown): boolean {
  * пока он слал tier, любой вошедший мог отправить обычную реплику Диалога с
  * tier:'max' и жечь дефицитные Pro-модели (пентест, заход 18).
  */
-export async function chat(
+export async function chat(messages: ChatTurn[], opts: { task: AiTask; system?: string }): Promise<string> {
+  return (await chatReply(messages, opts)).text
+}
+
+/**
+ * Право на бесплатные повторы плана материала (PLAN.md Ф2.17-4в-2б): сервер
+ * отдаёт его к оплаченному плану и к каждому повтору — сколько осталось.
+ */
+export interface ReplanGrant {
+  id: string
+  left: number
+}
+
+/**
+ * Как chat(), но целиком: текст и право на повторы плана (`replan`). Отказ
+ * сервера с кодом (`RECALL_REPLAN_LIMIT` — повторы кончились) — AppError с
+ * этим кодом: экран отличит его от сбоя.
+ */
+export async function chatReply(
   messages: ChatTurn[],
-  opts: { task: AiTask; system?: string },
-): Promise<string> {
+  opts: { task: AiTask; system?: string; replan?: string },
+): Promise<{ text: string; replan?: ReplanGrant }> {
   // одна точка на все AI-механики: любой экран, зовущий AI, попадает в воронку
   notifyRequest(opts.task)
 
@@ -70,24 +89,28 @@ export async function chat(
         system: opts.system,
         // модель и лимиты сервер подбирает сам по типу задачи
         task: opts.task,
+        ...(opts.replan ? { replan: opts.replan } : {}),
       }),
     })
   } catch {
     throw netError()
   }
 
-  let data: { text?: string; error?: string } | null = null
+  type Reply = { text?: string; error?: string; code?: string; replan?: ReplanGrant }
+  let data: Reply | null = null
   try {
-    data = (await res.json()) as { text?: string; error?: string }
+    data = (await res.json()) as Reply
   } catch {
     /* ответ не JSON — обработаем ниже по статусу */
   }
 
   if (!res.ok) {
-    throw new Error(data?.error ?? `Сервер AI ответил ошибкой ${res.status}`)
+    const message = data?.error ?? `Сервер AI ответил ошибкой ${res.status}`
+    throw data?.code ? new AppError(message, data.code) : new Error(message)
   }
   if (!data?.text) throw new Error('Пустой ответ от AI')
-  return data.text
+  const grant = data.replan
+  return { text: data.text, ...(grant && typeof grant.id === 'string' && typeof grant.left === 'number' ? { replan: grant } : {}) }
 }
 
 /**

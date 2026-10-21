@@ -17,7 +17,7 @@
     "src/features/teacher/WritingSection.tsx": 505,
     "src/features/words/MyWords.tsx": 466,
     "src/lib/homeworkRules.ts": 535,
-    "src/lib/materials.ts": 567,
+    "src/lib/materials.ts": 563,
     "src/types/index.ts": 508
   }
 }

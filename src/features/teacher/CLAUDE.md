@@ -77,7 +77,7 @@
 | `HomeworkSection.tsx`, `HomeworkComposer.tsx` | домашка в карточке и её сборка (правила — `features/homework/CLAUDE.md`) |
 | `StudentWordsSection.tsx`, `WordPicker.tsx` | раздел «Слова» карточки (d10-3): список с галочками, откуда слово и статус, «+ Выдать слова» (паки и свои наборы), удаление через диалог, подвал «Выбрано 3 · уйдут Айгерим в приложение» → перепроверка; прошлые перепроверки |
 | `DiagnosticsSection.tsx`, `ProgramSection.tsx`, `PlacementSection.tsx`, `QuestSection.tsx`, `DailyPlanSection.tsx` | экраны плиток: диагностика (d10-2: динамика «было → стало», три числа, слова, задания со статусом — письма ученика, материалы, домашка, — слабые темы, последнее занятие), программа (и под ней план дня), тест уровня (главная кнопка — язык студии), квесты (d10-4: назначенные с перепиской, «Новый квест» — язык и уровень полосами, сценарий плитками: «В аэропорту», «В отеле», «Собеседование» или свой, порог ползунком) |
-| `MaterialsSection.tsx`, `materials/*` | материалы: библиотека (d8-1 — шапка `ScreenTop`, `PendingWorks` «На проверку», `LibraryList` по уровням со строкой «Английский · A2 · рассказ · 1 на проверке», `MaterialDetail` рядом — `ListDetail fill`; на телефоне по очереди, у карточки «‹ Материалы»), заявка, план (слова правятся руками), предпросмотр; шаги мастера и «назад/вперёд» без потерь — `materials/wizard.ts`; «Для кого» — `ForWhom.tsx`, его правила (уровень, группы, предупреждение) — `audience.ts` |
+| `MaterialsSection.tsx`, `materials/*` | материалы: библиотека (d8-1 — шапка `ScreenTop`, `PendingWorks` «На проверку», `LibraryList` по уровням со строкой «Английский · A2 · рассказ · 1 на проверке», `MaterialDetail` рядом — `ListDetail fill`; на телефоне по очереди, у карточки «‹ Материалы»); мастер нового материала по d8-2…d8-5 — `MaterialWizard.tsx` (разводка шагов), `RequestForm` (заявка), `PlanScreen` (план и скелетон, пока AI пишет), `PreviewScreen` (текст готов); куски — `wizardBits.tsx` (шапка «‹ Материалы · Новый материал» с шагами «Заявка — План — Текст», карточка формы, «Итог»), `textBits.tsx` (статья, упражнения, «Назначится при сохранении», скелетон), `WordChips.tsx`, `markWords.ts` (слова плана в тексте), `useStudentLevels.ts` (уровни учеников — один запрос на мастер); шаги и «назад/вперёд» без потерь — `materials/wizard.ts`; «Для кого» — `ForWhom.tsx`, его правила (уровень, группы, предупреждение, подпись уровня в итоге) — `audience.ts` |
 | `materials/MaterialDetail.tsx`, `materials/detailParts.tsx` | карточка материала (d8-1): название, вид и «120 слов · 2 упражнения» (слова — по тексту), «Выдан: Әсел · вчера, 9:10 · ждёт проверки», текст абзацами, упражнения с ответом; ниже «Кому выдан» — «Выдать», «Убрать» (сданную — диалогом), «Проверить» ведёт в проверку `?work=`, «Разбор» — проверенная; печать, удаление |
 | `formHints.ts` | подсказки-примеры форм студии (материал, письмо, квест) на языке формы |
 | `WritingSection.tsx`, `WritingDeleteButton.tsx` | письменные работы; «Удалить задание» — с диалогом по центру (вынесено: большой `WritingSection` не растёт); проверка письма — `features/writing` |
@@ -179,13 +179,28 @@
 **«Назад» не выбрасывает то, что составил AI** (PLAN.md Ф2.11)
 
 - Шаги мастера материала живут как история браузера (`materials/wizard.ts`):
-  «К плану» и «К форме» двигают указатель, готовое остаётся впереди — на
-  плане «Вернуться к готовому тексту», в форме «Вернуться к плану». Раньше
-  «К плану» стирал текст, «К форме» — план, и вернуть их можно было только
-  новой генерацией. Новый план из формы или новый текст из плана — другая
-  ветка, прежнее впереди убирается (кнопки тогда говорят «Новый план»,
-  «Новый текст»); пересоставить план — правка того же шага, текст впереди
-  остаётся со своим планом.
+  пройденный шаг в шапке («Заявка», «План») — ссылка, она двигает указатель,
+  готовое остаётся впереди — на плане «Вернуться к готовому тексту», в форме
+  «Вернуться к плану» (и готовый шаг впереди тоже ссылка). Раньше «назад»
+  стирал текст и план, и вернуть их можно было только новой генерацией.
+  Новый план из формы или новый текст из плана — другая ветка, прежнее
+  впереди убирается (кнопки — «Новый план →», «Новый текст →»);
+  пересоставить план — правка того же шага, текст впереди остаётся со своим
+  планом. Шапка «назад» у мастера одна — «‹ Материалы», выход из мастера
+  спрашивает, если AI уже что-то составил.
+- **Ответ AI приходит позже нажатия** — шаг меняется от нынешнего черновика
+  (`update(f => …)` в `MaterialWizard`), а не от снимка на момент нажатия.
+  Пока AI пишет текст (скелетон d8-5), «План» в шагах возвращает к плану, а
+  текст, когда придёт, ложится готовым шагом впереди; к заявке, пока AI
+  пишет, не уйти — текст лёг бы не к тому плану.
+- **«Пересоставить план» — 3 раза бесплатно за оплаченный план** (журнал
+  п.76 (7)). Право выдаёт сервер вместе с планом (`replan` в ответе,
+  `api/_replan.ts`, миграция 0014) и хранит шаг плана; кончилось или
+  устарело (2 дня) — повтор за генерацию и с ним новое право. Ответ повтора
+  обязан быть планом (`api/_planShape.ts`): иначе «бесплатный повтор» был бы
+  бесплатным AI на любой текст. Правка слов руками — без генерации, право
+  остаётся; свои слова уходят и в заявку (повтор их не потеряет), звёздочка
+  «добавил AI» — у слов, которых нет в заявке.
 - «Программа»: «К форме» не стирает составленную программу —
   «Вернуться к программе» (`editing` в черновике).
 - «Отмена» при готовом впереди спрашивает, прежде чем выбросить.
@@ -317,7 +332,14 @@
   приглашение; плитки, тест уровня на языке студии, «назад» в программе и
   мастере, одна шапка, язык форм (`--shots`, `--theme light`, `--width 1280`).
 - `node scripts/test-material-wizard.mjs` (чистый, в CI) — шаги мастера:
-  «назад» и «вперёд» без потерь, ветки, черновик прежнего вида.
+  «назад» и «вперёд» без потерь, ветки, текст, пришедший пока смотрят план,
+  право на повторы в черновике, черновик прежнего вида.
+- `node scripts/test-mark-words.mjs` (чистый, в CI) — слова плана в тексте:
+  регистр, окончания, длинное раньше короткого, кусок слова не метится.
+- `node scripts/test-material-audience.mjs` (чистый, в CI) — «Для кого»:
+  уровень слабого, группы, предупреждение, подпись уровня в итоге.
+- `node scripts/shots-screens.mjs --only wizard` — мастер по d8-2…d8-5:
+  заявка, план, «AI пишет» (скелетон), текст готов; AI не зовётся.
 - `node scripts/smoke-navigation.mjs` — меню учителя, «ждут проверки» на
   вкладке, хаб «Заданий» → разбор работы, «Работа 2 из 2», «›» к соседней
   и «назад» после листания — в хаб (краснеет, если листалка пишет в
@@ -380,11 +402,11 @@
 <!-- Пишет `npm run gen:docs` (scripts/gen/module-docs.mjs) по коду — руками не править. -->
 ## Из кода (сгенерировано)
 
-- **Файлы:** `AssignmentsPage.tsx`, `BecomeTeacher.tsx`, `CardDetail.tsx`, `DailyPlanSection.tsx`, `DiagnosticsSection.tsx`, `formHints.ts`, `GuideSection.tsx`, `HomeworkComposer.tsx`, `HomeworkSection.tsx`, `index.ts`, `innerScreen.ts`, `materials/audience.ts`, `materials/detailParts.tsx`, `materials/ForWhom.tsx`, `materials/LibraryList.tsx`, `materials/MaterialDetail.tsx`, `materials/PendingWorks.tsx`, `materials/PlanScreen.tsx`, `materials/PreviewScreen.tsx`, `materials/RequestForm.tsx`, `materials/shared.ts`, `materials/wizard.ts`, `MaterialsSection.tsx`, `PlacementSection.tsx`, `PrintSheet.tsx`, `ProgramSection.tsx`, `QuestSection.tsx`, `ReportSheet.tsx`, `reviewBits.tsx`, `ReviewScreen.tsx`, `roster.tsx`, `sectionBits.tsx`, `StudentRowBits.tsx`, `StudentsTab.tsx`, `StudentStudio.tsx`, `StudentWordsSection.tsx`, `StudioEnergy.tsx`, `StudioSection.tsx`, `studioSections.ts`, `StudioTiles.tsx`, `TasksHub.tsx`, `TasksPage.tsx`, `TeacherBlock.tsx`, `TeacherPage.tsx`, `topicTitles.ts`, `useAnswerDraft.ts`, `useComposerDraft.ts`, `useReviewDraft.ts`, `useWritingTaskDraft.ts`, `waitingCount.ts`, `waitingWorks.ts`, `WordPicker.tsx`, `WritingDeleteButton.tsx`, `WritingSection.tsx`
-- **Вне папки (указатель «Описание:» в начале файла):** `src/lib/activityDays.ts`, `src/lib/diagnosticsBrief.ts`, `src/lib/materialExercises.ts`, `src/lib/reviewQueue.ts`, `src/lib/studentSignals.ts`, `src/lib/wordChecks.ts`
+- **Файлы:** `AssignmentsPage.tsx`, `BecomeTeacher.tsx`, `CardDetail.tsx`, `DailyPlanSection.tsx`, `DiagnosticsSection.tsx`, `formHints.ts`, `GuideSection.tsx`, `HomeworkComposer.tsx`, `HomeworkSection.tsx`, `index.ts`, `innerScreen.ts`, `materials/audience.ts`, `materials/detailParts.tsx`, `materials/ForWhom.tsx`, `materials/LibraryList.tsx`, `materials/markWords.ts`, `materials/MaterialDetail.tsx`, `materials/MaterialWizard.tsx`, `materials/PendingWorks.tsx`, `materials/PlanScreen.tsx`, `materials/PreviewScreen.tsx`, `materials/RequestForm.tsx`, `materials/shared.ts`, `materials/textBits.tsx`, `materials/useStudentLevels.ts`, `materials/wizard.ts`, `materials/wizardBits.tsx`, `materials/WordChips.tsx`, `MaterialsSection.tsx`, `PlacementSection.tsx`, `PrintSheet.tsx`, `ProgramSection.tsx`, `QuestSection.tsx`, `ReportSheet.tsx`, `reviewBits.tsx`, `ReviewScreen.tsx`, `roster.tsx`, `sectionBits.tsx`, `StudentRowBits.tsx`, `StudentsTab.tsx`, `StudentStudio.tsx`, `StudentWordsSection.tsx`, `StudioEnergy.tsx`, `StudioSection.tsx`, `studioSections.ts`, `StudioTiles.tsx`, `TasksHub.tsx`, `TasksPage.tsx`, `TeacherBlock.tsx`, `TeacherPage.tsx`, `topicTitles.ts`, `useAnswerDraft.ts`, `useComposerDraft.ts`, `useReviewDraft.ts`, `useWritingTaskDraft.ts`, `waitingCount.ts`, `waitingWorks.ts`, `WordPicker.tsx`, `WritingDeleteButton.tsx`, `WritingSection.tsx`
+- **Вне папки (указатель «Описание:» в начале файла):** `src/lib/activityDays.ts`, `src/lib/diagnosticsBrief.ts`, `src/lib/materialExercises.ts`, `src/lib/materialLengths.ts`, `src/lib/reviewQueue.ts`, `src/lib/studentSignals.ts`, `src/lib/wordChecks.ts`
 - **Адреса:** `/teacher`, `/tasks`, `/assignments`
 - **Таблицы:** `cards`, `decks`, `material_assignments`, `review_states`, `word_checks`, `writing_task_assignments`
 - **RPC:** `assign_word_check`, `submit_word_check`
 - **localStorage:** `recall.students.sort`
-- **Кто использует (импортом):** `app`, `features/dashboard`, `features/flashcards`, `features/homework`, `features/progress`, `features/words`, `lib`
+- **Кто использует (импортом):** `app`, `features/dashboard`, `features/flashcards`, `features/homework`, `features/progress`, `features/study`, `features/words`, `lib`
 <!-- generated:end -->

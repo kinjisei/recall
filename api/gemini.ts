@@ -10,7 +10,9 @@ import type { ChatTurn } from '../src/shared/api/aiTypes.js'
 // не находит модуль без расширения (FUNCTION_INVOCATION_FAILED при старте)
 import { callGemini, streamGemini, GEMINI_TIER_CHAINS } from './_core.js'
 import { groqChat, GROQ_MODELS } from './_groq.js'
-import { authorize, applyCors, authDenied, isTeacher, UNAVAILABLE } from './_auth.js'
+import { authorize, applyCors, authDenied, isTeacher, UNAVAILABLE, type AuthResult } from './_auth.js'
+import { isPlanShaped } from './_planShape.js'
+import { REPLANS_PER_PLAN, authorizeReplan, grantReplans } from './_replan.js'
 import { taskSpec } from './_tasks.js'
 import { startCall } from './_usage.js'
 import { TIMEOUTS, chainTime, windowUntil, workDeadline, type Timeouts } from './_timeouts.js'
@@ -49,12 +51,14 @@ export async function handle(req: VercelRequest, res: VercelResponse, t: Timeout
   if (applyCors(req, res)) return
   if (req.method !== 'POST') return res.status(405).json({ error: 'Только POST' })
 
-  const { messages, system, task, stream } = (req.body ?? {}) as {
+  const { messages, system, task, stream, replan } = (req.body ?? {}) as {
     messages?: ChatTurn[]
     system?: string
     task?: string
     /** Клиент просит потоковый ответ (пока только «Диалог»). */
     stream?: boolean
+    /** Право на бесплатный повтор плана (задача material_replan, api/_replan.ts). */
+    replan?: string
   }
 
   // Модель выбирает СЕРВЕР по типу задачи (карта — api/_tasks.ts). Клиент
@@ -99,9 +103,16 @@ export async function handle(req: VercelRequest, res: VercelResponse, t: Timeout
     if (!teacher) return res.status(403).json({ error: 'Эта функция доступна только преподавателю.' })
   }
 
-  const access = await authorize(req, spec.quota, spec.energyCost, spec.generation ?? false, t.supabaseMs)
+  // повтор плана тратит не генерацию, а право на повтор (миграция 0014)
+  let access: AuthResult
+  let replansLeft = 0
+  if (spec.replan) {
+    const r = await authorizeReplan(req, replan, t.supabaseMs)
+    if (!authDenied(r)) replansLeft = r.left
+    access = r
+  } else access = await authorize(req, spec.quota, spec.energyCost, spec.generation ?? false, t.supabaseMs)
   if (authDenied(access)) {
-    return res.status(access.status).json({ error: access.error })
+    return res.status(access.status).json({ error: access.error, ...(access.code ? { code: access.code } : {}) })
   }
 
   // Энергия уже списана. Дальше действует правило: НЕ ДОСТАВИЛИ ОТВЕТ — НЕ
@@ -132,6 +143,15 @@ export async function handle(req: VercelRequest, res: VercelResponse, t: Timeout
   /** Ответ есть: сначала итог в журнал, потом ответ (почему так — api/_usage.ts). */
   const answer = async (text: string) => {
     await call.finish('ok')
+    if (spec.replan) {
+      // неплан повтор не возвращает: иначе бесплатно гоняли бы что угодно (_planShape.ts)
+      if (!isPlanShaped(text)) return res.status(422).json({ error: 'AI ответил не планом. Пересоставь ещё раз или поправь заявку.' })
+      return res.status(200).json({ text, replan: { id: replan, left: replansLeft } })
+    }
+    if (spec.grantsReplans && isPlanShaped(text)) {
+      const id = await grantReplans(req, access.refundToken, t.supabaseMs)
+      if (id) return res.status(200).json({ text, replan: { id, left: REPLANS_PER_PLAN } })
+    }
     return res.status(200).json({ text })
   }
 

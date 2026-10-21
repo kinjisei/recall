@@ -41,6 +41,8 @@ export interface Picked {
   level: CEFRLevel | null
 }
 
+const first = (name: string) => name.trim().split(/\s+/)[0] ?? name
+
 /**
  * Строка-предупреждение под выбором: уровни разные — под кого текст; уровень
  * формы выше чьего-то — кому будет трудно (учитель поднял его руками); чей
@@ -58,6 +60,25 @@ export function levelNote(picked: Picked[], chosen: CEFRLevel): string {
   else if (mixed && chosen === weakest(known.map((p) => p.level))) notes.push(`Текст — под самого слабого (${chosen}).`)
   if (unknown.length) notes.push(`Уровень не знаем: ${unknown.join(', ')} — тест уровня в карточке ученика.`)
   return notes.join(' ')
+}
+
+/**
+ * Подпись к уровню в «Итоге» мастера (d8-2, d8-3): уровни разные и выбран
+ * уровень самого слабого — «под самого слабого — Әсел»; выбран выше чьего-то —
+ * «трудный для: Әсел». Иначе молчит: подробности — в предупреждении у формы.
+ */
+export function levelSummary(picked: Picked[], chosen: CEFRLevel): string | undefined {
+  const known = picked.filter((p) => p.level).sort((a, b) => CEFR.indexOf(a.level!) - CEFR.indexOf(b.level!))
+  const below = known.filter((p) => CEFR.indexOf(p.level!) < CEFR.indexOf(chosen)).map((p) => first(p.name))
+  if (below.length) return `трудный для: ${below.join(', ')}`
+  const mixed = new Set(known.map((p) => p.level)).size > 1
+  return mixed && known[0]?.level === chosen ? `под самого слабого — ${first(known[0].name)}` : undefined
+}
+
+/** «назначится обоим при сохранении» — под «Для кого» в итоге мастера. */
+export function assignNote(n: number): string {
+  if (n === 0) return 'выдать можно потом, из библиотеки'
+  return n === 1 ? 'назначится при сохранении' : n === 2 ? 'назначится обоим при сохранении' : 'назначится всем при сохранении'
 }
 
 /** Серия расписания и карточка ученика — только то, что нужно группам. */
@@ -82,8 +103,6 @@ export interface ScheduleGroup {
   /** Кто из группы ещё не в приложении (имена): назначить им нельзя. */
   outside: string[]
 }
-
-const first = (name: string) => name.trim().split(/\s+/)[0] ?? name
 
 /**
  * Группы из расписания: групповые серии с учениками в приложении. Две серии

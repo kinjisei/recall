@@ -108,6 +108,7 @@ export type Database = {
           kind: string
           pool_owner: string | null
           refund_token: string | null
+          replan_of: string | null
           user_id: string
         }
         Insert: {
@@ -118,6 +119,7 @@ export type Database = {
           kind?: string
           pool_owner?: string | null
           refund_token?: string | null
+          replan_of?: string | null
           user_id: string
         }
         Update: {
@@ -128,6 +130,7 @@ export type Database = {
           kind?: string
           pool_owner?: string | null
           refund_token?: string | null
+          replan_of?: string | null
           user_id?: string
         }
         Relationships: [
@@ -839,6 +842,35 @@ export type Database = {
           {
             foreignKeyName: "material_assignments_student_id_fkey"
             columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      material_replans: {
+        Row: {
+          call_token: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          call_token: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          call_token?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "material_replans_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -2410,6 +2442,7 @@ export type Database = {
           push: boolean
         }[]
       }
+      grant_material_replans: { Args: { p_nonce: string }; Returns: string }
       has_paid_access: { Args: { uid: string }; Returns: boolean }
       has_premium_access: { Args: { uid: string }; Returns: boolean }
       holds_seat: {
@@ -2664,6 +2697,10 @@ export type Database = {
           p_nonce?: string
         }
         Returns: undefined
+      }
+      spend_replan: {
+        Args: { p_nonce?: string; p_replan: string }
+        Returns: number
       }
       start_own_writing: {
         Args: {
