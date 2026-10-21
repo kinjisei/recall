@@ -519,7 +519,8 @@ async function main() {
   await tap(page, 'AI соберёт текст')
   await sleep(2000)
   check('«Задания» → заголовок «Материалы»: библиотека по адресу', path() === '/tasks?tab=materials' && (await seen(page, 'Материал для смоука навигации')), path())
-  await tap(page, 'Материал для смоука навигации')
+  // строка списка библиотеки (d8-1), а не «На проверку» над ним — та открывает проверку
+  await tap(page, 'Материал для смоука навигации', 'nav[aria-label="Материалы"] button')
   await sleep(1800)
   const matUrl = page.url()
   check('Материалы: открытый материал попал в адрес', matUrl.includes('mat='), matUrl)
@@ -532,6 +533,16 @@ async function main() {
   await page.goto(`${BASE}/tasks?tab=materials&mat=00000000-0000-0000-0000-000000000000`, { waitUntil: 'networkidle2' })
   await sleep(2500)
   check('Материалы: несуществующий материал показывает список', await seen(page, 'Создать материал'), path())
+  // «На проверку» над библиотекой (d8-1) — та же проверка, что из хаба, но «назад» — в «Материалы»
+  await page.goto(`${BASE}/tasks?tab=materials`, { waitUntil: 'networkidle2' })
+  await appears(page, 'На проверку')
+  await tap(page, 'Материал для смоука навигации', 'section[aria-label="На проверку"] button')
+  const backTo = await page
+    .waitForFunction(() => [...document.querySelectorAll('button')].some((b) => b.textContent.trim() === 'Материалы'), { polling: 250, timeout: 10000 })
+    .then(() => true, () => false)
+  check('Материалы: «На проверку» → проверка с «‹ Материалы»', path() === `/tasks?tab=materials&work=${work.id}` && backTo && (await appears(page, matTitle)), path())
+  await page.goBack({ waitUntil: 'networkidle2' }).catch(() => {})
+  check('Материалы: «назад» из проверки — в библиотеку', (await appears(page, 'Создать материал')) && path() === '/tasks?tab=materials', path())
   // старые ссылки на вкладки студии (до Ф2.10) ведут во «Задания»
   await page.goto(`${BASE}/teacher?tab=writing`, { waitUntil: 'networkidle2' })
   check('старая ссылка /teacher?tab=writing → «Задания», письменные', (await appears(page, 'Nav smoke essay')) && path() === '/tasks?tab=writing', path())

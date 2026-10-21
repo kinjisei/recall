@@ -123,9 +123,11 @@ export function BackLink({
 }
 
 /**
- * Шапка внутреннего экрана на компьютере (макеты d7–d9 `.d7top`): «‹ Задания»,
- * заголовок 20 с подписью под ним, справа — своё (листалка «Работа 2 из 2 ‹ ›»,
- * главная кнопка). На телефоне правое уходит под заголовок.
+ * Шапка внутреннего экрана (макеты d7–d9 `.d7top`, `.t8`): «‹ Задания»,
+ * заголовок, справа — своё (листалка «Работа 2 из 2 ‹ ›», главная кнопка).
+ * Раздел без подписи — заголовок 24 («‹ Задания  Материалы», d8-1), экран
+ * чего-то одного с подписью — 20 («Әсел Жұмабаева · «My morning»» и «задание
+ * по материалу · вчера», d7-2). Уже 672 правое уходит под заголовок.
  */
 export function ScreenTop({
   back,
@@ -144,7 +146,7 @@ export function ScreenTop({
         <BackLink onClick={back.onClick} label={back.label} />
         <header className="flex min-w-0 flex-1 flex-col leading-tight">
           {/* узко — в две строки, а не «Айгерим Нурланова · IE…» */}
-          <h1 className="text-xl font-semibold text-balance text-fg @2xl:truncate">{title}</h1>
+          <h1 className={`${subtitle ? 'text-xl' : 'text-2xl tracking-tight'} font-semibold text-balance text-fg @2xl:truncate`}>{title}</h1>
           {subtitle && <span className="truncate text-note text-fg-muted">{subtitle}</span>}
         </header>
         {trailing && <div className="hidden flex-none @2xl:block">{trailing}</div>}

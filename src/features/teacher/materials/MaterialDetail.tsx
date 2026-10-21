@@ -1,74 +1,66 @@
-// Карточка сохранённого материала: показ текста, печать, назначение ученикам,
-// открытие проверки сданной работы, удаление.
-import { useCallback, useEffect, useState } from 'react'
-
-import { Card } from '../../../shared/ui/Card'
-import { Reveal } from '../../../shared/ui/Reveal'
+// ============================================================================
+// Карточка материала (макет d8-1 `.det`, PLAN.md Ф2.17-4в-2): название,
+// «Английский · A2 · рассказ · 120 слов · 2 упражнения», «Выдан: …», текст и
+// упражнения с ответами. Ниже — «Кому выдан» (выдать, убрать, проверить,
+// разбор), печать и удаление: в кадре их не видно, карточка прокручивается.
+// На компьютере стоит справа от списка, на телефоне — экраном с «‹ Материалы».
+// ============================================================================
+import { useState } from 'react'
+import { assignMaterial, deleteMaterial, listMaterialAssignments, unassignMaterial } from '../../../lib/materials'
+import type { StudentInfo } from '../../../lib/teacher'
+import { plural } from '../../../shared/lib/plural'
+import { useAsyncData } from '../../../shared/lib/useAsyncData'
+import { AppLink } from '../../../shared/ui/AppLink'
+import { BackLink } from '../../../shared/ui/BackButton'
 import { Button } from '../../../shared/ui/Button'
 import { useConfirm } from '../../../shared/ui/ConfirmDialog'
-import { BackHeader } from '../../../shared/ui/BackButton'
-import { LoadError } from '../../../shared/ui/LoadError'
 import { IconPrinter, IconTrash } from '../../../shared/ui/icons'
-import {
-  assignMaterial,
-  deleteMaterial,
-  listMaterialAssignments,
-  unassignMaterial,
-} from '../../../lib/materials'
-import type { StudentInfo } from '../../../lib/teacher'
-import type { Material, MaterialAssignment } from '../../../types'
-import { ReviewScreen } from '../ReviewScreen'
-import { PrintSheet } from '../PrintSheet'
-import { AppLink } from '../../../shared/ui/AppLink'
+import { LoadError } from '../../../shared/ui/LoadError'
 import { RowsSkeleton } from '../../../shared/ui/Loading'
-import { RevealLink } from '../../../shared/ui/Disclosure'
+import type { Material, MaterialAssignment } from '../../../types'
+import { PrintSheet } from '../PrintSheet'
+import { DetailHead, IssuedLine, MaterialBody, StudentRow } from './detailParts'
+import { materialKind, materialWords } from './LibraryList'
 
 export function MaterialDetail({
   material,
   students,
-  initialReview,
   initialError,
   onDeleted,
   onBack,
   onWorksChanged,
+  onCheck,
+  onReview,
 }: {
   material: Material
   students: StudentInfo[]
-  /** Открыть сразу проверку конкретной работы (из блока «На проверку»). */
-  initialReview?: { a: MaterialAssignment; name: string }
-  /** Только что сохранён, но кому-то не назначился — сказать у блока «Назначить». */
+  /** Только что сохранён, но кому-то не назначился — сказать в «Кому выдан». */
   initialError?: string
   onDeleted: () => void
-  onBack: () => void
+  /** Телефон: карточка — экраном, «‹ Материалы» к списку. На компьютере список рядом. */
+  onBack?: () => void
   /** Число работ «на проверку» могло измениться (снятие сданной работы). */
   onWorksChanged?: () => void
+  /** Сданная работа — к проверке (та же, что из хаба: листалка по очереди). */
+  onCheck: (a: MaterialAssignment) => void
+  /** Проверенная — разбор и «Переназначить». */
+  onReview: (a: MaterialAssignment, name: string) => void
 }) {
-  const [assignments, setAssignments] = useState<MaterialAssignment[] | null>(null)
   // сбой загрузки назначений НЕ равен «никому не назначено»: иначе учитель
-  // видит всех учеников без работы и может переназначить/проглядеть сдачу
-  const [loadError, setLoadError] = useState<string | null>(null)
+  // видит всех учеников без работы и может переназначить/проглядеть сдачу.
+  // Другой материал — экран пересоздаётся (key у MaterialsSection).
+  const { data: assignments, error: loadError, reload } = useAsyncData(
+    () => listMaterialAssignments(material.id),
+    [material.id],
+    'Не удалось загрузить назначения',
+  )
   const [busyStudent, setBusyStudent] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(initialError ?? null)
-  const [showBody, setShowBody] = useState(false)
-  const [reviewing, setReviewing] = useState<{ a: MaterialAssignment; name: string } | null>(
-    initialReview ?? null,
-  )
   const [printMode, setPrintMode] = useState<'student' | 'teacher' | null>(null)
   const { confirm, dialog } = useConfirm()
 
-  const reload = useCallback(() => {
-    setLoadError(null)
-    listMaterialAssignments(material.id)
-      .then((rows) => setAssignments(rows))
-      .catch((e) => setLoadError(e instanceof Error ? e.message : 'Не удалось загрузить назначения'))
-  }, [material.id])
-
-  useEffect(() => {
-    reload()
-  }, [reload])
-
-  const assignedIds = new Set((assignments ?? []).map((a) => a.student_id))
+  const nameOf = (id: string) => students.find((s) => s.profile.id === id)?.profile.display_name ?? 'Ученик'
 
   const toggle = async (studentId: string) => {
     const cur = (assignments ?? []).find((a) => a.student_id === studentId)
@@ -86,7 +78,7 @@ export function MaterialDetail({
     setBusyStudent(studentId)
     setError(null)
     try {
-      if (assignedIds.has(studentId)) {
+      if (cur) {
         await unassignMaterial(material.id, studentId)
         onWorksChanged?.() // работа могла быть на проверке — обновим бейдж
       } else await assignMaterial(material.id, studentId)
@@ -117,121 +109,86 @@ export function MaterialDetail({
     }
   }
 
-  if (reviewing) {
-    return (
-      <ReviewScreen
-        material={material}
-        assignment={reviewing.a}
-        studentName={reviewing.name}
-        backLabel="Материал"
-        onDone={() => {
-          setReviewing(null)
-          reload()
-        }}
-        onBack={() => setReviewing(null)}
-      />
-    )
-  }
-
+  const n = material.exercises.length
   return (
-    <div className="flex flex-col gap-3">
-      <BackHeader onBack={onBack} title={material.title ?? material.topic} label="К материалам" />
-
-      <Card>
-        <p className="text-xs text-fg-muted">
-          {material.lang.toUpperCase()} · {material.level} · {material.format} ·{' '}
-          {material.length_range} слов · {material.exercises.length} упр.
-        </p>
-        <RevealLink open={showBody} onToggle={() => setShowBody((s) => !s)} className="mt-1">
-          {showBody ? 'Скрыть текст' : 'Показать текст'}
-        </RevealLink>
-        <Reveal open={showBody}>
-          <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-fg-secondary">
-            {material.body}
-          </p>
-        </Reveal>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Button size="sm" variant="secondary" onClick={() => setPrintMode('student')}>
-            <IconPrinter size={16} /> Для ученика
-          </Button>
-          <Button size="sm" variant="secondary" onClick={() => setPrintMode('teacher')}>
-            <IconPrinter size={16} /> С ответами
-          </Button>
+    <div className="flex flex-col gap-3.5">
+      {onBack && (
+        <div className="self-start">
+          <BackLink onClick={onBack} label="Материалы" />
         </div>
-      </Card>
-
-      {printMode && (
-        <PrintSheet
-          material={material}
-          withAnswers={printMode === 'teacher'}
-          onClose={() => setPrintMode(null)}
-        />
       )}
-
-      <Card className="flex flex-col gap-2">
-        <p className="text-sm font-semibold">Назначить ученикам</p>
+      <article className="flex flex-col gap-3.5 rounded-card bg-surface px-6.5 py-5.5 shadow-card">
+        <h2 lang={material.lang} className="text-2xl font-semibold tracking-tight text-fg">
+          {material.title ?? material.topic}
+        </h2>
+        <span className="-mt-1.5 text-sm text-fg-secondary">
+          {materialKind(material)} · {materialWords(material)} · {n} {plural(n, 'упражнение', 'упражнения', 'упражнений')}
+        </span>
         {loadError ? (
           <LoadError message={loadError} onRetry={reload} />
-        ) : assignments === null ? (
-          <RowsSkeleton count={2} height={56} />
-        ) : students.length === 0 ? (
+        ) : !assignments ? (
+          <RowsSkeleton count={1} height={40} />
+        ) : (
+          <IssuedLine assignments={assignments} nameOf={nameOf} />
+        )}
+        <MaterialBody material={material} />
+      </article>
+
+      <section aria-label="Кому выдан" className="flex flex-col rounded-card bg-surface px-5 py-4 shadow-card">
+        <DetailHead>Кому выдан</DetailHead>
+        {students.length === 0 ? (
           // Пустое состояние без выхода: материал уже стоил двух генераций, а
-          // код-приглашение живёт на другой вкладке, и здесь о нём не говорили
-          // ни слова (находка ревью 2В).
-          <p className="text-sm text-fg-muted">
+          // код-приглашение живёт на другой вкладке (находка ревью 2В).
+          <p className="mt-2 text-sm text-fg-muted">
             Учеников пока нет. Отправь код-приглашение — он на вкладке{' '}
             <AppLink to="/teacher" className="text-accent-strong underline underline-offset-2">
               «Ученики»
             </AppLink>
-            . Как только кто-то привяжется, материал назначается в один тап.
+            . Как только кто-то привяжется, материал выдаётся в один тап.
           </p>
+        ) : !assignments && !loadError ? (
+          <RowsSkeleton count={2} height={56} />
         ) : (
-          students.map((s) => {
-            const a = (assignments ?? []).find((x) => x.student_id === s.profile.id)
-            const name = s.profile.display_name ?? 'Без имени'
-            const teacherOk = (a?.teacher_review ?? []).filter((r) => r.ok).length
-            return (
-              <div
-                key={s.profile.id}
-                className="flex items-center justify-between gap-2 rounded-xl border border-tint/[0.08] px-3 py-2"
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">{name}</p>
-                  {a && (
-                    <p className="text-xs text-fg-muted">
-                      {a.status === 'assigned'
-                        ? 'ещё не выполнено'
-                        : a.status === 'submitted'
-                          ? `на проверке · авто ${a.auto_score}/${a.auto_total}`
-                          : `✓ проверено: ${teacherOk}/${a.auto_total}`}
-                    </p>
-                  )}
-                </div>
-                <div className="flex shrink-0 gap-1.5">
-                  {a && a.status !== 'assigned' && (
-                    <Button size="sm" onClick={() => setReviewing({ a, name })}>
-                      {a.status === 'submitted' ? 'Проверить' : 'Разбор'}
+          <div className="mt-1 flex flex-col">
+            {students.map((s) => {
+              const a = (assignments ?? []).find((x) => x.student_id === s.profile.id)
+              const name = s.profile.display_name ?? 'Без имени'
+              return (
+                <StudentRow key={s.profile.id} name={name} assignment={a}>
+                  {a?.status === 'submitted' && (
+                    <Button size="sm" variant="secondary" onClick={() => onCheck(a)}>
+                      Проверить
                     </Button>
                   )}
-                  <Button size="sm" variant={a ? 'ghost' : 'secondary'} disabled={busyStudent !== null} onClick={() => toggle(s.profile.id)}>
-                    {busyStudent === s.profile.id ? '…' : a ? 'Убрать ✓' : 'Назначить'}
+                  {a?.status === 'reviewed' && (
+                    <Button size="sm" variant="outline" onClick={() => onReview(a, name)}>
+                      Разбор
+                    </Button>
+                  )}
+                  <Button size="sm" variant={a ? 'ghost' : 'outline'} disabled={busyStudent !== null || !!loadError} loading={busyStudent === s.profile.id} onClick={() => toggle(s.profile.id)}>
+                    {a ? 'Убрать' : 'Выдать'}
                   </Button>
-                </div>
-              </div>
-            )
-          })
+                </StudentRow>
+              )
+            })}
+          </div>
         )}
-        {error && <p className="text-sm text-danger">{error}</p>}
-      </Card>
+        {error && <p className="mt-2 text-sm text-danger-strong">{error}</p>}
+      </section>
 
-      <Button size="sm"
-        variant="ghost"
-        className="self-start text-danger"
-        onClick={remove}
-        loading={deleting}
-      >
-        <IconTrash size={16} /> Удалить материал
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button size="sm" variant="outline" onClick={() => setPrintMode('student')}>
+          <IconPrinter size={16} aria-hidden /> Для ученика
+        </Button>
+        <Button size="sm" variant="outline" onClick={() => setPrintMode('teacher')}>
+          <IconPrinter size={16} aria-hidden /> С ответами
+        </Button>
+        <Button size="sm" variant="danger" className="ml-auto" onClick={remove} loading={deleting}>
+          <IconTrash size={16} aria-hidden /> Удалить материал
+        </Button>
+      </div>
+
+      {printMode && <PrintSheet material={material} withAnswers={printMode === 'teacher'} onClose={() => setPrintMode(null)} />}
       {dialog}
     </div>
   )

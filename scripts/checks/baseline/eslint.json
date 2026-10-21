@@ -318,11 +318,6 @@
       "count": 3
     }
   },
-  "src/features/teacher/materials/MaterialDetail.tsx": {
-    "react-hooks/set-state-in-effect": {
-      "count": 1
-    }
-  },
   "src/features/words/DictationMode.tsx": {
     "react-hooks/set-state-in-effect": {
       "count": 1

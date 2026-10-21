@@ -92,6 +92,15 @@ const MATERIALS = [
       { kind: 'grammar', type: 'fill', prompt: 'We ___ driving for three hours when the engine stopped. (past perfect continuous: had been)', answer: 'had been' },
     ],
   },
+  // испанский — в библиотеке строка «Испанский · A2 · рассказ», как в кадре d8-1
+  {
+    lang: 'es', level: 'A2', topic: 'La familia', format: 'рассказ', length_range: '50-100', title: 'Mi familia',
+    body: 'Me llamo Lucía y vivo en Sevilla con mi familia. Mi padre es profesor y mi madre trabaja en un hospital. Tengo un hermano pequeño, Pablo. Los domingos comemos juntos en casa de mis abuelos.',
+    exercises: [
+      { kind: 'comprehension', type: 'mcq', prompt: '¿Dónde vive Lucía?', options: ['En Madrid', 'En Sevilla', 'En Valencia', 'En Málaga'], answer: 1 },
+      { kind: 'vocab', type: 'fill', prompt: 'Mi madre ___ en un hospital.', answer: 'trabaja' },
+    ],
+  },
 ]
 
 const KEYS = ['teacher', 'aigerim', 'asel', 'meir', 'solo', 'newbie']
@@ -221,6 +230,7 @@ export function studio(prefix) {
     for (const mt of MATERIALS) mats.push(must(await admin.from('materials').insert({ teacher_id: t.id, ...mt }).select('id').single(), 'материал'))
     const ma = must(await admin.from('material_assignments').insert({
       material_id: mats[3].id, student_id: s.id, status: 'submitted', submitted_at: new Date(Date.parse(now) - 26 * 3600_000).toISOString(),
+      created_at: new Date(Date.parse(now) - 3 * 86400_000).toISOString(), // выдан раньше, чем сдан
       answers: [{ index: 0, given: 'No signal', auto_ok: true }, { index: 1, given: 'was driving', auto_ok: false }], auto_score: 1, auto_total: 2,
       // готовый разбор: без него экран проверки сам зовёт AI (ReviewScreen), а
       // снимок ловит «AI разбирает работу…» вместо проверки
@@ -229,7 +239,7 @@ export function studio(prefix) {
         { index: 1, ok: false, comment: 'Нужно «had been driving»: действие длилось до момента в прошлом — Past Perfect Continuous.' },
       ],
     }).select('id').single(), 'сданное задание')
-    await admin.from('material_assignments').insert({ material_id: mats[2].id, student_id: a.id, status: 'assigned' })
+    await admin.from('material_assignments').insert({ material_id: mats[2].id, student_id: a.id, status: 'assigned', created_at: new Date(Date.parse(now) - 2 * 86400_000).toISOString() })
     return { t, a, s, m, solo, nw, ca, card, wa: wa.id, ma: ma.id }
   }
 

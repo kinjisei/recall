@@ -251,7 +251,7 @@ try {
   await draftCase(te, 'заявка на материал', {
     open: async () => {
       await go(te, '/teacher?tab=materials')
-      if (!(await has(te, 'input[placeholder^="Например: Путешествие"]'))) await click(te, '+ Создать материал')
+      if (!(await has(te, 'input[placeholder^="Например: Путешествие"]'))) await click(te, 'Создать материал')
     },
     field: 'input[placeholder^="Например: Путешествие"]',
     value: 'Поход в горы',
@@ -267,13 +267,14 @@ try {
   await draftCase(te, 'правки к готовому материалу', { open: () => go(te, '/teacher?tab=materials'), field: 'textarea[placeholder^="Правки (необязательно)"]', value: 'Сделай текст проще' })
   await click(te, 'Очистить')
   await go(te, '/teacher?tab=materials')
-  check('мастер материала: «Очистить» — снова список', await click(te, '+ Создать материал', 8000) && !(await text(te)).includes(NOTE))
+  check('мастер материала: «Очистить» — снова список', await click(te, 'Создать материал', 8000) && !(await text(te)).includes(NOTE))
   await click(te, 'Отмена') // форма тоже черновик: закрываем, чтобы дальше был список
 
   await draftCase(te, 'разбор работы ученика', {
     open: async () => {
       await go(te, '/teacher?tab=materials')
-      await click(te, 'Ученица Черновик · Drafts review')
+      // «На проверку» над библиотекой (d8-1) — та же проверка, что из хаба
+      await click(te, 'Ученица Черновик · «Drafts review»')
     },
     field: 'textarea[placeholder^="Комментарий для ученика: что не так"]',
     value: 'Перечитай первое предложение',

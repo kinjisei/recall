@@ -384,8 +384,9 @@ async function main() {
   const got = new Set((asg ?? []).map((a) => a.student_id))
   check('материал на двух учеников назначен обоим', got.size === 2 && got.has(studentId) && got.has(student2Id), `назначено: ${got.size}`)
   check('…уровень материала — самого слабого (B1)', mat?.level === 'B1', `уровень: ${mat?.level}`)
-  const marked = await page.evaluate(() => [...document.querySelectorAll('button')].filter((b) => b.textContent.trim() === 'Убрать ✓').length)
-  check('блок «Назначить» заполнен: оба отмечены', marked === 2, `отмечено: ${marked}`)
+  // «Кому выдан» карточки материала (d8-1): у выданного — «Убрать», у остальных — «Выдать»
+  const marked = await page.evaluate(() => [...document.querySelectorAll('button')].filter((b) => b.textContent.trim() === 'Убрать').length)
+  check('«Кому выдан»: оба ученика с материалом', marked === 2, `выдано: ${marked}`)
   await page.evaluate(() => localStorage.removeItem('smoke.aiAnswer'))
 
   check('JS-ошибок за прогон нет', jsErrors.length === 0, jsErrors[0] ?? '')

@@ -33,7 +33,10 @@
 письма или «AI предлагает засчитать 1 из 2», «черновик AI готов» и
 «Проверить»; проверять нечего — строка «Всё проверено · последняя работа —
 вчера, 19:57», и «Собрать материал» становится главной кнопкой, d7-1), «Материалы» — без лишних слов: строка «Энергия студии» и кнопка
-«Собрать материал», по заголовку карточки — библиотека (AI собирает текст и
+«Собрать материал», по заголовку карточки — библиотека (d8-1: «‹ Задания ·
+Материалы», остаток генераций и «Создать материал»; «На проверку» — та же
+проверка, что из хаба, «назад» — в «Материалы»; список по уровням и рядом
+текст материала с упражнениями, ниже «Кому выдан», печать, удаление; AI собирает текст и
 упражнения, можно под нескольких учеников или группу из расписания — по их
 ошибкам, и «Сохранить» сразу назначает им; правка владельца 05.10.2026,
 Ф2.11б-3), «Письменные задания» (IELTS и эссе) и
@@ -74,7 +77,8 @@
 | `HomeworkSection.tsx`, `HomeworkComposer.tsx` | домашка в карточке и её сборка (правила — `features/homework/CLAUDE.md`) |
 | `StudentWordsSection.tsx`, `WordPicker.tsx` | раздел «Слова» карточки (d10-3): список с галочками, откуда слово и статус, «+ Выдать слова» (паки и свои наборы), удаление через диалог, подвал «Выбрано 3 · уйдут Айгерим в приложение» → перепроверка; прошлые перепроверки |
 | `DiagnosticsSection.tsx`, `ProgramSection.tsx`, `PlacementSection.tsx`, `QuestSection.tsx`, `DailyPlanSection.tsx` | экраны плиток: диагностика (d10-2: динамика «было → стало», три числа, слова, задания со статусом — письма ученика, материалы, домашка, — слабые темы, последнее занятие), программа (и под ней план дня), тест уровня (главная кнопка — язык студии), квесты (d10-4: назначенные с перепиской, «Новый квест» — язык и уровень полосами, сценарий плитками: «В аэропорту», «В отеле», «Собеседование» или свой, порог ползунком) |
-| `MaterialsSection.tsx`, `materials/*` | материалы: заявка, план (слова правятся руками), предпросмотр, по уровням; шаги мастера и «назад/вперёд» без потерь — `materials/wizard.ts`; «Для кого» — `ForWhom.tsx`, его правила (уровень, группы, предупреждение) — `audience.ts` |
+| `MaterialsSection.tsx`, `materials/*` | материалы: библиотека (d8-1 — шапка `ScreenTop`, `PendingWorks` «На проверку», `LibraryList` по уровням со строкой «Английский · A2 · рассказ · 1 на проверке», `MaterialDetail` рядом — `ListDetail fill`; на телефоне по очереди, у карточки «‹ Материалы»), заявка, план (слова правятся руками), предпросмотр; шаги мастера и «назад/вперёд» без потерь — `materials/wizard.ts`; «Для кого» — `ForWhom.tsx`, его правила (уровень, группы, предупреждение) — `audience.ts` |
+| `materials/MaterialDetail.tsx`, `materials/detailParts.tsx` | карточка материала (d8-1): название, вид и «120 слов · 2 упражнения» (слова — по тексту), «Выдан: Әсел · вчера, 9:10 · ждёт проверки», текст абзацами, упражнения с ответом; ниже «Кому выдан» — «Выдать», «Убрать» (сданную — диалогом), «Проверить» ведёт в проверку `?work=`, «Разбор» — проверенная; печать, удаление |
 | `formHints.ts` | подсказки-примеры форм студии (материал, письмо, квест) на языке формы |
 | `WritingSection.tsx`, `WritingDeleteButton.tsx` | письменные работы; «Удалить задание» — с диалогом по центру (вынесено: большой `WritingSection` не растёт); проверка письма — `features/writing` |
 | `ReviewScreen.tsx`, `reviewBits.tsx` | проверка задания по материалу (d7-2): «Текст материала» свёрнутой строкой, полоса «AI предлагает засчитать…», упражнения — ответ с полоской цветом вердикта, «Правильно / Ошибка», комментарий; справа итог «1 из 2», «Завершить проверку (1/2)», «Дальше откроется» (`MainAside narrow`); проверенная — «Переназначить» диалогом с полем, как «На доработку» у письма |
@@ -206,8 +210,9 @@
 **Одна шапка «назад»** (PLAN.md Ф2.11)
 
 - Внутренний экран со своей шапкой прячет шапку страницы над собой —
-  `useInnerScreen` из `innerScreen.ts`: в «Заданиях» — план и предпросмотр
-  мастера, карточка материала, письменное задание и его разбор; в «Учениках»
+  `useInnerScreen` из `innerScreen.ts`: в «Заданиях» — библиотека материалов
+  со своей «‹ Задания · Материалы» (d8-1) и её карточка, план и предпросмотр
+  мастера, письменное задание и его разбор; в «Учениках»
   — карточка ученика на телефоне (только «‹ Ученики», как в макете t6-2) и
   экран её раздела («‹ Имя»). Две стрелки друг под другом не говорили, какая
   куда ведёт.
@@ -316,7 +321,12 @@
 - `node scripts/smoke-navigation.mjs` — меню учителя, «ждут проверки» на
   вкладке, хаб «Заданий» → разбор работы, «Работа 2 из 2», «›» к соседней
   и «назад» после листания — в хаб (краснеет, если листалка пишет в
-  историю), материалы в адресе, старые ссылки `/teacher?tab=…` (`app/CLAUDE.md`).
+  историю), материалы в адресе, «На проверку» в «Материалах» → проверка с
+  «‹ Материалы» и «назад» — в библиотеку (краснеет, если у проверки всегда
+  «‹ Задания»), старые ссылки `/teacher?tab=…` (`app/CLAUDE.md`).
+- `node scripts/shots-screens.mjs --only materials` — библиотека по d8-1:
+  ничего не выбрано и открыт материал с работой на проверке, в четырёх
+  вариантах с UX-аудитом.
 - `node scripts/shots-screens.mjs --only tasks` — снимки «Заданий» по d7 и
   t1-3: хаб, проверка задания по материалу, проверка письма (правка 1
   выбрана, последняя убрана; окном 1800 — кадр во всю высоту), «проверять
@@ -370,7 +380,7 @@
 <!-- Пишет `npm run gen:docs` (scripts/gen/module-docs.mjs) по коду — руками не править. -->
 ## Из кода (сгенерировано)
 
-- **Файлы:** `AssignmentsPage.tsx`, `BecomeTeacher.tsx`, `CardDetail.tsx`, `DailyPlanSection.tsx`, `DiagnosticsSection.tsx`, `formHints.ts`, `GuideSection.tsx`, `HomeworkComposer.tsx`, `HomeworkSection.tsx`, `index.ts`, `innerScreen.ts`, `materials/audience.ts`, `materials/ForWhom.tsx`, `materials/MaterialDetail.tsx`, `materials/MaterialsByLevel.tsx`, `materials/PlanScreen.tsx`, `materials/PreviewScreen.tsx`, `materials/RequestForm.tsx`, `materials/shared.ts`, `materials/wizard.ts`, `MaterialsSection.tsx`, `PlacementSection.tsx`, `PrintSheet.tsx`, `ProgramSection.tsx`, `QuestSection.tsx`, `ReportSheet.tsx`, `reviewBits.tsx`, `ReviewScreen.tsx`, `roster.tsx`, `sectionBits.tsx`, `StudentRowBits.tsx`, `StudentsTab.tsx`, `StudentStudio.tsx`, `StudentWordsSection.tsx`, `StudioEnergy.tsx`, `StudioSection.tsx`, `studioSections.ts`, `StudioTiles.tsx`, `TasksHub.tsx`, `TasksPage.tsx`, `TeacherBlock.tsx`, `TeacherPage.tsx`, `topicTitles.ts`, `useAnswerDraft.ts`, `useComposerDraft.ts`, `useReviewDraft.ts`, `useWritingTaskDraft.ts`, `waitingCount.ts`, `waitingWorks.ts`, `WordPicker.tsx`, `WritingDeleteButton.tsx`, `WritingSection.tsx`
+- **Файлы:** `AssignmentsPage.tsx`, `BecomeTeacher.tsx`, `CardDetail.tsx`, `DailyPlanSection.tsx`, `DiagnosticsSection.tsx`, `formHints.ts`, `GuideSection.tsx`, `HomeworkComposer.tsx`, `HomeworkSection.tsx`, `index.ts`, `innerScreen.ts`, `materials/audience.ts`, `materials/detailParts.tsx`, `materials/ForWhom.tsx`, `materials/LibraryList.tsx`, `materials/MaterialDetail.tsx`, `materials/PendingWorks.tsx`, `materials/PlanScreen.tsx`, `materials/PreviewScreen.tsx`, `materials/RequestForm.tsx`, `materials/shared.ts`, `materials/wizard.ts`, `MaterialsSection.tsx`, `PlacementSection.tsx`, `PrintSheet.tsx`, `ProgramSection.tsx`, `QuestSection.tsx`, `ReportSheet.tsx`, `reviewBits.tsx`, `ReviewScreen.tsx`, `roster.tsx`, `sectionBits.tsx`, `StudentRowBits.tsx`, `StudentsTab.tsx`, `StudentStudio.tsx`, `StudentWordsSection.tsx`, `StudioEnergy.tsx`, `StudioSection.tsx`, `studioSections.ts`, `StudioTiles.tsx`, `TasksHub.tsx`, `TasksPage.tsx`, `TeacherBlock.tsx`, `TeacherPage.tsx`, `topicTitles.ts`, `useAnswerDraft.ts`, `useComposerDraft.ts`, `useReviewDraft.ts`, `useWritingTaskDraft.ts`, `waitingCount.ts`, `waitingWorks.ts`, `WordPicker.tsx`, `WritingDeleteButton.tsx`, `WritingSection.tsx`
 - **Вне папки (указатель «Описание:» в начале файла):** `src/lib/activityDays.ts`, `src/lib/diagnosticsBrief.ts`, `src/lib/materialExercises.ts`, `src/lib/reviewQueue.ts`, `src/lib/studentSignals.ts`, `src/lib/wordChecks.ts`
 - **Адреса:** `/teacher`, `/tasks`, `/assignments`
 - **Таблицы:** `cards`, `decks`, `material_assignments`, `review_states`, `word_checks`, `writing_task_assignments`

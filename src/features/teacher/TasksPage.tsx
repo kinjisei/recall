@@ -45,13 +45,14 @@ export function TasksPage() {
   const [inner, setInner] = useState(false)
   const hint = useHint()
 
-  if (workId) return <WaitingReview id={workId} onClose={() => setWorkId(null)} onOpen={(id) => setWorkId(id, { side: true })} />
+  // проверка открыта из раздела («На проверку» в «Материалах») — «назад» туда
+  if (workId) return <WaitingReview id={workId} backLabel={tab ? TITLES[tab] : 'Задания'} onClose={() => setWorkId(null)} onOpen={(id) => setWorkId(id, { side: true })} />
   if (tab) {
     return (
       <InnerScreenContext.Provider value={setInner}>
         <div className="flex flex-col gap-4">
           {!inner && <BackHeader onBack={() => setTab(null)} title={TITLES[tab]} label="Задания" />}
-          {tab === 'guide' ? <GuideSection /> : <StudentsSection tab={tab} startForm={startForm} />}
+          {tab === 'guide' ? <GuideSection /> : <StudentsSection tab={tab} startForm={startForm} onExit={() => setTab(null)} />}
         </div>
       </InnerScreenContext.Provider>
     )
@@ -77,7 +78,7 @@ export function TasksPage() {
 }
 
 /** Материалы и письма — со списком учеников: «для кого» и назначение. */
-function StudentsSection({ tab, startForm }: { tab: 'materials' | 'writing'; startForm: boolean }) {
+function StudentsSection({ tab, startForm, onExit }: { tab: 'materials' | 'writing'; startForm: boolean; onExit: () => void }) {
   const { data: students, error, reload } = useAsyncData(getMyStudents, [], 'Не удалось загрузить учеников')
   if (error) return <LoadError message={error} onRetry={reload} />
   if (!students) return <Loading label="Открываем раздел" />
@@ -85,7 +86,7 @@ function StudentsSection({ tab, startForm }: { tab: 'materials' | 'writing'; sta
     <WritingSection students={students} />
   ) : (
     // проверили или сняли сданную работу — число на вкладке «Задания» сходится
-    <MaterialsSection students={students} startForm={startForm} onWorksChanged={refreshWaitingCount} />
+    <MaterialsSection students={students} startForm={startForm} onWorksChanged={refreshWaitingCount} onExit={onExit} />
   )
 }
 
@@ -99,12 +100,12 @@ const workTitle = (w: WaitingWork) => `${w.studentName} · ${w.kind === 'writing
  * очереди, что в хабе (новые сверху), по кругу; «Завершить» открывает
  * следующую, последняя — возвращает в хаб.
  */
-function WaitingReview({ id, onClose, onOpen }: { id: string; onClose: () => void; onOpen: (id: string) => void }) {
+function WaitingReview({ id, backLabel, onClose, onOpen }: { id: string; backLabel: string; onClose: () => void; onOpen: (id: string) => void }) {
   const { data, error, reload } = useAsyncData(loadWaitingWorks, [id], 'Не удалось открыть работу')
   if (error) return <LoadError message={error} onRetry={reload} />
   if (!data) return <Loading label="Открываем работу" />
   const w = data.find((x) => x.assignment.id === id)
-  if (!w) return <Gone onClose={onClose} />
+  if (!w) return <Gone label={backLabel} onClose={onClose} />
   const { index, prev, next } = queuePlace(data, id)
   const pager = data.length > 1 && (
     <Pager
@@ -117,14 +118,14 @@ function WaitingReview({ id, onClose, onOpen }: { id: string; onClose: () => voi
   )
   const done = () => (next ? onOpen(next.assignment.id) : onClose())
   return w.kind === 'writing' ? (
-    <WritingReviewScreen key={id} task={w.task} assignment={w.assignment} studentName={w.studentName} backLabel="Задания" pager={pager} onBack={onClose} onDone={done} />
+    <WritingReviewScreen key={id} task={w.task} assignment={w.assignment} studentName={w.studentName} backLabel={backLabel} pager={pager} onBack={onClose} onDone={done} />
   ) : (
     <ReviewScreen
       key={id}
       material={w.material}
       assignment={w.assignment}
       studentName={w.studentName}
-      backLabel="Задания"
+      backLabel={backLabel}
       pager={pager}
       next={next && workTitle(next)}
       onBack={onClose}
@@ -133,10 +134,10 @@ function WaitingReview({ id, onClose, onOpen }: { id: string; onClose: () => voi
   )
 }
 
-function Gone({ onClose }: { onClose: () => void }) {
+function Gone({ label, onClose }: { label: string; onClose: () => void }) {
   return (
     <div className="flex flex-col gap-4">
-      <ScreenTop back={{ label: 'Задания', onClick: onClose }} title="Проверка работ" />
+      <ScreenTop back={{ label, onClick: onClose }} title="Проверка работ" />
       <p className="text-sm text-fg-muted">Эту работу уже проверили — она больше не ждёт.</p>
     </div>
   )

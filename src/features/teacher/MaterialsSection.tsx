@@ -1,8 +1,9 @@
 // ============================================================================
-// «Материалы» преподавателя — оркестратор экранов: список + блок «На проверку»,
-// переходы список → форма → план → предпросмотр → карточка материала.
-// Сами экраны — в features/teacher/materials/* (форма/план/предпросмотр/деталь/
-// список по уровням). Здесь только состояние Mode и разводка.
+// «Материалы» преподавателя — оркестратор экранов: библиотека (макет d8-1:
+// шапка «‹ Задания · Материалы» с остатком генераций и «Создать материал»,
+// «На проверку», список по уровням и рядом текст материала), переходы
+// библиотека → форма → план → предпросмотр → карточка материала. Сами экраны —
+// в features/teacher/materials/*. Здесь только состояние и разводка.
 // ============================================================================
 import { useEffect, useState } from 'react'
 import { Card } from '../../shared/ui/Card'
@@ -15,8 +16,12 @@ import { listSubmittedWorks, type SubmittedWork } from '../../lib/reviewQueue'
 import type { StudentInfo } from '../../lib/teacher'
 import { useScrollTop } from '../../lib/useScrollTop'
 import { useUrlState } from '../../shared/lib/useUrlState'
+import { ScreenTop } from '../../shared/ui/BackButton'
+import { IconPlus } from '../../shared/ui/icons'
+import { ListDetail, useListDetailSplit } from '../../shared/ui/layouts'
 import type { Material, MaterialAssignment } from '../../types'
-import { MaterialsByLevel } from './materials/MaterialsByLevel'
+import { LibraryList } from './materials/LibraryList'
+import { PendingWorks } from './materials/PendingWorks'
 import { REQUEST_DRAFT, RequestForm } from './materials/RequestForm'
 import { useDraft } from '../../shared/lib/useDraft'
 import { clearDraft } from '../../shared/lib/drafts'
@@ -27,17 +32,48 @@ import { MaterialDetail } from './materials/MaterialDetail'
 import { RowsSkeleton } from '../../shared/ui/Loading'
 import { START, advance, ahead, back, current, forward, fromDraft, replace, type Flow } from './materials/wizard'
 import { useInnerScreen } from './innerScreen'
+import { ReviewScreen } from './ReviewScreen'
+
+/**
+ * Остаток генераций ДО того, как в него упрёшься (d8-1: «Осталось генераций
+ * в этом месяце: 25 из 25»). Раньше о лимите узнавали только по отказу в
+ * середине работы — а один материал стоит двух генераций (план + текст).
+ */
+function GensLeft({ gens }: { gens: { left: number; limit: number } }) {
+  return (
+    <span className="text-sm text-fg-secondary tabular-nums">
+      {gens.limit === 0 ? (
+        // лимит НОЛЬ — это не «закончились»: генераций не было вовсе (тариф
+        // истёк). Сказать «обновятся 1-го числа» было бы неправдой.
+        <>Генерация материалов входит в тариф репетитора</>
+      ) : gens.left > 0 ? (
+        <>
+          Осталось генераций в этом месяце:{' '}
+          <b className="font-semibold text-fg">
+            {gens.left} из {gens.limit}
+          </b>
+          {gens.left < 2 && ' — на материал нужно две'}
+        </>
+      ) : (
+        <>Генерации в этом месяце закончились — обновятся 1-го числа</>
+      )}
+    </span>
+  )
+}
 
 export function MaterialsSection({
   students,
   startForm = false,
   onWorksChanged,
+  onExit,
 }: {
   students: StudentInfo[]
   /** Сразу форма нового материала — «Собрать материал» во «Заданиях» (Ф2.10). */
   startForm?: boolean
   /** Позвать, когда число работ «на проверку» могло измениться (счётчик вкладки «Задания»). */
   onWorksChanged?: () => void
+  /** «‹ Задания» в шапке библиотеки — назад в хаб. */
+  onExit: () => void
 }) {
   // Шаги мастера — черновик (Ф1.14): план и текст уже стоили генерации AI, и
   // перезагрузка (новая версия включается сразу) не должна их выбрасывать.
@@ -70,11 +106,13 @@ export function MaterialsSection({
   // восстановить его по ссылке нельзя. Адресуемая ссылка открывала бы пустой
   // мастер и выглядела как поломка — честнее, чтобы этих шагов в истории не было.
   const [matId, setMatId] = useUrlState('mat')
-  // какую именно работу открыть на проверке (вход из блока «На проверку»);
-  // в адрес не выносим — это указание «открой сразу проверку», а не место
-  const [review, setReview] = useState<{ a: MaterialAssignment; name: string } | undefined>()
-  // сохранили, но кому-то назначить не вышло — скажет карточка материала
-  const [notice, setNotice] = useState<string | undefined>()
+  // сданная работа — та же проверка, что из хаба «Заданий» (?work=, листалка
+  // по очереди); «назад» из неё — сюда, к библиотеке
+  const [, setWorkId] = useUrlState('work')
+  // разбор уже проверенной работы — из «Кому выдан» карточки материала
+  const [reviewing, setReviewing] = useState<{ a: MaterialAssignment; name: string } | undefined>()
+  // сохранили, но кому-то назначить не вышло — скажет карточка этого материала
+  const [notice, setNotice] = useState<{ id: string; text: string } | undefined>()
   // остаток генераций (get_my_plan): показываем заранее, а не по факту отказа
   const [gens, setGens] = useState<{ left: number; limit: number } | null>(null)
   useEffect(() => {
@@ -96,40 +134,26 @@ export function MaterialsSection({
     loading: loadingMaterials,
     reload,
   } = useAsyncData<Material[]>(() => listMyMaterials(), [], 'Не удалось загрузить материалы')
-  // сданные работы — блок «На проверку»: кто сдал и что проверять
-  const { data: works, reload: reloadWorks } = useAsyncData<SubmittedWork[]>(
-    () => listSubmittedWorks(),
-    [],
-    'Не удалось загрузить работы',
-  )
+  // сданные работы — «На проверку» и «1 на проверке» в строке материала
+  const { data: works } = useAsyncData<SubmittedWork[]>(() => listSubmittedWorks(), [], 'Не удалось загрузить работы')
+  const split = useListDetailSplit()
 
-  // адрес — источник правды для «какой материал открыт»; mode отвечает только
-  // за шаги мастера. Материал ищем в уже загруженном списке: чужой или
-  // удалённый id показывает список, а не пустой экран.
+  // адрес — источник правды для «какой материал открыт»; материал ищем в уже
+  // загруженном списке: чужой или удалённый id показывает список, а не пустой экран
   const openMaterial = matId ? (materials ?? []).find((m) => m.id === matId) : undefined
-  // у материала, плана и предпросмотра своя шапка «назад» — шапку раздела прячем
-  useInnerScreen(!!openMaterial || step?.name === 'plan' || step?.name === 'preview')
-  if (matId && openMaterial) {
+  // у библиотеки, карточки, плана и предпросмотра своя шапка «назад» — шапку
+  // раздела прячем; у формы — пока шапка раздела (её вид — d8-2, следующий шаг)
+  useInnerScreen(!flow || step?.name === 'plan' || step?.name === 'preview')
+
+  if (reviewing && openMaterial) {
     return (
-      <MaterialDetail
+      <ReviewScreen
         material={openMaterial}
-        students={students}
-        initialReview={review}
-        initialError={notice}
-        onWorksChanged={onWorksChanged}
-        onDeleted={() => {
-          reload()
-          setReview(undefined)
-          setNotice(undefined)
-          setMatId(null)
-        }}
-        onBack={() => {
-          reloadWorks() // проверенная работа должна исчезнуть из «На проверку»
-          onWorksChanged?.() // и бейдж вкладки пересчитать
-          setReview(undefined)
-          setNotice(undefined)
-          setMatId(null)
-        }}
+        assignment={reviewing.a}
+        studentName={reviewing.name}
+        backLabel="Материалы"
+        onDone={() => setReviewing(undefined)}
+        onBack={() => setReviewing(undefined)}
       />
     )
   }
@@ -142,9 +166,7 @@ export function MaterialsSection({
         onResume={() => go(forward(flow))}
         onCancel={() => go(null)}
         onPlanned={(req, plan) => go(advance(flow, { name: 'plan', req, plan }))}
-        onOwnGenerated={(req, plan, content) =>
-          go(advance(flow, { name: 'preview', req, plan, content, own: true }))
-        }
+        onOwnGenerated={(req, plan, content) => go(advance(flow, { name: 'preview', req, plan, content, own: true }))}
       />
     )
   }
@@ -181,7 +203,7 @@ export function MaterialsSection({
             flowDraft.clear()
             clearDraft(REQUEST_DRAFT)
             reload()
-            setNotice(failed)
+            setNotice(failed ? { id: material.id, text: failed } : undefined)
             setMatId(material.id)
           }}
           onBack={() => go(back(flow))}
@@ -189,83 +211,61 @@ export function MaterialsSection({
       </>
     )
   }
+
   const pending = works ?? []
+  const pendingBy = new Map<string, number>()
+  for (const w of pending) pendingBy.set(w.material.id, (pendingBy.get(w.material.id) ?? 0) + 1)
+  const detail = openMaterial && (
+    <MaterialDetail
+      key={openMaterial.id}
+      material={openMaterial}
+      students={students}
+      initialError={notice?.id === openMaterial.id ? notice.text : undefined}
+      onWorksChanged={onWorksChanged}
+      onCheck={(a) => setWorkId(a.id)}
+      onReview={(a, name) => setReviewing({ a, name })}
+      onDeleted={() => {
+        reload()
+        setNotice(undefined)
+        setMatId(null)
+      }}
+      // телефон: карточка — экраном со своим «‹ Материалы»; на компьютере список рядом
+      onBack={split ? undefined : () => setMatId(null)}
+    />
+  )
+  if (detail && !split) return detail
+
   return (
-    <div className="flex flex-col gap-3">
-      {/* На проверку: кто сдал, какой материал — сразу в проверку одним тапом */}
-      {pending.length > 0 && (
-        <Card tone="warning" className="flex flex-col gap-2">
-          <p className="text-sm font-semibold text-warning-soft-fg">
-            На проверку: {pending.length}
-          </p>
-          {pending.map((w) => (
-            <button
-              key={w.assignment.id}
-              onClick={() => {
-                setReview({ a: w.assignment, name: w.studentName })
-                setMatId(w.material.id)
-              }}
-              className="flex items-center justify-between gap-2 rounded-xl border border-tint/[0.08] px-3 py-2 text-left transition-transform active:scale-[0.99]"
-            >
-              <span className="min-w-0">
-                <span className="block truncate text-sm font-medium">
-                  {w.studentName} · {w.material.title ?? w.material.topic}
-                </span>
-                <span className="block text-xs text-fg-muted">
-                  авто-балл {w.assignment.auto_score}/{w.assignment.auto_total}
-                  {w.assignment.submitted_at
-                    ? ` · сдано ${new Date(w.assignment.submitted_at).toLocaleDateString('ru-RU')}`
-                    : ''}
-                </span>
-              </span>
-              <span className="shrink-0 text-sm font-medium text-accent-strong">
-                Проверить ›
-              </span>
-            </button>
-          ))}
-        </Card>
-      )}
-
-      <Card>
-        <p className="text-sm text-fg-secondary">
-          Генератор учебных текстов: тема, уровень, формат — AI составит план,
-          сгенерирует текст и упражнения. Материал можно назначить ученикам или
-          просто хранить в библиотеке.
-        </p>
-        <Button className="mt-3" onClick={() => go(START)}>
-          + Создать материал
-        </Button>
-        {/* Остаток генераций ДО того, как в него упрёшься. Раньше о лимите
-            узнавали только по отказу в середине работы — а один материал
-            стоит двух генераций (план + текст), и это тоже стоит сказать. */}
-        {gens && (
-          <p className="mt-2 text-xs text-fg-muted">
-            {gens.limit === 0 ? (
-              // лимит НОЛЬ — это не «закончились»: генераций не было вовсе
-              // (тариф истёк). Сказать «обновятся 1-го числа» было бы неправдой.
-              <>Генерация материалов входит в тариф репетитора.</>
-            ) : gens.left > 0 ? (
-              <>
-                Осталось генераций в этом месяце: {gens.left} из {gens.limit}
-                {gens.left < 2 && ' — на целый материал нужно две (план и текст)'}
-              </>
-            ) : (
-              <>Генерации в этом месяце закончились — обновятся 1-го числа.</>
-            )}
-          </p>
-        )}
-      </Card>
-
-      {loadingMaterials ? (
+    <div className="flex flex-col gap-4">
+      <ScreenTop
+        back={{ label: 'Задания', onClick: onExit }}
+        title="Материалы"
+        trailing={
+          <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-2">
+            {gens && <GensLeft gens={gens} />}
+            <Button onClick={() => go(START)}>
+              <IconPlus size={18} aria-hidden /> Создать материал
+            </Button>
+          </div>
+        }
+      />
+      <PendingWorks works={pending} onCheck={(w) => setWorkId(w.assignment.id)} />
+      {loadingMaterials && !materials ? (
         <RowsSkeleton count={3} />
       ) : loadError ? (
         <LoadError message={loadError} onRetry={reload} />
       ) : (materials ?? []).length === 0 ? (
-        <p className="text-sm text-fg-muted">Библиотека пустая. Созданные материалы останутся здесь: их можно назначать разным ученикам и печатать.</p>
+        <Card>
+          <p className="text-sm text-fg-muted">
+            Библиотека пустая. Созданные материалы останутся здесь: их можно выдавать разным ученикам и печатать.
+          </p>
+        </Card>
       ) : (
-        <MaterialsByLevel
-          materials={materials ?? []}
-          onOpen={(material) => setMatId(material.id)}
+        <ListDetail
+          fill
+          list={<LibraryList materials={materials ?? []} pending={pendingBy} selectedId={openMaterial?.id ?? null} onOpen={(m) => setMatId(m.id)} />}
+          detail={detail || null}
+          empty="Выбери материал слева — откроются текст, упражнения и кому он выдан."
         />
       )}
     </div>

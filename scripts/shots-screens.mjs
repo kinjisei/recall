@@ -30,6 +30,11 @@
  *   tasks-writing  — проверка письма Айгерим (d7-3, d7-4): правка 1 выбрана
  *                    (нажата в тексте), последняя убрана;
  *   tasks-empty    — проверять нечего (схема d7-1): работы проверены.
+ * Заход 4в-2 — «Материалы» (макеты d8):
+ *   materials      — библиотека: «На проверку», уровни, ничего не выбрано
+ *                    (на телефоне — список);
+ *   materials-open — открыт «A trip that went wrong» с работой Әсел на
+ *                    проверке (d8-1; на телефоне — экран материала).
  * Аудит у них — по шторке или диалогу (`audit`), а не по <main> под
  * затемнением; снимок — ровно окном (`overlay`), как кадры t5-2 и d2-2.
  * Ширины 390 и 1280 — в четырёх вариантах вида («Сумерки» и «Закат» ×
@@ -39,7 +44,7 @@
  * красная строка в итоге. Телефон снимается окном во всю высоту страницы.
  *
  * Запуск: npm run dev:test, затем node scripts/shots-screens.mjs [папка]
- * [--only home|students|cancel|tasks] [--name экран,экран] (по умолчанию shots-screens/,
+ * [--only home|students|cancel|tasks|materials] [--name экран,экран] (по умолчанию shots-screens/,
  * все экраны; --name — только эти снимки, для быстрой сверки). ~10 мин.
  */
 import { spawn } from 'node:child_process'
@@ -271,6 +276,14 @@ try {
       { name: 'cancel-confirm', path: lesson, expect: /Перенести[\s\S]*Отменить урок/, prepare: openSeriesAsk, audit: '[role="alertdialog"]', overlay: true },
       { name: 'material-delete', path: `/tasks?tab=materials&mat=${mat.id}`, expect: /Удалить материал/, prepare: askOn('Удалить материал'), audit: '[role="alertdialog"]', overlay: true },
       { name: 'reassign', path: `/tasks?work=${wa}`, expect: /На доработку/, prepare: askOn('На доработку'), audit: '[role="alertdialog"]', overlay: true },
+    ])
+  }
+  if (!ONLY || ONLY === 'materials') {
+    console.log('── «Материалы»')
+    const [trip] = must(await admin.from('materials').select('id').eq('teacher_id', t.id).eq('title', 'A trip that went wrong'), 'материал')
+    await screen(t.email, [
+      { name: 'materials', path: '/tasks?tab=materials', expect: /На проверку[\s\S]*A trip that went wrong/ },
+      { name: 'materials-open', path: `/tasks?tab=materials&mat=${trip.id}`, expect: /Выдан:[\s\S]*Упражнения/ },
     ])
   }
   if (!ONLY || ONLY === 'tasks') {
