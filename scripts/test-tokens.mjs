@@ -343,6 +343,7 @@ for (const [cssName, px, label] of [
   ['--container-summary', 312, 'итог мастера 312 (d8-2)'],
   ['--container-toc', 280, 'оглавление методички 280 (d9-3)'],
   ['--container-dialog', 400, 'карточка «Диалог» 400 (d12-2)'],
+  ['--container-nav', 220, 'оглавление Настроек 220 (d14)'],
 ]) {
   const inCss = rem(dark[cssName])
   check(`порог ${cssName} = ${label}`, Number.isFinite(px) && inCss === px, `${inCss} / ${px}`)

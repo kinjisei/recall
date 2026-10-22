@@ -8,13 +8,16 @@
 // адресом и текущим паролем; не сошлось — дальше не идём.
 //
 // Форма раскрывается по кнопке, а не висит открытой: в настройках человек
-// бывает часто, а пароль меняет раз в год.
+// бывает часто, а пароль меняет раз в год. Вид — карточка раздела (d14):
+// «Адрес входа» и «Сменить пароль» одной строкой.
 // ============================================================================
 import { useState, type FormEvent } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { Reveal } from '../../shared/ui/Reveal'
 import { MIN_PASSWORD, changePassword } from '../../lib/passwordReset'
 import { PasswordField } from '../auth/authUi'
+import { Button } from '../../shared/ui/Button'
+import { SettingsCard, ValueRow } from './settingsBits'
 
 export function SecuritySection() {
   const { user } = useAuth()
@@ -44,37 +47,34 @@ export function SecuritySection() {
   }
 
   return (
-    <section
-      id="security"
-      className="animate-fade-up rounded-2xl border border-tint/[0.08] bg-surface p-4 shadow-card"
-      style={{ animationDelay: '.23s' }}
-    >
-      <h2 className="mb-3 font-medium">Безопасность</h2>
-      <p className="text-sm text-fg-muted">
-        Вход по адресу <span className="break-all text-fg-secondary">{email}</span>
-      </p>
+    <SettingsCard id="security" title="Безопасность">
+      {/* «Адрес входа» и «Сменить пароль» — одной строкой (d14) */}
+      <ValueRow
+        action={
+          !open && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                setOpen(true)
+                setDone(false)
+                setError(null)
+              }}
+            >
+              Сменить пароль
+            </Button>
+          )
+        }
+      >
+        <span className="flex min-w-0 flex-col leading-snug">
+          <small className="text-note text-fg-muted">Адрес входа</small>
+          <span className="truncate text-fg">{email}</span>
+        </span>
+      </ValueRow>
 
-      {done && !open && (
-        <p className="mt-3 text-sm text-success-strong">
-          Пароль изменён. Входы на других устройствах завершены.
-        </p>
-      )}
-
-      {!open && (
-        <button
-          onClick={() => {
-            setOpen(true)
-            setDone(false)
-            setError(null)
-          }}
-          className="mt-3 inline-flex min-h-11 items-center rounded-xl border border-tint/[0.10] px-4 text-sm font-medium text-fg-secondary shadow-card"
-        >
-          Сменить пароль
-        </button>
-      )}
+      {done && !open && <p className="text-sm text-success-strong">Пароль изменён. Входы на других устройствах завершены.</p>}
 
       <Reveal open={open}>
-        <form onSubmit={submit} className="flex flex-col gap-4 pt-3">
+        <form onSubmit={submit} className="flex flex-col gap-4 pt-1">
           {/* Скрытое поле с адресом — чтобы менеджер паролей понял, к какому
               аккаунту относится новый пароль, и предложил его обновить. */}
           <input type="text" name="username" autoComplete="username" value={email} readOnly hidden />
@@ -103,28 +103,24 @@ export function SecuritySection() {
           )}
 
           <div className="flex gap-2">
-            <button
-              type="submit"
-              disabled={busy || current.length === 0 || next.length < MIN_PASSWORD}
-              className="min-h-11 flex-1 rounded-xl bg-accent-soft px-4 text-sm font-medium text-accent-soft-fg shadow-card disabled:opacity-40"
-            >
-              {busy ? '…' : 'Сохранить пароль'}
-            </button>
-            <button
+            <Button type="submit" variant="secondary" className="flex-1" loading={busy} disabled={current.length === 0 || next.length < MIN_PASSWORD}>
+              Сохранить пароль
+            </Button>
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => {
                 setOpen(false)
                 setCurrent('')
                 setNext('')
                 setError(null)
               }}
-              className="min-h-11 rounded-xl border border-tint/[0.10] px-4 text-sm font-medium text-fg-muted shadow-card"
             >
               Отмена
-            </button>
+            </Button>
           </div>
         </form>
       </Reveal>
-    </section>
+    </SettingsCard>
   )
 }

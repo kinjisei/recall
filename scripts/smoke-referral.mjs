@@ -232,8 +232,13 @@ async function run(browser, ids) {
     return { text: el?.textContent?.trim(), inside: !!r && !!nav && r.left >= nav.left && r.right <= nav.right }
   })
   check('1280: подарок строкой «Пригласить коллегу» в боковой панели', row.text === 'Пригласить коллегу' && row.inside, JSON.stringify(row))
-  const col = await a.evaluate(() => document.querySelector('main')?.getBoundingClientRect().width ?? 0)
-  check('1280: экран — колонка, без горизонтальной прокрутки', col > 0 && col <= 700 && (await noHScroll(a)), `${Math.round(col)} px`)
+  // d13-1: шаги карточками в две колонки — ссылка слева, «Что получите оба» справа
+  const two = await a.evaluate(() => {
+    const link = document.querySelector('[data-referral-link]')?.getBoundingClientRect()
+    const counter = document.querySelector('[data-referral-counter]')?.getBoundingClientRect()
+    return !!link && !!counter && counter.left > link.right
+  })
+  check('1280: две колонки (d13-1), без горизонтальной прокрутки', two && (await noHScroll(a)))
   await shot(a, 'referral-invite-1280')
 
   // ── 6. ученик ───────────────────────────────────────────────────────────────

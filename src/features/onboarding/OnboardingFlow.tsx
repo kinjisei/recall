@@ -20,10 +20,9 @@ import {
 } from '../../shared/ui/icons'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
-import { supabase } from '../../shared/api/supabase'
 import { joinTeacher } from '../../lib/teacher'
 import { hasPendingTeacherRole, pendingJoin } from '../../lib/pendingRole'
-import { getProfile, invalidateProfile } from '../../lib/profile'
+import { getProfile, updateMyProfile } from '../../lib/profile'
 import { setEsLevel } from '../../lib/esLevel'
 import { markOnboarded } from '../../lib/onboarding'
 import { startGuidedRoute } from '../../lib/guided'
@@ -72,12 +71,9 @@ export function OnboardingFlow() {
     const patch: { level?: CEFRLevel; goal?: LearningGoal } = {}
     if (level && lang === 'en') patch.level = level
     if (goal) patch.goal = goal
-    if (Object.keys(patch).length === 0) return
-    // supabase-js не бросает на ошибке — берём её из ответа. Если запись не
-    // удалась, не инвалидируем кэш зря, но пользователя не держим: онбординг
-    // всё равно завершаем (всё это можно задать позже в «Настройках»).
-    const { error } = await supabase.from('profiles').update(patch).eq('id', user.id)
-    if (!error) invalidateProfile()
+    // запись не удалась — пользователя не держим: онбординг всё равно
+    // завершаем (всё это можно задать позже в «Настройках»)
+    await updateMyProfile(user.id, patch).catch(() => {})
   }
 
   const finish = async () => {

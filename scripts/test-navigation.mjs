@@ -113,9 +113,9 @@ const teacherExpected = {
   '/pronunciation': 'Моя учёба',
   '/conversation': 'Моя учёба',
   '/progress': 'Моя учёба',
-  '/settings': 'Моя учёба',
   '/lessons': 'Моя учёба',
-  // не учёба и не вкладка
+  // не учёба и не вкладка (Настройки — как в макете d14: ни одна не горит)
+  '/settings': '—',
   '/admin': '—',
   '/invite': '—',
   '/pay': '—',

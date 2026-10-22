@@ -7,8 +7,9 @@
 // Репетитору — его три тарифа, ученику — Premium; ссылка ?plan= выбирает
 // тариф сразу (с карточки на странице тарифов). Открытая заявка переживает
 // перезаход: экран показывает «Спасибо», пока её не подтвердят или не уберут.
-// Раскладка одна на все ширины — колонка: форма короткая, на компьютере ей
-// ширина колонки впору. Страница оплаты — на «вы», как открытые (журнал п.71).
+// Телефон и содержимое уже 936 — колонка по t9-4; шире — PayDesk (d13-3,
+// d13-4): тариф и перевод рядом. Страница оплаты — на «вы», как открытые
+// (журнал п.71).
 // ============================================================================
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
@@ -36,35 +37,53 @@ import {
   type PayInfo,
   type PaymentClaim,
 } from '../../domains/billing'
+import { almatyTime, dateAt } from '../../domains/schedule'
+import { useAsideSplit } from '../../shared/ui/layouts'
 import { KaspiTransfer } from './KaspiTransfer'
+import { PayDesk, PayHelp } from './PayDesk'
 
 export function PayPage() {
   const [params] = useSearchParams()
   const info = useAsyncData(loadPayInfo, [], 'Не удалось загрузить данные для оплаты')
+  // компьютер (содержимое от 936) — d13-3, d13-4: тариф и перевод рядом, «Сейчас» — в карточке тарифа
+  const desk = useAsideSplit()
 
   return (
-    <div className="flex flex-col gap-5">
-      <div>
-        <BackButton fallback="/pricing" />
-      </div>
-      <header>
-        <h1 className="text-2xl font-medium tracking-tight">Как оплатить тариф</h1>
-        {info.data && <p className="mt-1 text-sm text-fg-muted">Сейчас: {planNowLabel(info.data)}</p>}
-      </header>
+    <div className={`flex flex-col ${desk ? 'gap-4' : 'gap-5'}`}>
+      {desk ? (
+        <h1 className="min-h-10 text-2xl font-semibold tracking-tight">Как оплатить тариф</h1>
+      ) : (
+        <>
+          <div>
+            <BackButton fallback="/pricing" />
+          </div>
+          <header>
+            <h1 className="text-2xl font-medium tracking-tight">Как оплатить тариф</h1>
+            {info.data && <p className="mt-1 text-sm text-fg-muted">Сейчас: {planNowLabel(info.data)}</p>}
+          </header>
+        </>
+      )}
       {info.error ? (
         <LoadError message={info.error} onRetry={info.reload} />
       ) : info.data ? (
-        <PayForm info={info.data} requested={params.get('plan')} />
+        <PayForm info={info.data} requested={params.get('plan')} desk={desk} />
       ) : (
         <RowsSkeleton count={4} />
       )}
-      <section className="mt-3 flex flex-col gap-3">
-        <p className="text-sm text-fg-tertiary">Что-то не сходится с оплатой — напишите нам:</p>
-        <ContactLinks subject="Recall — вопрос по оплате" />
-      </section>
+      {desk ? (
+        <PayHelp />
+      ) : (
+        <section className="mt-3 flex flex-col gap-3">
+          <p className="text-sm text-fg-tertiary">Что-то не сходится с оплатой — напишите нам:</p>
+          <ContactLinks subject="Recall — вопрос по оплате" />
+        </section>
+      )}
     </div>
   )
 }
+
+/** Когда отправлена заявка — «22 окт, 15:40» по Алматы. */
+const sentWhen = (claim: PaymentClaim) => `${dateAt(claim.created_at)}, ${almatyTime(claim.created_at)}`
 
 function Price({ amount }: { amount: number }) {
   return (
@@ -75,7 +94,7 @@ function Price({ amount }: { amount: number }) {
   )
 }
 
-function PayForm({ info, requested }: { info: PayInfo; requested: string | null }) {
+function PayForm({ info, requested, desk }: { info: PayInfo; requested: string | null; desk: boolean }) {
   const options = plansToPay(info.role, requested)
   // открытая заявка важнее нынешнего тарифа: вернулся после «Оплата
   // отправлена» — видит «Спасибо», а не «перевёл за другой?»
@@ -101,28 +120,45 @@ function PayForm({ info, requested }: { info: PayInfo; requested: string | null 
     }
   }
 
+  const choices = options.map((id) => {
+    const card = planCard(id)
+    const what = card.studentLimit ? `${card.studentLimit} учеников в приложении` : card.tagline
+    return {
+      id,
+      label: planShortTitle(id),
+      // «ваш тариф» — как в d13-3; на телефоне — как в t9
+      hint: id === mine ? `${what} · ${desk ? 'ваш тариф' : 'сейчас у вас'}` : what,
+      trailing: <Price amount={amountFor(id, 1)} />,
+    }
+  })
+  const retarget = claim && !sent ? `Мы уже ждём оплату за ${planShortTitle(claim.plan as PaidPlan)}. Перевели за ${planShortTitle(plan)} — нажмите, и мы поправим заявку.` : null
+
+  if (desk) {
+    return (
+      <PayDesk
+        info={info}
+        options={choices}
+        plan={plan}
+        onPlan={setPlan}
+        amount={amountFor(plan, 1)}
+        sent={sent}
+        claim={claim}
+        busy={busy}
+        error={error}
+        onReport={() => void report()}
+        sentAt={claim ? sentWhen(claim) : null}
+        retarget={retarget}
+      />
+    )
+  }
+
   return (
     <>
       <section>
         <h2 className="mb-2 text-sm text-fg-muted">Тариф</h2>
-        <ChoiceGroup
-          variant="cards"
-          label="Тариф"
-          value={plan}
-          onChange={setPlan}
-          options={options.map((id) => {
-            const card = planCard(id)
-            const what = card.studentLimit ? `${card.studentLimit} учеников в приложении` : card.tagline
-            return {
-              id,
-              label: planShortTitle(id),
-              hint: id === mine ? `${what} · сейчас у вас` : what,
-              trailing: <Price amount={amountFor(id, 1)} />,
-            }
-          })}
-        />
+        <ChoiceGroup variant="cards" label="Тариф" value={plan} onChange={setPlan} options={choices} />
         {/* репетитор приходит сюда из меню профиля, минуя страницу тарифов */}
-        <AppLink to="/pricing" className="mt-2 inline-block text-note text-accent-strong">
+        <AppLink to="/pricing" className="mt-1 inline-flex min-h-11 items-center text-note text-accent-strong">
           Что входит в каждый тариф
         </AppLink>
       </section>
@@ -137,11 +173,8 @@ function PayForm({ info, requested }: { info: PayInfo; requested: string | null 
             Оплата отправлена
           </Button>
           {error && <p className="mt-2 text-sm text-danger-strong">{error}</p>}
-          {claim ? (
-            <p className="mt-2 text-note text-fg-muted">
-              Мы уже ждём оплату за {planShortTitle(claim.plan as PaidPlan)}. Перевели за {planShortTitle(plan)} — нажмите, и
-              мы поправим заявку.
-            </p>
+          {retarget ? (
+            <p className="mt-2 text-note text-fg-muted">{retarget}</p>
           ) : (
             <p className="mt-2 flex gap-2 text-note text-fg-muted">
               <IconHint size={16} className="mt-0.5 flex-none text-fg-faint" />
@@ -155,12 +188,7 @@ function PayForm({ info, requested }: { info: PayInfo; requested: string | null 
 }
 
 function SentCard({ claim }: { claim: PaymentClaim }) {
-  const at = new Date(claim.created_at).toLocaleString('ru-RU', {
-    day: 'numeric',
-    month: 'long',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  const at = sentWhen(claim)
   return (
     <Card className="animate-fade-up flex flex-col items-center gap-2 text-center">
       <IconBadgeCheck size={28} className="text-success-strong" />

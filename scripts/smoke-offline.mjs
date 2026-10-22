@@ -39,7 +39,8 @@ const SCREENS = [
   { path: '/study' },
   { path: '/progress', lie: /\b0 (день|дня|дней)\b/, lieName: '«0 дней»' },
   { path: '/quests', lie: /Квестов пока нет/, lieName: '«Квестов пока нет»' },
-  { path: '/settings', lie: /Как тебя зовут/, lieName: 'пустой формы профиля' },
+  // «Как тебя зовут» с 4г-2 — подсказка в поле (её нет в тексте страницы): форму узнаём по строке под ней
+  { path: '/settings', lie: /Остальные настройки сохраняются сразу/, lieName: 'пустой формы профиля' },
   { path: '/conversation', lie: /Напиши что-нибудь/, lieName: 'пустого чата' },
   { path: '/writing' },
   { path: '/assignments' },

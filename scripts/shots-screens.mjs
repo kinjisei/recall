@@ -52,6 +52,8 @@
  * Заход 4г-1 — тест уровня и программа (d11), «Моя учёба» (d12): экраны и
  * данные — `_shots-4g.mjs` (placement, placement-empty, program-form,
  * program-draft, program-saved, program-student, learn, learn-empty).
+ * Заход 4г-2 — «Пригласи коллегу», «Как оплатить» (d13), Настройки (d14):
+ * `_shots-4g.mjs` (invite, invite-empty, pay, pay-sent, settings, settings-student).
  * Аудит у них — по шторке или диалогу (`audit`), а не по <main> под
  * затемнением; снимок — ровно окном (`overlay`), как кадры t5-2 и d2-2.
  * Ширины 390 и 1280 — в четырёх вариантах вида («Сумерки» и «Закат» ×
@@ -61,7 +63,7 @@
  * красная строка в итоге. Телефон снимается окном во всю высоту страницы.
  *
  * Запуск: npm run dev:test, затем node scripts/shots-screens.mjs [папка]
- * [--only home|students|cancel|tasks|materials|wizard|writing|program|learn] [--name экран,экран] (по умолчанию shots-screens/,
+ * [--only home|students|cancel|tasks|materials|wizard|writing|program|learn|invite|settings] [--name экран,экран] (по умолчанию shots-screens/,
  * все экраны; --name — только эти снимки, для быстрой сверки). ~10 мин.
  */
 import { spawn } from 'node:child_process'
@@ -72,7 +74,7 @@ import { APP_URL } from './_env.mjs'
 import { PASS, admin, must, sql, studio } from './_seed-studio.mjs'
 import { settleAnimations, settledScreenshot, waitForData } from './_shots.mjs'
 import { auditPage } from './_ux-audit-page.mjs'
-import { shotsLearn, shotsProgram } from './_shots-4g.mjs'
+import { shotsInvitePay, shotsLearn, shotsProgram, shotsSettings } from './_shots-4g.mjs'
 
 if (process.argv.includes('--prod')) {
   console.error('Снимки заводят аккаунты — только тестовая база (npm run dev:test).')
@@ -412,6 +414,14 @@ try {
   if (!ONLY || ONLY === 'learn') {
     console.log('── «Моя учёба»')
     await shotsLearn({ screen, sql, admin, must, t })
+  }
+  if (!ONLY || ONLY === 'invite') {
+    console.log('── «Пригласи коллегу» и «Как оплатить»')
+    await shotsInvitePay({ screen, sql, t })
+  }
+  if (!ONLY || ONLY === 'settings') {
+    console.log('── Настройки')
+    await shotsSettings({ screen, t, a })
   }
   if (!ONLY || ONLY === 'home') {
     const word = /Слово дня/

@@ -5,6 +5,7 @@
 // После изменения профиля (экран «Настройки») вызвать invalidateProfile().
 // ============================================================================
 import { supabase } from '../shared/api/supabase'
+import type { TablesUpdate } from '../shared/api/database.types'
 import { readJson, readRaw, writeJson, writeRaw } from '../shared/lib/storage'
 import type { Profile } from '../types'
 
@@ -135,6 +136,19 @@ export function invalidateProfile(): void {
   // раньше, чем профиль перечитан, и старая роль увела бы в расписание
   writeJson(ROLE_CACHE_KEY, null)
   if (typeof window !== 'undefined') window.dispatchEvent(new Event(PROFILE_CHANGED))
+}
+
+/**
+ * Записать свои поля профиля (имя, уровень английского, цель) и сбросить кэш —
+ * Главная, меню и промпты сразу видят новое. Бросает на сбое: supabase-js
+ * ошибку не бросает, а проглоченная ошибка — это «сохранено», которого нет.
+ * Одно место на Настройки, онбординг и тест уровня.
+ */
+export async function updateMyProfile(userId: string, patch: Pick<TablesUpdate<'profiles'>, 'display_name' | 'level' | 'goal'>): Promise<void> {
+  if (Object.keys(patch).length === 0) return
+  const { error } = await supabase.from('profiles').update(patch).eq('id', userId)
+  if (error) throw error
+  invalidateProfile()
 }
 
 /** Подписка на invalidateProfile; возвращает отписку. */

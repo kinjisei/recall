@@ -4,7 +4,7 @@
     "src/features/flashcards/DeckReview.tsx#DeckReview": 263,
     "src/features/grammar/ConjugationSection.tsx": 471,
     "src/features/grammar/GrammarPage.tsx": 638,
-    "src/features/onboarding/OnboardingFlow.tsx": 435,
+    "src/features/onboarding/OnboardingFlow.tsx": 431,
     "src/features/practice/PracticePage.tsx": 434,
     "src/features/practice/PracticePage.tsx#PracticePage": 262,
     "src/features/pronunciation/PronunciationPage.tsx": 497,

@@ -49,9 +49,11 @@ function useReferralHint(): [boolean, () => void] {
   return [hint, dismiss]
 }
 
+// в меню — сбоку, поверх страницы: вверх подсказка ложилась на строку
+// «Уведомления» над подарком (меню d0, Ф2.17-1), и после первой оплаты
+// «Оплата получена» было не открыть, пока не закроешь подсказку
 const HINT_AT = {
   below: 'right-0 top-full mt-2',
-  above: 'bottom-full left-0 mb-2',
   side: 'bottom-0 left-full ml-3',
 } as const
 
@@ -79,8 +81,8 @@ function Hint({ onClose, placement }: { onClose: () => void; placement: keyof ty
 
 /**
  * icon — круглая кнопка в шапке телефона (подсказка вниз); row — строка
- * «Пригласить коллегу» в меню 240 (подсказка вверх); rail — иконка в рельсе
- * 72 с подписью при наведении (подсказка вправо). Макеты s4, d0.
+ * «Пригласить коллегу» в меню 240; rail — иконка в рельсе 72 с подписью при
+ * наведении (в меню подсказка — вправо, за край меню). Макеты s4, d0.
  */
 export function GiftButton({ variant = 'icon' }: { variant?: 'icon' | 'row' | 'rail' }) {
   const [hint, dismiss] = useReferralHint()
@@ -124,7 +126,7 @@ export function GiftButton({ variant = 'icon' }: { variant?: 'icon' | 'row' | 'r
           <span>{label}</span>
         </AppLink>
       )}
-      {hint && <Hint onClose={dismiss} placement={variant === 'icon' ? 'below' : variant === 'rail' ? 'side' : 'above'} />}
+      {hint && <Hint onClose={dismiss} placement={variant === 'icon' ? 'below' : 'side'} />}
     </div>
   )
 }

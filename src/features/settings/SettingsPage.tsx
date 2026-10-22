@@ -1,285 +1,156 @@
 // ============================================================================
-// «Настройки» (роут /settings, вход из меню под аватаром).
-// Профиль (имя, уровень английского) пишется в БД — RLS разрешает менять
-// только эти колонки; оформление (shared/ui/theme), скорость озвучки и
-// размер текста в чтении хранятся локально (lib/settings.ts), у каждого
-// устройства свои.
+// «Настройки» (роут /settings, вход из меню под аватаром; макеты d14 —
+// компьютер, u4 — телефон). Разделы карточками: «Профиль» (имя и уровень —
+// в аккаунте, «Сохранить»), «Оформление» (цвет и режим этого устройства,
+// shared/ui/theme), у репетитора «Уроки» (ссылка на урок по умолчанию), у
+// ученика с преподавателем «Уведомления», «Озвучка» (скорость и
+// «Проверить»), «Текст в чтении» (размер и пример строки), «Безопасность» и
+// «Что-то не работает или непонятно?». Скорость и размер хранятся на
+// устройстве (lib/settings.ts) и сохраняются сразу.
+// На компьютере (содержимое от 936) — разделы до 640 и оглавление 220 справа,
+// оно держится при прокрутке и подсвечивает раздел на экране (MainAside nav).
+// Раздела «Данные» (выгрузка, удаление аккаунта) пока нет — PLAN.md 4г-2б.
 // ============================================================================
 import { useEffect, useState } from 'react'
-
-import { SecuritySection } from './SecuritySection'
-import { LessonReminders } from './LessonReminders'
-import { SUPPORT_SLA } from '../../shared/lib/contacts'
-import { ContactLinks } from '../../shared/ui/ContactLinks'
-import { IconSpeaker, IconCheck, IconThumbsUp } from '../../shared/ui/icons'
-import { BackButton } from '../../shared/ui/BackButton'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
-import { supabase } from '../../shared/api/supabase'
-import type { TablesUpdate } from '../../shared/api/database.types'
-import { invalidateProfile, selectProfiles } from '../../lib/profile'
+import { getEsLevel } from '../../lib/esLevel'
+import { loadProfile } from '../../lib/profile'
 import { speak } from '../../lib/speech'
-import {
-  SPEECH_RATES,
-  getSettings,
-  setSettings,
-  type ReaderSize,
-  type SpeechRate,
-} from '../../lib/settings'
-import { getEsLevel, setEsLevel } from '../../lib/esLevel'
+import { READER_CLASSES, SPEECH_RATES, getSettings, setSettings, type ReaderSize, type SpeechRate } from '../../lib/settings'
+import { BackButton } from '../../shared/ui/BackButton'
 import { Button } from '../../shared/ui/Button'
 import { ChoiceGroup, type ChoiceOption } from '../../shared/ui/ChoiceGroup'
-import type { CEFRLevel, Profile } from '../../types'
-import { AppLink } from '../../shared/ui/AppLink'
-import { FeedbackSheet } from '../../components/FeedbackSheet'
+import { IconPlay } from '../../shared/ui/icons'
+import { MainAside, useAsideSplit } from '../../shared/ui/layouts'
 import { LoadError } from '../../shared/ui/LoadError'
+import { RowsSkeleton } from '../../shared/ui/Loading'
+import { Field } from '../../shared/ui/TextField'
 import { ThemePicker } from '../../shared/ui/ThemePicker'
+import type { CEFRLevel, Profile } from '../../types'
+import { HelpSection } from './HelpSection'
+import { LessonLinkSection } from './LessonLinkSection'
+import { LessonReminders } from './LessonReminders'
+import { ProfileSection } from './ProfileSection'
+import { SecuritySection } from './SecuritySection'
+import { SettingsCard, SettingsToc } from './settingsBits'
 
-// A1 включён: тест уровня может дать A1, и без кнопки его нельзя было выбрать —
-// у пользователя с уровнем A1 не подсвечивалась ни одна кнопка, а сохранение
-// затирало его на случайно нажатый уровень
-const LEVELS: CEFRLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1']
-
-const SPEECH_LABELS: { id: SpeechRate; label: string }[] = [
+const SPEECH_LABELS: ChoiceOption<SpeechRate>[] = [
   { id: 'slow', label: 'Медленно' },
   { id: 'normal', label: 'Обычно' },
   { id: 'fast', label: 'Быстро' },
 ]
-
 // размер шрифта варианта — прямо в подписи, чтобы выбор был виден заранее
 const SIZE_LABELS: ChoiceOption<ReaderSize>[] = [
   { id: 'small', label: 'Мелкий', className: 'text-sm' },
   { id: 'normal', label: 'Обычный', className: 'text-base' },
   { id: 'large', label: 'Крупный', className: 'text-lg' },
 ]
-const LEVEL_OPTIONS: ChoiceOption<CEFRLevel>[] = LEVELS.map((l) => ({ id: l, label: l }))
+/** Пример строки для «Текста в чтении» — на языке учёбы. */
+const SAMPLE = { en: 'She stayed calm and resilient.', es: 'Se quedó tranquila y segura.' } as const
 
 export function SettingsPage() {
   const { user } = useAuth()
   const { lang } = useLanguage()
+  const desk = useAsideSplit()
   const [profile, setProfile] = useState<Profile | null>(null)
-  const [name, setName] = useState('')
-  const [level, setLevel] = useState<CEFRLevel | null>(null)
-  const [saved, setSaved] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [local, setLocal] = useState(getSettings)
-  const [feedback, setFeedback] = useState(false)
-  // Профиль не загрузился (нет связи) — формы нет: пустые имя и уровень,
-  // сохранённые после возврата связи, затёрли бы настоящие (PLAN.md Ф1.13).
-  const [loadFailed, setLoadFailed] = useState(false)
+  // профиль ещё не пришёл / не пришёл совсем (нет связи): формы нет — пустые
+  // имя и уровень, сохранённые после возврата связи, затёрли бы настоящие (Ф1.13)
+  const [state, setState] = useState<'loading' | 'ready' | 'failed'>('loading')
   const [attempt, setAttempt] = useState(0)
+  const [local, setLocal] = useState(getSettings)
 
   useEffect(() => {
     if (!user) return
-    void selectProfiles<Profile>((cols) =>
-      supabase.from('profiles').select(cols).eq('id', user.id).single() as never,
-    )
-      .then(({ data, error: e }) => {
-        // PGRST116 — ряда нет: это не сбой связи, форма остаётся
-        const failed = Boolean(e) && e?.code !== 'PGRST116'
-        setLoadFailed(failed)
-        if (failed) return
-        const p = data as Profile | null
+    // null — ряда нет: это не сбой связи, форма остаётся; сбой — бросает
+    loadProfile(user.id).then(
+      (p) => {
         setProfile(p)
-        setName(p?.display_name ?? '')
-        setLevel(lang === 'es' ? (getEsLevel() as CEFRLevel | null) : ((p?.level as CEFRLevel) ?? null))
-      })
-  }, [user, lang, attempt])
-
-  const saveProfile = async () => {
-    if (!user) return
-    setError(null)
-    try {
-      const patch: TablesUpdate<'profiles'> = {}
-      const trimmed = name.trim()
-      if (trimmed && trimmed !== profile?.display_name) patch.display_name = trimmed
-      // уровень испанского живёт локально, английского — в профиле
-      if (level) {
-        if (lang === 'es') setEsLevel(level)
-        else if (level !== profile?.level) patch.level = level
-      }
-      if (Object.keys(patch).length > 0) {
-        const { error: e } = await supabase.from('profiles').update(patch).eq('id', user.id)
-        if (e) throw e
-        // сбросить кэш профиля — Главная и аватар-меню сразу увидят изменения
-        invalidateProfile()
-      }
-      setSaved(true)
-      setTimeout(() => setSaved(false), 2000)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Не удалось сохранить')
-    }
-  }
+        setState('ready')
+      },
+      () => setState('failed'),
+    )
+  }, [user, attempt])
 
   const patchLocal = (p: Partial<typeof local>) => setLocal(setSettings(p))
+  const level = lang === 'es' ? (getEsLevel() as CEFRLevel | null) : ((profile?.level as CEFRLevel) ?? null)
 
-  return (
-    <div className="flex flex-col gap-6">
-      <header className="flex items-center gap-2">
-        <BackButton fallback="/" />
-        <h1 className="text-2xl font-medium tracking-tight">Настройки</h1>
-      </header>
-
-      {/* Профиль */}
-      {loadFailed ? (
-        <LoadError
-          message="Профиль не загрузился — похоже, пропала связь."
-          onRetry={() => setAttempt((n) => n + 1)}
-        />
+  const parts = (
+    <div id="settings-parts" className="flex flex-col gap-4">
+      {state === 'failed' ? (
+        <LoadError message="Профиль не загрузился — похоже, пропала связь." onRetry={() => setAttempt((n) => n + 1)} />
+      ) : state === 'loading' ? (
+        <RowsSkeleton count={2} height={52} />
       ) : (
-      <Section title="Профиль" delay=".05s">
-        <label htmlFor="settings-name" className="block text-sm text-fg-muted">
-          Как тебя зовут
-        </label>
-        <input
-          id="settings-name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Имя"
-          className="mt-1.5 h-11 w-full rounded-xl border border-tint/[0.10] bg-input px-3.5 text-sm outline-none focus:border-accent-line"
-        />
-
-        <p className="mt-4 text-sm text-fg-muted">
-          Мой уровень {lang === 'es' ? 'испанского' : 'английского'}
-        </p>
-        <ChoiceGroup
-          label="Мой уровень"
-          options={LEVEL_OPTIONS}
-          value={level}
-          onChange={setLevel}
-          className="mt-1.5"
-        />
-
-        {error && <p className="mt-3 text-sm text-danger-strong">{error}</p>}
-
-        <Button size="sm" className="mt-4 w-full" onClick={saveProfile}>
-          {saved ? (
-            <>
-              <IconCheck size={16} /> Сохранено
-            </>
-          ) : (
-            'Сохранить'
-          )}
-        </Button>
-      </Section>
+        // key — язык: уровень в поле — уровень языка из шапки
+        <ProfileSection key={lang} profile={profile} initialLevel={level} />
       )}
 
-      {/* Оформление: «Цвет» и «Режим» этого устройства (макет u4, Ф2.17-2) */}
-      <Section title="Оформление" delay=".08s">
+      {/* «Цвет» и «Режим» этого устройства (макеты u4, d14; Ф2.17-2) */}
+      <SettingsCard id="theme" title="Оформление">
         <ThemePicker />
-      </Section>
+      </SettingsCard>
 
-      {/* Уведомления об уроках (Ф2.9, макет u4-1) — только ученику с преподавателем */}
+      {/* ссылка на урок по умолчанию — у репетитора (u4-2, d14-1) */}
+      {profile?.role === 'teacher' && <LessonLinkSection />}
+
+      {/* напоминания об уроках — ученику с преподавателем (Ф2.9, u4-1, d14-2): раздел решает сам */}
       <LessonReminders />
 
-      {/* Озвучка */}
-      <Section title="Озвучка" delay=".11s">
-        <p className="text-sm text-fg-muted">
-          Скорость чтения вслух — в карточках, текстах и упражнениях.
-        </p>
-        <ChoiceGroup
-          label="Скорость озвучки"
-          options={SPEECH_LABELS}
-          value={local.speechRate}
-          onChange={(id) => patchLocal({ speechRate: id })}
-          stretch
-          className="mt-2.5"
-        />
-        <button
-          onClick={() =>
-            speak(lang === 'es' ? 'Hola, ¿cómo estás?' : 'This is how it sounds.', {
-              lang,
-              rate: SPEECH_RATES[local.speechRate],
-            })
-          }
-          className="lift mt-3 flex min-h-[44px] items-center gap-2 rounded-full border border-tint/[0.10] px-4 text-sm text-fg-secondary shadow-card"
-        >
-          <IconSpeaker size={16} /> Проверить
-        </button>
-      </Section>
+      <SettingsCard id="voice" title="Озвучка">
+        <Field label="Скорость">
+          <div className="flex flex-wrap items-center gap-3">
+            <ChoiceGroup
+              variant="segment"
+              pill
+              stretch
+              label="Скорость озвучки"
+              options={SPEECH_LABELS}
+              value={local.speechRate}
+              onChange={(id) => patchLocal({ speechRate: id })}
+              className="min-w-70 max-w-90 flex-1"
+            />
+            <Button variant="outline" onClick={() => speak(lang === 'es' ? 'Hola, ¿cómo estás?' : 'This is how it sounds.', { lang, rate: SPEECH_RATES[local.speechRate] })}>
+              <IconPlay size={18} aria-hidden /> Проверить
+            </Button>
+          </div>
+        </Field>
+      </SettingsCard>
 
-      {/* Размер текста */}
-      <Section title="Текст в чтении" delay=".17s">
-        <p className="text-sm text-fg-muted">
-          Размер шрифта в текстах раздела «Учёба».
-        </p>
+      <SettingsCard id="reader" title="Текст в чтении">
         <ChoiceGroup
+          variant="segment"
+          pill
+          stretch
           label="Размер текста в чтении"
           options={SIZE_LABELS}
           value={local.readerSize}
           onChange={(id) => patchLocal({ readerSize: id })}
-          stretch
-          className="mt-2.5"
+          className="max-w-105"
         />
-      </Section>
+        <p lang={lang} className={`rounded-control-sm bg-input px-3 py-2.5 text-fg ${READER_CLASSES[local.readerSize]}`} data-reader-sample>
+          {SAMPLE[lang]}
+        </p>
+      </SettingsCard>
 
-      {/* Безопасность — отдельным файлом: форма со своим состоянием и
-          проверкой текущего пароля, в общий экран настроек её мешать незачем. */}
+      {/* форма со своим состоянием и проверкой текущего пароля — отдельным файлом */}
       <SecuritySection />
 
-      <p className="px-1 text-xs text-fg-muted">
-        Оформление, скорость озвучки и размер текста сохраняются на этом
-        устройстве. Имя и уровень — в аккаунте.
-      </p>
-
-      {/* Написать владельцу. До этого из приложения написать было НЕКУДА:
-          адрес лежал только в юридических страницах, куда никто не заходит. */}
-      <div className="rounded-2xl border border-tint/[0.08] bg-surface p-4 shadow-card">
-        <p className="text-[15px] font-medium">Что-то не работает или непонятно?</p>
-        <p className="mt-1 text-sm text-fg-secondary">
-          Напиши нам — починим или объясним. {SUPPORT_SLA}.
-        </p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {/* Отзыв — отдельно от письма: письмо человек пишет, когда что-то
-              сломалось, а «чего не хватает» так никто не расскажет. Порог
-              должен быть в один тап. */}
-          <button
-            onClick={() => setFeedback(true)}
-            className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-accent-soft px-4 text-sm font-medium text-accent-soft-fg shadow-card"
-          >
-            <IconThumbsUp size={16} /> Оставить отзыв
-          </button>
-        </div>
-        <ContactLinks className="mt-2" />
-      </div>
-
-      {feedback && <FeedbackSheet where="settings" onClose={() => setFeedback(false)} />}
-
-      {/* Link, не <a>: обычная ссылка перезагружает всё приложение и рвёт
-          историю — «Назад» с тех страниц переставал возвращать сюда */}
-      <p className="px-1 text-xs text-fg-muted">
-        <AppLink to="/terms" className="underline hover:text-fg-secondary">
-          Условия использования
-        </AppLink>{' '}
-        ·{' '}
-        <AppLink to="/privacy" className="underline hover:text-fg-secondary">
-          Политика конфиденциальности
-        </AppLink>{' '}
-        ·{' '}
-        <AppLink to="/pricing" className="underline hover:text-fg-secondary">
-          Тарифы
-        </AppLink>
-      </p>
+      <HelpSection />
     </div>
   )
-}
 
-function Section({
-  title,
-  delay,
-  children,
-}: {
-  title: string
-  delay: string
-  children: React.ReactNode
-}) {
   return (
-    <section
-      className="animate-fade-up rounded-2xl border border-tint/[0.08] bg-surface p-4 shadow-card"
-      style={{ animationDelay: delay }}
-    >
-      <h2 className="mb-3 font-medium">{title}</h2>
-      {children}
-    </section>
+    <div className="flex flex-col gap-4">
+      {desk ? (
+        <h1 className="min-h-10 text-2xl font-semibold tracking-tight">Настройки</h1>
+      ) : (
+        <header className="flex items-center gap-2">
+          <BackButton fallback="/" />
+          <h1 className="text-2xl font-medium tracking-tight">Настройки</h1>
+        </header>
+      )}
+      {desk ? <MainAside size="nav" label="Разделы настроек" main={parts} aside={<SettingsToc rootId="settings-parts" />} /> : parts}
+    </div>
   )
 }

@@ -29,7 +29,7 @@ function fmtDate(iso: string | null): string {
   if (!iso) return '—'
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return '—'
-  return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  return d.toLocaleDateString('ru-RU', { timeZone: 'Asia/Almaty', day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
 export function UserSearch({ onPaid }: { onPaid: () => void }) {
@@ -124,7 +124,7 @@ function UserRow({
   return (
     <div className="animate-fade-up rounded-2xl border border-tint/[0.08] bg-surface p-4 shadow-card">
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-        <span className="font-medium">{row.email}</span>
+        <span className="min-w-0 font-medium">{row.email}</span>
         {row.display_name && (
           <span className="text-sm text-fg-muted">{row.display_name}</span>
         )}

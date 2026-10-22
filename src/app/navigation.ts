@@ -66,10 +66,10 @@ export const STUDENT_TABS: NavTab[] = [
 ]
 
 // Все экраны ученика, кроме Главной и студии: у учителя их подсвечивает «Моя
-// учёба». Админка и «Пригласи коллегу» — не учёба: там ни одна вкладка не горит.
-const LEARNER_PATHS = STUDENT_TABS.flatMap((t) => [t.to, ...(t.also ?? [])]).filter(
-  (p) => p !== '/' && p !== '/admin' && p !== '/invite' && !STUDIO_PATHS.includes(p),
-)
+// учёба». Админка, «Пригласи коллегу» и Настройки — не учёба: там ни одна
+// вкладка не горит (макеты d13, d14).
+const NOT_LEARNING = ['/', '/admin', '/invite', '/settings']
+const LEARNER_PATHS = STUDENT_TABS.flatMap((t) => [t.to, ...(t.also ?? [])]).filter((p) => !NOT_LEARNING.includes(p) && !STUDIO_PATHS.includes(p))
 
 export const TEACHER_TABS: NavTab[] = [
   { to: '/schedule', label: 'Расписание', icon: 'schedule', end: false },

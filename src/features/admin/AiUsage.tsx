@@ -51,7 +51,7 @@ export function AiUsage() {
       </div>
       <p className="mt-1 text-xs text-fg-muted">
         Сутки — по времени Google: дневные лимиты обнулятся в{' '}
-        {reset.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })} (
+        {reset.toLocaleTimeString('ru-RU', { timeZone: 'Asia/Almaty', hour: '2-digit', minute: '2-digit' })} (
         {untilLabel(reset.getTime() - now.getTime())}). Лимиты — на весь проект, не на человека.
       </p>
 

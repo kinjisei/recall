@@ -226,7 +226,7 @@ function RecentErrors() {
                   </span>
                 </div>
                 <p className="mt-1 text-xs text-fg-muted">
-                  {r.where_} · {new Date(r.last_at).toLocaleString('ru-RU')}
+                  {r.where_} · {new Date(r.last_at).toLocaleString('ru-RU', { timeZone: 'Asia/Almaty' })}
                   {!r.any_online && ' · офлайн'}
                 </p>
                 <Reveal open={open === key}>
@@ -289,12 +289,12 @@ function FeedbackList() {
           {rows.map((r, i) => (
             <div key={i} className="rounded-xl border border-tint/[0.08] p-3">
               <div className="flex items-start justify-between gap-3">
-                <span className="text-sm">
+                <span className="min-w-0 text-sm">
                   {r.rating === 'up' ? '👍 ' : r.rating === 'down' ? '👎 ' : ''}
                   {r.text || '(без текста)'}
                 </span>
                 <span className="shrink-0 text-xs text-fg-muted">
-                  {new Date(r.created_at).toLocaleDateString('ru-RU')}
+                  {new Date(r.created_at).toLocaleDateString('ru-RU', { timeZone: 'Asia/Almaty' })}
                 </span>
               </div>
               <p className="mt-1 text-xs text-fg-muted">

@@ -39,3 +39,24 @@ export function Card({
   const press = interactive ? 'lift' : ''
   return <div className={`${base} ${press} ${className}`}>{children}</div>
 }
+
+/**
+ * Карточка шага (`.c13` макетов d13): номер в кружке и заголовок, поля 20 / 22,
+ * радиус 24 — «1 Твоя ссылка», «2 Перевод на Kaspi Gold»; без номера — просто
+ * заголовок («Как это работает»).
+ */
+export function StepCard({ n, title, label, children }: { n?: number; title: string; label?: string; children: ReactNode }) {
+  return (
+    <section aria-label={label ?? title} className="flex flex-col gap-3.5 rounded-card bg-surface px-5.5 py-5 shadow-card">
+      <h2 className="flex items-center gap-2.5 text-lg font-semibold text-fg">
+        {n !== undefined && (
+          <span aria-hidden className="flex size-6.5 flex-none items-center justify-center rounded-full bg-accent-soft text-note font-bold text-accent-soft-fg">
+            {n}
+          </span>
+        )}
+        {title}
+      </h2>
+      {children}
+    </section>
+  )
+}

@@ -113,6 +113,10 @@
   (`getHours`, `toLocale…`) — только Intl с `SCHEDULE_TZ`. Компьютер
   владельца в UTC+5, как Алматы, и ошибку «взяли местное время» значения
   здесь не покажут — держит сторож по тексту в `test-schedule-screen.mjs`.
+  Во всём `src/` дата и время на экране тоже по Алматы: `dateAt`,
+  `almatyTime` или `toLocale…String` с `timeZone` — держит
+  `test-almaty-dates.mjs` (4г-2; до него 11 мест показывали момент из базы
+  по часам устройства, у английского телефона — даже «10/22/2026»).
 
 ## Как проверить
 
@@ -168,5 +172,5 @@
 
 - **Файлы:** `api.student.ts`, `api.ts`, `calendar.ts`, `editor.ts`, `index.ts`, `ledger.ts`, `model.ts`, `roster.ts`, `status.ts`, `student.ts`
 - **RPC:** `add_paid_lessons`, `cancel_lesson`, `cancel_series_from`, `create_lesson`, `create_series`, `get_card_history`, `get_lesson_balances`, `get_my_lesson_balances`, `get_my_lessons`, `get_my_series`, `get_schedule`, `get_schedule_settings`, `mark_lesson_participant`, `restore_lesson`, `send_card_message`, `set_cancel_charge`, `set_default_lesson_link`, `update_lesson`, `update_series_from`
-- **Кто использует (импортом):** `features/admin`, `features/dashboard`, `features/lessons`, `features/schedule`, `features/settings`, `features/students`, `features/teacher`, `features/writing`
+- **Кто использует (импортом):** `features/admin`, `features/billing`, `features/dashboard`, `features/lessons`, `features/schedule`, `features/settings`, `features/students`, `features/teacher`, `features/writing`
 <!-- generated:end -->

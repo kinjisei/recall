@@ -8,6 +8,7 @@
 // здесь, по виду: поменять формулировку — выкатка клиента, а не миграция, и
 // старые уведомления в ленте заговорят новыми словами.
 // ============================================================================
+import { daysBetween } from '../../shared/lib/days.js'
 import { plural } from '../../shared/lib/plural.js'
 import { lessonWhen, renderLessonNotice } from './lessonText.js'
 
@@ -239,7 +240,9 @@ export function unreadCount(list: Pick<AppNotification, 'read_at'>[]): number {
 
 /**
  * «Когда» для ленты: «только что», «5 мин назад», «3 ч назад», «вчера»,
- * дальше — дата. now — параметром, чтобы тест не зависел от часов.
+ * дальше — дата. Дни — по Алматы, как всё время в приложении: по часам
+ * устройства «вчера» сдвигалось у телефона в чужом поясе. now — параметром,
+ * чтобы тест не зависел от часов.
  */
 export function whenLabel(iso: string, now: Date = new Date()): string {
   const t = new Date(iso)
@@ -247,9 +250,9 @@ export function whenLabel(iso: string, now: Date = new Date()): string {
   if (Number.isNaN(diffMin)) return ''
   if (diffMin < 1) return 'только что'
   if (diffMin < 60) return `${diffMin} мин назад`
-  const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
-  const days = Math.round((startOfDay(now) - startOfDay(t)) / 86400000)
+  const day = (d: Date) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Almaty' }).format(d)
+  const days = daysBetween(day(t), day(now))
   if (days === 0) return `${Math.floor(diffMin / 60)} ч назад`
   if (days === 1) return 'вчера'
-  return t.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
+  return t.toLocaleDateString('ru-RU', { timeZone: 'Asia/Almaty', day: 'numeric', month: 'long' })
 }

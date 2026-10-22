@@ -24,7 +24,7 @@ const KIND_LABELS: Record<string, string> = {
 }
 
 function fmtDate(d: Date): string {
-  return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
+  return d.toLocaleDateString('ru-RU', { timeZone: 'Asia/Almaty', day: 'numeric', month: 'long' })
 }
 
 /** «12 → 18» + словами, куда сдвинулись. moreIsBetter=false для ошибок. */
@@ -214,7 +214,7 @@ export function ReportSheet({
 
         <p className="mt-8 border-t border-line pt-3 text-xs text-fg-muted">
           Отчёт подготовлен в приложении Recall по данным занятий ·{' '}
-          {today.toLocaleDateString('ru-RU')}
+          {today.toLocaleDateString('ru-RU', { timeZone: 'Asia/Almaty' })}
         </p>
       </div>
     </div>,

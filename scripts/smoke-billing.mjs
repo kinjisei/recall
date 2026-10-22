@@ -207,12 +207,13 @@ async function run(browser, ids) {
   await waitText(t, 'Как оплатить тариф')
   await t.screenshot({ encoding: 'base64' }) // кадр: медиа-запрос ширины
   check('компьютер: без горизонтальной прокрутки', await noHScroll(t))
+  // d13-3: тариф и перевод — двумя колонками рядом, а не колонкой 640
   const col = await t.evaluate(() => {
-    const h = [...document.querySelectorAll('h1')].find((e) => e.textContent?.includes('Как оплатить'))
-    const box = h?.closest('main')?.getBoundingClientRect()
-    return { nav: !!document.querySelector('nav'), main: box ? Math.round(box.width) : 0 }
+    const tariff = [...document.querySelectorAll('section')].find((e) => e.getAttribute('aria-label') === 'Тариф')?.getBoundingClientRect()
+    const kaspi = document.querySelector('[data-kaspi]')?.getBoundingClientRect()
+    return { nav: !!document.querySelector('nav'), side: !!tariff && !!kaspi && kaspi.left > tariff.right && Math.abs(kaspi.top - tariff.top) < 120 }
   })
-  check('компьютер: меню слева и колонка не шире 700', col.nav && col.main > 0 && col.main <= 700, JSON.stringify(col))
+  check('компьютер: меню слева, тариф и перевод рядом (d13-3)', col.nav && col.side, JSON.stringify(col))
   await shot(t, 'pay-1280')
 
   // ── 2. владелец ────────────────────────────────────────────────────────────
@@ -261,6 +262,20 @@ async function run(browser, ids) {
     .then(() => true)
     .catch(() => false)
   check('у репетитора появился колокольчик', tBell)
+  // после первой оплаты всплывает подсказка подарка; в меню 240 она ложилась
+  // на строку «Уведомления» над подарком — ленту было не открыть (4г-2)
+  const hint = await t
+    .waitForSelector('nav [data-gift=hint]', { timeout: 10000 })
+    .then(() => true)
+    .catch(() => false)
+  const bellAt = await t.evaluate(() => {
+    const el = document.querySelector('nav button[aria-label^="Уведомления"]')
+    const r = el?.getBoundingClientRect()
+    const h = document.querySelector('nav [data-gift] [role=status]')?.getBoundingClientRect()
+    const free = !!r && r.width > 0 && el.contains(document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2))
+    return { free, bell: r ? [Math.round(r.top), Math.round(r.bottom)] : null, hint: h ? [Math.round(h.top), Math.round(h.bottom), Math.round(h.left)] : null }
+  })
+  check('подсказка подарка открыта, колокольчик в меню ею не закрыт', hint && bellAt.free, JSON.stringify(bellAt))
   await t.click('button[aria-label^="Уведомления"]').catch(() => {})
   check('в ленте «Оплата получена — Тариф действует до …»', (await waitText(t, 'Оплата получена')) && (await waitText(t, `Тариф действует до ${expect}`)))
   await shot(t, 'bell-1280')

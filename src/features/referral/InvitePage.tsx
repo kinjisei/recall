@@ -1,11 +1,13 @@
 // ============================================================================
 // «Пригласи коллегу» (роут /invite; PLAN.md Ф2.3; журнал п.16; макеты t8-2,
-// t8-3). Что получат оба, своя ссылка, «поделиться» в WhatsApp / Telegram /
-// системное «Ещё…», как увидит коллега, честный счётчик и три шага.
+// t8-3; компьютер — d13-1, d13-2). Что получат оба, своя ссылка,
+// «поделиться» в WhatsApp / Telegram / системное «Ещё…», как увидит коллега,
+// честный счётчик и три шага.
 //
-// Начисляет база (миграция 0006) — экран только показывает. Раскладка одна
-// на все ширины — колонка, как у «Как оплатить»: на компьютере ей ширина
-// колонки впору.
+// Начисляет база (миграция 0006) — экран только показывает. Телефон и
+// содержимое уже 936 — колонка по t8; шире — InviteDesk: «1 Твоя ссылка» и
+// «2 Отправь коллеге» слева, «3 Что получите оба» со счётчиком и «Как это
+// работает» справа.
 // ============================================================================
 import { BackButton } from '../../shared/ui/BackButton'
 import { Card } from '../../shared/ui/Card'
@@ -14,18 +16,19 @@ import { RowsSkeleton } from '../../shared/ui/Loading'
 import { AppLink } from '../../shared/ui/AppLink'
 import { IconHeart, IconSparkle, IconTeacher } from '../../shared/ui/icons'
 import { useAsyncData } from '../../shared/lib/useAsyncData'
-import { plural } from '../../shared/lib/plural'
 import { AppError } from '../../shared/api/errors'
 import { getMyPlan } from '../../lib/billing'
 import {
   loadMyReferral,
-  REFERRAL_BONUS_DAYS,
   TEACHER_PLANS,
   rewardShort,
   type ReferralStats,
   type TeacherPlanId,
 } from '../../domains/billing'
+import { useAsideSplit } from '../../shared/ui/layouts'
+import { InviteDesk } from './InviteDesk'
 import { InviteShare } from './InviteShare'
+import { HOW_STEPS, Pending } from './inviteBits'
 import { Ticket } from './Ticket'
 
 type InviteData = { kind: 'ready'; stats: ReferralStats; mine: TeacherPlanId | null } | { kind: 'not_teacher' }
@@ -45,27 +48,37 @@ async function loadInvite(): Promise<InviteData> {
 
 export function InvitePage() {
   const data = useAsyncData(loadInvite, [], 'Не удалось загрузить приглашения')
+  // компьютер (содержимое от 936) — d13-1, d13-2: шаги карточками в две колонки
+  const desk = useAsideSplit()
 
   return (
     <div className="flex flex-col gap-5">
-      <div>
-        <BackButton fallback="/teacher" />
-      </div>
-      <header className="flex items-start">
-        <h1 className="text-2xl font-medium tracking-tight">Пригласи коллегу</h1>
-        {/* немного игры — единственный экран, где она уместна (промпт t8) */}
-        <span aria-hidden className="relative ml-1 h-8 w-12 flex-none text-accent">
-          <IconSparkle size={15} className="absolute left-0 top-0" />
-          <IconSparkle size={9} className="absolute left-4 top-5 opacity-60" />
-          <IconSparkle size={12} className="absolute left-9 top-1 opacity-80" />
-        </span>
-      </header>
+      {desk ? (
+        <h1 className="min-h-10 text-2xl font-semibold tracking-tight">Пригласи коллегу</h1>
+      ) : (
+        <>
+          <div>
+            <BackButton fallback="/teacher" />
+          </div>
+          <header className="flex items-start">
+            <h1 className="text-2xl font-medium tracking-tight">Пригласи коллегу</h1>
+            {/* немного игры — единственный экран, где она уместна (промпт t8) */}
+            <span aria-hidden className="relative ml-1 h-8 w-12 flex-none text-accent">
+              <IconSparkle size={15} className="absolute left-0 top-0" />
+              <IconSparkle size={9} className="absolute left-4 top-5 opacity-60" />
+              <IconSparkle size={12} className="absolute left-9 top-1 opacity-80" />
+            </span>
+          </header>
+        </>
+      )}
       {data.error ? (
         <LoadError message={data.error} onRetry={data.reload} />
       ) : !data.data ? (
         <RowsSkeleton count={4} />
       ) : data.data.kind === 'not_teacher' ? (
         <NotTeacher />
+      ) : desk ? (
+        <InviteDesk stats={data.data.stats} mine={data.data.mine} />
       ) : (
         <Invite stats={data.data.stats} mine={data.data.mine} />
       )}
@@ -125,35 +138,17 @@ function Counter({ stats }: { stats: ReferralStats }) {
         <Tile label="Оплатили" value={String(stats.paid)} />
         <Tile label="Получено" value={got} good={got !== '0'} />
       </div>
-      {stats.pending > 0 && <Pending count={stats.pending} />}
+      {stats.pending > 0 && (
+        <div className="mt-2">
+          <Pending count={stats.pending} />
+        </div>
+      )}
     </section>
   )
 }
 
-/**
- * Коллеги оплатили, а тарифа репетитора у тебя ещё не было — подарки ждут и
- * добавятся к первой оплате (0006). Истёкший тариф база продлевает сразу,
- * поэтому здесь всегда «первой».
- */
-function Pending({ count }: { count: number }) {
-  return (
-    <p className="mt-2 text-note text-fg-muted" data-referral-pending>
-      {count === 1
-        ? 'Подарок за одного коллегу ждёт твоей первой оплаты тарифа — добавим его сами. '
-        : `Подарки за ${count} ${plural(count, 'коллегу', 'коллег', 'коллег')} ждут твоей первой оплаты тарифа — добавим их сами. `}
-      <AppLink to="/pay" className="font-medium text-accent-strong">
-        Как оплатить
-      </AppLink>
-    </p>
-  )
-}
-
 function HowItWorks() {
-  const steps = [
-    { title: 'Отправь ссылку коллеге' },
-    { title: 'Коллега регистрируется по ней', note: `и получает +${REFERRAL_BONUS_DAYS} дней пробного периода` },
-    { title: 'Коллега оплачивает первый месяц', note: 'а тебе — месяц к тарифу' },
-  ]
+  const steps = HOW_STEPS
   return (
     <section>
       <h2 className="mb-2 text-sm text-fg-muted">Как это работает</h2>

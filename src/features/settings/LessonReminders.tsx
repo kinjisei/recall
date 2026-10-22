@@ -21,6 +21,7 @@ import { useAsyncData } from '../../shared/lib/useAsyncData'
 import { Button } from '../../shared/ui/Button'
 import { IconInfo } from '../../shared/ui/icons'
 import { Switch } from '../../shared/ui/Switch'
+import { SettingsCard } from './settingsBits'
 
 async function loadSection() {
   const teachers = await loadMyLessonBalances()
@@ -90,13 +91,15 @@ export function LessonReminders() {
   }
 
   return (
-    <section data-lesson-reminders aria-labelledby="reminders-title" className="flex flex-col gap-2">
-      <h2 id="reminders-title" className="px-1 text-caption font-semibold uppercase tracking-wider text-fg-muted">
-        Уведомления
-      </h2>
-      <div className="flex flex-col gap-3 rounded-2xl border border-tint/[0.08] bg-surface p-4 shadow-card">
-        <Switch checked={on} onChange={(v) => void toggle(v)} label="Напоминать о скором уроке" hint="за час до начала" />
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-tint/[0.06] pt-3">
+    <div data-lesson-reminders className="contents">
+      <SettingsCard id="notifications" title="Уведомления">
+        <div className="rounded-control-sm bg-input px-3.5">
+          <Switch checked={on} onChange={(v) => void toggle(v)} label="Напоминать о скором уроке" hint="за час до начала" />
+        </div>
+        <p className="flex items-start gap-2 text-sm text-fg-secondary">
+          <IconInfo size={16} aria-hidden className="mt-0.5 flex-none text-fg-muted" />О переносе и отмене урока сообщим всегда
+        </p>
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line pt-3">
           <p className="min-w-0 flex-1 text-sm text-fg-secondary">{line.text}</p>
           {line.action && (
             <Button size="sm" variant={line.action === 'on' ? 'secondary' : 'ghost'} loading={busy} onClick={() => void switchDevice()}>
@@ -105,10 +108,7 @@ export function LessonReminders() {
           )}
         </div>
         {problem && <p className="text-sm text-danger-strong">{problem}</p>}
-      </div>
-      <p className="flex items-start gap-1.5 px-1 text-note text-fg-muted">
-        <IconInfo size={14} aria-hidden className="mt-0.5 flex-none" />О переносе и отмене урока сообщим всегда.
-      </p>
-    </section>
+      </SettingsCard>
+    </div>
   )
 }

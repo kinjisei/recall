@@ -47,6 +47,8 @@ export function ChoiceGroup<T extends string>({
   label,
   stretch = false,
   variant = 'chips',
+  filled = false,
+  pill = false,
   className = '',
 }: {
   options: ChoiceOption<T>[]
@@ -57,11 +59,19 @@ export function ChoiceGroup<T extends string>({
   /** Варианты делят ширину поровну (скорость, размер); иначе — по содержимому. */
   stretch?: boolean
   variant?: 'chips' | 'cards' | 'segment' | 'tiles'
+  /** Только cards: невыбранная — на подложке поля, без черты (тарифы «Как оплатить» на компьютере, d13-3). */
+  filled?: boolean
+  /** Только segment: капсула (`.seg3` макетов d14, u4 — скорость озвучки, размер текста); со stretch — на всю ширину поровну. */
+  pill?: boolean
   className?: string
 }) {
   if (variant === 'segment') {
     return (
-      <div role="radiogroup" aria-label={label} className={`inline-flex h-11 self-start rounded-xl bg-input ${className}`}>
+      <div
+        role="radiogroup"
+        aria-label={label}
+        className={`h-11 bg-input ${pill ? 'rounded-full' : 'rounded-xl'} ${stretch ? 'flex w-full' : 'inline-flex self-start'} ${className}`}
+      >
         {options.map((o) => {
           const on = o.id === value
           return (
@@ -71,13 +81,13 @@ export function ChoiceGroup<T extends string>({
               role="radio"
               aria-checked={on}
               onClick={() => onChange(o.id)}
-              className={`relative min-w-11 rounded-xl text-body tabular-nums ${o.label.length > 2 ? 'px-4' : 'px-2.5'} transition-colors duration-(--dur-1) ease-out ${
+              className={`relative min-w-11 text-body tabular-nums ${pill ? 'rounded-full' : 'rounded-xl'} ${stretch ? 'flex-1' : ''} ${o.label.length > 2 ? 'px-4' : 'px-2.5'} transition-colors duration-(--dur-1) ease-out ${
                 on ? 'font-semibold text-fg' : 'font-medium text-fg-muted hover:text-fg-secondary'
               }`}
             >
               {/* «таблетка» — внутри кнопки 44, а не кнопка 38 на подложке: цель касания — вся высота */}
-              {on && <span aria-hidden className="absolute inset-0.75 rounded-lg bg-segment shadow-segment" />}
-              <span className="relative">{o.label}</span>
+              {on && <span aria-hidden className={`absolute inset-0.75 bg-segment shadow-segment ${pill ? 'rounded-full' : 'rounded-lg'}`} />}
+              <span className={`relative whitespace-nowrap ${o.className ?? ''}`}>{o.label}</span>
             </button>
           )
         })}
@@ -132,7 +142,7 @@ export function ChoiceGroup<T extends string>({
               aria-checked={on}
               onClick={() => onChange(o.id)}
               className={`flex items-start gap-3 rounded-control p-3.5 text-left transition-colors duration-(--dur-1) ease-out ${
-                on ? 'bg-accent-soft inset-ring-2 inset-ring-focus' : 'inset-ring inset-ring-line active:bg-row-press'
+                on ? 'bg-accent-soft inset-ring-2 inset-ring-focus' : filled ? 'bg-input active:bg-row-press' : 'inset-ring inset-ring-line active:bg-row-press'
               }`}
             >
               {/* кружок как у плиток: выбранный — толстое кольцо цвета главной кнопки */}

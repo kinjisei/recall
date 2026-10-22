@@ -19,7 +19,7 @@ import { Bolt, BoltText } from '../../shared/ui/Bolt'
 import { buttonClass } from '../../shared/ui/Button'
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
+  return new Date(iso).toLocaleDateString('ru-RU', { timeZone: 'Asia/Almaty', day: 'numeric', month: 'long', year: 'numeric' })
 }
 
 function MyPlanBanner({ plan }: { plan: MyPlan }) {

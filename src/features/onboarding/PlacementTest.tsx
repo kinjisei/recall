@@ -19,8 +19,7 @@ import { shuffle } from '../../lib/random'
 import { setEsLevel } from '../../lib/esLevel'
 import { reportPlacementResult } from '../../lib/placement'
 import { markOnboarded } from '../../lib/onboarding'
-import { supabase } from '../../shared/api/supabase'
-import { invalidateProfile } from '../../lib/profile'
+import { updateMyProfile } from '../../lib/profile'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import type { AppLang, CEFRLevel, PlacementQuestion } from '../../types'
@@ -168,12 +167,8 @@ export function PlacementTest() {
         if (lang === 'es') {
           setEsLevel(level)
         } else if (user) {
-          // supabase-js не бросает на ошибке — ошибку берём из ответа, иначе
-          // сбой записи уровня прошёл бы молча (пользователь думает, что уровень
-          // сохранён, а его нет)
-          const { error } = await supabase.from('profiles').update({ level }).eq('id', user.id)
-          if (error) throw error
-          invalidateProfile() // иначе кэш (Учёба, игры, промпты) не увидит новый уровень
+          // бросает на сбое — иначе пользователь думал бы, что уровень сохранён
+          await updateMyProfile(user.id, { level })
         }
         // если тест назначал преподаватель — закрываем просьбу и отдаём ему
         // результат (по испанскому уровень иначе остался бы только на телефоне)

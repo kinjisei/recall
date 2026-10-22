@@ -16,7 +16,7 @@ export function WritingHistory({ attempts }: { attempts: WritingAttempt[] }) {
         История попыток ({attempts.length})
       </p>
       {attempts.map((a, i) => {
-        const when = a.at ? new Date(a.at).toLocaleDateString() : ''
+        const when = a.at ? new Date(a.at).toLocaleDateString('ru-RU', { timeZone: 'Asia/Almaty' }) : ''
         return (
           <div key={i} className="rounded-xl border border-tint/[0.08]">
             <button

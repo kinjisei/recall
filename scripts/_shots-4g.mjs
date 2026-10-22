@@ -141,3 +141,37 @@ export async function shotsLearn({ screen, sql, admin, must, t }) {
   await sql(`delete from public.conversations where user_id = '${t.id}'`)
   await screen(t.email, [{ name: 'learn-empty', path: '/learn', before: spanish, expect: /Моя учёба/, wait: /всё повторено/ }])
 }
+
+// 4г-2 (макеты d13, d14):
+//   invite          — «Пригласи коллегу» Мадины: приглашено 3, оплатил 1,
+//                     получен месяц (d13-1);
+//   invite-empty    — пока никого (d13-2);
+//   pay             — «Как оплатить»: Mini действует, тарифы, перевод (d13-3, d13-4);
+//   pay-sent        — после «Оплата отправлена» (d13-3б);
+//   settings        — Настройки репетитора во всю высоту (d14-1, d14-3);
+//   settings-student — Настройки Айгерим: с «Уведомлениями» (d14-2).
+
+/** «Пригласи коллегу» и «Как оплатить» (d13). */
+export async function shotsInvitePay({ screen, sql, t }) {
+  const ago = (d) => new Date(Date.now() - d * DAY).toISOString()
+  await sql(`insert into public.referrals (referrer_id, code, status, created_at) values
+    ('${t.id}', 'SHOTS', 'registered', '${ago(9)}'), ('${t.id}', 'SHOTS', 'registered', '${ago(3)}')`)
+  await sql(`insert into public.referrals (referrer_id, code, status, created_at, paid_at, referee_plan, rewarded_at, reward_plan, reward_months)
+    values ('${t.id}', 'SHOTS', 'rewarded', '${ago(20)}', '${ago(12)}', 'teacher_mini', '${ago(12)}', 'teacher_mini', 1)`)
+  await screen(t.email, [
+    { name: 'invite', path: '/invite', expect: /Пригласи коллегу[\s\S]*Приглашено/ },
+    { name: 'pay', path: '/pay', expect: /Перевод на Kaspi Gold[\s\S]*Оплата отправлена/ },
+  ])
+  await sql(`delete from public.referrals where referrer_id = '${t.id}'`)
+  await sql(`insert into public.payment_claims (user_id, plan, months, created_at) values ('${t.id}', 'teacher_mini', 1, now() - interval '5 minutes')`)
+  await screen(t.email, [
+    { name: 'invite-empty', path: '/invite', expect: /Пока никого/ },
+    { name: 'pay-sent', path: '/pay', expect: /Спасибо!/ },
+  ])
+}
+
+/** Настройки репетитора и ученика (d14): во всю высоту, как кадры. */
+export async function shotsSettings({ screen, t, a }) {
+  await screen(t.email, [{ name: 'settings', path: '/settings', expect: /Профиль[\s\S]*Уроки[\s\S]*Безопасность/, wait: /meet\.google\.com/, tall: 1890 }])
+  await screen(a.email, [{ name: 'settings-student', path: '/settings', expect: /Профиль[\s\S]*Уведомления[\s\S]*Безопасность/, tall: 1890 }])
+}

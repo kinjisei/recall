@@ -96,7 +96,7 @@ export function PrintSheet({
         )}
 
         <p className="mt-8 border-t border-line pt-3 text-xs text-fg-muted">
-          Recall · {new Date().toLocaleDateString('ru-RU')}
+          Recall · {new Date().toLocaleDateString('ru-RU', { timeZone: 'Asia/Almaty' })}
         </p>
       </div>
     </div>,

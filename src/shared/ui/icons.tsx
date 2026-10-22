@@ -220,6 +220,7 @@ export const IconPencil = icon(
 export const IconPhone = icon(
   '<path d="M5.5 4h3l1.5 4-2 1.3a10 10 0 0 0 6.7 6.7l1.3-2 4 1.5v3a1.5 1.5 0 0 1-1.6 1.5A15.5 15.5 0 0 1 4 5.6 1.5 1.5 0 0 1 5.5 4Z"></path>',
 )
+export const IconPlay = icon('<path d="M8 5.5v13l10.5-6.5z"></path>')
 export const IconPlus = icon(
   '<path d="M12 5v14M5 12h14"></path>',
 )
