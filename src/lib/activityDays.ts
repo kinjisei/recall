@@ -8,22 +8,27 @@
 // разойдясь — обесценить оба: преподаватель перестаёт верить не тому числу,
 // которое ошиблось, а экрану целиком.
 //
-// Здесь же живёт localDay: он был скопирован в lib/teacher и lib/diagnostics
-// слово в слово. Копии одинаковых функций не расходятся ровно до первой правки.
+// Здесь же серия (streakFrom): её считали три копии — две в lib/activity и
+// одна в lib/teacher. Копии одинаковых функций не расходятся ровно до первой
+// правки.
 //
-// ⚠️ День — МЕСТНЫЙ, как его видит ученик. Сервер пишет activity_log.day с
-// клиента именно так (log_activity сверяет ±1 сутки), и сравнивать надо в той
-// же системе: перевод в UTC сдвинул бы границу дня и «сегодня» у части часовых
-// поясов становилось бы «вчера».
+// ⚠️ День — по Алматы (shared/lib/almaty; решение владельца 22.10.2026), как
+// энергия и уроки, а не по часам устройства: учитель видит серию ученика в
+// тех же сутках, что и сам ученик. activity_log.day пишет клиент
+// (log_activity сверяет ±1 сутки от даты сервера) — тоже по Алматы.
 // ============================================================================
+import { almatyToday } from '../shared/lib/almaty.ts'
 
-/** YYYY-MM-DD в местном времени со сдвигом в днях. */
-export function localDay(offsetDays = 0): string {
-  const d = new Date()
-  d.setDate(d.getDate() + offsetDays)
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const dd = String(d.getDate()).padStart(2, '0')
-  return `${d.getFullYear()}-${m}-${dd}`
+/** Серия дней подряд по множеству дней с занятиями: вчерашняя ещё жива. */
+export function streakFrom(days: Set<string>): number {
+  let offset = days.has(almatyToday(0)) ? 0 : days.has(almatyToday(-1)) ? -1 : null
+  if (offset === null) return 0
+  let streak = 0
+  while (days.has(almatyToday(offset))) {
+    streak++
+    offset--
+  }
+  return streak
 }
 
 /**
@@ -35,7 +40,7 @@ export function localDay(offsetDays = 0): string {
  * частота важнее суммы, и преподавателю нужна именно она.
  */
 export function activeDaysIn(days: Iterable<string>, window: number): number {
-  const from = localDay(-(Math.max(1, window) - 1))
+  const from = almatyToday(-(Math.max(1, window) - 1))
   const seen = new Set<string>()
   for (const d of days) if (d >= from) seen.add(d)
   return seen.size
@@ -47,7 +52,7 @@ export function activeDaysIn(days: Iterable<string>, window: number): number {
  */
 export function daysSinceActive(days: Set<string>): number | null {
   for (let i = 0; i <= 60; i++) {
-    if (days.has(localDay(-i))) return i
+    if (days.has(almatyToday(-i))) return i
   }
   return null
 }

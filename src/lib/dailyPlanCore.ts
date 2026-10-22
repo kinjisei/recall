@@ -9,6 +9,8 @@
 // продлевает любое одно занятие — идеальный день только бонус сверху.
 // buildTodayPlan — чистая функция, гоняется scripts/test-dailyplan.mjs.
 // ============================================================================
+import { almatyToday } from '../shared/lib/almaty.ts'
+import { isoWeekday } from '../shared/lib/days.ts'
 import type { ActivityType } from '../types'
 
 /** Пункты, которые учитель может включить в план (слова всегда включены). */
@@ -46,9 +48,12 @@ const item = (kind: PlanKind): TodayPlanItem => ({ key: kind, ...KIND_ITEMS[kind
 export interface PlanContext {
   pendingAssignments: number
   activeQuests: number
-  /** 0–6 (Date.getDay()). */
+  /** 0–6, воскресенье — 0 (как Date.getDay()); сегодня — todayWeekday(). */
   weekday: number
 }
+
+/** День недели сегодня по Алматы, 0–6 с воскресенья — для ротации пунктов плана. */
+export const todayWeekday = (): number => isoWeekday(almatyToday()) % 7
 
 /**
  * План на сегодня. cfg=null — умный дефолт из 3 пунктов; с настройкой

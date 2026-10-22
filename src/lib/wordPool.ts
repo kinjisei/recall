@@ -12,6 +12,8 @@ import { supabase, currentUserId } from '../shared/api/supabase'
 import { getDeckIds } from './cards'
 import { getEsLevel } from './esLevel'
 import { getProfile } from './profile'
+import { almatyToday } from '../shared/lib/almaty'
+import { dayNumber } from '../shared/lib/days'
 import { readJson, writeJson } from '../shared/lib/storage'
 import type { AppLang, Card, ReviewState } from '../types'
 
@@ -223,8 +225,9 @@ interface WodCache {
   word: PoolItem | null
 }
 
+/** Номер сегодняшнего дня по Алматы: слово дня меняется в полночь, а не в 5 утра (по UTC). */
 function todayNumber(): number {
-  return Math.floor(Date.now() / 86_400_000)
+  return dayNumber(almatyToday())
 }
 
 /** Слово дня из кэша на сегодня (синхронно, без загрузки словаря).

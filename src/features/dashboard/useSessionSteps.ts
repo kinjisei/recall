@@ -8,7 +8,7 @@
 // Не пришло — план без настроек учителя: занятие всё равно начнётся, просто
 // по умолчанию (не говорим «план 0» и не прячем кнопку).
 // ============================================================================
-import { buildTodayPlan, getMyDailyPlanConfig, sessionSteps, type TodayPlanItem } from '../../lib/dailyPlan'
+import { buildTodayPlan, getMyDailyPlanConfig, sessionSteps, todayWeekday, type TodayPlanItem } from '../../lib/dailyPlan'
 import { countDueCards } from '../../lib/fsrs'
 import { listMyQuests } from '../../lib/quests'
 import { useAsyncData } from '../../shared/lib/useAsyncData'
@@ -25,6 +25,6 @@ export function useSessionSteps(lang: AppLang, doneToday: ReadonlySet<ActivityTy
   const inputs = useAsyncData(() => loadInputs(lang), [lang])
   if (inputs.loading || !doneToday) return null
   const d = inputs.data
-  const plan = buildTodayPlan(d?.cfg ?? null, { pendingAssignments: d?.pending ?? 0, activeQuests: d?.quests ?? 0, weekday: new Date().getDay() })
+  const plan = buildTodayPlan(d?.cfg ?? null, { pendingAssignments: d?.pending ?? 0, activeQuests: d?.quests ?? 0, weekday: todayWeekday() })
   return sessionSteps(plan, doneToday, { noReview: d?.due === 0 })
 }

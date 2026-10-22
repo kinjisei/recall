@@ -8,7 +8,8 @@
 // модуль не должен тянуть supabase: тот читает import.meta.env и вне Vite
 // просто не грузится.
 // ============================================================================
-import { MONTH_SHORT } from '../shared/lib/days.ts'
+import { almatyDay } from '../shared/lib/almaty.ts'
+import { isoWeekday, MONTH_SHORT } from '../shared/lib/days.ts'
 import type { AppLang } from '../types'
 
 /** Чем закрывается пункт. 'free' — единственный, который сервер измерить не может. */
@@ -156,12 +157,13 @@ const msLeft = (dueAt: string): number => new Date(dueAt).getTime() - Date.now()
 export function dueShort(dueAt: string): string {
   const ms = msLeft(dueAt)
   if (ms < 0) return 'просрочена'
-  const due = new Date(dueAt)
+  // день срока — по Алматы, как он и задан (конец дня 23:59 по Алматы)
+  const due = almatyDay(new Date(dueAt))
   const days = Math.ceil(ms / 86_400_000)
   if (days === 0) return 'сегодня'
   if (days === 1) return 'до завтра'
-  if (days <= 6) return `до ${WEEKDAY_TO[due.getDay()]}`
-  return `до ${due.getDate()} ${MONTH_SHORT[due.getMonth()]}`
+  if (days <= 6) return `до ${WEEKDAY_TO[isoWeekday(due) % 7]}`
+  return `до ${Number(due.slice(8, 10))} ${MONTH_SHORT[Number(due.slice(5, 7)) - 1]}`
 }
 
 /**

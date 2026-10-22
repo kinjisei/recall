@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom'
 import { countDueCards } from '../../lib/fsrs'
 import { startGuidedRoute } from '../../lib/guided'
 import type { HomeActivity } from '../../lib/activity'
+import { almatyInstant, almatyToday } from '../../shared/lib/almaty'
 import { plural } from '../../shared/lib/plural'
 import type { AsyncData } from '../../shared/lib/useAsyncData'
 import { useAsyncData } from '../../shared/lib/useAsyncData'
@@ -86,13 +87,8 @@ function Heading({ title, note }: { title: string; note: string }) {
   )
 }
 
-/** Конец завтрашнего дня по часам устройства: «следующие слова — завтра», если к нему что-то подойдёт. */
-function endOfTomorrow(): Date {
-  const d = new Date()
-  d.setDate(d.getDate() + 2)
-  d.setHours(0, 0, 0, 0)
-  return d
-}
+/** Конец завтрашнего дня по Алматы: «следующие слова — завтра», если к нему что-то подойдёт. */
+const endOfTomorrow = (): Date => almatyInstant(almatyToday(2))
 
 /** «К повторению: 9» с «Открыть повторение» или «На сегодня всё повторено» (d12 `.rep12`). */
 function ReviewRow({ lang }: { lang: AppLang }) {

@@ -15,8 +15,9 @@ import {
   REGULARITY_WINDOW,
   activeDaysIn,
   daysSinceActive,
-  localDay,
+  streakFrom,
 } from './activityDays'
+import { almatyToday } from '../shared/lib/almaty'
 import type { AppLang, Card, Deck, Profile } from '../types'
 
 /** Сводка по ученику для экрана преподавателя. */
@@ -42,19 +43,6 @@ export interface StudentInfo {
 // lib/activityDays — их же читает диагностическая карта. Копия здесь молча
 // разошлась бы с карточкой, а два несогласных числа на одном экране хуже, чем
 // одно неточное.
-
-/** Стрик по множеству дней с активностью (вчерашняя серия ещё жива). */
-function streakFromDays(days: Set<string>): number {
-  const start = days.has(localDay(0)) ? 0 : days.has(localDay(-1)) ? -1 : null
-  if (start === null) return 0
-  let streak = 0
-  let offset = start
-  while (days.has(localDay(offset))) {
-    streak++
-    offset--
-  }
-  return streak
-}
 
 /**
  * Код-приглашение текущего преподавателя (генерирует при первом вызове).
@@ -231,7 +219,7 @@ export async function getMyStudents(): Promise<StudentInfo[]> {
       .from('activity_log')
       .select('user_id, day, items_done')
       .in('user_id', ids)
-      .gte('day', localDay(-60)),
+      .gte('day', almatyToday(-60)),
     supabase.from('deck_assignments').select('deck_id, student_id').in('student_id', ids),
   ])
   if (profilesRes.error) throw profilesRes.error
@@ -239,7 +227,7 @@ export async function getMyStudents(): Promise<StudentInfo[]> {
   if (assignRes.error) throw assignRes.error
 
   const activity = activityRes.data ?? []
-  const weekFrom = localDay(-6)
+  const weekFrom = almatyToday(-6)
 
   // .in() возвращает строки в произвольном порядке — восстанавливаем порядок
   // привязки, иначе «первые N покрыты тарифом» на экране будут не те люди
@@ -254,8 +242,8 @@ export async function getMyStudents(): Promise<StudentInfo[]> {
       .reduce((n, a) => n + ((a.items_done as number) ?? 0), 0)
     return {
       profile,
-      streak: streakFromDays(days),
-      doneToday: days.has(localDay(0)),
+      streak: streakFrom(days),
+      doneToday: days.has(almatyToday(0)),
       weekItems,
       daysSinceActive: daysSinceActive(days),
       activeDays7: activeDaysIn(days, REGULARITY_WINDOW),

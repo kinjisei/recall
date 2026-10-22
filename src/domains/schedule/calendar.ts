@@ -5,60 +5,16 @@
 //
 // ⚠️ Время урока — всегда по Алматы (архитектура §18), а не по поясу
 // телефона: репетитор в поездке видит те же «19:00», что и ученик дома. Поэтому
-// здесь нет ни одного `getHours()` — только Intl с SCHEDULE_TZ.
+// здесь нет ни одного `getHours()` — только shared/lib/almaty.
 // ============================================================================
-import { addDays, daysBetween, formatTime, isoWeekday, MONTH_GENITIVE, MONTH_SHORT, monthTitle, parseTime, WEEKDAY_SHORT } from '../../shared/lib/days.ts'
+import { almatyDay, almatyInstant, almatyMinutes, almatyTime } from '../../shared/lib/almaty.ts'
+import { addDays, daysBetween, isoWeekday, MONTH_GENITIVE, MONTH_SHORT, monthTitle, WEEKDAY_SHORT } from '../../shared/lib/days.ts'
 import { plural } from '../../shared/lib/plural.ts'
-import { almatyDay, SCHEDULE_TZ, type Lesson, type LessonParticipant } from './model.ts'
+import type { Lesson, LessonParticipant } from './model.ts'
 
-// ---- момент ↔ день и минуты по Алматы ---------------------------------------------
+// ---- момент ↔ день и минуты по Алматы — общие на всё приложение (shared/lib/almaty)
+export { almatyInstant, almatyMinutes, almatyTime }
 
-const PARTS = new Intl.DateTimeFormat('en-US', {
-  timeZone: SCHEDULE_TZ,
-  hourCycle: 'h23',
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-})
-
-/** Части момента по Алматы: год, месяц, день, час, минута. */
-function zoned(t: number): Record<'year' | 'month' | 'day' | 'hour' | 'minute', number> {
-  const p = Object.fromEntries(PARTS.formatToParts(new Date(t)).map((x) => [x.type, Number(x.value)]))
-  return { year: p.year ?? 0, month: p.month ?? 1, day: p.day ?? 1, hour: p.hour ?? 0, minute: p.minute ?? 0 }
-}
-
-/** Смещение пояса расписания от UTC в момент t, в минутах (Алматы: +300). */
-function zoneOffset(t: number): number {
-  const p = zoned(t)
-  const local = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute)
-  return Math.round((local - Math.floor(t / 60_000) * 60_000) / 60_000)
-}
-
-/** «День, ЧЧ:ММ по Алматы» → момент. */
-export function almatyInstant(day: string, time: string): Date {
-  const [h, m] = parseTime(time)
-  const naive = Date.parse(`${day}T00:00:00Z`) + (h * 60 + m) * 60_000
-  // пояс без перехода на летнее время — хватает одной поправки; вторая —
-  // на случай, если правила пояса когда-нибудь снова поменяют
-  let t = naive - zoneOffset(naive) * 60_000
-  t = naive - zoneOffset(t) * 60_000
-  return new Date(t)
-}
-
-/** Минуты от полуночи по Алматы: «19:30» → 1170. */
-export function almatyMinutes(at: string | Date): number {
-  const p = zoned(new Date(at).getTime())
-  return p.hour * 60 + p.minute
-}
-
-/** «19:00» по Алматы. */
-export function almatyTime(at: string | Date): string {
-  return formatTime(0, almatyMinutes(at))
-}
-
-/** День урока по Алматы. */
 export const lessonDay = (l: Pick<Lesson, 'startsAt'>): string => almatyDay(new Date(l.startsAt))
 
 /** Границы дня по Алматы: [полночь, следующая полночь). */

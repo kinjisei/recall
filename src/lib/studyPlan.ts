@@ -11,6 +11,8 @@ import type { Tables } from '../shared/api/database.types'
 import { chat } from '../shared/api/ai'
 import { getStudentDiagnostics } from './diagnostics'
 import { diagnosticsBrief, grammarCatalog } from './diagnosticsBrief'
+import { almatyToday } from '../shared/lib/almaty'
+import { daysBetween } from '../shared/lib/days'
 import { readRaw, writeRaw } from '../shared/lib/storage'
 import type { AppLang, PlanItem, PlanWeek, StudyPlan } from '../types'
 
@@ -247,8 +249,8 @@ export async function getMyPlans(): Promise<StudyPlan[]> {
 
 /** Номер текущей недели программы: 1-based, обрезан границами плана. */
 export function currentWeekIndex(plan: StudyPlan): number {
-  const start = new Date(plan.start_day + 'T00:00:00')
-  const diffDays = Math.floor((Date.now() - start.getTime()) / 86400000)
+  // дни — по Алматы: неделя программы меняется в полночь, а не по часам устройства
+  const diffDays = daysBetween(plan.start_day, almatyToday())
   const week = Math.floor(diffDays / 7) + 1
   return Math.min(Math.max(week, 1), plan.weeks.length)
 }

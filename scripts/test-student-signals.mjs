@@ -19,7 +19,8 @@ import {
   needAttention,
   studentSignal,
 } from '../src/lib/studentSignals.ts'
-import { activeDaysIn, localDay, regularityLabel } from '../src/lib/activityDays.ts'
+import { activeDaysIn, regularityLabel, streakFrom } from '../src/lib/activityDays.ts'
+import { almatyToday as day } from '../src/shared/lib/almaty.ts'
 import { dueLabel, homeworkProgress } from '../src/lib/homeworkView.ts'
 
 let pass = 0
@@ -66,11 +67,24 @@ const hw = (items, dueInDays = 3) => ({
 // ---------------------------------------------------------------------------
 console.log('\n— регулярность —')
 
-const days = [localDay(0), localDay(-1), localDay(-3), localDay(-6), localDay(-20)]
+const days = [day(0), day(-1), day(-3), day(-6), day(-20)]
 check('считаем только последнюю неделю', activeDaysIn(days, 7) === 4, `${activeDaysIn(days, 7)}`)
-check('повторный день не удваивается', activeDaysIn([localDay(0), localDay(0)], 7) === 1)
+check('повторный день не удваивается', activeDaysIn([day(0), day(0)], 7) === 1)
 check('пустая история — ноль', activeDaysIn([], 7) === 0)
 check('подпись «5 из 7»', regularityLabel(5) === '5 из 7', regularityLabel(5))
+
+// серия — одна функция на Главную, прогресс и карточку учителя (была в трёх копиях)
+console.log('\n— серия —')
+const streaks = [
+  [day(0), day(-1), day(-2), day(-4)],
+  [day(-1), day(-2)],
+  [day(-2), day(-3)],
+  [],
+].map((d) => streakFrom(new Set(d)))
+check('сегодня и два дня до — 3; со вчера — 2; позавчера оборвалась — 0; пусто — 0', streaks.join() === '3,2,0,0', streaks.join())
+// «сегодня» — по Алматы, а не по часам компьютера (на Windows TZ не меняется — сверяем с Intl)
+const almatyNow = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Almaty' }).format(new Date())
+check('«сегодня» — день по Алматы', day(0) === almatyNow, `${day(0)} / ${almatyNow}`)
 
 console.log('\n— пропал ли ученик —')
 check('не заходил 7 дней — пропал', isLost(student('a', { daysSince: 7 })))

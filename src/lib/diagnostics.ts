@@ -13,7 +13,8 @@ import { finalScore, scoreSamples } from './assignmentScore'
 import { computeDynamics, type MonthDynamics } from './dynamics'
 // ⚠️ Дни занятий считаются ОДНОЙ функцией на весь продукт: карточка ученика и
 // строка в списке показывают одно и то же число, и разойтись они не могут.
-import { REGULARITY_WINDOW, activeDaysIn, localDay } from './activityDays'
+import { REGULARITY_WINDOW, activeDaysIn } from './activityDays'
+import { almatyToday } from '../shared/lib/almaty'
 import type {
   AppLang,
   GrammarQuest,
@@ -96,7 +97,7 @@ export async function getStudentDiagnostics(studentId: string): Promise<StudentD
       .from('activity_log')
       .select('day, type')
       .eq('user_id', studentId)
-      .gte('day', localDay(-59)), // 60 дней: хватает и на «за 14», и на динамику
+      .gte('day', almatyToday(-59)), // 60 дней: хватает и на «за 14», и на динамику
   ])
 
   // --- слова -----------------------------------------------------------
@@ -191,7 +192,7 @@ export async function getStudentDiagnostics(studentId: string): Promise<StudentD
   if (activityRes.error) throw activityRes.error
   const activityRows = (activityRes.data ?? []) as { day: string; type: string }[]
   const days = [...new Set(activityRows.map((r) => r.day))].sort()
-  const from14 = localDay(-13)
+  const from14 = almatyToday(-13)
 
   // --- динамика «сейчас vs 30 дней назад» -----------------------------------
   const dynamics = computeDynamics({

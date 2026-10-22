@@ -26,7 +26,7 @@ import {
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { logActivity } from '../../lib/activity'
-import { buildTodayPlan, isPerfectDay, sessionSteps } from '../../lib/dailyPlan'
+import { buildTodayPlan, isPerfectDay, sessionSteps, todayWeekday } from '../../lib/dailyPlan'
 import { getEsLevel } from '../../lib/esLevel'
 import { dueShort, homeworkProgress } from '../../lib/homework'
 import { plural } from '../../shared/lib/plural'
@@ -83,7 +83,7 @@ export function DashboardPage() {
     ? buildTodayPlan(planInputs.dailyCfg, {
         pendingAssignments: home?.assignments?.pending ?? 0,
         activeQuests: planInputs.activeQuests,
-        weekday: new Date().getDay(),
+        weekday: todayWeekday(),
       })
     : null
   const perfect = todayPlan !== null && isPerfectDay(todayPlan, doneToday)
@@ -118,7 +118,7 @@ export function DashboardPage() {
   const doneCount = rows?.filter((r) => r.done).length ?? 0
   // «Начать занятие» — по плану дня: несделанные пункты; план не пришёл —
   // план без настроек учителя; повторять нечего — без шага слов (журнал п.76 (10))
-  const steps = sessionSteps(todayPlan ?? buildTodayPlan(null, { pendingAssignments: 0, activeQuests: 0, weekday: new Date().getDay() }), doneToday, {
+  const steps = sessionSteps(todayPlan ?? buildTodayPlan(null, { pendingAssignments: 0, activeQuests: 0, weekday: todayWeekday() }), doneToday, {
     noReview: emptyDeck || dueCount === 0,
   })
 

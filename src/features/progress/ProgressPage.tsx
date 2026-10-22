@@ -22,6 +22,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { supabase, currentUserId } from '../../shared/api/supabase'
 import { getBestStreak, getStreak, getWeek, type WeekDay } from '../../lib/activity'
+import { almatyInstant, almatyToday } from '../../shared/lib/almaty'
 import { settleAll } from '../../shared/lib/settleAll'
 import { useShellUp } from '../../shared/lib/shellUp'
 import { LoadError } from '../../shared/ui/LoadError'
@@ -97,10 +98,8 @@ async function loadMetrics(lang: 'en' | 'es'): Promise<Omit<Metrics, 'best'>> {
   // только с горизонтом до конца завтрашнего дня. Считать по одной таблице
   // review_states нельзя: совсем новые карточки в неё ещё не попали, и число
   // выходило меньше, чем на Главной.
-  const until = new Date()
-  until.setDate(until.getDate() + 1)
-  until.setHours(23, 59, 59, 999)
-  const tomorrow = await countDueCards(lang, until)
+  // конец завтрашнего дня по Алматы — как «К повторению» на «Моей учёбе»
+  const tomorrow = await countDueCards(lang, almatyInstant(almatyToday(2)))
 
   return { learned, accuracy, tomorrow }
 }

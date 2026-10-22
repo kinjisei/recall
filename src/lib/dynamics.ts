@@ -12,6 +12,7 @@
 //                   интервал ≈ момент «выучено»).
 // Чистый модуль без клиента БД — гоняется мини-тестом scripts/test-dynamics.mjs.
 // ============================================================================
+import { almatyInstant } from '../shared/lib/almaty.ts'
 
 export interface MetricDelta {
   /** Значение за последние 30 дней (null — данных не было вовсе). */
@@ -51,6 +52,9 @@ export interface DynamicsInput {
 
 const DAY = 86_400_000
 
+/** День 'YYYY-MM-DD' → начало дня по Алматы (а не по часам устройства). */
+const dayStart = (day: string): string => almatyInstant(day).toISOString()
+
 /** В какое окно попадает дата: 0 — последние 30 дней, 1 — предыдущие 30. */
 function windowOf(iso: string, today: Date): 0 | 1 | null {
   const t = new Date(iso).getTime()
@@ -81,7 +85,7 @@ export function computeDynamics(input: DynamicsInput): MonthDynamics {
   const prevDays = new Set<string>()
   for (const day of input.activityDays) {
     // day — YYYY-MM-DD в местном времени; полночь того дня
-    const w = windowOf(day + 'T00:00:00', today)
+    const w = windowOf(dayStart(day), today)
     if (w === 0) nowDays.add(day)
     else if (w === 1) prevDays.add(day)
   }
@@ -106,7 +110,7 @@ export function computeDynamics(input: DynamicsInput): MonthDynamics {
     avgScore: { now: avg(nowScores), prev: avg(prevScores) },
     newMistakes: countBy(input.mistakeDates, today),
     wordsAdded: countBy(input.cardCreatedDates, today),
-    perfectDays: countBy((input.perfectDays ?? []).map((d) => d + 'T00:00:00'), today),
+    perfectDays: countBy((input.perfectDays ?? []).map(dayStart), today),
     learnedRecently,
   }
 }

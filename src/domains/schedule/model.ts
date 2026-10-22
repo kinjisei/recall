@@ -5,6 +5,7 @@
 // test-schedule.mjs (по тексту миграции) и check-schedule.mjs (по базе).
 // ============================================================================
 import type { CardStatus } from '../students'
+import { almatyDay, APP_TZ } from '../../shared/lib/almaty.ts'
 import { addDays, dayNumber, dayString, isoWeekday } from '../../shared/lib/days.ts'
 
 export const LESSON_KINDS = ['individual', 'group', 'trial'] as const
@@ -30,7 +31,7 @@ export const HORIZON_DAYS = 84
 /** Самый длинный период одного чтения (get_schedule, get_my_lessons). */
 export const RANGE_MAX_DAYS = 100
 /** Часовой пояс расписания — фиксированный (архитектура §18). */
-export const SCHEDULE_TZ = 'Asia/Almaty'
+export const SCHEDULE_TZ = APP_TZ
 
 export interface LessonParticipant {
   cardId: string
@@ -179,10 +180,8 @@ export function lessonPhase(lesson: Pick<Lesson, 'status' | 'startsAt' | 'endsAt
 // (shared/lib/days — общее с календарём месяца).
 export { addDays, isoWeekday }
 
-/** Сегодня (или день момента) по Алматы. */
-export function almatyDay(at: Date): string {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: SCHEDULE_TZ }).format(at)
-}
+/** Сегодня (или день момента) по Алматы — общее на всё приложение. */
+export { almatyDay }
 
 export type SeriesRule = Pick<Series, 'weekdays' | 'everyWeeks' | 'startsOn' | 'endsOn'>
 

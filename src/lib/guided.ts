@@ -14,7 +14,7 @@
 // просто забылась.
 // ============================================================================
 
-import { buildTodayPlan, type TodayPlanItem } from './dailyPlanCore'
+import { buildTodayPlan, todayWeekday, type TodayPlanItem } from './dailyPlanCore'
 import type { ActivityType, AppLang } from '../types'
 
 const KEY = 'recall.guided'
@@ -87,7 +87,7 @@ function steps(): Step[] {
 
 /** План на сегодня без настроек учителя — когда экран не знает плана (онбординг). */
 function defaultPlan(): TodayPlanItem[] {
-  return buildTodayPlan(null, { pendingAssignments: 0, activeQuests: 0, weekday: new Date().getDay() })
+  return buildTodayPlan(null, { pendingAssignments: 0, activeQuests: 0, weekday: todayWeekday() })
 }
 
 /** Начать сессию с первого шага; вернуть, куда вести. */

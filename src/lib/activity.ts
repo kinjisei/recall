@@ -5,21 +5,16 @@
 //   getTodayTypes() — какие типы занятий уже сделаны сегодня
 //   getWeek()       — 7 дней (пн→вс) для полосок стрика и графика прогресса
 //   getBestStreak() — самая длинная серия за всю историю
-// День считается в МЕСТНОМ времени пользователя, а не в UTC, чтобы вечерние
-// занятия не «уезжали» на другую дату.
+// День — по Алматы (shared/lib/almaty), как энергия и уроки, а не по часам
+// устройства и не по UTC: вечерние занятия не «уезжают» на другую дату, а
+// учитель видит те же сутки, что ученик.
 // ============================================================================
 import { supabase, currentUserId } from '../shared/api/supabase'
+import { almatyToday } from '../shared/lib/almaty'
+import { addDays, daysBetween, weekStart, WEEKDAY_SHORT } from '../shared/lib/days'
 import type { ActivityType } from '../types'
+import { streakFrom } from './activityDays'
 import { noteGuidedActivity } from './guided'
-
-/** YYYY-MM-DD в местном времени (offsetDays: 0 — сегодня, -1 — вчера…). */
-function localDay(offsetDays = 0): string {
-  const d = new Date()
-  d.setDate(d.getDate() + offsetDays)
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const dd = String(d.getDate()).padStart(2, '0')
-  return `${d.getFullYear()}-${m}-${dd}`
-}
 
 /**
  * Засчитывает занятие: одна строка на (пользователь, день, тип),
@@ -41,7 +36,7 @@ export async function logActivity(
     // своей даты — подделать историю стрика произвольными датами нельзя.
     const { error } = await supabase.rpc('log_activity', {
       p_type: type,
-      p_day: localDay(),
+      p_day: almatyToday(),
       p_items: itemsDone,
       p_sec: durationSec,
     })
@@ -68,17 +63,7 @@ export async function getStreak(): Promise<number> {
     .limit(400)
   if (error) throw error
 
-  const days = new Set((data ?? []).map((r) => r.day as string))
-  const start = days.has(localDay(0)) ? 0 : days.has(localDay(-1)) ? -1 : null
-  if (start === null) return 0
-
-  let streak = 0
-  let offset = start
-  while (days.has(localDay(offset))) {
-    streak++
-    offset--
-  }
-  return streak
+  return streakFrom(new Set((data ?? []).map((r) => r.day as string)))
 }
 
 /** День недели: активность и объём (для полосок на Главной и графика прогресса). */
@@ -91,21 +76,14 @@ export interface WeekDay {
   isToday: boolean
 }
 
-const WEEKDAY_LABELS = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб']
-
 /** Скелет недели пн→вс (7 дней, все неактивны) — общий для getWeek и loadHomeActivity. */
 function weekSkeleton(): WeekDay[] {
-  const today = new Date()
-  const shiftToMonday = (today.getDay() + 6) % 7 // пн первым (вс=0 в JS)
-  const days: WeekDay[] = []
-  for (let i = 0; i < 7; i++) {
-    const day = localDay(i - shiftToMonday)
-    const d = new Date()
-    d.setDate(d.getDate() + (i - shiftToMonday))
-    // getDay() всегда 0–6, WEEKDAY_LABELS длиной 7 — элемент есть
-    days.push({ day, label: WEEKDAY_LABELS[d.getDay()]!, active: false, items: 0, minutes: 0, isToday: day === localDay() })
-  }
-  return days
+  const today = almatyToday()
+  const monday = weekStart(today)
+  return WEEKDAY_SHORT.map((label, i) => {
+    const day = addDays(monday, i)
+    return { day, label, active: false, items: 0, minutes: 0, isToday: day === today }
+  })
 }
 
 /** Заполняет скелет недели строками активности (day/items_done/duration_sec). */
@@ -164,20 +142,11 @@ export async function loadHomeActivity(): Promise<HomeActivity> {
   if (error) throw error
   const rows = (data ?? []) as { day: string; type: string; items_done: number; duration_sec: number }[]
 
-  const daySet = new Set(rows.map((r) => r.day))
-  const start = daySet.has(localDay(0)) ? 0 : daySet.has(localDay(-1)) ? -1 : null
-  let streak = 0
-  if (start !== null) {
-    let offset = start
-    while (daySet.has(localDay(offset))) {
-      streak++
-      offset--
-    }
-  }
+  const streak = streakFrom(new Set(rows.map((r) => r.day)))
 
   fillWeek(week, rows)
 
-  const today = localDay()
+  const today = almatyToday()
   const todayTypes = new Set(rows.filter((r) => r.day === today).map((r) => r.type as ActivityType))
 
   return { streak, week, todayTypes }
@@ -199,14 +168,11 @@ export async function getBestStreak(): Promise<number> {
   const days = [...new Set((data ?? []).map((r) => r.day as string))].sort()
   let best = 0
   let run = 0
-  let prev: Date | null = null
+  let prev: string | null = null
   for (const day of days) {
-    const d = new Date(day + 'T00:00:00')
-    const isNext =
-      prev !== null && Math.round((d.getTime() - prev.getTime()) / 86_400_000) === 1
-    run = isNext ? run + 1 : 1
+    run = prev !== null && daysBetween(prev, day) === 1 ? run + 1 : 1
     if (run > best) best = run
-    prev = d
+    prev = day
   }
   return best
 }
@@ -220,7 +186,7 @@ export async function getTodayTypes(): Promise<Set<ActivityType>> {
     .from('activity_log')
     .select('type')
     .eq('user_id', userId)
-    .eq('day', localDay())
+    .eq('day', almatyToday())
   if (error) throw error
 
   return new Set((data ?? []).map((r) => r.type as ActivityType))

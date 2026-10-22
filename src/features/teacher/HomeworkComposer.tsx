@@ -26,6 +26,7 @@ import { countableItems, MAX_ITEMS } from '../../lib/homeworkRules'
 import { suggestHomework, type SuggestedItem } from '../../lib/homeworkSuggest'
 import { DraftRestored } from '../../shared/ui/DraftRestored'
 import { useComposerDraft } from './useComposerDraft'
+import { almatyInstant, almatyToday } from '../../shared/lib/almaty'
 import { plural } from '../../shared/lib/plural'
 import type { AppLang } from '../../types'
 
@@ -67,15 +68,16 @@ const STARTER: SuggestedItem[] = [
   { kind: 'writing', title: 'Написать короткий текст', target: 1, why: '' },
 ]
 
-function isoDatePlus(days: number): string {
-  const d = new Date()
-  d.setDate(d.getDate() + days)
-  return d.toISOString().slice(0, 10)
-}
+// день — по Алматы: через toISOString он был по Гринвичу, и до 5 утра
+// «сегодня» в поле срока было вчерашним числом
+const isoDatePlus = (days: number): string => almatyToday(days)
+
+/** Срок домашки — конец выбранного дня по Алматы. */
+const dueEnd = (iso: string): Date => almatyInstant(iso, '23:59')
 
 /** Дней до срока — от него зависит объём набора, поэтому считаем честно. */
 function daysUntil(iso: string): number {
-  const diff = new Date(`${iso}T23:59:00`).getTime() - Date.now()
+  const diff = dueEnd(iso).getTime() - Date.now()
   return Math.max(1, Math.round(diff / 86_400_000))
 }
 
@@ -142,7 +144,7 @@ export function HomeworkComposer({
       await createHomework({
         studentId,
         lang,
-        due: new Date(`${due}T23:59:00`),
+        due: dueEnd(due),
         items: items.map((i) => ({
           kind: i.kind,
           title: i.title.trim(),

@@ -88,7 +88,7 @@
 | `useAnswerDraft.ts`, `useComposerDraft.ts`, `useReviewDraft.ts`, `useWritingTaskDraft.ts` | черновики: ответы домашки, сборка домашки, правки к разбору, письменное задание (Ф1.14) |
 | `src/lib/reviewQueue.ts` | очередь проверки: счётчики, списки сданных работ и писем, когда пришла последняя проверенная — одни условия на число меню и список хаба |
 | `src/lib/studentSignals.ts` | подписи и порядок строк списка учеников |
-| `src/lib/activityDays.ts` | дни с занятиями за окно (`activeDaysIn`) |
+| `src/lib/activityDays.ts` | дни с занятиями за окно (`activeDaysIn`) и серия (`streakFrom`) — одни на карточку учителя и экраны ученика; день по Алматы (`shared/lib/almaty`), учитель видит те же сутки, что ученик |
 | `src/lib/wordChecks.ts` | слова ученика со статусом (`getStudentWords`), перепроверка |
 | `src/lib/diagnosticsBrief.ts` | сводка диагностики для промптов — общая с программой обучения; сводка нескольких учеников для одного материала |
 | `src/lib/materialExercises.ts` | отсев несобираемых упражнений |

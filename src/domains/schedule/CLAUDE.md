@@ -110,7 +110,11 @@
 - **Время урока — по Алматы, не по поясу телефона**: в `calendar.ts`,
   `editor.ts`, `status.ts`, `model.ts`, `ledger.ts`, `student.ts` (и в
   текстах уведомлений `notifications/lessonText.ts`) нет методов местного времени
-  (`getHours`, `toLocale…`) — только Intl с `SCHEDULE_TZ`. Компьютер
+  (`getHours`, `toLocale…`) — только Intl с `SCHEDULE_TZ`. Переход «момент ↔
+  день и время по Алматы» (`almatyDay`, `almatyInstant`, `almatyMinutes`,
+  `almatyTime`) с 22.10.2026 живёт в `shared/lib/almaty` — им же считают
+  серию, план дня и срок домашки; `calendar.ts` и `model.ts` отдают его
+  под прежними именами. Компьютер
   владельца в UTC+5, как Алматы, и ошибку «взяли местное время» значения
   здесь не покажут — держит сторож по тексту в `test-schedule-screen.mjs`.
   Во всём `src/` дата и время на экране тоже по Алматы: `dateAt`,
