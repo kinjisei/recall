@@ -27,6 +27,8 @@ interface AuthContextValue {
     displayName?: string,
   ) => Promise<{ error?: string }>
   signOut: () => Promise<void>
+  /** Выход после «Удалить аккаунт»: только это устройство, без запроса к серверу. */
+  signOutDeleted: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
@@ -87,12 +89,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error?.message }
   }
 
-  const signOut = async () => {
+  const endSession = async (scope: 'global' | 'local') => {
     // Уведомления этого устройства — до выхода, пока есть вход: на общем
     // телефоне уроки прежнего человека не должны приходить следующему (Ф2.9).
     // Без связи выход не ждёт дольше 3 с — браузер отписан всё равно.
     await withTimeout(forgetPushOnThisDevice(), 3000).catch(() => {})
-    await supabase.auth.signOut()
+    // после «Удалить аккаунт» (local) сервер такого человека уже не знает:
+    // ждать его ответа нечего, а на медленной связи экран завис бы на
+    // удалённом аккаунте
+    await supabase.auth.signOut({ scope })
     // данные аккаунта в localStorage (уровень, «Мои тексты», банки ошибок, кэши)
     // не должны пережить выход — иначе на общем устройстве их увидит следующий
     clearUserLocalData()
@@ -107,7 +112,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         offline,
         signIn,
         signUp,
-        signOut,
+        signOut: () => endSession('global'),
+        signOutDeleted: () => endSession('local'),
       }}
     >
       {children}

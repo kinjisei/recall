@@ -4,12 +4,12 @@
 // в аккаунте, «Сохранить»), «Оформление» (цвет и режим этого устройства,
 // shared/ui/theme), у репетитора «Уроки» (ссылка на урок по умолчанию), у
 // ученика с преподавателем «Уведомления», «Озвучка» (скорость и
-// «Проверить»), «Текст в чтении» (размер и пример строки), «Безопасность» и
-// «Что-то не работает или непонятно?». Скорость и размер хранятся на
+// «Проверить»), «Текст в чтении» (размер и пример строки), «Безопасность»,
+// «Данные» (выгрузка и удаление аккаунта, DataSection) и «Что-то не работает
+// или непонятно?». Скорость и размер хранятся на
 // устройстве (lib/settings.ts) и сохраняются сразу.
 // На компьютере (содержимое от 936) — разделы до 640 и оглавление 220 справа,
 // оно держится при прокрутке и подсвечивает раздел на экране (MainAside nav).
-// Раздела «Данные» (выгрузка, удаление аккаунта) пока нет — PLAN.md 4г-2б.
 // ============================================================================
 import { useEffect, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
@@ -28,6 +28,7 @@ import { RowsSkeleton } from '../../shared/ui/Loading'
 import { Field } from '../../shared/ui/TextField'
 import { ThemePicker } from '../../shared/ui/ThemePicker'
 import type { CEFRLevel, Profile } from '../../types'
+import { DataSection } from './DataSection'
 import { HelpSection } from './HelpSection'
 import { LessonLinkSection } from './LessonLinkSection'
 import { LessonReminders } from './LessonReminders'
@@ -135,6 +136,7 @@ export function SettingsPage() {
 
       {/* форма со своим состоянием и проверкой текущего пароля — отдельным файлом */}
       <SecuritySection />
+      <DataSection teacher={profile?.role === 'teacher'} />
 
       <HelpSection />
     </div>

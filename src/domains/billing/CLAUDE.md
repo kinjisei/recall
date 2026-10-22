@@ -274,5 +274,5 @@
 
 - **Файлы:** `api.ts`, `bands.ts`, `index.ts`, `model.ts`, `referral.ts`
 - **RPC:** `admin_dismiss_payment_claim`, `admin_payment_claims`, `admin_recent_payments`, `confirm_payment`, `dismiss_referral_hint`, `get_my_referral`, `get_pay_info`, `referral_hint`, `report_payment_sent`
-- **Кто использует (импортом):** `app`, `features/admin`, `features/billing`, `features/landing`, `features/onboarding`, `features/referral`, `features/schedule`, `lib`
+- **Кто использует (импортом):** `app`, `features/admin`, `features/billing`, `features/landing`, `features/onboarding`, `features/referral`, `features/schedule`, `features/settings`, `lib`
 <!-- generated:end -->

@@ -9,7 +9,7 @@ import { IconGift } from '../../shared/ui/icons'
 import { track } from '../../lib/analytics'
 import { AppLink } from '../../shared/ui/AppLink'
 import { Button } from '../../shared/ui/Button'
-import { AuroraBg, EyeIcon, InputGroup, inputClass } from './authUi'
+import { AccountDeletedNote, AuroraBg, EyeIcon, InputGroup, inputClass } from './authUi'
 
 /**
  * Экран входа/регистрации Recall — тёмная версия «Nocturne».
@@ -123,6 +123,7 @@ export function LoginPage() {
           </div>
 
           <div className="flex flex-col gap-2">
+            <AccountDeletedNote />
             <h2 className="text-3xl font-medium tracking-tight">
               {sentTo ? 'Проверьте почту' : signup ? 'Создать новый профиль' : 'С возвращением'}
             </h2>

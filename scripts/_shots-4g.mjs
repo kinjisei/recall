@@ -172,6 +172,6 @@ export async function shotsInvitePay({ screen, sql, t }) {
 
 /** Настройки репетитора и ученика (d14): во всю высоту, как кадры. */
 export async function shotsSettings({ screen, t, a }) {
-  await screen(t.email, [{ name: 'settings', path: '/settings', expect: /Профиль[\s\S]*Уроки[\s\S]*Безопасность/, wait: /meet\.google\.com/, tall: 1890 }])
-  await screen(a.email, [{ name: 'settings-student', path: '/settings', expect: /Профиль[\s\S]*Уведомления[\s\S]*Безопасность/, tall: 1890 }])
+  await screen(t.email, [{ name: 'settings', path: '/settings', expect: /Профиль[\s\S]*Уроки[\s\S]*Безопасность[\s\S]*Данные/, wait: /meet\.google\.com/, tall: 1890 }])
+  await screen(a.email, [{ name: 'settings-student', path: '/settings', expect: /Профиль[\s\S]*Уведомления[\s\S]*Безопасность[\s\S]*Данные/, tall: 1890 }])
 }

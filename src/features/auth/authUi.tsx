@@ -6,7 +6,8 @@
 // она разъедется при первой же правке фона, и человек увидит два разных
 // приложения по дороге к одному действию.
 // ============================================================================
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
+import { ACCOUNT_DELETED_KEY } from '../../domains/account'
 import { BrandMark } from '../../shared/ui/Brand'
 import { IconEye } from '../../shared/ui/icons'
 import { Button } from '../../shared/ui/Button'
@@ -36,6 +37,35 @@ export function AuroraBg() {
  * Hero-панель со ступеньками остаётся только на самом входе — здесь человек
  * решает одну задачу и уходит.
  */
+/**
+ * «Аккаунт удалён» на экране входа — один раз, сразу после удаления в
+ * Настройках (отметка в sessionStorage). Текст безличный: экран входа — на
+ * «вы», а пришёл человек из приложения, где «ты».
+ */
+export function AccountDeletedNote() {
+  const [shown] = useState(() => {
+    try {
+      return sessionStorage.getItem(ACCOUNT_DELETED_KEY) === '1'
+    } catch {
+      return false
+    }
+  })
+  // стереть — в эффекте: инициализатор состояния в строгом режиме зовётся дважды
+  useEffect(() => {
+    try {
+      sessionStorage.removeItem(ACCOUNT_DELETED_KEY)
+    } catch {
+      // нет хранилища — нечего и стирать
+    }
+  }, [])
+  if (!shown) return null
+  return (
+    <p role="status" className="rounded-control-sm bg-success-soft px-3.5 py-2.5 text-sm text-success-soft-fg" data-account-deleted>
+      Аккаунт удалён, данные стёрты.
+    </p>
+  )
+}
+
 export function AuthCard({
   title,
   subtitle,

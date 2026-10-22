@@ -11,7 +11,10 @@
 // их не пропускает линтер, правило no-alert): системное окно браузера не
 // знает темы, у PWA выглядит чужим, а prompt путал «Отмену» с пустым ответом.
 // Поле (`field`) — для короткого текста к действию: фокус в поле, Enter —
-// действие; ответ — ask(): текст или null, если отказались.
+// действие; ответ — ask(): текст или null, если отказались. Поле пароля —
+// `type: 'password'`. `check` — проверка до закрытия («Удалить аккаунт»:
+// пароль и само удаление): пока идёт — кнопка с загрузкой, отменить нельзя;
+// вернула текст — окно остаётся, текст под полем; null — закрываемся с «да».
 //
 // Экрану удобнее спросить и дождаться ответа, как с window.confirm:
 //   const { confirm, dialog } = useConfirm()
@@ -34,6 +37,8 @@ export interface ConfirmOptions {
   cancel?: string
   /** Действие что-то уничтожает — сплошной красный. */
   danger?: boolean
+  /** Проверка перед «да»: текст ошибки — окно остаётся и показывает его; null — готово. */
+  check?: (text: string) => Promise<string | null>
 }
 
 /** Поле под текстом диалога: подпись над ним всегда, подсказка — в плейсхолдере. */
@@ -41,6 +46,8 @@ export interface ConfirmField {
   label: string
   placeholder?: string
   maxLength?: number
+  type?: 'text' | 'password'
+  autoComplete?: string
 }
 
 export function ConfirmDialog({
@@ -50,21 +57,39 @@ export function ConfirmDialog({
   cancel = 'Отмена',
   danger = true,
   field,
+  check,
   onAnswer,
 }: ConfirmOptions & { field?: ConfirmField; onAnswer: (ok: boolean, text: string) => void }) {
   const id = useId()
   const answer = useRef(false)
   const [text, setText] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  // пока идёт проверка, отказаться нельзя: удаление уже в пути
+  const busyRef = useRef(false)
   // ответ читается по концу ухода — из ref, а не из замыкания с прошлым текстом
   const typed = useRef('')
   const { leaving, leave } = useLeave(() => onAnswer(answer.current, typed.current.trim()), LEAVE_MS.menu)
   const reply = useCallback(
     (ok: boolean) => {
+      if (busyRef.current) return
       answer.current = ok
       leave()
     },
     [leave],
   )
+  const submit = async () => {
+    if (!check) return reply(true)
+    if (busyRef.current) return
+    busyRef.current = true
+    setBusy(true)
+    setError(null)
+    const problem = await check(typed.current).catch((e: unknown) => (e instanceof Error ? e.message : 'Не получилось — попробуй ещё раз.'))
+    busyRef.current = false
+    setBusy(false)
+    if (problem) setError(problem)
+    else reply(true)
+  }
   const cancelRef = useRef<HTMLButtonElement>(null)
   const withField = !!field
   useEffect(() => {
@@ -95,7 +120,7 @@ export function ConfirmDialog({
           // портал: в дереве React submit всплыл бы к форме экрана под диалогом
           e.preventDefault()
           e.stopPropagation()
-          reply(true)
+          void submit()
         }}
       >
         <h2 id={`${id}-t`} className="text-xl font-semibold text-fg">
@@ -112,19 +137,29 @@ export function ConfirmDialog({
             label={field.label}
             placeholder={field.placeholder}
             maxLength={field.maxLength}
+            type={field.type ?? 'text'}
+            autoComplete={field.autoComplete}
             value={text}
+            error={error ?? undefined}
+            showError
             onChange={(e) => {
               setText(e.target.value)
               typed.current = e.target.value
+              setError(null)
             }}
             className="mt-4"
           />
         )}
+        {error && !field && (
+          <p role="alert" className="mt-3 text-sm text-danger-strong">
+            {error}
+          </p>
+        )}
         <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button ref={cancelRef} type="button" variant="secondary" onClick={() => reply(false)}>
+          <Button ref={cancelRef} type="button" variant="secondary" disabled={busy} onClick={() => reply(false)}>
             {cancel}
           </Button>
-          <Button type="submit" variant={danger ? 'danger-solid' : 'primary'}>
+          <Button type="submit" loading={busy} variant={danger ? 'danger-solid' : 'primary'}>
             {action}
           </Button>
         </div>

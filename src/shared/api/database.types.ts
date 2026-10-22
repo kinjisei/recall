@@ -2295,6 +2295,7 @@ export type Database = {
         Returns: boolean
       }
       delete_grammar_quest: { Args: { p_id: string }; Returns: undefined }
+      delete_my_account: { Args: never; Returns: undefined }
       delete_push_subscription: {
         Args: { p_endpoint: string }
         Returns: undefined
@@ -2309,6 +2310,7 @@ export type Database = {
       energy_source: { Args: { uid: string }; Returns: Record<string, unknown> }
       ensure_invite_code: { Args: never; Returns: string }
       ensure_personal_code: { Args: { p_user: string }; Returns: string }
+      export_my_data: { Args: never; Returns: Json }
       finish_material_review: {
         Args: { p_id: string; p_review: Json }
         Returns: undefined
