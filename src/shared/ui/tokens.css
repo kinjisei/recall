@@ -281,6 +281,16 @@
   --text-display--line-height: 1;
   --text-display--letter-spacing: -0.02em;
   --text-display--font-weight: 700;
+  /* лендинг (d15): заголовок первого экрана 44 и 48 на 1440, заголовок секции 32 */
+  --text-headline: 2.75rem;
+  --text-headline--line-height: 1.14;
+  --text-headline--letter-spacing: -0.025em;
+  --text-headline-wide: 3rem;
+  --text-headline-wide--line-height: 1.14;
+  --text-headline-wide--letter-spacing: -0.025em;
+  --text-section: 2rem;
+  --text-section--line-height: 1.2;
+  --text-section--letter-spacing: -0.02em;
 
   /* --- Движение (лист s4, «Движение»): только transform и opacity. Что
      выехало снизу — уходит вниз, панель справа — вправо, меню — обратно к
@@ -339,6 +349,9 @@
   --container-reading-split: 57rem; /* 912 — перевод сбоку от текста */
   --container-home-split: 58.5rem; /* 936 — Главная + правая колонка */
   --container-exercise-sides: 70rem; /* 1120 — поля упражнения: прогресс и клавиши */
+  /* лендинг меряет себя сам (контейнер `landing`): гостю он во всю ширину, вошедшему — в рамке с меню */
+  --container-landing-split: 75rem; /* 1200 — первый экран в две колонки, «Что внутри» в четыре (d15); в рамке с меню на 1280 — одна */
+  --container-landing-wide: 85rem; /* 1360 — лендинг на 1440: заголовок 48, снимок 680 (d15-3) */
 }
 
 /* Переменные ТЕМЫ (не цвета): тени и сила затемнения под шторкой. Тёмная —

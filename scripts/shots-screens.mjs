@@ -49,11 +49,8 @@
  *   writing-new — «Новое письмо» панелью, вопрос придумал AI (d9-2; вопрос —
  *                 черновиком, AI не зовётся);
  *   guide       — методичка, прокручена до раздела 2 (d9-3), снимок окном.
- * Заход 4г-1 — тест уровня и программа (d11), «Моя учёба» (d12): экраны и
- * данные — `_shots-4g.mjs` (placement, placement-empty, program-form,
- * program-draft, program-saved, program-student, learn, learn-empty).
- * Заход 4г-2 — «Пригласи коллегу», «Как оплатить» (d13), Настройки (d14):
- * `_shots-4g.mjs` (invite, invite-empty, pay, pay-sent, settings, settings-student).
+ * Заходы 4г (d11–d15) — экраны и данные в `_shots-4g.mjs`: тест уровня, программа, «Моя учёба»,
+ * «Пригласи коллегу», «Как оплатить», Настройки, лендинг (гость — без входа: `screen(null, …)`).
  * Аудит у них — по шторке или диалогу (`audit`), а не по <main> под
  * затемнением; снимок — ровно окном (`overlay`), как кадры t5-2 и d2-2.
  * Ширины 390 и 1280 — в четырёх вариантах вида («Сумерки» и «Закат» ×
@@ -63,7 +60,7 @@
  * красная строка в итоге. Телефон снимается окном во всю высоту страницы.
  *
  * Запуск: npm run dev:test, затем node scripts/shots-screens.mjs [папка]
- * [--only home|students|cancel|tasks|materials|wizard|writing|program|learn|invite|settings] [--name экран,экран] (по умолчанию shots-screens/,
+ * [--only home|students|cancel|tasks|materials|wizard|writing|program|learn|invite|settings|landing] [--name экран,экран] (по умолчанию shots-screens/,
  * все экраны; --name — только эти снимки, для быстрой сверки). ~10 мин.
  */
 import { spawn } from 'node:child_process'
@@ -74,7 +71,7 @@ import { APP_URL } from './_env.mjs'
 import { PASS, admin, must, sql, studio } from './_seed-studio.mjs'
 import { settleAnimations, settledScreenshot, waitForData } from './_shots.mjs'
 import { auditPage } from './_ux-audit-page.mjs'
-import { shotsInvitePay, shotsLearn, shotsProgram, shotsSettings } from './_shots-4g.mjs'
+import { shotsInvitePay, shotsLanding, shotsLearn, shotsProgram, shotsSettings } from './_shots-4g.mjs'
 
 if (process.argv.includes('--prod')) {
   console.error('Снимки заводят аккаунты — только тестовая база (npm run dev:test).')
@@ -190,7 +187,7 @@ async function shoot(page, name, path, width, expect, looks, { before, prepare, 
 async function screen(email, shots) {
   for (const width of [390, 1280, 1440]) {
     const page = await newPage(width)
-    await signIn(page, email)
+    await (email ? signIn(page, email) : page.goto(APP_URL + '/teachers', { waitUntil: 'networkidle2' }))
     for (const s of shots) {
       if ((s.wide && width < 600) || (NAMES && !NAMES.includes(s.name))) continue
       await shoot(page, s.name, s.path, width, s.expect, width === 1440 ? LOOKS.slice(0, 1) : LOOKS, s)
@@ -423,6 +420,7 @@ try {
     console.log('── Настройки')
     await shotsSettings({ screen, t, a })
   }
+  if (!ONLY || ONLY === 'landing') await shotsLanding({ screen, t }) // лендинг (d15): гость и в рамке у репетитора
   if (!ONLY || ONLY === 'home') {
     const word = /Слово дня/
     console.log('── Главная ученицы')

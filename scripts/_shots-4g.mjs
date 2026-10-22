@@ -175,3 +175,21 @@ export async function shotsSettings({ screen, t, a }) {
   await screen(t.email, [{ name: 'settings', path: '/settings', expect: /Профиль[\s\S]*Уроки[\s\S]*Безопасность[\s\S]*Данные/, wait: /meet\.google\.com/, tall: 1890 }])
   await screen(a.email, [{ name: 'settings-student', path: '/settings', expect: /Профиль[\s\S]*Уведомления[\s\S]*Безопасность[\s\S]*Данные/, tall: 1890 }])
 }
+
+/**
+ * Лендинг (d15): гость — вся страница (d15-2), на 1440 — первый экран (d15-3);
+ * после прокрутки мимо первого экрана в шапке — главная кнопка (снимок окном);
+ * вошедший репетитор — тот же лендинг в рамке с меню.
+ */
+export async function shotsLanding({ screen, t }) {
+  const expect = /Расписание, оплаты и домашка/
+  const scroll = async (page) => {
+    await page.evaluate(() => window.scrollTo(0, 1100))
+    await new Promise((r) => setTimeout(r, 700))
+  }
+  await screen(null, [
+    { name: 'landing', path: '/teachers', expect },
+    { name: 'landing-scrolled', path: '/teachers', expect, overlay: true, prepare: scroll },
+  ])
+  await screen(t.email, [{ name: 'landing-shell', path: '/teachers', expect, wide: true }])
+}
