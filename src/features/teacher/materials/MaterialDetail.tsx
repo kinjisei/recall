@@ -21,6 +21,7 @@ import type { Material, MaterialAssignment } from '../../../types'
 import { PrintSheet } from '../PrintSheet'
 import { DetailHead, IssuedLine, MaterialBody, StudentRow } from './detailParts'
 import { materialKind, materialWords } from './LibraryList'
+import { ErrorText } from '../../../shared/ui/ErrorText'
 
 export function MaterialDetail({
   material,
@@ -173,7 +174,7 @@ export function MaterialDetail({
             })}
           </div>
         )}
-        {error && <p className="mt-2 text-sm text-danger-strong">{error}</p>}
+        {error && <ErrorText className="mt-2">{error}</ErrorText>}
       </section>
 
       <div className="flex flex-wrap gap-2">

@@ -29,6 +29,7 @@ import { useComposerDraft } from './useComposerDraft'
 import { almatyInstant, almatyToday } from '../../shared/lib/almaty'
 import { plural } from '../../shared/lib/plural'
 import type { AppLang } from '../../types'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 /** Через сколько дней срок по умолчанию: неделя — обычный шаг между уроками. */
 const DEFAULT_DAYS = 7
@@ -348,9 +349,9 @@ export function HomeworkComposer({
           />
 
           {error && (
-            <p role="alert" className="mt-3 text-sm text-danger-strong">
+            <ErrorText className="mt-3">
               {error}
-            </p>
+            </ErrorText>
           )}
         </div>
 

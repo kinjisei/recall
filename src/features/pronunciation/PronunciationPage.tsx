@@ -6,16 +6,7 @@ import { Button } from '../../shared/ui/Button'
 import { RoundResult } from '../../components/RoundResult'
 import { GuidedDone } from '../dashboard'
 import { celebrate } from '../../shared/ui/Confetti'
-import {
-  IconMic,
-  IconStop,
-  IconSpinner,
-  IconSpeaker,
-  IconSpeakerSlow,
-  IconBadgeCheck,
-  IconHeadphones,
-  IconRefresh,
-} from '../../shared/ui/icons'
+import { IconBadgeCheck, IconHeadphones, IconMic, IconRefresh, IconSpeaker, IconSpeakerSlow, IconSpinner, IconStop } from '../../shared/ui/icons'
 import { supabase } from '../../shared/api/supabase'
 import { getDeckIds } from '../../lib/cards'
 import { getUserLevel } from '../../lib/level'
@@ -30,6 +21,7 @@ import type { AppLang } from '../../types'
 import { Loading } from '../../shared/ui/Loading'
 import { HowItWorks } from '../../shared/ui/HowItWorks'
 import { HOW_IT_WORKS } from '../../data/howItWorks'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 /** Фраза для тренировки; hint — русский перевод, level — уровень CEFR. */
 interface Phrase {
@@ -421,7 +413,7 @@ export function PronunciationPage() {
         </Card>
       )}
 
-      {error && <p className="text-sm text-danger-strong">{error}</p>}
+      {error && <ErrorText>{error}</ErrorText>}
 
       {/* распорка: прижимает микрофон и кнопки к низу экрана */}
       <div className="flex-1" />

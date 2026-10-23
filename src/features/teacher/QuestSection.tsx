@@ -23,6 +23,7 @@ import type { AppLang, GrammarQuest } from '../../types'
 import { RowsSkeleton } from '../../shared/ui/Loading'
 import { FORM_HINTS, questTopicHint } from './formHints'
 import { InfoBox, Pill, SectionCard, SectionFooter } from './sectionBits'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 const LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1'] as const
 const LANGS: { id: AppLang; label: string }[] = [
@@ -165,7 +166,7 @@ export function QuestSection({ studentId, studentName }: { studentId: string; st
         >
           <Slider value={target} min={3} max={30} onChange={setTarget} label="Верных ответов для зачёта" />
         </Field>
-        {formError && <p className="text-sm text-danger-strong">{formError}</p>}
+        {formError && <ErrorText>{formError}</ErrorText>}
       </SectionCard>
 
       <SectionFooter text={`Квест придёт ${firstName(studentName)} в приложение`}>

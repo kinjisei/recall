@@ -15,6 +15,7 @@ import { LoadError } from '../../shared/ui/LoadError'
 import { RowsSkeleton } from '../../shared/ui/Loading'
 import type { StudyPlan } from '../../types'
 import { PlanView } from './PlanView'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 async function loadPlans(): Promise<{ plans: StudyPlan[]; marks: Map<string, PlanMarks> }> {
   const plans = await getMyPlans()
@@ -72,9 +73,9 @@ export function ProgramPage() {
         <>
           <p className="text-body text-fg-secondary">Пункт готов — нажми на него: преподаватель увидит галочку.</p>
           {failed && (
-            <p role="alert" className="text-sm text-danger-strong">
+            <ErrorText>
               {failed}
-            </p>
+            </ErrorText>
           )}
           {plans.map((plan) => {
             const week = currentWeekIndex(plan)

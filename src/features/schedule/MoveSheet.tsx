@@ -41,6 +41,7 @@ import { CHOICE_LABEL, LessonWho, NotifyLine } from './LessonParts'
 import type { Done } from './types'
 import { useDayLessons, useLessonsAhead } from './useScheduleData'
 import { WhenFields } from './WhenFields'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 export function MoveSheet({
   lesson,
@@ -166,9 +167,9 @@ export function MoveSheet({
         )}
         <NotifyLine lesson={lesson} reached={reached} />
         {error && (
-          <p role="alert" className="text-sm text-danger-soft-fg">
+          <ErrorText>
             {error}
-          </p>
+          </ErrorText>
         )}
       </div>
       <SheetFooter>

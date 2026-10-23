@@ -25,6 +25,7 @@ import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 
 import { createPortal } from 'react-dom'
 import { LEAVE_MS, useLeave } from '../lib/motion'
 import { Button } from './Button'
+import { ErrorText } from './ErrorText'
 import { TextField } from './TextField'
 
 export interface ConfirmOptions {
@@ -150,11 +151,7 @@ export function ConfirmDialog({
             className="mt-4"
           />
         )}
-        {error && !field && (
-          <p role="alert" className="mt-3 text-sm text-danger-strong">
-            {error}
-          </p>
-        )}
+        {error && !field && <ErrorText className="mt-3">{error}</ErrorText>}
         <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button ref={cancelRef} type="button" variant="secondary" disabled={busy} onClick={() => reply(false)}>
             {cancel}

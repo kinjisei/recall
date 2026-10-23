@@ -27,6 +27,7 @@ import { Loading } from '../../shared/ui/Loading'
 import { useAsyncData } from '../../shared/lib/useAsyncData'
 import { useShellUp } from '../../shared/lib/shellUp'
 import { LoadError } from '../../shared/ui/LoadError'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 const LEVELS_BY_LANG: Record<AppLang, CEFRLevel[]> = {
   es: ['A1', 'A2', 'B1', 'B2'],
@@ -198,9 +199,9 @@ export function PlacementTest() {
           </p>
         </Card>
         {saveError && (
-          <p className="text-center text-sm text-danger-strong">
+          <ErrorText className="text-center">
             Не удалось сохранить — проверь интернет и нажми ещё раз.
-          </p>
+          </ErrorText>
         )}
         <Button loading={saving} onClick={save}>
           Сохранить уровень

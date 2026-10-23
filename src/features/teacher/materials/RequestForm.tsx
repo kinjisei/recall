@@ -34,6 +34,7 @@ import { DraftRestored } from '../../../shared/ui/DraftRestored'
 import { FieldLabel, FormCard, Hint, LANG_NAME, Summary, WizardTop, audienceItems, gensAfter, materialLine } from './wizardBits'
 import type { StudentLevels } from './useStudentLevels'
 import { WordChips, splitWords } from './WordChips'
+import { ErrorText } from '../../../shared/ui/ErrorText'
 
 /** Черновик заявки — его стирает и MaterialsSection, когда материал сохранён. */
 export const REQUEST_DRAFT = 'material-request'
@@ -154,7 +155,7 @@ export function RequestForm({
         </>
       }
     >
-      {error && <p className="text-sm text-danger-strong">{error}</p>}
+      {error && <ErrorText>{error}</ErrorText>}
       <Button className="w-full" onClick={own ? submitOwn : submit} loading={busy} disabled={!ready}>
         {own ? 'Составить упражнения →' : 'Новый план →'}
       </Button>

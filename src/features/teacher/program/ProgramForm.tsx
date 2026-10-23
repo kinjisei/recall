@@ -25,6 +25,7 @@ import type { AppLang } from '../../../types'
 import { PlanView } from '../../program'
 import { SectionCard, SectionFooter } from '../sectionBits'
 import { initialProgramForm, programDraftKey, type ProgramForm as Form } from './programDraft'
+import { ErrorText } from '../../../shared/ui/ErrorText'
 
 const LANGS: { id: AppLang; label: string }[] = [
   { id: 'en', label: 'EN' },
@@ -95,9 +96,9 @@ export function ProgramForm({
 
   const showDraft = preview && !editing
   const error = err && (
-    <p role="alert" className="px-1 text-sm text-danger-strong">
+    <ErrorText className="px-1">
       {err}
-    </p>
+    </ErrorText>
   )
 
   return (

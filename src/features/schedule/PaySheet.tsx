@@ -14,6 +14,7 @@ import { DatePicker } from '../../shared/ui/DatePicker'
 import { FieldButton } from '../../shared/ui/FieldButton'
 import { IconArrowRight, IconCalendar, IconClose } from '../../shared/ui/icons'
 import { Sheet, SHEET_BODY } from '../../shared/ui/Sheet'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 type Choice = '4' | '8' | '12' | 'own'
 const signed = (n: number) => (n < 0 ? `−${-n}` : String(n))
@@ -125,9 +126,9 @@ export function PaySheet({
           </p>
         )}
         {error && (
-          <p role="alert" className="text-sm text-danger-soft-fg">
+          <ErrorText>
             {error}
-          </p>
+          </ErrorText>
         )}
         <Button className="w-full" onClick={() => void save()} disabled={!valid} loading={busy}>
           Отметить

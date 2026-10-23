@@ -29,6 +29,7 @@ import type { StudentLevels } from './useStudentLevels'
 import { FieldLabel, FormCard, Summary, WizardTop, audienceItems, gensAfter, materialLine } from './wizardBits'
 import { WordChips, splitWords } from './WordChips'
 import { TextSkeleton, WritingAside } from './textBits'
+import { ErrorText } from '../../../shared/ui/ErrorText'
 
 const KIND: Record<string, string> = { comprehension: 'Понимание текста', grammar: 'Грамматика', vocab: 'Словарь' }
 const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase()
@@ -179,7 +180,7 @@ export function PlanScreen({
         </>
       }
     >
-      {error && <p className="text-sm text-danger-strong">{error}</p>}
+      {error && <ErrorText>{error}</ErrorText>}
       <Button className="w-full" onClick={() => void generate()} loading={generating} disabled={busy !== null}>
         Новый текст →
       </Button>

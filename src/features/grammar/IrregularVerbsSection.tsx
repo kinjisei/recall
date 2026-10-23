@@ -366,7 +366,7 @@ function Trainer({ groups }: { groups: IrregularGroup[] }) {
             className={inputCls(partOk)}
           />
           {checked && (!pastOk || !partOk) && (
-            <p className="text-sm font-medium text-danger">
+            <p className="text-sm font-medium text-danger-strong">
               Правильно: {verb.base} — {verb.past} — {verb.part}
             </p>
           )}

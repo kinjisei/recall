@@ -237,7 +237,7 @@ function BuildTask({
             </span>
           ) : (
             <span>
-              <span className="text-danger">Правильно: </span>
+              <span className="text-danger-strong">Правильно: </span>
               <span className="font-semibold text-success-strong">{task.target}</span>
             </span>
           )}

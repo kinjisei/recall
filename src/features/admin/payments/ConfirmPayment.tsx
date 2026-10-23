@@ -28,6 +28,7 @@ import {
   type PayMethod,
   type PlanState,
 } from '../../../domains/billing'
+import { ErrorText } from '../../../shared/ui/ErrorText'
 
 const MONTHS = ['1', '3', '6', '12'] as const
 
@@ -117,7 +118,7 @@ export function ConfirmPayment({
           {w}
         </p>
       ))}
-      {error && <p className="text-sm text-danger-strong">{error}</p>}
+      {error && <ErrorText>{error}</ErrorText>}
 
       <div className="flex flex-wrap gap-2">
         <Button size="sm" onClick={submit} loading={busy} disabled={!amountOk}>

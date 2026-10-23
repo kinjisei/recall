@@ -236,7 +236,7 @@ export function FillExercise({
 
       {done && !solved && (
         <p className="text-sm">
-          <span className="text-danger">Верный ответ: </span>
+          <span className="text-danger-strong">Верный ответ: </span>
           <span className="font-semibold text-success-strong">{exercise.answer}</span>
         </p>
       )}
@@ -361,7 +361,7 @@ export function OrderExercise({
 
       {revealed && !solved && (
         <p className="text-sm">
-          <span className="text-danger">Правильно: </span>
+          <span className="text-danger-strong">Правильно: </span>
           <span className="font-semibold text-success-strong">{exercise.answer.join(' ')}</span>
         </p>
       )}

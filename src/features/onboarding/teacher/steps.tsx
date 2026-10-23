@@ -6,6 +6,7 @@ import { Button } from '../../../shared/ui/Button'
 import { IconInfo } from '../../../shared/ui/icons'
 import type { AppLang } from '../../../types'
 import { Choice, HeardChips, Question } from './parts'
+import { ErrorText } from '../../../shared/ui/ErrorText'
 
 export const LANGS: { id: AppLang; label: string; native: string }[] = [
   { id: 'en', label: 'Английский', native: 'English' },
@@ -110,7 +111,7 @@ export function StepDone({
       <div className="mt-auto flex flex-col pb-4 pt-6 lg:mt-0 lg:pt-7">
         <HeardChips value={heard} onPick={onHeard} />
       </div>
-      {error && <p className="mb-3 text-sm text-danger-strong">{error}</p>}
+      {error && <ErrorText className="mb-3">{error}</ErrorText>}
       <Button size="lg" onClick={onGo} loading={busy} className="w-full font-bold!">
         В студию
       </Button>

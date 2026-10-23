@@ -25,6 +25,7 @@ import { HowItWorks } from '../../shared/ui/HowItWorks'
 import { TabHeading } from '../../shared/ui/BackButton'
 import { HOW_IT_WORKS } from '../../data/howItWorks'
 import { ChatBubble, ChatInputBar, ChatWindow } from '../../shared/ui/Chat'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 export function ConversationPage() {
   const { user } = useAuth()
@@ -355,7 +356,7 @@ function ChatSection({
           Слова, чтение, грамматика и произношение работают как обычно.
         </p>
       ) : (
-        error && <p className="flex-none text-sm text-danger">{error}</p>
+        error && <ErrorText className="flex-none">{error}</ErrorText>
       )}
       </ChatWindow>
 

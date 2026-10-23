@@ -12,6 +12,7 @@ import { Card } from '../../shared/ui/Card'
 import { Button } from '../../shared/ui/Button'
 import { becomeTeacher } from '../../lib/teacher'
 import { getMyPlan } from '../../lib/billing'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 const TEACHER_PERKS = [
   'Привязываешь учеников по коду — они занимаются, ты видишь результат',
@@ -67,7 +68,7 @@ export function BecomeTeacher({ onBack }: { onBack: () => void }) {
           ))}
         </ul>
 
-        {error && <p className="mt-4 text-sm text-danger-soft-fg">{error}</p>}
+        {error && <ErrorText className="mt-4">{error}</ErrorText>}
 
         <Button className="mt-5 w-full" onClick={enable} loading={busy}>
           Включить режим преподавателя

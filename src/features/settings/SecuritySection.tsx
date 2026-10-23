@@ -18,6 +18,7 @@ import { MIN_PASSWORD, changePassword } from '../../lib/passwordReset'
 import { PasswordField } from '../auth/authUi'
 import { Button } from '../../shared/ui/Button'
 import { SettingsCard, ValueRow } from './settingsBits'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 export function SecuritySection() {
   const { user } = useAuth()
@@ -97,9 +98,9 @@ export function SecuritySection() {
           />
 
           {error && (
-            <p role="alert" className="text-sm text-danger-strong">
+            <ErrorText>
               {error}
-            </p>
+            </ErrorText>
           )}
 
           <div className="flex gap-2">

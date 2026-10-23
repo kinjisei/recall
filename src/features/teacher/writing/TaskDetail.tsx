@@ -21,6 +21,7 @@ import { RowsSkeleton } from '../../../shared/ui/Loading'
 import { ChartView } from '../../../components/ChartView'
 import { WritingDeleteButton } from '../WritingDeleteButton'
 import { bandText, kindChip, tally, tallyLine, taskFacts } from './writingFacts'
+import { ErrorText } from '../../../shared/ui/ErrorText'
 
 /** «сдано сегодня, 15:40» — без рода: «сдала» говорит о человеке то, чего мы не знаем. */
 function sinceLine(a: WritingTaskAssignment): string {
@@ -158,7 +159,7 @@ export function TaskDetail({
             })}
           </div>
         )}
-        {err && <p className="text-sm text-danger-strong">{err}</p>}
+        {err && <ErrorText>{err}</ErrorText>}
         <WritingDeleteButton taskId={task.id} onDeleted={onDeleted} onError={setErr} />
       </article>
     </div>

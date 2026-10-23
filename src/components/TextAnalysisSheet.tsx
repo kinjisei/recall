@@ -18,6 +18,7 @@ import {
 } from '../lib/textAnalysisCache'
 import type { AppLang } from '../types'
 import { Bolt } from '../shared/ui/Bolt'
+import { ErrorText } from '../shared/ui/ErrorText'
 
 export function TextAnalysisSheet({
   text,
@@ -113,9 +114,9 @@ export function TextAnalysisSheet({
 
           {phase === 'error' && (
             <div className="mt-4 flex flex-col gap-3">
-              <p className="text-sm text-danger-strong">
+              <ErrorText>
                 {error ?? 'Не удалось разобрать. Попробуй ещё раз.'}
-              </p>
+              </ErrorText>
               <Button className="w-full" onClick={run}>
                 Повторить
               </Button>

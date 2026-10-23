@@ -27,6 +27,7 @@ import { deleteStudentCards } from '../../lib/teacher'
 import { WordPicker } from './WordPicker'
 import { RowsSkeleton } from '../../shared/ui/Loading'
 import { InfoBox, SectionCard, SectionFooter } from './sectionBits'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 // подписи от 3-го лица — так их видит учитель
 const STATUS_LABEL = { new: 'новое', learning: 'учится', learned: 'выучено' } as const
@@ -172,7 +173,7 @@ export function StudentWordsSection({
           </>
         )}
         {msg && <p className="text-sm text-success-strong">{msg}</p>}
-        {error && <p className="text-sm text-danger-strong">{error}</p>}
+        {error && <ErrorText>{error}</ErrorText>}
       </SectionCard>
 
       {checks.length > 0 && (

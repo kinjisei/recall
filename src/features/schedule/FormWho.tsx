@@ -10,6 +10,7 @@ import type { LessonKind } from '../../domains/schedule'
 import { Avatar } from '../students'
 import { Button } from '../../shared/ui/Button'
 import { IconClose, IconPlus, IconSearch } from '../../shared/ui/icons'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 const input = 'min-h-12 w-full rounded-xl bg-input px-3.5 text-base ring-1 ring-control-line outline-none focus:ring-2 focus:ring-accent-line'
 const SHOWN = 6
@@ -42,7 +43,7 @@ function NewStudent({ kind, onCreated, onCancel }: { kind: LessonKind; onCreated
       </div>
       <input className={input} value={name} onChange={(e) => setName(e.target.value)} placeholder="Имя и фамилия" aria-label="Имя ученика" maxLength={80} />
       <input className={input} value={contact} onChange={(e) => setContact(e.target.value)} placeholder="Телефон или ник в Telegram" aria-label="Телефон или ник в Telegram" maxLength={80} />
-      {error && <p role="alert" className="text-sm text-danger-soft-fg">{error}</p>}
+      {error && <ErrorText>{error}</ErrorText>}
       <Button size="sm" variant="secondary" disabled={!name.trim()} loading={busy} onClick={() => void add()}>
         Добавить ученика
       </Button>

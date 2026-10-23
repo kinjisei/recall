@@ -46,7 +46,7 @@ import { PacksSheet } from '../flashcards/PacksSheet'
 import { AddCardForm } from '../words/AddCardForm'
 import { DeckReview } from '../flashcards/DeckReview'
 import { useScrollTop } from '../../lib/useScrollTop'
-import { Loading } from '../../shared/ui/Loading'
+import { Loading, RowsSkeleton } from '../../shared/ui/Loading'
 
 const MyWords = lazy(() => import('../words/MyWords').then((m) => ({ default: m.MyWords })))
 
@@ -180,11 +180,7 @@ export function StudyPage() {
 
       {hub === null ? (
         // скелетоны высоты RowCard — без прыжков вёрстки, пока грузятся строки
-        <div className="flex flex-col gap-2.5" aria-hidden>
-          {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="h-[74px] animate-pulse rounded-2xl bg-tint/[0.04]" />
-          ))}
-        </div>
+        <RowsSkeleton count={4} height={74} />
       ) : (
         <div className="flex flex-col gap-2.5">
           {/* Хотя бы один вход не ответил — картина неполная, и молчать нельзя:

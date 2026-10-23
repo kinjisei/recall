@@ -12,6 +12,7 @@ import { AppLink } from '../../shared/ui/AppLink'
 import { ContactLinks } from '../../shared/ui/ContactLinks'
 import { RESET_SENT_TEXT, requestReset } from '../../lib/passwordReset'
 import { AuthCard, InputGroup, PrimaryButton } from './authUi'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 export function ForgotPasswordPage() {
   const navigate = useNavigate()
@@ -57,9 +58,9 @@ export function ForgotPasswordPage() {
           </div>
 
           {error && (
-            <p role="alert" className="text-sm text-danger-strong">
+            <ErrorText>
               {error}
-            </p>
+            </ErrorText>
           )}
 
           <PrimaryButton type="button" onClick={() => navigate('/reset-password')}>
@@ -109,9 +110,9 @@ export function ForgotPasswordPage() {
         />
 
         {error && (
-          <p role="alert" className="text-sm text-danger-strong">
+          <ErrorText>
             {error}
-          </p>
+          </ErrorText>
         )}
 
         <PrimaryButton disabled={busy}>{busy ? '…' : 'Прислать письмо'}</PrimaryButton>

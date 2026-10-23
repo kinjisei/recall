@@ -23,6 +23,7 @@ import {
   type MyText,
 } from '../../lib/myTexts'
 import type { AppLang } from '../../types'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 /** Список своих текстов + кнопка добавления (рендерится в шапке читалки). */
 export function MyTextsList({
@@ -156,7 +157,7 @@ export function AddTextForm({
           Текст длиннее лимита — сохранятся первые {MY_TEXT_LIMIT.toLocaleString('ru-RU')} знаков.
         </p>
       )}
-      {err && <p className="text-sm text-danger-strong">{err}</p>}
+      {err && <ErrorText>{err}</ErrorText>}
 
       <div className="flex flex-wrap gap-2">
         <Button size="sm" loading={busy} onClick={save}>

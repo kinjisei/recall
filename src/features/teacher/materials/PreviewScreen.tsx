@@ -27,6 +27,7 @@ import type { StudentLevels } from './useStudentLevels'
 import { WizardTop, gensAfter } from './wizardBits'
 import { ExerciseRow } from './detailParts'
 import { Article, AssignCard, ExercisesCard, TextFeedback, assignRows, saveLabel } from './textBits'
+import { ErrorText } from '../../../shared/ui/ErrorText'
 
 export function PreviewScreen({
   req,
@@ -132,7 +133,7 @@ export function PreviewScreen({
           </>
         }
       >
-        {error && <p className="text-sm text-danger-strong">{error}</p>}
+        {error && <ErrorText>{error}</ErrorText>}
         <Button className="w-full" onClick={() => void save()} loading={busy === 'save'} disabled={busy !== null}>
           {saveLabel(ids.length)}
         </Button>

@@ -11,13 +11,7 @@
 // ============================================================================
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  IconBadgeCheck,
-  IconGap,
-  IconMic,
-  IconCards,
-  type IconLike,
-} from '../../shared/ui/icons'
+import { IconBadgeCheck, IconCards, IconGap, IconMic, type IconLike } from '../../shared/ui/icons'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { joinTeacher } from '../../lib/teacher'
@@ -33,6 +27,7 @@ import { Button } from '../../shared/ui/Button'
 import { GOAL_LABELS, type AppLang, type CEFRLevel, type LearningGoal } from '../../types'
 import { Heading, HowHeard, ONBOARDING_CTA } from './parts'
 import { TeacherOnboarding } from './teacher/TeacherOnboarding'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 // A1 добавлен: profiles.level и тест уровня теперь допускают его (новичок с нуля)
 const EN_LEVELS: CEFRLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1']
@@ -409,7 +404,7 @@ function StepReady({
               autoFocus
               className="h-12 rounded-2xl border border-tint/[0.12] bg-input px-4 text-center text-lg tracking-widest outline-none focus:border-accent-line"
             />
-            {joinError && <p className="text-sm text-danger-strong">{joinError}</p>}
+            {joinError && <ErrorText>{joinError}</ErrorText>}
             <Button type="submit" disabled={!code.trim() || joining} className={`py-4 ${ONBOARDING_CTA}`}>
               {joining ? 'Привязываю…' : 'Привязаться и начать'}
             </Button>

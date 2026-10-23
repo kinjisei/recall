@@ -13,6 +13,7 @@ import { Picker } from '../../shared/ui/Picker'
 import { IconSearch } from '../../shared/ui/icons'
 import { confirmWarnings, isPaidPlan } from '../../domains/billing'
 import { ConfirmPayment } from './payments/ConfirmPayment'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 const PLAN_LABELS: Record<PlanId, string> = {
   free: 'Free',
@@ -74,7 +75,7 @@ export function UserSearch({ onPaid }: { onPaid: () => void }) {
         </Button>
       </div>
 
-      {searchError && <p className="text-sm text-danger-strong">{searchError}</p>}
+      {searchError && <ErrorText>{searchError}</ErrorText>}
 
       {searched && !searching && rows.length === 0 && !searchError && (
         <p className="text-sm text-fg-muted">Никого не нашлось.</p>
@@ -199,7 +200,7 @@ function UserRow({
         </Button>
       </div>
 
-      {error && <p className="mt-2 text-sm text-danger-strong">{error}</p>}
+      {error && <ErrorText className="mt-2">{error}</ErrorText>}
     </div>
   )
 }

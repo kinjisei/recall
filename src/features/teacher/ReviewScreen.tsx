@@ -21,6 +21,7 @@ import { MainAside } from '../../shared/ui/layouts'
 import { Thinking } from '../../shared/ui/Thinking'
 import { AiBanner, AnswerBox, ExerciseCard, MaterialText, ReviewSummary, Verdict } from './reviewBits'
 import { useReviewDraft } from './useReviewDraft'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 export function ReviewScreen({
   material,
@@ -128,7 +129,7 @@ export function ReviewScreen({
       )}
       {error && (
         <Card tone="danger">
-          <p className="text-sm text-danger-soft-fg">{error}</p>
+          <ErrorText>{error}</ErrorText>
           {!review && (
             <Button size="sm" variant="secondary" className="mt-2" onClick={runAiReview}>
               Повторить разбор

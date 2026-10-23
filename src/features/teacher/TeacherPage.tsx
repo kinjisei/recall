@@ -24,6 +24,7 @@ import { getMyPlan, type MyPlan } from '../../lib/billing'
 import { AppLink } from '../../shared/ui/AppLink'
 import { LoadError } from '../../shared/ui/LoadError'
 import { isConnectionError } from '../../shared/api/connection'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 export function TeacherPage() {
   const { search } = useLocation()
@@ -189,7 +190,7 @@ function StudentsScreen() {
             onChanged={load}
             notice={
               loadError ? <LoadError message={loadError} onRetry={load} />
-              : error && <Card tone="danger"><p className="text-sm text-danger-soft-fg">{error}</p></Card>
+              : error && <Card tone="danger"><ErrorText>{error}</ErrorText></Card>
             }
             extras={
               <>

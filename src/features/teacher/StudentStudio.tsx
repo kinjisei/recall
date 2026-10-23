@@ -18,6 +18,7 @@ import { HomeworkSection } from './HomeworkSection'
 import { HomeworkComposer } from './HomeworkComposer'
 import { SectionTiles, StatTiles } from './StudioTiles'
 import type { StudioSection } from './studioSections'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 export function StudentStudio({
   student,
@@ -158,7 +159,7 @@ function StudioFooter({
 
   return (
     <div className="mt-1 flex flex-col gap-1 border-t border-tint/[0.06] pt-3" data-studio-footer>
-      {error && <p className="text-sm text-danger">{error}</p>}
+      {error && <ErrorText>{error}</ErrorText>}
       {seatsKnown && (
         <div>
           <Button size="sm" variant="ghost" loading={seatBusy} onClick={() => void setSeat(!covered)}>

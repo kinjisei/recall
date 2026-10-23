@@ -24,7 +24,9 @@ import { deleteCard, listMyWords, updateCard, type MyWord } from '../../lib/card
 import { speak } from '../../lib/speech'
 import { WORD_STATUS_CLS, type WordStatus } from '../../lib/wordChecks'
 import { GameHeader } from './GameShell'
+import { RowsSkeleton } from '../../shared/ui/Loading'
 import type { AppLang } from '../../types'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 type Filter = 'all' | WordStatus
 
@@ -143,7 +145,7 @@ export function MyWords({ lang, onBack }: { lang: AppLang; onBack: () => void })
 
       {error && (
         <Card tone="danger">
-          <p className="text-sm text-danger-soft-fg">{error}</p>
+          <ErrorText>{error}</ErrorText>
         </Card>
       )}
 
@@ -181,11 +183,7 @@ export function MyWords({ lang, onBack }: { lang: AppLang; onBack: () => void })
 
       {!words ? (
         // скелетоны в высоту строк (как в «Учёбе»/на Главной), а не голый текст
-        <div className="flex flex-col gap-2" aria-hidden>
-          {[0, 1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-[64px] animate-pulse rounded-2xl bg-tint/[0.04]" />
-          ))}
-        </div>
+        <RowsSkeleton count={5} height={64} />
       ) : shown.length === 0 ? (
         <Card className="text-center">
           <IconTray size={38} className="mx-auto block text-fg-muted" />

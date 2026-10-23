@@ -21,6 +21,7 @@ import { getCachedEnLevel } from '../../lib/profile'
 import { createSelfMaterial, MATERIAL_FORMATS, MATERIAL_LENGTHS } from '../../lib/materials'
 import { LENGTH_LABEL } from '../../lib/materialLengths'
 import type { CEFRLevel } from '../../types'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 const LEVELS: CEFRLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1']
 // длина — те же «~120 слов / ~200 / ~300», что у учителя (lib/materialLengths)
@@ -137,9 +138,9 @@ export function SelfMaterialPage() {
       </div>
 
       {error && (
-        <p role="alert" className="text-sm text-danger-strong">
+        <ErrorText>
           {error}
-        </p>
+        </ErrorText>
       )}
 
       <Button className="w-full" disabled={!topic.trim() || busy} loading={busy} onClick={make}>

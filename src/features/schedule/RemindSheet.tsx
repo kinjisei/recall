@@ -16,6 +16,7 @@ import { DraftRestored } from '../../shared/ui/DraftRestored'
 import { IconClose, IconSmartphone } from '../../shared/ui/icons'
 import { SHARE_ROW, ShareLink } from '../../shared/ui/ShareLink'
 import { Sheet, SHEET_BODY } from '../../shared/ui/Sheet'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 export function RemindSheet({
   card,
@@ -100,9 +101,9 @@ export function RemindSheet({
           </Button>
         </section>
         {error && (
-          <p role="alert" className="text-sm text-danger-soft-fg">
+          <ErrorText>
             {error}
-          </p>
+          </ErrorText>
         )}
         <p className="text-center text-note text-fg-muted">Recall сам ученику об оплате не пишет.</p>
       </div>

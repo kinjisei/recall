@@ -17,6 +17,7 @@ import { IconCheck } from '../../shared/ui/icons'
 import { LoadError } from '../../shared/ui/LoadError'
 import { RowsSkeleton } from '../../shared/ui/Loading'
 import { SectionCard } from './sectionBits'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 const KINDS: { kind: PlanKind; label: string; hint: string }[] = [
   { kind: 'reader', label: 'Чтение', hint: 'текст и новые слова' },
@@ -89,9 +90,9 @@ export function DailyPlanSection({ studentId, name }: { studentId: string; name:
             <Row label="Задания и квесты" hint="сами попадают в план" on={auto} onToggle={() => change({ kinds, auto: !auto })} />
           </div>
           {err && (
-            <p role="alert" className="text-sm text-danger-strong">
+            <ErrorText>
               {err}
-            </p>
+            </ErrorText>
           )}
           {notice && <p className="text-sm text-success-strong">{notice}</p>}
           {(data || draft) && (

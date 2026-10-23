@@ -16,6 +16,7 @@ import { LoadError } from '../../shared/ui/LoadError'
 import { RowsSkeleton } from '../../shared/ui/Loading'
 import { Field, fieldClass } from '../../shared/ui/TextField'
 import { SettingsCard, ValueRow } from './settingsBits'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 export function LessonLinkSection() {
   const link = useAsyncData(loadDefaultLessonLink, [], 'Не удалось загрузить ссылку на урок')
@@ -60,9 +61,9 @@ export function LessonLinkSection() {
             />
           </label>
           {error && (
-            <p role="alert" className="text-sm text-danger-strong">
+            <ErrorText>
               {error}
-            </p>
+            </ErrorText>
           )}
           <div className="flex gap-2">
             <Button type="submit" loading={busy}>

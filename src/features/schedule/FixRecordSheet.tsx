@@ -24,6 +24,7 @@ import { Button } from '../../shared/ui/Button'
 import { ChoiceGroup } from '../../shared/ui/ChoiceGroup'
 import { IconClose } from '../../shared/ui/icons'
 import { Sheet, SHEET_BODY } from '../../shared/ui/Sheet'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 const signedLessons = (n: number) => (n < 0 ? `−${lessonsCount(-n)}` : lessonsCount(n))
 
@@ -121,9 +122,9 @@ export function FixRecordSheet({
           />
         )}
         {error && (
-          <p role="alert" className="text-sm text-danger-soft-fg">
+          <ErrorText>
             {error}
-          </p>
+          </ErrorText>
         )}
         <Button className="w-full" variant={row.fix === 'payment' ? 'danger' : 'primary'} onClick={() => void save()} disabled={unchanged || (!choice && row.fix !== 'payment')} loading={busy}>
           {row.fix === 'payment' ? `Снять оплату +${item.n}` : 'Исправить'}

@@ -26,6 +26,7 @@ import { LoadError } from '../../shared/ui/LoadError'
 import { RowsSkeleton } from '../../shared/ui/Loading'
 import type { AppLang } from '../../types'
 import { SectionCard } from './sectionBits'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 const LANG_LABEL: Record<AppLang, string> = { en: 'Английский', es: 'Испанский' }
 
@@ -74,9 +75,9 @@ export function PlacementSection({ studentId }: { studentId: string }) {
           </Button>
         </div>
         {error && (
-          <p role="alert" className="text-sm text-danger-strong">
+          <ErrorText>
             {error}
-          </p>
+          </ErrorText>
         )}
       </SectionCard>
 

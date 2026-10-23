@@ -16,6 +16,7 @@ import { Picker } from '../../shared/ui/Picker'
 import { Field, TextField, fieldClass } from '../../shared/ui/TextField'
 import type { CEFRLevel, Profile } from '../../types'
 import { SettingsCard } from './settingsBits'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 // A1 включён: тест уровня может дать A1, и без него его нельзя было выбрать —
 // сохранение затирало уровень на случайно нажатый
@@ -67,9 +68,9 @@ export function ProfileSection({ profile, initialLevel }: { profile: Profile | n
         />
       </Field>
       {error && (
-        <p role="alert" className="text-sm text-danger-strong">
+        <ErrorText>
           {error}
-        </p>
+        </ErrorText>
       )}
       <div className="flex flex-wrap items-center gap-3">
         <span className="flex-1 text-sm text-fg-secondary">Остальные настройки сохраняются сразу</span>

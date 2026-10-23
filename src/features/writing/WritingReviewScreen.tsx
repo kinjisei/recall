@@ -24,6 +24,7 @@ import { TextPanel, useAsideSplit } from '../../shared/ui/layouts'
 import { locateFixes, wordCount } from './essayMarks'
 import { AiGrade, BandPicker, bandChoices, EssayCard, FixRow, groupFixes, PanelCard } from './reviewParts'
 import { WritingHistory } from './WritingHistory'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 export function WritingReviewScreen({
   task,
@@ -196,7 +197,7 @@ export function WritingReviewScreen({
           />
         </label>
         {draft.restored && <DraftRestored onClear={draft.clear} />}
-        {error && <p className="text-sm text-danger-strong">{error}</p>}
+        {error && <ErrorText>{error}</ErrorText>}
       </PanelCard>
       {assignment.attempts && assignment.attempts.length > 0 && (
         <PanelCard title="История">

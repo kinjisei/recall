@@ -29,6 +29,7 @@ import { StudentStudio } from './StudentStudio'
 import { StudioSectionScreen } from './StudioSection'
 import { useStudioSection } from './studioSections'
 import { useInnerScreen } from './innerScreen'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 export function CardDetail({
   card,
@@ -132,7 +133,7 @@ export function CardDetail({
         onBack={onBack}
         onAction={onAction}
       />
-      {actionError && <p className="text-sm text-danger-soft-fg">{actionError}</p>}
+      {actionError && <ErrorText>{actionError}</ErrorText>}
       {student ? (
         <StudentStudio
           student={student}

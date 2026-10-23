@@ -27,6 +27,7 @@ import {
   verifyRecoveryCode,
 } from '../../lib/passwordReset'
 import { AuthCard, InputGroup, PasswordField, PrimaryButton } from './authUi'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 export function ResetPasswordPage() {
   const navigate = useNavigate()
@@ -164,9 +165,9 @@ export function ResetPasswordPage() {
           />
 
           {error && (
-            <p role="alert" className="text-sm text-danger-strong">
+            <ErrorText>
               {error}
-            </p>
+            </ErrorText>
           )}
 
           <PrimaryButton disabled={busy || !canCheck}>
@@ -192,9 +193,9 @@ export function ResetPasswordPage() {
           />
 
           {error && (
-            <p role="alert" className="text-sm text-danger-strong">
+            <ErrorText>
               {error}
-            </p>
+            </ErrorText>
           )}
 
           <PrimaryButton disabled={busy || password.length < MIN_PASSWORD}>

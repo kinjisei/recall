@@ -40,6 +40,7 @@ import { useLessons, type ScheduleBase } from './useScheduleData'
 import { useScheduleUrl } from './useScheduleUrl'
 import { WeekGrid } from './WeekGrid'
 import { DayLessons, WeekList } from './WeekList'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 export function ScheduleScreen({ base, version, refresh }: { base: ScheduleBase; version: number; refresh: () => void }) {
   // desktop — меню слева (окно от 720): кнопка «Новый урок» в шапке, а не
@@ -161,9 +162,9 @@ export function ScheduleScreen({ base, version, refresh }: { base: ScheduleBase;
         />
       )}
       {act.error && !opened && (
-        <p role="alert" className="text-sm text-danger-soft-fg">
+        <ErrorText>
           {act.error}
-        </p>
+        </ErrorText>
       )}
       {body}
 

@@ -9,6 +9,7 @@
 // Многострочному полю и выбору того же вида — классы fieldClass().
 // ============================================================================
 import { useId, useState, type InputHTMLAttributes, type ReactNode } from 'react'
+import { BoltText } from './Bolt'
 import { IconInfo } from './icons'
 
 /** Вид поля — и для textarea, и для поля-кнопки. */
@@ -30,7 +31,7 @@ export function FieldNote({ id, error, hint }: { id: string; error?: ReactNode; 
     return (
       <span id={id} className="flex items-center gap-1.5 text-note font-medium text-danger-strong">
         <IconInfo size={16} className="flex-none rotate-180" />
-        {error}
+        {typeof error === 'string' ? <BoltText>{error}</BoltText> : error}
       </span>
     )
   }

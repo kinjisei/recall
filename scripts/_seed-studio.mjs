@@ -128,6 +128,8 @@ export function studio(prefix) {
     await sql(`update public.profiles set role = 'teacher', plan = 'teacher_mini', plan_expires_at = now() + interval '30 days' where id = '${t.id}'`)
     must(await t.client.rpc('set_default_lesson_link', { p_link: 'https://meet.google.com/abc-defg-hij' }), 'ссылка')
     const a = await makeUser('aigerim', 'Айгерим Нурланова', 'B1')
+    // одно уведомление — колокольчик в меню ученицы, как в макетах u1 и d4-home-v2 («Уведомления 1»)
+    must(await admin.from('notifications').insert({ user_id: a.id, kind: 'teacher_message', dedupe_key: 'seed-homework-reminder', data: { teacher_name: 'Мадина', text: 'Напоминаю про домашку до среды' } }), 'уведомление ученице')
     const s = await makeUser('asel', 'Әсел Жұмабаева', 'A2')
     const m = await makeUser('meir', 'Мейір Сапар', 'B1')
     const solo = await makeUser('solo', 'Диас Омаров', 'A2')

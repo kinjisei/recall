@@ -11,6 +11,7 @@ import { SheetHeader } from '../../shared/ui/SheetHeader'
 import { addCard } from '../../lib/cards'
 import { speak } from '../../lib/speech'
 import type { PoolItem } from '../../lib/wordPool'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 export function WordOfDay({ word, lang, compact = false }: { word: PoolItem; lang: 'en' | 'es'; compact?: boolean }) {
   const [open, setOpen] = useState(false)
@@ -87,7 +88,7 @@ export function WordOfDay({ word, lang, compact = false }: { word: PoolItem; lan
                 )}
               </Button>
             </div>
-            {state === 'error' && <p className="text-sm text-danger-strong">Не удалось добавить — попробуй ещё раз</p>}
+            {state === 'error' && <ErrorText>Не удалось добавить — попробуй ещё раз</ErrorText>}
           </div>
         </Sheet>
       )}

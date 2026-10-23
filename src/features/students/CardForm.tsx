@@ -16,6 +16,7 @@ import { ChoiceGroup } from '../../shared/ui/ChoiceGroup'
 import { DraftRestored } from '../../shared/ui/DraftRestored'
 import { IconBack, IconChevronRight, IconClose } from '../../shared/ui/icons'
 import { Sheet } from '../../shared/ui/Sheet'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 const inputCls =
   'mt-1.5 h-12 w-full rounded-xl border border-tint/[0.10] bg-input px-3.5 text-base outline-none focus:border-accent-line'
@@ -155,9 +156,9 @@ export function CardForm({
                 </p>
               )}
               {error && (
-                <p role="alert" className="mt-3 text-sm text-danger-soft-fg">
+                <ErrorText className="mt-3">
                   {error}
-                </p>
+                </ErrorText>
               )}
               {!card && generalInvite && (
                 <button

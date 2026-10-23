@@ -41,6 +41,7 @@ import { almatyTime, dateAt } from '../../domains/schedule'
 import { useAsideSplit } from '../../shared/ui/layouts'
 import { KaspiTransfer } from './KaspiTransfer'
 import { PayDesk, PayHelp } from './PayDesk'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 export function PayPage() {
   const [params] = useSearchParams()
@@ -172,7 +173,7 @@ function PayForm({ info, requested, desk }: { info: PayInfo; requested: string |
           <Button className="w-full" loading={busy} onClick={report}>
             Оплата отправлена
           </Button>
-          {error && <p className="mt-2 text-sm text-danger-strong">{error}</p>}
+          {error && <ErrorText className="mt-2">{error}</ErrorText>}
           {retarget ? (
             <p className="mt-2 text-note text-fg-muted">{retarget}</p>
           ) : (

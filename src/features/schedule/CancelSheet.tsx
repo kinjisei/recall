@@ -37,6 +37,7 @@ import { SheetHeader } from '../../shared/ui/SheetHeader'
 import { TabPicker } from '../../shared/ui/TabPicker'
 import { CHOICE_LABEL, LessonWho, NotifyLine } from './LessonParts'
 import type { Done } from './types'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 export function CancelSheet({
   lesson,
@@ -164,9 +165,9 @@ export function CancelSheet({
         <NotifyLine lesson={lesson} reached={reached} />
 
         {error && (
-          <p role="alert" className="text-sm text-danger-soft-fg">
+          <ErrorText>
             {error}
-          </p>
+          </ErrorText>
         )}
       </div>
       <SheetFooter>

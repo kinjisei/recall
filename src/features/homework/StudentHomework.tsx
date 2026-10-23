@@ -32,6 +32,7 @@ import {
   type HomeworkRow,
 } from '../../lib/homework'
 import { KIND_HINT, homeworkLink } from '../../lib/homeworkLinks'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 /** Тонкая полоса прогресса внутри пункта. */
 function ItemBar({ progress, target }: { progress: number; target: number }) {
@@ -233,9 +234,9 @@ export function StudentHomework({
       )}
 
       {error && (
-        <p role="alert" className="text-sm text-danger-strong">
+        <ErrorText>
           {error}
-        </p>
+        </ErrorText>
       )}
 
       <ul className="flex flex-col gap-3">

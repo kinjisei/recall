@@ -31,6 +31,7 @@ import {
 import type { ChatTurn, GrammarQuest } from '../../types'
 import { Thinking } from '../../shared/ui/Thinking'
 import { RowsSkeleton } from '../../shared/ui/Loading'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 /** Скрытая реплика, которой клиент запускает квест (не рендерится). */
 const START_MARK = '/start'
@@ -269,7 +270,7 @@ function QuestChat({ quest, onBack }: { quest: GrammarQuest; onBack: () => void 
             <Thinking label="печатает" />
           </ChatBubble>
         )}
-        {error && <p className="text-sm text-danger">{error}</p>}
+        {error && <ErrorText>{error}</ErrorText>}
         {completed && (
           <Card className="flex-none items-center text-center">
             <IconBadgeCheck size={40} className="animate-pop-in text-accent-strong" />

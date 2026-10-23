@@ -18,6 +18,7 @@ import { logActivity } from '../lib/activity'
 import { speak } from '../lib/speech'
 import type { AppLang } from '../types'
 import { Thinking } from '../shared/ui/Thinking'
+import { ErrorText } from '../shared/ui/ErrorText'
 
 /** Выбранное слово + предложение, в котором оно встретилось. */
 export interface WordPick {
@@ -295,7 +296,7 @@ export function WordSheet({
             «{sentence}»
           </p>
 
-          {error && <p className="mt-3 text-sm text-danger">{error}</p>}
+          {error && <ErrorText className="mt-3">{error}</ErrorText>}
 
           {/* Разбор всего предложения (фразовые глаголы/выражения/грамматика) */}
           <button

@@ -23,6 +23,7 @@ import {
 } from '../../../domains/billing'
 import { almatyTime, dateAt } from '../../../domains/schedule'
 import { ConfirmPayment } from './ConfirmPayment'
+import { ErrorText } from '../../../shared/ui/ErrorText'
 
 const when = (iso: string) => `${dateAt(iso)}, ${almatyTime(iso)}`
 
@@ -106,7 +107,7 @@ function Claim({ claim, onChanged }: { claim: ClaimRow; onChanged: () => void })
         {planCard(plan).title} · {claim.months} мес · код <span className="font-medium tracking-wide">{claim.code ?? '—'}</span>
       </p>
       <p className="text-note text-fg-muted">{claim.email}</p>
-      {error && <p className="mt-2 text-sm text-danger-strong">{error}</p>}
+      {error && <ErrorText className="mt-2">{error}</ErrorText>}
       {open ? (
         <ConfirmPayment
           payer={{ id: claim.user_id, name, state: claim, students: claim.students }}

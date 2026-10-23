@@ -29,6 +29,7 @@ import { RowsSkeleton } from '../../shared/ui/Loading'
 import { useDraft } from '../../shared/lib/useDraft'
 import { useUrlState } from '../../shared/lib/useUrlState'
 import { DraftRestored } from '../../shared/ui/DraftRestored'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 type Row = WritingTaskAssignment & { task: WritingTask }
 
@@ -272,7 +273,7 @@ function WritingRunner({
               </button>
             )}
           </div>
-          {error && <p className="text-sm text-danger">{error}</p>}
+          {error && <ErrorText>{error}</ErrorText>}
           <Button onClick={submit} disabled={busy || !essay.trim()} loading={busy}>
             {busy ? 'AI проверяет…' : grade ? 'Пересдать' : 'Сдать на проверку'}
           </Button>

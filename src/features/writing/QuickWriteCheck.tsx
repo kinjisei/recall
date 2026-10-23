@@ -21,6 +21,7 @@ import { chat } from '../../shared/api/ai'
 import { supabase } from '../../shared/api/supabase'
 import { logActivity } from '../../lib/activity'
 import type { AppLang, CEFRLevel } from '../../types'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 function writingSystemPrompt(level: CEFRLevel, lang: AppLang): string {
   const subject = lang === 'es' ? 'испанского' : 'английского'
@@ -131,7 +132,7 @@ export function QuickWriteCheck({
         {busy ? 'Проверяю…' : 'Проверить'}
       </Button>
 
-      {error && <p className="text-sm text-danger">{error}</p>}
+      {error && <ErrorText>{error}</ErrorText>}
 
       {feedback && (
         <Card>

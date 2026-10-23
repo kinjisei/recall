@@ -34,6 +34,7 @@ import { Sheet, SHEET_BODY } from '../../shared/ui/Sheet'
 import { Badge, LessonAvatar } from './LessonParts'
 import { MarksBlock } from './MarksBlock'
 import { PlanRequired } from './ReadOnly'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 export interface LessonSheetActions {
   onMove: () => void
@@ -180,9 +181,9 @@ export function LessonSheet({
         )}
 
         {error && (
-          <p role="alert" className="text-sm text-danger-soft-fg">
+          <ErrorText>
             {error}
-          </p>
+          </ErrorText>
         )}
         {!canWrite && <PlanRequired />}
 

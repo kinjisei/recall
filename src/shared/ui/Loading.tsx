@@ -59,6 +59,11 @@ function SkeletonRow({ i, height }: { i: number; height?: number }) {
   )
 }
 
+/** Ожидание блока своей высоты (ссылка-приглашение, карточка): поверхность скелетона, без своих цветов. */
+export function SkeletonBlock({ className = '' }: { className?: string }) {
+  return <div className={`animate-skeleton rounded-control bg-skeleton ${className}`} aria-hidden />
+}
+
 /**
  * Ожидание списка. Без height — список листа s3: строки 64 в одной
  * поверхности с разделителями. С height — отдельные строки этой высоты:

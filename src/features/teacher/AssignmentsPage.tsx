@@ -283,7 +283,7 @@ function ReviewedView({
             <p className="text-sm font-medium">{ex.prompt}</p>
             <p className="text-sm">
               Твой ответ:{' '}
-              <span className={ok ? 'font-semibold text-success-strong' : 'font-semibold text-danger'}>
+              <span className={ok ? 'font-semibold text-success-strong' : 'font-semibold text-danger-strong'}>
                 {given} {ok ? '✓' : '✗'}
               </span>
               {!ok && correct && <span className="text-fg-muted"> · правильно: {correct}</span>}

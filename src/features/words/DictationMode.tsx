@@ -254,7 +254,7 @@ export function DictationMode({ lang, onBack }: { lang: AppLang; onBack: () => v
             )}
             {checked === false && current && (
               <p className="text-sm">
-                <span className="text-danger">Правильно: </span>
+                <span className="text-danger-strong">Правильно: </span>
                 <span className="font-semibold text-success-strong">{current.term}</span>
               </p>
             )}

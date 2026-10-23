@@ -8,6 +8,7 @@ import { analyzeSelection, type Analysis } from '../lib/analyze'
 import { AnalyzedItemsView } from './AnalyzedItemsView'
 import type { AppLang } from '../types'
 import { Thinking } from '../shared/ui/Thinking'
+import { ErrorText } from '../shared/ui/ErrorText'
 
 export function AnalysisSheet({
   text,
@@ -47,7 +48,7 @@ export function AnalysisSheet({
           {!data && !error && (
             <Thinking label="Разбираю фрагмент" className="mt-4 text-sm" />
           )}
-          {error && <p className="mt-4 text-sm text-danger-strong">{error}</p>}
+          {error && <ErrorText className="mt-4">{error}</ErrorText>}
 
           {data && (
             <>

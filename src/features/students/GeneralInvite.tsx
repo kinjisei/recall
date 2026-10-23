@@ -6,6 +6,7 @@
 // (features/teacher/TeacherPage): строка и шторка показывают один и тот же.
 // ============================================================================
 import { Button } from '../../shared/ui/Button'
+import { SkeletonBlock } from '../../shared/ui/Loading'
 import { InviteShare } from './InviteBlock'
 
 export function GeneralInvite({
@@ -28,7 +29,7 @@ export function GeneralInvite({
       {code ? (
         <InviteShare name={null} code={code} event="general_invite_share" />
       ) : (
-        <div className="h-24 animate-pulse rounded-xl bg-tint/[0.05]" />
+        <SkeletonBlock className="h-24" />
       )}
       <div className="flex flex-wrap items-center gap-2 border-t border-tint/[0.06] pt-3">
         <Button size="sm" variant="ghost" loading={regenerating} onClick={onRegenerate}>

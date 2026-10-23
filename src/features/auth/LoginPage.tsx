@@ -10,6 +10,7 @@ import { track } from '../../lib/analytics'
 import { AppLink } from '../../shared/ui/AppLink'
 import { Button } from '../../shared/ui/Button'
 import { AccountDeletedNote, AuroraBg, EyeIcon, InputGroup, inputClass } from './authUi'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 /**
  * Экран входа/регистрации Recall — тёмная версия «Nocturne».
@@ -222,9 +223,9 @@ export function LoginPage() {
             </div>
 
             {error && (
-              <p role="alert" className="text-sm text-danger-strong">
+              <ErrorText>
                 {error}
-              </p>
+              </ErrorText>
             )}
             {info && <p className="text-sm text-success-strong">{info}</p>}
 
@@ -330,9 +331,9 @@ function CheckEmail({
 
       {note && <p className="text-sm text-success-strong">{note}</p>}
       {err && (
-        <p role="alert" className="text-sm text-danger-strong">
+        <ErrorText>
           {err}
-        </p>
+        </ErrorText>
       )}
 
       {/* ожидание — общий выключенный вид Button (лист s3): подпись со

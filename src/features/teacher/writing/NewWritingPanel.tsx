@@ -24,6 +24,7 @@ import { LEVELS } from '../materials/shared'
 import { FieldLabel } from '../materials/wizardBits'
 import { useWritingTaskDraft } from '../useWritingTaskDraft'
 import { ieltsHint } from './writingFacts'
+import { ErrorText } from '../../../shared/ui/ErrorText'
 
 const CHART_KINDS: { id: ChartSpec['kind']; label: string }[] = [
   { id: 'bar', label: 'Столбцы' },
@@ -199,7 +200,7 @@ function Form({ onCreated }: { onCreated: (task: WritingTask) => void }) {
             </label>
           </>
         )}
-        {error && <p className="text-sm text-danger-strong">{error}</p>}
+        {error && <ErrorText>{error}</ErrorText>}
       </div>
       <SheetFooter>
         <div className="flex gap-2.5">

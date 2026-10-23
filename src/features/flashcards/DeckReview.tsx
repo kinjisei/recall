@@ -24,6 +24,7 @@ import { SwipeCard, SwipeTutorial } from './SwipeCard'
 import { WordCheckRunner } from './WordCheckRunner'
 import type { Card as CardType, WordCheck } from '../../types'
 import { Loading } from '../../shared/ui/Loading'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 const TUTORIAL_KEY = 'recall.deck_tutorial_seen'
 
@@ -202,7 +203,7 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
 
       {error && (
         <Card tone="danger">
-          <p className="text-sm text-danger-soft-fg">{error}</p>
+          <ErrorText>{error}</ErrorText>
         </Card>
       )}
 

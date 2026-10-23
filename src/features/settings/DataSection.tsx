@@ -20,6 +20,7 @@ import { Button } from '../../shared/ui/Button'
 import { useConfirm } from '../../shared/ui/ConfirmDialog'
 import { IconTrash } from '../../shared/ui/icons'
 import { SettingsCard, ValueRow } from './settingsBits'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 /** Что пропадёт у репетитора; без связи — общими словами, удаление это не держит. */
 async function studioLoss(): Promise<string> {
@@ -112,9 +113,9 @@ export function DataSection({ teacher }: { teacher: boolean }) {
         </div>
       </div>
       {error && (
-        <p role="alert" className="text-sm text-danger-strong">
+        <ErrorText>
           {error}
-        </p>
+        </ErrorText>
       )}
       {dialog}
     </SettingsCard>

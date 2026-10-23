@@ -30,6 +30,7 @@ import { useCopy } from '../../shared/lib/useCopy'
 import { IconCheck, IconCopy, IconShare } from '../../shared/ui/icons'
 import { SHARE_BUTTON, SHARE_ROW, ShareLink } from '../../shared/ui/ShareLink'
 import { LoadError } from '../../shared/ui/LoadError'
+import { SkeletonBlock } from '../../shared/ui/Loading'
 import { track } from '../../lib/analytics'
 
 export function InviteBlock({ card, seats }: { card: StudentCard; seats: SeatsState | null }) {
@@ -58,7 +59,7 @@ export function InviteBlock({ card, seats }: { card: StudentCard; seats: SeatsSt
       {error ? (
         <LoadError message={error} onRetry={reload} />
       ) : loading || !code ? (
-        <div className="h-24 animate-pulse rounded-xl bg-tint/[0.05]" />
+        <SkeletonBlock className="h-24" />
       ) : (
         <InviteShare name={card.name} code={code} phone={contactLinks(card.contact).whatsapp ? card.contact : null} event="card_invite_share" />
       )}

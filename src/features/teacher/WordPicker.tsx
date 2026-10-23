@@ -19,17 +19,11 @@ import { IconClose, IconSearch } from '../../shared/ui/icons'
 import { Loading, RowsSkeleton } from '../../shared/ui/Loading'
 import { useLanguage } from '../../context/LanguageContext'
 import { assignWordsToStudent, getMyDecks, listDeckCards } from '../../lib/teacher'
-import {
-  loadPacks,
-  packCategory,
-  PACK_CATEGORY_LABEL,
-  PACK_LEVELS,
-  type LoadedPacks,
-  type PackWord,
-} from '../../lib/wordPacks'
+import { loadPacks, packCategory, PACK_CATEGORY_LABEL, PACK_LEVELS, type LoadedPacks, type PackWord } from '../../lib/wordPacks'
 import { describeDbError } from '../../shared/api/errors'
 import type { AppLang, CEFRLevel, Deck, WordTopic } from '../../types'
 import { DisclosureIcon } from '../../shared/ui/Disclosure'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 const SEARCH_FROM = 20 // поиск показываем только на длинных списках
 
@@ -391,7 +385,7 @@ function WordList({
           ← к наборам
         </button>
 
-        {error && <p className="mt-2 text-sm text-danger-strong">{error}</p>}
+        {error && <ErrorText className="mt-2">{error}</ErrorText>}
 
         {words === null ? (
           <RowsSkeleton count={5} height={44} />

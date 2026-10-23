@@ -22,6 +22,7 @@ import { Button } from '../../shared/ui/Button'
 import { IconInfo } from '../../shared/ui/icons'
 import { Switch } from '../../shared/ui/Switch'
 import { SettingsCard } from './settingsBits'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 async function loadSection() {
   const teachers = await loadMyLessonBalances()
@@ -107,7 +108,7 @@ export function LessonReminders() {
             </Button>
           )}
         </div>
-        {problem && <p className="text-sm text-danger-strong">{problem}</p>}
+        {problem && <ErrorText>{problem}</ErrorText>}
       </SettingsCard>
     </div>
   )

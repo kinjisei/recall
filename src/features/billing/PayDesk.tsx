@@ -18,6 +18,7 @@ import { ChoiceGroup, type ChoiceOption } from '../../shared/ui/ChoiceGroup'
 import { ContactLinks } from '../../shared/ui/ContactLinks'
 import { IconBadgeCheck, IconCheck, IconChevronRight, IconCopy, IconInfo } from '../../shared/ui/icons'
 import { MainAside } from '../../shared/ui/layouts'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 const money = (n: number) => `${n.toLocaleString('ru-RU')} ₸`
 
@@ -90,7 +91,7 @@ export function PayDesk({
               <Button size="lg" loading={busy} onClick={onReport}>
                 Оплата отправлена
               </Button>
-              {error && <p className="text-sm text-danger-strong">{error}</p>}
+              {error && <ErrorText>{error}</ErrorText>}
               <small className="text-center text-sm text-fg-secondary">{retarget ?? 'Нажмите после перевода — мы проверим и включим тариф'}</small>
             </div>
           )}

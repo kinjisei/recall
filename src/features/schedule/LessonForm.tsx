@@ -47,6 +47,7 @@ import { FormLink, FormRepeat } from './FormRepeatLink'
 import type { Done } from './types'
 import { useDayLessons, useLessonsAhead } from './useScheduleData'
 import { DurationField, WhenFields } from './WhenFields'
+import { ErrorText } from '../../shared/ui/ErrorText'
 
 export type FormMode =
   | { kind: 'new'; day: string; time: string; cardIds?: string[]; seed?: StudentCard[] }
@@ -246,9 +247,9 @@ export function LessonForm({
           {draftSummary(effective)}
         </p>
         {error && (
-          <p role="alert" className="text-sm text-danger-soft-fg">
+          <ErrorText>
             {error}
-          </p>
+          </ErrorText>
         )}
         <div className="flex flex-col gap-1.5">
           <Button className="w-full" onClick={() => void submit()} disabled={problem !== null} loading={busy}>
