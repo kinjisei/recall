@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { IconSpeaker } from '../../shared/ui/icons'
 import { Card } from '../../shared/ui/Card'
 import { Button } from '../../shared/ui/Button'
-import { RoundResult, RoundProgress } from '../../components/RoundResult'
+import { RoundResult } from '../../components/RoundResult'
 import { orderHint, shouldReveal } from '../../lib/selfCorrect'
 import type { ReviewItem } from '../../components/RoundReview'
 import { logActivity } from '../../lib/activity'
@@ -12,7 +12,7 @@ import { getUserLevel } from '../../lib/level'
 import { speak } from '../../lib/speech'
 import { spanishSentences } from '../../data/spanish'
 import { englishSentences } from '../../data/english'
-import { GameHeader as Header } from './GameShell'
+import { RoundFrame } from '../../shared/ui/RoundFrame'
 import { normalize, sample } from './gameUtils'
 import type { AppLang } from '../../types'
 
@@ -89,8 +89,7 @@ export function SentenceBuilder({ lang, onBack }: { lang: AppLang; onBack: () =>
 
   if (done) {
     return (
-      <div className="flex flex-col gap-4">
-        <Header title={TITLE} onBack={onBack} />
+      <RoundFrame title={TITLE} at={tasks.length} total={tasks.length} results={results.map((r) => r.ok)} onExit={onBack}>
         <RoundResult
           correct={correct}
           total={tasks.length}
@@ -105,14 +104,12 @@ export function SentenceBuilder({ lang, onBack }: { lang: AppLang; onBack: () =>
             setSeed((s) => s + 1)
           }}
         />
-      </div>
+      </RoundFrame>
     )
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <Header title={TITLE} onBack={onBack} />
-      <RoundProgress index={index + 1} total={tasks.length} correct={correct} />
+    <RoundFrame title={TITLE} at={index + 1} total={tasks.length} results={results.map((r) => r.ok)} onExit={onBack}>
       <BuildTask
         key={`${lang}-${index}`}
         task={task}
@@ -121,7 +118,7 @@ export function SentenceBuilder({ lang, onBack }: { lang: AppLang; onBack: () =>
         onNext={next}
         isLast={index + 1 >= tasks.length}
       />
-    </div>
+    </RoundFrame>
   )
 }
 
@@ -187,7 +184,7 @@ function BuildTask({
               key={i}
               onClick={() => !checked && setBuilt((arr) => arr.filter((_, j) => j !== i))}
               disabled={checked}
-              className="rounded-tag bg-accent px-3 py-1.5 text-sm text-accent-fg"
+              className="min-h-11 min-w-11 rounded-tag bg-accent px-3 py-1.5 text-sm text-accent-fg"
             >
               {b.w}
             </button>
@@ -204,7 +201,7 @@ function BuildTask({
             key={item.i}
             onClick={() => !checked && setBuilt((arr) => [...arr, item])}
             disabled={checked || used.has(item.i)}
-            className={`rounded-tag border px-3 py-1.5 text-sm ${
+            className={`min-h-11 min-w-11 rounded-tag border px-3 py-1.5 text-sm ${
               used.has(item.i)
                 ? 'border-tint/[0.08] text-fg-faint'
                 : 'border-tint/[0.10]'

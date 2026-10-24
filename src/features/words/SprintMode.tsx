@@ -17,7 +17,8 @@ import {
   type PoolItem,
 } from '../../lib/wordPool'
 import { markWrong, shuffle } from './gameUtils'
-import { EmptyPool, GameHeader, GameLoading } from './GameShell'
+import { EmptyPool, GameLoading } from './GameShell'
+import { RoundFrame } from '../../shared/ui/RoundFrame'
 import type { AppLang } from '../../types'
 
 const SECONDS = 60
@@ -108,8 +109,7 @@ export function SprintMode({ lang, onBack }: { lang: AppLang; onBack: () => void
 
   if (done) {
     return (
-      <div className="flex flex-col gap-4">
-        <GameHeader title={TITLE} onBack={onBack} />
+      <RoundFrame title={TITLE} at={null} total={null} results={results.map((r) => r.ok)} onExit={onBack}>
         <RoundResult
           correct={correct}
           total={total}
@@ -132,7 +132,7 @@ export function SprintMode({ lang, onBack }: { lang: AppLang; onBack: () => void
             setTimeLeft(SECONDS)
           }}
         />
-      </div>
+      </RoundFrame>
     )
   }
 
@@ -165,9 +165,11 @@ export function SprintMode({ lang, onBack }: { lang: AppLang; onBack: () => void
   }
 
   return (
-    // раскладка «по всему экрану»: таймер и слово сверху, кнопки прижаты к низу
+    // рамка раунда без полоски: спринт на время, счёт — строкой ниже и слева
+    // на широком экране; раскладка «по всему экрану»: таймер и слово сверху,
+    // кнопки прижаты к низу
+    <RoundFrame title={TITLE} at={null} total={null} results={results.map((r) => r.ok)} onExit={onBack}>
     <div className="flex min-h-[calc(100dvh-11rem)] flex-col gap-4">
-      <GameHeader title={TITLE} onBack={onBack} />
 
       <div className="flex items-center justify-between text-sm text-fg-muted">
         <span className="flex items-center gap-1.5">
@@ -207,5 +209,6 @@ export function SprintMode({ lang, onBack }: { lang: AppLang; onBack: () => void
         </button>
       </div>
     </div>
+    </RoundFrame>
   )
 }

@@ -3,7 +3,10 @@
 // отвечают, не хватаясь за мышь.
 //
 //   1–4    — выбрать вариант ответа;
-//   Enter  — «Проверить» / «Дальше»;
+//   Enter  — «Проверить» / «Дальше» (и когда фокус на варианте после щелчка
+//            мышью — «выбрать мышью, проверить Enter», макет d5);
+//   R      — озвучить слово вопроса (d5; по коду клавиши — и на русской
+//            раскладке, где она печатает «к»);
 //   Esc    — выйти из раунда, как стрелка «назад» (решение владельца
 //            28.09.2026). Ответы недоигранного раунда пропадают — так же, как
 //            при стрелке; повторение карточек сохраняется после каждой.
@@ -32,6 +35,8 @@ export interface RoundKeys {
   pick?: (index: number) => void
   enter?: () => void
   escape?: () => void
+  /** R — озвучить слово (d5). */
+  say?: () => void
 }
 
 export function useRoundKeys(keys: RoundKeys, enabled = true): void {
@@ -63,11 +68,18 @@ export function useRoundKeys(keys: RoundKeys, enabled = true): void {
       }
       if (typing || isSheetOpen()) return
       if (e.key === 'Enter') {
-        if (target?.closest('button, a, [role="button"], [role="tab"]')) return
+        // своя кнопка с фокусом нажимается сама; вариант ответа — нет: его
+        // выбрали щелчком, Enter — «Проверить» (иначе выбрал бы его ещё раз)
+        if (target?.closest('button, a, [role="button"], [role="tab"]') && !target.closest('[data-key]')) return
         if (k.enter) {
           e.preventDefault()
           k.enter()
         }
+        return
+      }
+      if (e.code === 'KeyR' && k.say) {
+        e.preventDefault()
+        k.say()
         return
       }
       if (/^[1-9]$/.test(e.key) && k.pick) {

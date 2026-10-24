@@ -60,7 +60,7 @@
  * красная строка в итоге. Телефон снимается окном во всю высоту страницы.
  *
  * Запуск: npm run dev:test, затем node scripts/shots-screens.mjs [папка]
- * [--only home|students|schedule|cancel|tasks|materials|wizard|writing|program|learn|invite|settings|landing] [--name экран,экран] (по умолчанию shots-screens/,
+ * [--only home|students|schedule|exercise|cancel|tasks|materials|wizard|writing|program|learn|invite|settings|landing] [--name экран,экран] (по умолчанию shots-screens/,
  * все экраны; --name — только эти снимки, для быстрой сверки). ~10 мин.
  */
 import { spawn } from 'node:child_process'
@@ -72,7 +72,7 @@ import { PASS, admin, must, sql, studio } from './_seed-studio.mjs'
 import { settleAnimations, settledScreenshot, waitForData } from './_shots.mjs'
 import { auditPage } from './_ux-audit-page.mjs'
 import { shotsInvitePay, shotsLanding, shotsLearn, shotsProgram, shotsSettings } from './_shots-4g.mjs'
-import { shotsSchedule } from './_shots-4d.mjs'
+import { shotsExercise, shotsSchedule } from './_shots-4d.mjs'
 
 if (process.argv.includes('--prod')) {
   console.error('Снимки заводят аккаунты — только тестовая база (npm run dev:test).')
@@ -423,6 +423,7 @@ try {
     await shotsSettings({ screen, t, a })
   }
   if (!ONLY || ONLY === 'schedule') await shotsSchedule({ screen, sql, t }) // расписание: день t2-1, неделя t2-2 и d1 (4д-4а)
+  if (!ONLY || ONLY === 'exercise') await shotsExercise({ screen, a }) // упражнение «Перевод слова» (d5, 4д-4б)
   if (!ONLY || ONLY === 'landing') await shotsLanding({ screen, t }) // лендинг (d15): гость и в рамке у репетитора
   if (!ONLY || ONLY === 'home') {
     const word = /Слово дня/

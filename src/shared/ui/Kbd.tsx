@@ -17,11 +17,14 @@ const SHOW = {
 export function Kbd({
   children,
   onPrimary = false,
+  outline = false,
   show = 'always',
   className = '',
 }: {
   children: ReactNode
   onPrimary?: boolean
+  /** Контуром, без подложки: список клавиш сбоку раунда (d5). */
+  outline?: boolean
   show?: keyof typeof SHOW
   className?: string
 }) {
@@ -29,7 +32,7 @@ export function Kbd({
     <kbd
       aria-hidden
       className={`${SHOW[show]} h-5 min-w-5 flex-none items-center justify-center rounded-mark px-1.25 font-sans text-caption font-semibold ${
-        onPrimary ? 'bg-primary-fg/20 text-primary-fg' : 'bg-input text-fg-muted'
+        onPrimary ? 'bg-primary-fg/20 text-primary-fg' : outline ? 'text-fg-muted inset-ring inset-ring-line' : 'bg-input text-fg-muted'
       } ${className}`}
     >
       {children}

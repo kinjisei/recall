@@ -9,7 +9,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { IconSpeaker } from '../../shared/ui/icons'
 import { Card } from '../../shared/ui/Card'
 import { Button } from '../../shared/ui/Button'
-import { RoundResult, RoundProgress } from '../../components/RoundResult'
+import { RoundResult } from '../../components/RoundResult'
 import type { ReviewItem } from '../../components/RoundReview'
 import { logActivity } from '../../lib/activity'
 import { speak } from '../../lib/speech'
@@ -23,11 +23,14 @@ import {
   type PoolItem,
 } from '../../lib/wordPool'
 import { markWrong, sample } from './gameUtils'
-import { GameHeader, GameLoading } from './GameShell'
+import { GameLoading } from './GameShell'
+import { KEY_EXIT, RoundFrame, type RoundKey } from '../../shared/ui/RoundFrame'
 import type { AppLang } from '../../types'
 
 const ROUND = 8
 const TITLE = 'Диктант'
+// клавиши раунда сбоку (d5): Enter в поле — «Проверить», дальше — кнопкой
+const KEYS: RoundKey[] = [{ keys: ['Enter'], label: 'проверить' }, KEY_EXIT]
 
 type Source = 'new' | 'deck'
 
@@ -96,8 +99,7 @@ export function DictationMode({ lang, onBack }: { lang: AppLang; onBack: () => v
 
   if (done) {
     return (
-      <div className="flex flex-col gap-4">
-        <GameHeader title={TITLE} onBack={onBack} />
+      <RoundFrame title={TITLE} at={words!.length} total={words!.length} results={results.map((r) => r.ok)} keys={KEYS} onExit={onBack}>
         <RoundResult
           correct={correct}
           total={words!.length}
@@ -110,7 +112,7 @@ export function DictationMode({ lang, onBack }: { lang: AppLang; onBack: () => v
           }
           onRestart={() => load(src)}
         />
-      </div>
+      </RoundFrame>
     )
   }
 
@@ -168,9 +170,14 @@ export function DictationMode({ lang, onBack }: { lang: AppLang; onBack: () => v
   )
 
   return (
-    <div className="flex flex-col gap-4">
-      <GameHeader title={TITLE} onBack={onBack} />
-
+    <RoundFrame
+      title={TITLE}
+      at={empty ? null : index + 1}
+      total={empty ? null : words!.length}
+      results={results.map((r) => r.ok)}
+      keys={KEYS}
+      onExit={onBack}
+    >
       {/* выбор источника слов */}
       <div className="flex gap-2">
         {chip('new', 'Новые слова')}
@@ -190,8 +197,6 @@ export function DictationMode({ lang, onBack }: { lang: AppLang; onBack: () => v
         </Card>
       ) : (
         <>
-          <RoundProgress index={index + 1} total={words!.length} correct={correct} />
-
           <Card className="flex flex-col gap-3">
             <button
               onClick={() => current && speak(current.term, { lang })}
@@ -206,7 +211,7 @@ export function DictationMode({ lang, onBack }: { lang: AppLang; onBack: () => v
 
             <input
               aria-label="Услышанное слово"
-              className={`w-full rounded-tile border bg-input px-3 py-2 outline-none ${
+              className={`min-h-11 w-full rounded-tile border bg-input px-3 py-2 outline-none ${
                 checked === null
                   ? 'border-tint/[0.10] focus:border-accent-line'
                   : checked
@@ -276,6 +281,6 @@ export function DictationMode({ lang, onBack }: { lang: AppLang; onBack: () => v
           </Card>
         </>
       )}
-    </div>
+    </RoundFrame>
   )
 }

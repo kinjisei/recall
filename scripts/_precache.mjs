@@ -34,10 +34,11 @@ const ALWAYS = [/[\\/]node_modules[\\/]workbox-window[\\/]/]
  * Предел кэша докачанных чанков `recall-chunks` (PLAN.md Ф1.12). Имена чанков
  * с хэшем: после выкладки старые больше не нужны, но без предела копились бы
  * навсегда. Вытесняются давно не открытые — значит, предел обязан вмещать ВСЕ
- * чанки одной сборки вне precache (на 03.10.2026 — 75, 3,7 МБ), иначе у того,
- * кто открывает всё, кэш выкидывал бы нужное. Это держит test-precache.mjs.
+ * чанки одной сборки вне precache (на 03.10.2026 — 75, 3,7 МБ; на 25.10.2026 —
+ * 102: поднят до 150 с запасом), иначе у того, кто открывает всё, кэш
+ * выкидывал бы нужное. Это держит test-precache.mjs.
  */
-export const RUNTIME_CHUNKS_MAX = 100
+export const RUNTIME_CHUNKS_MAX = 150
 
 /** JS-файлы сборки, которых нет в precache, — их докачивает recall-chunks. */
 export function chunksOutsidePrecache(distDir, precache = readPrecache(distDir)) {

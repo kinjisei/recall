@@ -389,8 +389,9 @@ async function keyboard(page) {
 
   // настоящий раунд «Практики»: грамматика вперемешку не требует своих слов
   await page.goto(`${BASE}/practice?m=gr-mcq`, { waitUntil: 'networkidle2' })
-  await waitText(page, 'Упражнение')
-  const progress = () => page.evaluate(() => (document.body.innerText.match(/Упражнение\s+(\d+)/) || [])[1] ?? '')
+  // номер вопроса — вверху рамки раунда «1 из 8» (d5, Ф2.17-4д-4б)
+  await page.waitForFunction(() => /\d+ из \d+/.test(document.body.innerText), { polling: 250, timeout: 15000 }).catch(() => {})
+  const progress = () => page.evaluate(() => (document.body.innerText.match(/(\d+) из \d+/) || [])[1] ?? '')
   const before = await progress()
   for (const k of ['1', '2', '3', '4']) {
     await page.keyboard.press(k)

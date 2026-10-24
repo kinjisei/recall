@@ -196,7 +196,7 @@ export function FillExercise({
     <Card className="flex flex-col gap-3">
       <p className="text-lg font-medium">{exercise.prompt}</p>
       <input
-        className={`w-full rounded-tile border bg-input px-3 py-2 outline-none ${
+        className={`min-h-11 w-full rounded-tile border bg-input px-3 py-2 outline-none ${
           done
             ? solved
               ? 'border-success'
@@ -325,7 +325,7 @@ export function OrderExercise({
               key={i}
               onClick={() => !checked && setBuilt((arr) => arr.filter((_, j) => j !== i))}
               disabled={checked}
-              className="rounded-tag bg-accent px-3 py-1.5 text-sm text-accent-fg"
+              className="min-h-11 min-w-11 rounded-tag bg-accent px-3 py-1.5 text-sm text-accent-fg"
             >
               {b.w}
             </button>
@@ -345,7 +345,7 @@ export function OrderExercise({
             key={item.i}
             onClick={() => !checked && setBuilt((arr) => [...arr, item])}
             disabled={checked || usedIdx.has(item.i)}
-            className={`rounded-tag border px-3 py-1.5 text-sm transition-colors ${
+            className={`min-h-11 min-w-11 rounded-tag border px-3 py-1.5 text-sm transition-colors ${
               usedIdx.has(item.i)
                 ? 'border-tint/[0.06] text-fg-muted' // использованное слово — приглушено
                 : 'border-tint/[0.10] active:scale-[0.97]'

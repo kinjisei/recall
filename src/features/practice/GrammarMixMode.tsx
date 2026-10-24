@@ -8,15 +8,14 @@
 // ============================================================================
 import { useEffect, useState } from 'react'
 import { Card } from '../../shared/ui/Card'
-import { Button } from '../../shared/ui/Button'
-import { RoundResult, RoundProgress } from '../../components/RoundResult'
+import { RoundResult } from '../../components/RoundResult'
 import { ExerciseView } from '../../components/exercises'
 import { useExerciseReview } from '../../components/useExerciseReview'
 import { logActivity } from '../../lib/activity'
 import { addMistake, removeMistake } from '../../lib/mistakes'
 import { getUserLevel } from '../../lib/level'
 import { shuffle } from '../../lib/wordPool'
-import { GameHeader } from '../words/GameShell'
+import { KEY_EXIT, RoundFrame, type RoundKey } from '../../shared/ui/RoundFrame'
 import type { AppLang, GrammarExercise, GrammarTopic } from '../../types'
 import { Loading } from '../../shared/ui/Loading'
 import { useAsyncData } from '../../shared/lib/useAsyncData'
@@ -26,6 +25,14 @@ const ROUND = 8
 const CEFR = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
 
 export type GrammarGameKind = 'mcq' | 'fill' | 'order'
+
+/** Клавиши раунда сбоку (d5): у «Выбери форму» — варианты 1–4. */
+const KEYS: Record<GrammarGameKind | 'mix', RoundKey[]> = {
+  mcq: [{ keys: ['1', '4'], range: true, label: 'выбрать' }, { keys: ['Enter'], label: 'дальше' }, KEY_EXIT],
+  fill: [{ keys: ['Enter'], label: 'проверить, дальше' }, KEY_EXIT],
+  order: [{ keys: ['Enter'], label: 'проверить, дальше' }, KEY_EXIT],
+  mix: [{ keys: ['Enter'], label: 'проверить, дальше' }, KEY_EXIT],
+}
 
 const TITLES: Record<GrammarGameKind | 'mix', string> = {
   mcq: 'Выбери форму',
@@ -103,26 +110,26 @@ export function GrammarMixMode({
     if (done) void logActivity('grammar')
   }, [done])
 
+  const keys = KEYS[kind ?? 'mix']
+  const answers = review.results.map((r) => r.ok)
   if (!items) {
     return (
-      <div className="flex flex-col gap-4">
-        <GameHeader title={title} onBack={onBack} />
+      <RoundFrame title={title} at={null} total={null} results={[]} keys={keys} onExit={onBack}>
         {topicsError ? <LoadError message={topicsError} onRetry={reloadTopics} /> : <Loading label="Готовим раунд" />}
-      </div>
+      </RoundFrame>
     )
   }
 
   if (items.length === 0) {
     return (
-      <div className="flex flex-col gap-4">
-        <GameHeader title={title} onBack={onBack} />
+      <RoundFrame title={title} at={null} total={null} results={[]} keys={keys} onExit={onBack}>
         <Card className="text-center">
           <p className="font-semibold">Уроков для этого уровня пока нет</p>
           <p className="mt-1 text-sm text-fg-muted">
             Загляни во вкладку «Учёба» → «Грамматика».
           </p>
         </Card>
-      </div>
+      </RoundFrame>
     )
   }
 
@@ -150,8 +157,7 @@ export function GrammarMixMode({
 
   if (done) {
     return (
-      <div className="flex flex-col gap-4">
-        <GameHeader title={title} onBack={onBack} />
+      <RoundFrame title={title} at={items.length} total={items.length} results={answers} keys={keys} onExit={onBack}>
         <RoundResult
           correct={correct}
           total={items.length}
@@ -171,14 +177,12 @@ export function GrammarMixMode({
             review.reset()
           }}
         />
-      </div>
+      </RoundFrame>
     )
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <GameHeader title={title} onBack={onBack} />
-      <RoundProgress index={index + 1} total={items.length} correct={correct} progressLabel="Упражнение" />
+    <RoundFrame title={title} at={index + 1} total={items.length} results={answers} keys={keys} onExit={onBack}>
       <p className="text-sm text-fg-muted">Тема: {current.topicTitle}</p>
       <ExerciseView
         key={`${current.topicId}-${current.ex}-${index}`}
@@ -187,9 +191,6 @@ export function GrammarMixMode({
         onNext={next}
         isLast={index + 1 >= items.length}
       />
-      <Button size="sm" variant="ghost" className="self-center" onClick={onBack}>
-        Завершить досрочно
-      </Button>
-    </div>
+    </RoundFrame>
   )
 }

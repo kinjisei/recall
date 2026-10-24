@@ -155,7 +155,8 @@ function checkThinkingClass() {
 function checkAnswerPopClass() {
   const places = [
     'src/components/exercises.tsx',
-    'src/features/words/GameShell.tsx',
+    // «4 варианта» Практики — QuizRunner (до 4д-4б раунд жил в GameShell)
+    'src/features/words/QuizRunner.tsx',
     'src/features/words/MatchMode.tsx',
     'src/features/words/SentenceBuilder.tsx',
     'src/features/words/SprintMode.tsx',

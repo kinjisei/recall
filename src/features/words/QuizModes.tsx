@@ -1,14 +1,15 @@
 // ============================================================================
 // Три режима на общем движке QuizRunner:
-//   GapMode       — «Пропущенное слово»: предложение-пример с ___ и 4 варианта;
-//   TranslateMode — «Быстрый перевод»: слово и 4 перевода;
+//   GapMode       — «Пропуск в предложении»: предложение-пример с ___ и 4 варианта;
+//   TranslateMode — «Перевод слова»: слово и 4 перевода;
 //   ListeningMode — «Аудирование»: слово звучит, нужно выбрать написание.
 // Слова берутся из общего пула (карточки пользователя + добор из паков).
 // ============================================================================
 import { useCallback, useEffect, useState } from 'react'
 import { loadGamePool, pickDistractors, type GamePool, type PoolItem } from '../../lib/wordPool'
 import { pickWords, shuffle } from './gameUtils'
-import { EmptyPool, GameLoading, QuizRunner, type Question } from './GameShell'
+import { EmptyPool, GameLoading } from './GameShell'
+import { QuizRunner, type Question } from './QuizRunner'
 import type { AppLang } from '../../types'
 
 const ROUND = 8
@@ -165,12 +166,12 @@ export function GapMode({ lang, onBack }: { lang: AppLang; onBack: () => void })
   }, [])
   const { questions, empty, restart } = useRound(lang, build)
 
-  if (empty) return <EmptyPool title="Пропущенное слово" onBack={onBack} />
-  if (!questions) return <GameLoading title="Пропущенное слово" onBack={onBack} />
+  if (empty) return <EmptyPool title="Пропуск в предложении" onBack={onBack} />
+  if (!questions) return <GameLoading title="Пропуск в предложении" onBack={onBack} />
   return (
     <QuizRunner
-      title="Пропущенное слово"
-      hint="Какое слово подходит по смыслу?"
+      title="Пропуск в предложении"
+      task="Какое слово подходит по смыслу?"
       questions={questions}
       lang={lang}
       onBack={onBack}
@@ -191,12 +192,12 @@ export function TranslateMode({ lang, onBack }: { lang: AppLang; onBack: () => v
   }, [])
   const { questions, empty, restart } = useRound(lang, build)
 
-  if (empty) return <EmptyPool title="Быстрый перевод" onBack={onBack} />
-  if (!questions) return <GameLoading title="Быстрый перевод" onBack={onBack} />
+  if (empty) return <EmptyPool title="Перевод слова" onBack={onBack} />
+  if (!questions) return <GameLoading title="Перевод слова" onBack={onBack} />
   return (
     <QuizRunner
-      title="Быстрый перевод"
-      hint="Выбери перевод слова"
+      title="Перевод слова"
+      task="Выбери перевод"
       questions={questions}
       lang={lang}
       onBack={onBack}
@@ -222,7 +223,7 @@ export function ListeningMode({ lang, onBack }: { lang: AppLang; onBack: () => v
   return (
     <QuizRunner
       title="Аудирование"
-      hint="Нажми на динамик ещё раз, если не расслышал"
+      task="Выбери, что прозвучало"
       questions={questions}
       lang={lang}
       onBack={onBack}

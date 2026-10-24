@@ -341,6 +341,10 @@ export const IconVideo = icon(
 export const IconWarning = icon(
   '<path d="M10.7 5.2 3.6 17.6a1.5 1.5 0 0 0 1.3 2.2h14.2a1.5 1.5 0 0 0 1.3-2.2L13.3 5.2a1.5 1.5 0 0 0-2.6 0Z"></path><path d="M12 9.5V14"></path><path d="M12 16.9v.2"></path>',
 )
+/** Верный ответ в круге — пара к IconXCircle (итог ответа в раунде, d5). */
+export const IconCheckCircle = icon(
+  '<circle cx="12" cy="12" r="8.5"></circle><path d="m8.5 12.3 2.4 2.4 4.6-4.9"></path>',
+)
 export const IconXCircle = icon(
   '<circle cx="12" cy="12" r="8.5"></circle><path d="m9 9 6 6M15 9l-6 6"></path>',
 )

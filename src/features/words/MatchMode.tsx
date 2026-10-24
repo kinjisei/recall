@@ -17,7 +17,8 @@ import { getDefinitions } from '../../lib/definitions'
 import { getUserLevel } from '../../lib/level'
 import { loadGamePool, type GamePool, type PoolItem } from '../../lib/wordPool'
 import { markWrong, pickWords, shuffle } from './gameUtils'
-import { GameHeader, GameLoading, EmptyPool } from './GameShell'
+import { GameLoading, EmptyPool } from './GameShell'
+import { RoundFrame } from '../../shared/ui/RoundFrame'
 import type { AppLang } from '../../types'
 
 const PAIRS = 6
@@ -175,10 +176,11 @@ function MatchRound({
     setSelected(null)
   }
 
+  // ход раунда — по найденным парам (содержимое игры по d5 — 4д-4б-2)
+  const found = Array.from({ length: matched.size }, () => true)
   if (complete) {
     return (
-      <div className="flex flex-col gap-4">
-        <GameHeader title="Значения" onBack={onBack} />
+      <RoundFrame title="Значения" at={pairs.length} total={pairs.length} results={found} onExit={onBack}>
         <Card className="flex flex-col items-center text-center">
           <ScoreGlyph percent={mistakes === 0 ? 100 : 65} />
           <p className="mt-2 font-semibold">
@@ -204,17 +206,16 @@ function MatchRound({
         {showReview && (
           <RoundReview items={wrongItems} lang={lang} onClose={() => setShowReview(false)} />
         )}
-      </div>
+      </RoundFrame>
     )
   }
 
   // active:scale — тактильный отклик на тап (у disabled-ячеек не срабатывает)
   const cellBase =
-    'rounded-control border px-3 py-2.5 text-left text-sm transition-[transform,background-color,border-color,color] duration-150 active:scale-[0.97] disabled:active:scale-100'
+    'min-h-11 rounded-control border px-3 py-2.5 text-left text-sm transition-[transform,background-color,border-color,color] duration-150 active:scale-[0.97] disabled:active:scale-100'
 
   return (
-    <div className="flex flex-col gap-4">
-      <GameHeader title="Значения" onBack={onBack} />
+    <RoundFrame title="Значения" at={Math.min(matched.size + 1, pairs.length)} total={pairs.length} results={found} onExit={onBack}>
       <p className="text-sm text-fg-muted">
         {lang === 'en'
           ? 'Нажми слово слева, затем его значение справа — по-английски.'
@@ -277,6 +278,6 @@ function MatchRound({
       <p className="text-center text-sm text-fg-muted">
         Найдено: {matched.size} / {pairs.length}
       </p>
-    </div>
+    </RoundFrame>
   )
 }
