@@ -82,7 +82,7 @@ export function StatTiles({
         >
           <span className="text-xs leading-tight text-fg-muted">{t.label}</span>
           <span className="break-words text-2xl font-semibold leading-tight tabular-nums">
-            {loading ? <span className="animate-skeleton inline-block h-6 w-8 rounded bg-skeleton" /> : t.value}
+            {loading ? <span className="animate-skeleton inline-block h-6 w-8 rounded-tag bg-skeleton" /> : t.value}
           </span>
         </button>
       ))}
@@ -157,13 +157,13 @@ export function SectionTiles({
               data-tile={id}
               className={`${surface} flex min-h-18 min-w-0 items-center gap-2 rounded-control px-3 py-2.5 @lg:gap-3 @lg:px-3.5`}
             >
-              <span className="flex flex-none items-center justify-center text-accent-strong @lg:size-10 @lg:rounded-xl @lg:bg-accent-soft">
+              <span className="flex flex-none items-center justify-center text-accent-strong @lg:size-10 @lg:rounded-tile @lg:bg-accent-soft">
                 <Icon size={20} aria-hidden />
               </span>
               <span className="flex min-w-0 flex-1 flex-col gap-0.5 leading-snug">
                 <span className="break-words text-body font-semibold text-fg @lg:truncate">{title}</span>
                 {st === 'loading' ? (
-                  <span className="animate-skeleton mt-1 block h-3 w-16 rounded bg-skeleton" />
+                  <span className="animate-skeleton mt-1 block h-3 w-16 rounded-full bg-skeleton" />
                 ) : (
                   <span
                     className={`truncate text-note ${st !== 'error' && st.action ? 'font-medium text-accent-strong' : 'text-fg-muted'}`}

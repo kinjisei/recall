@@ -72,7 +72,7 @@ function Participant({
         aria-pressed={on}
         disabled={!canWrite || busy || !allowed.includes(target)}
         onClick={() => pick(target)}
-        className={`min-h-11 flex-1 rounded-xl px-3 text-sm font-semibold transition-colors disabled:opacity-50 ${
+        className={`min-h-11 flex-1 rounded-control-sm px-3 text-sm font-semibold transition-colors disabled:opacity-50 ${
           on ? 'bg-accent-soft text-accent-soft-fg ring-2 ring-control-line-active' : 'bg-tint/[0.06] text-fg-secondary ring-1 ring-control-line'
         }`}
       >
@@ -91,7 +91,7 @@ function Participant({
         aria-pressed={on}
         disabled={!canWrite || busy}
         onClick={() => pick(target)}
-        className={`flex min-h-12 flex-1 flex-col items-start justify-center rounded-xl px-3 py-1.5 text-left transition-colors disabled:opacity-50 ${
+        className={`flex min-h-12 flex-1 flex-col items-start justify-center rounded-control px-3 py-1.5 text-left transition-colors disabled:opacity-50 ${
           on ? 'bg-accent-soft text-accent-soft-fg ring-2 ring-control-line-active' : 'bg-tint/[0.04] text-fg ring-1 ring-control-line'
         }`}
       >

@@ -63,7 +63,7 @@ export function DatePicker({
   }
 
   return (
-    <div className="rounded-2xl border border-tint/[0.08] bg-surface p-3 shadow-card">
+    <div className="rounded-row border border-tint/[0.08] bg-surface p-3 shadow-card">
       <div className="flex items-center justify-between pb-1 pl-2">
         <span className="text-sm font-semibold text-fg" aria-live="polite">
           {monthTitle(month)}
@@ -73,7 +73,7 @@ export function DatePicker({
             type="button"
             aria-label="Предыдущий месяц"
             onClick={() => setMonth(addMonths(month, -1))}
-            className="flex size-11 items-center justify-center rounded-xl text-fg-secondary hover:bg-tint/[0.06]"
+            className="flex size-11 items-center justify-center rounded-tile text-fg-secondary hover:bg-tint/[0.06]"
           >
             <IconChevronLeft size={20} />
           </button>
@@ -81,7 +81,7 @@ export function DatePicker({
             type="button"
             aria-label="Следующий месяц"
             onClick={() => setMonth(addMonths(month, 1))}
-            className="flex size-11 items-center justify-center rounded-xl text-fg-secondary hover:bg-tint/[0.06]"
+            className="flex size-11 items-center justify-center rounded-tile text-fg-secondary hover:bg-tint/[0.06]"
           >
             <IconChevronRight size={20} />
           </button>

@@ -44,7 +44,7 @@ export function Article({ req, title, body, words }: { req: MaterialRequest; tit
         <p key={i} lang={req.lang} className="whitespace-pre-line text-lg leading-relaxed text-fg">
           {markWords(p, words).map((piece, j) =>
             piece.hit ? (
-              <mark key={j} className="rounded-sm bg-accent-soft px-0.5 font-medium text-accent-soft-fg">
+              <mark key={j} className="rounded-mark bg-accent-soft px-0.5 font-medium text-accent-soft-fg">
                 {piece.text}
               </mark>
             ) : (
@@ -70,7 +70,7 @@ export function ExercisesCard({ count, children }: { count: number; children: Re
 }
 
 /** Серая полоса скелетона (d8-5 `.sk`). */
-const Bar = ({ className }: { className: string }) => <span className={`animate-skeleton block rounded-lg bg-skeleton ${className}`} />
+const Bar = ({ className }: { className: string }) => <span className={`animate-skeleton block rounded-tag bg-skeleton ${className}`} />
 
 const LINES = [
   ['w-full', 'w-11/12', 'w-full', 'w-7/12'],
@@ -96,7 +96,7 @@ export function TextSkeleton({ req, exercises }: { req: MaterialRequest; exercis
       <ExercisesCard count={exercises}>
         {Array.from({ length: Math.min(exercises, 6) }, (_, i) => (
           <div key={i} className="flex gap-2.5 rounded-control-sm bg-input px-3 py-2.5">
-            <span className="flex size-6 flex-none items-center justify-center rounded-lg bg-surface text-xs font-semibold text-fg-secondary">{i + 1}</span>
+            <span className="flex size-6 flex-none items-center justify-center rounded-tag bg-surface text-xs font-semibold text-fg-secondary">{i + 1}</span>
             <span className="flex flex-1 flex-col gap-2 py-1">
               <Bar className={`h-3.5 bg-surface! ${i % 2 ? 'w-11/12' : 'w-4/5'}`} />
               <Bar className={`h-3 bg-surface! ${i % 2 ? 'w-1/2' : 'w-2/5'}`} />

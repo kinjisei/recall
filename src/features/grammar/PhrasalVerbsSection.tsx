@@ -118,11 +118,11 @@ function Reference({ entries }: { entries: PhrasalEntry[] }) {
                       </p>
                       <span className="flex flex-none items-center gap-1.5">
                         {i.separable && (
-                          <span className="rounded bg-tint/[0.07] px-1.5 py-0.5 text-[10px] text-fg-muted">
+                          <span className="rounded-mark bg-tint/[0.07] px-1.5 py-0.5 text-[10px] text-fg-muted">
                             разделяемый
                           </span>
                         )}
-                        <span className="rounded bg-accent-soft px-1.5 py-0.5 text-[10px] text-accent-soft-fg">
+                        <span className="rounded-mark bg-accent-soft px-1.5 py-0.5 text-[10px] text-accent-soft-fg">
                           {i.level}
                         </span>
                         <button
@@ -300,7 +300,7 @@ function Trainer({ entries }: { entries: PhrasalEntry[] }) {
               key={opt}
               onClick={() => pick(i)}
               disabled={chosen !== null}
-              className={`lift min-h-[52px] rounded-2xl border px-3 font-medium ${state}`}
+              className={`lift min-h-[52px] rounded-control border px-3 font-medium ${state}`}
             >
               {opt}
             </button>

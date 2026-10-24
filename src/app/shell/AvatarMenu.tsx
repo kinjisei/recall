@@ -103,7 +103,7 @@ export function AvatarMenu({ variant = 'circle' }: { variant?: Variant }) {
           aria-expanded={open}
           aria-label="Меню профиля"
           data-profile-card
-          className="flex w-full items-center gap-2.5 rounded-2xl border border-line p-2 text-left transition-colors hover:bg-row-press active:bg-row-press"
+          className="flex w-full items-center gap-2.5 rounded-control border border-line p-2 text-left transition-colors hover:bg-row-press active:bg-row-press"
         >
           <Avatar name={name} size={36} />
           <span className="min-w-0 flex-1">
@@ -127,11 +127,11 @@ export function AvatarMenu({ variant = 'circle' }: { variant?: Variant }) {
       {open && (
         <div
           role="menu"
-          className={`${leaving ? 'animate-menu-out' : 'animate-menu-in'} absolute z-30 w-56 overflow-hidden rounded-2xl border border-line bg-surface py-1 shadow-raised ${MENU_AT[variant]}`}
+          className={`${leaving ? 'animate-menu-out' : 'animate-menu-in'} absolute z-30 w-56 overflow-hidden rounded-control border border-line bg-surface py-1 shadow-raised ${MENU_AT[variant]}`}
         >
           <p className="truncate px-4 pb-2 pt-1.5 text-xs text-fg-muted">{name}</p>
           {trialText && (
-            <p className="mx-4 mb-2 flex items-start gap-1.5 rounded-lg bg-tint/[0.06] px-2.5 py-1.5 text-caption leading-snug text-fg-secondary" data-trial>
+            <p className="mx-4 mb-2 flex items-start gap-1.5 rounded-tag bg-tint/[0.06] px-2.5 py-1.5 text-caption leading-snug text-fg-secondary" data-trial>
               <IconTimer size={13} className="mt-px flex-none" /> <span>{trialText}</span>
             </p>
           )}

@@ -36,7 +36,7 @@ export function ChartView({ chart }: { chart: ChartSpec }) {
         <div className="mt-2 flex flex-wrap justify-center gap-x-3 gap-y-1">
           {chart.series.map((s, i) => (
             <span key={i} className="flex items-center gap-1.5 text-xs text-fg-secondary">
-              <span className="h-2.5 w-2.5 rounded-sm" style={{ background: `var(--color-chart-${(i % COLORS.length) + 1})` }} />
+              <span className="h-2.5 w-2.5 rounded-full" style={{ background: `var(--color-chart-${(i % COLORS.length) + 1})` }} />
               {s.name}
             </span>
           ))}

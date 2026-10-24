@@ -287,7 +287,7 @@ function WordCardSheet({
           )}
 
           {card.example && (
-            <p className="mt-3 rounded-lg bg-tint/[0.06] px-3 py-2 text-sm italic leading-relaxed text-fg-muted">
+            <p className="mt-3 rounded-tile bg-tint/[0.06] px-3 py-2 text-sm italic leading-relaxed text-fg-muted">
               «{card.example}»
             </p>
           )}
@@ -379,14 +379,14 @@ function WordRow({
         <div className="flex shrink-0 gap-2">
           <button
             onClick={onDelete}
-            className="rounded-lg bg-danger/90 px-3 py-1.5 text-sm font-medium text-danger-fg"
+            className="rounded-tag bg-danger/90 px-3 py-1.5 text-sm font-medium text-danger-fg"
           >
             Удалить
           </button>
           <button
             onClick={onCancelDelete}
             aria-label="Отмена"
-            className="rounded-lg border border-tint/[0.10] px-2 py-1.5 text-fg-secondary"
+            className="rounded-tag border border-tint/[0.10] px-2 py-1.5 text-fg-secondary"
           >
             <IconClose size={16} />
           </button>
@@ -396,7 +396,7 @@ function WordRow({
   }
 
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-tint/[0.08] bg-surface px-4 py-3 shadow-card">
+    <div className="flex items-center gap-3 rounded-row border border-tint/[0.08] bg-surface px-4 py-3 shadow-card">
       {/* Тап по строке — карточка со ВСЕМ содержимым: в строке слово и перевод
           обрезаны, а пример не виден вовсе, и на телефоне длинный перевод было
           не прочитать (жалоба владельца 24.07). */}
@@ -421,21 +421,21 @@ function WordRow({
         <button
           onClick={() => speak(card.front, { lang })}
           aria-label="Озвучить"
-          className="rounded-lg p-2 text-fg-muted hover:text-fg"
+          className="rounded-tile p-2 text-fg-muted hover:text-fg"
         >
           <IconSpeaker size={17} />
         </button>
         <button
           onClick={onEdit}
           aria-label={`Изменить ${card.front}`}
-          className="rounded-lg p-2 text-fg-muted hover:text-fg"
+          className="rounded-tile p-2 text-fg-muted hover:text-fg"
         >
           <IconPencil size={17} />
         </button>
         <button
           onClick={onAskDelete}
           aria-label={`Удалить ${card.front}`}
-          className="rounded-lg p-2 text-fg-muted hover:text-danger-strong"
+          className="rounded-tile p-2 text-fg-muted hover:text-danger-strong"
         >
           <IconTrash size={17} />
         </button>

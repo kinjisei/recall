@@ -40,7 +40,7 @@ export function TrialQuestion({
   return (
     <section
       aria-label="После пробного урока"
-      className={`flex gap-3 rounded-2xl border border-accent-line bg-surface p-4 shadow-card ${desktop ? 'items-center' : 'flex-col'}`}
+      className={`flex gap-3 rounded-card border border-accent-line bg-surface p-4 shadow-card ${desktop ? 'items-center' : 'flex-col'}`}
     >
       <div className="flex min-w-0 flex-1 items-center gap-3">
         <span aria-hidden className="flex size-10 flex-none items-center justify-center rounded-full bg-accent-soft text-accent-soft-fg">

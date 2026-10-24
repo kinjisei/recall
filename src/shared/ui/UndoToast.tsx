@@ -87,7 +87,7 @@ export function ToastView({
         <button
           type="button"
           onClick={onAction}
-          className="min-h-11 flex-none rounded-xl px-3.5 font-semibold text-toast-action active:bg-ghost-press"
+          className="min-h-11 flex-none rounded-tile px-3.5 font-semibold text-toast-action active:bg-ghost-press"
         >
           {actionLabel}
         </button>

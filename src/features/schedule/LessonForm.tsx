@@ -235,7 +235,7 @@ export function LessonForm({
 
         <FormLink link={draft.link} defaultLink={defaultLink} group={draft.kind === 'group'} title={draft.title} onLink={(link) => patch({ link })} />
 
-        <p className="flex items-start gap-2 rounded-xl bg-tint/[0.04] px-3 py-2.5 text-note text-fg-secondary" data-lesson-summary>
+        <p className="flex items-start gap-2 rounded-control bg-tint/[0.04] px-3 py-2.5 text-note text-fg-secondary" data-lesson-summary>
           <IconList size={16} aria-hidden className="mt-0.5 flex-none text-fg-muted" />
           {draftSummary(effective)}
         </p>

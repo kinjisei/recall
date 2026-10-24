@@ -124,7 +124,7 @@ function UserRow({
   }
 
   return (
-    <div className="animate-fade-up rounded-2xl border border-tint/[0.08] bg-surface p-4 shadow-card">
+    <div className="animate-fade-up rounded-card border border-tint/[0.08] bg-surface p-4 shadow-card">
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
         <span className="min-w-0 font-medium">{row.email}</span>
         {row.display_name && (
@@ -170,7 +170,7 @@ function UserRow({
           сколько останется без покрытия и не понижается ли действующий тариф */}
       {isPaidPlan(selPlan) &&
         confirmWarnings(row, selPlan, row.students ?? 0).map((w) => (
-          <p key={w} className="mt-2 rounded-xl bg-warning/10 px-3 py-2 text-xs text-warning-soft-fg">
+          <p key={w} className="mt-2 rounded-tile bg-warning/10 px-3 py-2 text-xs text-warning-soft-fg">
             {w}
           </p>
         ))}
@@ -181,7 +181,7 @@ function UserRow({
           onChange={(id) => setSelPlan(id as PlanId)}
           label="Тариф"
           options={PLAN_OPTIONS.map((p) => ({ id: p, label: PLAN_LABELS[p] }))}
-          triggerClassName="flex h-11 items-center justify-between gap-2 rounded-xl border border-tint/[0.10] bg-input px-3 text-sm outline-none focus:border-accent-line"
+          triggerClassName="flex h-11 items-center justify-between gap-2 rounded-control-sm border border-tint/[0.10] bg-input px-3 text-sm outline-none focus:border-accent-line"
         />
 
         {selPlan === 'free' ? (
@@ -192,7 +192,7 @@ function UserRow({
             onChange={(id) => setSelMonths(Number(id))}
             label="Срок"
             options={MONTH_OPTIONS.map((m) => ({ id: String(m), label: `${m} мес.` }))}
-            triggerClassName="flex h-11 items-center justify-between gap-2 rounded-xl border border-tint/[0.10] bg-input px-3 text-sm outline-none focus:border-accent-line"
+            triggerClassName="flex h-11 items-center justify-between gap-2 rounded-control-sm border border-tint/[0.10] bg-input px-3 text-sm outline-none focus:border-accent-line"
           />
         )}
 

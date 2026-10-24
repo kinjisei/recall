@@ -67,14 +67,14 @@ export function PlanView({
                     {(onToggle || done) && (
                       <span
                         aria-hidden
-                        className={`mt-0.5 flex size-5.5 flex-none items-center justify-center rounded-md ${done ? 'bg-success text-success-fg' : 'bg-surface inset-ring-2 inset-ring-fg-faint'}`}
+                        className={`mt-0.5 flex size-5.5 flex-none items-center justify-center rounded-tag ${done ? 'bg-success text-success-fg' : 'bg-surface inset-ring-2 inset-ring-fg-faint'}`}
                       >
                         {done && <IconCheck size={14} />}
                       </span>
                     )}
                   </>
                 )
-                const look = 'flex min-h-11 items-start gap-3 rounded-xl bg-input px-2.75 py-2.25 text-left'
+                const look = 'flex min-h-11 items-start gap-3 rounded-control-sm bg-input px-2.75 py-2.25 text-left'
                 return onToggle ? (
                   <button
                     key={ii}

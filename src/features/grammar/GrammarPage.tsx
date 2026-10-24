@@ -250,7 +250,7 @@ function LessonsSection({ lang }: { lang: AppLang }) {
             <div key={level}>
               <button
                 onClick={() => setOpenLevel((cur) => (cur === level ? null : level))}
-                className="flex min-h-11 w-full items-center justify-between rounded-lg bg-surface px-3 py-2 text-left"
+                className="flex min-h-11 w-full items-center justify-between rounded-control-sm bg-surface px-3 py-2 text-left"
               >
                 <span className="text-sm font-bold">
                   Уровень {level}{' '}
@@ -311,7 +311,7 @@ function TopicScreen({
       <div className="flex gap-2">
         <button
           onClick={() => setMode('theory')}
-          className={`min-h-[44px] rounded-lg px-4 text-sm font-semibold ${
+          className={`min-h-[44px] rounded-control-sm px-4 text-sm font-semibold ${
             mode === 'theory'
               ? 'bg-accent-soft text-accent-soft-fg'
               : 'bg-tint/[0.07] text-fg-secondary'
@@ -322,7 +322,7 @@ function TopicScreen({
         {topic.exercises.length > 0 && (
           <button
             onClick={() => setMode('exercises')}
-            className={`min-h-[44px] rounded-lg px-4 text-sm font-semibold ${
+            className={`min-h-[44px] rounded-control-sm px-4 text-sm font-semibold ${
               mode === 'exercises'
                 ? 'bg-accent-soft text-accent-soft-fg'
                 : 'bg-tint/[0.07] text-fg-secondary'
@@ -385,7 +385,7 @@ function TheoryBlock({ block, lang }: { block: GrammarTheoryBlock; lang: AppLang
     // абзацы «⚠️ типичная ошибка» — в аккуратный callout с иконкой вместо эмодзи
     if (block.text.startsWith('⚠')) {
       return (
-        <div className="flex gap-2 rounded-xl border border-warning/25 bg-warning/[0.07] px-3 py-2">
+        <div className="flex gap-2 rounded-tile border border-warning/25 bg-warning/[0.07] px-3 py-2">
           <IconWarning size={16} className="mt-0.5 shrink-0 text-warning" />
           <p className="leading-relaxed text-warning-soft-fg/90">
             {block.text.replace(/^⚠️?\s*/, '')}
@@ -399,7 +399,7 @@ function TheoryBlock({ block, lang }: { block: GrammarTheoryBlock; lang: AppLang
     // текст примера: испанские уроки хранят его в es, английские — в en
     const sample = block.es ?? block.en ?? ''
     return (
-      <div className="rounded-xl bg-surface px-3 py-2">
+      <div className="rounded-tile bg-surface px-3 py-2">
         <div className="flex items-center gap-2">
           <p className="font-medium text-fg">{sample}</p>
           <button

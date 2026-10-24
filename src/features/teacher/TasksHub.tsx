@@ -67,7 +67,7 @@ const aiReady = (w: WaitingWork) => !!w.assignment.ai_review
 
 function Tile({ Icon }: { Icon: IconLike }) {
   return (
-    <span className="flex size-11 flex-none items-center justify-center rounded-xl bg-accent-soft text-accent-soft-fg">
+    <span className="flex size-11 flex-none items-center justify-center rounded-control-sm bg-accent-soft text-accent-soft-fg">
       <Icon size={22} />
     </span>
   )

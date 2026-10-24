@@ -192,7 +192,7 @@ function MatchRound({
           {wrongItems.length > 0 && (
             <button
               onClick={() => setShowReview(true)}
-              className="lift mt-4 w-full rounded-xl border border-tint/[0.12] py-2.5 text-sm font-medium text-fg-secondary"
+              className="lift mt-4 w-full rounded-tile border border-tint/[0.12] py-2.5 text-sm font-medium text-fg-secondary"
             >
               Посмотреть результаты
             </button>
@@ -210,7 +210,7 @@ function MatchRound({
 
   // active:scale — тактильный отклик на тап (у disabled-ячеек не срабатывает)
   const cellBase =
-    'rounded-xl border px-3 py-2.5 text-left text-sm transition-[transform,background-color,border-color,color] duration-150 active:scale-[0.97] disabled:active:scale-100'
+    'rounded-control border px-3 py-2.5 text-left text-sm transition-[transform,background-color,border-color,color] duration-150 active:scale-[0.97] disabled:active:scale-100'
 
   return (
     <div className="flex flex-col gap-4">

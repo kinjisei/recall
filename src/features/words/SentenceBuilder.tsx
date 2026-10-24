@@ -177,7 +177,7 @@ function BuildTask({
       <p className="text-lg font-medium">{task.ru}</p>
 
       <div
-        className={`min-h-[48px] rounded-lg border-2 border-dashed p-2 ${
+        className={`min-h-[48px] rounded-control border-2 border-dashed p-2 ${
           checked ? (ok ? 'border-success' : 'border-danger') : 'border-tint/[0.10]'
         }`}
       >
@@ -187,7 +187,7 @@ function BuildTask({
               key={i}
               onClick={() => !checked && setBuilt((arr) => arr.filter((_, j) => j !== i))}
               disabled={checked}
-              className="rounded-lg bg-accent px-3 py-1.5 text-sm text-accent-fg"
+              className="rounded-tag bg-accent px-3 py-1.5 text-sm text-accent-fg"
             >
               {b.w}
             </button>
@@ -204,7 +204,7 @@ function BuildTask({
             key={item.i}
             onClick={() => !checked && setBuilt((arr) => [...arr, item])}
             disabled={checked || used.has(item.i)}
-            className={`rounded-lg border px-3 py-1.5 text-sm ${
+            className={`rounded-tag border px-3 py-1.5 text-sm ${
               used.has(item.i)
                 ? 'border-tint/[0.08] text-fg-faint'
                 : 'border-tint/[0.10]'
@@ -216,7 +216,7 @@ function BuildTask({
       </div>
 
       {!checked && hint && (
-        <p className="rounded-lg bg-warning/10 px-3 py-2 text-sm text-warning-soft-fg">
+        <p className="rounded-tile bg-warning/10 px-3 py-2 text-sm text-warning-soft-fg">
           {hint} <span className="text-fg-muted">Попробуй ещё раз.</span>
         </p>
       )}

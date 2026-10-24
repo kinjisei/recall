@@ -61,7 +61,7 @@ export function InviteDesk({ stats, mine }: { stats: ReferralStats; mine: Teache
               )}
             </div>
             <span className="mx-0.5 -mb-1.5 text-note font-medium text-fg-muted">Так увидит коллега</span>
-            <p className="whitespace-pre-line break-words rounded-control-lg rounded-bl-md bg-input px-4 py-3.5 text-body text-fg" data-referral-message>
+            <p className="whitespace-pre-line break-words rounded-control-lg rounded-bl-mark bg-input px-4 py-3.5 text-body text-fg" data-referral-message>
               {before}
               {at >= 0 && <span className="break-all text-accent-soft-fg underline underline-offset-2">{s.link}</span>}
               {after}

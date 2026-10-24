@@ -13,7 +13,7 @@ import { IconEye } from '../../shared/ui/icons'
 import { Button } from '../../shared/ui/Button'
 
 export const inputClass =
-  'h-11 w-full rounded-xl border-none bg-input px-4 text-sm text-fg ring-1 ring-control-line placeholder:text-fg-muted outline-none focus:ring-2 focus:ring-accent-line'
+  'h-11 w-full rounded-control-sm border-none bg-input px-4 text-sm text-fg ring-1 ring-control-line placeholder:text-fg-muted outline-none focus:ring-2 focus:ring-accent-line'
 
 /**
  * Переливающийся фон: градиент + 3 дрейфующих blur-пятна + блик. Цвета —
@@ -80,7 +80,7 @@ export function AuthCard({
       <div className="fixed inset-0" aria-hidden="true">
         <AuroraBg />
       </div>
-      <div className="relative z-10 flex w-full max-w-md animate-fade-in flex-col gap-7 rounded-3xl border border-line bg-glass p-6 backdrop-blur-2xl">
+      <div className="relative z-10 flex w-full max-w-md animate-fade-in flex-col gap-7 rounded-card border border-line bg-glass p-6 backdrop-blur-2xl">
         <div className="flex items-center gap-2">
           <BrandMark size={22} />
           <span className="text-lg font-medium tracking-tight">Recall</span>

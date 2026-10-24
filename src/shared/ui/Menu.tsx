@@ -76,7 +76,7 @@ export function MenuPanel({
     <div
       role="menu"
       aria-label={label ?? title}
-      className={`${leaving ? 'animate-menu-out' : 'animate-menu-in'} absolute z-30 flex flex-col rounded-2xl border border-line bg-surface p-1.5 shadow-raised ${className}`}
+      className={`${leaving ? 'animate-menu-out' : 'animate-menu-in'} absolute z-30 flex flex-col rounded-control border border-line bg-surface p-1.5 shadow-raised ${className}`}
     >
       {title && <p className="px-2.5 pb-1.5 pt-2 text-xs font-semibold text-fg-muted">{title}</p>}
       {children}

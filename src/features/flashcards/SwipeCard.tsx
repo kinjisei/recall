@@ -97,7 +97,7 @@ export function SwipeCard({
   const againOpacity = Math.min(1, Math.max(0, -x) / SWIPE_THRESHOLD)
 
   const faceCls =
-    'absolute inset-0 flex cursor-pointer flex-col items-center justify-center gap-3 rounded-3xl border border-tint/[0.08] p-6 text-center [backface-visibility:hidden]'
+    'absolute inset-0 flex cursor-pointer flex-col items-center justify-center gap-3 rounded-card border border-tint/[0.08] p-6 text-center [backface-visibility:hidden]'
 
   return (
     <div
@@ -159,13 +159,13 @@ export function SwipeCard({
 
       {/* штампы направления — поверх, не участвуют во вращении */}
       <span
-        className="absolute left-4 top-4 z-10 rounded-xl border-2 border-accent px-3 py-1 text-lg font-bold text-accent-strong"
+        className="absolute left-4 top-4 z-10 rounded-tile border-2 border-accent px-3 py-1 text-lg font-bold text-accent-strong"
         style={{ opacity: rememberOpacity, transform: 'rotate(-12deg)' }}
       >
         Помню
       </span>
       <span
-        className="absolute right-4 top-4 z-10 rounded-xl border-2 border-tint/40 px-3 py-1 text-lg font-bold text-tint/70"
+        className="absolute right-4 top-4 z-10 rounded-tile border-2 border-tint/40 px-3 py-1 text-lg font-bold text-tint/70"
         style={{ opacity: againOpacity, transform: 'rotate(12deg)' }}
       >
         Ещё раз

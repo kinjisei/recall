@@ -72,7 +72,7 @@ export function RowCard({
       {lead ??
         (IconCmp && (
           <span
-            className={`flex size-10 flex-none items-center justify-center rounded-xl ${
+            className={`flex size-10 flex-none items-center justify-center rounded-tile ${
               active
                 ? 'bg-accent-soft text-accent-soft-fg'
                 : 'bg-tint/[0.06] text-fg-secondary'

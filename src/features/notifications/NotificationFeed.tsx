@@ -62,13 +62,13 @@ function FeedItem({ n, onOpen }: { n: AppNotification; onOpen: () => void }) {
       {view.body && <span className="mt-0.5 block text-sm text-fg-secondary">{view.body}</span>}
       {/* весь пункт — ссылка; подпись говорит, что по нажатию (макет t9-2) */}
       {view.href && view.action && (
-        <span className="mt-2.5 inline-flex rounded-xl bg-accent-soft px-3 py-1.5 text-sm font-medium text-accent-soft-fg" data-action>
+        <span className="mt-2.5 inline-flex rounded-tag bg-accent-soft px-3 py-1.5 text-sm font-medium text-accent-soft-fg" data-action>
           {view.action}
         </span>
       )}
     </>
   )
-  const cls = `block rounded-2xl border px-4 py-3 text-left ${
+  const cls = `block rounded-row border px-4 py-3 text-left ${
     fresh ? 'border-accent-line bg-accent-soft/40' : 'border-tint/[0.08] bg-surface'
   }`
   return (

@@ -45,14 +45,14 @@ function Stepper({ steps, current, go }: { steps: WizardStepId[]; current: Wizar
               <button
                 type="button"
                 onClick={onGo}
-                className="flex min-h-11 items-center gap-2 rounded-lg pl-1.5 pr-3 text-sm font-medium text-accent-strong underline decoration-1 underline-offset-3 active:bg-ghost-press"
+                className="flex min-h-11 items-center gap-2 rounded-control-sm pl-1.5 pr-3 text-sm font-medium text-accent-strong underline decoration-1 underline-offset-3 active:bg-ghost-press"
               >
                 {body}
               </button>
             ) : (
               <span
                 aria-current={cur ? 'step' : undefined}
-                className={`flex min-h-9 items-center gap-2 rounded-lg pl-1.5 pr-3 text-sm ${cur ? 'bg-accent-soft font-semibold text-accent-soft-fg' : 'font-medium text-fg-muted'}`}
+                className={`flex min-h-9 items-center gap-2 rounded-tile pl-1.5 pr-3 text-sm ${cur ? 'bg-accent-soft font-semibold text-accent-soft-fg' : 'font-medium text-fg-muted'}`}
               >
                 {body}
               </span>

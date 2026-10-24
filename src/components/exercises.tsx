@@ -25,7 +25,7 @@ import type { GrammarExercise } from '../types'
 /** Подсказка о месте ошибки — одинаковая на всех типах упражнений. */
 function HintLine({ text }: { text: string }) {
   return (
-    <p className="rounded-lg bg-warning/10 px-3 py-2 text-sm text-warning-soft-fg">
+    <p className="rounded-tile bg-warning/10 px-3 py-2 text-sm text-warning-soft-fg">
       {text} <span className="text-fg-muted">Попробуй ещё раз.</span>
     </p>
   )
@@ -138,7 +138,7 @@ export function McqExercise({
               data-key={i + 1}
               onClick={() => choose(i)}
               disabled={done || isWrong}
-              className={`rounded-xl border px-4 py-2.5 text-left transition-colors ${cls}${pop}`}
+              className={`rounded-control border px-4 py-2.5 text-left transition-colors ${cls}${pop}`}
             >
               {opt}
             </button>
@@ -196,7 +196,7 @@ export function FillExercise({
     <Card className="flex flex-col gap-3">
       <p className="text-lg font-medium">{exercise.prompt}</p>
       <input
-        className={`w-full rounded-lg border bg-input px-3 py-2 outline-none ${
+        className={`w-full rounded-tile border bg-input px-3 py-2 outline-none ${
           done
             ? solved
               ? 'border-success'
@@ -311,7 +311,7 @@ export function OrderExercise({
 
       {/* Собранное предложение */}
       <div
-        className={`min-h-[48px] rounded-lg border-2 border-dashed p-2 ${
+        className={`min-h-[48px] rounded-control border-2 border-dashed p-2 ${
           checked
             ? ok
               ? 'border-success'
@@ -325,7 +325,7 @@ export function OrderExercise({
               key={i}
               onClick={() => !checked && setBuilt((arr) => arr.filter((_, j) => j !== i))}
               disabled={checked}
-              className="rounded-lg bg-accent px-3 py-1.5 text-sm text-accent-fg"
+              className="rounded-tag bg-accent px-3 py-1.5 text-sm text-accent-fg"
             >
               {b.w}
             </button>
@@ -345,7 +345,7 @@ export function OrderExercise({
             key={item.i}
             onClick={() => !checked && setBuilt((arr) => [...arr, item])}
             disabled={checked || usedIdx.has(item.i)}
-            className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${
+            className={`rounded-tag border px-3 py-1.5 text-sm transition-colors ${
               usedIdx.has(item.i)
                 ? 'border-tint/[0.06] text-fg-muted' // использованное слово — приглушено
                 : 'border-tint/[0.10] active:scale-[0.97]'

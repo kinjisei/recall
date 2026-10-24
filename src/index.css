@@ -78,7 +78,7 @@ a,
 :where(button, a, input, textarea, select, [tabindex]):focus-visible {
   outline: 2px solid var(--color-focus);
   outline-offset: 2px;
-  border-radius: 0.5rem;
+  border-radius: var(--radius-tag);
 }
 
 /* Смена вида в Настройках («Цвет», «Режим»; макет u4-3): фон, карточки,
@@ -159,7 +159,7 @@ a,
     justify-content: center;
     vertical-align: middle;
     border: 1px solid color-mix(in srgb, var(--color-tint) 14%, transparent);
-    border-radius: 0.375rem;
+    border-radius: var(--radius-mark);
     font-size: var(--text-caption);
     color: var(--color-fg-muted);
   }

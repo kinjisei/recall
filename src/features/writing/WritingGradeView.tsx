@@ -40,7 +40,7 @@ export function WritingGradeView({ grade, mode }: { grade: WritingGrade; mode: W
   return (
     <div className="flex flex-col gap-4">
       {mode === 'ielts' ? (
-        <div className="rounded-2xl bg-accent-soft px-4 py-3 text-center">
+        <div className="rounded-row bg-accent-soft px-4 py-3 text-center">
           <p className="text-3xl font-bold text-accent-soft-fg">
             {grade.band != null ? `Band ${grade.band}` : '—'}
           </p>
@@ -98,7 +98,7 @@ export function WritingGradeView({ grade, mode }: { grade: WritingGrade; mode: W
             {grade.focus.map((f, i) => (
               <div
                 key={i}
-                className="rounded-xl border border-accent-line/40 bg-accent-soft/25 px-3 py-2.5"
+                className="rounded-control border border-accent-line/40 bg-accent-soft/25 px-3 py-2.5"
               >
                 <p className="text-sm font-medium text-accent-soft-fg">{f.type}</p>
                 {f.why && (
@@ -168,7 +168,7 @@ export function WritingGradeView({ grade, mode }: { grade: WritingGrade; mode: W
         <Section title="Как сказать лучше">
           <div className="flex flex-col gap-1.5">
             {grade.rewrites.map((r, i) => (
-              <div key={i} className="rounded-xl bg-tint/[0.04] px-3 py-2 text-sm">
+              <div key={i} className="rounded-tile bg-tint/[0.04] px-3 py-2 text-sm">
                 <p className="text-fg-muted">{r.was}</p>
                 <p className="text-success-soft-fg">→ {r.better}</p>
               </div>
@@ -196,7 +196,7 @@ function Chip({ label, ok }: { label: string; ok: boolean }) {
 /** Правка «было → стало» и, если есть, почему («Предлог: at home», Ф2.17-4в-1). */
 function ErrorItem({ e }: { e: NonNullable<WritingGrade['errors']>[number] }) {
   return (
-    <div className="rounded-xl border border-danger/25 px-3 py-2 text-sm">
+    <div className="rounded-tile border border-danger/25 px-3 py-2 text-sm">
       <p className="text-danger-soft-fg line-through decoration-danger/60">{e.was}</p>
       <p className="text-success-soft-fg">→ {e.fix}</p>
       {e.why && <p className="mt-0.5 text-note text-fg-muted">{e.why}</p>}

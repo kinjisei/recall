@@ -44,7 +44,7 @@ export function InviteBlock({ card, seats }: { card: StudentCard; seats: SeatsSt
 
   return (
     <section
-      className="flex flex-col gap-3 rounded-2xl border border-accent-line bg-surface p-4 shadow-card"
+      className="flex flex-col gap-3 rounded-card border border-accent-line bg-surface p-4 shadow-card"
       data-card-invite
     >
       <h3 className="flex items-center gap-2 font-semibold">
@@ -103,7 +103,7 @@ export function InviteShare({
   return (
     <>
       <p
-        className="whitespace-pre-line break-words rounded-xl bg-input px-4 py-3 text-sm leading-relaxed text-fg-secondary"
+        className="whitespace-pre-line break-words rounded-control bg-input px-4 py-3 text-sm leading-relaxed text-fg-secondary"
         data-invite-message
       >
         {message}

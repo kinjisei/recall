@@ -164,10 +164,10 @@ function StepLanguage({ onPick, onTeacher }: { onPick: (l: AppLang) => void; onT
           <button
             key={o.id}
             onClick={() => onPick(o.id)}
-            className="lift animate-fade-up flex aspect-square flex-col items-center justify-center gap-3 rounded-3xl border border-tint/[0.08] bg-surface shadow-card"
+            className="lift animate-fade-up flex aspect-square flex-col items-center justify-center gap-3 rounded-card border border-tint/[0.08] bg-surface shadow-card"
             style={{ animationDelay: `${0.05 + i * 0.08}s` }}
           >
-            <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-accent-soft text-2xl font-medium text-accent-soft-fg">
+            <span className="flex h-16 w-16 items-center justify-center rounded-row bg-accent-soft text-2xl font-medium text-accent-soft-fg">
               {o.label}
             </span>
             <span className="text-[15px] font-medium">{o.desc}</span>
@@ -240,7 +240,7 @@ function StepLevel({
           EN ещё и ручной выбор, чтобы не заставлять новичка проходить тест. */}
       <button
         onClick={onPlacement}
-        className="lift animate-fade-up rounded-2xl border border-accent-line bg-linear-135 from-accent/22 to-accent/10 px-4 py-4 text-left"
+        className="lift animate-fade-up rounded-row border border-accent-line bg-linear-135 from-accent/22 to-accent/10 px-4 py-4 text-left"
       >
         <span className="block text-[15px] font-medium">
           Пройти тест · до {lang === 'es' ? 40 : 50} вопросов
@@ -258,7 +258,7 @@ function StepLevel({
               <button
                 key={l}
                 onClick={() => onPick(l)}
-                className={`lift animate-fade-up rounded-2xl border px-4 py-4 text-left ${
+                className={`lift animate-fade-up rounded-row border px-4 py-4 text-left ${
                   level === l
                     ? 'border-accent-line bg-accent/16'
                     : 'border-tint/[0.08] bg-surface'
@@ -299,7 +299,7 @@ function StepLevel({
         </Button>
         <button
           onClick={onSkip}
-          className="h-13 rounded-2xl border border-tint/[0.12] py-3.5 font-medium text-fg-secondary transition-[filter,transform] active:scale-[0.98]"
+          className="h-13 rounded-control border border-tint/[0.12] py-3.5 font-medium text-fg-secondary transition-[filter,transform] active:scale-[0.98]"
         >
           Не знаю свой уровень
         </button>
@@ -366,10 +366,10 @@ function StepReady({
         {PLAN.map((p, i) => (
           <div
             key={p.title}
-            className="animate-fade-up flex items-center gap-3.5 rounded-2xl border border-tint/[0.08] bg-surface px-4 py-3.5 shadow-card"
+            className="animate-fade-up flex items-center gap-3.5 rounded-row border border-tint/[0.08] bg-surface px-4 py-3.5 shadow-card"
             style={{ animationDelay: `${0.1 + i * 0.09}s` }}
           >
-            <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-accent-soft text-accent-soft-fg">
+            <span className="flex h-10 w-10 flex-none items-center justify-center rounded-tile bg-accent-soft text-accent-soft-fg">
               <p.Icon size={20} />
             </span>
             <span className="flex flex-col">
@@ -390,7 +390,7 @@ function StepReady({
             </Button>
             <button
               onClick={() => setShowCode(true)}
-              className="rounded-2xl border border-tint/[0.12] py-3.5 font-medium text-fg-secondary transition-[filter,transform] active:scale-[0.98]"
+              className="rounded-control border border-tint/[0.12] py-3.5 font-medium text-fg-secondary transition-[filter,transform] active:scale-[0.98]"
             >
               У меня есть преподаватель
             </button>

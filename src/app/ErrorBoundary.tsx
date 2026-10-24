@@ -70,7 +70,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
                 sessionStorage.removeItem(RELOAD_AT)
                 window.location.reload()
               }}
-              className="min-h-11 rounded-xl bg-accent px-5 py-2.5 font-semibold text-accent-fg hover:brightness-110"
+              className="min-h-11 rounded-control-sm bg-accent px-5 py-2.5 font-semibold text-accent-fg hover:brightness-110"
             >
               Обновить
             </button>
@@ -79,7 +79,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
                 sessionStorage.removeItem(RELOAD_AT)
                 window.location.assign('/')
               }}
-              className="min-h-11 rounded-xl border border-tint/[0.12] px-5 py-2.5 font-medium text-fg-secondary"
+              className="min-h-11 rounded-control-sm border border-tint/[0.12] px-5 py-2.5 font-medium text-fg-secondary"
             >
               На главную
             </button>

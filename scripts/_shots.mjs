@@ -32,17 +32,19 @@ export async function settleAnimations(page) {
  * у значков-подсказок). Проверка смоука может
  * дождаться одного элемента, а соседний блок ещё грузится — и снимок ловил
  * заглушку вместо приглашения и «Ближайших» (приёмка Ф2.11, снимок 07 на
- * 1280). Не дождались за `ms` — снимаем как есть: сбой тоже надо видеть.
+ * 1280). Не дождались за `ms` — снимаем как есть: сбой тоже надо видеть, —
+ * но вслух: false, и `settledScreenshot` пишет «⚠ заглушка» (в 4д-3 снимок
+ * «Письменных заданий» вышел со списком-заглушкой, а в итоге стояло ✓).
  */
 export async function waitForData(page, ms = 10_000) {
-  await page
+  return page
     .waitForFunction(() => !document.querySelector('main :is(div, span):is(.animate-pulse, .animate-skeleton)'), { polling: 250, timeout: ms })
-    .catch(() => {})
+    .then(() => true, () => false)
 }
 
 /** page.screenshot(options), но экран — в конечном виде: данные пришли, надписи проявились. */
 export async function settledScreenshot(page, options) {
-  await waitForData(page)
+  if (!(await waitForData(page))) console.log(`⚠ заглушка загрузки не ушла за 10 с — снимок с ней: ${options?.path ?? '(без файла)'}`)
   const style = await page.addStyleTag({ content: NO_MOTION })
   try {
     await settleAnimations(page)

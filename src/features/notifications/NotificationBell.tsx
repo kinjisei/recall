@@ -76,7 +76,7 @@ export function NotificationBell({ variant = 'icon' }: { variant?: 'icon' | 'row
           type="button"
           onClick={() => setOpen(true)}
           aria-label={label}
-          className="flex h-11 w-full items-center gap-3 rounded-2xl px-3 text-body font-semibold text-fg-secondary transition-colors hover:text-fg"
+          className="flex h-11 w-full items-center gap-3 rounded-control-sm px-3 text-body font-semibold text-fg-secondary transition-colors hover:text-fg"
         >
           <IconBell size={22} />
           <span className="flex-1 text-left">Уведомления</span>
@@ -87,7 +87,7 @@ export function NotificationBell({ variant = 'icon' }: { variant?: 'icon' | 'row
           type="button"
           onClick={() => setOpen(true)}
           aria-label={label}
-          className="group relative flex size-12 items-center justify-center rounded-2xl text-fg-muted transition-colors hover:bg-tint/[0.06] hover:text-fg-secondary"
+          className="group relative flex size-12 items-center justify-center rounded-control text-fg-muted transition-colors hover:bg-tint/[0.06] hover:text-fg-secondary"
         >
           <span className="relative flex">
             <IconBell size={22} />

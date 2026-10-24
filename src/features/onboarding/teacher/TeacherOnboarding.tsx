@@ -123,7 +123,7 @@ export function TeacherOnboarding({
             aria-label="Назад"
             aria-hidden={!back}
             tabIndex={back ? 0 : -1}
-            className={`flex size-11 shrink-0 items-center justify-center rounded-xl text-accent-strong lg:hidden ${back ? '' : 'invisible'}`}
+            className={`flex size-11 shrink-0 items-center justify-center rounded-control-sm text-accent-strong lg:hidden ${back ? '' : 'invisible'}`}
           >
             <IconChevronLeft size={24} />
           </button>

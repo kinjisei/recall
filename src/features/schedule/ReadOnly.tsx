@@ -25,7 +25,7 @@ export function ReadOnlyLine({ plan }: { plan: MyPlan | null }) {
 /** Строка в шторке вместо действий (t9-3 «нажатие на выключенное»). */
 export function PlanRequired() {
   return (
-    <p className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl bg-accent-soft px-3 py-2.5 text-sm text-accent-soft-fg">
+    <p className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-control bg-accent-soft px-3 py-2.5 text-sm text-accent-soft-fg">
       <span className="min-w-0 flex-1">{PLAN_REQUIRED_TEXT}</span>
       <AppLink to="/pay" className="flex min-h-11 items-center font-semibold underline underline-offset-2">
         Продлить

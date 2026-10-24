@@ -131,7 +131,7 @@ export function LessonSheet({
         )}
 
         {askTrial && single && canWrite && (
-          <div className="flex flex-col gap-2 rounded-2xl border border-accent-line p-3">
+          <div className="flex flex-col gap-2 rounded-row border border-accent-line p-3">
             <p className="text-sm font-semibold">{single.name} остаётся заниматься?</p>
             <div className="flex gap-2">
               <Button size="sm" variant="secondary" className="flex-1" disabled={busy} onClick={() => actions.onTrialAnswer(single.cardId, single.name, true)}>
@@ -160,7 +160,7 @@ export function LessonSheet({
         {group && (phase === 'upcoming' || cancelled) && (
           <section aria-label="Участники" className="flex flex-col gap-1.5">
             <h3 className="text-sm font-semibold text-fg-secondary">Участники · {lesson.participants.length}</h3>
-            <div className="divide-y divide-tint/[0.06] overflow-hidden rounded-2xl border border-tint/[0.08]">
+            <div className="divide-y divide-tint/[0.06] overflow-hidden rounded-row border border-tint/[0.08]">
               {lesson.participants.map((p) => (
                 <RowCard key={p.cardId} flat to={`/teacher?student=${p.cardId}`} title={p.name} desc={inApp(p.cardId) ? undefined : 'без приложения'} />
               ))}
@@ -176,7 +176,7 @@ export function LessonSheet({
         )}
         {!canWrite && <PlanRequired />}
 
-        <nav aria-label="Действия с уроком" className="divide-y divide-tint/[0.06] overflow-hidden rounded-2xl border border-tint/[0.08]">
+        <nav aria-label="Действия с уроком" className="divide-y divide-tint/[0.06] overflow-hidden rounded-row border border-tint/[0.08]">
           {cancelled ? (
             <RowCard flat Icon={IconRefresh} title="Вернуть урок" onClick={actions.onRestore} disabled={!canWrite || busy} />
           ) : (

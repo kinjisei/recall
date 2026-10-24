@@ -206,7 +206,7 @@ export function DictationMode({ lang, onBack }: { lang: AppLang; onBack: () => v
 
             <input
               aria-label="Услышанное слово"
-              className={`w-full rounded-lg border bg-input px-3 py-2 outline-none ${
+              className={`w-full rounded-tile border bg-input px-3 py-2 outline-none ${
                 checked === null
                   ? 'border-tint/[0.10] focus:border-accent-line'
                   : checked
@@ -240,7 +240,7 @@ export function DictationMode({ lang, onBack }: { lang: AppLang; onBack: () => v
             )}
 
             {checked === null && hint && (
-              <p className="rounded-lg bg-warning/10 px-3 py-2 text-sm text-warning-soft-fg">
+              <p className="rounded-tile bg-warning/10 px-3 py-2 text-sm text-warning-soft-fg">
                 {hint} <span className="text-fg-muted">Попробуй ещё раз.</span>
               </p>
             )}

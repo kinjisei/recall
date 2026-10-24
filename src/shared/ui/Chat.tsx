@@ -22,7 +22,7 @@ import type { DraftControls } from '../lib/useDraft'
 export const ChatWindow = forwardRef<HTMLDivElement, { height: number | null; children: ReactNode }>(
   function ChatWindow({ height, children }, ref) {
     return (
-      <div className="overflow-hidden rounded-3xl border border-tint/[0.06] bg-tint/[0.02]">
+      <div className="overflow-hidden rounded-card border border-tint/[0.06] bg-tint/[0.02]">
         <div
           ref={ref}
           style={height ? { height } : undefined}
@@ -47,7 +47,7 @@ export function ChatBubble({ mine, inCard = false, children }: { mine: boolean; 
     return (
       <div
         className={`max-w-[88%] whitespace-pre-wrap rounded-control px-3 py-2.25 text-body ${
-          mine ? 'self-end rounded-br-md bg-accent-soft text-accent-soft-fg' : 'self-start rounded-bl-md bg-input text-fg'
+          mine ? 'self-end rounded-br-mark bg-accent-soft text-accent-soft-fg' : 'self-start rounded-bl-mark bg-input text-fg'
         }`}
       >
         {children}
@@ -56,10 +56,10 @@ export function ChatBubble({ mine, inCard = false, children }: { mine: boolean; 
   }
   return (
     <div
-      className={`max-w-[min(85%,var(--container-bubble))] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-body leading-relaxed text-fg ${
+      className={`max-w-[min(85%,var(--container-bubble))] whitespace-pre-wrap rounded-control px-4 py-2.5 text-body leading-relaxed text-fg ${
         mine
-          ? 'self-end rounded-br-md border border-accent-line bg-accent/18'
-          : 'self-start rounded-bl-md border border-tint/[0.08] bg-surface shadow-card'
+          ? 'self-end rounded-br-mark border border-accent-line bg-accent/18'
+          : 'self-start rounded-bl-mark border border-tint/[0.08] bg-surface shadow-card'
       }`}
     >
       {children}

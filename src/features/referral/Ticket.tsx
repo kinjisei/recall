@@ -36,7 +36,7 @@ export function Ticket({ mine }: { mine: TeacherPlanId | null }) {
   const note = cheaperNote(mine, PRICES, TITLES)
   return (
     // подложка — градиент героя, как у билета в макете t8 (токенов cta больше нет, s2)
-    <div className="relative overflow-hidden rounded-3xl border border-accent-line-soft bg-surface bg-linear-[165deg] from-hero via-hero-mid via-62% to-surface shadow-card">
+    <div className="relative overflow-hidden rounded-card border border-accent-line-soft bg-surface bg-linear-[165deg] from-hero via-hero-mid via-62% to-surface shadow-card">
       <Half
         label="Коллеге"
         big={`+${REFERRAL_BONUS_DAYS} ${plural(REFERRAL_BONUS_DAYS, 'день', 'дня', 'дней')}`}

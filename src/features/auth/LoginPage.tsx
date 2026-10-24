@@ -91,7 +91,7 @@ export function LoginPage() {
       </div>
 
       {/* ===== Левая колонка: hero + аврора (только lg+) ===== */}
-      <div className="relative hidden h-full w-[52%] flex-col items-center justify-end overflow-hidden rounded-3xl px-12 pb-24 shadow-2xl lg:flex">
+      <div className="relative hidden h-full w-[52%] flex-col items-center justify-end overflow-hidden rounded-card px-12 pb-24 shadow-2xl lg:flex">
         <AuroraBg />
         <div className="relative z-10 flex w-full max-w-[340px] animate-fade-in flex-col gap-8">
           <div className="flex animate-fade-up items-center justify-center [animation-delay:.2s]">
@@ -116,7 +116,7 @@ export function LoginPage() {
 
       {/* ===== Правая колонка: форма ===== */}
       <div className="relative z-10 flex flex-1 flex-col items-center justify-center overflow-y-auto px-2 py-8 sm:px-12 lg:overflow-hidden lg:px-16 lg:py-6 xl:px-24">
-        <div className="flex w-full max-w-xl animate-fade-in flex-col gap-7 rounded-3xl border border-line bg-glass p-6 backdrop-blur-2xl lg:border-none lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
+        <div className="flex w-full max-w-xl animate-fade-in flex-col gap-7 rounded-card border border-line bg-glass p-6 backdrop-blur-2xl lg:border-none lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
           {/* Бренд над формой — только на мобильных (hero скрыт) */}
           <div className="-mb-2 flex items-center gap-2 lg:hidden">
             <BrandMark size={22} />
@@ -320,7 +320,7 @@ function CheckEmail({
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="rounded-2xl border border-accent-line bg-accent/10 p-4">
+      <div className="rounded-row border border-accent-line bg-accent/10 p-4">
         <p className="text-sm text-fg-secondary">Письмо ушло на адрес</p>
         <p className="mt-1 break-all font-medium">{email}</p>
         <p className="mt-3 text-sm text-fg-secondary">
@@ -376,7 +376,7 @@ function StepItem({
   return (
     <div
       style={{ animationDelay: delay }}
-      className={`flex animate-fade-up items-center gap-3.5 rounded-2xl px-4.5 py-3.5 ${
+      className={`flex animate-fade-up items-center gap-3.5 rounded-row px-4.5 py-3.5 ${
         active
           ? 'border border-accent-line-soft bg-fg text-page'
           : 'bg-step text-fg-secondary backdrop-blur-sm'

@@ -34,7 +34,7 @@ export function FormRepeat({
   const toggleDay = (w: number) =>
     onChange({ weekdays: draft.weekdays.includes(w) ? draft.weekdays.filter((x) => x !== w) : [...draft.weekdays, w].sort((a, b) => a - b) })
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-tint/[0.08] p-3">
+    <div className="flex flex-col gap-3 rounded-row border border-tint/[0.08] p-3">
       {fixed ? (
         <span className="text-sm font-semibold">Повтор</span>
       ) : (
@@ -141,7 +141,7 @@ export function FormLink({
     <div className="flex flex-col gap-1.5">
       <span className={label}>Ссылка на урок</span>
       {!editing && defaultLink ? (
-        <div className="flex min-h-12 items-center gap-2 rounded-xl bg-input px-3 ring-1 ring-control-line">
+        <div className="flex min-h-12 items-center gap-2 rounded-control bg-input px-3 ring-1 ring-control-line">
           <IconLink size={18} aria-hidden className="flex-none text-fg-muted" />
           <span className="flex min-w-0 flex-1 flex-col">
             <span className="truncate text-sm font-semibold">{defaultLink.replace(/^https?:\/\//, '')}</span>
@@ -167,11 +167,11 @@ export function FormLink({
               <button type="button" onClick={() => {
                   onLink('')
                   setEditing(false)
-                }} className="min-h-12 flex-none rounded-xl px-3 text-sm font-semibold text-accent-strong hover:bg-tint/[0.06]">
+                }} className="min-h-12 flex-none rounded-control px-3 text-sm font-semibold text-accent-strong hover:bg-tint/[0.06]">
                 По умолчанию
               </button>
             ) : (
-              <button type="button" onClick={() => void paste()} className="min-h-12 flex-none rounded-xl px-3 text-sm font-semibold text-accent-strong hover:bg-tint/[0.06]">
+              <button type="button" onClick={() => void paste()} className="min-h-12 flex-none rounded-control px-3 text-sm font-semibold text-accent-strong hover:bg-tint/[0.06]">
                 Вставить
               </button>
             )}

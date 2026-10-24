@@ -66,7 +66,7 @@ const PRACTICE: Tile[] = [
 function TileLink({ to, title, desc, Icon }: Tile) {
   return (
     <AppLink to={to} className="lift flex min-h-16.5 items-center gap-3 rounded-control bg-surface px-3 py-2.5 text-fg shadow-card">
-      <span className="flex size-9.5 flex-none items-center justify-center rounded-xl bg-accent-soft text-accent-strong">
+      <span className="flex size-9.5 flex-none items-center justify-center rounded-tile bg-accent-soft text-accent-strong">
         <Icon size={20} aria-hidden />
       </span>
       <span className="flex min-w-0 flex-1 flex-col leading-snug">
@@ -183,7 +183,7 @@ export function LearnDesk({
               </span>
             </>
           ) : (
-            <span className="animate-skeleton h-12 w-64 rounded-lg bg-skeleton" />
+            <span className="animate-skeleton h-12 w-64 rounded-control bg-skeleton" />
           )}
         </div>
         <div className="relative ml-auto flex min-w-65 flex-col gap-1.5">

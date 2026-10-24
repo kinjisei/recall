@@ -52,8 +52,8 @@ function SkeletonRow({ i, height }: { i: number; height?: number }) {
     <div className={`flex min-h-16 items-center gap-3 pl-4 pr-3.5 ${lead ? 'py-2.5' : 'py-2'}`} style={height ? { minHeight: height } : undefined}>
       {lead && <span className="animate-skeleton size-10 flex-none rounded-full bg-skeleton" />}
       <span className="flex flex-1 flex-col gap-2">
-        <span className={`animate-skeleton h-3 rounded-lg bg-skeleton ${a}`} />
-        {lead && <span className={`animate-skeleton h-2.5 rounded-lg bg-skeleton ${b}`} />}
+        <span className={`animate-skeleton h-3 rounded-tag bg-skeleton ${a}`} />
+        {lead && <span className={`animate-skeleton h-2.5 rounded-tag bg-skeleton ${b}`} />}
       </span>
     </div>
   )

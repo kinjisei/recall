@@ -82,7 +82,7 @@ export function FixRecordSheet({
     <Sheet onClose={onClose} labelledBy="fix-title">
       <SheetHeader id="fix-title" title={row.fix === 'payment' ? 'Исправить оплату' : 'Исправить запись'} />
       <div className={SHEET_BODY}>
-        <p className="rounded-xl bg-tint/[0.04] px-3 py-2.5 text-sm">
+        <p className="rounded-control bg-tint/[0.04] px-3 py-2.5 text-sm">
           <span className="font-semibold">{row.title}</span>
           <span className="block text-note text-fg-muted">{row.detail} · так записано сейчас</span>
         </p>

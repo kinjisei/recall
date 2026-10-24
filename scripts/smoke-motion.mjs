@@ -387,7 +387,7 @@ async function main() {
     // ждём, пока на экране появятся варианты ответа, а не «через 900 мс»
     const ready = await page
       .waitForFunction(
-        () => [...document.querySelectorAll('button')].some((b) => /rounded-xl border/.test(b.className)),
+        () => !!document.querySelector('button[data-key]'), // вариант ответа: номер клавиши, а не класс оформления
         { timeout: 8000, polling: 200 },
       )
       .then(() => true)
@@ -433,7 +433,7 @@ async function main() {
     await tap(page, 'Упражнения')
     await page
       .waitForFunction(
-        () => [...document.querySelectorAll('button')].some((b) => /rounded-xl border/.test(b.className)),
+        () => !!document.querySelector('button[data-key]'), // вариант ответа: номер клавиши, а не класс оформления
         { timeout: 8000, polling: 200 },
       )
       .catch(() => {})

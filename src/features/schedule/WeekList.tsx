@@ -36,11 +36,11 @@ export function DayLessons({
   onOpen: (id: string) => void
 }) {
   if (!list.length) {
-    return <p className="rounded-2xl border border-dashed border-tint/[0.10] px-4 py-3 text-sm text-fg-muted">Свободный день</p>
+    return <p className="rounded-row border border-dashed border-tint/[0.10] px-4 py-3 text-sm text-fg-muted">Свободный день</p>
   }
   return (
     <div
-      className={`divide-y divide-tint/[0.06] overflow-hidden rounded-2xl border bg-surface shadow-card ${
+      className={`divide-y divide-tint/[0.06] overflow-hidden rounded-row border bg-surface shadow-card ${
         isToday ? 'border-accent-line' : 'border-tint/[0.08]'
       }`}
     >

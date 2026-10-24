@@ -197,7 +197,7 @@ function SetList({
               <button
                 key={d.id}
                 onClick={() => onChoose({ kind: 'deck', id: d.id, title: d.title })}
-                className="lift rounded-xl border border-tint/[0.08] px-3 py-2.5 text-left text-sm"
+                className="lift rounded-control border border-tint/[0.08] px-3 py-2.5 text-left text-sm"
               >
                 {d.title}
               </button>
@@ -227,7 +227,7 @@ function SetList({
                       <div key={key}>
                         <button
                           onClick={() => setOpen(isOpen ? null : key)}
-                          className="flex min-h-[44px] w-full items-center justify-between rounded-lg bg-tint/[0.06] px-3 text-left text-sm"
+                          className="flex min-h-[44px] w-full items-center justify-between rounded-control-sm bg-tint/[0.06] px-3 text-left text-sm"
                           aria-expanded={isOpen}
                         >
                           <span className="font-medium">
@@ -248,7 +248,7 @@ function SetList({
                                 onClick={() =>
                                   onChoose({ kind: 'topic', id: t.id, title: t.name })
                                 }
-                                className="lift rounded-xl border border-tint/[0.08] px-3 py-2 text-left text-sm"
+                                className="lift rounded-tile border border-tint/[0.08] px-3 py-2 text-left text-sm"
                               >
                                 {t.name}
                               </button>
@@ -398,7 +398,7 @@ function WordList({
                 return (
                   <label
                     key={w.front}
-                    className="flex min-h-[44px] cursor-pointer items-center gap-3 rounded-lg px-1 py-1.5"
+                    className="flex min-h-[44px] cursor-pointer items-center gap-3 rounded-control-sm px-1 py-1.5"
                   >
                     <input
                       type="checkbox"
@@ -446,7 +446,7 @@ function norm(s: string): string {
 }
 
 function chip(active: boolean): string {
-  return `min-h-[44px] rounded-xl px-3.5 text-sm font-medium transition-colors ${
+  return `min-h-[44px] rounded-control-sm px-3.5 text-sm font-medium transition-colors ${
     active
       ? 'bg-accent-soft text-accent-soft-fg'
       : 'bg-tint/[0.06] text-fg-muted'

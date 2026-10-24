@@ -169,7 +169,7 @@ function ReadingView({
               {openRu.has(i) ? 'Скрыть перевод' : 'Перевод'}
             </button>
             <Reveal open={openRu.has(i)}>
-              <p className="mt-1 rounded-lg bg-surface px-3 py-2 text-sm text-fg-faint">
+              <p className="mt-1 rounded-tile bg-surface px-3 py-2 text-sm text-fg-faint">
                 {p.ru}
               </p>
             </Reveal>

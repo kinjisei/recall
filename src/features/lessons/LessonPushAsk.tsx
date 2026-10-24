@@ -58,7 +58,7 @@ export function LessonPushAsk({ hasLessons }: { hasLessons: boolean }) {
   return (
     <Sheet onClose={outcome === 'idle' ? later : () => setDone(true)} labelledBy="push-ask-title">
       <div data-push-ask className="flex flex-col items-center gap-3 px-5 pb-5 pt-2 text-center">
-        <span aria-hidden className="flex size-14 items-center justify-center rounded-2xl bg-accent-soft text-accent-soft-fg">
+        <span aria-hidden className="flex size-14 items-center justify-center rounded-control-lg bg-accent-soft text-accent-soft-fg">
           <IconBell size={26} />
         </span>
         <h2 id="push-ask-title" className="text-xl font-semibold tracking-tight text-fg">

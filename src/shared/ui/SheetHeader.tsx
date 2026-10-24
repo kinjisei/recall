@@ -53,7 +53,7 @@ export function SheetHeader({
       {trailing}
       {close && (
         <>
-          <kbd aria-hidden className="hidden h-5 min-w-5 items-center justify-center rounded-md bg-input px-1.25 font-sans text-caption font-semibold text-fg-muted group-data-panel/panel:inline-flex">
+          <kbd aria-hidden className="hidden h-5 min-w-5 items-center justify-center rounded-mark bg-input px-1.25 font-sans text-caption font-semibold text-fg-muted group-data-panel/panel:inline-flex">
             Esc
           </kbd>
           <IconButton label="Закрыть" onClick={close} className="-mr-2 text-fg-muted group-data-panel/panel:mr-0">

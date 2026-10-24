@@ -55,7 +55,7 @@ export function AccessEndedBanner({ role }: { role: string }) {
     <section
       aria-label="Тариф"
       data-access-ended={notice.source}
-      className="animate-fade-in mb-4 flex items-center gap-3 rounded-2xl bg-accent-soft px-4 py-3"
+      className="animate-fade-in mb-4 flex items-center gap-3 rounded-row bg-accent-soft px-4 py-3"
     >
       <IconTimer size={20} className="flex-none text-accent-soft-fg" />
       <div className="min-w-0 flex-1">
@@ -64,7 +64,7 @@ export function AccessEndedBanner({ role }: { role: string }) {
       </div>
       <AppLink
         to="/pay"
-        className="lift flex min-h-10 flex-none items-center rounded-xl bg-accent px-3.5 text-sm font-semibold text-accent-fg"
+        className="lift flex min-h-10 flex-none items-center rounded-tile bg-accent px-3.5 text-sm font-semibold text-accent-fg"
       >
         {notice.action}
       </AppLink>

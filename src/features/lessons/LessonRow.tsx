@@ -37,11 +37,11 @@ export function LessonRow({
     <li
       id={`lesson-${lesson.id}`}
       data-my-lesson={lesson.id}
-      className={`flex gap-3 px-4 py-3.5 ${highlighted ? 'rounded-2xl bg-accent-soft/60 ring-2 ring-accent' : ''}`}
+      className={`flex gap-3 px-4 py-3.5 ${highlighted ? 'rounded-control bg-accent-soft/60 ring-2 ring-accent' : ''}`}
     >
       <span
         aria-hidden
-        className={`flex size-11 flex-none flex-col items-center justify-center rounded-xl leading-none ${
+        className={`flex size-11 flex-none flex-col items-center justify-center rounded-control-sm leading-none ${
           cancelled ? 'border border-dashed border-tint/[0.2] text-fg-muted' : 'bg-accent-soft text-accent-soft-fg'
         }`}
       >

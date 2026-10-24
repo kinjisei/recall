@@ -94,7 +94,7 @@ export function UiShowcase() {
         <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
           {SWATCHES.map(([name, cls]) => (
             <div key={name} className="flex flex-col gap-1">
-              <span className={`h-10 rounded-xl border border-tint/[0.10] ${cls}`} />
+              <span className={`h-10 rounded-tile border border-tint/[0.10] ${cls}`} />
               <span className="text-caption text-fg-muted">{name}</span>
             </div>
           ))}

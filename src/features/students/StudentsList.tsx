@@ -307,7 +307,7 @@ function Row({ row, selected, onOpen }: { row: RosterRow; selected: boolean; onO
         <>
           <span className={row.trialAsk ? 'font-medium text-accent-strong' : ''}>{row.line}</span>
           {row.outside && (
-            <span className="mt-1 block w-fit rounded-lg bg-warning-soft px-2 py-0.5 text-xs text-warning-soft-fg">Вне мест тарифа</span>
+            <span className="mt-1 block w-fit rounded-full bg-warning-soft px-2 py-0.5 text-xs text-warning-soft-fg">Вне мест тарифа</span>
           )}
         </>
       }

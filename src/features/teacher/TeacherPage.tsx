@@ -246,7 +246,7 @@ function CodeRow({ code }: { code: string | null }) {
         type="button"
         disabled={!code}
         onClick={() => code && void copy('invite', code)}
-        className="-mx-1 min-h-11 rounded-lg px-1 font-semibold text-accent-strong"
+        className="-mx-1 min-h-11 rounded-control-sm px-1 font-semibold text-accent-strong"
       >
         {/* подтверждение «клюёт» — иначе подмена текста на секунду проходит
             мимо глаза, и человек жмёт второй раз */}

@@ -58,7 +58,7 @@ export function WeekGrid({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="overflow-hidden rounded-2xl border border-tint/[0.08] bg-surface shadow-card">
+      <div className="overflow-hidden rounded-row border border-tint/[0.08] bg-surface shadow-card">
         <div className="grid border-b border-tint/[0.08]" style={columns}>
           <span />
           {week.map(({ name, day }, i) => {
@@ -132,7 +132,7 @@ export function WeekGrid({
           <ul aria-label="Обозначения" className="flex flex-wrap gap-x-3 gap-y-1.5 text-caption text-fg-secondary">
             {LEGEND.map((l) => (
               <li key={l.label} className="flex items-center gap-1.5">
-                <span aria-hidden className={`h-3 w-4 rounded ${l.look}`} />
+                <span aria-hidden className={`h-3 w-4 rounded-full ${l.look}`} />
                 {l.label}
               </li>
             ))}

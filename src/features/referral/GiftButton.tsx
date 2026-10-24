@@ -61,7 +61,7 @@ function Hint({ onClose, placement }: { onClose: () => void; placement: keyof ty
   return (
     <div
       role="status"
-      className={`animate-fade-up absolute z-40 flex w-64 items-start gap-2 rounded-2xl border border-accent-line bg-surface p-3 text-sm text-fg-secondary shadow-raised ${HINT_AT[placement]}`}
+      className={`animate-fade-up absolute z-40 flex w-64 items-start gap-2 rounded-row border border-accent-line bg-surface p-3 text-sm text-fg-secondary shadow-raised ${HINT_AT[placement]}`}
     >
       <p className="flex-1 leading-snug">
         <b className="font-medium text-fg">Подарок за коллег.</b> Пригласи коллегу: за его первую оплату к твоему тарифу
@@ -107,7 +107,7 @@ export function GiftButton({ variant = 'icon' }: { variant?: 'icon' | 'row' | 'r
           to="/invite"
           onClick={() => hint && dismiss()}
           aria-label={label}
-          className={`group relative flex size-12 items-center justify-center rounded-2xl border transition-colors hover:bg-tint/[0.06] ${
+          className={`group relative flex size-12 items-center justify-center rounded-control border transition-colors hover:bg-tint/[0.06] ${
             hint ? 'border-accent-line text-accent-strong' : 'border-transparent text-fg-muted hover:text-fg-secondary'
           }`}
         >
@@ -118,7 +118,7 @@ export function GiftButton({ variant = 'icon' }: { variant?: 'icon' | 'row' | 'r
         <AppLink
           to="/invite"
           onClick={() => hint && dismiss()}
-          className={`flex h-11 items-center gap-3 rounded-2xl border px-3 text-body font-semibold transition-colors ${
+          className={`flex h-11 items-center gap-3 rounded-control-sm border px-3 text-body font-semibold transition-colors ${
             hint ? 'border-accent-line text-accent-strong' : 'border-transparent text-fg-secondary hover:text-fg'
           }`}
         >

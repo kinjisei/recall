@@ -21,7 +21,7 @@ export function InviteShare({ code }: { code: string }) {
     <>
       <section>
         <h2 className="mb-2 text-sm text-fg-muted">Твоя ссылка</h2>
-        <div className="flex items-center gap-2 rounded-2xl border border-tint/[0.08] bg-input p-1.5 pl-4">
+        <div className="flex items-center gap-2 rounded-control border border-tint/[0.08] bg-input p-1.5 pl-4">
           {/* ссылка выделяется целиком — если буфер недоступен, копируют руками */}
           <span className="min-w-0 flex-1 select-all truncate text-sm text-fg" data-referral-link={link}>
             {shown}
@@ -47,7 +47,7 @@ export function InviteShare({ code }: { code: string }) {
 
       <section>
         <h2 className="mb-2 text-sm text-fg-muted">Так увидит коллега</h2>
-        <p className="whitespace-pre-line break-words rounded-2xl bg-input px-4 py-3 text-sm leading-relaxed text-fg-secondary" data-referral-message>
+        <p className="whitespace-pre-line break-words rounded-control bg-input px-4 py-3 text-sm leading-relaxed text-fg-secondary" data-referral-message>
           {message}
         </p>
       </section>

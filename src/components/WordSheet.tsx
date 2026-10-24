@@ -140,7 +140,7 @@ export function TappableText({
           <span
             key={i}
             onClick={() => onWord(tok, i)}
-            className={`cursor-pointer rounded px-0.5 transition-colors ${
+            className={`cursor-pointer rounded-mark px-0.5 transition-colors ${
               highlighted
                 ? 'bg-accent/28 ring-1 ring-accent-line'
                 : 'hover:bg-accent/18 active:bg-accent/28'
@@ -290,7 +290,7 @@ export function WordSheet({
             </p>
           )}
 
-          <p className="mt-3 rounded-lg bg-input px-3 py-2 text-sm italic text-fg-muted">
+          <p className="mt-3 rounded-tile bg-input px-3 py-2 text-sm italic text-fg-muted">
             «{sentence}»
           </p>
 
@@ -299,7 +299,7 @@ export function WordSheet({
           {/* Разбор всего предложения (фразовые глаголы/выражения/грамматика) */}
           <button
             onClick={() => setAnalyze(true)}
-            className="lift mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl border border-accent-line bg-accent/10 py-2.5 text-sm font-medium text-accent-soft-fg"
+            className="lift mt-4 flex w-full items-center justify-center gap-1.5 rounded-tile border border-accent-line bg-accent/10 py-2.5 text-sm font-medium text-accent-soft-fg"
           >
             <IconSearch size={16} /> Разбор предложения
           </button>

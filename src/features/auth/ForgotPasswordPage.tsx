@@ -48,7 +48,7 @@ export function ForgotPasswordPage() {
     return (
       <AuthCard title="Проверьте почту" subtitle={RESET_SENT_TEXT}>
         <div className="flex flex-col gap-5">
-          <div className="rounded-2xl border border-accent-line bg-accent/10 p-4">
+          <div className="rounded-row border border-accent-line bg-accent/10 p-4">
             <p className="text-sm text-fg-secondary">Письмо отправлено на адрес</p>
             <p className="mt-1 break-all font-medium">{email.trim()}</p>
             <p className="mt-3 text-sm text-fg-secondary">

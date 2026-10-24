@@ -18,7 +18,7 @@ export function WritingHistory({ attempts }: { attempts: WritingAttempt[] }) {
       {attempts.map((a, i) => {
         const when = a.at ? new Date(a.at).toLocaleDateString('ru-RU', { timeZone: 'Asia/Almaty' }) : ''
         return (
-          <div key={i} className="rounded-xl border border-tint/[0.08]">
+          <div key={i} className="rounded-tile border border-tint/[0.08]">
             <button
               onClick={() => setOpen(open === i ? null : i)}
               className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left"
@@ -35,7 +35,7 @@ export function WritingHistory({ attempts }: { attempts: WritingAttempt[] }) {
                   {a.essay}
                 </p>
                 {a.teacher_review?.comment && (
-                  <p className="mt-2 rounded-lg bg-tint/[0.05] px-2.5 py-1.5 text-sm text-fg-secondary">
+                  <p className="mt-2 rounded-tag bg-tint/[0.05] px-2.5 py-1.5 text-sm text-fg-secondary">
                     Учитель: {a.teacher_review.comment}
                   </p>
                 )}

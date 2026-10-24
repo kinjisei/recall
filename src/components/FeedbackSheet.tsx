@@ -54,7 +54,7 @@ export function FeedbackSheet({ where, onClose }: { where: string; onClose: () =
         onClick={() => setRating(active ? null : value)}
         aria-pressed={active}
         aria-label={value === 'up' ? 'Нравится' : 'Не нравится'}
-        className={`flex h-12 w-12 items-center justify-center rounded-2xl border transition-colors ${
+        className={`flex h-12 w-12 items-center justify-center rounded-control border transition-colors ${
           active
             ? 'border-accent-line bg-accent-soft text-accent-soft-fg'
             : 'border-tint/[0.10] text-fg-muted hover:text-fg-secondary'

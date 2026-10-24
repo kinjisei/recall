@@ -52,7 +52,7 @@ export function CTA({
  */
 export function ReportSample() {
   return (
-    <div data-theme="light" className="w-full max-w-sm rounded-2xl border border-tint/[0.10] bg-surface p-4 text-left text-fg shadow-raised">
+    <div data-theme="light" className="w-full max-w-sm rounded-card border border-tint/[0.10] bg-surface p-4 text-left text-fg shadow-raised">
       <p className="text-micro uppercase tracking-widest text-fg-muted">Отчёт о занятиях · за месяц</p>
       <p className="font-serif text-lg font-bold">Айгерим</p>
       <div className="mt-2 flex flex-col gap-1 text-note">
@@ -96,7 +96,7 @@ export function ShotFrame({ title, children, className = '' }: { title: string; 
 /** Телефон (.phshot) с настоящим снимком Главной ученика — `scripts/shot-landing-phone.mjs`. */
 export function PhoneShot() {
   return (
-    <div className="mx-auto h-125 w-62.5 overflow-hidden rounded-[2.75rem] bg-surface shadow-raised ring-8 ring-fg">
+    <div className="mx-auto h-125 w-62.5 overflow-hidden rounded-device bg-surface shadow-raised ring-8 ring-fg">
       <img
         src="/landing/student-home.webp"
         width={250}

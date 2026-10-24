@@ -109,7 +109,7 @@ function HistoryRow({ r, busy, onRemove }: { r: PlacementRequest; busy: boolean;
     <li className="flex min-h-15 items-center gap-3 py-1.5" data-placement-row={r.status}>
       <span
         aria-hidden
-        className={`flex h-11 min-w-11 flex-none items-center justify-center rounded-xl px-2 text-base font-bold ${done ? 'bg-success-soft text-success-soft-fg' : 'bg-input text-fg-secondary'}`}
+        className={`flex h-11 min-w-11 flex-none items-center justify-center rounded-control-sm px-2 text-base font-bold ${done ? 'bg-success-soft text-success-soft-fg' : 'bg-input text-fg-secondary'}`}
       >
         {done ? r.result_level : '…'}
       </span>

@@ -127,14 +127,14 @@ export function TextAnalysisSheet({
               <p className="mt-2 text-lg font-semibold">Уровень: {data.level || '—'}</p>
               {data.why && <p className="mt-0.5 text-sm text-fg-muted">{data.why}</p>}
               {data.takeaway && (
-                <p className="mt-3 rounded-xl bg-tint/[0.04] px-3 py-2 text-sm leading-relaxed text-fg-secondary">
+                <p className="mt-3 rounded-tile bg-tint/[0.04] px-3 py-2 text-sm leading-relaxed text-fg-secondary">
                   💡 {data.takeaway}
                 </p>
               )}
               <AnalyzedItemsView items={data.items} lang={lang} onClose={onClose} />
               <button
                 onClick={redo}
-                className="lift mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl border border-tint/[0.10] py-2.5 text-sm text-fg-muted"
+                className="lift mt-4 flex w-full items-center justify-center gap-1.5 rounded-tile border border-tint/[0.10] py-2.5 text-sm text-fg-muted"
               >
                 <IconRefresh size={15} /> Разобрать заново
               </button>

@@ -95,7 +95,7 @@ export function MyLessonsPage() {
           <h2 id="upcoming-title" className="mb-2 px-1 text-caption font-semibold uppercase tracking-wider text-fg-muted">
             Ближайшие
           </h2>
-          <ul className="divide-y divide-tint/[0.06] rounded-2xl border border-tint/[0.08] bg-surface shadow-card">
+          <ul className="divide-y divide-tint/[0.06] rounded-row border border-tint/[0.08] bg-surface shadow-card">
             {split.upcoming.map((l) => (
               <LessonRow key={l.id} lesson={l} now={now} join={l.id === joinId} highlighted={l.id === highlight} />
             ))}
@@ -113,7 +113,7 @@ export function MyLessonsPage() {
             type="button"
             aria-expanded={pastOpen}
             onClick={() => setPastToggled(!pastOpen)}
-            className="flex min-h-12 w-full select-none items-center justify-between rounded-2xl border border-tint/[0.08] bg-surface px-4 text-left shadow-card active:scale-[0.99]"
+            className="flex min-h-12 w-full select-none items-center justify-between rounded-control border border-tint/[0.08] bg-surface px-4 text-left shadow-card active:scale-[0.99]"
           >
             <span className="font-semibold text-fg">Прошедшие</span>
             <span className="flex items-center gap-2 text-sm text-fg-muted">
@@ -122,7 +122,7 @@ export function MyLessonsPage() {
             </span>
           </button>
           {pastOpen && (
-            <ul className="mt-2 divide-y divide-tint/[0.06] rounded-2xl border border-tint/[0.08] bg-surface">
+            <ul className="mt-2 divide-y divide-tint/[0.06] rounded-row border border-tint/[0.08] bg-surface">
               {split.past.map((l) => (
                 <LessonRow key={l.id} lesson={l} now={now} join={false} highlighted={l.id === highlight} />
               ))}

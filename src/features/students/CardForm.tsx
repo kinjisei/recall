@@ -158,7 +158,7 @@ export function CardForm({
                 <button
                   type="button"
                   onClick={() => setGeneral(true)}
-                  className="mt-4 flex min-h-12 w-full items-center gap-3 rounded-xl border border-tint/[0.08] px-3.5 text-left"
+                  className="mt-4 flex min-h-12 w-full items-center gap-3 rounded-control border border-tint/[0.08] px-3.5 text-left"
                 >
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-semibold">Пригласить по общему коду</span>

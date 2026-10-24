@@ -10,7 +10,7 @@ import { fieldClass } from '../../shared/ui/TextField'
 // порядку в CSS, а не по порядку в строке. Выключенный вид — общий у Button
 // (подложка input, текст fg-faint, лист s3): своя прозрачность поверх него
 // сделала бы подпись нечитаемой.
-export const ONBOARDING_CTA = 'rounded-2xl! font-medium!'
+export const ONBOARDING_CTA = 'rounded-control! font-medium!'
 
 /** Поле кода преподавателя: поле s3 (4д-2), код крупно и вразрядку. */
 export const CODE_FIELD = `${fieldClass()} text-center text-lg tracking-widest`
@@ -53,7 +53,7 @@ export function HowHeard({ options }: { options: string[] }) {
               setHeard(h)
               setSelfReportedSource(h)
             }}
-            className={`min-h-11 rounded-xl border px-3.5 py-2 text-sm ${
+            className={`min-h-11 rounded-control-sm border px-3.5 py-2 text-sm ${
               heard === h
                 ? 'border-accent-line bg-accent-soft text-accent-soft-fg'
                 : 'border-tint/[0.08] bg-surface text-fg-secondary'

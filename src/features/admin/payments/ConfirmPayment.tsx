@@ -83,7 +83,7 @@ export function ConfirmPayment({
   }
 
   return (
-    <div className="mt-3 flex flex-col gap-3 rounded-xl bg-tint/[0.04] p-3">
+    <div className="mt-3 flex flex-col gap-3 rounded-control bg-tint/[0.04] p-3">
       <p className="text-note text-fg-muted">Сейчас: {planNowLabel(payer.state)}</p>
       <ChoiceGroup
         label="Тариф"
@@ -115,7 +115,7 @@ export function ConfirmPayment({
         <span className="text-fg-muted"> (срок с {dayLabel(term.start)})</span>
       </p>
       {warnings.map((w) => (
-        <p key={w} className="rounded-xl bg-warning/10 px-3 py-2 text-note text-warning-soft-fg">
+        <p key={w} className="rounded-tile bg-warning/10 px-3 py-2 text-note text-warning-soft-fg">
           {w}
         </p>
       ))}

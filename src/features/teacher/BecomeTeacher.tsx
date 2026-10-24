@@ -48,7 +48,7 @@ export function BecomeTeacher({ onBack }: { onBack: () => void }) {
       <BackHeader onBack={onBack} title="Преподаватель" label="На главную" />
       <Card>
         <div className="flex items-start gap-3">
-          <span className="flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-accent-soft text-accent-soft-fg">
+          <span className="flex h-11 w-11 flex-none items-center justify-center rounded-control-sm bg-accent-soft text-accent-soft-fg">
             <IconGraduation size={22} />
           </span>
           <div>

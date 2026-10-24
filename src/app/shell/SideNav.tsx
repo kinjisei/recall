@@ -35,7 +35,7 @@ export function SideNav({ rail, collapsible, onToggle }: { rail: boolean; collap
       type="button"
       onClick={onToggle}
       aria-label={rail ? 'Развернуть меню' : 'Свернуть меню'}
-      className={`group relative flex size-11 flex-none items-center justify-center rounded-xl text-fg-faint transition-colors hover:bg-tint/[0.06] hover:text-fg-secondary ${rail ? 'mt-1' : '-mr-1'}`}
+      className={`group relative flex size-11 flex-none items-center justify-center rounded-control-sm text-fg-faint transition-colors hover:bg-tint/[0.06] hover:text-fg-secondary ${rail ? 'mt-1' : '-mr-1'}`}
     >
       {rail ? <IconChevronRight size={18} /> : <IconChevronLeft size={18} />}
       {rail && <HoverTip label="Развернуть меню" />}
@@ -56,7 +56,7 @@ export function SideNav({ rail, collapsible, onToggle }: { rail: boolean; collap
         <AppLink
           to="/"
           aria-label="На главную"
-          className={`flex min-h-11 items-center gap-2.5 rounded-xl ${rail ? 'min-w-11 justify-center' : 'px-2'}`}
+          className={`flex min-h-11 items-center gap-2.5 rounded-control-sm ${rail ? 'min-w-11 justify-center' : 'px-2'}`}
         >
           <BrandMark size={30} />
           {!rail && <span className="text-xl font-semibold tracking-[-0.01em] text-fg">Recall</span>}
@@ -70,7 +70,7 @@ export function SideNav({ rail, collapsible, onToggle }: { rail: boolean; collap
             в меню 240 шаг — высота и промежуток 4 px (макет d4-v2). */}
         <span
           aria-hidden
-          className={`pointer-events-none absolute top-0 rounded-2xl bg-accent-soft transition-[transform,opacity] duration-(--dur-2) ease-sheet ${
+          className={`pointer-events-none absolute top-0 rounded-control bg-accent-soft transition-[transform,opacity] duration-(--dur-2) ease-sheet ${
             rail ? 'size-12' : 'inset-x-0 h-11'
           }`}
           style={{
@@ -96,7 +96,7 @@ export function SideNav({ rail, collapsible, onToggle }: { rail: boolean; collap
               direction="fade"
               onClick={() => onTabClick(to)}
               aria-current={active ? 'page' : undefined}
-              className={`group relative flex items-center rounded-2xl transition-colors duration-300 ${
+              className={`group relative flex items-center rounded-control transition-colors duration-300 ${
                 rail
                   ? `size-12 justify-center ${active ? 'text-accent-soft-fg' : 'text-fg-muted hover:text-fg-secondary'}`
                   : `h-11 gap-3 px-3 text-body ${active ? 'font-semibold text-accent-soft-fg' : 'font-medium text-fg-secondary hover:text-fg'}`

@@ -122,7 +122,7 @@ function Invite({ stats, mine }: { stats: ReferralStats; mine: TeacherPlanId | n
 
 function Tile({ label, value, good = false }: { label: string; value: string; good?: boolean }) {
   return (
-    <div className="flex min-h-24 flex-col justify-between rounded-2xl border border-tint/[0.08] bg-surface p-3 shadow-card">
+    <div className="flex min-h-24 flex-col justify-between rounded-control border border-tint/[0.08] bg-surface p-3 shadow-card">
       <span className="text-caption leading-tight text-fg-muted">{label}</span>
       <span className={`text-2xl font-semibold tracking-tight ${good ? 'text-success-strong' : 'text-fg'}`}>{value}</span>
     </div>

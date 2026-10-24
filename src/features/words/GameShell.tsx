@@ -194,7 +194,7 @@ export function QuizRunner({
                 data-key={i + 1}
                 onClick={() => choose(i)}
                 disabled={picked !== null}
-                className={`rounded-xl border px-3 py-2.5 text-left transition-[transform,background-color,border-color,color] duration-150 ${cls}${pop}`}
+                className={`rounded-control border px-3 py-2.5 text-left transition-[transform,background-color,border-color,color] duration-150 ${cls}${pop}`}
               >
                 {opt}
               </button>

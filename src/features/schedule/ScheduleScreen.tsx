@@ -171,7 +171,7 @@ export function ScheduleScreen({ base, version, refresh }: { base: ScheduleBase;
       {/* обёртка держит место у края: у Button свой position: relative */}
       {!desktop && !firstRun && (
         <div className="fixed right-4 z-30" style={{ bottom: `calc(${insets.bottom} + 0.75rem)` }}>
-          <Button className={`min-h-12 rounded-2xl px-4 shadow-raised ${canWrite ? '' : 'opacity-60'}`} onClick={openNew}>
+          <Button className={`min-h-12 rounded-control px-4 shadow-raised ${canWrite ? '' : 'opacity-60'}`} onClick={openNew}>
             <IconPlus size={20} aria-hidden /> Новый урок
           </Button>
         </div>

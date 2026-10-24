@@ -39,7 +39,7 @@ function MyPlanBanner({ plan }: { plan: MyPlan }) {
   }
 
   return (
-    <div className="animate-fade-up flex items-center gap-3 rounded-2xl border border-accent-line bg-accent-soft p-4">
+    <div className="animate-fade-up flex items-center gap-3 rounded-row border border-accent-line bg-accent-soft p-4">
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-line text-accent-soft-fg">
         <IconTrophy size={18} />
       </div>
@@ -80,7 +80,7 @@ const LINK_BUTTON = buttonClass('secondary', 'sm')
 
 function PlanCardView({ plan, canPay }: { plan: PlanCard; canPay: boolean }) {
   return (
-    <div className="animate-fade-up rounded-2xl border border-tint/[0.08] bg-surface p-4 shadow-card">
+    <div className="animate-fade-up rounded-card border border-tint/[0.08] bg-surface p-4 shadow-card">
       <div className="flex items-center justify-between gap-2">
         <h3 className="font-medium">{plan.title}</h3>
         {plan.studentLimit && (
@@ -153,7 +153,7 @@ export function PricingPage() {
         ))}
       </div>
 
-      <section className="animate-fade-up mt-8 rounded-2xl border border-tint/[0.08] bg-surface p-4 shadow-card">
+      <section className="animate-fade-up mt-8 rounded-card border border-tint/[0.08] bg-surface p-4 shadow-card">
         <h2 className="font-medium">Как оплатить</h2>
         <p className="mt-2 text-sm leading-relaxed text-fg-secondary">
           Платите переводом на Kaspi Gold: выбираете тариф, переводите и

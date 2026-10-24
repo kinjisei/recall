@@ -108,7 +108,7 @@ function Variant({
               {link && (
                 <AppLink
                   to={link.to}
-                  className="inline-flex min-h-[40px] items-center rounded-xl bg-accent-soft px-3.5 text-sm font-medium text-accent-soft-fg"
+                  className="inline-flex min-h-[40px] items-center rounded-tile bg-accent-soft px-3.5 text-sm font-medium text-accent-soft-fg"
                 >
                   {link.label} →
                 </AppLink>
@@ -120,7 +120,7 @@ function Variant({
                 <button
                   onClick={() => onDone(item.id)}
                   disabled={busy}
-                  className="inline-flex min-h-[40px] items-center rounded-xl border border-tint/[0.14] px-3.5 text-sm text-fg-secondary disabled:opacity-50"
+                  className="inline-flex min-h-[40px] items-center rounded-tile border border-tint/[0.14] px-3.5 text-sm text-fg-secondary disabled:opacity-50"
                 >
                   Отметить, что сделал
                 </button>
@@ -147,7 +147,7 @@ function PickRow({
 }) {
   const chosen = row.chosen
   return (
-    <li className="rounded-xl border border-accent-line/40 bg-accent-soft/25 p-3">
+    <li className="rounded-control border border-accent-line/40 bg-accent-soft/25 p-3">
       <p className="mb-2 text-xs font-medium text-accent-soft-fg">
         {chosen ? 'Ты выбрал' : 'На выбор — сделай что-то одно'}
       </p>
@@ -228,7 +228,7 @@ export function StudentHomework({
       </div>
 
       {hw.note && (
-        <p className="rounded-xl bg-tint/[0.04] px-3 py-2 text-sm text-fg-secondary">
+        <p className="rounded-tile bg-tint/[0.04] px-3 py-2 text-sm text-fg-secondary">
           {hw.note}
         </p>
       )}

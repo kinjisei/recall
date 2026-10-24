@@ -162,7 +162,7 @@ export function ProgressPage() {
 
       {/* График недели */}
       <section
-        className="animate-fade-up rounded-3xl border border-tint/[0.08] bg-surface p-5 shadow-card"
+        className="animate-fade-up rounded-card border border-tint/[0.08] bg-surface p-5 shadow-card"
         style={{ animationDelay: '.05s' }}
       >
         <div className="flex items-baseline justify-between">
@@ -183,7 +183,7 @@ export function ProgressPage() {
                 {/* flex-1 задаёт колонке высоту, столбик тянется от низа */}
                 <div className="relative w-full flex-1">
                   <div
-                    className={`animate-bar-grow absolute bottom-0 w-full rounded-lg ${
+                    className={`animate-bar-grow absolute bottom-0 w-full rounded-tag ${
                       d.active ? 'bg-accent' : 'bg-tint/[0.07]'
                     }`}
                     style={{ height: `${height}%`, animationDelay: `${0.1 + i * 0.06}s` }}
@@ -240,7 +240,7 @@ export function ProgressPage() {
           блок. */}
       {weak && (weak.struggling.length > 0 || weak.weakTopics.length > 0) && (
         <section
-          className="animate-fade-up flex flex-col gap-4 rounded-3xl border border-tint/[0.08] bg-surface p-5 shadow-card"
+          className="animate-fade-up flex flex-col gap-4 rounded-card border border-tint/[0.08] bg-surface p-5 shadow-card"
           style={{ animationDelay: '.34s' }}
         >
           <h2 className="text-lg font-medium tracking-tight">Над чем поработать</h2>
@@ -326,10 +326,10 @@ function Metric({
 }) {
   return (
     <div
-      className="animate-fade-up flex flex-col gap-2 rounded-2xl border border-tint/[0.08] bg-surface p-4 shadow-card"
+      className="animate-fade-up flex flex-col gap-2 rounded-card border border-tint/[0.08] bg-surface p-4 shadow-card"
       style={{ animationDelay: delay }}
     >
-      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-soft text-accent-soft-fg">
+      <span className="flex h-9 w-9 items-center justify-center rounded-tile bg-accent-soft text-accent-soft-fg">
         <IconCmp size={18} />
       </span>
       <span className="text-2xl font-medium tabular-nums">{value}</span>

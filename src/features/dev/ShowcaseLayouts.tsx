@@ -47,7 +47,7 @@ function CenterDemo() {
         <Card className="flex flex-col gap-3">
           <p className="text-lg font-medium">Выбери перевод: «river»</p>
           {['река', 'дорога', 'город', 'утро'].map((o) => (
-            <button key={o} className="rounded-xl border border-tint/[0.10] px-4 py-2.5 text-left">
+            <button key={o} className="rounded-control border border-tint/[0.10] px-4 py-2.5 text-left">
               {o}
             </button>
           ))}
@@ -79,7 +79,7 @@ function ReadingDemo() {
       <Card>
         <p className="text-lg leading-relaxed" data-demo="reading">
           {TEXT.split(' ').map((w, i) => (
-            <button key={i} className="mr-1 rounded hover:bg-accent-soft" onClick={() => setWord(w.replace(/[.,]/g, ''))}>
+            <button key={i} className="mr-1 rounded-mark hover:bg-accent-soft" onClick={() => setWord(w.replace(/[.,]/g, ''))}>
               {w}
             </button>
           ))}

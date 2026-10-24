@@ -17,7 +17,7 @@ function Step({ n, children, picture }: { n: number; children: ReactNode; pictur
       </span>
       <div className="min-w-0 flex-1">
         <p className="text-sm text-fg">{children}</p>
-        <div aria-hidden className="mt-2 rounded-xl bg-tint/[0.05] p-2">
+        <div aria-hidden className="mt-2 rounded-tile bg-tint/[0.05] p-2">
           {picture}
         </div>
       </div>
@@ -27,7 +27,7 @@ function Step({ n, children, picture }: { n: number; children: ReactNode; pictur
 
 export function IosInstallCard({ onHide }: { onHide: () => void }) {
   return (
-    <section data-ios-install aria-labelledby="ios-install-title" className="animate-fade-up rounded-2xl border border-accent bg-surface p-4 shadow-card">
+    <section data-ios-install aria-labelledby="ios-install-title" className="animate-fade-up rounded-card border border-accent bg-surface p-4 shadow-card">
       <h2 id="ios-install-title" className="text-base font-semibold text-fg">
         Чтобы получать напоминания на iPhone, добавь Recall на экран «Домой»
       </h2>
@@ -53,8 +53,8 @@ export function IosInstallCard({ onHide }: { onHide: () => void }) {
           n={2}
           picture={
             <div className="flex flex-col gap-1.5 text-sm">
-              <span className="rounded-lg bg-surface px-3 py-2 text-fg-muted">Скопировать</span>
-              <span className="flex items-center gap-2 rounded-lg border-2 border-accent bg-surface px-3 py-2 font-semibold text-accent-strong">
+              <span className="rounded-tile bg-surface px-3 py-2 text-fg-muted">Скопировать</span>
+              <span className="flex items-center gap-2 rounded-tile border-2 border-accent bg-surface px-3 py-2 font-semibold text-accent-strong">
                 <IconPlus size={15} /> На экран «Домой»
               </span>
             </div>

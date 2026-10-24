@@ -33,7 +33,7 @@ export function Payments({ version, onChanged }: { version: number; onChanged: (
   const recent = useAsyncData(() => loadRecentPayments(10), [version], 'Не удалось загрузить оплаты')
 
   return (
-    <section className="rounded-2xl border border-tint/[0.08] bg-surface p-4 shadow-card">
+    <section className="rounded-card border border-tint/[0.08] bg-surface p-4 shadow-card">
       <h2 className="font-medium">Оплаты</h2>
       <p className="mt-1 text-note text-fg-muted">
         Сверь перевод в Kaspi (код из сообщения или имя отправителя) и подтверди — тариф включится сразу, человеку
@@ -98,7 +98,7 @@ function Claim({ claim, onChanged }: { claim: ClaimRow; onChanged: () => void })
   }
 
   return (
-    <div className="rounded-xl border border-tint/[0.08] p-3" data-claim={claim.id}>
+    <div className="rounded-control border border-tint/[0.08] p-3" data-claim={claim.id}>
       <div className="flex flex-wrap items-baseline justify-between gap-x-3">
         <span className="font-medium">{name}</span>
         <span className="text-note text-fg-muted">{when(claim.created_at)}</span>

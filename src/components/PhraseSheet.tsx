@@ -91,14 +91,14 @@ export function PhraseSheet({
             )}
             {failed && <p className="mt-3 text-sm text-fg-muted">{failed}</p>}
             {tr && (
-              <p className="mt-2 rounded-xl bg-tint/[0.04] px-3 py-2 text-[15px] leading-relaxed text-fg">
+              <p className="mt-2 rounded-tile bg-tint/[0.04] px-3 py-2 text-[15px] leading-relaxed text-fg">
                 {tr}
               </p>
             )}
 
             <button
               onClick={() => setAnalyze(true)}
-              className="lift mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl border border-accent-line bg-accent/10 py-2.5 text-sm font-medium text-accent-soft-fg"
+              className="lift mt-4 flex w-full items-center justify-center gap-1.5 rounded-tile border border-accent-line bg-accent/10 py-2.5 text-sm font-medium text-accent-soft-fg"
             >
               <IconSearch size={16} /> Разбор предложения
             </button>

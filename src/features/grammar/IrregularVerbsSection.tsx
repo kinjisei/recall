@@ -247,7 +247,7 @@ function Trainer({ groups }: { groups: IrregularGroup[] }) {
         value={scope}
         onChange={pickScope}
         label="Группа глаголов"
-        triggerClassName="flex min-h-11 flex-1 items-center justify-between gap-2 rounded-xl border border-tint/[0.10] bg-input px-3 text-sm text-fg outline-none focus:border-accent-line"
+        triggerClassName="flex min-h-11 flex-1 items-center justify-between gap-2 rounded-control-sm border border-tint/[0.10] bg-input px-3 text-sm text-fg outline-none focus:border-accent-line"
         options={[
           { id: 'all', label: 'Все группы' },
           ...(mistakeCount > 0 ? [{ id: 'mistakes', label: `Мои ошибки (${mistakeCount})` }] : []),
@@ -279,7 +279,7 @@ function Trainer({ groups }: { groups: IrregularGroup[] }) {
           onRestart={() => restart()}
         >
           {wrong.length > 0 && (
-            <div className="rounded-xl bg-surface p-3 text-left text-sm">
+            <div className="rounded-control bg-surface p-3 text-left text-sm">
               <p className="mb-1 font-semibold">Повтори:</p>
               {wrong.map(({ verb: v }) => (
                 <p key={v.base}>
@@ -309,7 +309,7 @@ function Trainer({ groups }: { groups: IrregularGroup[] }) {
   const pastOk = checked && matches(past, verb.past)
   const partOk = checked && matches(part, verb.part)
   const inputCls = (ok: boolean) =>
-    `rounded-xl border px-4 py-2.5 ${
+    `rounded-control border px-4 py-2.5 ${
       !checked
         ? 'border-tint/[0.10] bg-surface'
         : ok

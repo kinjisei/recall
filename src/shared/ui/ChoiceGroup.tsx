@@ -70,7 +70,7 @@ export function ChoiceGroup<T extends string>({
       <div
         role="radiogroup"
         aria-label={label}
-        className={`h-11 bg-input ${pill ? 'rounded-full' : 'rounded-xl'} ${stretch ? 'flex w-full' : 'inline-flex self-start'} ${className}`}
+        className={`h-11 bg-input ${pill ? 'rounded-full' : 'rounded-tile'} ${stretch ? 'flex w-full' : 'inline-flex self-start'} ${className}`}
       >
         {options.map((o) => {
           const on = o.id === value
@@ -81,12 +81,12 @@ export function ChoiceGroup<T extends string>({
               role="radio"
               aria-checked={on}
               onClick={() => onChange(o.id)}
-              className={`relative min-w-11 text-body tabular-nums ${pill ? 'rounded-full' : 'rounded-xl'} ${stretch ? 'flex-1' : ''} ${o.label.length > 2 ? 'px-4' : 'px-2.5'} transition-colors duration-(--dur-1) ease-out ${
+              className={`relative min-w-11 text-body tabular-nums ${pill ? 'rounded-full' : 'rounded-tile'} ${stretch ? 'flex-1' : ''} ${o.label.length > 2 ? 'px-4' : 'px-2.5'} transition-colors duration-(--dur-1) ease-out ${
                 on ? 'font-semibold text-fg' : 'font-medium text-fg-muted hover:text-fg-secondary'
               }`}
             >
               {/* «таблетка» — внутри кнопки 44, а не кнопка 38 на подложке: цель касания — вся высота */}
-              {on && <span aria-hidden className={`absolute inset-0.75 bg-segment shadow-segment ${pill ? 'rounded-full' : 'rounded-lg'}`} />}
+              {on && <span aria-hidden className={`absolute inset-0.75 bg-segment shadow-segment ${pill ? 'rounded-full' : 'rounded-tag'}`} />}
               <span className={`relative whitespace-nowrap ${o.className ?? ''}`}>{o.label}</span>
             </button>
           )

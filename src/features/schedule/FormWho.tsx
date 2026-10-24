@@ -35,7 +35,7 @@ function NewStudent({ kind, onCreated, onCancel }: { kind: LessonKind; onCreated
     }
   }
   return (
-    <div className="flex flex-col gap-2 rounded-2xl border border-tint/[0.08] p-3">
+    <div className="flex flex-col gap-2 rounded-row border border-tint/[0.08] p-3">
       <div className="flex items-center justify-between">
         <span className="text-sm font-semibold">Новый ученик</span>
         <button type="button" onClick={onCancel} className="min-h-11 px-2 text-sm font-semibold text-accent-strong">
@@ -94,7 +94,7 @@ export function FormWho({
   const single = !group ? chosen[0] : undefined
   if (single) {
     return (
-      <div className="flex min-h-12 items-center gap-3 rounded-xl bg-input px-3 ring-1 ring-control-line">
+      <div className="flex min-h-12 items-center gap-3 rounded-control bg-input px-3 ring-1 ring-control-line">
         <Avatar name={single.name} inApp={single.inApp} small />
         <span className="min-w-0 flex-1 truncate text-sm font-semibold">{single.name}</span>
         {!locked && (
@@ -143,7 +143,7 @@ export function FormWho({
             <ul className="flex flex-col">
               {shown.map((c) => (
                 <li key={c.id}>
-                  <button type="button" onClick={() => pick(c.id)} className="flex min-h-12 w-full items-center gap-3 rounded-xl px-2 text-left hover:bg-tint/[0.04]">
+                  <button type="button" onClick={() => pick(c.id)} className="flex min-h-12 w-full items-center gap-3 rounded-control px-2 text-left hover:bg-tint/[0.04]">
                     <Avatar name={c.name} inApp={c.inApp} small />
                     <span className="min-w-0 flex-1 truncate text-sm">{c.name}</span>
                     {!c.inApp && <span className="text-caption text-fg-muted">без приложения</span>}
@@ -153,7 +153,7 @@ export function FormWho({
               {shown.length < found.length && <li className="px-2 py-1 text-note text-fg-muted">Ещё {found.length - shown.length} — найди поиском</li>}
               {query && !found.length && <li className="px-2 py-1 text-note text-fg-muted">Никого не нашли</li>}
             </ul>
-            <button type="button" onClick={() => setAdding(true)} className="flex min-h-11 items-center gap-2 self-start rounded-xl px-2 text-sm font-semibold text-accent-strong">
+            <button type="button" onClick={() => setAdding(true)} className="flex min-h-11 items-center gap-2 self-start rounded-control-sm px-2 text-sm font-semibold text-accent-strong">
               <IconPlus size={18} aria-hidden /> Новый ученик
             </button>
           </>

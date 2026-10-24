@@ -155,7 +155,7 @@ export function MoveSheet({
         )}
 
         {!following && (
-          <p className="flex items-center justify-center gap-2 rounded-xl bg-tint/[0.04] px-3 py-2.5 text-sm" data-move-preview>
+          <p className="flex items-center justify-center gap-2 rounded-control bg-tint/[0.04] px-3 py-2.5 text-sm" data-move-preview>
             <span className="text-fg-muted">
               {dayShort(lessonDay(lesson))}, {almatyTime(lesson.startsAt)}
             </span>

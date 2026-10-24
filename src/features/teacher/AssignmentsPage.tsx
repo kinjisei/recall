@@ -289,7 +289,7 @@ function ReviewedView({
               {!ok && correct && <span className="text-fg-muted"> · правильно: {correct}</span>}
             </p>
             {item?.comment && (
-              <p className="rounded-lg bg-tint/[0.06] px-3 py-2 text-sm text-fg-secondary">
+              <p className="rounded-tile bg-tint/[0.06] px-3 py-2 text-sm text-fg-secondary">
                 💬 {item.comment}
               </p>
             )}

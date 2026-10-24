@@ -76,7 +76,7 @@ function Wheel({ values, value, onChange, label }: { values: number[]; value: nu
         aria-valuetext={String(value).padStart(2, '0')}
         onScroll={onScroll}
         onKeyDown={onKey}
-        className="scrollbar-none relative h-45 w-full snap-y snap-mandatory overflow-y-auto overscroll-contain rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-focus"
+        className="scrollbar-none relative h-45 w-full snap-y snap-mandatory overflow-y-auto overscroll-contain rounded-tile outline-none focus-visible:ring-2 focus-visible:ring-focus"
         style={{ scrollPaddingTop: ROW * 2 }}
       >
         <div style={{ height: ROW * 2 }} aria-hidden />
@@ -117,9 +117,9 @@ export function TimeWheel({
   const minutes = Array.from({ length: Math.ceil(60 / minuteStep) }, (_, i) => i * minuteStep)
   const set = (hh: number, mi: number) => onChange(formatTime(hh, mi))
   return (
-    <div className="relative flex items-stretch gap-2 rounded-2xl border border-tint/[0.08] bg-surface px-3 pb-2 pt-2 shadow-card">
+    <div className="relative flex items-stretch gap-2 rounded-row border border-tint/[0.08] bg-surface px-3 pb-2 pt-2 shadow-card">
       {/* полоса выбранного значения — под строкой посередине колёс */}
-      <span aria-hidden className="pointer-events-none absolute inset-x-3 bottom-2 h-9 -translate-y-18 rounded-xl bg-accent-soft/60" />
+      <span aria-hidden className="pointer-events-none absolute inset-x-3 bottom-2 h-9 -translate-y-18 rounded-tile bg-accent-soft/60" />
       <Wheel values={HOURS} value={h} onChange={(v) => set(v, m)} label="Часы" />
       <span aria-hidden className="self-end pb-20 text-lg font-bold text-fg">
         :

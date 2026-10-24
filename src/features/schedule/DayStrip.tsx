@@ -32,7 +32,7 @@ export function DayStrip({
             aria-pressed={on}
             aria-label={`${name}, ${Number(d.slice(8))}${isToday ? ', сегодня' : ''}${busy.has(d) ? ', есть уроки' : ''}`}
             onClick={() => onPick(d)}
-            className={`flex min-h-14 flex-col items-center justify-center rounded-xl transition-colors ${
+            className={`flex min-h-14 flex-col items-center justify-center rounded-control transition-colors ${
               on ? 'bg-accent-soft text-accent-soft-fg ring-2 ring-control-line-active' : 'hover:bg-tint/[0.05]'
             }`}
           >

@@ -51,7 +51,7 @@ export function StepStudents({
       <Question title="Сколько у тебя учеников?" />
       {/* на компьютере та же строка — первым пунктом справа */}
       {trial && (
-        <p className="mt-2.5 flex gap-2.5 rounded-2xl bg-accent-soft px-3.5 py-3 text-sm leading-[1.45] text-accent-soft-fg lg:hidden">
+        <p className="mt-2.5 flex gap-2.5 rounded-row bg-accent-soft px-3.5 py-3 text-sm leading-[1.45] text-accent-soft-fg lg:hidden">
           <IconInfo size={18} className="mt-0.5 shrink-0" aria-hidden />
           {trial}
         </p>
@@ -99,7 +99,7 @@ export function StepDone({
     <>
       <div className="mt-10 flex flex-col gap-3 lg:mt-0">
         <h1 className="text-3xl font-bold leading-[1.18] tracking-[-0.02em] lg:text-4xl lg:leading-[1.15]">Студия готова</h1>
-        <dl className="flex flex-col rounded-2xl bg-surface shadow-card">
+        <dl className="flex flex-col rounded-control-lg bg-surface shadow-card">
           {rows.map((r, i) => (
             <div key={r.label} className={`flex min-h-13 items-center gap-3 px-4 text-body ${i > 0 ? 'border-t border-line' : ''}`}>
               <dt className="flex-1 text-fg-secondary">{r.label}</dt>

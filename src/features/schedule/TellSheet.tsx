@@ -41,7 +41,7 @@ function Item({ item, url }: { item: TellItem; url: string }) {
           ? `${item.name} — уведомления в Recall выключены, напиши сам`
           : `${item.name} — без приложения, отправь сообщение сам`}
       </p>
-      <p className="whitespace-pre-line break-words rounded-xl bg-input px-4 py-3 text-sm leading-relaxed text-fg" data-tell-message>
+      <p className="whitespace-pre-line break-words rounded-control bg-input px-4 py-3 text-sm leading-relaxed text-fg" data-tell-message>
         {item.text}
       </p>
       <div className={SHARE_ROW}>

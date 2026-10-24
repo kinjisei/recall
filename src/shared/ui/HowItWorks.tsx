@@ -97,7 +97,7 @@ export function HintButton({
 export function HintPanel({ open, children }: { open: boolean; children: ReactNode }) {
   return (
     <Reveal open={open}>
-      <div className="mt-2 rounded-2xl bg-tint/[0.04] px-4 py-3 text-sm leading-relaxed text-fg-secondary">
+      <div className="mt-2 rounded-control bg-tint/[0.04] px-4 py-3 text-sm leading-relaxed text-fg-secondary">
         {typeof children === 'string' ? <BoltText>{children}</BoltText> : children}
       </div>
     </Reveal>

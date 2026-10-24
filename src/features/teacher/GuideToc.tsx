@@ -44,7 +44,7 @@ export function GuideToc({
               type="button"
               aria-current={cur ? 'location' : undefined}
               onClick={() => onGo(s.id)}
-              className={`flex min-h-11 items-start gap-2 rounded-lg px-2.5 py-2 text-left text-sm leading-snug ${
+              className={`flex min-h-11 items-start gap-2 rounded-control-sm px-2.5 py-2 text-left text-sm leading-snug ${
                 cur ? 'bg-accent-soft font-semibold text-accent-soft-fg' : done ? 'text-fg-muted hover:bg-row-press' : 'text-fg-secondary hover:bg-row-press'
               }`}
             >
@@ -61,7 +61,7 @@ export function GuideToc({
                     type="button"
                     aria-current={j === block ? 'location' : undefined}
                     onClick={() => onGo(s.id, j)}
-                    className={`-ml-0.5 min-h-11 rounded-r-lg border-l-2 py-1.5 pl-3.5 pr-2.5 text-left text-note leading-snug ${
+                    className={`-ml-0.5 min-h-11 rounded-r-control-sm border-l-2 py-1.5 pl-3.5 pr-2.5 text-left text-note leading-snug ${
                       j === block ? 'border-focus font-semibold text-accent-soft-fg' : 'border-transparent text-fg-secondary hover:bg-row-press'
                     }`}
                   >

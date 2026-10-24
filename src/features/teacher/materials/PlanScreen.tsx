@@ -217,7 +217,7 @@ export function PlanScreen({
         <div className="flex flex-col gap-2">
           {plan.exercise_plan.map((p, i) => (
             <div key={i} className="flex items-start gap-3 rounded-control-sm bg-input px-3.5 py-3">
-              <span className="flex h-7 min-w-8 flex-none items-center justify-center rounded-lg bg-surface px-2 text-sm font-bold text-fg tabular-nums">{p.count}</span>
+              <span className="flex h-7 min-w-8 flex-none items-center justify-center rounded-tag bg-surface px-2 text-sm font-bold text-fg tabular-nums">{p.count}</span>
               <span className="flex flex-col gap-0.5 text-sm leading-snug text-fg-secondary">
                 <b className="text-body font-semibold text-fg">{KIND[p.kind] ?? p.kind}</b>
                 {p.note}

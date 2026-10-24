@@ -12,8 +12,8 @@ export function HomeSkeleton() {
   const wide = useEvenColumnsSplit()
   const header = (
     <header className="flex flex-col gap-2 px-1 pt-1">
-      <div className={`${BAR} h-8 w-56 rounded-lg`} />
-      <div className={`${BAR} h-4 w-36 rounded`} />
+      <div className={`${BAR} h-8 w-56 rounded-tag`} />
+      <div className={`${BAR} h-4 w-36 rounded-full`} />
     </header>
   )
   if (wide) {

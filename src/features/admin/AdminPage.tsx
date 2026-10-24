@@ -79,7 +79,7 @@ function Funnel() {
   const top = data?.steps?.[0]?.people ?? 0
 
   return (
-    <section className="rounded-2xl border border-tint/[0.08] bg-surface p-4 shadow-card">
+    <section className="rounded-card border border-tint/[0.08] bg-surface p-4 shadow-card">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="font-medium">Воронка</h2>
         <div className="flex gap-1">
@@ -87,7 +87,7 @@ function Funnel() {
             <button
               key={d}
               onClick={() => setDays(d)}
-              className={`min-h-11 rounded-lg px-3 text-sm ${
+              className={`min-h-11 rounded-control-sm px-3 text-sm ${
                 days === d
                   ? 'bg-accent-soft text-accent-soft-fg'
                   : 'text-fg-muted hover:text-fg'
@@ -189,7 +189,7 @@ function RecentErrors() {
             <button
               key={d}
               onClick={() => setDays(d)}
-              className={`min-h-11 rounded-lg px-3 text-sm font-medium ${
+              className={`min-h-11 rounded-control-sm px-3 text-sm font-medium ${
                 days === d
                   ? 'bg-accent-soft text-accent-soft-fg'
                   : 'bg-tint/[0.06] text-fg-muted'
@@ -217,7 +217,7 @@ function RecentErrors() {
               <button
                 key={key}
                 onClick={() => setOpen(open === key ? null : key)}
-                className="rounded-xl border border-tint/[0.08] p-3 text-left"
+                className="rounded-control border border-tint/[0.08] p-3 text-left"
               >
                 <div className="flex items-start justify-between gap-3">
                   <span className="min-w-0 text-sm font-medium">{r.message ?? '(без текста)'}</span>
@@ -287,7 +287,7 @@ function FeedbackList() {
       ) : (
         <div className="mt-3 flex flex-col gap-2">
           {rows.map((r, i) => (
-            <div key={i} className="rounded-xl border border-tint/[0.08] p-3">
+            <div key={i} className="rounded-control border border-tint/[0.08] p-3">
               <div className="flex items-start justify-between gap-3">
                 <span className="min-w-0 text-sm">
                   {r.rating === 'up' ? '👍 ' : r.rating === 'down' ? '👎 ' : ''}

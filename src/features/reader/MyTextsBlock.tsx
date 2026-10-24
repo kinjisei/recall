@@ -75,7 +75,7 @@ export function MyTextsList({
               <button
                 onClick={() => void remove(t)}
                 aria-label={`Удалить ${t.title}`}
-                className="flex h-11 w-11 flex-none items-center justify-center rounded-xl border border-tint/[0.08] text-fg-muted"
+                className="flex h-11 w-11 flex-none items-center justify-center rounded-control-sm border border-tint/[0.08] text-fg-muted"
               >
                 <IconTrash size={16} />
               </button>

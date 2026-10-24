@@ -255,7 +255,7 @@ function WordRow({ w, on, onToggle, onDelete }: { w: StudentWord; on: boolean; o
         <input type="checkbox" checked={on} onChange={onToggle} className="peer absolute inset-0 size-full cursor-pointer opacity-0" />
         <span
           aria-hidden
-          className={`flex size-5.5 flex-none items-center justify-center rounded-lg peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus ${
+          className={`flex size-5.5 flex-none items-center justify-center rounded-tag peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus ${
             on ? 'bg-primary text-primary-fg' : 'bg-surface inset-ring-2 inset-ring-fg-faint'
           }`}
         >
@@ -277,7 +277,7 @@ function WordRow({ w, on, onToggle, onDelete }: { w: StudentWord; on: boolean; o
         type="button"
         onClick={onDelete}
         aria-label={`Удалить ${w.card.front}`}
-        className="flex size-11 flex-none items-center justify-center rounded-xl text-fg-muted hover:text-danger-strong active:bg-ghost-press"
+        className="flex size-11 flex-none items-center justify-center rounded-control-sm text-fg-muted hover:text-danger-strong active:bg-ghost-press"
       >
         <IconTrash size={18} />
       </button>

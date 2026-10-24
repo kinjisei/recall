@@ -75,7 +75,7 @@ export function ScheduleHeader({
         type="button"
         aria-label={view === 'day' ? 'Предыдущий день' : 'Предыдущая неделя'}
         onClick={() => onShift(-1)}
-        className="flex size-11 flex-none items-center justify-center rounded-xl text-fg-secondary hover:bg-tint/[0.06]"
+        className="flex size-11 flex-none items-center justify-center rounded-control-sm text-fg-secondary hover:bg-tint/[0.06]"
       >
         <IconChevronLeft size={20} />
       </button>
@@ -87,7 +87,7 @@ export function ScheduleHeader({
         type="button"
         aria-label={view === 'day' ? 'Следующий день' : 'Следующая неделя'}
         onClick={() => onShift(1)}
-        className="flex size-11 flex-none items-center justify-center rounded-xl text-fg-secondary hover:bg-tint/[0.06]"
+        className="flex size-11 flex-none items-center justify-center rounded-control-sm text-fg-secondary hover:bg-tint/[0.06]"
       >
         <IconChevronRight size={20} />
       </button>
@@ -98,7 +98,7 @@ export function ScheduleHeader({
       type="button"
       onClick={onToday}
       disabled={isCurrent}
-      className="min-h-11 flex-none rounded-xl px-3 text-sm font-semibold text-accent-strong hover:bg-tint/[0.06] disabled:text-fg-muted disabled:hover:bg-transparent"
+      className="min-h-11 flex-none rounded-control-sm px-3 text-sm font-semibold text-accent-strong hover:bg-tint/[0.06] disabled:text-fg-muted disabled:hover:bg-transparent"
     >
       Сегодня
     </button>

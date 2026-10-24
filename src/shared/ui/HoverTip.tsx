@@ -9,7 +9,7 @@ export function HoverTip({ label }: { label: string }) {
   return (
     <span
       aria-hidden
-      className="pointer-events-none absolute left-full top-1/2 z-40 ml-5 -translate-y-1/2 whitespace-nowrap rounded-lg bg-fg px-2.5 py-1.5 text-xs font-medium text-page opacity-0 shadow-raised transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100"
+      className="pointer-events-none absolute left-full top-1/2 z-40 ml-5 -translate-y-1/2 whitespace-nowrap rounded-tag bg-fg px-2.5 py-1.5 text-xs font-medium text-page opacity-0 shadow-raised transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100"
     >
       {label}
     </span>

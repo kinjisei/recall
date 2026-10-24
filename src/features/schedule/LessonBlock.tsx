@@ -50,7 +50,7 @@ export function LessonBlock({
   const name = lessonName(lesson)
   const label = `${timeRange(lesson)}, ${name}${badge ? `, ${badge.text}` : soon ? `, ${soon}` : ''}`
   const cancelled = lesson.status === 'cancelled'
-  const base = `h-full w-full overflow-hidden rounded-xl text-left transition-[filter] hover:brightness-95 focus-visible:outline-2 focus-visible:outline-focus ${lessonLook(lesson)}`
+  const base = `h-full w-full overflow-hidden rounded-tile text-left transition-[filter] hover:brightness-95 focus-visible:outline-2 focus-visible:outline-focus ${lessonLook(lesson)}`
 
   // мини-сетка телефона: урок — картинка, нажимается день целиком (WeekGrid)
   if (size === 'mini') {

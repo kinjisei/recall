@@ -60,7 +60,7 @@ export function RoundReview({
             {items.map((it, i) => (
               <div
                 key={i}
-                className={`rounded-xl border px-3 py-2 ${it.ok ? 'border-success/30' : 'border-danger/30'}`}
+                className={`rounded-tile border px-3 py-2 ${it.ok ? 'border-success/30' : 'border-danger/30'}`}
               >
                 <div className="flex items-start gap-2">
                   <span className={`mt-0.5 flex-none ${it.ok ? 'text-success-strong' : 'text-danger-strong'}`}>
@@ -79,7 +79,7 @@ export function RoundReview({
                     </p>
                     {!it.ok &&
                       (why[i] ? (
-                        <p className="mt-1 rounded-lg bg-tint/[0.04] px-2.5 py-1.5 text-sm leading-relaxed text-fg-secondary">
+                        <p className="mt-1 rounded-tag bg-tint/[0.04] px-2.5 py-1.5 text-sm leading-relaxed text-fg-secondary">
                           {why[i]}
                         </p>
                       ) : loading[i] ? (

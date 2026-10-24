@@ -129,7 +129,7 @@ export function WordCheckRunner({
         </p>
 
         <input
-          className={`mt-2 w-full max-w-xs rounded-xl border bg-input px-4 py-3 text-center text-lg outline-none ${
+          className={`mt-2 w-full max-w-xs rounded-control border bg-input px-4 py-3 text-center text-lg outline-none ${
             checked
               ? ok
                 ? 'border-success'

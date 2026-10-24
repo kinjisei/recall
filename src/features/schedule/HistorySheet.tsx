@@ -82,7 +82,7 @@ export function HistorySheet({
     <Sheet onClose={onClose} labelledBy="history-title" maxH="92dvh">
       <SheetHeader id="history-title" title="История" note={`${name} · уроки и оплаты`} />
       <div className={SHEET_BODY}>
-        <div className="flex items-center justify-between gap-3 rounded-2xl border border-tint/[0.08] px-4 py-3">
+        <div className="flex items-center justify-between gap-3 rounded-row border border-tint/[0.08] px-4 py-3">
           <span className="text-sm font-semibold">{balanceLabel(balance)}</span>
           {canWrite && (
             <Button size="sm" variant="secondary" className="flex-none" onClick={onPay}>
@@ -102,7 +102,7 @@ export function HistorySheet({
             {months.map((m) => (
               <section key={m.title} aria-label={m.title} className="flex flex-col gap-1.5">
                 <h3 className="text-note font-semibold text-fg-muted">{m.title}</h3>
-                <ul className="divide-y divide-tint/[0.06] overflow-hidden rounded-2xl border border-tint/[0.08]">
+                <ul className="divide-y divide-tint/[0.06] overflow-hidden rounded-row border border-tint/[0.08]">
                   {m.rows.map((h) => {
                     const r = historyRow(h)
                     const tappable = canWrite && r.fix !== null

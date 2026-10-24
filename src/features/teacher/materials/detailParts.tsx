@@ -73,7 +73,7 @@ export function MaterialBody({ material }: { material: Material }) {
 export function ExerciseRow({ n, ex, lang }: { n: number; ex: GrammarExercise; lang: string }) {
   return (
     <div className="flex gap-2.5 rounded-control-sm bg-input px-3 py-2.5 text-body leading-normal">
-      <span className="flex size-6 flex-none items-center justify-center rounded-lg bg-surface text-xs font-semibold text-fg-secondary">{n}</span>
+      <span className="flex size-6 flex-none items-center justify-center rounded-tag bg-surface text-xs font-semibold text-fg-secondary">{n}</span>
       <span className="flex min-w-0 flex-col gap-0.5">
         <span className="text-fg">{ex.prompt}</span>
         <span className="text-sm font-medium text-success-strong">

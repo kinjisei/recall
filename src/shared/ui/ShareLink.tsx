@@ -19,7 +19,7 @@ export const SHARE_ROW = '@container flex gap-2'
 
 /** Вид кнопки «поделиться» — и для соседних «Скопировать», «Ещё…». Ставится в SHARE_ROW. */
 export const SHARE_BUTTON =
-  'lift flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl bg-accent-soft px-1.5 py-1.5 text-sm font-semibold text-accent-soft-fg @min-[19rem]:flex-row [&>svg]:flex-none'
+  'lift flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-tile bg-accent-soft px-1.5 py-1.5 text-sm font-semibold text-accent-soft-fg @min-[19rem]:flex-row [&>svg]:flex-none'
 
 /**
  * Кнопка-контур в строку: значок цвета акцента слева, подпись, поверхность и

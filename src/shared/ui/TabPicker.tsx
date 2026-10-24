@@ -2,7 +2,7 @@
 // Единый сегмент-переключатель «выбери один из N» вместо копий по экранам.
 // Активный вариант везде — акцент (`accent-soft` / `accent-soft-fg`); отличались только
 // форма и hover. Два варианта формы:
-//   tabs    — строка кнопок rounded-lg (грамматика, глаголы, читалки) — дефолт;
+//   tabs    — строка кнопок rounded-tag (грамматика, глаголы, читалки) — дефолт;
 //   segment — капсула rounded-full с фоном-контейнером (Диалог: Чат/Письмо);
 //             `stretch` — поровну на всю ширину, поля 8, а не 16: ячейки и так
 //             делят ширину. Поровну, пока слова влезают; не влезает — вкладка
@@ -16,7 +16,7 @@
 //             ученика, макет d10-2): строка не переносится, лишнее — прокруткой
 //             вбок; `trailing` — справа в той же строке («Отчёт ↗»).
 // (Выбор значения — уровень, скорость, размер текста в «Настройках» — это не
-//  вкладки, а ChoiceGroup: radiogroup, rounded-xl, размер шрифта в самих
+//  вкладки, а ChoiceGroup: radiogroup, rounded-tile, размер шрифта в самих
 //  кнопках.)
 // ============================================================================
 import type React from 'react'
@@ -70,7 +70,7 @@ export function TabPicker<T extends string>({
                 role="tab"
                 aria-selected={isActive}
                 onClick={() => onChange(o.id)}
-                className={`relative flex min-h-11 flex-none items-center gap-1.5 whitespace-nowrap rounded-t-lg px-2.5 text-body transition-colors duration-(--dur-1) ${
+                className={`relative flex min-h-11 flex-none items-center gap-1.5 whitespace-nowrap rounded-t-tag px-2.5 text-body transition-colors duration-(--dur-1) ${
                   isActive ? 'font-semibold text-accent-soft-fg after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:rounded-full after:bg-focus' : 'font-medium text-fg-secondary hover:text-fg'
                 }`}
               >
@@ -108,7 +108,7 @@ export function TabPicker<T extends string>({
             aria-selected={isActive}
             onClick={() => onChange(o.id)}
             className={`relative flex min-h-11 items-center justify-center gap-1.5 transition-colors duration-(--dur-1) ease-out ${stretch ? 'min-w-min flex-1 px-2' : 'px-4'} ${
-              segment ? `${stretch ? '' : 'min-w-27.5'} rounded-full ${small ? 'text-sm' : 'text-body'}` : 'rounded-lg text-sm'
+              segment ? `${stretch ? '' : 'min-w-27.5'} rounded-full ${small ? 'text-sm' : 'text-body'}` : 'rounded-tag text-sm'
             } ${isActive ? active : inactive}`}
           >
             {segment && isActive && <span aria-hidden className="absolute inset-0.75 rounded-full bg-segment shadow-segment" />}

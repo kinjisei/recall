@@ -107,7 +107,7 @@ export function PaySheet({
         </section>
 
         {valid && (
-          <p className="flex items-center justify-center gap-2 rounded-xl bg-tint/[0.04] px-3 py-2.5 text-sm" data-pay-preview>
+          <p className="flex items-center justify-center gap-2 rounded-control bg-tint/[0.04] px-3 py-2.5 text-sm" data-pay-preview>
             <span className="text-fg-muted">Было {signed(now)}</span>
             <IconArrowRight size={16} aria-hidden className="text-fg-muted" />
             <span className="font-semibold">станет {lessonsCount(now + count).replace(/^-/, '−')}</span>

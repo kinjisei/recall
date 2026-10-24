@@ -39,7 +39,7 @@ export function LearnDialog({ lang }: { lang: AppLang }) {
   return (
     <section aria-label="Диалог" className="flex flex-col gap-3 rounded-card bg-surface p-4 shadow-card" data-learn-dialog>
       <div className="flex items-center gap-2.5">
-        <span className="flex size-9.5 flex-none items-center justify-center rounded-xl bg-accent-soft text-accent-strong">
+        <span className="flex size-9.5 flex-none items-center justify-center rounded-tile bg-accent-soft text-accent-strong">
           <IconDialog size={20} aria-hidden />
         </span>
         <span className="flex flex-col leading-snug">
@@ -74,7 +74,7 @@ export function LearnDialog({ lang }: { lang: AppLang }) {
                 {notes.slice(0, 1).map((n, j) => {
                   const { Icon, cls } = MARKER_LOOK[n.kind]
                   return (
-                    <p key={j} lang="ru" className="flex max-w-[88%] gap-2 self-start rounded-xl px-2.5 py-2 text-note text-fg-secondary inset-ring inset-ring-line">
+                    <p key={j} lang="ru" className="flex max-w-[88%] gap-2 self-start rounded-tile px-2.5 py-2 text-note text-fg-secondary inset-ring inset-ring-line">
                       <Icon size={16} aria-hidden className={`mt-px flex-none ${cls}`} />
                       <span className="line-clamp-3">{n.text}</span>
                     </p>
@@ -107,7 +107,7 @@ export function LearnDialog({ lang }: { lang: AppLang }) {
           placeholder={turns.length ? `Ответь ${IN[lang]}…` : EXAMPLE[lang]}
           className="min-h-11 flex-1 resize-none bg-transparent py-2.5 text-body text-fg outline-none placeholder:text-fg-muted"
         />
-        <button type="submit" aria-label="Отправить в «Диалог»" className="flex size-11 flex-none items-center justify-center rounded-xl bg-surface text-fg-muted active:bg-row-press">
+        <button type="submit" aria-label="Отправить в «Диалог»" className="flex size-11 flex-none items-center justify-center rounded-control-sm bg-surface text-fg-muted active:bg-row-press">
           <IconArrowRight size={20} aria-hidden />
         </button>
       </form>

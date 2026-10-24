@@ -54,7 +54,7 @@ export function AnalysisSheet({
           {data && (
             <>
               {data.translation && (
-                <p className="mt-2 rounded-xl bg-tint/[0.04] px-3 py-2 text-sm leading-relaxed text-fg-secondary">
+                <p className="mt-2 rounded-tile bg-tint/[0.04] px-3 py-2 text-sm leading-relaxed text-fg-secondary">
                   {data.translation}
                 </p>
               )}

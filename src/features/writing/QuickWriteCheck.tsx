@@ -116,7 +116,7 @@ export function QuickWriteCheck({
       </Card>
 
       <textarea
-        className="min-h-[140px] w-full rounded-xl border border-tint/[0.10] bg-input px-4 py-3 text-base leading-relaxed outline-none focus:border-accent-line"
+        className="min-h-[140px] w-full rounded-row border border-tint/[0.10] bg-input px-4 py-3 text-base leading-relaxed outline-none focus:border-accent-line"
         placeholder={
           lang === 'es'
             ? 'Hola. Me gusta mucho la música española…'

@@ -119,7 +119,7 @@ function Row({ label, hint, on, locked = false, onToggle }: { label: string; hin
     >
       <span
         aria-hidden
-        className={`flex size-5.5 flex-none items-center justify-center rounded-md ${
+        className={`flex size-5.5 flex-none items-center justify-center rounded-tag ${
           locked ? 'bg-input text-fg-muted' : on ? 'bg-primary text-primary-fg' : 'bg-surface inset-ring-2 inset-ring-fg-faint'
         }`}
       >

@@ -16,7 +16,7 @@ export function PlanPanel({ band, offer }: { band: StudentBand | null; offer: Tr
       className="hidden flex-col justify-center gap-4 border-l border-line bg-surface px-[clamp(3.5rem,15vw_-_8.5rem,5rem)] py-12 lg:flex"
     >
       <span className="text-note font-semibold uppercase tracking-[0.04em] text-fg-muted">Подойдёт тариф</span>
-      <div aria-live="polite" className="flex max-w-105 flex-col gap-2.5 rounded-3xl bg-accent-soft p-5.5 text-accent-soft-fg">
+      <div aria-live="polite" className="flex max-w-105 flex-col gap-2.5 rounded-card bg-accent-soft p-5.5 text-accent-soft-fg">
         <b className="text-2xl font-bold">{card.title}</b>
         <span className="text-body leading-[1.45]">{card.students}</span>
         <span className="text-body leading-[1.45] opacity-90">{card.price}</span>

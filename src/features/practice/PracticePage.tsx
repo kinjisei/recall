@@ -117,7 +117,7 @@ function TileGrid({
           style={{ animationDelay: `${delayBase + 0.05 + i * 0.04}s` }}
         >
           <Card interactive className="relative flex h-full flex-col p-4">
-            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent-soft text-accent-soft-fg">
+            <span className="flex h-11 w-11 items-center justify-center rounded-control-sm bg-accent-soft text-accent-soft-fg">
               <t.Icon size={22} />
             </span>
             {t.badge !== undefined && (
@@ -381,11 +381,11 @@ export function PracticePage() {
           заставляет браузер показать, как одна карточка выросла, а другая
           сжалась: те же элементы, а не подмена содержимого. */}
       <div
-        className="animate-fade-up flex flex-col gap-3 rounded-3xl border border-accent-line bg-linear-135 from-accent/16 to-accent/5 p-4"
+        className="animate-fade-up flex flex-col gap-3 rounded-card border border-accent-line bg-linear-135 from-accent/16 to-accent/5 p-4"
         style={{ viewTransitionName: `pg-${active.id}` }}
       >
         <div className="flex items-center gap-3">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-accent-soft text-accent-soft-fg">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-control bg-accent-soft text-accent-soft-fg">
             <active.Icon size={24} />
           </span>
           <span className="min-w-0">
@@ -415,9 +415,9 @@ export function PracticePage() {
             key={g.id}
             onClick={() => setGroup(g.id)}
             style={{ viewTransitionName: `pg-${g.id}` }}
-            className="lift relative flex flex-col items-center gap-1.5 rounded-2xl border border-tint/[0.08] bg-surface px-2 py-3 text-center shadow-card"
+            className="lift relative flex flex-col items-center gap-1.5 rounded-control-lg border border-tint/[0.08] bg-surface px-2 py-3 text-center shadow-card"
           >
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-tint/[0.06] text-fg-secondary">
+            <span className="flex h-10 w-10 items-center justify-center rounded-tile bg-tint/[0.06] text-fg-secondary">
               <g.Icon size={20} />
             </span>
             <span className="text-[13px] font-medium leading-tight">{g.title}</span>

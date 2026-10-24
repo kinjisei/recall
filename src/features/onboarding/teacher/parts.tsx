@@ -78,7 +78,7 @@ export function Choice({
       onMouseLeave={() => onPreview?.(false)}
       onFocus={() => onPreview?.(true)}
       onBlur={() => onPreview?.(false)}
-      className={`flex min-h-16 items-center gap-3.5 rounded-2xl px-4.5 text-left text-lg font-semibold transition-[background-color,box-shadow,color] duration-[120ms] ${
+      className={`flex min-h-16 items-center gap-3.5 rounded-control-lg px-4.5 text-left text-lg font-semibold transition-[background-color,box-shadow,color] duration-[120ms] ${
         center ? 'justify-center tabular-nums' : ''
       } ${on ? 'bg-accent-soft text-accent-soft-fg inset-ring-2 inset-ring-focus' : 'bg-surface text-fg shadow-card inset-ring inset-ring-line'}`}
     >

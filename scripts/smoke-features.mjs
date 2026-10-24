@@ -182,7 +182,7 @@ async function main() {
     await waitText(page, 'Тема:')
     const mixState = await page.evaluate(() => ({
       theme: (document.body.textContent || '').includes('Тема:'),
-      exercise: !!document.querySelector('button.rounded-xl.text-left'),
+      exercise: !!document.querySelector('button[data-key]'),
     }))
     check('«Выбери форму» работает', mixOpened && mixState.theme && mixState.exercise, JSON.stringify(mixState))
 
@@ -341,14 +341,14 @@ async function main() {
     await clickByText(page, 'button', 'Начать тест')
     await sleep(600)
     // прокликиваем: всегда первый вариант; максимум 60 кликов.
-    // Варианты ответа — button.rounded-xl.text-left (в отличие от «На главную»
+    // Варианты ответа — button[data-key] — номер клавиши стоит только у вариантов (в отличие от «На главную»
     // и нижней навигации).
     let finished = false
     for (let i = 0; i < 60; i++) {
       const state = await page.evaluate(() => {
         const body = document.body.textContent || ''
         if (body.includes('Твой уровень')) return 'done'
-        const opt = document.querySelector('button.rounded-xl.text-left')
+        const opt = document.querySelector('button[data-key]')
         if (opt) {
           opt.click()
           return 'clicked'
@@ -393,7 +393,7 @@ async function main() {
     for (let step = 0; step < 5 && !gotWrong; step++) {
       const kind = await page.evaluate(() => {
         if (document.querySelector('input[placeholder="Твой ответ…"]')) return 'fill'
-        if (document.querySelector('button.rounded-xl.text-left')) return 'mcq'
+        if (document.querySelector('button[data-key]')) return 'mcq'
         return 'other'
       })
       if (kind === 'fill') {
@@ -402,7 +402,7 @@ async function main() {
         await sleep(300)
         gotWrong = true
       } else if (kind === 'mcq') {
-        await page.evaluate(() => document.querySelector('button.rounded-xl.text-left').click())
+        await page.evaluate(() => document.querySelector('button[data-key]').click())
         await sleep(300)
         gotWrong = await page.evaluate(
           () => !!document.querySelector('button.border-red-500'),

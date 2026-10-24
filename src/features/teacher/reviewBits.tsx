@@ -108,7 +108,7 @@ export function ExerciseCard({ n, prompt, children }: { n: number; prompt: strin
   return (
     <Card className="flex flex-col gap-3 p-4.5!">
       <p className="flex gap-2.5 text-body font-medium text-fg">
-        <span className="flex size-6.5 flex-none items-center justify-center rounded-lg bg-input text-note font-semibold text-fg-secondary">{n}</span>
+        <span className="flex size-6.5 flex-none items-center justify-center rounded-tag bg-input text-note font-semibold text-fg-secondary">{n}</span>
         <span className="pt-0.5">{prompt}</span>
       </p>
       {children}

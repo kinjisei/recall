@@ -238,13 +238,13 @@ export function DeckReview({ onBack }: { onBack?: () => void }) {
             <div className="grid grid-cols-2 gap-2.5">
               <button
                 onClick={() => onSwipe('left')}
-                className="lift rounded-2xl border border-tint/[0.12] py-3.5 text-sm font-medium text-fg-secondary"
+                className="lift rounded-control border border-tint/[0.12] py-3.5 text-sm font-medium text-fg-secondary"
               >
                 Ещё раз
               </button>
               <button
                 onClick={() => onSwipe('right')}
-                className="lift rounded-2xl border border-accent-line bg-accent/18 py-3.5 text-sm font-medium text-fg"
+                className="lift rounded-control border border-accent-line bg-accent/18 py-3.5 text-sm font-medium text-fg"
               >
                 Помню
               </button>

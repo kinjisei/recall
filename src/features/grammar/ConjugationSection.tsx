@@ -89,7 +89,7 @@ function SubTab({
   return (
     <button
       onClick={onClick}
-      className={`rounded-lg px-4 py-2 text-sm font-semibold ${
+      className={`rounded-tile px-4 py-2 text-sm font-semibold ${
         active
           ? 'bg-accent-soft text-accent-soft-fg'
           : 'bg-tint/[0.07] text-fg-secondary'
@@ -192,7 +192,7 @@ function TenseDetail({
 
       <Card className="flex flex-col gap-2">
         <p className="text-sm text-fg-secondary">{tense.usage}</p>
-        <div className="rounded-lg bg-surface px-3 py-2">
+        <div className="rounded-tile bg-surface px-3 py-2">
           <div className="flex items-center gap-2">
             <p className="font-medium">{tense.example}</p>
             <button
@@ -323,7 +323,7 @@ function TrainerView({ exercises }: { exercises: EndingsExercise[] }) {
           <button
             key={id}
             onClick={() => setLevel(id)}
-            className={`rounded-lg px-3 py-1.5 text-sm font-semibold ${
+            className={`rounded-tag px-3 py-1.5 text-sm font-semibold ${
               level === id
                 ? 'bg-accent-soft text-accent-soft-fg'
                 : 'bg-tint/[0.07] text-fg-secondary'
@@ -447,7 +447,7 @@ function TrainerRunner({
                 key={i}
                 onClick={() => choose(i)}
                 disabled={picked !== null}
-                className={`rounded-xl border px-4 py-2.5 text-left transition-colors ${cls}${pop}`}
+                className={`rounded-control border px-4 py-2.5 text-left transition-colors ${cls}${pop}`}
               >
                 {opt}
               </button>
@@ -457,7 +457,7 @@ function TrainerRunner({
 
         {picked !== null && (
           <>
-            <p className="rounded-lg bg-surface px-3 py-2 text-sm text-fg-faint">
+            <p className="rounded-tile bg-surface px-3 py-2 text-sm text-fg-faint">
               {current.explanation}
             </p>
             <Button onClick={next}>

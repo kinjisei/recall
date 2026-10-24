@@ -31,7 +31,7 @@ export function FieldButton({
       onClick={onClick}
       disabled={disabled}
       aria-expanded={open}
-      className={`flex min-h-12 min-w-0 items-center gap-2 rounded-xl bg-input px-3 text-left text-sm font-semibold text-fg transition-shadow disabled:opacity-50 ${
+      className={`flex min-h-12 min-w-0 items-center gap-2 rounded-tile bg-input px-3 text-left text-sm font-semibold text-fg transition-shadow disabled:opacity-50 ${
         open ? 'ring-2 ring-accent-line' : 'ring-1 ring-control-line'
       } ${className}`}
     >

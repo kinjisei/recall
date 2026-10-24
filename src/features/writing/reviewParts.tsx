@@ -81,7 +81,7 @@ export function EssayCard({
                     }
                   }}
                   aria-label={`Правка ${number[x.mark]}: ${x.text}`}
-                  className={`cursor-pointer rounded-sm px-0.5 box-decoration-clone focus-visible:outline-2 focus-visible:outline-focus ${
+                  className={`cursor-pointer rounded-mark px-0.5 box-decoration-clone focus-visible:outline-2 focus-visible:outline-focus ${
                     selected === x.mark
                       ? 'bg-accent-soft text-accent-soft-fg inset-ring-2 inset-ring-focus'
                       : kept[x.mark]
@@ -190,7 +190,8 @@ export function FixRow({
   onSelect: () => void
   onKeep: (keep: boolean) => void
 }) {
-  const seg = 'min-h-11 rounded-lg px-2.5 text-note font-medium transition-colors duration-(--dur-1)'
+  // в подложке 14 с полем 2 — кнопки 12: углы концентричны (макет d7: 10 и 8)
+  const seg = 'min-h-11 rounded-tile px-2.5 text-note font-medium transition-colors duration-(--dur-1)'
   return (
     <div
       data-fix={n}

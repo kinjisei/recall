@@ -188,7 +188,7 @@ export function HomeworkComposer({
           <button
             onClick={pick}
             disabled={picking}
-            className="lift mt-3 flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl border border-accent-line bg-accent-soft px-4 text-sm font-semibold text-accent-soft-fg transition-[filter,transform] active:scale-[0.99] disabled:opacity-60"
+            className="lift mt-3 flex min-h-[52px] w-full items-center justify-center gap-2 rounded-control border border-accent-line bg-accent-soft px-4 text-sm font-semibold text-accent-soft-fg transition-[filter,transform] active:scale-[0.99] disabled:opacity-60"
           >
             {picking ? (
               <Thinking label="Смотрю, что у ученика буксует" />
@@ -234,7 +234,7 @@ export function HomeworkComposer({
               return (
                 <li
                   key={i}
-                  className={`flex flex-col gap-2 rounded-xl border p-3 ${
+                  className={`flex flex-col gap-2 rounded-control border p-3 ${
                     inGroup
                       ? 'border-accent-line/40 bg-accent-soft/30'
                       : 'border-tint/[0.08] bg-tint/[0.03]'
@@ -254,12 +254,12 @@ export function HomeworkComposer({
                       onChange={(kind) => patch(i, { kind, target: DEFAULT_TARGET[kind] })}
                       label="Тип задания"
                       options={KINDS.map((k) => ({ id: k, label: KIND_LABEL[k] }))}
-                      triggerClassName="flex h-11 min-w-0 flex-1 items-center justify-between gap-1 rounded-lg border border-tint/[0.10] bg-input px-3 text-sm outline-none focus:border-accent-line"
+                      triggerClassName="flex h-11 min-w-0 flex-1 items-center justify-between gap-1 rounded-control-sm border border-tint/[0.10] bg-input px-3 text-sm outline-none focus:border-accent-line"
                     />
                     <button
                       onClick={() => remove(i)}
                       aria-label="Убрать задание"
-                      className="flex h-11 w-11 flex-none items-center justify-center rounded-lg text-fg-muted hover:text-danger-soft-fg"
+                      className="flex h-11 w-11 flex-none items-center justify-center rounded-control-sm text-fg-muted hover:text-danger-soft-fg"
                     >
                       <IconTrash size={16} />
                     </button>
@@ -315,7 +315,7 @@ export function HomeworkComposer({
           {items.length < MAX_ITEMS && (
             <button
               onClick={add}
-              className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-tint/[0.14] text-sm text-fg-muted hover:text-fg-secondary"
+              className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-control-sm border border-dashed border-tint/[0.14] text-sm text-fg-muted hover:text-fg-secondary"
             >
               <IconPlus size={16} /> Добавить задание
             </button>

@@ -56,9 +56,9 @@ function Half({ theme, diagonal = false }: { theme: 'light' | 'dark'; diagonal?:
         light ? 'bg-preview-light-page' : 'bg-preview-dark-page'
       } ${diagonal ? '[clip-path:polygon(100%_0,100%_100%,0_100%)]' : ''}`}
     >
-      <span className={`h-2 w-[55%] rounded ${light ? 'bg-preview-light-accent' : 'bg-preview-dark-accent'}`} />
-      <span className={`h-2 rounded ${light ? 'bg-preview-light-card ring-1 ring-scrim/[0.06]' : 'bg-preview-dark-card'}`} />
-      <span className={`h-1 w-[70%] rounded-xs opacity-50 ${light ? 'bg-preview-light-fg' : 'bg-preview-dark-fg'}`} />
+      <span className={`h-2 w-[55%] rounded-full ${light ? 'bg-preview-light-accent' : 'bg-preview-dark-accent'}`} />
+      <span className={`h-2 rounded-full ${light ? 'bg-preview-light-card ring-1 ring-scrim/[0.06]' : 'bg-preview-dark-card'}`} />
+      <span className={`h-1 w-[70%] rounded-full opacity-50 ${light ? 'bg-preview-light-fg' : 'bg-preview-dark-fg'}`} />
     </span>
   )
 }

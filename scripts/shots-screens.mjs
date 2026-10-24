@@ -161,7 +161,8 @@ async function shoot(page, name, path, width, expect, looks, { before, prepare, 
     // ДО снимка и после доигранных анимаций: снимок всей страницы меняет окно и
     // перезапускает появление, и аудит ловил полупрозрачный текст («Войти в
     // урок» 3,3 : 1 вместо 5 : 1 — прогон 20.10.2026)
-    await waitForData(page)
+    // заглушка не ушла за 10 с — снимок не годится для приёмки: ✗ в итоге, а не тихий ✓
+    const loaded = await waitForData(page)
     await settleAnimations(page)
     const issues = await page.evaluate(auditPage, audit)
     const file = `${DIR}/${name}-${palette}-${theme}-${width}.png`
@@ -176,7 +177,7 @@ async function shoot(page, name, path, width, expect, looks, { before, prepare, 
     }
     await settledScreenshot(page, { path: file, fullPage: width >= 600 && !overlay })
     if (stretch) await page.setViewport(vp)
-    report.push(`${ok ? '✓' : '✗'} ${file}`)
+    report.push(`${ok && loaded ? '✓' : '✗'} ${file}${loaded ? '' : ' — заглушка загрузки не ушла за 10 с'}`)
     report.push(`${issues.length ? '✗' : '✓'} UX ${file}: ${issues.length ? JSON.stringify(issues.slice(0, 3)) : '0 замечаний'}`)
     console.log(`${ok ? 'снимок' : 'НЕ ТОТ ЭКРАН'} ${file}${issues.length ? ` — UX: ${issues.length}` : ''}`)
   }

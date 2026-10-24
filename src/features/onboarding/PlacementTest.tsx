@@ -140,7 +140,7 @@ export function PlacementTest() {
       <div className="flex flex-col gap-4">
         <TopBack onBack={back} />
         <div className="flex flex-col items-center gap-3 py-6 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-accent-soft text-accent-soft-fg">
+          <div className="flex h-16 w-16 items-center justify-center rounded-row bg-accent-soft text-accent-soft-fg">
             <IconSparkle size={30} />
           </div>
           <h1 className="text-2xl font-medium tracking-tight">
@@ -247,7 +247,7 @@ export function PlacementTest() {
               key={i}
               data-key={i + 1}
               onClick={() => choose(i)}
-              className="rounded-xl border border-tint/[0.10] px-4 py-2.5 text-left transition-colors hover:border-accent-line hover:bg-accent/10"
+              className="rounded-control border border-tint/[0.10] px-4 py-2.5 text-left transition-colors hover:border-accent-line hover:bg-accent/10"
             >
               {opt}
             </button>
