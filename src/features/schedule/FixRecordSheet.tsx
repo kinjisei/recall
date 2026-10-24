@@ -22,9 +22,9 @@ import {
 } from '../../domains/schedule'
 import { Button } from '../../shared/ui/Button'
 import { ChoiceGroup } from '../../shared/ui/ChoiceGroup'
-import { IconClose } from '../../shared/ui/icons'
 import { Sheet, SHEET_BODY } from '../../shared/ui/Sheet'
 import { ErrorText } from '../../shared/ui/ErrorText'
+import { SheetHeader } from '../../shared/ui/SheetHeader'
 
 const signedLessons = (n: number) => (n < 0 ? `−${lessonsCount(-n)}` : lessonsCount(n))
 
@@ -80,15 +80,8 @@ export function FixRecordSheet({
 
   return (
     <Sheet onClose={onClose} labelledBy="fix-title">
+      <SheetHeader id="fix-title" title={row.fix === 'payment' ? 'Исправить оплату' : 'Исправить запись'} />
       <div className={SHEET_BODY}>
-        <div className="flex items-center justify-between gap-3">
-          <h2 id="fix-title" className="text-lg font-semibold">
-            {row.fix === 'payment' ? 'Исправить оплату' : 'Исправить запись'}
-          </h2>
-          <button type="button" aria-label="Закрыть" onClick={onClose} className="flex size-11 flex-none items-center justify-center rounded-xl text-fg-muted hover:bg-tint/[0.06]">
-            <IconClose size={20} />
-          </button>
-        </div>
         <p className="rounded-xl bg-tint/[0.04] px-3 py-2.5 text-sm">
           <span className="font-semibold">{row.title}</span>
           <span className="block text-note text-fg-muted">{row.detail} · так записано сейчас</span>

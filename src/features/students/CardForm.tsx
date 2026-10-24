@@ -14,12 +14,13 @@ import { useDraftForm } from '../../shared/lib/useDraft'
 import { Button } from '../../shared/ui/Button'
 import { ChoiceGroup } from '../../shared/ui/ChoiceGroup'
 import { DraftRestored } from '../../shared/ui/DraftRestored'
-import { IconBack, IconChevronRight, IconClose } from '../../shared/ui/icons'
+import { IconBack, IconChevronRight } from '../../shared/ui/icons'
 import { Sheet } from '../../shared/ui/Sheet'
+import { SheetHeader } from '../../shared/ui/SheetHeader'
 import { ErrorText } from '../../shared/ui/ErrorText'
+import { fieldClass } from '../../shared/ui/TextField'
 
-const inputCls =
-  'mt-1.5 h-12 w-full rounded-xl border border-tint/[0.10] bg-input px-3.5 text-base outline-none focus:border-accent-line'
+const inputCls = `${fieldClass()} mt-1.5`
 
 type NewStatus = 'trial' | 'active'
 const STATUS_OPTIONS: { id: NewStatus; label: string }[] = [
@@ -72,9 +73,11 @@ export function CardForm({
   return (
     <Sheet onClose={onClose} maxH="88dvh" labelledBy="card-form-title">
       <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
-        <div className="flex items-center justify-between gap-2 px-5 pt-1">
-          <h2 id="card-form-title" className="flex items-center gap-1 text-lg font-semibold">
-            {general && (
+        <SheetHeader
+          id="card-form-title"
+          title={title}
+          lead={
+            general && (
               <button
                 type="button"
                 onClick={() => setGeneral(false)}
@@ -83,18 +86,9 @@ export function CardForm({
               >
                 <IconBack size={20} />
               </button>
-            )}
-            {title}
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Закрыть"
-            className="-mr-2 flex size-11 flex-none items-center justify-center rounded-full text-fg-muted"
-          >
-            <IconClose size={20} />
-          </button>
-        </div>
+            )
+          }
+        />
 
         {general ? (
           <div className="flex-1 overflow-y-auto px-5 py-4">{generalInvite}</div>
@@ -146,7 +140,7 @@ export function CardForm({
                   placeholder="Например: готовится к IELTS, цель — 7.0"
                   maxLength={1000}
                   rows={3}
-                  className="mt-1.5 w-full resize-none rounded-xl border border-tint/[0.10] bg-input px-3.5 py-2.5 text-base outline-none focus:border-accent-line"
+                  className={`${fieldClass()} mt-1.5 resize-none py-3`}
                 />
               </label>
               {!card && (

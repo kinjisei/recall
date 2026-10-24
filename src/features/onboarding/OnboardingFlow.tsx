@@ -25,7 +25,7 @@ import { useAsyncData } from '../../shared/lib/useAsyncData'
 import { celebrate } from '../../shared/ui/Confetti'
 import { Button } from '../../shared/ui/Button'
 import { GOAL_LABELS, type AppLang, type CEFRLevel, type LearningGoal } from '../../types'
-import { Heading, HowHeard, ONBOARDING_CTA } from './parts'
+import { CODE_FIELD, Heading, HowHeard, ONBOARDING_CTA } from './parts'
 import { TeacherOnboarding } from './teacher/TeacherOnboarding'
 import { ErrorText } from '../../shared/ui/ErrorText'
 
@@ -402,7 +402,7 @@ function StepReady({
               onChange={(e) => setCode(e.target.value)}
               placeholder="Код от преподавателя"
               autoFocus
-              className="h-12 rounded-2xl border border-tint/[0.12] bg-input px-4 text-center text-lg tracking-widest outline-none focus:border-accent-line"
+              className={CODE_FIELD}
             />
             {joinError && <ErrorText>{joinError}</ErrorText>}
             <Button type="submit" disabled={!code.trim() || joining} className={`py-4 ${ONBOARDING_CTA}`}>

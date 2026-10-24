@@ -5,6 +5,7 @@ import { Card } from '../../shared/ui/Card'
 import { Button } from '../../shared/ui/Button'
 import { addCard } from '../../lib/cards'
 import type { AppLang } from '../../types'
+import { fieldClass } from '../../shared/ui/TextField'
 
 export function AddCardForm({ lang, onAdded }: { lang: AppLang; onAdded: () => void }) {
   const [front, setFront] = useState('')
@@ -13,8 +14,7 @@ export function AddCardForm({ lang, onAdded }: { lang: AppLang; onAdded: () => v
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
 
-  const inputClass =
-    'w-full rounded-lg border border-tint/[0.10] bg-input px-3 py-2 text-sm outline-none focus:border-accent-line'
+  const inputClass = fieldClass()
 
   const submit = async () => {
     if (!front.trim()) return

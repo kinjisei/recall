@@ -22,6 +22,7 @@ import { DatePicker } from '../../shared/ui/DatePicker'
 import { FieldButton } from '../../shared/ui/FieldButton'
 import { IconCalendar, IconClock, IconInfo, IconWarning } from '../../shared/ui/icons'
 import { TimeWheel } from '../../shared/ui/TimeWheel'
+import { fieldClass } from '../../shared/ui/TextField'
 
 export function WhenFields({
   day,
@@ -108,7 +109,7 @@ export function DurationField({ minutes, trial, onMinutes }: { minutes: number; 
             aria-label="Длительность, минут"
             value={String(minutes)}
             onChange={(e) => onMinutes(Number(e.target.value.replace(/\D/g, '').slice(0, 3)) || 0)}
-            className="min-h-11 w-24 rounded-xl bg-input px-3 text-base ring-1 ring-control-line outline-none focus:ring-2 focus:ring-accent-line"
+            className={`${fieldClass()} w-24!`}
           />
           минут · {durationLabel(Math.min(Math.max(minutes, MINUTES_MIN), MINUTES_MAX))}
         </label>

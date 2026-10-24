@@ -24,6 +24,7 @@ import { useAsyncData } from '../../shared/lib/useAsyncData'
 import { LoadError } from '../../shared/ui/LoadError'
 import { Reveal } from '../../shared/ui/Reveal'
 import { RevealHeader } from '../../shared/ui/Disclosure'
+import { SearchField } from '../../shared/ui/SearchField'
 
 const ROUND_SIZE = 10
 
@@ -93,13 +94,7 @@ function Reference({ entries }: { entries: PhrasalEntry[] }) {
         {total} самых ходовых фразовых глаголов, сгруппированных по базовому глаголу.
         Пометка «разделяемый» — дополнение можно вставить внутрь: turn the light on.
       </p>
-      <input
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Поиск: look for, откладывать…"
-        aria-label="Поиск по фразовым глаголам"
-        className="rounded-xl border border-tint/[0.10] bg-surface px-4 py-2.5 shadow-card"
-      />
+      <SearchField value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Поиск: look for, откладывать…" label="Поиск по фразовым глаголам" />
 
       {filtered.map((e) => {
         const isOpen = q !== '' || open === e.verb

@@ -9,9 +9,10 @@ import { contactLinks } from '../../domains/students'
 import { useCopy } from '../../shared/lib/useCopy'
 import { telegramLink, whatsappLink } from '../../shared/lib/share'
 import { Button } from '../../shared/ui/Button'
-import { IconCheck, IconClose, IconCopy, IconSmartphoneOff } from '../../shared/ui/icons'
+import { IconCheck, IconCopy, IconSmartphoneOff } from '../../shared/ui/icons'
 import { SHARE_BUTTON, SHARE_ROW, ShareLink } from '../../shared/ui/ShareLink'
 import { Sheet, SHEET_BODY } from '../../shared/ui/Sheet'
+import { SheetHeader } from '../../shared/ui/SheetHeader'
 
 export interface TellItem {
   cardId: string
@@ -58,15 +59,8 @@ function Item({ item, url }: { item: TellItem; url: string }) {
 export function TellSheet({ tell, onClose }: { tell: Tell; onClose: () => void }) {
   return (
     <Sheet onClose={onClose} labelledBy="tell-title">
+      <SheetHeader id="tell-title" title={tell.title} />
       <div className={SHEET_BODY}>
-        <div className="flex items-start justify-between gap-3">
-          <h2 id="tell-title" className="text-lg font-semibold">
-            {tell.title}
-          </h2>
-          <button type="button" aria-label="Закрыть" onClick={onClose} className="flex size-11 flex-none items-center justify-center rounded-xl text-fg-muted hover:bg-tint/[0.06]">
-            <IconClose size={20} />
-          </button>
-        </div>
         <ul className="flex flex-col gap-5">
           {tell.items.map((item) => (
             <Item key={item.cardId} item={item} url={tell.url} />

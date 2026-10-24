@@ -11,8 +11,9 @@ import { Avatar } from '../students'
 import { Button } from '../../shared/ui/Button'
 import { IconClose, IconPlus, IconSearch } from '../../shared/ui/icons'
 import { ErrorText } from '../../shared/ui/ErrorText'
+import { fieldClass } from '../../shared/ui/TextField'
 
-const input = 'min-h-12 w-full rounded-xl bg-input px-3.5 text-base ring-1 ring-control-line outline-none focus:ring-2 focus:ring-accent-line'
+const input = fieldClass()
 const SHOWN = 6
 
 function NewStudent({ kind, onCreated, onCancel }: { kind: LessonKind; onCreated: (card: StudentCard) => void; onCancel: () => void }) {

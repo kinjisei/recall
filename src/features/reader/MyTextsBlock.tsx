@@ -24,6 +24,7 @@ import {
 } from '../../lib/myTexts'
 import type { AppLang } from '../../types'
 import { ErrorText } from '../../shared/ui/ErrorText'
+import { fieldClass } from '../../shared/ui/TextField'
 
 /** Список своих текстов + кнопка добавления (рендерится в шапке читалки). */
 export function MyTextsList({
@@ -141,7 +142,7 @@ export function AddTextForm({
         onChange={(e) => setTitle(e.target.value)}
         placeholder="Название (необязательно)"
         aria-label="Название текста"
-        className="rounded-xl border border-tint/[0.10] bg-input px-4 py-2.5 outline-none focus:border-accent-line"
+        className={fieldClass()}
       />
       <textarea
         value={body}
@@ -149,7 +150,7 @@ export function AddTextForm({
         rows={8}
         placeholder={lang === 'es' ? 'Pega el texto aquí…' : 'Paste your text here…'}
         aria-label="Текст"
-        className="rounded-xl border border-tint/[0.10] bg-input px-4 py-2.5 text-[15px] leading-relaxed outline-none focus:border-accent-line"
+        className={`${fieldClass()} py-3 leading-relaxed`}
       />
       {draft.restored && <DraftRestored onClear={draft.clear} />}
       {body.length > MY_TEXT_LIMIT && (

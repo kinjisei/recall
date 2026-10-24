@@ -16,11 +16,11 @@ import {
 } from '../../domains/schedule'
 import { useAsyncData } from '../../shared/lib/useAsyncData'
 import { Button } from '../../shared/ui/Button'
-import { IconClose } from '../../shared/ui/icons'
 import { LoadError } from '../../shared/ui/LoadError'
 import { RowsSkeleton } from '../../shared/ui/Loading'
 import { Sheet, SHEET_BODY } from '../../shared/ui/Sheet'
 import { FixRecordSheet } from './FixRecordSheet'
+import { SheetHeader } from '../../shared/ui/SheetHeader'
 
 const PAGE = 50
 const deltaText = (d: number | null) => (d === null ? '—' : d > 0 ? `+${d}` : d < 0 ? `−${-d}` : '0')
@@ -80,18 +80,8 @@ export function HistorySheet({
 
   return (
     <Sheet onClose={onClose} labelledBy="history-title" maxH="92dvh">
+      <SheetHeader id="history-title" title="История" note={`${name} · уроки и оплаты`} />
       <div className={SHEET_BODY}>
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h2 id="history-title" className="text-lg font-semibold">
-              История
-            </h2>
-            <p className="truncate text-sm text-fg-secondary">{name} · уроки и оплаты</p>
-          </div>
-          <button type="button" aria-label="Закрыть" onClick={onClose} className="flex size-11 flex-none items-center justify-center rounded-xl text-fg-muted hover:bg-tint/[0.06]">
-            <IconClose size={20} />
-          </button>
-        </div>
         <div className="flex items-center justify-between gap-3 rounded-2xl border border-tint/[0.08] px-4 py-3">
           <span className="text-sm font-semibold">{balanceLabel(balance)}</span>
           {canWrite && (

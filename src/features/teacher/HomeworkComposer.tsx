@@ -20,7 +20,7 @@ import { Button } from '../../shared/ui/Button'
 import { Picker } from '../../shared/ui/Picker'
 import { Sheet } from '../../shared/ui/Sheet'
 import { Thinking } from '../../shared/ui/Thinking'
-import { IconClose, IconPlus, IconSparkle, IconTrash } from '../../shared/ui/icons'
+import { IconPlus, IconSparkle, IconTrash } from '../../shared/ui/icons'
 import { KIND_LABEL, createHomework, type HomeworkKind } from '../../lib/homework'
 import { countableItems, MAX_ITEMS } from '../../lib/homeworkRules'
 import { suggestHomework, type SuggestedItem } from '../../lib/homeworkSuggest'
@@ -30,6 +30,8 @@ import { almatyInstant, almatyToday } from '../../shared/lib/almaty'
 import { plural } from '../../shared/lib/plural'
 import type { AppLang } from '../../types'
 import { ErrorText } from '../../shared/ui/ErrorText'
+import { SheetHeader } from '../../shared/ui/SheetHeader'
+import { fieldClass } from '../../shared/ui/TextField'
 
 /** Через сколько дней срок по умолчанию: неделя — обычный шаг между уроками. */
 const DEFAULT_DAYS = 7
@@ -165,23 +167,7 @@ export function HomeworkComposer({
 
   return (
     <Sheet onClose={onClose} maxH="88dvh" labelledBy="hw-title">
-      <div className="flex items-start justify-between gap-2 px-5 pt-1">
-          <div className="min-w-0">
-            <h2 id="hw-title" className="text-lg font-medium">
-              Домашка для {studentName}
-            </h2>
-            <p className="mt-0.5 text-sm text-fg-muted">
-              Короткие задания чаще работают лучше одного длинного
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            aria-label="Закрыть"
-            className="-mr-2 flex h-11 w-11 flex-none items-center justify-center rounded-full text-fg-muted"
-          >
-            <IconClose size={20} />
-          </button>
-        </div>
+      <SheetHeader id="hw-title" title={`Домашка для ${studentName}`} note="Короткие задания чаще работают лучше одного длинного" />
 
         <div className="flex-1 overflow-y-auto px-5 py-4">
           {draft.restored && <DraftRestored onClear={draft.clear} className="mb-3" />}
@@ -194,7 +180,7 @@ export function HomeworkComposer({
             value={due}
             min={isoDatePlus(0)}
             onChange={(e) => setDue(e.target.value)}
-            className="mt-1.5 h-11 w-full rounded-xl border border-tint/[0.10] bg-input px-3.5 text-sm outline-none focus:border-accent-line"
+            className={`${fieldClass()} mt-1.5`}
           />
 
           {/* Подбор — главное действие формы, поэтому стоит до списка: сперва
@@ -284,7 +270,7 @@ export function HomeworkComposer({
                     value={it.title}
                     placeholder="Что сделать"
                     onChange={(e) => patch(i, { title: e.target.value })}
-                    className="h-11 w-full rounded-lg border border-tint/[0.10] bg-input px-3 text-sm outline-none focus:border-accent-line"
+                    className={fieldClass()}
                   />
 
                   {/* Число — только где реальное. Единица прямо у поля: «20» без
@@ -302,7 +288,7 @@ export function HomeworkComposer({
                             target: Math.max(1, Math.min(500, Number(e.target.value) || 1)),
                           })
                         }
-                        className="h-9 w-16 rounded-lg border border-tint/[0.10] bg-input px-2 text-sm text-fg"
+                        className={`${fieldClass()} w-20! px-3`}
                       />
                       {plural(it.target ?? 1, unit[0], unit[1], unit[2])}
                     </label>
@@ -345,7 +331,7 @@ export function HomeworkComposer({
             placeholder="Например: сперва слова, потом текст"
             onChange={(e) => setNote(e.target.value)}
             rows={2}
-            className="mt-1.5 w-full resize-none overflow-hidden rounded-xl border border-tint/[0.10] bg-input px-3.5 py-2.5 text-sm outline-none focus:border-accent-line"
+            className={`${fieldClass()} mt-1.5 resize-none overflow-hidden py-3`}
           />
 
           {error && (

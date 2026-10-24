@@ -14,6 +14,7 @@ import { AppLink } from '../../shared/ui/AppLink'
 import { LoadError } from '../../shared/ui/LoadError'
 import { RowsSkeleton } from '../../shared/ui/Loading'
 import { Sheet } from '../../shared/ui/Sheet'
+import { SheetHeader } from '../../shared/ui/SheetHeader'
 
 export function NotificationFeed({ onClose, onAllRead }: { onClose: () => void; onAllRead: () => void }) {
   const { data, error, loading, reload } = useAsyncData(() => loadNotifications(), [], 'Не удалось загрузить уведомления')
@@ -30,11 +31,9 @@ export function NotificationFeed({ onClose, onAllRead }: { onClose: () => void; 
 
   return (
     <Sheet onClose={onClose} labelledBy="notifications-title">
+      <SheetHeader id="notifications-title" title="Уведомления" />
       <div className="min-h-0 overflow-y-auto px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-1">
-        <h2 id="notifications-title" className="text-lg font-medium">
-          Уведомления
-        </h2>
-        <div className="mt-3">
+        <div>
           {loading && <RowsSkeleton count={3} height={64} />}
           {error && <LoadError message={error} onRetry={reload} />}
           {data && data.length === 0 && <p className="text-sm text-fg-muted">Пока пусто.</p>}

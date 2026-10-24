@@ -14,6 +14,7 @@ import { FieldButton } from '../../shared/ui/FieldButton'
 import { IconCalendar, IconLink } from '../../shared/ui/icons'
 import { Switch } from '../../shared/ui/Switch'
 import { TabPicker } from '../../shared/ui/TabPicker'
+import { fieldClass } from '../../shared/ui/TextField'
 
 const label = 'text-note text-fg-muted'
 
@@ -160,7 +161,7 @@ export function FormLink({
               onChange={(e) => onLink(e.target.value)}
               placeholder="meet.google.com/…"
               aria-label="Ссылка на урок"
-              className="min-h-12 min-w-0 flex-1 rounded-xl bg-input px-3.5 text-base ring-1 ring-control-line outline-none focus:ring-2 focus:ring-accent-line"
+              className={`${fieldClass()} min-w-0 flex-1`}
             />
             {defaultLink ? (
               <button type="button" onClick={() => {

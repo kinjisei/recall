@@ -3,6 +3,7 @@
 // (teacher/parts.tsx).
 import { useState } from 'react'
 import { setSelfReportedSource } from '../../lib/analytics'
+import { fieldClass } from '../../shared/ui/TextField'
 
 // Главные кнопки онбординга: скругление 16 и вес 500. «!» — потому что
 // обычный класс проиграл бы базе Button (rounded-control, font-semibold) по
@@ -10,6 +11,9 @@ import { setSelfReportedSource } from '../../lib/analytics'
 // (подложка input, текст fg-faint, лист s3): своя прозрачность поверх него
 // сделала бы подпись нечитаемой.
 export const ONBOARDING_CTA = 'rounded-2xl! font-medium!'
+
+/** Поле кода преподавателя: поле s3 (4д-2), код крупно и вразрядку. */
+export const CODE_FIELD = `${fieldClass()} text-center text-lg tracking-widest`
 
 export function Heading({
   title,

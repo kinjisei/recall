@@ -16,6 +16,7 @@ import { IconPrinter } from '../../shared/ui/icons'
 import type { StudentDiagnostics } from '../../lib/diagnostics'
 import type { MetricDelta } from '../../lib/dynamics'
 import { plural } from '../../shared/lib/plural'
+import { fieldClass } from '../../shared/ui/TextField'
 
 const KIND_LABELS: Record<string, string> = {
   comprehension: 'понимание текста',
@@ -157,7 +158,7 @@ export function ReportSheet({
             onChange={(e) => setComment(e.target.value)}
             rows={3}
             placeholder="Пара живых фраз: что получалось на занятиях, что порадовало, на чём сосредоточимся…"
-            className="mt-1 w-full rounded-lg border border-tint/[0.2] px-3 py-2 text-[15px] text-fg outline-none focus:border-accent-line"
+            className={`${fieldClass()} mt-1 py-3`}
           />
         </label>
         {draft.restored && <DraftRestored onClear={draft.clear} className="mt-1" />}

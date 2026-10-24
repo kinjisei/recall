@@ -27,7 +27,7 @@ import {
 } from '../../domains/schedule'
 import type { StudentCard } from '../../domains/students'
 import { Button } from '../../shared/ui/Button'
-import { IconClose, IconPencil, IconRefresh, IconRepeat, IconReschedule, IconSend, IconTicket, IconUser, IconVideo, IconXCircle } from '../../shared/ui/icons'
+import { IconPencil, IconRefresh, IconRepeat, IconReschedule, IconSend, IconTicket, IconUser, IconVideo, IconXCircle } from '../../shared/ui/icons'
 import { plural } from '../../shared/lib/plural'
 import { RowCard } from '../../shared/ui/RowCard'
 import { Sheet, SHEET_BODY } from '../../shared/ui/Sheet'
@@ -35,6 +35,7 @@ import { Badge, LessonAvatar } from './LessonParts'
 import { MarksBlock } from './MarksBlock'
 import { PlanRequired } from './ReadOnly'
 import { ErrorText } from '../../shared/ui/ErrorText'
+import { SheetHeader } from '../../shared/ui/SheetHeader'
 
 export interface LessonSheetActions {
   onMove: () => void
@@ -95,20 +96,8 @@ export function LessonSheet({
 
   return (
     <Sheet onClose={onClose} labelledBy="lesson-title" maxH="88dvh">
+      <SheetHeader id="lesson-title" lead={<LessonAvatar lesson={lesson} inApp={inApp} />} title={lessonName(lesson)} note={subtitle(lesson, inApp)} />
       <div className={SHEET_BODY}>
-        <div className="flex items-center gap-3">
-          <LessonAvatar lesson={lesson} inApp={inApp} />
-          <div className="min-w-0 flex-1">
-            <h2 id="lesson-title" className="truncate text-lg font-semibold">
-              {lessonName(lesson)}
-            </h2>
-            <p className="text-note text-fg-muted">{subtitle(lesson, inApp)}</p>
-          </div>
-          <button type="button" aria-label="Закрыть" onClick={onClose} className="flex size-11 flex-none items-center justify-center rounded-xl text-fg-muted hover:bg-tint/[0.06]">
-            <IconClose size={20} />
-          </button>
-        </div>
-
         <div className="flex flex-col gap-1.5">
           <p className="text-xl font-bold">{dayTitle(lessonDay(lesson), today)}</p>
           <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-fg-secondary">

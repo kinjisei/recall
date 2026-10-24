@@ -13,6 +13,7 @@ import {
 } from '../../lib/wordPacks'
 import { Loading } from '../../shared/ui/Loading'
 import { RevealHeader } from '../../shared/ui/Disclosure'
+import { SearchField } from '../../shared/ui/SearchField'
 
 const LEVEL_ORDER = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const
 
@@ -107,12 +108,7 @@ export function PacksSheet({ lang, onAdded }: { lang: AppLang; onAdded: () => vo
         как новые карточки (дубликаты пропускаются).
       </p>
 
-      <input
-        className="w-full rounded-lg border border-tint/[0.10] bg-input px-3 py-2 text-sm outline-none focus:border-accent-line"
-        placeholder="Поиск темы…"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-      />
+      <SearchField placeholder="Поиск темы…" value={query} onChange={(e) => setQuery(e.target.value)} />
 
       {(
         [

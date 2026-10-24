@@ -12,9 +12,9 @@
     "src/features/study/StudyPage.tsx": 512,
     "src/features/study/StudyPage.tsx#StudyPage": 365,
     "src/features/teacher/AssignmentsPage.tsx": 497,
-    "src/features/teacher/HomeworkComposer.tsx#HomeworkComposer": 281,
-    "src/features/teacher/WordPicker.tsx": 483,
-    "src/features/words/MyWords.tsx": 464,
+    "src/features/teacher/HomeworkComposer.tsx#HomeworkComposer": 265,
+    "src/features/teacher/WordPicker.tsx": 454,
+    "src/features/words/MyWords.tsx": 445,
     "src/lib/homeworkRules.ts": 535,
     "src/lib/materials.ts": 563,
     "src/types/index.ts": 508

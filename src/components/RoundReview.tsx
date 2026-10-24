@@ -9,6 +9,7 @@ import { IconCheck, IconClose } from '../shared/ui/icons'
 import { explainMistake } from '../lib/explain'
 import type { AppLang } from '../types'
 import { Thinking } from '../shared/ui/Thinking'
+import { SheetHeader } from '../shared/ui/SheetHeader'
 
 export interface ReviewItem {
   /** Текст вопроса/задания. */
@@ -52,10 +53,10 @@ export function RoundReview({
   }
 
   return (
-    <Sheet onClose={onClose} maxH="85dvh" label="Итоги раунда">
-        <div className="min-h-0 overflow-y-auto px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-2">
-          <p className="text-[10px] uppercase tracking-wider text-fg-muted">Результаты</p>
-          <div className="mt-2 flex flex-col gap-2">
+    <Sheet onClose={onClose} maxH="85dvh" labelledBy="round-review-title">
+        <SheetHeader id="round-review-title" title="Итоги раунда" />
+        <div className="min-h-0 overflow-y-auto px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-1">
+          <div className="flex flex-col gap-2">
             {items.map((it, i) => (
               <div
                 key={i}

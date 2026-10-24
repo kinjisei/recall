@@ -9,15 +9,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Sheet } from '../../shared/ui/Sheet'
 import { useNavigate } from 'react-router-dom'
-import {
-  IconSearch,
-  IconPencil,
-  IconSpeaker,
-  IconCheck,
-  IconTrash,
-  IconClose,
-  IconTray,
-} from '../../shared/ui/icons'
+import { IconPencil, IconSpeaker, IconCheck, IconTrash, IconClose, IconTray } from '../../shared/ui/icons'
 import { Card } from '../../shared/ui/Card'
 import { Button } from '../../shared/ui/Button'
 import { deleteCard, listMyWords, updateCard, type MyWord } from '../../lib/cards'
@@ -27,6 +19,9 @@ import { GameHeader } from './GameShell'
 import { RowsSkeleton } from '../../shared/ui/Loading'
 import type { AppLang } from '../../types'
 import { ErrorText } from '../../shared/ui/ErrorText'
+import { SheetHeader } from '../../shared/ui/SheetHeader'
+import { SearchField } from '../../shared/ui/SearchField'
+import { fieldClass } from '../../shared/ui/TextField'
 
 type Filter = 'all' | WordStatus
 
@@ -150,18 +145,7 @@ export function MyWords({ lang, onBack }: { lang: AppLang; onBack: () => void })
       )}
 
       {/* поиск */}
-      <div className="relative">
-        <IconSearch
-          size={18}
-          className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-fg-muted"
-        />
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Найти слово или перевод…"
-          className="h-11 w-full rounded-xl border border-tint/[0.10] bg-input pl-10 pr-3 text-sm outline-none focus:border-accent-line"
-        />
-      </div>
+      <SearchField value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Найти слово или перевод…" />
 
       {/* фильтры по статусу */}
       <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
@@ -267,21 +251,19 @@ function WordCardSheet({
   const chip = STATUS_CHIP[status]
 
   return (
-    <Sheet onClose={onClose} maxH="85dvh" label="Слово">
+    <Sheet onClose={onClose} maxH="85dvh" labelledBy="my-word-title">
 
-        <div className="min-h-0 overflow-y-auto px-5 pt-2">
-          <div className="flex items-start justify-between gap-3">
-            <h3 className="min-w-0 break-words text-xl font-bold">{card.front}</h3>
-            <button
-              onClick={() => speak(card.front, { lang })}
-              aria-label="Озвучить"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-tint/[0.08]"
-            >
+        <SheetHeader
+          id="my-word-title"
+          title={card.front}
+          trailing={
+            <button onClick={() => speak(card.front, { lang })} aria-label="Озвучить" className="flex size-11 flex-none items-center justify-center rounded-full bg-tint/[0.08] text-fg-secondary">
               <IconSpeaker size={18} />
             </button>
-          </div>
-
-          <div className="mt-2 flex flex-wrap items-center gap-2">
+          }
+        />
+        <div className="min-h-0 overflow-y-auto px-5 pt-1">
+          <div className="flex flex-wrap items-center gap-2">
             <span
               className={`inline-block rounded-full px-2.5 py-1 text-[11px] font-medium ${chip.cls}`}
             >
@@ -363,8 +345,7 @@ function WordRow({
   }, [editing, card])
 
   const chip = STATUS_CHIP[status]
-  const inputCls =
-    'w-full rounded-lg border border-tint/[0.10] bg-input px-3 py-2 text-sm outline-none focus:border-accent-line'
+  const inputCls = fieldClass()
 
   if (editing) {
     return (

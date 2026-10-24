@@ -22,13 +22,13 @@ import { createSelfMaterial, MATERIAL_FORMATS, MATERIAL_LENGTHS } from '../../li
 import { LENGTH_LABEL } from '../../lib/materialLengths'
 import type { CEFRLevel } from '../../types'
 import { ErrorText } from '../../shared/ui/ErrorText'
+import { fieldClass } from '../../shared/ui/TextField'
 
 const LEVELS: CEFRLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1']
 // длина — те же «~120 слов / ~200 / ~300», что у учителя (lib/materialLengths)
 const LEN_LABEL = LENGTH_LABEL
 
-const inputCls =
-  'w-full rounded-xl border border-tint/[0.10] bg-input px-3.5 py-2.5 text-sm outline-none focus:border-accent-line'
+const inputCls = `${fieldClass()} py-3`
 
 export function SelfMaterialPage() {
   const nav = useNavigate()

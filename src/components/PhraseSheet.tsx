@@ -15,6 +15,7 @@ import { speak } from '../lib/speech'
 import { logActivity } from '../lib/activity'
 import type { AppLang } from '../types'
 import { Thinking } from '../shared/ui/Thinking'
+import { SheetHeader } from '../shared/ui/SheetHeader'
 
 export interface PhrasePick {
   text: string
@@ -72,21 +73,18 @@ export function PhraseSheet({
 
   return (
     <>
-      <Sheet onClose={onClose} maxH="85dvh" label="Фраза">
-          <div className="min-h-0 overflow-y-auto px-5 pt-2">
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <p className="text-[10px] uppercase tracking-wider text-fg-muted">Фраза</p>
-                <p className="mt-0.5 text-[15px] font-medium leading-snug">{text}</p>
-              </div>
-              <button
-                onClick={() => speak(text, { lang })}
-                aria-label="Озвучить"
-                className="lift flex h-9 w-9 flex-none items-center justify-center rounded-full border border-tint/[0.08] text-fg-secondary"
-              >
-                <IconSpeaker size={16} />
+      <Sheet onClose={onClose} maxH="85dvh" labelledBy="phrase-title">
+          <SheetHeader
+            id="phrase-title"
+            title="Фраза"
+            trailing={
+              <button onClick={() => speak(text, { lang })} aria-label="Озвучить" className="flex size-11 flex-none items-center justify-center rounded-full bg-tint/[0.08] text-fg-secondary">
+                <IconSpeaker size={18} />
               </button>
-            </div>
+            }
+          />
+          <div className="min-h-0 overflow-y-auto px-5 pt-1">
+            <p className="text-body font-medium leading-snug">{text}</p>
 
             {tr === null && !failed && (
               <Thinking label="Перевожу" className="mt-3 text-sm" />

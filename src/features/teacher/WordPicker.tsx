@@ -15,7 +15,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { Sheet } from '../../shared/ui/Sheet'
 import { Reveal } from '../../shared/ui/Reveal'
 import { Button } from '../../shared/ui/Button'
-import { IconClose, IconSearch } from '../../shared/ui/icons'
 import { Loading, RowsSkeleton } from '../../shared/ui/Loading'
 import { useLanguage } from '../../context/LanguageContext'
 import { assignWordsToStudent, getMyDecks, listDeckCards } from '../../lib/teacher'
@@ -24,6 +23,8 @@ import { describeDbError } from '../../shared/api/errors'
 import type { AppLang, CEFRLevel, Deck, WordTopic } from '../../types'
 import { DisclosureIcon } from '../../shared/ui/Disclosure'
 import { ErrorText } from '../../shared/ui/ErrorText'
+import { SheetHeader } from '../../shared/ui/SheetHeader'
+import { SearchField } from '../../shared/ui/SearchField'
 
 const SEARCH_FROM = 20 // поиск показываем только на длинных списках
 
@@ -57,27 +58,13 @@ export function WordPicker({
   const [chosen, setChosen] = useState<Chosen | null>(null)
 
   return (
-    <Sheet onClose={onClose} maxH="88dvh" label="Выбор слов">
+    <Sheet onClose={onClose} maxH="88dvh" labelledBy="word-picker-title">
 
-        <div className="flex items-start justify-between gap-2 px-5 pt-1">
-          <div className="min-w-0">
-            <h2 className="text-lg font-medium">
-              {chosen ? chosen.title : 'Выдать слова'}
-            </h2>
-            <p className="mt-0.5 text-sm text-fg-muted">
-              {chosen
-                ? 'Сними лишние — остальные уйдут ученику'
-                : 'Готовые наборы приложения или твои собственные'}
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            aria-label="Закрыть"
-            className="flex h-11 w-11 flex-none items-center justify-center rounded-xl text-fg-muted"
-          >
-            <IconClose size={18} />
-          </button>
-        </div>
+        <SheetHeader
+          id="word-picker-title"
+          title={chosen ? chosen.title : 'Выдать слова'}
+          note={chosen ? 'Сними лишние — остальные уйдут ученику' : 'Готовые наборы приложения или твои собственные'}
+        />
 
         {chosen ? (
           <WordList
@@ -192,15 +179,7 @@ function SetList({
         ))}
       </div>
 
-      <label className="mt-3 flex items-center gap-2 rounded-xl bg-input px-3 ring-1 ring-control-line">
-        <IconSearch size={16} className="text-fg-muted" />
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Найти набор…"
-          className="h-11 w-full bg-transparent text-[15px] outline-none"
-        />
-      </label>
+      <SearchField className="mt-3" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Найти набор…" />
 
       {source === 'mine' ? (
         decks === null ? (
@@ -392,15 +371,7 @@ function WordList({
         ) : (
           <>
             {words.length >= SEARCH_FROM && (
-              <label className="mt-2 flex items-center gap-2 rounded-xl bg-input px-3 ring-1 ring-control-line">
-                <IconSearch size={16} className="text-fg-muted" />
-                <input
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Найти слово…"
-                  className="h-11 w-full bg-transparent text-[15px] outline-none"
-                />
-              </label>
+              <SearchField className="mt-2" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Найти слово…" />
             )}
 
             <div className="mt-2 flex items-center gap-3 text-xs text-fg-muted">

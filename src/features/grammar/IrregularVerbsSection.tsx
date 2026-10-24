@@ -26,6 +26,7 @@ import type {
   IrregularVerb,
 } from '../../data/english/irregular'
 import { RevealHeader } from '../../shared/ui/Disclosure'
+import { SearchField } from '../../shared/ui/SearchField'
 
 const ROUND_SIZE = 10
 
@@ -98,12 +99,7 @@ function Reference({ groups }: { groups: IrregularGroup[] }) {
         {total} самых нужных неправильных глаголов, сгруппированных по типу изменения —
         так закономерности видны и запоминаются легче.
       </p>
-      <input
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Поиск: go, went, идти…"
-        className="rounded-xl border border-tint/[0.10] bg-surface px-4 py-2.5 shadow-card"
-      />
+      <SearchField value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Поиск: go, went, идти…" label="Поиск по неправильным глаголам" />
 
       {filtered.map((g) => {
         const isOpen = q !== '' || open === g.title

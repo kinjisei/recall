@@ -12,12 +12,14 @@
 import { useState } from 'react'
 import { Sheet } from '../shared/ui/Sheet'
 import { Button } from '../shared/ui/Button'
-import { IconCheck, IconClose, IconThumbsUp } from '../shared/ui/icons'
+import { IconCheck, IconThumbsUp } from '../shared/ui/icons'
 import { FEEDBACK_MAX, sendFeedback } from '../lib/feedback'
 import { describeDbError } from '../shared/api/errors'
 import { useDraft } from '../shared/lib/useDraft'
 import { DraftRestored } from '../shared/ui/DraftRestored'
 import { ErrorText } from '../shared/ui/ErrorText'
+import { SheetHeader } from '../shared/ui/SheetHeader'
+import { fieldClass } from '../shared/ui/TextField'
 
 export function FeedbackSheet({ where, onClose }: { where: string; onClose: () => void }) {
   const [rating, setRating] = useState<'up' | 'down' | null>(null)
@@ -65,7 +67,7 @@ export function FeedbackSheet({ where, onClose }: { where: string; onClose: () =
   }
 
   return (
-    <Sheet onClose={onClose} maxH="85dvh" label="Обратная связь">
+    <Sheet onClose={onClose} maxH="85dvh" labelledBy="feedback-title">
 
         {state === 'sent' ? (
           <div className="flex flex-col items-center gap-3 px-5 py-10 text-center">
@@ -78,24 +80,10 @@ export function FeedbackSheet({ where, onClose }: { where: string; onClose: () =
             </p>
           </div>
         ) : (
-          <div className="min-h-0 overflow-y-auto px-5 pb-5 pt-2">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <h2 className="text-lg font-medium">Как тебе Recall?</h2>
-                <p className="mt-0.5 text-sm text-fg-muted">
-                  Что мешает или чего не хватает — пиши прямо.
-                </p>
-              </div>
-              <button
-                onClick={onClose}
-                aria-label="Закрыть"
-                className="flex h-11 w-11 flex-none items-center justify-center rounded-xl text-fg-muted"
-              >
-                <IconClose size={18} />
-              </button>
-            </div>
-
-            <div className="mt-4 flex gap-2">
+          <>
+          <SheetHeader id="feedback-title" title="Как тебе Recall?" note="Что мешает или чего не хватает — пиши прямо." />
+          <div className="min-h-0 overflow-y-auto px-5 pb-5 pt-1">
+            <div className="flex gap-2">
               {thumb('up')}
               {thumb('down')}
             </div>
@@ -109,7 +97,7 @@ export function FeedbackSheet({ where, onClose }: { where: string; onClose: () =
               onChange={(e) => setText(e.target.value.slice(0, FEEDBACK_MAX))}
               rows={4}
               placeholder="Например: не нашёл, где смотреть свои ошибки"
-              className="mt-1.5 w-full resize-none rounded-xl bg-input px-3 py-2.5 text-[15px] outline-none ring-1 ring-control-line focus:ring-1 focus:ring-accent-line"
+              className={`${fieldClass()} mt-1.5 resize-none py-3`}
             />
             <div className="mt-1 flex items-center justify-between gap-2">
               {draft.restored ? <DraftRestored onClear={draft.clear} /> : <span />}
@@ -127,7 +115,7 @@ export function FeedbackSheet({ where, onClose }: { where: string; onClose: () =
               onChange={(e) => setContact(e.target.value)}
               placeholder="почта или @телеграм"
               autoComplete="off"
-              className="mt-1.5 w-full rounded-xl bg-input px-3 py-2.5 text-[15px] outline-none ring-1 ring-control-line focus:ring-1 focus:ring-accent-line"
+              className={`${fieldClass()} mt-1.5`}
             />
 
             {error && <ErrorText className="mt-3">{error}</ErrorText>}
@@ -141,6 +129,7 @@ export function FeedbackSheet({ where, onClose }: { where: string; onClose: () =
               Отправить
             </Button>
           </div>
+          </>
         )}
     </Sheet>
   )

@@ -39,7 +39,7 @@ import {
 } from '../../domains/schedule'
 import type { StudentCard } from '../../domains/students'
 import { Button } from '../../shared/ui/Button'
-import { IconClose, IconList, IconWarning } from '../../shared/ui/icons'
+import { IconList, IconWarning } from '../../shared/ui/icons'
 import { Sheet, SHEET_BODY } from '../../shared/ui/Sheet'
 import { TabPicker } from '../../shared/ui/TabPicker'
 import { FormWho } from './FormWho'
@@ -48,6 +48,7 @@ import type { Done } from './types'
 import { useDayLessons, useLessonsAhead } from './useScheduleData'
 import { DurationField, WhenFields } from './WhenFields'
 import { ErrorText } from '../../shared/ui/ErrorText'
+import { SheetHeader } from '../../shared/ui/SheetHeader'
 
 export type FormMode =
   | { kind: 'new'; day: string; time: string; cardIds?: string[]; seed?: StudentCard[] }
@@ -155,16 +156,8 @@ export function LessonForm({
 
   return (
     <Sheet onClose={onClose} labelledBy="lesson-form-title" maxH="92dvh">
+      <SheetHeader id="lesson-form-title" title={edit ? 'Изменить урок' : 'Новый урок'} />
       <div className={SHEET_BODY}>
-        <div className="flex items-center justify-between gap-3">
-          <h2 id="lesson-form-title" className="text-lg font-semibold">
-            {edit ? 'Изменить урок' : 'Новый урок'}
-          </h2>
-          <button type="button" aria-label="Закрыть" onClick={onClose} className="flex size-11 flex-none items-center justify-center rounded-xl text-fg-muted hover:bg-tint/[0.06]">
-            <IconClose size={20} />
-          </button>
-        </div>
-
         {!edit && (
           <TabPicker
             variant="segment"

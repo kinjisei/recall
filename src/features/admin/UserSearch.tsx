@@ -14,6 +14,7 @@ import { IconSearch } from '../../shared/ui/icons'
 import { confirmWarnings, isPaidPlan } from '../../domains/billing'
 import { ConfirmPayment } from './payments/ConfirmPayment'
 import { ErrorText } from '../../shared/ui/ErrorText'
+import { SearchField } from '../../shared/ui/SearchField'
 
 const PLAN_LABELS: Record<PlanId, string> = {
   free: 'Free',
@@ -61,14 +62,14 @@ export function UserSearch({ onPaid }: { onPaid: () => void }) {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex gap-2">
-        <input
+        <SearchField
+          className="flex-1"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter') runSearch()
           }}
           placeholder="Email, его часть или код из перевода"
-          className="h-11 flex-1 rounded-xl border border-tint/[0.10] bg-input px-3.5 text-sm outline-none focus:border-accent-line"
         />
         <Button size="sm" onClick={runSearch} loading={searching}>
           <IconSearch size={18} /> Найти

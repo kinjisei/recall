@@ -23,6 +23,7 @@ import { ExerciseView } from '../../components/exercises'
 import { LAYOUTS, LayoutDemo, type LayoutId } from './ShowcaseLayouts'
 import { ShowcaseS3 } from './ShowcaseS3'
 import { ShowcaseS4 } from './ShowcaseS4'
+import { SheetHeader } from '../../shared/ui/SheetHeader'
 
 // Классы — строками целиком: Tailwind находит утилиты по тексту исходника.
 const SWATCHES = [
@@ -136,11 +137,9 @@ export function UiShowcase() {
         </Button>
         {sheet && (
           <Sheet onClose={() => setSheet(false)} labelledBy="demo-sheet">
+            <SheetHeader id="demo-sheet" title="Шторка" />
             <div className="min-h-0 overflow-y-auto px-5 pb-5 pt-1">
-              <h2 id="demo-sheet" className="text-lg font-medium">
-                Шторка
-              </h2>
-              <p className="mt-2 text-sm text-fg-muted">
+              <p className="text-sm text-fg-muted">
                 На телефоне — снизу, тянется за ручку. На компьютере — панель справа на всю высоту.
               </p>
             </div>

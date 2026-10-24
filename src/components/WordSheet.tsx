@@ -19,6 +19,7 @@ import { speak } from '../lib/speech'
 import type { AppLang } from '../types'
 import { Thinking } from '../shared/ui/Thinking'
 import { ErrorText } from '../shared/ui/ErrorText'
+import { SheetHeader } from '../shared/ui/SheetHeader'
 
 /** Выбранное слово + предложение, в котором оно встретилось. */
 export interface WordPick {
@@ -249,27 +250,24 @@ export function WordSheet({
   // fixed-позиционирование, и шторка уезжает за навигацию на длинных текстах.
   return (
     <>
-    <Sheet onClose={onClose} maxH="85dvh" label="Слово">
+    <Sheet onClose={onClose} maxH="85dvh" labelledBy="word-title">
 
         {/* Прокручиваемое содержимое */}
-        <div className="min-h-0 overflow-y-auto px-5 pt-2">
-          <div className="flex items-center justify-between gap-2">
-            <h3 className="min-w-0 text-xl font-bold">
+        <SheetHeader
+          id="word-title"
+          title={
+            <>
               {word.toLowerCase()}
-              {baseDiffers && (
-                <span className="ml-2 text-base font-normal text-fg-muted">
-                  → {ctx.base}
-                </span>
-              )}
-            </h3>
-            <button
-              onClick={playAudio}
-              className="shrink-0 rounded-full bg-tint/[0.08] px-3 py-2"
-              aria-label="Озвучить"
-            >
+              {baseDiffers && <span className="ml-2 text-base font-normal text-fg-muted">→ {ctx.base}</span>}
+            </>
+          }
+          trailing={
+            <button onClick={playAudio} aria-label="Озвучить" className="flex size-11 flex-none items-center justify-center rounded-full bg-tint/[0.08] text-fg-secondary">
               <IconSpeaker size={18} />
             </button>
-          </div>
+          }
+        />
+        <div className="min-h-0 overflow-y-auto px-5 pt-1">
 
           {ipa && <p className="mt-1 text-fg-muted">/{ipa}/</p>}
 

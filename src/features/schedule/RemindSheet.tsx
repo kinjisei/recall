@@ -13,10 +13,12 @@ import { useDraft } from '../../shared/lib/useDraft'
 import { telegramLink, whatsappLink } from '../../shared/lib/share'
 import { Button } from '../../shared/ui/Button'
 import { DraftRestored } from '../../shared/ui/DraftRestored'
-import { IconClose, IconSmartphone } from '../../shared/ui/icons'
+import { IconSmartphone } from '../../shared/ui/icons'
 import { SHARE_ROW, ShareLink } from '../../shared/ui/ShareLink'
 import { Sheet, SHEET_BODY } from '../../shared/ui/Sheet'
 import { ErrorText } from '../../shared/ui/ErrorText'
+import { SheetHeader } from '../../shared/ui/SheetHeader'
+import { fieldClass } from '../../shared/ui/TextField'
 
 export function RemindSheet({
   card,
@@ -61,15 +63,8 @@ export function RemindSheet({
 
   return (
     <Sheet onClose={onClose} labelledBy="remind-title">
+      <SheetHeader id="remind-title" title={`Напомнить: ${card.name}`} />
       <div className={SHEET_BODY}>
-        <div className="flex items-center justify-between gap-3">
-          <h2 id="remind-title" className="text-lg font-semibold">
-            Напомнить: {card.name}
-          </h2>
-          <button type="button" aria-label="Закрыть" onClick={onClose} className="flex size-11 flex-none items-center justify-center rounded-xl text-fg-muted hover:bg-tint/[0.06]">
-            <IconClose size={20} />
-          </button>
-        </div>
         <label className="flex flex-col gap-1.5">
           <span className="text-note text-fg-muted">Текст — можно поправить</span>
           <textarea
@@ -78,7 +73,7 @@ export function RemindSheet({
             rows={4}
             maxLength={500}
             data-remind-text
-            className="rounded-xl bg-input px-3.5 py-3 text-base leading-relaxed ring-1 ring-control-line outline-none focus:ring-2 focus:ring-accent-line"
+            className={`${fieldClass()} py-3 leading-relaxed`}
           />
           {draft.restored && <DraftRestored onClear={draft.clear} />}
         </label>

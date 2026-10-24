@@ -29,6 +29,7 @@ import {
   type PlanState,
 } from '../../../domains/billing'
 import { ErrorText } from '../../../shared/ui/ErrorText'
+import { fieldClass } from '../../../shared/ui/TextField'
 
 const MONTHS = ['1', '3', '6', '12'] as const
 
@@ -97,7 +98,7 @@ export function ConfirmPayment({
           value={amountText ?? String(amount)}
           onChange={(e) => setAmountText(e.target.value)}
           inputMode="numeric"
-          className="h-11 rounded-xl border border-tint/[0.10] bg-input px-3.5 text-sm text-fg outline-none focus:border-accent-line"
+          className={fieldClass()}
         />
       </label>
       <ChoiceGroup label="Способ" value={method} onChange={setMethod} options={PAY_METHODS.map((p) => ({ id: p.id, label: p.label }))} />
@@ -106,7 +107,7 @@ export function ConfirmPayment({
         onChange={(e) => setNote(e.target.value)}
         maxLength={500}
         placeholder="Заметка (необязательно): от кого перевод, если без кода"
-        className="h-11 rounded-xl border border-tint/[0.10] bg-input px-3.5 text-sm outline-none focus:border-accent-line"
+        className={fieldClass()}
       />
 
       <p className="text-sm">

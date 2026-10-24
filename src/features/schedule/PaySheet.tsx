@@ -12,9 +12,11 @@ import { Button } from '../../shared/ui/Button'
 import { ChoiceGroup } from '../../shared/ui/ChoiceGroup'
 import { DatePicker } from '../../shared/ui/DatePicker'
 import { FieldButton } from '../../shared/ui/FieldButton'
-import { IconArrowRight, IconCalendar, IconClose } from '../../shared/ui/icons'
+import { IconArrowRight, IconCalendar } from '../../shared/ui/icons'
 import { Sheet, SHEET_BODY } from '../../shared/ui/Sheet'
 import { ErrorText } from '../../shared/ui/ErrorText'
+import { SheetHeader } from '../../shared/ui/SheetHeader'
+import { fieldClass } from '../../shared/ui/TextField'
 
 type Choice = '4' | '8' | '12' | 'own'
 const signed = (n: number) => (n < 0 ? `−${-n}` : String(n))
@@ -65,22 +67,8 @@ export function PaySheet({
 
   return (
     <Sheet onClose={onClose} labelledBy="pay-title">
+      <SheetHeader id="pay-title" title={title} note={`${name}${balance && balance.paid > 0 ? ` · сейчас осталось ${signed(now)}` : ''}`} />
       <div className={SHEET_BODY}>
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h2 id="pay-title" className="text-lg font-semibold">
-              {title}
-            </h2>
-            <p className="text-sm text-fg-secondary">
-              {name}
-              {balance && balance.paid > 0 ? ` · сейчас осталось ${signed(now)}` : ''}
-            </p>
-          </div>
-          <button type="button" aria-label="Закрыть" onClick={onClose} className="flex size-11 flex-none items-center justify-center rounded-xl text-fg-muted hover:bg-tint/[0.06]">
-            <IconClose size={20} />
-          </button>
-        </div>
-
         <section aria-label="Сколько уроков оплачено" className="flex flex-col gap-1.5">
           <span className="text-note text-fg-muted">Сколько уроков оплачено?</span>
           <ChoiceGroup<Choice>
@@ -103,7 +91,7 @@ export function PaySheet({
               placeholder="Сколько уроков"
               value={own}
               onChange={(e) => setOwn(e.target.value.replace(/\D/g, '').slice(0, 3))}
-              className="min-h-12 rounded-xl bg-input px-3.5 text-base ring-1 ring-control-line outline-none focus:ring-2 focus:ring-accent-line"
+              className={fieldClass()}
             />
           )}
         </section>

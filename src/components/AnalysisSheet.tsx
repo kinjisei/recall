@@ -9,6 +9,7 @@ import { AnalyzedItemsView } from './AnalyzedItemsView'
 import type { AppLang } from '../types'
 import { Thinking } from '../shared/ui/Thinking'
 import { ErrorText } from '../shared/ui/ErrorText'
+import { SheetHeader } from '../shared/ui/SheetHeader'
 
 export function AnalysisSheet({
   text,
@@ -40,10 +41,10 @@ export function AnalysisSheet({
   }, [text, sentence, lang])
 
   return (
-    <Sheet onClose={onClose} maxH="85dvh" label="Разбор предложения">
-        <div className="min-h-0 overflow-y-auto px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-2">
-          <p className="text-[10px] uppercase tracking-wider text-fg-muted">Разбор</p>
-          <p className="mt-0.5 text-[15px] font-medium leading-snug">«{text}»</p>
+    <Sheet onClose={onClose} maxH="85dvh" labelledBy="analysis-title">
+        <SheetHeader id="analysis-title" title="Разбор предложения" />
+        <div className="min-h-0 overflow-y-auto px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-1">
+          <p className="text-body font-medium leading-snug">«{text}»</p>
 
           {!data && !error && (
             <Thinking label="Разбираю фрагмент" className="mt-4 text-sm" />

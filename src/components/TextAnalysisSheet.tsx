@@ -19,6 +19,7 @@ import {
 import type { AppLang } from '../types'
 import { Bolt } from '../shared/ui/Bolt'
 import { ErrorText } from '../shared/ui/ErrorText'
+import { SheetHeader } from '../shared/ui/SheetHeader'
 
 export function TextAnalysisSheet({
   text,
@@ -68,11 +69,9 @@ export function TextAnalysisSheet({
   const cost = estimateCost(text)
 
   return (
-    <Sheet onClose={onClose} maxH="85dvh" label="Разбор текста">
-        <div className="min-h-0 overflow-y-auto px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-2">
-          <p className="text-[10px] uppercase tracking-wider text-fg-muted">
-            Разбор всего текста
-          </p>
+    <Sheet onClose={onClose} maxH="85dvh" labelledBy="text-analysis-title">
+        <SheetHeader id="text-analysis-title" title="Разбор всего текста" />
+        <div className="min-h-0 overflow-y-auto px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-1">
 
           {phase === 'confirm' && (
             <div className="mt-3 flex flex-col gap-3">

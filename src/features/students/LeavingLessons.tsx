@@ -11,6 +11,7 @@ import type { CardStatus, StudentCard } from '../../domains/students'
 import { addDays } from '../../shared/lib/days'
 import { Button } from '../../shared/ui/Button'
 import { Sheet } from '../../shared/ui/Sheet'
+import { SheetHeader } from '../../shared/ui/SheetHeader'
 
 interface Ask {
   card: StudentCard
@@ -44,10 +45,8 @@ export function useLeavingLessons() {
   }
   const sheet = ask && (
     <Sheet onClose={() => setAsk(null)} labelledBy="leaving-title">
+      <SheetHeader id="leaving-title" title={ask.next === 'paused' ? 'Поставить на паузу?' : 'Отправить в архив?'} />
       <div className="flex flex-col gap-3 px-5 pb-5 pt-1">
-        <h2 id="leaving-title" className="text-lg font-semibold">
-          {ask.next === 'paused' ? 'Поставить на паузу?' : 'Отправить в архив?'}
-        </h2>
         <p className="text-sm text-fg-secondary">
           {ask.total === null
             ? `${ask.card.name}: будущие уроки уйдут из расписания.`
