@@ -375,14 +375,14 @@ try {
   // ── 5б. таблица или список — у дня тоже (правка владельца 05.10.2026, Ф2.10) ───
   await go(te, '/schedule')
   const layoutNow = (p) => p.$eval('[data-schedule-layout]', (e) => e.getAttribute('data-schedule-layout')).catch(() => null)
-  check('телефон: день по умолчанию списком — уроки строками, без ленты часов', (await layoutNow(te)) === 'list' && !(await te.$('ol[aria-label="Уроки дня"]')))
+  check('телефон: день по умолчанию списком — уроки карточками (t1-1), без ленты часов', (await layoutNow(te)) === 'list' && !(await te.$('ol[aria-label="Уроки дня"]')) && !!(await te.$('[data-day-cards]')))
   await shot(te, 'day-list-390')
   await clickSel(te, 'button[aria-label="Таблицей по часам"]')
   await sleep(500)
   check('«Таблицей по часам» в углу — день лентой часов', (await layoutNow(te)) === 'cols' && !!(await te.$('ol[aria-label="Уроки дня"]')) && new URL(te.url()).searchParams.get('layout') === 'cols')
   await clickSel(te, 'button[aria-label="Списком"]')
   await sleep(500)
-  check('«Списком» — снова строки', (await layoutNow(te)) === 'list' && !(await te.$('ol[aria-label="Уроки дня"]')))
+  check('«Списком» — снова карточки', (await layoutNow(te)) === 'list' && !(await te.$('ol[aria-label="Уроки дня"]')) && !!(await te.$('[data-day-cards]')))
 
   // ── 6. неделя целиком ───────────────────────────────────────────────────────────
   await go(te, '/schedule?view=week')
@@ -432,7 +432,39 @@ try {
   await shot(desk, 'week-1280')
   await go(desk, '/schedule?view=day')
   check('компьютер: день по умолчанию таблицей (лента часов), «Списком» рядом', !!(await desk.waitForSelector('ol[aria-label="Уроки дня"]', { timeout: 10000 }).catch(() => null)) && !!(await desk.$('button[aria-label="Списком"]')))
+  // d1: пустое время под мышью — «+ 11:00 N», нажатие — «Новый урок» на это время;
+  // клавиши N (новый урок) и T (сегодня). Без них — ✗: плашки нет, панель не открылась
   await go(desk, '/schedule')
+  await desk.waitForSelector('ol[aria-label^="Уроки, "]', { timeout: 10000 })
+  const spot = await desk.evaluate(() => {
+    const cols = [...document.querySelectorAll('ol[aria-label^="Уроки, "]')]
+    const col = cols.find((c) => !c.querySelector('[data-week-lesson]')) ?? cols[0]
+    const r = col.getBoundingClientRect()
+    return { x: r.left + r.width / 2, y: r.top + 46 * 3 + 12 }
+  })
+  await desk.mouse.move(spot.x, spot.y)
+  const slotTime = await desk
+    .waitForFunction(() => [...document.querySelectorAll('ol[aria-label^="Уроки, "] li')].map((li) => li.textContent.trim().match(/^(\d\d:\d\d)N$/)?.[1]).find(Boolean), { timeout: 3000 })
+    .then((h) => h.jsonValue(), () => null)
+  check('компьютер: наведение на пустое время — «+ 11:00 N» (d1-2)', slotTime === '11:00' || /^1[01]:[03]0$/.test(slotTime ?? ''), String(slotTime))
+  await desk.mouse.click(spot.x, spot.y)
+  const slotForm = await desk
+    .waitForFunction((t) => [...document.querySelectorAll('[role="dialog"]')].some((d) => d.textContent.includes('Новый урок') && d.textContent.includes(t)), { timeout: 5000 }, slotTime ?? '—')
+    .then(() => true, () => false)
+  check('нажатие на пустое время — «Новый урок» на это время', slotForm)
+  await desk.keyboard.press('Escape')
+  await desk.waitForFunction(() => !document.querySelector('[role="dialog"]'), { timeout: 5000 }).catch(() => {})
+  await desk.mouse.move(5, 5)
+  await desk.keyboard.press('n')
+  check('клавиша N — «Новый урок»', await desk.waitForFunction(() => [...document.querySelectorAll('[role="dialog"]')].some((d) => d.textContent.includes('Новый урок')), { timeout: 5000 }).then(() => true, () => false))
+  await desk.keyboard.press('Escape')
+  await desk.waitForFunction(() => !document.querySelector('[role="dialog"]'), { timeout: 5000 }).catch(() => {})
+  const period = () => desk.$eval('h2[aria-live]', (h) => h.textContent)
+  const thisWeek = await period()
+  await desk.click('button[aria-label="Следующая неделя"]')
+  await desk.waitForFunction((w) => document.querySelector('h2[aria-live]')?.textContent !== w, { timeout: 5000 }, thisWeek).catch(() => {})
+  await desk.keyboard.press('t')
+  check('клавиша T — обратно к сегодняшней неделе', await desk.waitForFunction((w) => document.querySelector('h2[aria-live]')?.textContent === w, { timeout: 5000 }, thisWeek).then(() => true, () => false))
   await click(desk, 'Новый урок')
   const panel = await desk.evaluate(() => {
     const d = [...document.querySelectorAll('[role="dialog"]')].pop()?.getBoundingClientRect()

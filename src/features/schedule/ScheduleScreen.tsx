@@ -39,8 +39,10 @@ import { useScheduleActions } from './useScheduleActions'
 import { useLessons, type ScheduleBase } from './useScheduleData'
 import { useScheduleUrl } from './useScheduleUrl'
 import { WeekGrid } from './WeekGrid'
-import { DayLessons, WeekList } from './WeekList'
+import { DayCards } from './DayCards'
+import { WeekList } from './WeekList'
 import { ErrorText } from '../../shared/ui/ErrorText'
+import { useHotkeys } from '../../shared/ui/hotkeys'
 
 export function ScheduleScreen({ base, version, refresh }: { base: ScheduleBase; version: number; refresh: () => void }) {
   // desktop — меню слева (окно от 720): кнопка «Новый урок» в шапке, а не
@@ -83,11 +85,31 @@ export function ScheduleScreen({ base, version, refresh }: { base: ScheduleBase;
   const opened = all?.find((l) => l.id === url.lessonId) ?? null
   const firstRun = all !== null && all.length === 0 && base.cards.length === 0
 
-  const openNew = () => {
+  // время под мышью на сетке недели (d1-2: «+ 11:00 N») — «Новый урок» на него
+  const [slot, setSlot] = useState<{ day: string; time: string } | null>(null)
+  const openNew = (at: { day: string; time: string } | null = null) => {
     if (!canWrite) return act.say(PLAN_REQUIRED_TEXT, 'Продлить', () => navigate('/pay'))
-    act.setPanel({ kind: 'form', mode: { kind: 'new', ...defaultSlot(url.day < today ? today : url.day, today, almatyMinutes(now)) } })
+    const when = at ?? defaultSlot(url.day < today ? today : url.day, today, almatyMinutes(now))
+    act.setPanel({ kind: 'form', mode: { kind: 'new', ...when } })
   }
   const shift = (dir: -1 | 1) => url.goTo(addDays(url.day, dir * (url.view === 'day' ? 1 : 7)))
+  // компьютер (d1): T — сегодня, N — новый урок (на время под мышью, если оно есть)
+  useHotkeys({ KeyT: () => url.goTo(today), KeyN: () => openNew(slot) }, desktop && !firstRun)
+  const trial = question && (
+    <TrialQuestion
+      question={question}
+      today={today}
+      desktop={desktop}
+      busy={answering}
+      inApp={inApp}
+      onAnswer={(stays) => {
+        setAnswering(true)
+        void act.answerTrial(question.participant.cardId, question.participant.name, stays).finally(() => setAnswering(false))
+      }}
+    />
+  )
+  // телефон, день: вопрос — над лентой дня, под полоской недели (t7-4); иначе — под шапкой (d1)
+  const trialInDay = !desktop && url.view === 'day'
 
   let body
   if (!all) body = query.error ? <LoadError message={query.error} onRetry={query.reload} /> : <RowsSkeleton count={4} />
@@ -99,7 +121,7 @@ export function ScheduleScreen({ base, version, refresh }: { base: ScheduleBase;
         actions={
           <>
             <Button onClick={() => (canWrite ? act.setPanel({ kind: 'card' }) : openNew())}>Добавить первого ученика</Button>
-            <Button variant="secondary" onClick={openNew}>
+            <Button variant="secondary" onClick={() => openNew()}>
               Новый урок
             </Button>
           </>
@@ -119,16 +141,28 @@ export function ScheduleScreen({ base, version, refresh }: { base: ScheduleBase;
           busy={new Set(week.filter((l) => l.status !== 'cancelled').map(lessonDay))}
           onPick={(d) => url.goTo(d)}
         />
+        {trialInDay && trial}
         {url.layout === 'cols' ? (
           <DayTimeline day={url.day} today={today} lessons={days.get(url.day) ?? []} now={now} nextId={nextId} inApp={inApp} onOpen={url.openLesson} />
         ) : (
-          <DayLessons list={days.get(url.day) ?? []} isToday={url.day === today} now={now} nextId={nextId} inApp={inApp} onOpen={url.openLesson} />
+          <DayCards list={days.get(url.day) ?? []} now={now} nextId={nextId} onOpen={url.openLesson} />
         )}
       </div>
     )
   else if (url.layout === 'cols')
     body = (
-      <WeekGrid monday={monday} today={today} days={days} now={now} compact={!cols} inApp={inApp} onOpen={url.openLesson} onDay={(d) => url.goTo(d, 'day')} />
+      <WeekGrid
+        monday={monday}
+        today={today}
+        days={days}
+        now={now}
+        compact={!cols}
+        nextId={nextId}
+        inApp={inApp}
+        onOpen={url.openLesson}
+        onDay={(d) => url.goTo(d, 'day')}
+        slot={desktop && cols && canWrite ? { at: slot, onHover: setSlot, onPick: openNew } : null}
+      />
     )
   else body = <WeekList monday={monday} today={today} days={days} now={now} nextId={nextId} inApp={inApp} onOpen={url.openLesson} onDay={(d) => url.goTo(d, 'day')} />
 
@@ -146,21 +180,10 @@ export function ScheduleScreen({ base, version, refresh }: { base: ScheduleBase;
         onLayout={url.setLayout}
         onShift={shift}
         onToday={() => url.goTo(today)}
-        onNew={openNew}
+        onNew={() => openNew()}
       />
       {!canWrite && <ReadOnlyLine plan={base.plan} />}
-      {question && (
-        <TrialQuestion
-          question={question}
-          today={today}
-          desktop={desktop}
-          busy={answering}
-          onAnswer={(stays) => {
-            setAnswering(true)
-            void act.answerTrial(question.participant.cardId, question.participant.name, stays).finally(() => setAnswering(false))
-          }}
-        />
-      )}
+      {!trialInDay && trial}
       {act.error && !opened && (
         <ErrorText>
           {act.error}
@@ -171,7 +194,7 @@ export function ScheduleScreen({ base, version, refresh }: { base: ScheduleBase;
       {/* обёртка держит место у края: у Button свой position: relative */}
       {!desktop && !firstRun && (
         <div className="fixed right-4 z-30" style={{ bottom: `calc(${insets.bottom} + 0.75rem)` }}>
-          <Button className={`min-h-12 rounded-control px-4 shadow-raised ${canWrite ? '' : 'opacity-60'}`} onClick={openNew}>
+          <Button className={`min-h-12 rounded-control px-4 shadow-raised ${canWrite ? '' : 'opacity-60'}`} onClick={() => openNew()}>
             <IconPlus size={20} aria-hidden /> Новый урок
           </Button>
         </div>

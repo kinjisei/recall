@@ -148,6 +148,11 @@ check('часы сетки: обычно 8–22, ранний урок расш�
   { from: 8, to: 22 },
   { from: 6, to: 22 },
 ])
+// неделя на компьютере (d1): 8–21 — вся неделя в окне 800; поздний урок расширяет
+check('часы недели на компьютере: 8–21, урок до 22:00 расширяет', [hourWindow([], 21), hourWindow(placeLessons([at('21:00', 60)], '2026-10-15'), 21)], [
+  { from: 8, to: 21 },
+  { from: 8, to: 22 },
+])
 
 // ── вопрос после пробного ────────────────────────────────────────────────────────────
 const P = (cardId, extra = {}) => ({ cardId, name: cardId, cardStatus: 'trial', trial: true, attended: null, charge: null, chargeAuto: false, ...extra })

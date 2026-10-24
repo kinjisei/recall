@@ -10,7 +10,7 @@
 // шапка с поиском и фильтром стоит, остальное прокручивается; «/» — к поиску,
 // ↑ ↓ — по ученикам.
 // ============================================================================
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import {
   CARD_FILTERS,
   matchesFilter,
@@ -23,6 +23,7 @@ import {
   type StudentCard,
 } from '../../domains/students'
 import { useUrlState } from '../../shared/lib/useUrlState'
+import { useHotkeys } from '../../shared/ui/hotkeys'
 import { Card } from '../../shared/ui/Card'
 import { ChoiceGroup } from '../../shared/ui/ChoiceGroup'
 import { IconArrowUp, IconCaretDown, IconSearch, IconSmartphone, IconSparkle } from '../../shared/ui/icons'
@@ -96,25 +97,13 @@ export function StudentsList({
 
   // компьютер: «/» — к поиску (значка в поле нет — решение владельца
   // 20.10.2026), ↑ ↓ — по ученикам (d3-1, d3-3)
-  useEffect(() => {
-    if (!wide) return
-    const onKey = (e: KeyboardEvent) => {
-      const t = e.target as HTMLElement | null
-      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return
-      if (e.metaKey || e.ctrlKey || e.altKey) return
-      if (e.key === '/' && search.current) {
-        e.preventDefault()
-        search.current.focus()
-      } else if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && shown.length) {
-        e.preventDefault()
-        const at = shown.findIndex((r) => r.card.id === selectedId)
-        const next = at === -1 ? 0 : Math.min(Math.max(at + (e.key === 'ArrowDown' ? 1 : -1), 0), shown.length - 1)
-        onOpen(shown[next]!.card.id)
-      }
-    }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [wide, shown, selectedId, onOpen])
+  const step = (dir: 1 | -1) => {
+    if (!shown.length) return
+    const at = shown.findIndex((r) => r.card.id === selectedId)
+    const next = at === -1 ? 0 : Math.min(Math.max(at + dir, 0), shown.length - 1)
+    onOpen(shown[next]!.card.id)
+  }
+  useHotkeys({ Slash: () => search.current?.focus(), ArrowDown: () => step(1), ArrowUp: () => step(-1) }, wide)
 
   const head = (
     <>

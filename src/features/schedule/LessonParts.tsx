@@ -61,16 +61,49 @@ export function LessonAvatar({ lesson, inApp, small = false }: { lesson: Lesson;
   return p ? <Avatar name={p.name} inApp={inApp(p.cardId)} small={small} /> : null
 }
 
-/** Подложка урока по типу и состоянию: группа — акцент, пробный — пунктир, отмена — бледно, поздняя отмена — штриховка. */
-export function lessonLook(lesson: Lesson): string {
-  if (lesson.status === 'cancelled') {
-    return lesson.participants.some((p) => p.charge === 'late_cancel')
-      ? 'border border-warning/40 bg-hatch-warning text-fg-secondary'
-      : 'border border-dashed border-tint/[0.18] bg-tint/[0.03] text-fg-muted'
-  }
-  if (lesson.kind === 'group') return 'border border-accent-line bg-accent-soft text-accent-soft-fg'
-  if (isTrialLesson(lesson)) return 'border border-dashed border-accent-line bg-surface text-fg'
-  return 'border border-tint/[0.08] bg-surface text-fg shadow-card'
+export type LookKind = 'one' | 'group' | 'trial' | 'cancelled' | 'late'
+export type LookPlace = 'day' | 'week' | 'mini'
+
+/** Какой урок по виду: ученик, группа, пробный, отменён, поздняя отмена. */
+export function lookKind(lesson: Lesson): LookKind {
+  if (lesson.status === 'cancelled') return lesson.participants.some((p) => p.charge === 'late_cancel') ? 'late' : 'cancelled'
+  if (lesson.kind === 'group') return 'group'
+  return isTrialLesson(lesson) ? 'trial' : 'one'
+}
+
+/**
+ * Подложка урока по месту и виду. В неделе урок на ступень заметнее, чем в
+ * ленте дня: ученик — мягкий акцент, группа — сплошной (d1, t2-2); в ленте
+ * дня (t2-1) ученик — белая карточка, группа — мягкий с рамкой. Пробный —
+ * рамкой ring (на мини-сетке — пунктиром), отмена — бледно, поздняя отмена —
+ * штриховкой: состояние читается и без цвета.
+ */
+export const LESSON_LOOK: Record<LookPlace, Record<LookKind, string>> = {
+  day: {
+    one: 'border border-tint/[0.08] bg-surface text-fg shadow-card',
+    group: 'bg-accent-soft text-accent-soft-fg inset-ring-2 inset-ring-accent',
+    trial: 'bg-surface text-fg inset-ring-2 inset-ring-ring',
+    cancelled: 'border border-dashed border-tint/[0.18] bg-tint/[0.03] text-fg-muted',
+    late: 'bg-hatch-warning text-fg-secondary inset-ring inset-ring-warning/40',
+  },
+  week: {
+    one: 'relative bg-accent-soft text-accent-soft-fg before:absolute before:inset-y-0 before:left-0 before:w-0.75 before:bg-accent',
+    group: 'bg-accent text-accent-fg',
+    trial: 'bg-surface text-fg inset-ring-2 inset-ring-ring',
+    cancelled: 'text-fg-muted inset-ring-2 inset-ring-fg-faint',
+    late: 'bg-hatch-warning text-fg inset-ring inset-ring-warning',
+  },
+  mini: {
+    one: 'bg-accent-soft text-accent-soft-fg inset-ring inset-ring-accent',
+    group: 'bg-accent text-accent-fg',
+    trial: 'border border-dashed border-accent bg-surface text-fg',
+    cancelled: 'bg-tint/[0.06] text-fg-muted inset-ring inset-ring-fg-faint',
+    late: 'bg-hatch-warning text-fg inset-ring inset-ring-warning',
+  },
+}
+
+export function lessonLook(lesson: Lesson, place: LookPlace = 'day'): string {
+  return LESSON_LOOK[place][lookKind(lesson)]
 }
 
 /** Подпись над выбором в шторках переноса и отмены (t5-1, t5-2): 13, средний, на 4 px внутрь от карточек. */

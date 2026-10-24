@@ -4,6 +4,8 @@
 // форма и hover. Два варианта формы:
 //   tabs    — строка кнопок rounded-tag (грамматика, глаголы, читалки) — дефолт;
 //   segment — капсула rounded-full с фоном-контейнером (Диалог: Чат/Письмо);
+//             `square` — прямоугольником: дорожка 12, плашка 8 («День / Неделя»
+//             расписания на компьютере, макет d1);
 //             `stretch` — поровну на всю ширину, поля 8, а не 16: ячейки и так
 //             делят ширину. Поровну, пока слова влезают; не влезает — вкладка
 //             не уже своего слова (min-w-min), остальные делят остаток
@@ -35,6 +37,7 @@ export function TabPicker<T extends string>({
   ariaLabel,
   stretch = false,
   small = false,
+  square = false,
   trailing,
   iconsWide = false,
   className = '',
@@ -48,6 +51,8 @@ export function TabPicker<T extends string>({
   stretch?: boolean
   /** Только segment: подписи 14 — длинные варианты («Этот и все следующие»). */
   small?: boolean
+  /** Только segment: прямоугольник вместо капсулы (d1). */
+  square?: boolean
   /** Только line: элемент справа в строке вкладок. */
   trailing?: React.ReactNode
   /**
@@ -88,7 +93,7 @@ export function TabPicker<T extends string>({
   // tabs: обводка ring-control-line — граница элемента в обеих темах (лист
   // s2): подложка на белом теряется. ring, а не border — рамка сдвинула бы ряд.
   const container = segment
-    ? `${stretch ? 'flex' : 'inline-flex'} rounded-full bg-input`
+    ? `${stretch ? 'flex' : 'inline-flex'} ${square ? 'rounded-tile' : 'rounded-full'} bg-input`
     : 'flex flex-wrap gap-2'
   const inactive = segment
     ? 'font-medium text-fg-muted hover:text-fg-secondary'
@@ -108,10 +113,10 @@ export function TabPicker<T extends string>({
             aria-selected={isActive}
             onClick={() => onChange(o.id)}
             className={`relative flex min-h-11 items-center justify-center gap-1.5 transition-colors duration-(--dur-1) ease-out ${stretch ? 'min-w-min flex-1 px-2' : 'px-4'} ${
-              segment ? `${stretch ? '' : 'min-w-27.5'} rounded-full ${small ? 'text-sm' : 'text-body'}` : 'rounded-tag text-sm'
+              segment ? `${stretch ? '' : 'min-w-27.5'} ${square ? 'rounded-tile' : 'rounded-full'} ${small ? 'text-sm' : 'text-body'}` : 'rounded-tag text-sm'
             } ${isActive ? active : inactive}`}
           >
-            {segment && isActive && <span aria-hidden className="absolute inset-0.75 rounded-full bg-segment shadow-segment" />}
+            {segment && isActive && <span aria-hidden className={`absolute inset-0.75 ${square ? 'rounded-tag' : 'rounded-full'} bg-segment shadow-segment`} />}
             {o.Icon && <o.Icon size={segment ? 18 : 16} className="relative" />}
             <span className="relative">{o.label}</span>
           </button>

@@ -24,6 +24,7 @@
 // ============================================================================
 import { useEffect, useRef } from 'react'
 import { useFocusMode } from '../lib/focusMode'
+import { isTypingTarget } from './hotkeys'
 import { isSheetOpen } from './Sheet'
 
 export interface RoundKeys {
@@ -45,7 +46,7 @@ export function useRoundKeys(keys: RoundKeys, enabled = true): void {
     const onKey = (e: KeyboardEvent) => {
       if (e.defaultPrevented || e.repeat || e.isComposing || e.ctrlKey || e.metaKey || e.altKey) return
       const target = e.target instanceof HTMLElement ? e.target : null
-      const typing = !!target && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))
+      const typing = isTypingTarget(target)
       const k = latest.current
 
       if (e.key === 'Escape') {

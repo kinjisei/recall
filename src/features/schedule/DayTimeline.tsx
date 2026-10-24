@@ -40,7 +40,7 @@ export function DayTimeline({
       {hours.map((h) => (
         <div key={h} aria-hidden className="absolute inset-x-0 flex items-center gap-2" style={{ top: y(h * 60) }}>
           <span className="w-11 -translate-y-px text-right text-caption tabular-nums text-fg-muted">{formatTime(h)}</span>
-          <span className="h-px flex-1 bg-tint/[0.07]" />
+          <span className="h-px flex-1 bg-line" />
         </div>
       ))}
 

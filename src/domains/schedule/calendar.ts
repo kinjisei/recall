@@ -181,10 +181,13 @@ export function placeLessons<T extends Pick<Lesson, 'startsAt' | 'endsAt'>>(item
   return rows
 }
 
-/** Видимые часы сетки: обычно 8–22, шире — если уроки раньше или позже. */
-export function hourWindow(placed: Pick<Placed<unknown>, 'top' | 'height'>[]): { from: number; to: number } {
+/**
+ * Видимые часы сетки: обычно 8–22 (неделя на компьютере — 8–21, как в d1:
+ * вся неделя в окне 800), шире — если уроки раньше или позже.
+ */
+export function hourWindow(placed: Pick<Placed<unknown>, 'top' | 'height'>[], end = 22): { from: number; to: number } {
   let from = 8
-  let to = 22
+  let to = end
   for (const p of placed) {
     from = Math.min(from, Math.floor(p.top / 60))
     to = Math.max(to, Math.ceil((p.top + p.height) / 60))
