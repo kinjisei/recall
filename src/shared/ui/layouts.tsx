@@ -82,12 +82,15 @@ export function CenterColumn({
  */
 export function ReadingColumn({
   children,
+  top,
   aside,
   onAsideClose,
   asideLabel,
   asideHint,
 }: {
   children: ReactNode
+  /** Строка над текстом и панелью сразу («‹ Учёба … Слушать текст», макет d6). */
+  top?: ReactNode
   /** Содержимое панели (например, перевод слова); null — панель пуста. */
   aside: ReactNode | null
   /** Закрыть панель: на телефоне это шторка. */
@@ -104,6 +107,7 @@ export function ReadingColumn({
   if (!split) {
     return (
       <div className="mx-auto w-full max-w-reading">
+        {top}
         {children}
         {aside && (
           <Sheet onClose={onAsideClose} label={asideLabel}>
@@ -114,7 +118,8 @@ export function ReadingColumn({
     )
   }
   return (
-    <div className="grid grid-cols-[minmax(0,var(--container-reading))_var(--container-aside)] justify-center gap-8">
+    <div className="grid grid-cols-[minmax(0,var(--container-reading))_var(--container-aside)] justify-center gap-x-8">
+      {top && <div className="col-span-2">{top}</div>}
       <div className="min-w-0">{children}</div>
       <aside
         aria-label={asideLabel}

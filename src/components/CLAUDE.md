@@ -20,7 +20,7 @@
 |---|---|
 | `exercises.tsx`, `useExerciseReview.ts` | движок упражнений (выбор, вписать, собрать предложение) и сбор ответов для разбора; вид — детали упражнения d5 (`shared/ui/roundParts`: варианты, поле, фишки, итог «Верно! / Не совсем», главная кнопка внизу); в уроке и материале — в карточке, в раунде «Практики» — `bare`, без неё (Ф2.17-4д-4б); номер варианта — общая плашка `data-key` (index.css) |
 | `RoundResult.tsx`, `RoundReview.tsx` | итог раунда — один на все игры; разбор с «Почему?» (лёгкая модель, ⚡ не стоит) |
-| `WordSheet.tsx`, `MarkableText.tsx` | шторка слова для всех читалок; текст, где тап по слову открывает шторку, и «Выделить фразу» |
+| `WordSheet.tsx`, `WordDetails.tsx`, `wordLookup.ts`, `MarkableText.tsx` | перевод слова: данные — `useWordLookup` (перевод в контексте, для английского транскрипция, часть речи по-русски и пример словаря — по начальной форме, если нажата другая («habits» → «habit»: словарь форм не знает), в карточку транскрипция и звук — только от её слова, «в мои слова»; ответ по прошлому слову к новому не прилипает — ключ слова), содержимое — `WordFacts`/`WordTitle`/`AddWordButton` (d6: «В этом тексте», примеры со словом жирным, «+ В мои слова» → «✓ Добавлено»); `WordPanel` — панель сбоку текста (компьютер, экран чтения `features/reader/ReadingScreen`), `WordSheet` — шторкой (телефон, задания); `TappableText` — слова-кнопки: сохранённые — пунктиром (`marked`), выбранное — в рамке (`activeAt`); `MarkableText` — текст с переводом и «Выделить фразу» в заданиях; его `ReadingTools` («Выделить фразу», «Разобрать весь текст», 44, на телефоне в ряд) — те же на экране чтения |
 | `AnalysisSheet.tsx`, `TextAnalysisSheet.tsx`, `PhraseSheet.tsx`, `AnalyzedItemsView.tsx` | разбор предложения, всего текста, выделенной фразы |
 | `EnergyBar.tsx` | строка ⚡ на Главной (правила энергии — `features/billing/CLAUDE.md`) |
 | `FeedbackSheet.tsx` | шторка «Расскажи, как тебе» |
@@ -77,7 +77,7 @@
 <!-- Пишет `npm run gen:docs` (scripts/gen/module-docs.mjs) по коду — руками не править. -->
 ## Из кода (сгенерировано)
 
-- **Файлы:** `AnalysisSheet.tsx`, `AnalyzedItemsView.tsx`, `ChartView.tsx`, `exercises.tsx`, `FeedbackSheet.tsx`, `MarkableText.tsx`, `PhraseSheet.tsx`, `RoundResult.tsx`, `RoundReview.tsx`, `TextAnalysisSheet.tsx`, `useExerciseReview.ts`, `WordSheet.tsx`
+- **Файлы:** `AnalysisSheet.tsx`, `AnalyzedItemsView.tsx`, `ChartView.tsx`, `exercises.tsx`, `FeedbackSheet.tsx`, `MarkableText.tsx`, `PhraseSheet.tsx`, `RoundResult.tsx`, `RoundReview.tsx`, `TextAnalysisSheet.tsx`, `useExerciseReview.ts`, `WordDetails.tsx`, `wordLookup.ts`, `WordSheet.tsx`
 - **Вне папки (указатель «Описание:» в начале файла):** `src/lib/feedback.ts`, `src/lib/selfCorrect.ts`
 - **Описаны в другом модуле (указатель «Описание:»):** `EnergyBar.tsx → features/billing`
 - **RPC:** `track_event`

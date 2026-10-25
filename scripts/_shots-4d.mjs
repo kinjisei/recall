@@ -83,3 +83,36 @@ export async function shotsExercise({ screen, a }) {
     },
   ])
 }
+
+// ── 4д-4в: чтение (d6) ─────────────────────────────────────────────────────
+//   reading      — «Small habits, big changes» у Айгерим: текст, справа панель-
+//                  подсказка и «Сохранено из этого текста» (d6-1); два слова
+//                  текста кладём в её словарь — они подчёркнуты пунктиром;
+//   reading-word — нажала «habits»: перевод в панели справа (d6-2), на
+//                  телефоне — шторкой. Ответ AI подставляет браузер (shots.aiReply).
+const WORD_REPLY = JSON.stringify({ base: 'habit', translation: 'привычка', note: '' })
+const clearAi = async (page) => page.evaluate(() => localStorage.removeItem('shots.aiReply'))
+const tapWord = (word) => async (page) => {
+  await page.evaluate((r) => localStorage.setItem('shots.aiReply', r), WORD_REPLY)
+  await page.evaluate(
+    (w) => [...document.querySelectorAll('main span.cursor-pointer')].find((s) => s.textContent.replace(/[^A-Za-z]/g, '') === w)?.click(),
+    word,
+  )
+  await page.waitForFunction(() => /привычка/.test(document.body.innerText), { timeout: 8000 }).catch(() => {})
+  await sleep(600)
+}
+
+export async function shotsReading({ screen, admin, must, a }) {
+  const [deck] = must(await admin.from('decks').select('id').eq('owner_id', a.id).eq('title', 'Мой словарь'), 'словарь Айгерим')
+  for (const [front, back] of [
+    ['repetition', 'повторение'],
+    ['effective', 'эффективный'],
+  ]) {
+    const { data } = await admin.from('cards').select('id').eq('deck_id', deck.id).eq('front', front)
+    if (!data?.length) must(await admin.from('cards').insert({ deck_id: deck.id, front, back, source: 'manual' }).select('id'), `слово ${front}`)
+  }
+  await screen(a.email, [
+    { name: 'reading', path: '/study?view=reader&text=b1-habits', expect: /Small habits/, prepare: clearAi },
+    { name: 'reading-word', path: '/study?view=reader&text=b1-habits', expect: /Small habits/, prepare: tapWord('habits') },
+  ])
+}

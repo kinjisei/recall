@@ -11,9 +11,7 @@ import { Card } from '../../shared/ui/Card'
 import { Button } from '../../shared/ui/Button'
 import { useConfirm } from '../../shared/ui/ConfirmDialog'
 import { BackHeader } from '../../shared/ui/BackButton'
-import { MarkableText } from '../../components/MarkableText'
 import { IconPlus, IconTrash } from '../../shared/ui/icons'
-import { getSettings, READER_CLASSES } from '../../lib/settings'
 import {
   addMyText,
   extractFileText,
@@ -25,6 +23,7 @@ import {
 import type { AppLang } from '../../types'
 import { ErrorText } from '../../shared/ui/ErrorText'
 import { fieldClass } from '../../shared/ui/TextField'
+import { ReadingScreen, toParagraphs } from './ReadingScreen'
 
 /** Список своих текстов + кнопка добавления (рендерится в шапке читалки). */
 export function MyTextsList({
@@ -188,19 +187,16 @@ export function MyTextReader({
   lang: AppLang
   onBack: () => void
 }) {
+  // тот же экран чтения, что у встроенных текстов (макет d6)
   return (
-    <div className="flex flex-col gap-4">
-      <BackHeader onBack={onBack} title={text.title} />
-      {text.truncated && (
-        <p className="text-xs text-warning-strong">Текст был обрезан по лимиту при добавлении.</p>
-      )}
-      <Card>
-        <MarkableText
-          text={text.body}
-          lang={lang}
-          className={`whitespace-pre-wrap ${READER_CLASSES[getSettings().readerSize]}`}
-        />
-      </Card>
-    </div>
+    <ReadingScreen
+      title={text.title}
+      backLabel="Тексты"
+      onBack={onBack}
+      lang={lang}
+      paragraphs={toParagraphs(text.body)}
+      tools
+      note={text.truncated && <p className="text-note text-warning-strong">Текст был обрезан по лимиту при добавлении.</p>}
+    />
   )
 }

@@ -11,20 +11,18 @@ import { Sheet } from '../shared/ui/Sheet'
 import { IconSearch, IconSpeaker } from '../shared/ui/icons'
 import { Button } from '../shared/ui/Button'
 import { AnalysisSheet } from './AnalysisSheet'
-import { addCard } from '../lib/cards'
-import { lookup } from '../lib/dictionary'
-import { lookupInContext, type ContextLookup } from '../lib/contextDict'
-import { logActivity } from '../lib/activity'
-import { speak } from '../lib/speech'
 import type { AppLang } from '../types'
-import { Thinking } from '../shared/ui/Thinking'
 import { ErrorText } from '../shared/ui/ErrorText'
 import { SheetHeader } from '../shared/ui/SheetHeader'
+import { AddWordButton, WordFacts } from './WordDetails'
+import { useWordLookup } from './wordLookup'
 
 /** Выбранное слово + предложение, в котором оно встретилось. */
 export interface WordPick {
   word: string
   sentence: string
+  /** Где в тексте нажали — рамка у выбранного слова (d6). */
+  at?: number
 }
 
 /** Обрезает пунктуацию по краям, сохраняя апострофы и дефисы внутри. */
@@ -78,9 +76,15 @@ export function TappableText({
   onSelect,
   selectMode = false,
   onPhrase,
+  marked,
+  activeAt,
 }: {
   text: string
   onSelect: (pick: WordPick) => void
+  /** Слова, которые уже в «Моих словах» (в нижнем регистре), — пунктиром (d6). */
+  marked?: Set<string>
+  /** Начало выбранного слова в тексте — оно в рамке, пока открыт перевод. */
+  activeAt?: number | null
   /** Режим «Выделить фразу»: тап ПЕРВОГО и ПОСЛЕДНЕГО слова → onPhrase(фраза). */
   selectMode?: boolean
   onPhrase?: (phrase: string, sentence: string) => void
@@ -128,7 +132,7 @@ export function TappableText({
       if (phrase) onPhrase?.(phrase, sentenceAround(text, word, offsets[a]))
       return
     }
-    onSelect({ word, sentence: sentenceAround(text, word, offsets[i]) })
+    onSelect({ word, sentence: sentenceAround(text, word, offsets[i]), at: offsets[i] })
   }
 
   return (
@@ -136,15 +140,19 @@ export function TappableText({
       {tokens.map((tok, i) => {
         if (!isWordToken(tok)) return <span key={i}>{tok}</span>
         const highlighted = selectMode && startIdx === i
+        const active = activeAt === offsets[i]
+        const saved = !!marked?.has(cleanWord(tok).toLowerCase())
         return (
           <span
             key={i}
             onClick={() => onWord(tok, i)}
-            className={`cursor-pointer rounded-mark px-0.5 transition-colors ${
+            className={`-mx-0.5 cursor-pointer rounded-mark px-0.5 transition-colors ${
               highlighted
                 ? 'bg-accent/28 ring-1 ring-accent-line'
-                : 'hover:bg-accent/18 active:bg-accent/28'
-            }`}
+                : active
+                  ? 'bg-accent-soft ring-2 ring-focus'
+                  : 'hover:bg-accent/18 active:bg-accent/28'
+            } ${saved && !active ? 'underline decoration-accent decoration-dotted decoration-2 underline-offset-4' : ''}`}
           >
             {tok}
           </span>
@@ -154,8 +162,8 @@ export function TappableText({
   )
 }
 
-// ---------------------------------------------------------------------------
-// Шторка слова.
+// ---------------------------------------------------------------------------// Шторка слова: то же содержимое, что панель перевода сбоку текста
+// (WordDetails, макет d6), и кнопки внизу — «В мои слова», «Закрыть».
 // ---------------------------------------------------------------------------
 
 export function WordSheet({
@@ -163,143 +171,44 @@ export function WordSheet({
   sentence,
   lang,
   onClose,
+  onAdded,
 }: {
   word: string
   sentence: string
   lang: AppLang
   onClose: () => void
+  onAdded?: (front: string, back: string) => void
 }) {
-  const [ctx, setCtx] = useState<ContextLookup | null>(null)
-  const [ctxError, setCtxError] = useState(false)
-  const [ipa, setIpa] = useState<string | undefined>()
-  const [audioUrl, setAudioUrl] = useState<string | undefined>()
-  const [added, setAdded] = useState(false)
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  // разбор ВСЕГО предложения (умная модель) — вместо выделения фразы пальцем
+  const look = useWordLookup(word, sentence, lang, onAdded)
   const [analyze, setAnalyze] = useState(false)
-
-  // Контекстный перевод (Gemini) и — для английского — транскрипция/аудио.
-  // alive-флаг: при быстрой смене слова медленный ответ по прошлому слову
-  // не должен перезаписать данные актуального.
-  useEffect(() => {
-    let alive = true
-    setCtx(null)
-    setCtxError(false)
-    setAdded(false)
-    setError(null)
-    setIpa(undefined)
-    setAudioUrl(undefined)
-
-    lookupInContext(word, sentence, lang)
-      .then((r) => alive && setCtx(r))
-      .catch(() => alive && setCtxError(true))
-
-    if (lang === 'en') {
-      lookup(word)
-        .then((r) => {
-          if (alive && r) {
-            setIpa(r.ipa)
-            setAudioUrl(r.audio_url)
-          }
-        })
-        .catch(() => {})
-    }
-
-    return () => {
-      alive = false
-    }
-  }, [word, sentence, lang])
-
-  const playAudio = () => {
-    if (audioUrl) {
-      new Audio(audioUrl).play().catch(() => speak(word, { lang }))
-    } else {
-      speak(word, { lang })
-    }
-  }
-
-  const addToDeck = async () => {
-    setBusy(true)
-    setError(null)
-    try {
-      await addCard({
-        front: ctx?.base ?? word.toLowerCase(),
-        back: ctx
-          ? ctx.translation + (ctx.note ? ` · ${ctx.note}` : '')
-          : undefined,
-        example: sentence,
-        ipa,
-        audio_url: audioUrl,
-        lang,
-        source: 'reader',
-      })
-      setAdded(true)
-      void logActivity('reader')
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Не удалось добавить слово')
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  const baseDiffers =
-    ctx && ctx.base.toLowerCase() !== word.toLowerCase().replace(/[’]/g, "'")
 
   // Портал в body: внутри <main> любой предок с transform/filter «приватизирует»
   // fixed-позиционирование, и шторка уезжает за навигацию на длинных текстах.
   return (
     <>
-    <Sheet onClose={onClose} maxH="85dvh" labelledBy="word-title">
-
-        {/* Прокручиваемое содержимое */}
+      <Sheet onClose={onClose} maxH="85dvh" labelledBy="word-title">
         <SheetHeader
           id="word-title"
           title={
             <>
               {word.toLowerCase()}
-              {baseDiffers && <span className="ml-2 text-base font-normal text-fg-muted">→ {ctx.base}</span>}
+              {look.baseDiffers && <span className="ml-2 text-base font-normal text-fg-muted">→ {look.ctx?.base}</span>}
             </>
           }
           trailing={
-            <button onClick={playAudio} aria-label="Озвучить" className="flex size-11 flex-none items-center justify-center rounded-full bg-tint/[0.08] text-fg-secondary">
+            <button onClick={look.playAudio} aria-label="Озвучить" className="flex size-11 flex-none items-center justify-center rounded-full bg-accent-soft text-accent-soft-fg">
               <IconSpeaker size={18} />
             </button>
           }
         />
         <div className="min-h-0 overflow-y-auto px-5 pt-1">
-
-          {ipa && <p className="mt-1 text-fg-muted">/{ipa}/</p>}
-
-          {!ctx && !ctxError && (
-            <Thinking label="Перевожу в контексте" className="mt-3" />
-          )}
-          {ctx && (
-            <div className="mt-3">
-              <p className="text-lg font-semibold text-fg">
-                {ctx.translation}
-              </p>
-              {ctx.note && (
-                <p className="mt-1 text-sm text-fg-muted">{ctx.note}</p>
-              )}
-            </div>
-          )}
-          {ctxError && (
-            <p className="mt-3 text-fg-muted">
-              Перевод сейчас недоступен — слово всё равно можно добавить в мои слова.
-            </p>
-          )}
-
-          <p className="mt-3 rounded-tile bg-input px-3 py-2 text-sm italic text-fg-muted">
-            «{sentence}»
-          </p>
-
-          {error && <ErrorText className="mt-3">{error}</ErrorText>}
-
+          <WordFacts look={look} word={word} sentence={sentence} />
+          {look.error && <ErrorText className="mt-3">{look.error}</ErrorText>}
           {/* Разбор всего предложения (фразовые глаголы/выражения/грамматика) */}
           <button
+            type="button"
             onClick={() => setAnalyze(true)}
-            className="lift mt-4 flex w-full items-center justify-center gap-1.5 rounded-tile border border-accent-line bg-accent/10 py-2.5 text-sm font-medium text-accent-soft-fg"
+            className="mt-3 flex min-h-11 items-center gap-1.5 text-sm font-medium text-accent-strong"
           >
             <IconSearch size={16} /> Разбор предложения
           </button>
@@ -307,28 +216,13 @@ export function WordSheet({
 
         {/* Кнопки — всегда видны, не прячутся за навигацией */}
         <div className="flex shrink-0 gap-3 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4">
-          {added ? (
-            <Button variant="secondary" className="flex-1" disabled>
-              Добавлено ✓
-            </Button>
-          ) : (
-            <Button className="flex-1" onClick={addToDeck} disabled={busy}>
-              {busy ? 'Добавляю…' : '+ В мои слова'}
-            </Button>
-          )}
-          <Button variant="ghost" onClick={onClose}>
+          <AddWordButton look={look} className="flex-1" />
+          <Button size="sm" variant="ghost" onClick={onClose}>
             Закрыть
           </Button>
         </div>
-    </Sheet>
-    {analyze && (
-      <AnalysisSheet
-        text={sentence}
-        sentence={sentence}
-        lang={lang}
-        onClose={() => setAnalyze(false)}
-      />
-    )}
+      </Sheet>
+      {analyze && <AnalysisSheet text={sentence} sentence={sentence} lang={lang} onClose={() => setAnalyze(false)} />}
     </>
   )
 }

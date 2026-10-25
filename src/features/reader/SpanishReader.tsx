@@ -11,14 +11,13 @@ import {
   IconTranslate,
   type IconProps,
 } from '../../shared/ui/icons'
-import { getSettings, READER_CLASSES } from '../../lib/settings'
 import { Card } from '../../shared/ui/Card'
-import { Reveal } from '../../shared/ui/Reveal'
 import { Button } from '../../shared/ui/Button'
 import { BackButton, BackHeader } from '../../shared/ui/BackButton'
 import { TabPicker } from '../../shared/ui/TabPicker'
 import { speak } from '../../lib/speech'
 import { TappableText, WordSheet, type WordPick } from '../../components/WordSheet'
+import { ReadingScreen } from './ReadingScreen'
 import {
   spanishDialogues,
   spanishLevels,
@@ -134,53 +133,17 @@ function ReadingView({
   reading: SpanishReading
   onBack: () => void
 }) {
-  const [selected, setSelected] = useState<WordPick | null>(null)
-  const [openRu, setOpenRu] = useState<Set<number>>(new Set())
-
-  const toggleRu = (i: number) =>
-    setOpenRu((prev) => {
-      const next = new Set(prev)
-      if (next.has(i)) next.delete(i)
-      else next.add(i)
-      return next
-    })
-
+  // тот же экран чтения, что у английских текстов (макет d6); перевод абзаца — по кнопке
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-3">
-        <BackButton onClick={onBack} />
-        <div className="min-w-0">
-          <h1 className="truncate text-xl font-medium tracking-tight">{reading.title}</h1>
-          <p className="truncate text-sm text-fg-muted">{reading.titleRu}</p>
-        </div>
-      </div>
-
-      <Card className="flex flex-col gap-4">
-        {reading.paragraphs.map((p, i) => (
-          <div key={i}>
-            <p className={READER_CLASSES[getSettings().readerSize]}>
-              <TappableText text={p.es} onSelect={setSelected} />
-            </p>
-            <button
-              onClick={() => toggleRu(i)}
-              className="mt-1 inline-flex min-h-[44px] items-center gap-1 text-xs font-semibold text-accent-strong"
-            >
-              <IconTranslate size={14} />
-              {openRu.has(i) ? 'Скрыть перевод' : 'Перевод'}
-            </button>
-            <Reveal open={openRu.has(i)}>
-              <p className="mt-1 rounded-tile bg-surface px-3 py-2 text-sm text-fg-faint">
-                {p.ru}
-              </p>
-            </Reveal>
-          </div>
-        ))}
-      </Card>
-
-      {selected && (
-        <WordSheet word={selected.word} sentence={selected.sentence} lang="es" onClose={() => setSelected(null)} />
-      )}
-    </div>
+    <ReadingScreen
+      title={reading.title}
+      subtitle={reading.titleRu}
+      backLabel="Тексты"
+      onBack={onBack}
+      level={reading.level}
+      lang="es"
+      paragraphs={reading.paragraphs.map((p) => ({ text: p.es, ru: p.ru }))}
+    />
   )
 }
 

@@ -3,10 +3,9 @@ import { Card } from '../../shared/ui/Card'
 import { GuidedDone } from '../dashboard'
 import { BackHeader } from '../../shared/ui/BackButton'
 import { TabPicker } from '../../shared/ui/TabPicker'
-import { MarkableText } from '../../components/MarkableText'
 import { useLanguage } from '../../context/LanguageContext'
+import { ReadingScreen, toParagraphs } from './ReadingScreen'
 import { getUserLevel } from '../../lib/level'
-import { getSettings, READER_CLASSES } from '../../lib/settings'
 // SpanishReader тянет весь испанский контент (data/spanish, ~246КБ). Статический
 // импорт грузил его на «Учёбе» ДАЖЕ английскому ученику, который его не увидит.
 // Лениво: испанские данные приезжают только когда язык реально ES.
@@ -167,15 +166,16 @@ function EnglishReaderPage({
 
 function Reader({ text, onBack }: { text: SampleText; onBack: () => void }) {
   return (
-    <div className="flex flex-col gap-4">
-      <BackHeader onBack={onBack} title={text.title} />
-
-      <Card>
-        <MarkableText text={text.body} lang="en" className={READER_CLASSES[getSettings().readerSize]} />
-      </Card>
-
-      {/* ведомое занятие: текст открыт — шаг чтения сделан, «Дальше» покажет каркас под текстом */}
-      <GuidedDone step="reader" />
-    </div>
+    <ReadingScreen
+      title={text.title}
+      backLabel="Тексты"
+      onBack={onBack}
+      level={text.level}
+      lang="en"
+      paragraphs={toParagraphs(text.body)}
+      tools
+      // ведомое занятие: текст открыт — шаг чтения сделан, «Дальше» покажет каркас под текстом
+      footer={<GuidedDone step="reader" />}
+    />
   )
 }

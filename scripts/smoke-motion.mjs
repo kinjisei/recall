@@ -131,7 +131,8 @@ function checkThinkingClass() {
   const places = [
     'src/features/conversation/ConversationPage.tsx',
     'src/features/quests/QuestsPage.tsx',
-    'src/components/WordSheet.tsx',
+    // перевод слова: шторка и панель d6 — общие WordFacts (до 4д-4в жил в WordSheet)
+    'src/components/WordDetails.tsx',
     'src/components/PhraseSheet.tsx',
     'src/components/AnalysisSheet.tsx',
     'src/components/RoundReview.tsx',

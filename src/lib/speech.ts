@@ -41,7 +41,7 @@ export function getEnglishVoices(): SpeechSynthesisVoice[] {
 /** Озвучить текст. По умолчанию английский; opts.lang = 'es' — испанский. */
 export function speak(
   text: string,
-  opts?: { rate?: number; voice?: string; lang?: AppLang },
+  opts?: { rate?: number; voice?: string; lang?: AppLang; /** Дочитал или остановлен — «Слушать текст» в читалке. */ onEnd?: () => void },
 ): void {
   if (typeof window === 'undefined' || !window.speechSynthesis) return
   const lang = opts?.lang ?? 'en'
@@ -58,9 +58,19 @@ export function speak(
     voices.find((v) => v.lang.toLowerCase() === bcp.toLowerCase()) ||
     voices[0]
   if (chosen) u.voice = chosen
+  if (opts?.onEnd) {
+    const end = opts.onEnd
+    u.onend = () => end()
+    u.onerror = () => end()
+  }
 
   window.speechSynthesis.cancel()
   window.speechSynthesis.speak(u)
+}
+
+/** Остановить озвучку («Стоп» у «Слушать текст»). */
+export function stopSpeaking(): void {
+  if (typeof window !== 'undefined') window.speechSynthesis?.cancel()
 }
 
 // --- Сравнение произнесённого с целевой фразой ---
