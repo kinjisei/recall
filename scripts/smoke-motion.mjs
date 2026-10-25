@@ -166,9 +166,14 @@ function checkAnswerPopClass() {
     'src/features/grammar/ConjugationSection.tsx',
     'src/features/flashcards/WordCheckRunner.tsx',
   ]
-  const missing = places.filter(
-    (p) => !readFileSync(join(ROOT, p), 'utf8').includes('animate-answer-pop'),
-  )
+  // место празднует само (класс в файле) или общими деталями упражнения
+  // (shared/ui/roundParts: вариант с pop и итог «Верно!» — с тем же классом)
+  const parts = readFileSync(join(ROOT, 'src/shared/ui/roundParts.tsx'), 'utf8')
+  const partsPop = (parts.match(/animate-answer-pop/g) ?? []).length >= 2
+  const missing = places.filter((p) => {
+    const src = readFileSync(join(ROOT, p), 'utf8')
+    return !(src.includes('animate-answer-pop') || (partsPop && (/\bpop=\{/.test(src) || /<RoundFeedback ok[\s>]/.test(src) || /<Solved\b/.test(src))))
+  })
   check(
     'верный ответ отмечен во всех десяти местах',
     missing.length === 0,

@@ -35,7 +35,9 @@ export async function shotsSchedule({ screen, sql, t }) {
 //                      смотря, верный ли он: ответы перемешаны);
 //   exercise-<режим> — остальные игры «Практики» в той же рамке раунда
 //                      (содержимое по d5 — 4д-4б-2): Значения, Спринт,
-//                      Диктант, Собери фразу, «Выбери форму».
+//                      Диктант, Собери фразу, «Выбери форму»;
+//   exercise-lesson  — тот же движок упражнений в карточке: урок грамматики
+//                      (так же — материал преподавателя).
 // Слова — колода «Мой словарь» из засеянной студии. AI не вызывается.
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 const openMode = (title, after, ready = 'button[data-key="1"]') => async (page) => {
@@ -68,5 +70,16 @@ export async function shotsExercise({ screen, a }) {
     { name: 'exercise-dictation', path: '/practice?g=words', expect: /Диктант/, prepare: openMode('Диктант', null, 'input') },
     { name: 'exercise-sentence', path: '/practice?g=words', expect: /Собери фразу/, prepare: openMode('Собери фразу', null, 'h1') },
     { name: 'exercise-grammar', path: '/practice?g=grammar', expect: /Выбери форму/, prepare: openMode('Выбери форму') },
+    // упражнение в карточке — урок грамматики (тот же движок, что в материалах)
+    {
+      name: 'exercise-lesson',
+      path: '/grammar?lesson=1',
+      expect: /Упражнения/,
+      prepare: async (page) => {
+        await page.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.textContent.trim().startsWith('Упражнения'))?.click())
+        await page.waitForSelector('button[data-key="1"], input[placeholder="Твой ответ…"]', { timeout: 8000 }).catch(() => {})
+        await sleep(800)
+      },
+    },
   ])
 }

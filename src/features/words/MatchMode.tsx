@@ -19,6 +19,7 @@ import { loadGamePool, type GamePool, type PoolItem } from '../../lib/wordPool'
 import { markWrong, pickWords, shuffle } from './gameUtils'
 import { GameLoading, EmptyPool } from './GameShell'
 import { RoundFrame } from '../../shared/ui/RoundFrame'
+import { RoundFooter, RoundHint, RoundOption, RoundTask } from '../../shared/ui/roundParts'
 import type { AppLang } from '../../types'
 
 const PAIRS = 6
@@ -210,22 +211,21 @@ function MatchRound({
     )
   }
 
-  // active:scale — тактильный отклик на тап (у disabled-ячеек не срабатывает)
-  const cellBase =
-    'min-h-11 rounded-control border px-3 py-2.5 text-left text-sm transition-[transform,background-color,border-color,color] duration-150 active:scale-[0.97] disabled:active:scale-100'
-
+  // ячейки — варианты d5 (shared/ui/roundParts): выбранное слово — в рамке фокуса,
+  // сошедшаяся пара — зелёным с «клевком», промах — красной вспышкой
   return (
     <RoundFrame title="Значения" at={Math.min(matched.size + 1, pairs.length)} total={pairs.length} results={found} onExit={onBack}>
-      <p className="text-sm text-fg-muted">
-        {lang === 'en'
-          ? 'Нажми слово слева, затем его значение справа — по-английски.'
-          : 'Нажми слово слева, затем его перевод справа.'}
-      </p>
+      <div className="flex flex-col gap-1">
+        <RoundTask>Соедини пары</RoundTask>
+        <p className="text-sm text-fg-secondary">
+          {lang === 'en' ? 'Нажми слово слева, затем его значение справа — по-английски.' : 'Нажми слово слева, затем его перевод справа.'}
+        </p>
+      </div>
 
       {/* Одна сетка на оба столбца: слово и значение стоят в ОДНОМ ряду,
           поэтому короткое слово растягивается по высоте длинного значения
           и пары не разъезжаются по вертикали. */}
-      <div className="grid grid-cols-[minmax(28%,34%)_1fr] gap-x-2.5 gap-y-2">
+      <div className="mt-2 grid grid-cols-[minmax(28%,34%)_1fr] gap-x-2.5 gap-y-2.5">
         {left.map((l, row) => {
           const r = right[row]
           // right — та же перетасовка pairs, что и left, длины совпадают;
@@ -233,51 +233,40 @@ function MatchRound({
           if (!r) return null
           const lDone = matched.has(l.id)
           const rDone = matched.has(r.id)
-          const sel = selected === l.id
-          const isWrong = wrong === r.id
-          // пара сошлась — короткий «клевок» (тот же класс, что в остальных играх)
-          const doneCls =
-            'border-success/60 bg-success/12 text-success-soft-fg animate-answer-pop'
           return (
             <Fragment key={l.id}>
-              <button
+              <RoundOption
+                state={lDone ? 'ok' : selected === l.id ? 'sel' : 'idle'}
+                pop={lDone}
+                disabled={lDone}
+                className="break-words"
                 onClick={() => {
                   if (lDone) return
                   setSelected(l.id)
                   speak(l.item.term, { lang })
                 }}
-                disabled={lDone}
-                className={`${cellBase} flex items-center font-medium ${
-                  lDone
-                    ? doneCls
-                    : sel
-                      ? 'border-accent-line bg-accent/14'
-                      : 'border-tint/[0.10]'
-                }`}
               >
-                <span className="break-words">{l.item.term}</span>
-              </button>
-              <button
-                onClick={() => pickRight(r.id)}
+                {l.item.term}
+              </RoundOption>
+              <RoundOption
+                state={rDone ? 'ok' : wrong === r.id ? 'bad' : 'idle'}
+                pop={rDone}
                 disabled={rDone}
-                className={`${cellBase} flex items-center text-[13px] leading-snug ${
-                  rDone
-                    ? doneCls
-                    : isWrong
-                      ? 'border-danger/70 bg-danger/12'
-                      : 'border-tint/[0.10]'
-                }`}
+                className="py-2 text-sm! leading-snug @xl/round:text-base!"
+                onClick={() => pickRight(r.id)}
               >
-                <span>{r.meaning}</span>
-              </button>
+                {r.meaning}
+              </RoundOption>
             </Fragment>
           )
         })}
       </div>
 
-      <p className="text-center text-sm text-fg-muted">
-        Найдено: {matched.size} / {pairs.length}
-      </p>
+      <RoundFooter>
+        <RoundHint>
+          Найдено: {matched.size} из {pairs.length}
+        </RoundHint>
+      </RoundFooter>
     </RoundFrame>
   )
 }

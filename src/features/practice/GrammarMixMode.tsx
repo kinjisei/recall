@@ -16,6 +16,7 @@ import { addMistake, removeMistake } from '../../lib/mistakes'
 import { getUserLevel } from '../../lib/level'
 import { shuffle } from '../../lib/wordPool'
 import { KEY_EXIT, RoundFrame, type RoundKey } from '../../shared/ui/RoundFrame'
+import { RoundTask } from '../../shared/ui/roundParts'
 import type { AppLang, GrammarExercise, GrammarTopic } from '../../types'
 import { Loading } from '../../shared/ui/Loading'
 import { useAsyncData } from '../../shared/lib/useAsyncData'
@@ -183,10 +184,11 @@ export function GrammarMixMode({
 
   return (
     <RoundFrame title={title} at={index + 1} total={items.length} results={answers} keys={keys} onExit={onBack}>
-      <p className="text-sm text-fg-muted">Тема: {current.topicTitle}</p>
+      <RoundTask>Тема: {current.topicTitle}</RoundTask>
       <ExerciseView
         key={`${current.topicId}-${current.ex}-${index}`}
         exercise={current.exercise}
+        bare
         {...review.handlers(current.exercise, onAnswered)}
         onNext={next}
         isLast={index + 1 >= items.length}

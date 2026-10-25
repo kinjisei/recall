@@ -17,9 +17,9 @@ import type { PoolItem } from '../../lib/wordPool'
 import { useIsDesktop } from '../../shared/lib/useMediaQuery'
 import type { AppLang } from '../../types'
 import { Button } from '../../shared/ui/Button'
-import { IconCheck, IconCheckCircle, IconClose, IconSpeaker, IconXCircle } from '../../shared/ui/icons'
 import { useRoundKeys } from '../../shared/ui/roundKeys'
 import { KEY_EXIT, RoundFrame, type RoundKey } from '../../shared/ui/RoundFrame'
+import { RoundFeedback, RoundFooter, RoundHint, RoundListen, RoundOption, RoundPrompt, RoundTask, type OptionState } from '../../shared/ui/roundParts'
 import { markWrong } from './gameUtils'
 
 export interface Question {
@@ -30,16 +30,6 @@ export interface Question {
   item: PoolItem
   /** Что произносить вслух (аудирование). */
   say?: string
-}
-
-type OptionState = 'idle' | 'sel' | 'ok' | 'bad' | 'off'
-
-const OPTION_LOOK: Record<OptionState, string> = {
-  idle: 'bg-surface text-fg shadow-card inset-ring inset-ring-line hover:bg-row-press active:scale-[0.99]',
-  sel: 'bg-accent-soft text-accent-soft-fg inset-ring-2 inset-ring-focus',
-  ok: 'bg-success-soft text-fg inset-ring-2 inset-ring-success',
-  bad: 'bg-danger-soft text-fg inset-ring-2 inset-ring-danger',
-  off: 'bg-surface text-fg shadow-card inset-ring inset-ring-line opacity-55',
 }
 
 export function QuizRunner({
@@ -161,93 +151,38 @@ export function QuizRunner({
   const right = picked === q.answer
   const pair = `${q.item.term} — ${q.item.translation}`
   const last = index + 1 >= questions.length
-  const longPrompt = q.prompt.length > 24
 
   return frame(
     <>
       <div className="flex flex-col gap-2">
-        <p className="text-body font-medium text-fg-muted">{task}</p>
-        {q.prompt ? (
-          <div className="flex items-center gap-3.5">
-            <p
-              className={`min-w-0 font-semibold tracking-tight text-fg ${
-                longPrompt ? 'text-xl leading-snug @xl/round:text-2xl' : 'text-3xl leading-tight @xl/round:text-headline'
-              }`}
-            >
-              {q.prompt}
-            </p>
-            {say && (
-              <button
-                type="button"
-                onClick={hear}
-                aria-label="Озвучить"
-                className="flex size-12 flex-none items-center justify-center rounded-full bg-accent-soft text-accent-soft-fg"
-              >
-                <IconSpeaker size={22} />
-              </button>
-            )}
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={hear}
-            aria-label="Прослушать ещё раз"
-            className="flex size-20 items-center justify-center self-start rounded-full bg-accent-soft text-accent-soft-fg"
-          >
-            <IconSpeaker size={32} />
-          </button>
-        )}
+        <RoundTask>{task}</RoundTask>
+        {q.prompt ? <RoundPrompt text={q.prompt} onSay={say ? hear : undefined} /> : <RoundListen onSay={hear} />}
       </div>
 
       <div className="mt-2 flex flex-col gap-2.5">
-        {q.options.map((opt, i) => {
-          const state = stateOf(i)
-          // празднуем только собственный верный ответ (см. exercises.tsx)
-          const pop = picked === i && i === q.answer ? ' animate-answer-pop' : ''
-          return (
-            <button
-              key={i}
-              type="button"
-              data-key={i + 1}
-              data-state={state}
-              aria-pressed={state === 'sel' || undefined}
-              onClick={() => choose(i)}
-              disabled={picked !== null}
-              className={`flex min-h-14 items-center gap-0 rounded-control px-4 text-left text-base font-medium transition-[transform,background-color,color,box-shadow] duration-150 @xl/round:min-h-15 @xl/round:pl-3.5 @xl/round:text-lg ${OPTION_LOOK[state]}${pop}`}
-            >
-              <span className="min-w-0 flex-1">{opt}</span>
-              {state === 'ok' && (
-                <span className="ml-3 flex flex-none items-center gap-1.5 text-sm font-semibold text-success-strong">
-                  <IconCheck size={16} aria-hidden />
-                  {picked === i ? 'Верно' : 'Правильно'}
-                </span>
-              )}
-              {state === 'bad' && (
-                <span className="ml-3 flex flex-none items-center gap-1.5 text-sm font-semibold text-danger-strong">
-                  <IconClose size={16} aria-hidden />
-                  Твой ответ
-                </span>
-              )}
-            </button>
-          )
-        })}
+        {q.options.map((opt, i) => (
+          <RoundOption
+            key={i}
+            n={i + 1}
+            state={stateOf(i)}
+            mark={i === q.answer ? (picked === i ? 'Верно' : 'Правильно') : 'Твой ответ'}
+            // празднуем только собственный верный ответ (см. exercises.tsx)
+            pop={picked === i && i === q.answer}
+            disabled={picked !== null}
+            onClick={() => choose(i)}
+          >
+            {opt}
+          </RoundOption>
+        ))}
       </div>
 
-      <div className="mt-2 flex flex-col gap-3.5 @xl/round:flex-row @xl/round:items-center">
+      <RoundFooter>
         {picked === null ? (
-          <p className="flex-1 text-sm text-fg-muted">
-            {twoStep ? 'Выбери вариант мышью или клавишей 1–4' : 'Нажми на вариант — ответ проверится сразу'}
-          </p>
+          <RoundHint>{twoStep ? 'Выбери вариант мышью или клавишей 1–4' : 'Нажми на вариант — ответ проверится сразу'}</RoundHint>
         ) : (
-          <div role="status" className={`flex flex-1 items-center gap-2.5 text-base font-semibold ${right ? 'text-success-strong' : 'text-danger-strong'}`}>
-            {right ? <IconCheckCircle size={22} aria-hidden className="flex-none" /> : <IconXCircle size={22} aria-hidden className="flex-none" />}
-            <span className="min-w-0">
-              {right ? 'Верно!' : 'Не совсем'}
-              <span className="block text-sm font-normal text-fg-secondary">
-                {right ? pair : `${pair}. ${q.item.card ? 'Слово вернётся в повторение' : 'Слово добавлено в повторение'}`}
-              </span>
-            </span>
-          </div>
+          <RoundFeedback ok={right}>
+            {right ? pair : `${pair}. ${q.item.card ? 'Слово вернётся в повторение' : 'Слово добавлено в повторение'}`}
+          </RoundFeedback>
         )}
         {picked !== null ? (
           <Button className="flex-none @xl/round:px-5.5!" onClick={advance}>
@@ -260,7 +195,7 @@ export function QuizRunner({
             </Button>
           )
         )}
-      </div>
+      </RoundFooter>
     </>,
   )
 }

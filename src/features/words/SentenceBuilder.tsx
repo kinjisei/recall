@@ -2,7 +2,6 @@
 // Материал — встроенные фразы «Речи» (60 английских / 135 испанских).
 import { useEffect, useMemo, useState } from 'react'
 import { IconSpeaker } from '../../shared/ui/icons'
-import { Card } from '../../shared/ui/Card'
 import { Button } from '../../shared/ui/Button'
 import { RoundResult } from '../../components/RoundResult'
 import { orderHint, shouldReveal } from '../../lib/selfCorrect'
@@ -13,6 +12,7 @@ import { speak } from '../../lib/speech'
 import { spanishSentences } from '../../data/spanish'
 import { englishSentences } from '../../data/english'
 import { RoundFrame } from '../../shared/ui/RoundFrame'
+import { MistakeHint, RevealAnswer, RoundBuild, RoundFeedback, RoundFooter, RoundHint, RoundPrompt, RoundTask } from '../../shared/ui/roundParts'
 import { normalize, sample } from './gameUtils'
 import type { AppLang } from '../../types'
 
@@ -150,7 +150,6 @@ function BuildTask({
   const [hint, setHint] = useState<string | null>(null)
   const checked = solved || revealed
 
-  const used = new Set(built.map((b) => b.i))
   const ok = normalize(built.map((b) => b.w).join(' ')) === normalize(task.target)
 
   const check = () => {
@@ -167,101 +166,62 @@ function BuildTask({
   }
 
   return (
-    <Card className="flex flex-col gap-3">
-      <p className="text-sm text-fg-muted">
-        Переведи на {lang === 'es' ? 'испанский' : 'английский'}:
-      </p>
-      <p className="text-lg font-medium">{task.ru}</p>
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2">
+        <RoundTask>Переведи на {lang === 'es' ? 'испанский' : 'английский'}:</RoundTask>
+        <RoundPrompt text={task.ru} />
+      </div>
 
-      <div
-        className={`min-h-[48px] rounded-control border-2 border-dashed p-2 ${
-          checked ? (ok ? 'border-success' : 'border-danger') : 'border-tint/[0.10]'
-        }`}
-      >
-        <div className="flex flex-wrap gap-2">
-          {built.map((b, i) => (
+      <RoundBuild
+        built={built}
+        bank={shuffled}
+        result={checked ? ok : null}
+        onTake={(item) => setBuilt((arr) => [...arr, item])}
+        onDrop={(i) => setBuilt((arr) => arr.filter((_, j) => j !== i))}
+      />
+
+      {!checked && hint && <MistakeHint text={hint} />}
+      {!checked && attempts > 0 && <RevealAnswer onClick={() => setRevealed(true)} />}
+
+      <RoundFooter>
+        {checked ? (
+          <div className="flex flex-1 items-center gap-2">
+            {solved ? (
+              <RoundFeedback ok title={attempts > 1 ? 'Верно — со второй попытки!' : 'Верно!'}>
+                {task.target}
+              </RoundFeedback>
+            ) : (
+              <RoundFeedback ok={false}>Правильно: {task.target}</RoundFeedback>
+            )}
             <button
-              key={i}
-              onClick={() => !checked && setBuilt((arr) => arr.filter((_, j) => j !== i))}
-              disabled={checked}
-              className="min-h-11 min-w-11 rounded-tag bg-accent px-3 py-1.5 text-sm text-accent-fg"
+              type="button"
+              onClick={() => speak(task.target, { lang })}
+              className="flex size-11 flex-none items-center justify-center rounded-full bg-accent-soft text-accent-soft-fg"
+              aria-label="Озвучить"
             >
-              {b.w}
+              <IconSpeaker size={18} />
             </button>
-          ))}
-          {built.length === 0 && (
-            <span className="px-1 py-1 text-sm text-fg-muted">нажимай слова снизу по порядку</span>
-          )}
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        {shuffled.map((item) => (
-          <button
-            key={item.i}
-            onClick={() => !checked && setBuilt((arr) => [...arr, item])}
-            disabled={checked || used.has(item.i)}
-            className={`min-h-11 min-w-11 rounded-tag border px-3 py-1.5 text-sm ${
-              used.has(item.i)
-                ? 'border-tint/[0.08] text-fg-faint'
-                : 'border-tint/[0.10]'
-            }`}
-          >
-            {item.w}
-          </button>
-        ))}
-      </div>
-
-      {!checked && hint && (
-        <p className="rounded-tile bg-warning/10 px-3 py-2 text-sm text-warning-soft-fg">
-          {hint} <span className="text-fg-muted">Попробуй ещё раз.</span>
-        </p>
-      )}
-      {!checked && attempts > 0 && (
-        <button
-          onClick={() => setRevealed(true)}
-          className="self-start text-sm font-medium text-accent-strong"
-        >
-          Показать ответ
-        </button>
-      )}
-
-      {checked && (
-        <div className="flex items-center gap-2 text-sm">
-          {solved ? (
-            <span className="animate-answer-pop font-semibold text-success-strong">
-              {attempts > 1 ? 'Верно — со второй попытки ✓' : 'Верно! ✓'}
-            </span>
-          ) : (
-            <span>
-              <span className="text-danger-strong">Правильно: </span>
-              <span className="font-semibold text-success-strong">{task.target}</span>
-            </span>
-          )}
-          <button
-            onClick={() => speak(task.target, { lang })}
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-tint/[0.08] text-fg-secondary"
-            aria-label="Озвучить"
-          >
-            <IconSpeaker size={18} />
-          </button>
-        </div>
-      )}
-
-      {checked ? (
-        <Button onClick={onNext}>{isLast ? 'Завершить' : 'Дальше →'}</Button>
-      ) : (
-        <div className="flex gap-2">
-          <Button onClick={check} disabled={built.length !== task.words.length} className="flex-1">
-            Проверить
+          </div>
+        ) : (
+          <RoundHint>Собери фразу из слов и нажми «Проверить»</RoundHint>
+        )}
+        {checked ? (
+          <Button className="flex-none @xl/round:px-5.5!" onClick={onNext}>
+            {isLast ? 'Итоги' : 'Дальше'}
           </Button>
-          {built.length > 0 && (
-            <Button variant="ghost" onClick={() => setBuilt([])}>
-              Сброс
+        ) : (
+          <div className="flex flex-none gap-2">
+            {built.length > 0 && (
+              <Button variant="ghost" onClick={() => setBuilt([])}>
+                Сброс
+              </Button>
+            )}
+            <Button onClick={check} disabled={built.length !== task.words.length} className="flex-1 @xl/round:px-5.5!">
+              Проверить
             </Button>
-          )}
-        </div>
-      )}
-    </Card>
+          </div>
+        )}
+      </RoundFooter>
+    </div>
   )
 }

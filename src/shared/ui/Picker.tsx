@@ -13,6 +13,7 @@
 import { useState } from 'react'
 import { IconCaretDown, IconCheck } from './icons'
 import { Sheet } from './Sheet'
+import { fieldClass } from './TextField'
 
 export interface PickerOption<T extends string> {
   id: T
@@ -21,8 +22,9 @@ export interface PickerOption<T extends string> {
   hint?: string
 }
 
-const TRIGGER =
-  'flex w-full items-center justify-between gap-2 rounded-tag border border-tint/[0.10] bg-input px-3 py-2 text-left text-sm outline-none focus:border-accent-line disabled:opacity-60'
+// по умолчанию — общее поле s3 (48): своё поле 38 было меньше цели 44 (UX-аудит,
+// «Материал под себя», Ф2.17-4д-4б)
+const TRIGGER = `${fieldClass()} flex items-center justify-between gap-2.5 text-left disabled:opacity-60`
 
 export function Picker<T extends string>({
   value,

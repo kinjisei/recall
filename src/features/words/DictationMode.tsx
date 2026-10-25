@@ -6,7 +6,6 @@
 //   • перевод-подсказка скрыт за кнопкой (не подсматриваешь заранее).
 // ============================================================================
 import { useCallback, useEffect, useState } from 'react'
-import { IconSpeaker } from '../../shared/ui/icons'
 import { Card } from '../../shared/ui/Card'
 import { Button } from '../../shared/ui/Button'
 import { RoundResult } from '../../components/RoundResult'
@@ -25,6 +24,7 @@ import {
 import { markWrong, sample } from './gameUtils'
 import { GameLoading } from './GameShell'
 import { KEY_EXIT, RoundFrame, type RoundKey } from '../../shared/ui/RoundFrame'
+import { MistakeHint, RevealAnswer, RoundFeedback, RoundFooter, RoundHint, RoundListen, RoundTask } from '../../shared/ui/roundParts'
 import type { AppLang } from '../../types'
 
 const ROUND = 8
@@ -186,99 +186,77 @@ export function DictationMode({ lang, onBack }: { lang: AppLang; onBack: () => v
 
       {empty ? (
         <Card className="text-center">
-          <p className="font-medium">
-            {src === 'deck' ? 'Пока нет своих слов' : 'Нет слов для диктанта'}
-          </p>
+          <p className="font-medium">{src === 'deck' ? 'Пока нет своих слов' : 'Нет слов для диктанта'}</p>
           <p className="mt-1 text-sm text-fg-muted">
-            {src === 'deck'
-              ? 'Добавь слова в «Учёба» — или потренируйся на новых.'
-              : 'Попробуй другой набор.'}
+            {src === 'deck' ? 'Добавь слова в «Учёба» — или потренируйся на новых.' : 'Попробуй другой набор.'}
           </p>
         </Card>
       ) : (
         <>
-          <Card className="flex flex-col gap-3">
-            <button
-              onClick={() => current && speak(current.term, { lang })}
-              className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-accent-soft text-accent-soft-fg"
-              aria-label="Прослушать ещё раз"
-            >
-              <IconSpeaker size={32} />
-            </button>
-            <p className="text-center text-sm text-fg-muted">
-              Напиши слово, которое услышишь
-            </p>
+          <div className="flex flex-col gap-3">
+            <RoundTask>Напиши слово, которое услышишь</RoundTask>
+            <RoundListen onSay={() => current && speak(current.term, { lang })} />
+          </div>
 
-            <input
-              aria-label="Услышанное слово"
-              className={`min-h-11 w-full rounded-tile border bg-input px-3 py-2 outline-none ${
-                checked === null
-                  ? 'border-tint/[0.10] focus:border-accent-line'
-                  : checked
-                    ? 'border-success'
-                    : 'border-danger'
-              }`}
-              placeholder="Слово…"
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && check()}
-              disabled={checked !== null}
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="off"
-            />
+          {/* поле — как вариант d5: поверхность и черта, итог — зелёным или красным */}
+          <input
+            aria-label="Услышанное слово"
+            className={`mt-2 min-h-14 w-full rounded-control px-4 text-lg text-fg outline-none placeholder:text-fg-muted @xl/round:min-h-15 ${
+              checked === null
+                ? 'bg-surface shadow-card inset-ring inset-ring-line focus:inset-ring-2 focus:inset-ring-focus'
+                : checked
+                  ? 'bg-success-soft inset-ring-2 inset-ring-success'
+                  : 'bg-danger-soft inset-ring-2 inset-ring-danger'
+            }`}
+            placeholder="Слово…"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && check()}
+            disabled={checked !== null}
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+          />
 
-            {/* подсказка-перевод — только по кнопке, чтобы не подсматривать */}
-            {checked === null && current?.translation && (
-              revealed ? (
-                <p className="text-center text-sm text-fg-muted">
-                  подсказка: «{current.translation}»
-                </p>
-              ) : (
-                <button
-                  onClick={() => setRevealed(true)}
-                  className="mx-auto min-h-11 text-sm font-medium text-accent-strong"
-                >
-                  Показать подсказку
-                </button>
-              )
-            )}
+          {checked === null && hint && <MistakeHint text={hint} />}
+          {/* подсказка-перевод — только по кнопке, чтобы не подсматривать; ответ — после попытки */}
+          {checked === null && (current?.translation || attempts > 0) && (
+            <div className="flex flex-wrap gap-x-4">
+              {current?.translation &&
+                (revealed ? (
+                  <p className="flex min-h-11 items-center text-sm text-fg-muted">подсказка: «{current.translation}»</p>
+                ) : (
+                  <button type="button" onClick={() => setRevealed(true)} className="min-h-11 text-sm font-medium text-accent-strong">
+                    Показать подсказку
+                  </button>
+                ))}
+              {attempts > 0 && <RevealAnswer onClick={() => setChecked(false)} />}
+            </div>
+          )}
 
-            {checked === null && hint && (
-              <p className="rounded-tile bg-warning/10 px-3 py-2 text-sm text-warning-soft-fg">
-                {hint} <span className="text-fg-muted">Попробуй ещё раз.</span>
-              </p>
-            )}
-            {checked === null && attempts > 0 && (
-              <button
-                onClick={() => setChecked(false)}
-                className="mx-auto min-h-11 text-sm font-medium text-accent-strong"
-              >
-                Показать ответ
-              </button>
-            )}
-            {checked === false && current && (
-              <p className="text-sm">
-                <span className="text-danger-strong">Правильно: </span>
-                <span className="font-semibold text-success-strong">{current.term}</span>
-              </p>
-            )}
-            {checked === true && (
-              <p className="animate-answer-pop text-sm font-semibold text-success-strong">
-                {attempts > 1 ? 'Верно — со второй попытки!' : 'Верно!'}
-              </p>
-            )}
-
+          <RoundFooter>
             {checked === null ? (
-              <Button onClick={check} disabled={!value.trim()}>
+              <RoundHint>Впиши слово и нажми Enter или «Проверить»</RoundHint>
+            ) : checked ? (
+              <RoundFeedback ok title={attempts > 1 ? 'Верно — со второй попытки!' : 'Верно!'}>
+                {current?.translation ? `${current.term} — ${current.translation}` : undefined}
+              </RoundFeedback>
+            ) : (
+              <RoundFeedback ok={false}>
+                Правильно: {current?.term}
+                {current?.translation ? ` — ${current.translation}` : ''}
+              </RoundFeedback>
+            )}
+            {checked === null ? (
+              <Button className="flex-none @xl/round:px-5.5!" onClick={check} disabled={!value.trim()}>
                 Проверить
               </Button>
             ) : (
-              <Button onClick={next}>
-                {index + 1 >= words!.length ? 'Итоги' : 'Дальше →'}
+              <Button className="flex-none @xl/round:px-5.5!" onClick={next}>
+                {index + 1 >= words!.length ? 'Итоги' : 'Дальше'}
               </Button>
             )}
-          </Card>
+          </RoundFooter>
         </>
       )}
     </RoundFrame>

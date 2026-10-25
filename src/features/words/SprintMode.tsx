@@ -5,7 +5,6 @@
 // ============================================================================
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { IconCheck, IconTimer, IconClose } from '../../shared/ui/icons'
-import { Card } from '../../shared/ui/Card'
 import { RoundResult } from '../../components/RoundResult'
 import type { ReviewItem } from '../../components/RoundReview'
 import { logActivity } from '../../lib/activity'
@@ -18,11 +17,14 @@ import {
 } from '../../lib/wordPool'
 import { markWrong, shuffle } from './gameUtils'
 import { EmptyPool, GameLoading } from './GameShell'
-import { RoundFrame } from '../../shared/ui/RoundFrame'
+import { useRoundKeys } from '../../shared/ui/roundKeys'
+import { KEY_EXIT, RoundFrame, type RoundKey } from '../../shared/ui/RoundFrame'
+import { OPTION_LOOK, OPTION_SIZE, RoundPrompt, RoundTask } from '../../shared/ui/roundParts'
 import type { AppLang } from '../../types'
 
 const SECONDS = 60
 const TITLE = 'Спринт'
+const KEYS: RoundKey[] = [{ keys: ['1'], label: 'неверно' }, { keys: ['2'], label: 'верно' }, KEY_EXIT]
 
 interface Pair {
   item: PoolItem
@@ -104,6 +106,11 @@ export function SprintMode({ lang, onBack }: { lang: AppLang; onBack: () => void
     if (done && total > 0) void logActivity('practice')
   }, [done, total])
 
+  // клавиши (d5 — клавиши раунда сбоку): 1 — «Неверно», 2 — «Верно»;
+  // ответ берётся из ref — он объявлен ниже, после ранних return
+  const answerRef = useRef<(saidTrue: boolean) => void>(() => {})
+  useRoundKeys({ pick: (i) => i < 2 && answerRef.current(i === 1) }, running)
+
   if (empty) return <EmptyPool title={TITLE} onBack={onBack} />
   if (!items) return <GameLoading title={TITLE} onBack={onBack} />
 
@@ -163,52 +170,58 @@ export function SprintMode({ lang, onBack }: { lang: AppLang; onBack: () => void
     flashTimer.current = setTimeout(() => setFlash(null), 250)
     setIndex((i) => i + 1)
   }
+  answerRef.current = answer
+
+  // кнопки ответа — варианты d5 с клавишами 1 и 2 (номер рисует index.css)
+  const button = (n: number, label: string, Icon: typeof IconCheck, saidTrue: boolean) => (
+    <button
+      type="button"
+      data-key={n}
+      data-state="idle"
+      onClick={() => answer(saidTrue)}
+      className={`${OPTION_SIZE} ${OPTION_LOOK.idle} min-h-16 justify-center gap-2 @xl/round:min-h-16`}
+    >
+      <Icon size={20} aria-hidden />
+      {label}
+    </button>
+  )
 
   return (
-    // рамка раунда без полоски: спринт на время, счёт — строкой ниже и слева
-    // на широком экране; раскладка «по всему экрану»: таймер и слово сверху,
-    // кнопки прижаты к низу
-    <RoundFrame title={TITLE} at={null} total={null} results={results.map((r) => r.ok)} onExit={onBack}>
-    <div className="flex min-h-[calc(100dvh-11rem)] flex-col gap-4">
+    // рамка раунда без полоски: спринт на время; на телефоне — «по всему
+    // экрану»: слово сверху, кнопки прижаты к низу
+    <RoundFrame title={TITLE} at={null} total={null} results={results.map((r) => r.ok)} keys={KEYS} onExit={onBack}>
+      <div className="flex min-h-[calc(100dvh-11rem)] flex-col gap-5 @xl/round:min-h-0">
+        <div className="flex items-center justify-between gap-3">
+          <RoundTask>Верно ли перевод?</RoundTask>
+          <span
+            className={`flex flex-none items-center gap-1.5 rounded-full bg-input px-3 py-1 text-sm font-semibold tabular-nums ${
+              timeLeft <= 10 ? 'text-danger-strong' : 'text-fg-secondary'
+            }`}
+          >
+            <IconTimer size={16} aria-hidden />
+            {timeLeft} с
+          </span>
+        </div>
 
-      <div className="flex items-center justify-between text-sm text-fg-muted">
-        <span className="flex items-center gap-1.5">
-          <IconTimer size={16} />
-          <span className={timeLeft <= 10 ? 'font-bold text-danger-strong' : ''}>{timeLeft} с</span>
-        </span>
-        <span>верно: {correct} / {total}</span>
-      </div>
-
-      <Card
-        className={`items-center gap-2 py-12 text-center transition-colors ${
-          flash === 'ok'
-            ? 'border-success/60! animate-answer-pop'
-            : flash === 'bad'
-              ? 'border-danger/60!'
-              : ''
-        }`}
-      >
-        <p className="text-3xl font-bold">{pair.item.term}</p>
-        <p className="text-xl text-fg-secondary">= {pair.shown} ?</p>
-      </Card>
-
-      <div className="flex-1" />
-
-      <div className="grid grid-cols-2 gap-2.5">
-        <button
-          onClick={() => answer(false)}
-          className="lift flex min-h-16 items-center justify-center gap-2 rounded-control-lg border border-tint/[0.12] font-medium text-fg-secondary"
+        {/* ответ подсвечивает пару на миг: верно — зелёным с «клевком», ошибка — красным */}
+        <div
+          className={`-mx-3 rounded-card px-3 py-4 transition-shadow duration-150 ${
+            flash === 'ok' ? 'animate-answer-pop inset-ring-2 inset-ring-success' : flash === 'bad' ? 'inset-ring-2 inset-ring-danger' : ''
+          }`}
         >
-          <IconClose size={20} /> Неверно
-        </button>
-        <button
-          onClick={() => answer(true)}
-          className="lift flex min-h-16 items-center justify-center gap-2 rounded-control-lg border border-accent-line bg-accent/18 font-medium text-fg"
-        >
-          <IconCheck size={20} /> Верно
-        </button>
+          <RoundPrompt text={pair.item.term} sub={<>= {pair.shown} ?</>} />
+        </div>
+        <p className="text-sm text-fg-muted">
+          верно: {correct} / {total}
+        </p>
+
+        <div className="flex-1 @xl/round:hidden" />
+
+        <div className="grid grid-cols-2 gap-2.5">
+          {button(1, 'Неверно', IconClose, false)}
+          {button(2, 'Верно', IconCheck, true)}
+        </div>
       </div>
-    </div>
     </RoundFrame>
   )
 }

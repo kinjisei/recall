@@ -4,6 +4,12 @@
 // onGiven — необязательный колбэк: каким был ответ ученика (для проверки
 // учителем в материалах).
 //
+// Вид — детали упражнения по макету d5 (shared/ui/roundParts): варианты с
+// номером клавиши и состоянием, поле и фишки в том же языке, итог «Верно! /
+// Не совсем» и главная кнопка внизу. В уроке и материале упражнение — в
+// карточке; в раунде «Практики» (`bare`) — без неё, в рамке раунда
+// (Ф2.17-4д-4б).
+//
 // ⚠️ САМОКОРРЕКЦИЯ. Ошибся — сперва показываем, ГДЕ ошибка, и даём вторую
 // попытку; правильный ответ появляется только после неё или по кнопке
 // «показать ответ». Готовый ответ, выданный сразу, закрывает работу: человек
@@ -14,49 +20,22 @@
 // Иначе «8 из 10» перестаёт значить «знает восемь», и преподаватель планирует
 // урок по завышенной цифре.
 // ============================================================================
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { Card } from '../shared/ui/Card'
 import { Button } from '../shared/ui/Button'
 import { useRoundKeys } from '../shared/ui/roundKeys'
+import { MistakeHint, RevealAnswer, RoundBuild, RoundFeedback, RoundFooter, RoundHint, RoundOption, RoundPrompt, type OptionState } from '../shared/ui/roundParts'
 import { answerMatches, normalizeAnswer } from '../lib/text'
 import { mcqHint, mistakeHint, orderHint, shouldReveal } from '../lib/selfCorrect'
 import type { GrammarExercise } from '../types'
-
-/** Подсказка о месте ошибки — одинаковая на всех типах упражнений. */
-function HintLine({ text }: { text: string }) {
-  return (
-    <p className="rounded-tile bg-warning/10 px-3 py-2 text-sm text-warning-soft-fg">
-      {text} <span className="text-fg-muted">Попробуй ещё раз.</span>
-    </p>
-  )
-}
-
-/** «Показать ответ» — выход для того, кто застрял; не прячем его. */
-function RevealButton({ onClick }: { onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className="self-start text-sm font-medium text-accent-strong"
-    >
-      Показать ответ
-    </button>
-  )
-}
-
-/** Итог после верного ответа. Со второй попытки — так и пишем. */
-function CorrectLine({ attempts }: { attempts: number }) {
-  return (
-    <p className="animate-answer-pop text-sm font-semibold text-success-strong">
-      {attempts > 1 ? 'Верно — со второй попытки ✓' : 'Верно! ✓'}
-    </p>
-  )
-}
 
 export interface ExerciseCallbacks {
   onAnswered: (ok: boolean) => void
   onGiven?: (given: string) => void
   onNext: () => void
   isLast: boolean
+  /** Без карточки — внутри рамки раунда «Практики» (d5). */
+  bare?: boolean
 }
 
 export function ExerciseView({
@@ -72,8 +51,22 @@ export function ExerciseView({
 // и предпросмотр материала; правило «как выглядит верный ответ» должно быть одно.
 export { correctAnswerText } from '../lib/text'
 
+/** Карточка в уроке и материале, без неё — в раунде «Практики». */
+function Shell({ bare, children }: { bare?: boolean; children: ReactNode }) {
+  return bare ? <div className="flex flex-col gap-3">{children}</div> : <Card className="flex flex-col gap-3">{children}</Card>
+}
+
 function NextButton({ onNext, isLast }: { onNext: () => void; isLast: boolean }) {
-  return <Button onClick={onNext}>{isLast ? 'Завершить' : 'Дальше →'}</Button>
+  return (
+    <Button className="flex-none @xl/round:px-5.5!" onClick={onNext}>
+      {isLast ? 'Завершить' : 'Дальше'}
+    </Button>
+  )
+}
+
+/** Итог верного ответа. Со второй попытки — так и пишем. */
+function Solved({ attempts }: { attempts: number }) {
+  return <RoundFeedback ok title={attempts > 1 ? 'Верно — со второй попытки!' : 'Верно!'} />
 }
 
 export function McqExercise({
@@ -82,6 +75,7 @@ export function McqExercise({
   onGiven,
   onNext,
   isLast,
+  bare,
 }: { exercise: Extract<GrammarExercise, { type: 'mcq' }> } & ExerciseCallbacks) {
   // Все неверные варианты, которые человек уже перебрал.
   const [wrong, setWrong] = useState<number[]>([])
@@ -114,43 +108,41 @@ export function McqExercise({
   // короткие варианты (слова) — сеткой 2×2, длинные фразы — столбиком
   const compact = exercise.options.every((o) => o.length <= 16)
   const left = exercise.options.length - wrong.length
+  // ⚠️ Правильный вариант подсвечиваем ТОЛЬКО когда всё кончено. Пока идёт
+  // вторая попытка, зелёная рамка была бы тем же готовым ответом.
+  const stateOf = (i: number): OptionState => {
+    if (wrong.includes(i)) return 'bad'
+    if (!done) return 'idle'
+    return i === exercise.answer ? 'ok' : 'off'
+  }
 
   return (
-    <Card className="flex flex-col gap-3">
-      <p className="text-lg font-medium">{exercise.prompt}</p>
-      <div className={compact ? 'grid grid-cols-2 gap-2' : 'flex flex-col gap-2'}>
-        {exercise.options.map((opt, i) => {
-          const isAnswer = i === exercise.answer
-          const isWrong = wrong.includes(i)
-          let cls = 'border-tint/[0.10] hover:border-accent-line'
-          // ⚠️ Правильный вариант подсвечиваем ТОЛЬКО когда всё кончено. Пока
-          // идёт вторая попытка, зелёная рамка была бы тем же готовым ответом.
-          if (isWrong) cls = 'border-danger bg-danger-soft/40 opacity-60'
-          else if (done) {
-            if (isAnswer) cls = 'border-success bg-success-soft/40'
-            else cls = 'border-tint/[0.08] opacity-60'
-          }
-          // «клевок» только когда человек нашёл ответ сам
-          const pop = solved && isAnswer ? ' animate-answer-pop' : ''
-          return (
-            <button
-              key={i}
-              data-key={i + 1}
-              onClick={() => choose(i)}
-              disabled={done || isWrong}
-              className={`rounded-control border px-4 py-2.5 text-left transition-colors ${cls}${pop}`}
-            >
-              {opt}
-            </button>
-          )
-        })}
+    <Shell bare={bare}>
+      <RoundPrompt text={exercise.prompt} />
+      <div className={`mt-2 ${compact ? 'grid grid-cols-2 gap-2.5' : 'flex flex-col gap-2.5'}`}>
+        {exercise.options.map((opt, i) => (
+          <RoundOption
+            key={i}
+            n={i + 1}
+            state={stateOf(i)}
+            mark={i === exercise.answer ? (solved ? 'Верно' : 'Правильно') : 'Твой ответ'}
+            // «клевок» только когда человек нашёл ответ сам
+            pop={solved && i === exercise.answer}
+            disabled={done || wrong.includes(i)}
+            onClick={() => choose(i)}
+          >
+            {opt}
+          </RoundOption>
+        ))}
       </div>
 
-      {!done && wrong.length > 0 && <HintLine text={mcqHint(left)} />}
-      {!done && wrong.length > 0 && <RevealButton onClick={() => setRevealed(true)} />}
-      {solved && <CorrectLine attempts={attempts} />}
-      {done && <NextButton onNext={onNext} isLast={isLast} />}
-    </Card>
+      {!done && wrong.length > 0 && <MistakeHint text={mcqHint(left)} />}
+      {!done && wrong.length > 0 && <RevealAnswer onClick={() => setRevealed(true)} />}
+      <RoundFooter>
+        {solved ? <Solved attempts={attempts} /> : revealed ? <RoundFeedback ok={false} /> : <RoundHint>Выбери вариант</RoundHint>}
+        {done && <NextButton onNext={onNext} isLast={isLast} />}
+      </RoundFooter>
+    </Shell>
   )
 }
 
@@ -160,6 +152,7 @@ export function FillExercise({
   onGiven,
   onNext,
   isLast,
+  bare,
 }: { exercise: Extract<GrammarExercise, { type: 'fill' }> } & ExerciseCallbacks) {
   const [value, setValue] = useState('')
   const [attempts, setAttempts] = useState(0)
@@ -193,17 +186,18 @@ export function FillExercise({
   useRoundKeys({ enter: () => done && onNext() })
 
   return (
-    <Card className="flex flex-col gap-3">
-      <p className="text-lg font-medium">{exercise.prompt}</p>
+    <Shell bare={bare}>
+      <RoundPrompt text={exercise.prompt} />
+      {/* поле — как вариант d5: поверхность и черта, итог — зелёным или красным */}
       <input
-        className={`min-h-11 w-full rounded-tile border bg-input px-3 py-2 outline-none ${
+        className={`mt-2 min-h-14 w-full rounded-control px-4 text-lg text-fg outline-none placeholder:text-fg-muted @xl/round:min-h-15 ${
           done
             ? solved
-              ? 'border-success'
-              : 'border-danger'
+              ? 'bg-success-soft inset-ring-2 inset-ring-success'
+              : 'bg-danger-soft inset-ring-2 inset-ring-danger'
             : hint
-              ? 'border-warning'
-              : 'border-tint/[0.10] focus:border-accent-line'
+              ? 'bg-surface inset-ring-2 inset-ring-warning'
+              : 'bg-surface shadow-card inset-ring inset-ring-line focus:inset-ring-2 focus:inset-ring-focus'
         }`}
         placeholder="Твой ответ…"
         value={value}
@@ -220,36 +214,32 @@ export function FillExercise({
 
       {/* Подсказка автора задания — как была, до первой проверки. */}
       {!done && attempts === 0 && exercise.hint && (
-        <button
-          onClick={() => setShowHint((s) => !s)}
-          className="self-start text-xs font-semibold text-accent-strong"
-        >
+        <button type="button" onClick={() => setShowHint((s) => !s)} className="min-h-11 self-start text-sm font-semibold text-accent-strong">
           {showHint ? 'скрыть подсказку' : 'подсказка'}
         </button>
       )}
-      {!done && attempts === 0 && showHint && exercise.hint && (
-        <p className="text-sm text-fg-muted">{exercise.hint}</p>
-      )}
+      {!done && attempts === 0 && showHint && exercise.hint && <p className="text-sm text-fg-muted">{exercise.hint}</p>}
 
-      {!done && hint && <HintLine text={hint} />}
-      {!done && attempts > 0 && <RevealButton onClick={() => setRevealed(true)} />}
+      {!done && hint && <MistakeHint text={hint} />}
+      {!done && attempts > 0 && <RevealAnswer onClick={() => setRevealed(true)} />}
 
-      {done && !solved && (
-        <p className="text-sm">
-          <span className="text-danger-strong">Верный ответ: </span>
-          <span className="font-semibold text-success-strong">{exercise.answer}</span>
-        </p>
-      )}
-      {solved && <CorrectLine attempts={attempts} />}
-
-      {done ? (
-        <NextButton onNext={onNext} isLast={isLast} />
-      ) : (
-        <Button onClick={check} disabled={!value.trim()}>
-          Проверить
-        </Button>
-      )}
-    </Card>
+      <RoundFooter>
+        {solved ? (
+          <Solved attempts={attempts} />
+        ) : revealed ? (
+          <RoundFeedback ok={false}>Верный ответ: {exercise.answer}</RoundFeedback>
+        ) : (
+          <RoundHint>Впиши ответ и нажми Enter или «Проверить»</RoundHint>
+        )}
+        {done ? (
+          <NextButton onNext={onNext} isLast={isLast} />
+        ) : (
+          <Button className="flex-none @xl/round:px-5.5!" onClick={check} disabled={!value.trim()}>
+            Проверить
+          </Button>
+        )}
+      </RoundFooter>
+    </Shell>
   )
 }
 
@@ -259,6 +249,7 @@ export function OrderExercise({
   onGiven,
   onNext,
   isLast,
+  bare,
 }: { exercise: Extract<GrammarExercise, { type: 'order' }> } & ExerciseCallbacks) {
   // Перемешиваем слова для показа (в данных они часто уже в правильном порядке).
   const shuffled = useMemo(() => {
@@ -280,7 +271,6 @@ export function OrderExercise({
   const [hint, setHint] = useState<string | null>(null)
   const checked = solved || revealed
 
-  const usedIdx = new Set(built.map((b) => b.i))
   // сравниваем нормализованно: расхождение регистра/диакритики в данных
   // не должно превращать верный порядок в «неверно»
   const ok =
@@ -306,91 +296,48 @@ export function OrderExercise({
   useRoundKeys({ enter: () => (checked ? onNext() : check()) })
 
   return (
-    <Card className="flex flex-col gap-3">
-      <p className="text-lg font-medium">{exercise.prompt}</p>
+    <Shell bare={bare}>
+      <RoundPrompt text={exercise.prompt} />
+      <RoundBuild
+        built={built}
+        bank={shuffled}
+        result={checked ? ok : null}
+        onTake={(item) => setBuilt((arr) => [...arr, item])}
+        onDrop={(i) => setBuilt((arr) => arr.filter((_, j) => j !== i))}
+      />
 
-      {/* Собранное предложение */}
-      <div
-        className={`min-h-[48px] rounded-control border-2 border-dashed p-2 ${
-          checked
-            ? ok
-              ? 'border-success'
-              : 'border-danger'
-            : 'border-tint/[0.10]'
-        }`}
-      >
-        <div className="flex flex-wrap gap-2">
-          {built.map((b, i) => (
-            <button
-              key={i}
-              onClick={() => !checked && setBuilt((arr) => arr.filter((_, j) => j !== i))}
-              disabled={checked}
-              className="min-h-11 min-w-11 rounded-tag bg-accent px-3 py-1.5 text-sm text-accent-fg"
-            >
-              {b.w}
-            </button>
-          ))}
-          {built.length === 0 && (
-            <span className="px-1 py-1 text-sm text-fg-muted">
-              нажимай слова снизу по порядку
-            </span>
-          )}
-        </div>
-      </div>
+      {!checked && hint && <MistakeHint text={hint} />}
+      {!checked && attempts > 0 && <RevealAnswer onClick={() => setRevealed(true)} />}
 
-      {/* Банк слов */}
-      <div className="flex flex-wrap gap-2">
-        {shuffled.map((item) => (
-          <button
-            key={item.i}
-            onClick={() => !checked && setBuilt((arr) => [...arr, item])}
-            disabled={checked || usedIdx.has(item.i)}
-            className={`min-h-11 min-w-11 rounded-tag border px-3 py-1.5 text-sm transition-colors ${
-              usedIdx.has(item.i)
-                ? 'border-tint/[0.06] text-fg-muted' // использованное слово — приглушено
-                : 'border-tint/[0.10] active:scale-[0.97]'
-            }`}
-          >
-            {item.w}
-          </button>
-        ))}
-      </div>
-
-      {!checked && hint && <HintLine text={hint} />}
-      {!checked && attempts > 0 && <RevealButton onClick={() => setRevealed(true)} />}
-
-      {revealed && !solved && (
-        <p className="text-sm">
-          <span className="text-danger-strong">Правильно: </span>
-          <span className="font-semibold text-success-strong">{exercise.answer.join(' ')}</span>
-        </p>
-      )}
-      {solved && <CorrectLine attempts={attempts} />}
-
-      {checked ? (
-        <NextButton onNext={onNext} isLast={isLast} />
-      ) : (
-        <div className="flex gap-2">
-          <Button
-            onClick={check}
-            disabled={built.length !== exercise.words.length}
-            className="flex-1"
-          >
-            Проверить
-          </Button>
-          {built.length > 0 && (
-            <Button
-              variant="ghost"
-              onClick={() => {
-                setBuilt([])
-                setHint(null)
-              }}
-            >
-              Сброс
+      <RoundFooter>
+        {solved ? (
+          <Solved attempts={attempts} />
+        ) : revealed ? (
+          <RoundFeedback ok={false}>Правильно: {exercise.answer.join(' ')}</RoundFeedback>
+        ) : (
+          <RoundHint>Собери предложение и нажми «Проверить»</RoundHint>
+        )}
+        {checked ? (
+          <NextButton onNext={onNext} isLast={isLast} />
+        ) : (
+          <div className="flex flex-none gap-2">
+            {built.length > 0 && (
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setBuilt([])
+                  setHint(null)
+                }}
+              >
+                Сброс
+              </Button>
+            )}
+            <Button onClick={check} disabled={built.length !== exercise.words.length} className="flex-1 @xl/round:px-5.5!">
+              Проверить
             </Button>
-          )}
-        </div>
-      )}
-    </Card>
+          </div>
+        )}
+      </RoundFooter>
+    </Shell>
   )
 }
