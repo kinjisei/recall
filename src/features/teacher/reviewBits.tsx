@@ -103,53 +103,44 @@ export function AnswerBox({ who, given, correct, ok, lang }: { who: string; give
   )
 }
 
-/** Карточка упражнения (d7-2 `.exc`): номер и задание, ответ, вердикт, комментарий. */
-export function ExerciseCard({ n, prompt, children }: { n: number; prompt: string; children: ReactNode }) {
+/** Счёт упражнения (d18 `.pts`): всё — зелёным, часть — жёлтым, ноль — красным. */
+export function PointsPill({ got, of }: { got: number; of: number }) {
+  const look = got >= of ? 'bg-success-soft text-success-strong' : got > 0 ? 'bg-warning-soft text-warning-soft-fg' : 'bg-danger-soft text-danger-strong'
+  return (
+    <span className={`ml-auto flex-none rounded-full px-2.5 py-0.75 text-note font-bold whitespace-nowrap tabular-nums ${look}`}>
+      {got} из {of}
+    </span>
+  )
+}
+
+/** Карточка упражнения (d18 `.exc`): номер, вид («Верно / Неверно · текст A2»), счёт, задание, ответ. */
+export function ExerciseCard({ n, label, pill, prompt, lang, children }: { n: number; label: string; pill: ReactNode; prompt?: string; lang: string; children: ReactNode }) {
   return (
     <Card className="flex flex-col gap-3 p-4.5!">
-      <p className="flex gap-2.5 text-body font-medium text-fg">
+      <div className="flex items-center gap-2.5">
         <span className="flex size-6.5 flex-none items-center justify-center rounded-tag bg-input text-note font-semibold text-fg-secondary">{n}</span>
-        <span className="pt-0.5">{prompt}</span>
-      </p>
+        <span className="min-w-0 text-note font-semibold text-fg-muted">{label}</span>
+        {pill}
+      </div>
+      {prompt && (
+        <p lang={lang} className="text-body leading-normal font-medium text-fg">
+          {prompt}
+        </p>
+      )}
       {children}
     </Card>
   )
 }
 
-/** Итог справа (d7-2 `.side7`): «1 из 2», правильно и ошибки, главное действие, «Дальше откроется». */
-export function ReviewSummary({
-  ok,
-  total,
-  action,
-  next,
-}: {
-  ok: number
-  total: number
-  action: ReactNode
-  /** «Айгерим Нурланова · IELTS Task 2» — что откроется после «Завершить». */
-  next?: string | null
-}) {
+/** Верный ответ одной строкой (d18 `.lineok`): ✓, ответ, справа «ответ Әсел». */
+export function AnswerLine({ who, given, lang }: { who: string; given: string; lang: string }) {
   return (
-    <section aria-label="Итог проверки" className="flex flex-col gap-3 rounded-card bg-surface p-4.5 shadow-card">
-      <span className="text-note text-fg-muted">Итог</span>
-      <span className="text-3xl font-semibold tabular-nums text-fg">
-        {ok} из {total}
+    <p className="flex items-center gap-2.5 rounded-control-sm bg-input px-3.5 py-2.5 text-body text-fg">
+      <IconCheck size={18} aria-hidden className="flex-none text-success-strong" />
+      <span lang={lang} className="min-w-0">
+        {given}
       </span>
-      <div className="flex justify-between text-sm text-fg-secondary">
-        <span>Правильно</span>
-        <b className="font-semibold text-fg tabular-nums">{ok}</b>
-      </div>
-      <div className="flex justify-between text-sm text-fg-secondary">
-        <span>Ошибка</span>
-        <b className="font-semibold text-fg tabular-nums">{total - ok}</b>
-      </div>
-      {action}
-      {next && (
-        <p className="flex flex-col gap-0.5 border-t border-line pt-2.5 text-note text-fg-muted">
-          <span>Дальше откроется</span>
-          <b className="text-sm font-medium text-fg">{next}</b>
-        </p>
-      )}
-    </section>
+      <small className="ml-auto text-note whitespace-nowrap text-fg-muted">ответ {who}</small>
+    </p>
   )
 }

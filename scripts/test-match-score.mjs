@@ -12,7 +12,7 @@
  *
  * Запуск: node scripts/test-match-score.mjs
  */
-import { exercisePoints, verdictPoints, workScore } from '../src/lib/assignmentScore.ts'
+import { aiVerdict, exercisePoints, verdictPoints, workScore } from '../src/lib/assignmentScore.ts'
 import { matchVerdicts, normalizeChoice } from '../src/lib/text.ts'
 import { MATCH_CASES } from './_match-cases.mjs'
 
@@ -59,6 +59,15 @@ const reviewed = workScore(whole.exercises, whole.answers, [
   { index: 3, ok: false, comment: '', pairs: [true, true, true, true] },
 ])
 check('по вердиктам: где их нет — авто по ответу', reviewed.got === 8 && reviewed.of === 9, `получилось ${reviewed.got} из ${reviewed.of}`)
+
+// ── AI-разбор поверх авто-проверки (Ф2.25-1б) ──────────────────────────────
+const wrongDelay = MATCH_CASES[0].answers[0] // delay → «опоздать на рейс», остальные верны
+check('AI молчит — у пар отметки авто-проверки', JSON.stringify(aiVerdict(ex, wrongDelay, 0, undefined).pairs) === '[false,true,true,true]')
+check('AI засчитал пару — она засчитана', JSON.stringify(aiVerdict(ex, wrongDelay, 0, { ok: true, pairs: [true, true, true, true] }).pairs) === '[true,true,true,true]')
+check('AI не снимает верную пару', JSON.stringify(aiVerdict(ex, wrongDelay, 0, { ok: false, pairs: [false, false, false, false] }).pairs) === '[false,true,true,true]')
+check('у пар комментарий AI не берётся', aiVerdict(ex, wrongDelay, 0, { ok: false, comment: 'текст', pairs: [] }).comment === '')
+const mcq = MATCH_CASES[7].exercises[0]
+check('у выбора — вердикт и комментарий AI', JSON.stringify(aiVerdict(mcq, { index: 0, given: 'x', auto_ok: false }, 0, { ok: true, comment: 'синоним' })) === '{"index":0,"ok":true,"comment":"синоним"}')
 
 console.log(`\nИтог: ${pass}/${pass + fail}`)
 process.exitCode = fail ? 1 : 0

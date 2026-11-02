@@ -71,7 +71,7 @@ function shuffled<T>(arr: readonly T[], seed: number): T[] {
 }
 
 /** Правые половины и лишние — вперемешку, и ни одна не стоит в ряд со своим словом. */
-function rightColumn(ex: MatchData): string[] {
+export function rightColumn(ex: MatchData): string[] {
   const all = [...ex.pairs.map((p) => p.right), ...(ex.extra ?? [])]
   const base = seedOf(JSON.stringify(ex.pairs))
   let best = all

@@ -9,7 +9,73 @@
  * относящийся, строки не даёт.
  */
 
+import { readFileSync } from 'node:fs'
+import { inText, irregularFromEnglish, irregularFromSpanish } from '../../src/lib/wordForms.ts'
+import { irregularGroups } from '../../src/data/english/irregular.ts'
+
 const CYR = /[а-яё]/i
+
+// «слово есть в тексте» — тем же правилом, что приложение (начальная форма, разрывы)
+const IRREGULAR = {
+  en: irregularFromEnglish(irregularGroups),
+  es: irregularFromSpanish(JSON.parse(readFileSync(new URL('../../src/data/spanish/conjugation_reference.json', import.meta.url), 'utf8'))),
+}
+// кнопки «Верно / Неверно / Не сказано» на языке текста (журнал п.76 (18)) — литералами
+const TFNG = { en: ['True', 'False', 'Not given'], es: ['Verdadero', 'Falso', 'No se dice'] }
+const lowLevel = (level) => /^A[12]$/i.test(String(level).trim())
+
+/** Вид упражнения так, как его пишет план: tfng, form, match_translation… */
+const planType = (x) => (x.type === 'mcq' && x.format ? x.format : x.type === 'match' ? `match_${x.format}` : x.type)
+
+/**
+ * Новые форматы Ф2.25 — по сырому ответу модели (приложение потом приводит его
+ * к своему виду, и по итогу брака не видно):
+ * М13 «Верно / Неверно» — кнопки на языке текста, у A1–A2 две, quote — из текста, mark — в quote;
+ * М14 «Соедини пары» — 3–8 пар, слова из текста, перевод — по-русски, объяснение — на языке текста
+ *     без самого слова, лишний вариант — ровно один и не совпадает с парой;
+ * М16 нет вопросов с открытым ответом — только наши виды.
+ */
+export function formatRows(body, raw, lang, level) {
+  const out = []
+  const tf = raw.filter((e) => e?.type === 'mcq' && e.format === 'tfng')
+  if (tf.length) {
+    const want = TFNG[lang].slice(0, lowLevel(level) ? 2 : 3).join('|')
+    const bad = tf.flatMap((e) => {
+      const why = []
+      if ((e.options ?? []).join('|') !== want) why.push(`кнопки ${JSON.stringify(e.options)}`)
+      const ng = e.answer === 2
+      if (!ng && !(e.quote && isQuote(body, e.quote))) why.push(`цитаты нет в тексте: «${e.quote ?? ''}»`)
+      if (!ng && e.mark && !fold(e.quote).includes(fold(e.mark))) why.push(`«${e.mark}» не в цитате`)
+      return why.length ? [`«${e.prompt}»: ${why.join(', ')}`] : []
+    })
+    out.push(row('М13', bad.length === 0, bad.join('; ')))
+  }
+  const pairs = raw.filter((e) => e?.type === 'match')
+  if (pairs.length) {
+    const bad = pairs.flatMap((e) => {
+      const why = []
+      const ps = e.pairs ?? []
+      if (ps.length < 3 || ps.length > 8) why.push(`пар ${ps.length}`)
+      const off = ps.filter((p) => !inText(body, p.left, lang, IRREGULAR[lang])).map((p) => p.left)
+      if (off.length) why.push(`нет в тексте: ${list(off)}`)
+      const rights = ps.map((p) => p.right)
+      if (e.format === 'translation' && rights.some((r) => !CYR.test(r))) why.push('перевод не по-русски')
+      if (e.format === 'definition' && rights.some((r) => CYR.test(r))) why.push('объяснение не на языке текста')
+      if (e.format === 'definition') {
+        const leak = ps.filter((p) => hasWord(p.right, p.left)).map((p) => p.left)
+        if (leak.length) why.push(`слово в своём объяснении: ${list(leak)}`)
+      }
+      const extra = e.extra ?? []
+      if (extra.length !== 1 || rights.some((r) => fold(r) === fold(extra[0]))) why.push(`лишних вариантов ${extra.length}`)
+      return why.length ? [`${e.prompt}: ${why.join(', ')}`] : []
+    })
+    out.push(row('М14', bad.length === 0, bad.join('; ')))
+  }
+  const KNOWN = new Set(['mcq', 'fill', 'order', 'match'])
+  const open = raw.filter((e) => !KNOWN.has(e?.type) || (e.type === 'mcq' && e.format && !['tfng', 'form'].includes(e.format)))
+  out.push(row('М16', open.length === 0, `не наш вид: ${list(open.map((e) => `${e?.type}${e?.format ? '/' + e.format : ''}`))}`))
+  return out
+}
 
 /** Сравнение текста без мелочей набора: регистр, диакритика, кавычки, пробелы. */
 export const fold = (s) =>
@@ -126,13 +192,13 @@ export function materialRules(ex, out) {
   const exr = exerciseRows(content.body, raw, content.exercises, { fromText: true })
   rows.push(...exr.rows)
   const planned = (plan.exercise_plan ?? []).filter((p) => p.count > 0)
-  const off = planned.filter((p) => raw.filter((x) => x.kind === p.kind && x.type === p.type).length !== p.count)
+  const off = planned.filter((p) => raw.filter((x) => x.kind === p.kind && planType(x) === p.type).length !== p.count)
   rows.push(
     row(
       'М11',
       off.length === 0 && exr.ordered,
       [
-        ...off.map((p) => `${p.kind}/${p.type}: по плану ${p.count}, есть ${raw.filter((x) => x.kind === p.kind && x.type === p.type).length}`),
+        ...off.map((p) => `${p.kind}/${p.type}: по плану ${p.count}, есть ${raw.filter((x) => x.kind === p.kind && planType(x) === p.type).length}`),
         exr.ordered ? '' : 'порядок не «понимание → грамматика → слова»',
       ]
         .filter(Boolean)
@@ -161,6 +227,7 @@ export function materialRules(ex, out) {
     const where = fold([plan.grammar_focus, ...(plan.exercise_plan ?? []).map((p) => p.note)].join(' '))
     rows.push(row('Д2', e.weakTopic.some((k) => where.includes(fold(k))), `в плане нет слабой темы (${e.weakTopic.join(' / ')}): «${plan.grammar_focus}»`))
   }
+  rows.push(...formatRows(content.body, raw, ex.req.lang, ex.req.level))
   rows.push(materialLanguage(content.body, content.exercises, plan.comments))
   return rows
 }
@@ -179,7 +246,7 @@ export function ownTextRules(ex, out) {
     count('vocab') < 3 || count('vocab') > 6 ? `слова ${count('vocab')}, нужно 3–6` : '',
     exr.ordered ? '' : 'порядок не «понимание → грамматика → слова»',
   ].filter(Boolean)
-  return [...exr.rows, row('М11', bad.length === 0, bad.join('; ')), materialLanguage(content.body, content.exercises)]
+  return [...exr.rows, row('М11', bad.length === 0, bad.join('; ')), ...formatRows(content.body, raw, ex.ownText.lang, ex.ownText.level), materialLanguage(content.body, content.exercises)]
 }
 
 /**

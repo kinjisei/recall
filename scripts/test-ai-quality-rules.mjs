@@ -68,19 +68,24 @@ check('пропуск не из текста — нет', !fillFromText('There w
   p5.raw.exercises = p5.raw.exercises.filter((e) => !String(e.prompt).includes('kitchen'))
   check('М5: слова плана нет в тексте', red(materialRules(ex, p5)).includes('М5'))
 
+  // упражнение — по виду, а не по номеру: номера сдвигаются, когда в заготовку добавляют вид (Ф2.25)
+  const at = (list, test) => list.findIndex(test)
+  const fill0 = at(good.raw.exercises, (e) => e.type === 'fill')
+  const order0 = at(good.raw.exercises, (e) => e.type === 'order')
+  const word0 = at(good.raw.exercises, (e) => e.kind === 'vocab' && e.type === 'mcq')
   const p8 = clone(good)
-  p8.content.exercises[3].prompt = 'She ___ in a small school.'
-  p8.raw.exercises[3].prompt = 'She ___ in a small school.'
+  p8.content.exercises[fill0].prompt = 'She ___ in a small school.'
+  p8.raw.exercises[fill0].prompt = 'She ___ in a small school.'
   onlyRed('М8: пропуск не из текста', materialRules(ex, p8), 'М8')
 
   const p9 = clone(good)
-  p9.raw.exercises[5].words = ['school', 'goes', 'He', 'at']
+  p9.raw.exercises[order0].words = ['school', 'goes', 'He', 'at']
   p9.content.exercises = validExercises(p9.raw.exercises)
   check('М9: «собери» не собирается — выброшено', red(materialRules(ex, p9)).includes('М9'))
 
   const p10 = clone(good)
-  p10.content.exercises[7].prompt = 'the kitchen is where you cook food'
-  p10.raw.exercises[7].prompt = p10.content.exercises[7].prompt
+  p10.content.exercises[word0].prompt = 'the kitchen is where you cook food'
+  p10.raw.exercises[word0].prompt = p10.content.exercises[word0].prompt
   onlyRed('М10: слово в своём определении', materialRules(ex, p10), 'М10')
 
   const p11 = clone(good)
@@ -89,9 +94,30 @@ check('пропуск не из текста — нет', !fillFromText('There w
   onlyRed('М11: порядок упражнений перевёрнут', materialRules(ex, p11), 'М11')
 
   const pO2 = clone(good)
-  pO2.content.exercises[3].hint = 'add -s'
-  pO2.raw.exercises[3].hint = 'add -s'
+  pO2.content.exercises[fill0].hint = 'add -s'
+  pO2.raw.exercises[fill0].hint = 'add -s'
   onlyRed('О2: подсказка не по-русски', materialRules(ex, pO2), 'О2')
+
+  // новые форматы Ф2.25 — по сырому ответу модели
+  const tf0 = at(good.raw.exercises, (e) => e.format === 'tfng')
+  const pairs0 = at(good.raw.exercises, (e) => e.type === 'match')
+  check('материал: проверены М13, М14, М16', ['М13', 'М14', 'М16'].every((id) => materialRules(ex, good).some((r) => r.id === id)))
+  // портим только сырой ответ: приложение приводит его к своему виду, итог — прежний
+  const spoil = (fn) => {
+    const c = clone(good)
+    c.raw.exercises = clone(c.raw.exercises)
+    fn(c.raw.exercises)
+    return materialRules(ex, c)
+  }
+  onlyRed('М13: кнопки по-русски', spoil((r) => (r[tf0].options = ['Верно', 'Неверно'])), 'М13')
+  onlyRed('М13: у A1 три кнопки', spoil((r) => (r[tf0].options = ['True', 'False', 'Not given'])), 'М13')
+  onlyRed('М13: цитаты нет в тексте', spoil((r) => (r[tf0].quote = 'My mother cooks dinner every day.')), 'М13')
+  onlyRed('М14: слово не из текста', spoil((r) => (r[pairs0].pairs[0].left = 'grandmother')), 'М14')
+  onlyRed('М14: перевод по-английски', spoil((r) => (r[pairs0].pairs[1].right = 'sibling')), 'М14')
+  onlyRed('М14: лишних вариантов два', spoil((r) => (r[pairs0].extra = ['школа', 'дом'])), 'М14')
+  onlyRed('М14: лишний совпадает с парой', spoil((r) => (r[pairs0].extra = ['Кухня'])), 'М14')
+  // открытый вопрос приложение выбрасывает — краснеет и М9
+  check('М16: вопрос с открытым ответом', red(spoil((r) => r.splice(1, 0, { kind: 'comprehension', type: 'open', prompt: 'Why?' }))).includes('М16'))
 
   const group = byId(MATERIAL, 'en-b1-group-dialog')
   const g = clone(good)

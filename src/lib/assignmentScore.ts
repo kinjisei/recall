@@ -59,10 +59,24 @@ export function autoVerdict(ex: MaterialExercise, a: AssignmentAnswer | undefine
   return { index, ok: pairs.every(Boolean), comment: '', pairs }
 }
 
-/** «Правильно / Ошибка» упражнения целиком: у пар — все засчитаны или как у авто-проверки. */
-export function markWhole(ex: MaterialExercise, a: AssignmentAnswer | undefined, ok: boolean): Partial<ReviewItem> {
-  if (ex.type !== 'match') return { ok }
-  return { ok, pairs: ok ? ex.pairs.map(() => true) : matchVerdicts(ex, a?.pairs) }
+/**
+ * Вердикт AI-разбора поверх авто-проверки. У выбора, вписывания и сборки —
+ * вердикт и комментарий AI (нет его — авто). У пар AI может только добавить
+ * зачёт пары (синоним перевода), снять верную — нет; комментарий у пар не
+ * нужен: пары с верным ответом видны сами (d18).
+ */
+export function aiVerdict(
+  ex: MaterialExercise,
+  a: AssignmentAnswer | undefined,
+  index: number,
+  ai: { ok?: unknown; comment?: unknown; pairs?: unknown } | undefined,
+): ReviewItem {
+  const auto = autoVerdict(ex, a, index)
+  if (!ai) return auto
+  if (ex.type !== 'match') return { index, ok: Boolean(ai.ok), comment: typeof ai.comment === 'string' ? ai.comment : '' }
+  const extra = Array.isArray(ai.pairs) ? ai.pairs : []
+  const pairs = (auto.pairs ?? []).map((ok, i) => ok || extra[i] === true)
+  return { index, ok: pairs.every(Boolean), comment: '', pairs }
 }
 
 /** Баллы каждого упражнения: вердикт (если есть), иначе авто по ответу. */

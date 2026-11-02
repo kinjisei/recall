@@ -497,7 +497,8 @@ async function main() {
   await page.goBack({ waitUntil: 'networkidle2' }).catch(() => {})
   await appears(page, '«Материал для смоука навигации»')
   await tap(page, '«Материал для смоука навигации»')
-  const matTitle = 'Әсел Навигация · «Материал для смоука навигации»'
+  // на телефоне в шапке проверки — только имя (макет d18-2, Ф2.25-1б)
+  const matTitle = 'Әсел · «Материал для смоука навигации»'
   check('«Задания»: строка открывает разбор этой работы', (await appears(page, matTitle)) && path() === `/tasks?work=${work.id}`, path())
   // очередь — новые сверху (t1-3, d7-1): письмо сдано сейчас, задание — час назад
   check('«Задания»: листалка «Работа 2 из 2»', await appears(page, 'Работа 2 из 2'))

@@ -16,6 +16,15 @@
  *   material-mcq      — «Выбери ответ» в той же рамке (шапка u5 для прежних видов);
  *   material-reviewed — разбор проверенной работы: счёт в баллах, пары с
  *                       отметкой учителя (вторая копия материала, проверена).
+ *
+ * Ф2.25-1б — проверка работы учителем (макет d18), `--only material-review`:
+ * Әсел сдала «A long day at the airport» (текст кадра d8-4): два «Выбери
+ * ответ» верно, «Верно / Неверно» — «True» вместо «False», пары — 3 из 4
+ * (delay → «опоздать на рейс»), «Вставь форму» — верно; авто 6 из 8, разбор
+ * AI лежит готовым (AI не зовётся):
+ *   material-review          — d18-1: проверка, итог справа (1280 во всю высоту);
+ *   material-review-credited — d18-2: пара delay засчитана вручную → 7 из 8;
+ *   material-library         — тот же материал в библиотеке: пары двумя колонками (d8-4).
  */
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
@@ -166,4 +175,66 @@ export async function shotsMaterialRun({ screen, admin, must, t, s }) {
     'проверенная работа',
   )
   await screen(s.email, [{ name: 'material-reviewed', path: `/assignments?a=${done.id}&stage=review`, expect: /Проверено преподавателем/, prepare: steps() }])
+}
+
+// ── Ф2.25-1б: проверка работы учителем (d18) ───────────────────────────────
+const D8_BODY = [
+  'Last summer Dana flew from Almaty to Istanbul. She came to the airport early, but the screen said: “Delay — 3 hours”. Dana was not happy. She bought a coffee and waited near the gate.',
+  'The plane left very late, and in Istanbul Dana had only forty minutes for her next flight. She ran through the airport with her boarding pass in her hand. But the gate was already closed. She missed her flight!',
+  'A woman at the desk was very kind. She gave Dana a ticket for the evening flight. Then Dana went to get her luggage, but her bag was not there. “Don’t worry,” the woman said. “It is on the next plane.” Dana laughed. What a day!',
+].join('\n\n')
+
+const REVIEW_EXERCISES = [
+  { kind: 'comprehension', type: 'mcq', prompt: 'Why did Dana wait near the gate for three hours?', options: ['Her flight had a delay.', 'She lost her boarding pass.', 'She came to the airport late.', 'The gate was closed.'], answer: 0 },
+  { kind: 'comprehension', type: 'mcq', prompt: 'What did the woman at the desk give Dana?', options: ['A ticket for the evening flight.', 'A new bag.', 'A coffee.', 'A map of the airport.'], answer: 0 },
+  { kind: 'comprehension', type: 'mcq', format: 'tfng', prompt: 'Dana missed her flight because she came to the airport late.', options: ['True', 'False'], answer: 1, quote: 'She came to the airport early, but the screen said: “Delay — 3 hours”.', mark: 'early', why: 'Она приехала рано, а опоздала из-за задержки рейса' },
+  AIRPORT[2],
+  { kind: 'grammar', type: 'fill', prompt: 'She ___ (buy) a coffee and waited near the gate.', answer: 'bought' },
+]
+const REVIEW_ANSWERS = [
+  { index: 0, given: 'Her flight had a delay.', auto_ok: true },
+  { index: 1, given: 'A ticket for the evening flight.', auto_ok: true },
+  { index: 2, given: 'True', auto_ok: false },
+  { ...DONE[2], index: 3 },
+  { index: 4, given: 'bought', auto_ok: true },
+]
+const REVIEW_AI = [
+  { index: 0, ok: true, comment: '' },
+  { index: 1, ok: true, comment: '' },
+  { index: 2, ok: false, comment: 'Она приехала рано: «She came to the airport early». Опоздала из-за задержки рейса.' },
+  { index: 3, ok: false, comment: '', pairs: [false, true, true, true] },
+  { index: 4, ok: true, comment: '' },
+]
+
+/** Карточка материала прокручивается сама — к упражнениям. */
+const toExercises = async (page) => {
+  await page.evaluate(() => [...document.querySelectorAll('main *')].find((e) => e.children.length === 0 && /^Упражнени/.test(e.textContent.trim()))?.scrollIntoView({ block: 'start' }))
+  await sleep(400)
+}
+
+export async function shotsMaterialReview({ screen, admin, must, t, s }) {
+  const [mat] = must(
+    await admin
+      .from('materials')
+      .insert({ teacher_id: t.id, lang: 'en', level: 'A2', topic: 'Travel problems', format: 'рассказ', length_range: '100-140', title: 'A long day at the airport', body: D8_BODY, exercises: REVIEW_EXERCISES })
+      .select('id'),
+    'материал d18',
+  )
+  const [asg] = must(
+    await admin
+      .from('material_assignments')
+      .insert({ material_id: mat.id, student_id: s.id, status: 'submitted', answers: REVIEW_ANSWERS, auto_score: 6, auto_total: 8, ai_review: REVIEW_AI, submitted_at: new Date().toISOString() })
+      .select('id'),
+    'сданная работа d18',
+  )
+  const path = `/tasks?work=${asg.id}`
+  const expect = /AI предлагает засчитать/
+  // правки проверки — черновиком на устройстве: каждый снимок — с чистого листа
+  const clean = (page) => page.evaluate((key) => localStorage.removeItem(key), `recall.draft.${t.id}.review:${asg.id}`)
+  await screen(t.email, [
+    { name: 'material-review', path, expect, tall: 1200, before: clean, prepare: steps() },
+    { name: 'material-review-credited', path, expect, before: clean, prepare: steps(tapText('Засчитать')) },
+    // тот же материал в библиотеке: пары двумя колонками, как на d8-4
+    { name: 'material-library', path: `/tasks?tab=materials&mat=${mat.id}`, expect: /Соедини слово и перевод/, wide: true, prepare: toExercises },
+  ])
 }

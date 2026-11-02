@@ -14,6 +14,7 @@ import { lengthLabel } from '../../../lib/materialLengths'
 import type { MaterialRequest } from '../../../lib/materials'
 import { FieldLabel, LANG_NAME } from './wizardBits'
 import { markWords, paragraphs } from './markWords'
+import { useIrregular } from './useIrregular'
 import type { StudentLevels } from './useStudentLevels'
 
 /** «A2 · ~120 слов · английский · рассказ» под заголовком (d8-4 `.mt8`). */
@@ -34,6 +35,8 @@ const ARTICLE = 'flex flex-col gap-3.5 rounded-card bg-surface px-7.5 pb-7 pt-6.
 
 /** Статья (d8-4 `.art`): заголовок 28, строка о тексте, абзацы — слова плана подсвечены. */
 export function Article({ req, title, body, words }: { req: MaterialRequest; title: string; body: string; words: string[] }) {
+  // слово плана — в любой форме: took ⇒ take, «missed her flight» ⇒ miss a flight
+  const irregular = useIrregular(req.lang)
   return (
     <article className={ARTICLE}>
       <h2 lang={req.lang} className="text-greeting font-semibold">
@@ -42,7 +45,7 @@ export function Article({ req, title, body, words }: { req: MaterialRequest; tit
       <Meta req={req} />
       {paragraphs(body).map((p, i) => (
         <p key={i} lang={req.lang} className="whitespace-pre-line text-lg leading-relaxed text-fg">
-          {markWords(p, words).map((piece, j) =>
+          {markWords(p, words, req.lang, irregular).map((piece, j) =>
             piece.hit ? (
               <mark key={j} className="rounded-mark bg-accent-soft px-0.5 font-medium text-accent-soft-fg">
                 {piece.text}

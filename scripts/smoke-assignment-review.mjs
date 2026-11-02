@@ -15,6 +15,10 @@
  *     3 из 4 пар — 3 балла и «+3» у счёта), «Выбери правильную форму».
  *     Пары переживают перезагрузку (черновик), сервер начисляет балл за
  *     каждую пару: итог работы — 5 из 9 баллов, а не «2 из 6».
+ *  4. Проверка учителем по d18 (Ф2.25-1б): ответ AI — заготовкой (запрос к
+ *     /api/gemini перехвачен — ни AI, ни энергии), счёт в баллах, у неверной
+ *     пары «Засчитать» → «4 из 4» и «вручную +1»; «Завершить проверку»
+ *     сохраняет отметки у пар, ученик видит «6 баллов из 9».
  *
  * Материал кладём в базу напрямую (service_role): генерация стоила бы дорогой
  * модели и месячного лимита, а проверяем мы не её, а путь ученика.
@@ -314,6 +318,62 @@ async function main() {
       check('объяснение дождалось ответа', explained)
     }
   }
+
+  // ---- проверка учителем (d18) ------------------------------------------
+  const { data: asg } = await admin.from('material_assignments').select('id').eq('material_id', mat.id).single()
+  const tctx = await browser.createBrowserContext()
+  const tp = await tctx.newPage()
+  await tp.setViewport({ width: 1280, height: 900 })
+  tp.on('pageerror', (e) => jsErrors.push(String(e)))
+  // AI-разбор — заготовкой: выбор и вписать неверны, «верно/неверно» и форма верны,
+  // у пар AI пытается снять верную пару — приложение не даст
+  const aiReview = {
+    items: [
+      { index: 0, ok: false, comment: 'Он встаёт в семь: at seven.' },
+      { index: 1, ok: false, comment: 'Нужно get.' },
+      { index: 2, ok: true, comment: '' },
+      { index: 3, ok: false, comment: 'лишнее', pairs: [false, true, true, false] },
+      { index: 4, ok: true, comment: '' },
+      { index: 5, ok: false, comment: 'Порядок: I go home every day.' },
+    ],
+  }
+  await tp.setRequestInterception(true)
+  tp.on('request', (r) =>
+    r.url().includes('/api/gemini')
+      ? r.respond({ status: 200, contentType: 'application/json', body: JSON.stringify({ text: JSON.stringify(aiReview) }) })
+      : r.continue(),
+  )
+  await tp.goto(`${BASE}/login`, { waitUntil: 'networkidle2' })
+  await tp.evaluate(() => localStorage.setItem('recall.onboarded', '1'))
+  await tap(tp, 'Войти')
+  await tp.type('input[type=email]', T_EMAIL)
+  await tp.type('input[type=password]', PASSWORD)
+  await tp.keyboard.press('Enter')
+  await sleep(4500)
+  await tp.goto(`${BASE}/tasks?work=${asg.id}`, { waitUntil: 'networkidle2' })
+  await tp.waitForFunction(() => /AI предлагает засчитать/.test(document.body.innerText), { timeout: 20000, polling: 300 }).catch(() => {})
+  check('проверка: AI предлагает в баллах — 5 баллов из 9', await seen(tp, 'AI предлагает засчитать 5 баллов из 9'))
+  check('у пар счёт «3 из 4» и подпись вида', (await seen(tp, '3 из 4')) && (await seen(tp, 'Соедини слово и перевод · балл за пару')))
+  check('AI не снял верную пару: «Пары Айгерим: 3 верно, 1 неверно»', await seen(tp, '3 верно, 1 неверно'))
+  check('итог справа: «Авто: 5 из 9 баллов · вручную 0»', await seen(tp, 'Авто: 5 из 9 баллов · вручную 0'))
+  await tap(tp, 'Засчитать', true)
+  await sleep(500)
+  check('«Засчитать» у пары — «4 из 4» и «вручную +1»', (await seen(tp, '4 из 4')) && (await seen(tp, 'вручную +1')))
+  check('сводка пар — «1 засчитана вручную»', await seen(tp, '1 засчитана вручную'))
+  await tap(tp, 'Завершить проверку')
+  await sleep(2500)
+  const { data: rv } = await admin.from('material_assignments').select('status, teacher_review').eq('id', asg.id).single()
+  check(
+    'сервер сохранил отметки у пар',
+    rv?.status === 'reviewed' && JSON.stringify(rv.teacher_review?.find((x) => x.index === 3)?.pairs) === '[true,true,true,true]',
+    JSON.stringify(rv?.teacher_review?.find((x) => x.index === 3)),
+  )
+  await tctx.close()
+
+  // ученик видит итог учителя в баллах
+  await page.goto(`${BASE}/assignments?a=${asg.id}&stage=review`, { waitUntil: 'networkidle2' })
+  await sleep(2000)
+  check('ученик: «Проверено преподавателем: 6 баллов из 9»', await seen(page, 'Проверено преподавателем: 6 баллов из 9'))
 
   check('JS-ошибок за прогон нет', jsErrors.length === 0, jsErrors[0] ?? '')
 

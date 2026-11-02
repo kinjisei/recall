@@ -28,7 +28,7 @@ const OWN = {
   'src/features/writing/WritingPage.tsx': [1, 'редактор письма: лист бумаги'],
   'src/features/writing/QuickWriteCheck.tsx': [1, 'редактор быстрой проверки: то же'],
   'src/features/writing/WritingReviewScreen.tsx': [1, 'правка в разборе письма — в строке текста'],
-  'src/features/teacher/ReviewScreen.tsx': [1, 'комментарий к ответу — по макету d7-2'],
+  'src/features/teacher/ReviewExercise.tsx': [1, 'комментарий к ответу — по макету d18 (было d7-2)'],
 }
 
 let ok = 0

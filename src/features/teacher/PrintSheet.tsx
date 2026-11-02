@@ -3,15 +3,33 @@
 // при печати CSS прячет приложение и остаётся только этот лист.
 // Два режима: для ученика (без ответов) и для учителя (с ключом).
 // «Сохранить в PDF» — стандартный диалог печати браузера.
+// Каждый вид — с местом для ответа (Ф2.25-1б): «Соедини пары» — слова с
+// номером и пропуском, справа варианты с буквой в том же порядке, что у
+// ученика на экране (ключ «1–b, 2–d» сходится и с экраном); «Верно /
+// Неверно» — кнопки на языке текста, обвести; «Собери предложение» — слова
+// вперемешку и строка (раньше печатался только перевод, а ключ был пуст).
 // ============================================================================
 import { createPortal } from 'react-dom'
 import { Button } from '../../shared/ui/Button'
 import { IconPrinter } from '../../shared/ui/icons'
-import type { Material } from '../../types'
+import { rightColumn } from '../../components/MatchExercise'
+import type { Material, MaterialExercise } from '../../types'
 
-// с запасом: mcq обычно 4 варианта, но валидатор допускает больше — лишние
+// с запасом: у пар справа до 10 вариантов (8 пар и 2 лишних) — лишние
 // не должны печататься как «undefined)»
-const LETTERS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+const LETTERS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']
+
+/** Ключ упражнения строкой: «b) at seven», «1–b, 2–d, 3–a», «I go home». */
+function keyOf(ex: MaterialExercise): string {
+  if (ex.type === 'mcq') return `${LETTERS[ex.answer]}) ${ex.options[ex.answer]}`
+  if (ex.type === 'fill') return ex.answer
+  if (ex.type === 'order') return ex.answer.join(' ')
+  const rights = rightColumn(ex)
+  return ex.pairs.map((p, k) => `${k + 1}–${LETTERS[rights.indexOf(p.right)]}`).join(', ')
+}
+
+/** Слова «собери предложение» вперемешку, но одинаково при каждой печати: по алфавиту. */
+const bank = (words: string[]) => [...words].sort((a, b) => a.localeCompare(b)).join(' / ')
 
 export function PrintSheet({
   material,
@@ -71,6 +89,30 @@ export function PrintSheet({
                   {ex.hint ? `   (${ex.hint})` : ''}
                 </p>
               )}
+              {ex.type === 'order' && (
+                <>
+                  <p className="mt-1 pl-5 text-fg-secondary">( {bank(ex.words)} )</p>
+                  <p className="mt-1 pl-5 text-sm text-fg-muted">______________________________________________</p>
+                </>
+              )}
+              {ex.type === 'match' && (
+                <div className="mt-1 grid grid-cols-2 gap-x-8 pl-5 text-fg-secondary">
+                  <ol>
+                    {ex.pairs.map((p, k) => (
+                      <li key={k}>
+                        {k + 1}. {p.left} ____
+                      </li>
+                    ))}
+                  </ol>
+                  <ul>
+                    {rightColumn(ex).map((r, k) => (
+                      <li key={k}>
+                        {LETTERS[k]}) {r}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </li>
           ))}
         </ol>
@@ -84,11 +126,7 @@ export function PrintSheet({
               {m.exercises.map((ex, i) => (
                 <li key={i}>
                   <span className="font-semibold">{i + 1}.</span>{' '}
-                  {ex.type === 'mcq'
-                    ? `${LETTERS[ex.answer]}) ${ex.options[ex.answer]}`
-                    : ex.type === 'fill'
-                      ? ex.answer
-                      : ''}
+                  {keyOf(ex)}
                 </li>
               ))}
             </ol>

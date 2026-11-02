@@ -1,17 +1,19 @@
 // ============================================================================
-// Проверка сданного задания по материалу (макет d7-2, PLAN.md Ф2.17-4в-1): AI
-// делает первичный разбор, преподаватель по каждому упражнению соглашается
-// или ставит свой вердикт с комментарием и завершает проверку (статус
-// reviewed). Слева — текст материала свёрнутой строкой и упражнения, справа —
-// итог «1 из 2», «Завершить проверку» и что откроется дальше; уже 936 —
-// итог под упражнениями. Из «Проверки работ» сверху листалка «Работа 2 из 2».
+// Проверка сданного задания по материалу (макет d18, Ф2.25-1б; до него —
+// d7-2): AI делает первичный разбор, преподаватель по каждому упражнению
+// соглашается или ставит свой вердикт с комментарием, у «Соедини пары» —
+// отметку у каждой пары, и завершает проверку (статус reviewed). Счёт — в
+// баллах: пары — по паре (`lib/assignmentScore`). Слева — текст материала
+// свёрнутой строкой и упражнения, справа — итог «6 из 8 баллов» с разбивкой
+// и «Завершить проверку»; на телефоне итог — полосой внизу (d18-2). Из
+// «Проверки работ» сверху листалка «Работа 2 из 2».
 // ============================================================================
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { whenDone } from '../../domains/schedule'
 import { firstName } from '../../domains/students'
 import { finishReview, generateAiReview, reassignAssignment, saveAiReview } from '../../lib/materials'
-import { correctAnswerText } from '../../lib/text'
-import { markWhole, points, workScore } from '../../lib/assignmentScore'
+import { exerciseScores, points, workScore } from '../../lib/assignmentScore'
+import { shortLabel } from '../../lib/exerciseFormats'
 import type { Material, MaterialAssignment, ReviewItem } from '../../types'
 import { ScreenTop } from '../../shared/ui/BackButton'
 import { Button } from '../../shared/ui/Button'
@@ -19,8 +21,12 @@ import { Card } from '../../shared/ui/Card'
 import { useConfirm } from '../../shared/ui/ConfirmDialog'
 import { DraftRestored } from '../../shared/ui/DraftRestored'
 import { MainAside } from '../../shared/ui/layouts'
+import { AREA } from '../../shared/ui/breakpoints'
+import { useContentAtLeast } from '../../shared/lib/screenWidth'
 import { Thinking } from '../../shared/ui/Thinking'
-import { AiBanner, AnswerBox, ExerciseCard, MaterialText, ReviewSummary, Verdict } from './reviewBits'
+import { AiBanner, MaterialText } from './reviewBits'
+import { ReviewExercise } from './ReviewExercise'
+import { ReviewBar, ReviewSummary } from './reviewTotals'
 import { useReviewDraft } from './useReviewDraft'
 import { ErrorText } from '../../shared/ui/ErrorText'
 
@@ -54,6 +60,8 @@ export function ReviewScreen({
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const { ask, dialog } = useConfirm()
+  // итог справа — когда рядом есть место, иначе полосой внизу (d18-2)
+  const split = useContentAtLeast(AREA.homeSplit)
 
   // Первичный AI-разбор (один раз). requestedRef защищает от двойного вызова
   // Gemini в StrictMode/dev; runAiReview можно вызвать повторно как ретрай.
@@ -77,9 +85,12 @@ export function ReviewScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  const exercises = material.exercises
   const answers = assignment.answers ?? []
   // счёт — в баллах (у пар — по паре), одной функцией с экраном ученика
-  const { got: okCount, of: total } = workScore(material.exercises, answers, review)
+  const total = workScore(exercises, answers, review)
+  const auto = workScore(exercises, answers, null).got
+  const proposed = workScore(exercises, answers, base)
   const who = firstName(studentName)
   const title = material.title ?? material.topic
 
@@ -140,41 +151,34 @@ export function ReviewScreen({
       )}
       {review && (
         <AiBanner>
-          {alreadyReviewed ? `Проверено: ${points(okCount)} из ${total}` : `AI предлагает засчитать ${points(okCount)} из ${total} — проверь вердикты`}
+          {alreadyReviewed
+            ? `Проверено: ${points(total.got)} из ${total.of}`
+            : `AI предлагает засчитать ${points(proposed.got)} из ${proposed.of} — проверь спорные`}
         </AiBanner>
       )}
       {review &&
-        material.exercises.map((ex, i) => {
+        exercises.map((ex, i) => {
           const item = review.find((r) => r.index === i)
           if (!item) return null
-          const given = answers.find((a) => a.index === i)?.given ?? '(нет ответа)'
           return (
-            <ExerciseCard key={i} n={i + 1} prompt={ex.prompt}>
-              <AnswerBox who={who} given={given} correct={correctAnswerText(ex)} ok={item.ok} lang={material.lang} />
-              {alreadyReviewed ? (
-                item.comment && <p className="rounded-control-sm bg-input px-3 py-2.5 text-sm text-fg-secondary">{item.comment}</p>
-              ) : (
-                <>
-                  <Verdict ok={item.ok} onChange={(ok) => setItem(i, markWhole(ex, answers.find((a) => a.index === i), ok))} />
-                  <label className="flex flex-col gap-1">
-                    <small className="text-xs text-fg-muted">Комментарий · AI, можно править</small>
-                    <textarea
-                      className="field-sizing-content min-h-11 resize-none w-full rounded-control-sm bg-surface px-3 py-2.5 text-sm leading-relaxed text-fg inset-ring-1 inset-ring-line outline-none placeholder:text-fg-muted focus:inset-ring-2 focus:inset-ring-focus"
-                      placeholder="Комментарий для ученика: что не так и как правильно…"
-                      value={item.comment}
-                      onChange={(e) => setItem(i, { comment: e.target.value })}
-                    />
-                  </label>
-                </>
-              )}
-            </ExerciseCard>
+            <ReviewExercise
+              key={i}
+              ex={ex}
+              index={i}
+              answer={answers.find((a) => a.index === i)}
+              item={item}
+              who={who}
+              lang={material.lang}
+              level={material.level}
+              onItem={alreadyReviewed ? undefined : (patch) => setItem(i, patch)}
+            />
           )
         })}
       {attempts.length > 0 && (
         <Card className="flex flex-col gap-1">
           <p className="text-sm font-semibold">Прошлые попытки</p>
           {attempts.map((at, i) => {
-            const tOk = workScore(material.exercises, at.answers, at.teacher_review).got
+            const tOk = workScore(exercises, at.answers, at.teacher_review).got
             return (
               <p key={i} className="text-sm text-fg-muted">
                 {i + 1}-я: авто {at.auto_score}/{at.auto_total}
@@ -187,30 +191,30 @@ export function ReviewScreen({
       )}
     </div>
   )
-  const aside = review && (
-    <ReviewSummary
-      ok={okCount}
-      total={total}
-      next={alreadyReviewed ? null : next}
-      action={
-        alreadyReviewed ? (
-          <Button variant="secondary" className="w-full" onClick={reassign} loading={saving}>
-            Переназначить
-          </Button>
-        ) : (
-          <Button className="w-full" onClick={finish} loading={saving}>
-            Завершить проверку ({okCount}/{total})
-          </Button>
-        )
-      }
-    />
+  const action = alreadyReviewed ? (
+    <Button variant="secondary" className="w-full" onClick={reassign} loading={saving}>
+      Переназначить
+    </Button>
+  ) : (
+    <Button className="w-full" onClick={finish} loading={saving}>
+      Завершить проверку
+    </Button>
   )
+  const rows = exerciseScores(exercises, answers, review).map((score, i) => ({ label: exercises[i] ? shortLabel(exercises[i]) : '', score }))
+  const aside =
+    review &&
+    (split ? (
+      <ReviewSummary total={total} auto={auto} rows={rows} action={action} next={alreadyReviewed ? null : next} />
+    ) : (
+      <ReviewBar total={total} auto={auto} action={action} />
+    ))
 
   return (
     <div className="flex flex-col gap-4">
       <ScreenTop
         back={{ label: backLabel, onClick: onBack }}
-        title={`${studentName} · «${title}»`}
+        // на телефоне — только имя, как в d18-2: полное в две строки теснило шапку
+        title={`${split ? studentName : who} · «${title}»`}
         subtitle={['задание по материалу', whenDone(assignment.submitted_at)].filter(Boolean).join(' · ')}
         trailing={pager}
       />

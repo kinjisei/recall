@@ -7,7 +7,7 @@ import { TextField } from '../../shared/ui/TextField'
 import { IconKey } from '../../shared/ui/icons'
 import { joinTeacher } from '../../lib/teacher'
 import { pendingJoin } from '../../lib/pendingRole'
-import { getMyAssignments } from '../../lib/materials'
+import { getMyAssignments } from '../../lib/materialAssignments'
 import type { Profile } from '../../types'
 
 /** Сколько заданий у ученика всего и сколько ещё не сдано. */

@@ -8,14 +8,14 @@ import { dbError } from '../shared/api/errors'
 import { chat, chatReply, type ReplanGrant } from '../shared/api/ai'
 import { comprehensionRange, lengthRangeOf } from './materialLengths'
 import { correctAnswerText } from './text'
-import { validExercises } from './materialExercises'
+import { normalizeExercises, validExercises } from './materialExercises'
+import { loadIrregular } from './wordForms'
 import { REVIEW_SYSTEM, contentSystem, ownTextSystem, planSystem, requestDescription, type MaterialRequest } from './materialPrompts'
-import { autoVerdict } from './assignmentScore'
+import { aiVerdict } from './assignmentScore'
 import { groupBriefBlock } from './diagnosticsBrief'
 import { track } from './analytics'
 import type {
   AppLang,
-  AssignmentAnswer,
   CEFRLevel,
   Material,
   MaterialAssignment,
@@ -124,7 +124,8 @@ export async function generateMaterialContent(
   const content = parseJson<MaterialContent>(raw)
 
   // Валидация: выбрасываем битые упражнения, требуем минимум приличный набор.
-  const valid = validExercises(content.exercises ?? [])
+  const irregular = await loadIrregular(req.lang).catch(() => undefined) // к нашему виду (Ф2.25): normalizeExercises
+  const valid = validExercises(normalizeExercises(content.exercises ?? [], { body: content.body ?? '', lang: req.lang, level: req.level, irregular }))
   if (!content.title || !content.body || valid.length < 3) {
     throw new Error('AI вернул неполный материал. Нажми «Генерировать» ещё раз.')
   }
@@ -159,7 +160,7 @@ export async function generateExercisesForText(
   // «Свой текст» — путь преподавателя, задача material (в 3b не входит).
   const raw = await chat([{ role: 'user', content: userMsg }], { system, task: 'material' })
   const content = parseJson<{ title?: string; exercises?: MaterialExercise[] }>(raw)
-  const valid = validExercises(content.exercises ?? [])
+  const valid = validExercises(normalizeExercises(content.exercises ?? [], { body, lang, level, irregular: await loadIrregular(lang).catch(() => undefined) }))
   if (valid.length < 3) {
     throw new Error('AI не собрал упражнения по тексту. Попробуй ещё раз.')
   }
@@ -295,38 +296,6 @@ export async function listMaterialAssignments(
   return (data ?? []) as MaterialAssignment[]
 }
 
-/** Задания текущего ученика вместе с материалами. */
-export async function getMyAssignments(): Promise<
-  (MaterialAssignment & { material: Material })[]
-> {
-  const userId = await requireUserId()
-  const { data, error } = await supabase
-    .from('material_assignments')
-    .select('*, materials(*)')
-    .eq('student_id', userId)
-    .order('created_at', { ascending: false })
-  if (error) throw error
-  return ((data ?? []) as (MaterialAssignment & { materials: Material | null })[])
-    .filter((row) => row.materials)
-    .map(({ materials, ...a }) => ({ ...(a as MaterialAssignment), material: materials as Material }))
-}
-
-/** Ученик сдаёт работу: ответы + авто-балл, статус submitted (через RPC). */
-export async function submitAssignment(
-  assignmentId: string,
-  answers: AssignmentAnswer[],
-  autoScore: number,
-  autoTotal: number,
-): Promise<void> {
-  const { error } = await supabase.rpc('submit_material', {
-    p_id: assignmentId,
-    p_answers: toJson(answers),
-    p_auto_score: autoScore,
-    p_auto_total: autoTotal,
-  })
-  if (error) throw dbError(error, 'отправить работу')
-}
-
 // ---------------------------------------------------------------------------
 // Фаза B: проверка работ (AI-разбор → вердикты преподавателя).
 // ---------------------------------------------------------------------------
@@ -347,6 +316,8 @@ export async function generateAiReview(
       options: ex.type === 'mcq' ? ex.options : undefined,
       given: a?.given ?? '(нет ответа)',
       auto_ok: a?.auto_ok ?? false,
+      // «Соедини пары»: слово, что соединил ученик, верный ответ (Ф2.25-1б)
+      pairs: ex.type === 'match' ? ex.pairs.map((p, j) => ({ word: p.left, chosen: a?.pairs?.[j] ?? '', correct: p.right })) : undefined,
     }
   })
 
@@ -364,12 +335,8 @@ export async function generateAiReview(
   const raw = await chat([{ role: 'user', content: userMsg }], { system, task: 'review' })
   const parsed = parseJson<{ items: ReviewItem[] }>(raw)
   if (!Array.isArray(parsed.items)) throw new Error('AI вернул неполный разбор.')
-  // страховка: вердикт на каждое упражнение; чего нет и у пар (по паре) — авто-проверка, комментарий — от AI
-  return material.exercises.map((ex, i) => {
-    const auto = autoVerdict(ex, answers.find((x) => x.index === i), i)
-    const found = parsed.items.find((x) => x.index === i)
-    return !found ? auto : ex.type === 'match' ? { ...auto, comment: found.comment ?? '' } : { index: i, ok: Boolean(found.ok), comment: found.comment ?? '' }
-  })
+  // страховка: вердикт на каждое упражнение (чего нет — авто), у пар AI только добавляет зачёт
+  return material.exercises.map((ex, i) => aiVerdict(ex, answers.find((x) => x.index === i), i, parsed.items.find((x) => x.index === i)))
 }
 
 /** Сохранить черновик AI-разбора (чтобы не генерировать повторно; через RPC). */

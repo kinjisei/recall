@@ -70,17 +70,36 @@ export function MaterialBody({ material }: { material: Material }) {
   )
 }
 
-/** Упражнение с ответом (d8-1, d8-4 `.ex8`): «1 Why did Dana…? Ответ: Her flight had a delay.» */
+/**
+ * Упражнение с ответом (d8-1, d8-4 `.ex8`): «1 Why did Dana…? Ответ: Her
+ * flight had a delay.»; у «Соедини пары» — слово и перевод двумя колонками,
+ * перевод — цветом ответа (d8-4).
+ */
 export function ExerciseRow({ n, ex, lang }: { n: number; ex: GrammarExercise | MatchExercise; lang: string }) {
   return (
     <div className="flex gap-2.5 rounded-control-sm bg-input px-3 py-2.5 text-body leading-normal">
       <span className="flex size-6 flex-none items-center justify-center rounded-tag bg-surface text-xs font-semibold text-fg-secondary">{n}</span>
       <span className="flex min-w-0 flex-col gap-0.5">
         <span className="text-fg">{ex.prompt}</span>
-        <span className="text-sm font-medium text-success-strong">
-          <small className="text-sm font-normal text-fg-muted">Ответ: </small>
-          <span lang={lang}>{correctAnswerText(ex)}</span>
-        </span>
+        {ex.type === 'match' ? (
+          <span className="mt-0.5 grid grid-cols-[max-content_minmax(0,1fr)] gap-x-6 gap-y-0.5 text-sm">
+            {ex.pairs.map((p, i) => (
+              <span key={i} className="contents">
+                <span lang={lang} className="text-fg">
+                  {p.left}
+                </span>
+                <span lang={ex.format === 'definition' ? lang : undefined} className="font-medium text-success-strong">
+                  {p.right}
+                </span>
+              </span>
+            ))}
+          </span>
+        ) : (
+          <span className="text-sm font-medium text-success-strong">
+            <small className="text-sm font-normal text-fg-muted">Ответ: </small>
+            <span lang={lang}>{correctAnswerText(ex)}</span>
+          </span>
+        )}
       </span>
     </div>
   )

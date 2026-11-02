@@ -41,12 +41,15 @@
 ошибкам, и «Сохранить» сразу назначает им; правка владельца 05.10.2026,
 Ф2.11б-3), «Письменные задания» (IELTS и эссе) и
 «Методичка». Число «ждут проверки» стоит на вкладке «Задания» в меню.
-Проверка (d7-2, d7-3) — шапка «‹ Задания · Әсел Жұмабаева · «My morning»» и
-листалка «Работа 2 из 2 ‹ ›» по той же очереди, по кругу; «Завершить
-проверку» открывает следующую, последняя — возвращает в хаб. Задание по
-материалу: текст свёрнутой строкой, упражнения с «Правильно / Ошибка» и
-комментарием, справа итог «1 из 2» и «Дальше откроется»; письмо —
-`features/writing/CLAUDE.md`. До
+Проверка (d18 для материалов, d7-3 для письма) — шапка «‹ Задания · Әсел
+Жұмабаева · «My morning»» (на телефоне — только имя) и листалка «Работа 2
+из 2 ‹ ›» по той же очереди, по кругу; «Завершить проверку» открывает
+следующую, последняя — возвращает в хаб. Задание по материалу: текст
+свёрнутой строкой, у каждого упражнения — вид и счёт «1 из 1 / 3 из 4»;
+верное — одной строкой, спорное — «Правильно / Ошибка» и комментарий, у
+пар — «Засчитать» у неверной пары; справа итог «6 из 8 баллов», «Авто ·
+вручную», баллы по упражнениям и «Дальше откроется», на телефоне — полосой
+внизу; письмо — `features/writing/CLAUDE.md`. До
 Ф2.10 эти разделы были вкладками студии — старые ссылки `/teacher?tab=…`
 ведут сюда. Отчёт родителям печатается белым листом при любой теме.
 
@@ -78,12 +81,12 @@
 | `StudentWordsSection.tsx`, `WordPicker.tsx` | раздел «Слова» карточки (d10-3): список с галочками, откуда слово и статус, «+ Выдать слова» (паки и свои наборы), удаление через диалог, подвал «Выбрано 3 · уйдут Айгерим в приложение» → перепроверка; прошлые перепроверки |
 | `DiagnosticsSection.tsx`, `PlacementSection.tsx`, `QuestSection.tsx` | экраны плиток: диагностика (d10-2: динамика «было → стало», три числа, слова, задания со статусом — письма ученика, материалы, домашка, — слабые темы, последнее занятие), тест уровня (d11-1: «Тест появится у ученика в «Учёбе»…», «Назначить тест уровня» — главная кнопка на языке студии, второй язык тихой; пока тест ждёт — «Назначен 10 окт · ждёт» вместо кнопки; «История» — «…» или уровень, «назначен · пройден», «Снять» / «Убрать»; тестов не было — строка «Тестов пока не было»), квесты (d10-4: назначенные с перепиской, «Новый квест» — язык и уровень полосами, сценарий плитками: «В аэропорту», «В отеле», «Собеседование» или свой, порог ползунком) |
 | `program/ProgramSection.tsx`, `program/ProgramForm.tsx`, `program/programDraft.ts`, `DailyPlanSection.tsx` | «Программа» (d11-2, d11-3): форма «Новая программа» — язык и уровень полосами, «Недель» −/+ (`NumberStepper`), «Цель или пожелания», что учтёт AI; черновик AI — жёлтая плашка «ещё не назначен — Айгерим его не видит», недели в пунктирной рамке, внизу «К форме · Составить заново · Сохранить и назначить»; сохранённая — зелёная «Назначена 15 окт · неделя 1 из 4», пункты, которые ученик отметил «сделал» (миграция 0015), с галочкой, внизу «Изменить» (там же — «Снять программу»); программы на двух языках — выбор EN/ES над ней. Черновик — один на ученика, язык — его поле (`programDraft`; старый черновик по языку переносится). Под программой — «План дня» карточкой: галочки «Слова (повторение) — всегда в плане», чтение, грамматика, речь, диалог, «Задания и квесты сами попадают в план», «Сохранить план» справа от заголовка, «Вернуть план приложения»; вид недель — `features/program` `PlanView` |
-| `MaterialsSection.tsx`, `materials/*` | материалы: библиотека (d8-1 — шапка `ScreenTop`, `PendingWorks` «На проверку», `LibraryList` по уровням со строкой «Английский · A2 · рассказ · 1 на проверке», `MaterialDetail` рядом — `ListDetail fill`; на телефоне по очереди, у карточки «‹ Материалы»); мастер нового материала по d8-2…d8-5 — `MaterialWizard.tsx` (разводка шагов), `RequestForm` (заявка), `PlanScreen` (план и скелетон, пока AI пишет), `PreviewScreen` (текст готов); куски — `wizardBits.tsx` (шапка «‹ Материалы · Новый материал» с шагами «Заявка — План — Текст», карточка формы, «Итог»), `textBits.tsx` (статья, упражнения, «Назначится при сохранении», скелетон), `WordChips.tsx`, `markWords.ts` (слова плана в тексте), `useStudentLevels.ts` (уровни учеников — один запрос на мастер); шаги и «назад/вперёд» без потерь — `materials/wizard.ts`; «Для кого» — `ForWhom.tsx`, его правила (уровень, группы, предупреждение, подпись уровня в итоге) — `audience.ts` |
+| `MaterialsSection.tsx`, `materials/*` | материалы: библиотека (d8-1 — шапка `ScreenTop`, `PendingWorks` «На проверку», `LibraryList` по уровням со строкой «Английский · A2 · рассказ · 1 на проверке», `MaterialDetail` рядом — `ListDetail fill`; на телефоне по очереди, у карточки «‹ Материалы»); мастер нового материала по d8-2…d8-5 — `MaterialWizard.tsx` (разводка шагов), `RequestForm` (заявка), `PlanScreen` (план и скелетон, пока AI пишет), `PreviewScreen` (текст готов); куски — `wizardBits.tsx` (шапка «‹ Материалы · Новый материал» с шагами «Заявка — План — Текст», карточка формы, «Итог»), `textBits.tsx` (статья, упражнения, «Назначится при сохранении», скелетон), `WordChips.tsx`, `markWords.ts` (слова плана в тексте — в любой форме и с разрывами, `lib/wordForms`; справочник неправильных форм — лениво, `useIrregular.ts`), `useStudentLevels.ts` (уровни учеников — один запрос на мастер); шаги и «назад/вперёд» без потерь — `materials/wizard.ts`; «Для кого» — `ForWhom.tsx`, его правила (уровень, группы, предупреждение, подпись уровня в итоге) — `audience.ts` |
 | `materials/MaterialDetail.tsx`, `materials/detailParts.tsx` | карточка материала (d8-1): название, вид и «120 слов · 2 упражнения» (слова — по тексту), «Выдан: Әсел · вчера, 9:10 · ждёт проверки», текст абзацами, упражнения с ответом; ниже «Кому выдан» — «Выдать», «Убрать» (сданную — диалогом), «Проверить» ведёт в проверку `?work=`, «Разбор» — проверенная; печать, удаление |
 | `formHints.ts` | подсказки-примеры форм студии (материал, письмо, квест) на языке формы |
 | `writing/*`, `WritingDeleteButton.tsx` | письменные задания по d9-1, d9-2: `WritingSection` — шапка «‹ Задания · Письменные задания» и «+ Новое письмо», список рядом с заданием (`ListDetail fill`), открытое — в адресе `?wt=`; `TaskList` — вид «IELTS · Task 2 · band 6.5», вопрос, «1 сдано · 1 проверено · 1 назначено»; `TaskDetail` — ярлык, вопрос, плитки «Целевой балл · Объём · Время», строка на ученика (сдано → «Проверить» — та же проверка, что из хаба, `?work=`; проверено → «Разбор»; назначено → «Убрать»; нет → «Назначить»); `NewWritingPanel` — «Новое письмо» панелью 440 справа (шторкой на телефоне), вопрос от AI помечен «придумал AI · можно править»; подписи — `writingFacts.ts`; «Удалить задание» — под чертой, с диалогом по центру; проверка письма — `features/writing` |
-| `ReviewScreen.tsx`, `reviewBits.tsx` | проверка задания по материалу (d7-2): «Текст материала» свёрнутой строкой, полоса «AI предлагает засчитать…», упражнения — ответ с полоской цветом вердикта, «Правильно / Ошибка», комментарий; справа итог «1 из 2», «Завершить проверку (1/2)», «Дальше откроется» (`MainAside narrow`); проверенная — «Переназначить» диалогом с полем, как «На доработку» у письма |
-| `ReportSheet.tsx`, `PrintSheet.tsx` | отчёт родителям и печать |
+| `ReviewScreen.tsx`, `ReviewExercise.tsx`, `reviewBits.tsx`, `reviewPairs.tsx`, `reviewTotals.tsx` | проверка задания по материалу (d18, Ф2.25-1б; до неё d7-2): «Текст материала» свёрнутой строкой, «AI предлагает засчитать 6 баллов из 8 — проверь спорные»; упражнение — номер, вид («Верно / Неверно · текст A2», «Соедини слово и перевод · балл за пару») и счёт «1 из 1 / 3 из 4»; верное и по авто, и по вердикту — строкой «✓ ответ · ответ Әсел», спорное — ответ с полоской цветом вердикта, «Правильно / Ошибка», комментарий; пары — «Засчитать» у неверной (засчитанная — на акценте), сводка «Пары Әсел: 3 верно, 1 неверно · 1 засчитана вручную»; справа итог в баллах с «Авто · вручную» и баллами упражнений, «Завершить проверку», «Дальше откроется» (`MainAside narrow`), на телефоне — полоса внизу над навигацией (d18-2); проверенная — «Переназначить» диалогом с полем, как «На доработку» у письма |
+| `ReportSheet.tsx`, `PrintSheet.tsx` | отчёт родителям и печать: каждый вид с местом для ответа — пары словами с номером и вариантами с буквой в порядке экрана ученика, «собери» — слова и строка; ключ — «b) at seven», «1–b, 2–d», «I go home» |
 | `AssignmentsPage.tsx` | экран ученика `/assignments`: домашка и список заданий-материалов; открытое задание и стадия — в адресе (`?a=`, `?stage=`) |
 | `assignment/AssignmentRunner.tsx`, `assignment/runnerBits.tsx`, `assignment/ReviewedView.tsx`, `assignment/TappableBody.tsx` | задание ученика: прохождение (текст → упражнения → сдача); упражнения — по макету u5: режим раунда (меню спрятано, Esc — к заданиям), на телефоне шапка «‹ Название», «↑ перечитать текст» и «3 / 6 · 2 балла» (после пар — «+3»), полоска; на компьютере — рамка раунда d5 (`shared/ui/RoundFrame`): ход «Упражнения» с «3/4» у пар, «6 баллов», клавиши упражнения; разбор проверенной работы (счёт в баллах, пары с отметкой учителя); текст с тапом по словам |
 | `useAnswerDraft.ts`, `useComposerDraft.ts`, `useReviewDraft.ts`, `useWritingTaskDraft.ts` | черновики: ответы домашки, сборка домашки, правки к разбору, письменное задание (Ф1.14) |
@@ -92,9 +95,12 @@
 | `src/lib/activityDays.ts` | дни с занятиями за окно (`activeDaysIn`) и серия (`streakFrom`) — одни на карточку учителя и экраны ученика; день по Алматы (`shared/lib/almaty`), учитель видит те же сутки, что ученик |
 | `src/lib/wordChecks.ts` | слова ученика со статусом (`getStudentWords`), перепроверка |
 | `src/lib/diagnosticsBrief.ts` | сводка диагностики для промптов — общая с программой обучения; сводка нескольких учеников для одного материала |
-| `src/lib/materialExercises.ts` | отсев несобираемых упражнений: «собери» не из своих слов, пары не 3–8 / пустые / повторы / лишний вариант совпал с парой, «Верно / Неверно» не 2–3 кнопки, «Выбери форму» не 3–4, одинаковые варианты выбора |
-| `src/lib/materialPrompts.ts` | промпты материала: заявка учителя (`MaterialRequest`), план, текст с упражнениями, «Мой текст», AI-разбор сданной работы; вызовы и фильтры — `lib/materials.ts` |
-| `src/lib/assignmentScore.ts` | балл работы в баллах — один на все экраны (`workScore`, `exercisePoints`, `verdictPoints`), черновик проверки по авто-проверке с отметками у пар (`autoVerdict`), «Правильно / Ошибка» у пар целиком (`markWhole`), процент для диагностики и динамики |
+| `src/lib/materialExercises.ts` | приведение ответа AI к нашему виду (`normalizeExercises`: «Верно / Неверно» — кнопки на языке текста, у A1–A2 две, ответ по подписи; словарь — только слова текста; перевод — по-русски, объяснение — на языке текста) и отсев несобираемых упражнений: «собери» не из своих слов, пары не 3–8 / пустые / повторы / лишний вариант совпал с парой, «Верно / Неверно» не 2–3 кнопки, «Выбери форму» не 3–4, одинаковые варианты выбора |
+| `src/lib/materialPrompts.ts` | промпты материала: заявка учителя (`MaterialRequest`), план, текст с упражнениями, «Мой текст», AI-разбор сданной работы; виды упражнений и их правила — одним блоком на «Новый текст» и «Мой текст» (`exerciseSpec`); вызовы и фильтры — `lib/materials.ts` |
+| `src/lib/materialAssignments.ts` | задания ученика: список с материалами и сдача — отдельно от генерации: их зовут Главная и «Учёба», и с генерацией в стартовую загрузку ехали все промпты |
+| `src/lib/wordForms.ts` | «слово есть в тексте» по начальной форме и с разрывами: «missed her flight» ⇒ miss a flight, took ⇒ take, esperó ⇒ esperar; кусок слова — нет; справочники неправильных форм (`data/english/irregular`, `data/spanish/conjugation`) — лениво (`loadIrregular`) |
+| `src/lib/exerciseFormats.ts` | названия видов упражнений («Выбери ответ», «Верно / Неверно», «Соедини слово и перевод»…) — для проверки, итога и печати; каталог форматов — Ф2.25-2 |
+| `src/lib/assignmentScore.ts` | балл работы в баллах — один на все экраны (`workScore`, `exercisePoints`, `verdictPoints`), черновик проверки по авто-проверке с отметками у пар (`autoVerdict`), вердикт AI-разбора поверх авто (`aiVerdict`: у пар AI только добавляет зачёт), процент для диагностики и динамики |
 
 ## Правила, которые нельзя нарушить
 
@@ -342,8 +348,19 @@
   миграция 0017). Экран ученика, разбор, проверка, карточка материала, хаб
   «Заданий», диагностика — `lib/assignmentScore` (`workScore`); до Ф2.25
   было семь своих «filter(r => r.ok).length», и с парами каждый показал бы
-  своё «N из M». Отметка учителя у пары — `pairs` в вердикте (d18 — в 1б);
-  пока её нет, «Правильно» у пар — все пары, «Ошибка» — как у авто-проверки.
+  своё «N из M». Отметка учителя у пары — `pairs` в вердикте (d18).
+- **Всё на уровне текста, словарь — из текста** (Ф2.25-1б, журнал п.76 (8)):
+  промпты «Нового текста» и «Моего текста» просят виды одним блоком
+  (`exerciseSpec`): вопросы и объяснения — не сложнее текста, открытых
+  вопросов нет, «Верно / Неверно» — на языке текста, у A1–A2 без «Не
+  сказано», пары — 4–6 и один лишний вариант. Ответ модели приводит
+  `normalizeExercises`: подписи кнопок — по смыслу, а не по месту; пара или
+  «слово по объяснению» без слова из текста (в любой форме, `lib/wordForms`)
+  — убирается; перепутанный перевод / объяснение — выбрасывается.
+- **AI-разбор у пар только добавляет зачёт** (`aiVerdict`): синоним перевода
+  AI может засчитать, снять верную пару — нет; комментарий у пар не нужен —
+  пары с верным ответом видны сами. «Вручную» в итоге — разница проверки и
+  авто-проверки, в том числе то, что предложил AI.
 - После работы ученик видит разбор с кнопкой «Почему?» — объяснение лёгкой
   моделью, энергии не стоит.
 
@@ -368,7 +385,9 @@
   «назад» и «вперёд» без потерь, ветки, текст, пришедший пока смотрят план,
   право на повторы в черновике, черновик прежнего вида.
 - `node scripts/test-mark-words.mjs` (чистый, в CI) — слова плана в тексте:
-  регистр, окончания, длинное раньше короткого, кусок слова не метится.
+  регистр, окончания, длинное раньше короткого, кусок слова не метится; с
+  Ф2.25 — начальная форма и разрывы (missed her flight ⇒ miss a flight,
+  took ⇒ take по справочнику, stopped, carried; esperó ⇒ esperar, fue ⇒ ir).
 - `node scripts/test-material-audience.mjs` (чистый, в CI) — «Для кого»:
   уровень слабого, группы, предупреждение, подпись уровня в итоге.
 - `node scripts/shots-screens.mjs --only wizard` — мастер по d8-2…d8-5:
@@ -415,19 +434,26 @@
   заготовкой вместо модели); правила держит `test-ai-quality-rules.mjs` (в CI).
 - `node scripts/smoke-assignment-review.mjs` — все виды упражнений доходят до
   ученика (пары — нажатиями и клавишами, Backspace, «+3», пары переживают
-  перезагрузку), сервер начисляет балл за каждую пару (5 из 9), разбор ошибок.
+  перезагрузку), сервер начисляет балл за каждую пару (5 из 9), разбор ошибок;
+  проверка учителем по d18 с ответом AI заготовкой: баллы, «Засчитать» у
+  пары → «4 из 4» и «вручную +1», сервер сохраняет отметки у пар, ученик
+  видит «6 баллов из 9».
 - `node scripts/test-material-exercises.mjs` (чистый, в CI) — отсев
-  несобираемых (+ пары, «Верно / Неверно», «Выбери форму», одинаковые варианты).
+  несобираемых (+ пары, «Верно / Неверно», «Выбери форму», одинаковые варианты)
+  и приведение ответа AI (`normalizeExercises`: кнопки по уровню и языку,
+  ответ по подписи, словарь — только из текста, перевод по-русски).
 - `node scripts/test-match-score.mjs` (чистый, в CI) — счёт в баллах на
   клиенте по общим с сервером случаям (`_match-cases.mjs`), сверка выбора =
-  SQL `norm_answer`, отметки учителя у пар; `node scripts/check-material-match.mjs`
+  SQL `norm_answer`, отметки учителя у пар, AI у пар только добавляет зачёт; `node scripts/check-material-match.mjs`
   — те же случаи на тестовой базе (`supabase/CLAUDE.md`).
 - `node scripts/test-assignment-score.mjs` (чистый, в CI) — балл работы для
   диагностики: учитель приоритетнее авто, переназначенная, пары по баллам.
 - `node scripts/shots-screens.mjs --only material-run` — задание ученика по
   u5: пары до и после «Проверить», «Верно / Неверно» до и после ответа, пары
   с объяснением на компьютере; сверх кадров — выбор ответа в той же рамке и
-  разбор проверенной работы.
+  разбор проверенной работы. `--only material-review` — проверка по d18
+  (1280 во всю высоту; телефон — пара засчитана вручную) и пары двумя
+  колонками в библиотеке (d8-4).
 - Карточка и сборка домашки — `smoke-homework-ui` (`features/homework/CLAUDE.md`).
 - `node scripts/smoke-drafts.mjs` — каждое поле учителя и ответы домашки
   переживают перезагрузку; «Очистить» в мастере возвращает к списку.
@@ -451,11 +477,11 @@
 <!-- Пишет `npm run gen:docs` (scripts/gen/module-docs.mjs) по коду — руками не править. -->
 ## Из кода (сгенерировано)
 
-- **Файлы:** `assignment/AssignmentRunner.tsx`, `assignment/ReviewedView.tsx`, `assignment/runnerBits.tsx`, `assignment/TappableBody.tsx`, `AssignmentsPage.tsx`, `BecomeTeacher.tsx`, `CardDetail.tsx`, `DailyPlanSection.tsx`, `DiagnosticsSection.tsx`, `formHints.ts`, `guideReading.ts`, `GuideSection.tsx`, `GuideToc.tsx`, `HomeworkComposer.tsx`, `HomeworkSection.tsx`, `index.ts`, `innerScreen.ts`, `materials/audience.ts`, `materials/detailParts.tsx`, `materials/ForWhom.tsx`, `materials/LibraryList.tsx`, `materials/markWords.ts`, `materials/MaterialDetail.tsx`, `materials/MaterialWizard.tsx`, `materials/PendingWorks.tsx`, `materials/PlanScreen.tsx`, `materials/PreviewScreen.tsx`, `materials/RequestForm.tsx`, `materials/shared.ts`, `materials/textBits.tsx`, `materials/useStudentLevels.ts`, `materials/wizard.ts`, `materials/wizardBits.tsx`, `materials/WordChips.tsx`, `MaterialsSection.tsx`, `PlacementSection.tsx`, `PrintSheet.tsx`, `program/programDraft.ts`, `program/ProgramForm.tsx`, `program/ProgramSection.tsx`, `QuestSection.tsx`, `ReportSheet.tsx`, `reviewBits.tsx`, `ReviewScreen.tsx`, `roster.tsx`, `sectionBits.tsx`, `StudentRowBits.tsx`, `StudentsTab.tsx`, `StudentStudio.tsx`, `StudentWordsSection.tsx`, `StudioEnergy.tsx`, `StudioSection.tsx`, `studioSections.ts`, `StudioTiles.tsx`, `TasksHub.tsx`, `TasksPage.tsx`, `TeacherBlock.tsx`, `TeacherPage.tsx`, `topicTitles.ts`, `useAnswerDraft.ts`, `useComposerDraft.ts`, `useReviewDraft.ts`, `useWritingTaskDraft.ts`, `waitingCount.ts`, `waitingWorks.ts`, `WordPicker.tsx`, `writing/NewWritingPanel.tsx`, `writing/TaskDetail.tsx`, `writing/TaskList.tsx`, `writing/writingFacts.ts`, `writing/WritingSection.tsx`, `WritingDeleteButton.tsx`
-- **Вне папки (указатель «Описание:» в начале файла):** `src/lib/activityDays.ts`, `src/lib/assignmentScore.ts`, `src/lib/diagnosticsBrief.ts`, `src/lib/materialExercises.ts`, `src/lib/materialLengths.ts`, `src/lib/materialPrompts.ts`, `src/lib/reviewQueue.ts`, `src/lib/studentSignals.ts`, `src/lib/wordChecks.ts`
+- **Файлы:** `assignment/AssignmentRunner.tsx`, `assignment/ReviewedView.tsx`, `assignment/runnerBits.tsx`, `assignment/TappableBody.tsx`, `AssignmentsPage.tsx`, `BecomeTeacher.tsx`, `CardDetail.tsx`, `DailyPlanSection.tsx`, `DiagnosticsSection.tsx`, `formHints.ts`, `guideReading.ts`, `GuideSection.tsx`, `GuideToc.tsx`, `HomeworkComposer.tsx`, `HomeworkSection.tsx`, `index.ts`, `innerScreen.ts`, `materials/audience.ts`, `materials/detailParts.tsx`, `materials/ForWhom.tsx`, `materials/LibraryList.tsx`, `materials/markWords.ts`, `materials/MaterialDetail.tsx`, `materials/MaterialWizard.tsx`, `materials/PendingWorks.tsx`, `materials/PlanScreen.tsx`, `materials/PreviewScreen.tsx`, `materials/RequestForm.tsx`, `materials/shared.ts`, `materials/textBits.tsx`, `materials/useIrregular.ts`, `materials/useStudentLevels.ts`, `materials/wizard.ts`, `materials/wizardBits.tsx`, `materials/WordChips.tsx`, `MaterialsSection.tsx`, `PlacementSection.tsx`, `PrintSheet.tsx`, `program/programDraft.ts`, `program/ProgramForm.tsx`, `program/ProgramSection.tsx`, `QuestSection.tsx`, `ReportSheet.tsx`, `reviewBits.tsx`, `ReviewExercise.tsx`, `reviewPairs.tsx`, `ReviewScreen.tsx`, `reviewTotals.tsx`, `roster.tsx`, `sectionBits.tsx`, `StudentRowBits.tsx`, `StudentsTab.tsx`, `StudentStudio.tsx`, `StudentWordsSection.tsx`, `StudioEnergy.tsx`, `StudioSection.tsx`, `studioSections.ts`, `StudioTiles.tsx`, `TasksHub.tsx`, `TasksPage.tsx`, `TeacherBlock.tsx`, `TeacherPage.tsx`, `topicTitles.ts`, `useAnswerDraft.ts`, `useComposerDraft.ts`, `useReviewDraft.ts`, `useWritingTaskDraft.ts`, `waitingCount.ts`, `waitingWorks.ts`, `WordPicker.tsx`, `writing/NewWritingPanel.tsx`, `writing/TaskDetail.tsx`, `writing/TaskList.tsx`, `writing/writingFacts.ts`, `writing/WritingSection.tsx`, `WritingDeleteButton.tsx`
+- **Вне папки (указатель «Описание:» в начале файла):** `src/lib/activityDays.ts`, `src/lib/assignmentScore.ts`, `src/lib/diagnosticsBrief.ts`, `src/lib/exerciseFormats.ts`, `src/lib/materialAssignments.ts`, `src/lib/materialExercises.ts`, `src/lib/materialLengths.ts`, `src/lib/materialPrompts.ts`, `src/lib/reviewQueue.ts`, `src/lib/studentSignals.ts`, `src/lib/wordChecks.ts`, `src/lib/wordForms.ts`
 - **Адреса:** `/teacher`, `/tasks`, `/assignments`
 - **Таблицы:** `cards`, `decks`, `material_assignments`, `review_states`, `word_checks`, `writing_task_assignments`
-- **RPC:** `assign_word_check`, `submit_word_check`
+- **RPC:** `assign_word_check`, `submit_material`, `submit_word_check`
 - **localStorage:** `recall.guide`, `recall.students.sort`
 - **Кто использует (импортом):** `app`, `features/dashboard`, `features/flashcards`, `features/homework`, `features/progress`, `features/study`, `features/words`, `lib`
 <!-- generated:end -->
