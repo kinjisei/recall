@@ -10,6 +10,9 @@ const bridge = () => {
 }
 
 export const chat = (messages, opts) => bridge().chat(messages, opts)
+// план материала зовёт chatReply (текст + право на повторы плана, Ф2.17-4в-2б);
+// без неё --dry и --fake падали на импорте. Права на повторы проверка не меряет.
+export const chatReply = async (messages, opts) => ({ text: await bridge().chat(messages, opts) })
 export const chatStream = () => {
   throw new Error('поток в проверке качества не нужен')
 }

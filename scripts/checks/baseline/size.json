@@ -15,7 +15,7 @@
     "src/features/teacher/WordPicker.tsx": 454,
     "src/features/words/MyWords.tsx": 445,
     "src/lib/homeworkRules.ts": 535,
-    "src/lib/materials.ts": 563,
+    "src/lib/materials.ts": 414,
     "src/types/index.ts": 427
   }
 }
