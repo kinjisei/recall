@@ -223,7 +223,7 @@ function ReadingHint({ saved }: { saved: [string, string][] | null }) {
     <div className="flex flex-col gap-3 text-fg">
       <p className="text-caption font-semibold text-fg-muted">Перевод</p>
       <p className="rounded-control bg-accent-soft px-3.5 py-3 text-note text-accent-soft-fg">
-        Нажми на любое слово в тексте — перевод появится здесь, текст не сдвинется.
+        Нажми на любое слово в тексте — перевод появится здесь.
       </p>
       {saved && saved.length > 0 && (
         <div className="flex flex-col">
