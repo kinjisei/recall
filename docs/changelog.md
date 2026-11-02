@@ -469,7 +469,7 @@
   Экран /pricing (публичный, Kaspi +7 776 210 02 21, email в комментарии
   перевода), /admin (is_admin: поиск по email → admin_set_plan на N месяцев).
   Блок «ТАРИФЫ И FREE-ЛИМИТЫ» в schema.sql ВЫПОЛНЕН пользователем; владелец
-  (k.yerbolat.2004) — is_admin, девушка (a.abduldina19) — teacher_pro на 100 лет.
+  — is_admin, тестовый аккаунт репетитора — teacher_pro на 100 лет.
   Смоук на проде: 5 lite-запросов прошли, 6-й → 429 с текстом про Premium.
   AI-роутинг по сложности: tier lite/standard/max (перевод слова → Groq-8b/
   Gemini-lite; чат/письмо/разбор → flash-цепочка; материалы учителя →
