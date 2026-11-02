@@ -1,6 +1,9 @@
 // ============================================================================
 // Общий движок упражнений (mcq / fill / order) — используется грамматикой
 // и материалами преподавателя. Перенесён из features/grammar/GrammarPage.
+// У материала ещё «Соедини пары» (MatchExercise), «Верно / Неверно / Не
+// сказано» (TrueFalseExercise) и «Выбери правильную форму» — выбор с
+// подписью задания (Ф2.25-1, макет u5).
 // onGiven — необязательный колбэк: каким был ответ ученика (для проверки
 // учителем в материалах).
 //
@@ -24,24 +27,34 @@ import { useMemo, useState, type ReactNode } from 'react'
 import { Card } from '../shared/ui/Card'
 import { Button } from '../shared/ui/Button'
 import { useRoundKeys } from '../shared/ui/roundKeys'
-import { MistakeHint, RevealAnswer, RoundBuild, RoundFeedback, RoundFooter, RoundHint, RoundOption, RoundPrompt, type OptionState } from '../shared/ui/roundParts'
+import { MistakeHint, RevealAnswer, RoundBuild, RoundFeedback, RoundFooter, RoundHint, RoundOption, RoundPrompt, RoundTask, type OptionState } from '../shared/ui/roundParts'
 import { answerMatches, normalizeAnswer } from '../lib/text'
 import { mcqHint, mistakeHint, orderHint, shouldReveal } from '../lib/selfCorrect'
-import type { GrammarExercise } from '../types'
+import { MatchExercise } from './MatchExercise'
+import { TrueFalseExercise } from './TrueFalseExercise'
+import type { AppLang, GrammarExercise, MatchExercise as MatchData, MaterialMcq } from '../types'
 
 export interface ExerciseCallbacks {
   onAnswered: (ok: boolean) => void
   onGiven?: (given: string) => void
+  /** «Соедини пары»: что соединено с каждым словом (вызывается до onGiven). */
+  onPairs?: (chosen: string[]) => void
   onNext: () => void
   isLast: boolean
-  /** Без карточки — внутри рамки раунда «Практики» (d5). */
+  /** Без карточки — внутри рамки раунда «Практики» (d5) и задания по материалу (u5). */
   bare?: boolean
+  /** Язык текста материала: у слов и утверждений — для читалки. */
+  lang?: AppLang
+  /** Баллов до этого упражнения (u5-3: «+1 балл · 6 баллов»). */
+  score?: number
 }
 
 export function ExerciseView({
   exercise,
   ...cb
-}: { exercise: GrammarExercise } & ExerciseCallbacks) {
+}: { exercise: GrammarExercise | MaterialMcq | MatchData } & ExerciseCallbacks) {
+  if (exercise.type === 'match') return <MatchExercise exercise={exercise} {...cb} />
+  if (exercise.type === 'mcq' && 'format' in exercise && exercise.format === 'tfng') return <TrueFalseExercise exercise={exercise} {...cb} />
   if (exercise.type === 'mcq') return <McqExercise exercise={exercise} {...cb} />
   if (exercise.type === 'fill') return <FillExercise exercise={exercise} {...cb} />
   return <OrderExercise exercise={exercise} {...cb} />
@@ -76,7 +89,7 @@ export function McqExercise({
   onNext,
   isLast,
   bare,
-}: { exercise: Extract<GrammarExercise, { type: 'mcq' }> } & ExerciseCallbacks) {
+}: { exercise: Extract<GrammarExercise, { type: 'mcq' }> & { format?: MaterialMcq['format'] } } & ExerciseCallbacks) {
   // Все неверные варианты, которые человек уже перебрал.
   const [wrong, setWrong] = useState<number[]>([])
   const [solved, setSolved] = useState(false)
@@ -118,6 +131,8 @@ export function McqExercise({
 
   return (
     <Shell bare={bare}>
+      {/* «Выбери правильную форму» — тот же выбор, с подписью задания (u5) */}
+      {exercise.format === 'form' && <RoundTask>Выбери правильную форму</RoundTask>}
       <RoundPrompt text={exercise.prompt} />
       <div className={`mt-2 ${compact ? 'grid grid-cols-2 gap-2.5' : 'flex flex-col gap-2.5'}`}>
         {exercise.options.map((opt, i) => (

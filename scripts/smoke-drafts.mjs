@@ -200,15 +200,16 @@ try {
   await go(st, `/assignments?a=${d.ma1}&stage=exercises`)
   await click(st, 'at seven')
   await st.reload({ waitUntil: 'networkidle2' })
-  await st.waitForFunction(() => document.body.innerText.includes('верно:'), { polling: 250, timeout: 15000 }).catch(() => {})
+  // счёт в шапке задания — в баллах (u5): «1 / 2 · 1 балл»
+  await st.waitForFunction(() => /·\s*\d+ балл/.test(document.body.innerText), { polling: 250, timeout: 15000 }).catch(() => {})
   const ans = await text(st)
-  check('ответы домашки: ответил → перезагрузил → ответ на месте', /верно:\s*1/.test(ans) && ans.includes(NOTE), ans.slice(0, 160))
+  check('ответы домашки: ответил → перезагрузил → ответ на месте', /·\s*1 балл(?![а-я])/.test(ans) && ans.includes(NOTE), ans.slice(0, 160))
   // «Очистить» — задание с чистого листа, и это переживает перезагрузку
   await click(st, 'Очистить')
   await st.reload({ waitUntil: 'networkidle2' })
-  await st.waitForFunction(() => document.body.innerText.includes('верно:'), { polling: 250, timeout: 15000 }).catch(() => {})
+  await st.waitForFunction(() => /·\s*\d+ балл/.test(document.body.innerText), { polling: 250, timeout: 15000 }).catch(() => {})
   const cleared = await text(st)
-  check('«Очистить» стирает черновик', /верно:\s*0/.test(cleared) && !cleared.includes(NOTE), cleared.slice(0, 160))
+  check('«Очистить» стирает черновик', /·\s*0 баллов/.test(cleared) && !cleared.includes(NOTE), cleared.slice(0, 160))
 
   // выход из аккаунта стирает черновики с устройства (общий телефон)
   await go(st, '/conversation')

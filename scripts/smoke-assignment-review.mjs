@@ -1,5 +1,5 @@
 /**
- * Смоук: задание с тремя типами упражнений и разбор ошибок у ученика.
+ * Смоук: задание со всеми видами упражнений и разбор ошибок у ученика.
  *
  * Проверяет две вещи, которых раньше не было:
  *  1. «Собери предложение» (order) доходит до ученика. Движок и сервер его
@@ -8,6 +8,13 @@
  *  2. После работы есть разбор с кнопкой «Почему?». В практике объяснение
  *     ошибки было, в заданиях преподавателя — нет: ученик видел «неверно» и
  *     правильный ответ, но не узнавал, чем плох его собственный.
+ *  3. Новые виды Ф2.25-1 (макет u5) доходят до ученика и считаются в
+ *     баллах: «Верно / Неверно» (две кнопки на языке текста, после ответа —
+ *     строка из текста), «Соедини пары» (нажал слово — нажал пару, на
+ *     компьютере — клавишами 1–4 и A–E; «Проверить» — когда соединено всё;
+ *     3 из 4 пар — 3 балла и «+3» у счёта), «Выбери правильную форму».
+ *     Пары переживают перезагрузку (черновик), сервер начисляет балл за
+ *     каждую пару: итог работы — 5 из 9 баллов, а не «2 из 6».
  *
  * Материал кладём в базу напрямую (service_role): генерация стоила бы дорогой
  * модели и месячного лимита, а проверяем мы не её, а путь ученика.
@@ -101,6 +108,21 @@ async function main() {
       exercises: [
         { kind: 'comprehension', type: 'mcq', prompt: 'When does he get up?', options: ['at six', 'at seven'], answer: 1 },
         { kind: 'grammar', type: 'fill', prompt: 'I ___ up at seven.', answer: 'get' },
+        { kind: 'comprehension', type: 'mcq', format: 'tfng', prompt: 'He gets up at six.', options: ['True', 'False'], answer: 1, quote: 'I get up at seven.', mark: 'seven', why: 'Он встаёт в семь' },
+        {
+          kind: 'vocab',
+          type: 'match',
+          format: 'translation',
+          prompt: 'Соедини слово и перевод',
+          pairs: [
+            { left: 'morning', right: 'утро' },
+            { left: 'quiet', right: 'тихий' },
+            { left: 'work', right: 'работа' },
+            { left: 'home', right: 'дом' },
+          ],
+          extra: ['день'],
+        },
+        { kind: 'grammar', type: 'mcq', format: 'form', prompt: 'Mornings ___ quiet.', options: ['are', 'is', 'be'], answer: 0 },
         {
           kind: 'grammar',
           type: 'order',
@@ -190,7 +212,58 @@ async function main() {
   check('по кнопке ответ появляется', await seen(page, 'Верный ответ'))
   await tap(page, 'Дальше')
 
-  // 3. сборка предложения — тот самый третий тип
+  // 3. «Верно / Неверно» (A2 — две кнопки на языке текста), отвечаем верно
+  check('«Верно или неверно?» дошло до ученика', await seen(page, 'Верно или неверно?'))
+  const tfButtons = await page.evaluate(() => [...document.querySelectorAll('main button')].map((b) => b.textContent.trim()).filter((t) => ['True', 'False', 'Not given'].includes(t)))
+  check('у текста A2 — две кнопки True / False', tfButtons.join(',') === 'True,False', tfButtons.join(','))
+  await tap(page, 'False', true)
+  check('после ответа — «Правильно — False» и строка из текста', (await seen(page, 'Правильно — False')) && (await seen(page, 'I get up at seven.')))
+  check('и балл «+1 балл»', await seen(page, '+1 балл'))
+  await tap(page, 'Дальше')
+
+  // 4. «Соедини пары» — на компьютере, клавишами: 1–4 слово, A–E перевод
+  check('«Соедини пары» дошло до ученика', await seen(page, 'Соедини слово и перевод'))
+  const checkOff = () => page.evaluate(() => [...document.querySelectorAll('main button')].find((b) => b.textContent.trim() === 'Проверить')?.disabled ?? null)
+  check('«Проверить» выключена, пока соединено не всё', (await checkOff()) === true)
+  await page.setViewport({ width: 1280, height: 800 })
+  await sleep(800)
+  const rights = await page.evaluate(() => [...document.querySelectorAll('button[data-pair-side="R"]')].map((b) => b.lastElementChild?.textContent.trim()))
+  const key = (word) => 'Key' + String.fromCharCode(65 + rights.indexOf(word))
+  // три верные пары и одна неверная: home ↔ «день» (лишний вариант)
+  for (const [n, word] of [['1', 'утро'], ['2', 'тихий'], ['3', 'работа'], ['4', 'день']]) {
+    await page.keyboard.press(n)
+    await page.keyboard.press(key(word))
+    await sleep(150)
+  }
+  check('все пары соединены клавишами — «Проверить» включена', (await checkOff()) === false, `справа: ${rights.join(', ')}`)
+  // Backspace разъединяет последнюю пару, она снова соединяется
+  await page.keyboard.press('Backspace')
+  await sleep(150)
+  check('Backspace разъединил пару', (await checkOff()) === true)
+  await page.keyboard.press('4')
+  await page.keyboard.press(key('день'))
+  await sleep(150)
+  await page.keyboard.press('Enter')
+  await sleep(600)
+  check('после «Проверить»: 3 из 4 пар — 3 балла', await seen(page, '3 из 4 пар — 3 балла'))
+  check('у неверной пары — верный перевод', await seen(page, 'верно: дом'))
+  check('у счёта — «+3»', await seen(page, '+3'))
+  await page.keyboard.press('Enter')
+  await sleep(800)
+  await page.setViewport({ width: 420, height: 900 })
+  await sleep(500)
+
+  // пары переживают перезагрузку: черновик хранит их, счёт — с баллами пар
+  await page.reload({ waitUntil: 'networkidle2' })
+  await sleep(2000)
+  check('после перезагрузки счёт помнит пары — «5 / 6 · 4 балла»', await seen(page, '5 / 6 · 4 балла'))
+
+  // 5. «Выбери правильную форму» — выбор с подписью задания
+  check('«Выбери правильную форму» дошло до ученика', await seen(page, 'Выбери правильную форму'))
+  await tap(page, 'are', true)
+  await tap(page, 'Дальше')
+
+  // 6. сборка предложения — тот самый третий тип
   const bank = await page.evaluate(() =>
     [...document.querySelectorAll('button')]
       .map((b) => (b.textContent || '').trim())
@@ -211,6 +284,14 @@ async function main() {
 
   // ---- разбор ------------------------------------------------------------
   check('итог работы показан', await seen(page, 'Работа отправлена'))
+  // сервер считает в баллах: выбор 0, вписать 0, верно/неверно 1, пары 3, форма 1, сборка 0
+  await sleep(1500)
+  const { data: done } = await admin.from('material_assignments').select('auto_score, auto_total, answers').eq('material_id', mat.id).single()
+  check('сервер начислил балл за каждую пару: 5 из 9', done?.auto_score === 5 && done?.auto_total === 9, `${done?.auto_score} из ${done?.auto_total}`)
+  check(
+    'пары ученика дошли до сервера',
+    JSON.stringify(done?.answers?.find((a) => a.index === 3)?.pairs) === JSON.stringify(['утро', 'тихий', 'работа', 'день']),
+  )
   const hasReview = await seen(page, 'Посмотреть результаты')
   check('в задании появился разбор ответов', hasReview)
 

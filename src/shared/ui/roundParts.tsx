@@ -14,6 +14,23 @@ export function RoundTask({ children }: { children: ReactNode }) {
   return <p className="text-body font-medium text-fg-muted">{children}</p>
 }
 
+/**
+ * Заголовок упражнения материала (u5): на телефоне — крупно жирным («Соедини
+ * слово и перевод») и под ним «что делать»; в колонке раунда на компьютере
+ * (u5-4) — тихой подписью, как RoundTask. Отступы — макета: 22 сверху и 14
+ * снизу на телефоне, 16 снизу на компьютере.
+ */
+export function RoundHead({ title, sub }: { title: string; sub?: ReactNode }) {
+  return (
+    <div className="mt-3.5 mb-3.5 flex flex-col gap-1 @xl/round:mt-0 @xl/round:mb-4">
+      <h2 className="text-xl leading-tight font-bold tracking-tight text-fg @xl/round:text-body @xl/round:font-medium @xl/round:tracking-normal @xl/round:text-fg-muted">
+        {title}
+      </h2>
+      {sub && <p className="text-sm text-fg-secondary">{sub}</p>}
+    </div>
+  )
+}
+
 /** Вопрос крупно (слово — 44, фраза длиннее 24 знаков — 24) и «озвучить» рядом. */
 export function RoundPrompt({ text, onSay, sub }: { text: string; onSay?: () => void; sub?: ReactNode }) {
   const long = text.length > 24

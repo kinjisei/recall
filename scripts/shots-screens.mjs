@@ -49,6 +49,7 @@
  *   writing-new — «Новое письмо» панелью, вопрос придумал AI (d9-2; вопрос —
  *                 черновиком, AI не зовётся);
  *   guide       — методичка, прокручена до раздела 2 (d9-3), снимок окном.
+ * Ф2.25 — упражнения материала: экраны и данные в `_shots-f225.mjs` (`--only material-run` — ученик по u5).
  * Заходы 4г (d11–d15) — экраны и данные в `_shots-4g.mjs`: тест уровня, программа, «Моя учёба»,
  * «Пригласи коллегу», «Как оплатить», Настройки, лендинг (гость — без входа: `screen(null, …)`).
  * Аудит у них — по шторке или диалогу (`audit`), а не по <main> под
@@ -60,7 +61,7 @@
  * красная строка в итоге. Телефон снимается окном во всю высоту страницы.
  *
  * Запуск: npm run dev:test, затем node scripts/shots-screens.mjs [папка]
- * [--only home|students|schedule|exercise|reading|cancel|tasks|materials|wizard|writing|program|learn|invite|settings|landing] [--name экран,экран] (по умолчанию shots-screens/,
+ * [--only home|students|schedule|exercise|reading|material-run|cancel|tasks|materials|wizard|writing|program|learn|invite|settings|landing] [--name экран,экран] (по умолчанию shots-screens/,
  * все экраны; --name — только эти снимки, для быстрой сверки). ~10 мин.
  */
 import { spawn } from 'node:child_process'
@@ -73,6 +74,7 @@ import { settleAnimations, settledScreenshot, waitForData } from './_shots.mjs'
 import { auditPage } from './_ux-audit-page.mjs'
 import { shotsInvitePay, shotsLanding, shotsLearn, shotsProgram, shotsSettings } from './_shots-4g.mjs'
 import { shotsExercise, shotsReading, shotsSchedule } from './_shots-4d.mjs'
+import { shotsMaterialRun } from './_shots-f225.mjs'
 
 if (process.argv.includes('--prod')) {
   console.error('Снимки заводят аккаунты — только тестовая база (npm run dev:test).')
@@ -425,6 +427,7 @@ try {
   if (!ONLY || ONLY === 'schedule') await shotsSchedule({ screen, sql, t }) // расписание: день t2-1, неделя t2-2 и d1 (4д-4а)
   if (!ONLY || ONLY === 'exercise') await shotsExercise({ screen, a }) // упражнение «Перевод слова» (d5, 4д-4б)
   if (!ONLY || ONLY === 'reading') await shotsReading({ screen, admin, must, a }) // чтение (d6, 4д-4в)
+  if (!ONLY || ONLY === 'material-run') await shotsMaterialRun({ screen, admin, must, t, s }) // задание: новые форматы (u5, Ф2.25-1а)
   if (!ONLY || ONLY === 'landing') await shotsLanding({ screen, t }) // лендинг (d15): гость и в рамке у репетитора
   if (!ONLY || ONLY === 'home') {
     const word = /Слово дня/

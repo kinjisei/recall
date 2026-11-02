@@ -7,6 +7,8 @@
 //            мышью — «выбрать мышью, проверить Enter», макет d5);
 //   R      — озвучить слово вопроса (d5; по коду клавиши — и на русской
 //            раскладке, где она печатает «к»);
+//   A–J    — вариант справа в «Соедини пары» (u5-4; тоже по коду клавиши),
+//   Backspace — разъединить выбранную пару;
 //   Esc    — выйти из раунда, как стрелка «назад» (решение владельца
 //            28.09.2026). Ответы недоигранного раунда пропадают — так же, как
 //            при стрелке; повторение карточек сохраняется после каждой.
@@ -37,6 +39,10 @@ export interface RoundKeys {
   escape?: () => void
   /** R — озвучить слово (d5). */
   say?: () => void
+  /** Буква A… (по коду клавиши) → вариант справа с индексом 0… («Соедини пары», u5-4). */
+  letter?: (index: number) => void
+  /** Backspace — разъединить выбранное (u5-4). */
+  erase?: () => void
 }
 
 export function useRoundKeys(keys: RoundKeys, enabled = true): void {
@@ -80,6 +86,16 @@ export function useRoundKeys(keys: RoundKeys, enabled = true): void {
       if (e.code === 'KeyR' && k.say) {
         e.preventDefault()
         k.say()
+        return
+      }
+      if (e.key === 'Backspace' && k.erase) {
+        e.preventDefault()
+        k.erase()
+        return
+      }
+      if (k.letter && /^Key[A-J]$/.test(e.code)) {
+        e.preventDefault()
+        k.letter(e.code.charCodeAt(3) - 65)
         return
       }
       if (/^[1-9]$/.test(e.key) && k.pick) {

@@ -141,7 +141,7 @@ export async function getStudentDiagnostics(studentId: string): Promise<StudentD
     if (!mat) continue
     // единая логика балла (assignmentScore): переназначенные работы берут
     // последнюю завершённую попытку из attempts — не выпадают из среднего
-    const score = finalScore(a)
+    const score = finalScore(a, mat.exercises)
     assignments.push({
       id: a.id,
       title: mat.title ?? mat.topic,
@@ -152,12 +152,13 @@ export async function getStudentDiagnostics(studentId: string): Promise<StudentD
       percent: score.percent,
       fromAttempt: score.fromAttempt,
     })
-    // разбивка по категориям — по вердиктам той же попытки, что дала балл
-    score.verdicts.forEach((ok, index) => {
+    // разбивка по категориям — по баллам той же попытки, что дала балл
+    // (у «Соедини пары» — по паре: 3 из 4 пар — 3 из 4, а не «ошибка»)
+    score.verdicts.forEach((p, index) => {
       const kind = mat.exercises[index]?.kind
       if (!kind || !(kind in kindTotals)) return
-      kindTotals[kind].total++
-      if (ok) kindTotals[kind].ok++
+      kindTotals[kind].total += p.of
+      kindTotals[kind].ok += p.got
     })
   }
   const withScore = assignments.filter((a) => a.percent !== null)
@@ -198,7 +199,7 @@ export async function getStudentDiagnostics(studentId: string): Promise<StudentD
   const dynamics = computeDynamics({
     activityDays: days,
     perfectDays: [...new Set(activityRows.filter((r) => r.type === 'perfect').map((r) => r.day))],
-    scoreSamples: rows.flatMap((a) => scoreSamples(a)),
+    scoreSamples: rows.flatMap((a) => scoreSamples(a, a.materials?.exercises ?? [])),
     mistakeDates: mistakesAvailable
       ? (mistakesRes.data ?? []).map((r) => r.created_at as string)
       : [],

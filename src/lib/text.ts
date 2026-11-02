@@ -3,7 +3,7 @@
 // один и тот же ответ мог считаться верным в игре и неверным в грамматике.
 // ============================================================================
 
-import type { GrammarExercise } from '../types'
+import type { GrammarExercise, MatchExercise } from '../types'
 /**
  * Нормализация НАПЕЧАТАННОГО ответа перед сравнением. Снимаем всё, что не
  * относится к сути ответа:
@@ -76,9 +76,47 @@ export function answerMatches(given: string, expected: string): boolean {
  * в трёх местах, «собери предложение» в двух из них давало ПУСТУЮ строку —
  * преподаватель не видел ответа, а AI-проверяющий получал «правильный ответ: ».
  */
-export function correctAnswerText(exercise: GrammarExercise): string {
+export function correctAnswerText(exercise: GrammarExercise | MatchExercise): string {
   if (exercise.type === 'mcq') return exercise.options[exercise.answer] ?? ''
   if (exercise.type === 'fill') return exercise.answer
+  if (exercise.type === 'match') return exercise.pairs.map((p) => `${p.left} — ${p.right}`).join('; ')
   return exercise.answer.join(' ')
+}
+
+// Буквы, с которых снимает знак norm_answer в SQL (миграция 0000), — та же
+// строка и тот же порядок: translate берёт пары по месту.
+const CHOICE_FROM = 'áàäâãéèëêíìïîóòöôõúùüûñçÁÀÄÂÃÉÈËÊÍÌÏÎÓÒÖÔÕÚÙÜÛÑÇ'
+const CHOICE_TO = 'aaaaaeeeeiiiiooooouuuuncAAAAAEEEEIIIIOOOOOUUUUNC'
+
+/**
+ * Сверка ВЫБРАННОГО ответа (вариант, половина пары) — точная копия SQL
+ * `norm_answer`: пробелы по краям, знаки над буквами из её списка (и только
+ * их: «й» и «ё» остаются, в отличие от normalizeAnswer), регистр, пробелы
+ * внутри. Строже печатного: «It's» и «Its» — разные варианты.
+ *
+ * ⚠️ Меняешь — меняй norm_answer в новой миграции, иначе пара «верна» у
+ * ученика, а балл сервер не начислит (test-match-score + check-material-match).
+ */
+export function normalizeChoice(s: string): string {
+  let out = ''
+  for (const ch of s.replace(/^ +| +$/g, '')) {
+    const i = CHOICE_FROM.indexOf(ch)
+    out += i >= 0 ? CHOICE_TO[i] : ch
+  }
+  return out.toLowerCase().replace(/\s+/g, ' ')
+}
+
+/**
+ * «Соедини пары»: верна ли каждая пара — что ученик соединил со словом
+ * (`chosen[i]`, по порядку `pairs`) против правой половины. Пустое — не
+ * верно. Так же считает сервер (`submit_material`, миграция 0017).
+ */
+export function matchVerdicts(exercise: MatchExercise, chosen: readonly (string | null | undefined)[] | undefined): boolean[] {
+  // не массив (подделка, старый черновик) — ни одной пары, как на сервере
+  const list: readonly unknown[] = Array.isArray(chosen) ? chosen : []
+  return exercise.pairs.map((p, i) => {
+    const c = list[i]
+    return typeof c === 'string' && c !== '' && normalizeChoice(c) === normalizeChoice(p.right)
+  })
 }
 

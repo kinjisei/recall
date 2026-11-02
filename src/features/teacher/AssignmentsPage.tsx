@@ -19,6 +19,7 @@ import { useAsyncData } from '../../shared/lib/useAsyncData'
 import { LoadError } from '../../shared/ui/LoadError'
 import { IconTray } from '../../shared/ui/icons'
 import { getMyAssignments } from '../../lib/materials'
+import { workScore } from '../../lib/assignmentScore'
 import { getHomework, type Homework } from '../../lib/homework'
 import { StudentHomework } from '../homework/StudentHomework'
 import { useScrollTop } from '../../lib/useScrollTop'
@@ -157,6 +158,8 @@ export function AssignmentsPage() {
 
 function AssignmentCard({ row, onOpen }: { row: Row; onOpen: () => void }) {
   const m = row.material
+  // в баллах (у пар — по паре), как у проверки учителя
+  const score = workScore(m.exercises, row.answers, row.teacher_review)
   return (
     <button onClick={onOpen} className="text-left">
       <Card className="flex items-center justify-between gap-2 transition-transform active:scale-[0.99]">
@@ -184,7 +187,7 @@ function AssignmentCard({ row, onOpen }: { row: Row; onOpen: () => void }) {
           ) : (
             <>
               <span className="block font-semibold text-success-strong">
-                ✓ {(row.teacher_review ?? []).filter((r) => r.ok).length}/{row.auto_total}
+                ✓ {score.got}/{score.of}
               </span>
               <span className="block text-xs text-accent-strong">тренироваться →</span>
             </>

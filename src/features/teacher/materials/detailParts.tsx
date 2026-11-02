@@ -7,7 +7,8 @@ import { whenDone } from '../../../domains/schedule'
 import { correctAnswerText } from '../../../lib/text'
 import { plural } from '../../../shared/lib/plural'
 import { Avatar } from '../../../shared/ui/Avatar'
-import type { GrammarExercise, Material, MaterialAssignment } from '../../../types'
+import { points, workScore } from '../../../lib/assignmentScore'
+import type { GrammarExercise, MatchExercise, Material, MaterialAssignment, MaterialExercise } from '../../../types'
 
 /** Подзаголовок карточки (d8-1 `.sh8`): «Текст», «Упражнения · 2». */
 export function DetailHead({ children }: { children: React.ReactNode }) {
@@ -70,7 +71,7 @@ export function MaterialBody({ material }: { material: Material }) {
 }
 
 /** Упражнение с ответом (d8-1, d8-4 `.ex8`): «1 Why did Dana…? Ответ: Her flight had a delay.» */
-export function ExerciseRow({ n, ex, lang }: { n: number; ex: GrammarExercise; lang: string }) {
+export function ExerciseRow({ n, ex, lang }: { n: number; ex: GrammarExercise | MatchExercise; lang: string }) {
   return (
     <div className="flex gap-2.5 rounded-control-sm bg-input px-3 py-2.5 text-body leading-normal">
       <span className="flex size-6 flex-none items-center justify-center rounded-tag bg-surface text-xs font-semibold text-fg-secondary">{n}</span>
@@ -86,14 +87,25 @@ export function ExerciseRow({ n, ex, lang }: { n: number; ex: GrammarExercise; l
 }
 
 /** Ученик в «Кому выдан»: имя, что с работой, справа — действия. */
-export function StudentRow({ name, assignment, children }: { name: string; assignment?: MaterialAssignment; children: React.ReactNode }) {
-  const done = assignment?.teacher_review?.filter((r) => r.ok).length ?? 0
+export function StudentRow({
+  name,
+  assignment,
+  exercises,
+  children,
+}: {
+  name: string
+  assignment?: MaterialAssignment
+  exercises: MaterialExercise[]
+  children: React.ReactNode
+}) {
+  // счёт в баллах (у пар — по паре), одной функцией с проверкой и экраном ученика
+  const done = assignment ? workScore(exercises, assignment.answers, assignment.teacher_review) : null
   const line = !assignment
     ? 'не выдан'
     : assignment.status === 'submitted'
       ? `ждёт проверки · авто ${assignment.auto_score}/${assignment.auto_total}`
       : assignment.status === 'reviewed'
-        ? `проверено: ${done} из ${assignment.auto_total}`
+        ? `проверено: ${done?.got} из ${points(done?.of ?? 0)}`
         : `выдан ${whenDone(assignment.created_at)} · ещё не выполнено`
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-line py-2.5 first:border-t-0">

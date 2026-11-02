@@ -9,6 +9,7 @@ import { chat, chatReply, type ReplanGrant } from '../shared/api/ai'
 import { comprehensionRange, lengthRangeOf, type MaterialLength } from './materialLengths'
 import { correctAnswerText } from './text'
 import { validExercises } from './materialExercises'
+import { autoVerdict } from './assignmentScore'
 import { groupBriefBlock } from './diagnosticsBrief'
 import { track } from './analytics'
 import type {
@@ -512,12 +513,11 @@ export async function generateAiReview(
   const raw = await chat([{ role: 'user', content: userMsg }], { system, task: 'review' })
   const parsed = parseJson<{ items: ReviewItem[] }>(raw)
   if (!Array.isArray(parsed.items)) throw new Error('AI вернул неполный разбор.')
-  // страховка: вердикт на каждое упражнение (чего нет — берём авто-результат)
-  return material.exercises.map((_, i) => {
+  // страховка: вердикт на каждое упражнение; чего нет и у пар (по паре) — авто-проверка, комментарий — от AI
+  return material.exercises.map((ex, i) => {
+    const auto = autoVerdict(ex, answers.find((x) => x.index === i), i)
     const found = parsed.items.find((x) => x.index === i)
-    if (found) return { index: i, ok: Boolean(found.ok), comment: found.comment ?? '' }
-    const a = answers.find((x) => x.index === i)
-    return { index: i, ok: a?.auto_ok ?? false, comment: '' }
+    return !found ? auto : ex.type === 'match' ? { ...auto, comment: found.comment ?? '' } : { index: i, ok: Boolean(found.ok), comment: found.comment ?? '' }
   })
 }
 

@@ -11,6 +11,7 @@ import { whenDone } from '../../domains/schedule'
 import { firstName } from '../../domains/students'
 import { finishReview, generateAiReview, reassignAssignment, saveAiReview } from '../../lib/materials'
 import { correctAnswerText } from '../../lib/text'
+import { markWhole, points, workScore } from '../../lib/assignmentScore'
 import type { Material, MaterialAssignment, ReviewItem } from '../../types'
 import { ScreenTop } from '../../shared/ui/BackButton'
 import { Button } from '../../shared/ui/Button'
@@ -77,8 +78,8 @@ export function ReviewScreen({
   }, [])
 
   const answers = assignment.answers ?? []
-  const total = material.exercises.length
-  const okCount = (review ?? []).filter((r) => r.ok).length
+  // счёт — в баллах (у пар — по паре), одной функцией с экраном ученика
+  const { got: okCount, of: total } = workScore(material.exercises, answers, review)
   const who = firstName(studentName)
   const title = material.title ?? material.topic
 
@@ -139,7 +140,7 @@ export function ReviewScreen({
       )}
       {review && (
         <AiBanner>
-          {alreadyReviewed ? `Проверено: ${okCount} из ${total}` : `AI предлагает засчитать ${okCount} из ${total} — проверь вердикты`}
+          {alreadyReviewed ? `Проверено: ${points(okCount)} из ${total}` : `AI предлагает засчитать ${points(okCount)} из ${total} — проверь вердикты`}
         </AiBanner>
       )}
       {review &&
@@ -154,7 +155,7 @@ export function ReviewScreen({
                 item.comment && <p className="rounded-control-sm bg-input px-3 py-2.5 text-sm text-fg-secondary">{item.comment}</p>
               ) : (
                 <>
-                  <Verdict ok={item.ok} onChange={(ok) => setItem(i, { ok })} />
+                  <Verdict ok={item.ok} onChange={(ok) => setItem(i, markWhole(ex, answers.find((a) => a.index === i), ok))} />
                   <label className="flex flex-col gap-1">
                     <small className="text-xs text-fg-muted">Комментарий · AI, можно править</small>
                     <textarea
@@ -173,7 +174,7 @@ export function ReviewScreen({
         <Card className="flex flex-col gap-1">
           <p className="text-sm font-semibold">Прошлые попытки</p>
           {attempts.map((at, i) => {
-            const tOk = (at.teacher_review ?? []).filter((r) => r.ok).length
+            const tOk = workScore(material.exercises, at.answers, at.teacher_review).got
             return (
               <p key={i} className="text-sm text-fg-muted">
                 {i + 1}-я: авто {at.auto_score}/{at.auto_total}

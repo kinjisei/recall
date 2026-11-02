@@ -15,6 +15,7 @@ import { writingName } from '../../lib/writingLabels'
 import { useAsyncData } from '../../shared/lib/useAsyncData'
 import { useOnReturn } from '../../shared/lib/useOnReturn'
 import { plural } from '../../shared/lib/plural'
+import { points, workScore } from '../../lib/assignmentScore'
 import { Avatar } from '../../shared/ui/Avatar'
 import { Button, buttonClass } from '../../shared/ui/Button'
 import { Card } from '../../shared/ui/Card'
@@ -59,7 +60,10 @@ function workPreview(w: WaitingWork): string {
   const total = w.material.exercises.length
   const ex = plural(total, 'упражнение', 'упражнения', 'упражнений')
   const ai = w.assignment.ai_review
-  return ai ? `${total} ${ex} · AI предлагает засчитать ${ai.filter((r) => r.ok).length} из ${total}` : `${total} ${ex}`
+  if (!ai) return `${total} ${ex}`
+  // в баллах, как в проверке (d18): у пар — по паре
+  const s = workScore(w.material.exercises, w.assignment.answers, ai)
+  return `${total} ${ex} · AI предлагает засчитать ${points(s.got)} из ${s.of}`
 }
 
 /** Разбор AI уже лежит — проверка откроется сразу, без ожидания. */

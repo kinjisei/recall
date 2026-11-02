@@ -1,10 +1,13 @@
 // ============================================================================
 // Прохождение задания учеником: текст → упражнения → сдача (?a=<id>&stage=).
 // Ответы — черновиком (useAnswerDraft): переживают выход в список и
-// перезагрузку. Балл считает сервер (submit_material); счёт на экране — тот
-// же, что пришлёт сервер.
+// перезагрузку. Балл считает сервер (submit_material); счёт на экране — в
+// баллах (`lib/assignmentScore`: пары — по паре), тот же, что пришлёт сервер.
+// Упражнения — по макету u5: на время упражнений меню каркаса спрятано
+// (режим раунда, Esc — к заданиям), на телефоне своя шапка, на компьютере —
+// рамка раунда d5 с ходом «Упражнения» и клавишами.
 // ============================================================================
-import { useRef, useState } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import { BackHeader } from '../../../shared/ui/BackButton'
 import { Card } from '../../../shared/ui/Card'
 import { Button } from '../../../shared/ui/Button'
@@ -14,10 +17,16 @@ import { correctAnswerText } from '../../../lib/text'
 import type { ReviewItem } from '../../../components/RoundReview'
 import { logActivity } from '../../../lib/activity'
 import { DraftRestored } from '../../../shared/ui/DraftRestored'
+import { RoundFrame, type RoundStep } from '../../../shared/ui/RoundFrame'
+import { useRoundMode } from '../../../shared/ui/roundKeys'
+import { plural } from '../../../shared/lib/plural'
 import { useAnswerDraft } from '../useAnswerDraft'
 import { submitAssignment } from '../../../lib/materials'
+import { answerPoints, exercisePoints, points, workScore } from '../../../lib/assignmentScore'
 import { useScrollTop } from '../../../lib/useScrollTop'
 import { TappableBody, type Row } from './TappableBody'
+import { PhoneTop, ReadAgain, ScoreCount, keysFor } from './runnerBits'
+import type { AssignmentAnswer } from '../../../types'
 
 /**
  * Стадия прохождения задания — живёт в адресе (?stage=).
@@ -64,18 +73,24 @@ export function AssignmentRunner({
   const current = m.exercises[index]
 
   const answers = Object.values(answerMap)
-  const correct = answers.filter((a) => a.auto_ok).length
+  // счёт — в баллах, как у сервера: «Соедини пары» — по паре
+  const score = workScore(m.exercises, answers)
+  const scoreBefore = score.got - (current && answerMap[index] ? answerPoints(current, answerMap[index]) : 0)
 
-  // ok приходит из onAnswered, given — из onGiven; собираем в одну запись по index
-  // именно ref, а не состояние: значение живёт между двумя колбэками одного
-  // упражнения (onAnswered → onGiven) и не должно вызывать перерисовку
-  const pendingRef = useRef<{ ok: boolean }>({ ok: false })
+  // ok приходит из onAnswered, пары — из onPairs, given — из onGiven; собираем
+  // в одну запись по index. Именно ref, а не состояние: значение живёт между
+  // колбэками одного упражнения и не должно вызывать перерисовку
+  const pendingRef = useRef<{ ok: boolean; pairs?: string[] }>({ ok: false })
 
   const onAnswered = (ok: boolean) => {
-    pendingRef.current.ok = ok
+    pendingRef.current = { ok }
+  }
+  const onPairs = (pairs: string[]) => {
+    pendingRef.current.pairs = pairs
   }
   const onGiven = (given: string) => {
-    setAnswerMap((m) => ({ ...m, [index]: { index, given, auto_ok: pendingRef.current.ok } }))
+    const { ok, pairs } = pendingRef.current
+    setAnswerMap((m) => ({ ...m, [index]: { index, given, auto_ok: ok, ...(pairs ? { pairs } : {}) } }))
   }
 
   const next = () => {
@@ -92,7 +107,7 @@ export function AssignmentRunner({
     if (alreadyDone) return
     setSaving(true)
     try {
-      await submitAssignment(row.id, answers, correct, total)
+      await submitAssignment(row.id, answers, score.got, score.of)
       void logActivity('assignment')
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : 'Не удалось отправить работу')
@@ -121,8 +136,8 @@ export function AssignmentRunner({
   if (finished) {
     return (
       <RoundResult
-        correct={correct}
-        total={total}
+        correct={score.got}
+        total={score.of}
         review={reviewItems}
         lang={m.lang}
         note={
@@ -165,7 +180,8 @@ export function AssignmentRunner({
         </Button>
         {alreadyDone && (
           <p className="text-center text-xs text-fg-muted">
-            Работа уже сдана ({row.auto_score}/{row.auto_total}) — повторное прохождение не отправляется.
+            Работа уже сдана ({row.auto_score} из {row.auto_total} {plural(row.auto_total ?? 0, 'балла', 'баллов', 'баллов')}) — повторное
+            прохождение не отправляется.
           </p>
         )}
       </div>
@@ -176,32 +192,93 @@ export function AssignmentRunner({
   // увеличивает index только пока index + 1 < total, иначе завершает раунд) —
   // подстраховка для noUncheckedIndexedAccess.
   if (!current) return null
-
   return (
-    <div className="flex flex-col gap-3">
-      {/* Заголовок с возвратом есть и на упражнениях: раньше здесь не было ни
-          того, ни другого — ученик не видел, какое задание выполняет, и выйти
-          мог только системным «назад». Каретка ведёт в СПИСОК заданий, а не на
-          шаг вверх: «перечитать текст» рядом и так есть, а лишний push в
-          историю возвращал бы свайпом обратно в упражнения. */}
-      <BackHeader onBack={onBack} title={m.title ?? m.topic} label="К заданиям" />
-      <div className="flex items-center justify-between text-sm text-fg-muted">
-        <button onClick={() => onStage('read')} className="font-medium text-accent-strong hover:underline">
-          ↑ перечитать текст
-        </button>
-        <span>
-          {index + 1} / {total} · верно: {correct}
-        </span>
-      </div>
-      {draft.restored && <DraftRestored onClear={draft.clear} />}
+    <ExerciseStage
+      row={row}
+      index={index}
+      answers={answerMap}
+      score={score.got}
+      scoreBefore={scoreBefore}
+      restored={draft.restored ? draft.clear : null}
+      onRead={() => onStage('read')}
+      onBack={onBack}
+    >
       <ExerciseView
         key={index}
+        bare
+        lang={m.lang}
+        score={scoreBefore}
         exercise={current}
         onAnswered={onAnswered}
+        onPairs={onPairs}
         onGiven={onGiven}
         onNext={next}
         isLast={index + 1 >= total}
       />
-    </div>
+    </ExerciseStage>
+  )
+}
+
+/**
+ * Упражнения по u5: режим раунда (меню спрятано, Esc — к заданиям); на
+ * телефоне — шапка «‹ Название», «перечитать текст» и счёт; на компьютере —
+ * рамка d5: ход «Упражнения» (у пар — «3/4»), «6 баллов», клавиши.
+ * «‹» ведёт в СПИСОК заданий, а не на шаг вверх: «перечитать текст» рядом и
+ * так есть, а лишний шаг в истории возвращал бы свайпом обратно в упражнения.
+ */
+function ExerciseStage({
+  row,
+  index,
+  answers,
+  score,
+  scoreBefore,
+  restored,
+  onRead,
+  onBack,
+  children,
+}: {
+  row: Row
+  index: number
+  answers: Record<number, AssignmentAnswer>
+  score: number
+  scoreBefore: number
+  /** Черновик восстановлен — «Очистить»; null — нет. */
+  restored: (() => void) | null
+  onRead: () => void
+  onBack: () => void
+  children: ReactNode
+}) {
+  const m = row.material
+  const total = m.exercises.length
+  const current = m.exercises[index]
+  useRoundMode(true, onBack)
+  // ход слева — упражнения позади: верно / нет, у пар — сколько из скольких
+  const steps: RoundStep[] = m.exercises
+    .slice(0, index)
+    .map((ex, i) => (ex.type === 'match' ? { got: answerPoints(ex, answers[i]), of: exercisePoints(ex) } : !!answers[i]?.auto_ok))
+  // «+3» — только что проверенные пары (u5-2)
+  const plus = current?.type === 'match' && answers[index] ? score - scoreBefore : 0
+  const count = <ScoreCount at={index + 1} total={total} score={score} plus={plus} />
+  const title = m.title ?? m.topic
+
+  return (
+    <RoundFrame
+      title={title}
+      at={index + 1}
+      total={total}
+      results={steps}
+      keys={current ? keysFor(current) : undefined}
+      onExit={onBack}
+      back={title}
+      count={count}
+      headerEnd={<ReadAgain onClick={onRead} />}
+      trackTitle="Упражнения"
+      trackNote={points(score)}
+      dense
+      narrowHeader={<PhoneTop title={title} lang={m.lang} onBack={onBack} onRead={onRead} count={count} done={index} total={total} />}
+    >
+      {restored && <DraftRestored onClear={restored} />}
+      {children}
+    </RoundFrame>
   )
 }

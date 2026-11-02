@@ -73,8 +73,45 @@ check(
 )
 check('пустая строка среди слов не проходит', !keep({ ...order, words: ['I', 'go', '', 'every', 'day'], answer: ['I', 'go', '', 'every', 'day'] }))
 check('без answer не проходит', !keep({ kind: 'grammar', type: 'order', prompt: 'x', words: ['a', 'b', 'c'] }))
-check('неизвестный тип не проходит', !keep({ kind: 'grammar', type: 'match', prompt: 'x' }))
+check('неизвестный тип не проходит', !keep({ kind: 'grammar', type: 'essay', prompt: 'x' }))
 check('мусор вместо упражнения не проходит', !keep(null))
+
+// ---- «Соедини пары» и новые виды выбора (Ф2.25-1) ---------------------------
+const match = {
+  kind: 'vocab',
+  type: 'match',
+  format: 'translation',
+  prompt: 'Соедини слово и перевод',
+  pairs: [
+    { left: 'delay', right: 'задержка' },
+    { left: 'gate', right: 'выход на посадку' },
+    { left: 'luggage', right: 'багаж' },
+    { left: 'boarding pass', right: 'посадочный талон' },
+  ],
+  extra: ['опоздать на рейс'],
+}
+const pairsOf = (n) => Array.from({ length: n }, (_, i) => ({ left: `w${i}`, right: `п${i}` }))
+check('пары проходят', keep(match))
+check('пары с объяснением проходят', keep({ ...match, format: 'definition', extra: undefined }))
+check('3 пары — нижний край', keep({ ...match, pairs: pairsOf(3), extra: [] }))
+check('8 пар — верхний край', keep({ ...match, pairs: pairsOf(8), extra: [] }))
+check('2 пары не проходят', !keep({ ...match, pairs: pairsOf(2), extra: [] }))
+check('9 пар не проходят', !keep({ ...match, pairs: pairsOf(9), extra: [] }))
+check('пустая половина пары не проходит', !keep({ ...match, pairs: [...match.pairs.slice(0, 3), { left: 'gate', right: '  ' }] }))
+check('одно слово дважды слева не проходит', !keep({ ...match, pairs: [...match.pairs.slice(0, 3), { left: 'Delay', right: 'опоздание' }] }))
+check('перевод дважды справа не проходит', !keep({ ...match, pairs: [...match.pairs.slice(0, 3), { left: 'wait', right: 'Задержка' }] }))
+check('лишний вариант совпадает с парой — не проходит (два верных)', !keep({ ...match, extra: ['багаж'] }))
+check('три лишних — не проходит', !keep({ ...match, extra: ['a', 'b', 'c'] }))
+check('неизвестный вид пар не проходит', !keep({ ...match, format: 'picture' }))
+const tf = { kind: 'comprehension', type: 'mcq', format: 'tfng', prompt: 'Dana came late.', options: ['True', 'False'], answer: 1 }
+check('«Верно / Неверно» проходит', keep(tf))
+check('«Верно / Неверно / Не сказано» проходит', keep({ ...tf, options: ['True', 'False', 'Not given'], answer: 2 }))
+check('«Верно / Неверно» с четырьмя кнопками не проходит', !keep({ ...tf, options: ['True', 'False', 'Not given', 'Maybe'] }))
+const form = { kind: 'grammar', type: 'mcq', format: 'form', prompt: 'She ___ late.', options: ['came', 'come', 'comes'], answer: 0 }
+check('«Выбери форму» из 3 проходит', keep(form))
+check('«Выбери форму» из 2 не проходит', !keep({ ...form, options: ['came', 'come'] }))
+check('два одинаковых варианта не проходят (сервер сверяет текст)', !keep({ ...mcq, options: ['at seven', 'At seven '] }))
+check('пустой вариант не проходит', !keep({ ...mcq, options: ['a', ''] }))
 
 // ---- смесь: битые уходят, целые остаются ------------------------------------
 const mixed = validExercises([mcq, { ...order, words: ['broken'] }, fill, order])

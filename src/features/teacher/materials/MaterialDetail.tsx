@@ -155,7 +155,7 @@ export function MaterialDetail({
               const a = (assignments ?? []).find((x) => x.student_id === s.profile.id)
               const name = s.profile.display_name ?? 'Без имени'
               return (
-                <StudentRow key={s.profile.id} name={name} assignment={a}>
+                <StudentRow key={s.profile.id} name={name} assignment={a} exercises={material.exercises}>
                   {a?.status === 'submitted' && (
                     <Button size="sm" variant="secondary" onClick={() => onCheck(a)}>
                       Проверить

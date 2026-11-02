@@ -85,14 +85,15 @@
 | `ReviewScreen.tsx`, `reviewBits.tsx` | проверка задания по материалу (d7-2): «Текст материала» свёрнутой строкой, полоса «AI предлагает засчитать…», упражнения — ответ с полоской цветом вердикта, «Правильно / Ошибка», комментарий; справа итог «1 из 2», «Завершить проверку (1/2)», «Дальше откроется» (`MainAside narrow`); проверенная — «Переназначить» диалогом с полем, как «На доработку» у письма |
 | `ReportSheet.tsx`, `PrintSheet.tsx` | отчёт родителям и печать |
 | `AssignmentsPage.tsx` | экран ученика `/assignments`: домашка и список заданий-материалов; открытое задание и стадия — в адресе (`?a=`, `?stage=`) |
-| `assignment/AssignmentRunner.tsx`, `assignment/ReviewedView.tsx`, `assignment/TappableBody.tsx` | задание ученика: прохождение (текст → упражнения → сдача), разбор проверенной работы, текст с тапом по словам |
+| `assignment/AssignmentRunner.tsx`, `assignment/runnerBits.tsx`, `assignment/ReviewedView.tsx`, `assignment/TappableBody.tsx` | задание ученика: прохождение (текст → упражнения → сдача); упражнения — по макету u5: режим раунда (меню спрятано, Esc — к заданиям), на телефоне шапка «‹ Название», «↑ перечитать текст» и «3 / 6 · 2 балла» (после пар — «+3»), полоска; на компьютере — рамка раунда d5 (`shared/ui/RoundFrame`): ход «Упражнения» с «3/4» у пар, «6 баллов», клавиши упражнения; разбор проверенной работы (счёт в баллах, пары с отметкой учителя); текст с тапом по словам |
 | `useAnswerDraft.ts`, `useComposerDraft.ts`, `useReviewDraft.ts`, `useWritingTaskDraft.ts` | черновики: ответы домашки, сборка домашки, правки к разбору, письменное задание (Ф1.14) |
 | `src/lib/reviewQueue.ts` | очередь проверки: счётчики, списки сданных работ и писем, когда пришла последняя проверенная — одни условия на число меню и список хаба |
 | `src/lib/studentSignals.ts` | подписи и порядок строк списка учеников |
 | `src/lib/activityDays.ts` | дни с занятиями за окно (`activeDaysIn`) и серия (`streakFrom`) — одни на карточку учителя и экраны ученика; день по Алматы (`shared/lib/almaty`), учитель видит те же сутки, что ученик |
 | `src/lib/wordChecks.ts` | слова ученика со статусом (`getStudentWords`), перепроверка |
 | `src/lib/diagnosticsBrief.ts` | сводка диагностики для промптов — общая с программой обучения; сводка нескольких учеников для одного материала |
-| `src/lib/materialExercises.ts` | отсев несобираемых упражнений |
+| `src/lib/materialExercises.ts` | отсев несобираемых упражнений: «собери» не из своих слов, пары не 3–8 / пустые / повторы / лишний вариант совпал с парой, «Верно / Неверно» не 2–3 кнопки, «Выбери форму» не 3–4, одинаковые варианты выбора |
+| `src/lib/assignmentScore.ts` | балл работы в баллах — один на все экраны (`workScore`, `exercisePoints`, `verdictPoints`), черновик проверки по авто-проверке с отметками у пар (`autoVerdict`), «Правильно / Ошибка» у пар целиком (`markWhole`), процент для диагностики и динамики |
 
 ## Правила, которые нельзя нарушить
 
@@ -326,10 +327,22 @@
   по-разному представлять одного ученика. Одно слово в двух колодах ученика
   — одно «буксующее» (`getStudentDiagnostics`), иначе группа получала «у 3
   из 2».
-- В заданиях работают все ТРИ типа упражнений (выбор, вписать, собрать
-  предложение); `lib/materialExercises.ts` отсеивает несобираемые: если набор
-  слов не совпадает с ответом, упражнение невозможно пройти. Подсказки и
-  вторая попытка — общие для всех упражнений (`src/components/CLAUDE.md`).
+- В заданиях работают выбор, вписать, собрать предложение и с Ф2.25-1 —
+  «Соедини пары» (слово ↔ перевод на русский или объяснение на языке
+  текста), «Верно / Неверно / Не сказано» (кнопки на языке текста; у текста
+  A1–A2 — без третьей) и «Выбери правильную форму» (выбор с подписью);
+  `lib/materialExercises.ts` отсеивает несобираемые: если набор слов не
+  совпадает с ответом, упражнение невозможно пройти. Подсказки и вторая
+  попытка — общие для всех упражнений, кроме пар и «Верно / Неверно»
+  (`src/components/CLAUDE.md`).
+- **Счёт работы — в баллах, одной функцией** (Ф2.25-1, журнал п.76 (8)):
+  «Соедини пары» — балл за каждую верную пару, остальное — 1;
+  `auto_score` / `auto_total` от сервера — тоже баллы (`submit_material`,
+  миграция 0017). Экран ученика, разбор, проверка, карточка материала, хаб
+  «Заданий», диагностика — `lib/assignmentScore` (`workScore`); до Ф2.25
+  было семь своих «filter(r => r.ok).length», и с парами каждый показал бы
+  своё «N из M». Отметка учителя у пары — `pairs` в вердикте (d18 — в 1б);
+  пока её нет, «Правильно» у пар — все пары, «Ошибка» — как у авто-проверки.
 - После работы ученик видит разбор с кнопкой «Почему?» — объяснение лёгкой
   моделью, энергии не стоит.
 
@@ -399,10 +412,21 @@
   `check-ai-review.mjs` (AI-разбор сданной работы), `check-ai-program.mjs`
   (программа). Без AI — `--dry` (промпты) и `--fake` (весь путь с
   заготовкой вместо модели); правила держит `test-ai-quality-rules.mjs` (в CI).
-- `node scripts/smoke-assignment-review.mjs` — три типа упражнений доходят до
-  ученика, разбор ошибок.
+- `node scripts/smoke-assignment-review.mjs` — все виды упражнений доходят до
+  ученика (пары — нажатиями и клавишами, Backspace, «+3», пары переживают
+  перезагрузку), сервер начисляет балл за каждую пару (5 из 9), разбор ошибок.
 - `node scripts/test-material-exercises.mjs` (чистый, в CI) — отсев
-  несобираемых.
+  несобираемых (+ пары, «Верно / Неверно», «Выбери форму», одинаковые варианты).
+- `node scripts/test-match-score.mjs` (чистый, в CI) — счёт в баллах на
+  клиенте по общим с сервером случаям (`_match-cases.mjs`), сверка выбора =
+  SQL `norm_answer`, отметки учителя у пар; `node scripts/check-material-match.mjs`
+  — те же случаи на тестовой базе (`supabase/CLAUDE.md`).
+- `node scripts/test-assignment-score.mjs` (чистый, в CI) — балл работы для
+  диагностики: учитель приоритетнее авто, переназначенная, пары по баллам.
+- `node scripts/shots-screens.mjs --only material-run` — задание ученика по
+  u5: пары до и после «Проверить», «Верно / Неверно» до и после ответа, пары
+  с объяснением на компьютере; сверх кадров — выбор ответа в той же рамке и
+  разбор проверенной работы.
 - Карточка и сборка домашки — `smoke-homework-ui` (`features/homework/CLAUDE.md`).
 - `node scripts/smoke-drafts.mjs` — каждое поле учителя и ответы домашки
   переживают перезагрузку; «Очистить» в мастере возвращает к списку.
@@ -426,8 +450,8 @@
 <!-- Пишет `npm run gen:docs` (scripts/gen/module-docs.mjs) по коду — руками не править. -->
 ## Из кода (сгенерировано)
 
-- **Файлы:** `assignment/AssignmentRunner.tsx`, `assignment/ReviewedView.tsx`, `assignment/TappableBody.tsx`, `AssignmentsPage.tsx`, `BecomeTeacher.tsx`, `CardDetail.tsx`, `DailyPlanSection.tsx`, `DiagnosticsSection.tsx`, `formHints.ts`, `guideReading.ts`, `GuideSection.tsx`, `GuideToc.tsx`, `HomeworkComposer.tsx`, `HomeworkSection.tsx`, `index.ts`, `innerScreen.ts`, `materials/audience.ts`, `materials/detailParts.tsx`, `materials/ForWhom.tsx`, `materials/LibraryList.tsx`, `materials/markWords.ts`, `materials/MaterialDetail.tsx`, `materials/MaterialWizard.tsx`, `materials/PendingWorks.tsx`, `materials/PlanScreen.tsx`, `materials/PreviewScreen.tsx`, `materials/RequestForm.tsx`, `materials/shared.ts`, `materials/textBits.tsx`, `materials/useStudentLevels.ts`, `materials/wizard.ts`, `materials/wizardBits.tsx`, `materials/WordChips.tsx`, `MaterialsSection.tsx`, `PlacementSection.tsx`, `PrintSheet.tsx`, `program/programDraft.ts`, `program/ProgramForm.tsx`, `program/ProgramSection.tsx`, `QuestSection.tsx`, `ReportSheet.tsx`, `reviewBits.tsx`, `ReviewScreen.tsx`, `roster.tsx`, `sectionBits.tsx`, `StudentRowBits.tsx`, `StudentsTab.tsx`, `StudentStudio.tsx`, `StudentWordsSection.tsx`, `StudioEnergy.tsx`, `StudioSection.tsx`, `studioSections.ts`, `StudioTiles.tsx`, `TasksHub.tsx`, `TasksPage.tsx`, `TeacherBlock.tsx`, `TeacherPage.tsx`, `topicTitles.ts`, `useAnswerDraft.ts`, `useComposerDraft.ts`, `useReviewDraft.ts`, `useWritingTaskDraft.ts`, `waitingCount.ts`, `waitingWorks.ts`, `WordPicker.tsx`, `writing/NewWritingPanel.tsx`, `writing/TaskDetail.tsx`, `writing/TaskList.tsx`, `writing/writingFacts.ts`, `writing/WritingSection.tsx`, `WritingDeleteButton.tsx`
-- **Вне папки (указатель «Описание:» в начале файла):** `src/lib/activityDays.ts`, `src/lib/diagnosticsBrief.ts`, `src/lib/materialExercises.ts`, `src/lib/materialLengths.ts`, `src/lib/reviewQueue.ts`, `src/lib/studentSignals.ts`, `src/lib/wordChecks.ts`
+- **Файлы:** `assignment/AssignmentRunner.tsx`, `assignment/ReviewedView.tsx`, `assignment/runnerBits.tsx`, `assignment/TappableBody.tsx`, `AssignmentsPage.tsx`, `BecomeTeacher.tsx`, `CardDetail.tsx`, `DailyPlanSection.tsx`, `DiagnosticsSection.tsx`, `formHints.ts`, `guideReading.ts`, `GuideSection.tsx`, `GuideToc.tsx`, `HomeworkComposer.tsx`, `HomeworkSection.tsx`, `index.ts`, `innerScreen.ts`, `materials/audience.ts`, `materials/detailParts.tsx`, `materials/ForWhom.tsx`, `materials/LibraryList.tsx`, `materials/markWords.ts`, `materials/MaterialDetail.tsx`, `materials/MaterialWizard.tsx`, `materials/PendingWorks.tsx`, `materials/PlanScreen.tsx`, `materials/PreviewScreen.tsx`, `materials/RequestForm.tsx`, `materials/shared.ts`, `materials/textBits.tsx`, `materials/useStudentLevels.ts`, `materials/wizard.ts`, `materials/wizardBits.tsx`, `materials/WordChips.tsx`, `MaterialsSection.tsx`, `PlacementSection.tsx`, `PrintSheet.tsx`, `program/programDraft.ts`, `program/ProgramForm.tsx`, `program/ProgramSection.tsx`, `QuestSection.tsx`, `ReportSheet.tsx`, `reviewBits.tsx`, `ReviewScreen.tsx`, `roster.tsx`, `sectionBits.tsx`, `StudentRowBits.tsx`, `StudentsTab.tsx`, `StudentStudio.tsx`, `StudentWordsSection.tsx`, `StudioEnergy.tsx`, `StudioSection.tsx`, `studioSections.ts`, `StudioTiles.tsx`, `TasksHub.tsx`, `TasksPage.tsx`, `TeacherBlock.tsx`, `TeacherPage.tsx`, `topicTitles.ts`, `useAnswerDraft.ts`, `useComposerDraft.ts`, `useReviewDraft.ts`, `useWritingTaskDraft.ts`, `waitingCount.ts`, `waitingWorks.ts`, `WordPicker.tsx`, `writing/NewWritingPanel.tsx`, `writing/TaskDetail.tsx`, `writing/TaskList.tsx`, `writing/writingFacts.ts`, `writing/WritingSection.tsx`, `WritingDeleteButton.tsx`
+- **Вне папки (указатель «Описание:» в начале файла):** `src/lib/activityDays.ts`, `src/lib/assignmentScore.ts`, `src/lib/diagnosticsBrief.ts`, `src/lib/materialExercises.ts`, `src/lib/materialLengths.ts`, `src/lib/reviewQueue.ts`, `src/lib/studentSignals.ts`, `src/lib/wordChecks.ts`
 - **Адреса:** `/teacher`, `/tasks`, `/assignments`
 - **Таблицы:** `cards`, `decks`, `material_assignments`, `review_states`, `word_checks`, `writing_task_assignments`
 - **RPC:** `assign_word_check`, `submit_word_check`
