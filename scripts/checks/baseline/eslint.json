@@ -298,11 +298,6 @@
       "count": 2
     }
   },
-  "src/features/teacher/AssignmentsPage.tsx": {
-    "react-hooks/set-state-in-effect": {
-      "count": 1
-    }
-  },
   "src/features/teacher/TeacherPage.tsx": {
     "react-hooks/set-state-in-effect": {
       "count": 1

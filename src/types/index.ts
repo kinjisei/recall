@@ -8,12 +8,13 @@
 // импортировать этот файл. Здесь — реэкспорт, чтобы правило «типы — отсюда»
 // оставалось верным.
 import type { ChatTurn } from '../shared/api/aiTypes'
+import type { AppLang, CEFRLevel, GrammarExercise } from './base'
+import type { AssignmentStatus } from './materials'
+
+// Язык, уровень и формат упражнения — types/base.ts (на них опираются и
+// материалы: из одного файла с ними был бы цикл импортов).
+export * from './base'
 export type { AiTask, ChatTurn } from '../shared/api/aiTypes'
-
-export type CEFRLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2'
-
-/** Язык изучения. Приложение объединяет английский и испанский. */
-export type AppLang = 'en' | 'es'
 
 /** Оценка ответа на карточку (для FSRS). */
 export type Rating = 'again' | 'hard' | 'good' | 'easy'
@@ -240,12 +241,6 @@ export type GrammarTheoryBlock =
   // пример на изучаемом языке: es — для испанских уроков, en — для английских
   | { type: 'example'; es?: string; en?: string; ru: string }
 
-/** Упражнение в уроке грамматики. */
-export type GrammarExercise =
-  | { type: 'mcq'; prompt: string; options: string[]; answer: number }
-  | { type: 'fill'; prompt: string; answer: string; hint?: string }
-  | { type: 'order'; prompt: string; words: string[]; answer: string[] }
-
 /** Тема (урок) грамматики: теория + упражнения. id присваивается загрузчиком. */
 export interface GrammarTopic {
   id: number
@@ -300,84 +295,8 @@ export interface EndingsExercise {
 // Фаза 4: режим «Преподаватель».
 // ---------------------------------------------------------------------------
 
-// ---------------------------------------------------------------------------
-// Материалы преподавателя: сгенерированный текст + упражнения (фича Materials).
-// ---------------------------------------------------------------------------
-
-/** Категория упражнения материала. */
-export type MaterialExerciseKind = 'comprehension' | 'grammar' | 'vocab'
-
-/** Упражнение материала: формат грамматики + категория. */
-export type MaterialExercise = GrammarExercise & { kind: MaterialExerciseKind }
-
-/** План будущего материала (шаг 1 генерации, ответ AI). */
-export interface MaterialPlan {
-  comments: string
-  vocabulary: string[]
-  grammar_focus: string | null
-  exercise_plan: { kind: MaterialExerciseKind; type: string; count: number; note: string }[]
-}
-
-/** Сохранённый материал (таблица materials). */
-export interface Material {
-  id: string
-  teacher_id: string
-  lang: AppLang
-  level: string
-  topic: string
-  format: string
-  length_range: string
-  title: string | null
-  body: string
-  exercises: MaterialExercise[]
-  plan: MaterialPlan | null
-  created_at: string
-}
-
-export type AssignmentStatus = 'assigned' | 'submitted' | 'reviewed'
-
-/** Ответ ученика на одно упражнение. */
-export interface AssignmentAnswer {
-  index: number
-  given: string
-  auto_ok: boolean
-}
-
-/** Вердикт по одному упражнению (AI — черновик, учитель — финал). */
-export interface ReviewItem {
-  index: number
-  ok: boolean
-  comment: string
-}
-
-/** Снимок прошлой попытки (при переназначении материала). */
-export interface AttemptSnapshot {
-  answers: AssignmentAnswer[] | null
-  auto_score: number | null
-  auto_total: number | null
-  teacher_review: ReviewItem[] | null
-  submitted_at: string | null
-  reviewed_at: string | null
-  note: string | null
-}
-
-/** Назначение материала ученику + его работа (таблица material_assignments). */
-export interface MaterialAssignment {
-  id: string
-  material_id: string
-  student_id: string
-  status: AssignmentStatus
-  answers: AssignmentAnswer[] | null
-  auto_score: number | null
-  auto_total: number | null
-  ai_review: ReviewItem[] | null
-  teacher_review: ReviewItem[] | null
-  submitted_at: string | null
-  reviewed_at: string | null
-  attempts: AttemptSnapshot[] | null
-  note: string | null
-  created_at: string
-}
+// Материалы преподавателя и работы учеников — types/materials.ts.
+export * from './materials'
 
 // ---------------------------------------------------------------------------
 // «Письмо»: письменные задания (IELTS / обычное эссе). Механика — как материалы.
