@@ -1,7 +1,7 @@
 // ============================================================================
-// Куски карточки материала (макет d8-1 `.det`): «Выдан: Әсел Жұмабаева ·
-// вчера, 9:10 · ждёт проверки», текст абзацами, упражнения с ответом (вид по
-// d17: шапка с видом упражнения), строка ученика в «Кому выдан».
+// Куски карточки материала (макеты d8-1 `.det`, d17-4): «Выдан» — ученик и
+// плашка статуса, текст абзацами, упражнения с ответом (вид по d17: шапка с
+// видом упражнения), строка ученика в «Кому выдан».
 // ============================================================================
 import { whenDone } from '../../../domains/schedule'
 import { correctAnswerText } from '../../../lib/text'
@@ -16,43 +16,46 @@ export function DetailHead({ children }: { children: React.ReactNode }) {
   return <h3 className="mt-1.5 text-note font-semibold text-fg-muted">{children}</h3>
 }
 
-const STATUS: Record<MaterialAssignment['status'], string> = {
-  assigned: 'ещё не выполнено',
-  submitted: 'ждёт проверки',
-  reviewed: 'проверено',
+/** Плашка статуса у ученика в «Выдан» (d17-4 `.p7x`): слова без рода — «сдано», а не «сдала». */
+function issuedChip(a: MaterialAssignment): { text: string; tone: string } {
+  if (a.status === 'reviewed') return { text: 'сдано · проверено', tone: 'bg-success-soft text-success-soft-fg' }
+  if (a.status === 'submitted') return { text: 'сдано · ждёт проверки', tone: 'bg-warning-soft text-warning-soft-fg' }
+  if ((a.attempts?.length ?? 0) > 0) return { text: 'переназначено', tone: 'bg-input text-fg-secondary' }
+  return { text: 'ещё не сдано', tone: 'bg-input text-fg-secondary' }
 }
 
-/** «Выдан: <b>Әсел Жұмабаева</b> · вчера, 9:10 · ждёт проверки»; нескольким — имена и счёт по статусам. */
-export function IssuedLine({ assignments, nameOf }: { assignments: MaterialAssignment[]; nameOf: (id: string) => string }) {
-  const box = 'rounded-control-sm bg-input px-3 py-2.5 text-sm text-fg-secondary'
-  if (assignments.length === 0) return <p className={box}>Ещё никому не выдан — выдать можно ниже, в «Кому выдан».</p>
-  const [first] = assignments
-  if (assignments.length === 1 && first) {
-    return (
-      <p className={box}>
-        Выдан: <b className="font-semibold text-fg">{nameOf(first.student_id)}</b> ·{' '}
-        {[whenDone(first.created_at), STATUS[first.status]].filter(Boolean).join(' · ')}
-      </p>
-    )
+/**
+ * «Выдан» (d17-4 `.st17`): строка на ученика — инициалы, имя, справа статус;
+ * сдавшие — сверху. Никому — строка, где выдать (d8-1 `.as8`).
+ */
+export function IssuedList({ assignments, nameOf }: { assignments: MaterialAssignment[]; nameOf: (id: string) => string }) {
+  if (assignments.length === 0) {
+    return <p className="rounded-control-sm bg-input px-3 py-2.5 text-sm text-fg-secondary">Ещё никому не выдан — выдать можно ниже, в «Кому выдан».</p>
   }
-  const names = assignments.slice(0, 2).map((a) => nameOf(a.student_id))
-  const rest = assignments.length - names.length
-  const counts = (['submitted', 'reviewed', 'assigned'] as const)
-    .map((st) => [st, assignments.filter((a) => a.status === st).length] as const)
-    .filter(([, n]) => n > 0)
-    .map(([st, n]) => `${n} ${st === 'assigned' ? 'не выполнено' : STATUS[st]}`)
+  const rank = (a: MaterialAssignment) => (a.status === 'assigned' ? 1 : 0)
+  const rows = [...assignments].sort((a, b) => rank(a) - rank(b) || nameOf(a.student_id).localeCompare(nameOf(b.student_id)))
   return (
-    <p className={box}>
-      Выдан: <b className="font-semibold text-fg">{names.join(', ')}</b>
-      {rest > 0 && ` и ещё ${rest}`} · {counts.join(' · ')}
-    </p>
+    <>
+      <DetailHead>Выдан</DetailHead>
+      <ul className="flex flex-col rounded-control-sm inset-ring-1 inset-ring-line">
+        {rows.map((a) => {
+          const chip = issuedChip(a)
+          return (
+            <li key={a.id} className="flex min-h-12 items-center gap-2.5 border-t border-line px-3 py-1.5 text-sm text-fg first:border-t-0">
+              <Avatar name={nameOf(a.student_id)} size={32} />
+              <span className="min-w-0 grow truncate">{nameOf(a.student_id)}</span>
+              <span className={`whitespace-nowrap rounded-full px-2.5 py-0.5 text-note font-semibold ${chip.tone}`}>{chip.text}</span>
+            </li>
+          )
+        })}
+      </ul>
+    </>
   )
 }
 
-/** Текст абзацами и упражнения с ответом (d8-1 `.det p`, `.ex8`). */
-export function MaterialBody({ material }: { material: Material }) {
+/** Текст абзацами (d8-1 `.det p`). */
+export function MaterialText({ material }: { material: Material }) {
   const paragraphs = material.body.split(/\n\s*\n|\n/).filter((p) => p.trim())
-  const n = material.exercises.length
   return (
     <>
       <DetailHead>Текст</DetailHead>
@@ -61,14 +64,6 @@ export function MaterialBody({ material }: { material: Material }) {
           {p}
         </p>
       ))}
-      <DetailHead>
-        {plural(n, 'Упражнение', 'Упражнения', 'Упражнений')} · {n}
-      </DetailHead>
-      <div className="@container flex flex-col gap-2.5">
-        {material.exercises.map((ex, i) => (
-          <ExerciseRow key={i} n={i + 1} ex={ex} lang={material.lang} />
-        ))}
-      </div>
     </>
   )
 }

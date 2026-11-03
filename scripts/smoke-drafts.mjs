@@ -6,7 +6,8 @@
  * отчёт родителям пропадали. Здесь — каждое такое место: ученик (сочинение,
  * быстрая проверка, ответы домашки, свой текст, «Диалог», квест, отзыв) и
  * учитель (сборка домашки, отчёт, программа, заявка на материал, правки к
- * плану и к тексту, правка упражнения — открытая и после «Готово», разбор
+ * плану и к тексту, правка упражнения — открытая и после «Готово», в мастере
+ * и в библиотеке, разбор
  * работы, письменное задание, разбор сочинения).
  * Плюс: после отправки черновика нет; «Очистить» стирает; после выхода из
  * аккаунта черновиков на устройстве нет.
@@ -91,7 +92,7 @@ async function seed(t, s) {
     teacher_id: t, student_id: s, lang: 'en', level: 'A2', topic: 'Past Simple', scenario: 'A trip to the market',
     messages: [{ role: 'assistant', content: 'Hi! Where did you go yesterday?' }],
   }).select('id').single())
-  return { waA: waA.id, ma1: ma1.id, quest: q.id }
+  return { waA: waA.id, m1: m1.id, ma1: ma1.id, quest: q.id }
 }
 
 // --- браузер ----------------------------------------------------------------------------
@@ -290,6 +291,23 @@ try {
   await go(te, '/teacher?tab=materials')
   check('мастер материала: «Очистить» — снова список, черновика формы упражнения нет', (await click(te, 'Создать материал', 8000)) && !(await text(te)).includes(NOTE) && !editLeft, `форма осталась: ${editLeft}`)
   await click(te, 'Отмена') // форма тоже черновик: закрываем, чтобы дальше был список
+
+  // правка в библиотеке (Ф2.25-3б, d17-4): открытая форма — черновиком своего
+  // материала; после «Готово» вопрос — в базе, перезагрузка его не теряет
+  await go(te, `/tasks?tab=materials&mat=${d.m1}`)
+  if (!(await waitSel(te, editField, 4000))) await click(te, 'Изменить')
+  if (!(await waitSel(te, editField))) check('библиотека: форма правки на месте', false, (await text(te)).slice(0, 120))
+  await typeInto(te, editField, 'When does he get up on Monday?')
+  await te.reload({ waitUntil: 'networkidle2' })
+  await waitSel(te, editField)
+  const libGot = await valueOf(te, editField)
+  check('открытая правка упражнения в библиотеке: набрал → перезагрузил → форма открыта, текст на месте', libGot === 'When does he get up on Monday?', `в поле «${libGot}»`)
+  await click(te, 'Готово')
+  await te.waitForFunction(() => !document.querySelector('[data-exercise-edit]'), { polling: 250, timeout: 10000 }).catch(() => {})
+  await te.reload({ waitUntil: 'networkidle2' })
+  await waitSel(te, '[data-exercise-list]')
+  const { data: libRow } = await admin.from('materials').select('exercises, exercises_version').eq('id', d.m1).single()
+  check('правка в библиотеке после «Готово»: в базе новый вопрос и версия 2, после перезагрузки формы нет', libRow?.exercises?.[0]?.prompt === 'When does he get up on Monday?' && libRow?.exercises_version === 2 && (await text(te)).includes('When does he get up on Monday?') && !(await has(te, '[data-exercise-edit]')), JSON.stringify(libRow).slice(0, 160))
 
   await draftCase(te, 'разбор работы ученика', {
     open: async () => {

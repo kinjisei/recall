@@ -25,18 +25,24 @@ export async function getMyAssignments(): Promise<
     .map(({ materials, ...a }) => ({ ...(a as MaterialAssignment), material: materials as Material }))
 }
 
-/** Ученик сдаёт работу: ответы + авто-балл, статус submitted (через RPC). */
+/**
+ * Ученик сдаёт работу: ответы + авто-балл, статус submitted (через RPC).
+ * `version` — версия упражнений, на которые он отвечал: учитель уже поправил —
+ * отказ с кодом RECALL_MATERIAL_CHANGED (миграция 0018), экран берёт новую.
+ */
 export async function submitAssignment(
   assignmentId: string,
   answers: AssignmentAnswer[],
   autoScore: number,
   autoTotal: number,
+  version?: number,
 ): Promise<void> {
   const { error } = await supabase.rpc('submit_material', {
     p_id: assignmentId,
     p_answers: toJson(answers),
     p_auto_score: autoScore,
     p_auto_total: autoTotal,
+    p_version: version,
   })
   if (error) throw dbError(error, 'отправить работу')
 }

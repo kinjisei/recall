@@ -11,6 +11,12 @@
  *   edit-new    — d17-3б: пустая форма «Выбери правильную форму · новое»;
  *   edit-phone  — только 390, окном: форма от верха экрана, «Готово · Отмена»
  *                 сразу после вариантов, рамка цела (решение владельца 04.11).
+ * Библиотека (Ф2.25-3б):
+ *   lib-lock    — d17-4: «A long day at the airport» — Әсел сдала и
+ *                 проверена, Айгерим ещё не сдала: плашка с копией, «Выдан»
+ *                 со статусами, у упражнений «правка закрыта»;
+ *   lib-edit    — материал без сданных работ: «Изменить» открыл форму
+ *                 упражнения 1 на месте (та же, что в мастере).
  * Рамка формы на снимке (для пары с фрагментом d17-3б) пишется в
  * `<папка>/boxes.json`: { "<снимок>": { x, y, w, h } }.
  */
@@ -48,7 +54,7 @@ const EXERCISES = [
 
 const draft = (format, patch) => ({ format, prompt: '', options: [], answer: null, text: '', note: '', pairs: [], extra: [], ...patch })
 
-export async function shotsExerciseEdit({ screen, t, a, s, dir }) {
+export async function shotsExerciseEdit({ screen, admin, must, t, a, s, dir }) {
   console.log('── правка упражнений (d17)')
   const req = { lang: 'en', level: 'A2', topic: 'Travel problems', format: 'рассказ', lengthRange: '100-140', vocabulary: 'delay, luggage, boarding pass', grammar: 'Past Simple', studentIds: [a.id, s.id] }
   const plan = {
@@ -129,5 +135,35 @@ export async function shotsExerciseEdit({ screen, t, a, s, dir }) {
     { name: 'edit-pick', path, before: drafts(null), prepare: pick, tall: 2500, expect: /Упражнения \(5\)/ },
     { name: 'edit-new', path, before: drafts(newOpen), prepare: focus('edit-new', '[data-exercise-edit] textarea[name="prompt"]'), tall: 1900, expect: /Выбери правильную форму · новое/ },
     { name: 'edit-phone', path, before: drafts(mcqOpen), prepare: phone, overlay: true, phone: true, expect: /Отметь верный вариант/ },
+  ])
+
+  // ---- библиотека (3б): d17-4 и правка до сдачи ----
+  const day = (h) => new Date(Date.now() - h * 3600_000).toISOString()
+  const lock = must(
+    await admin
+      .from('materials')
+      .insert({ teacher_id: t.id, lang: 'en', level: 'A2', topic: 'Travel problems', format: 'рассказ', length_range: '100-140', title: 'A long day at the airport', body: BODY, exercises: EXERCISES, plan, created_at: day(1) })
+      .select('id')
+      .single(),
+    'материал d17-4',
+  )
+  const answers = EXERCISES.map((ex, index) => (ex.type === 'match' ? { index, given: '', auto_ok: true, pairs: ex.pairs.map((p) => p.right) } : { index, given: ex.type === 'fill' ? ex.answer : ex.options[ex.answer], auto_ok: true }))
+  must(
+    await admin.from('material_assignments').insert([
+      { material_id: lock.id, student_id: s.id, status: 'reviewed', answers, auto_score: 9, auto_total: 9, teacher_review: answers.map((x) => ({ index: x.index, ok: true, comment: '' })), created_at: day(30), submitted_at: day(26), reviewed_at: day(20) },
+      // вставка пачкой: колонки, которых нет в строке, приходят null, а не по умолчанию
+      { material_id: lock.id, student_id: a.id, status: 'assigned', created_at: day(30) },
+    ]),
+    'выдачи d17-4',
+  )
+  const [morning] = must(await admin.from('materials').select('id').eq('teacher_id', t.id).eq('title', 'My morning routine'), 'материал без сданных')
+  const openFirst = async (page) => {
+    await page.evaluate(() => document.querySelector('button[aria-label="Изменить упражнение 1"]')?.click())
+    await page.waitForSelector('[data-exercise-edit]', { timeout: 5000 }).catch(() => {})
+    await sleep(300)
+  }
+  await screen(t.email, [
+    { name: 'lib-lock', path: `/tasks?tab=materials&mat=${lock.id}`, expect: /Работу уже сдали[\s\S]*правка закрыта/ },
+    { name: 'lib-edit', path: `/tasks?tab=materials&mat=${morning.id}`, prepare: openFirst, tall: 1400, expect: /Упражнени/ },
   ])
 }

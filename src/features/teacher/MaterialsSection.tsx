@@ -141,6 +141,7 @@ export function MaterialsSection({
     error: loadError,
     loading: loadingMaterials,
     reload,
+    set: setMaterials,
   } = useAsyncData<Material[]>(() => listMyMaterials(), [], 'Не удалось загрузить материалы')
   // сданные работы — «На проверку» и «1 на проверке» в строке материала
   const { data: works } = useAsyncData<SubmittedWork[]>(() => listSubmittedWorks(), [], 'Не удалось загрузить работы')
@@ -207,6 +208,14 @@ export function MaterialsSection({
         setNotice(undefined)
         setMatId(null)
       }}
+      // правка из библиотеки (Ф2.25-3б): новая версия — в список сразу, без перечитывания
+      onChanged={(m) => setMaterials((list) => list && list.map((x) => (x.id === m.id ? m : x)))}
+      onCopied={(copy) => {
+        setMaterials((list) => [copy, ...(list ?? [])])
+        setMatId(copy.id)
+        reload()
+      }}
+      onStale={reload}
       // телефон: карточка — экраном со своим «‹ Материалы»; на компьютере список рядом
       onBack={split ? undefined : () => setMatId(null)}
     />

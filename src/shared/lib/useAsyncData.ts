@@ -23,6 +23,11 @@ export interface AsyncData<T> {
   error: string | null
   loading: boolean
   reload: () => void
+  /**
+   * Поправить загруженное на месте, без запроса: экран сам записал в базу
+   * (правка материала, копия) и знает ответ. Следующая загрузка перезапишет.
+   */
+  set: (next: (prev: T | null) => T | null) => void
 }
 
 /**
@@ -85,5 +90,5 @@ export function useAsyncData<T>(
 
   const reload = useCallback(() => setAttempt((n) => n + 1), [])
 
-  return { data, error, loading, reload }
+  return { data, error, loading, reload, set: setData }
 }

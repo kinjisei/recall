@@ -8,6 +8,8 @@
 // domains/materials): причина — у поля, после первого нажатия обновляется
 // на ходу. Открытая форма — черновиком (`draftScope`): переживает
 // перезагрузку; черновик чужого упражнения (текст перегенерирован) забыт.
+// Мастер меняет шаг «Текст» сразу; библиотека пишет в базу (Ф2.25-3б) —
+// `onChange` ждём, и не сохранилось — форма остаётся открытой.
 // ============================================================================
 import { useEffect, useState } from 'react'
 import { blankDraft, checkEdit, exerciseProblems, toDraft, type ExerciseDraft } from '../../../../domains/materials'
@@ -56,7 +58,8 @@ export function ExerciseList({
   onPending,
 }: {
   exercises: MaterialExercise[]
-  onChange: (next: MaterialExercise[]) => void
+  /** Новые упражнения. Библиотека пишет в базу: `false` — не сохранилось, форма остаётся (причину показывает экран). */
+  onChange: (next: MaterialExercise[]) => void | Promise<boolean>
   text: EditText
   /** Черновик открытой формы: мастер — `material-exercise-edit`. */
   draftScope: string
@@ -93,7 +96,10 @@ export function ExerciseList({
   const remove = async (i: number) => {
     const ok = await confirm({ title: `Убрать упражнение ${i + 1}?`, body: 'Его не будет в материале.', action: 'Убрать', cancel: 'Оставить', danger: true })
     if (!ok) return
-    onChange(exercises.filter((_, j) => j !== i))
+    setBusy(true)
+    const saved = await onChange(exercises.filter((_, j) => j !== i))
+    setBusy(false)
+    if (saved === false) return
     // открытая форма ниже убранного — съезжает на одно место; новая — помнит, что упражнений стало меньше
     if (open?.at === 'new') setOpen({ ...open, count: exercises.length - 1 })
     else if (open && open.at >= i) setOpen(open.at === i ? null : { ...open, at: open.at - 1 })
@@ -104,15 +110,17 @@ export function ExerciseList({
     setBusy(true)
     // слово «из текста» — и в форме из справочника (took ⇒ take): дождаться его
     const forms = await loadIrregular(text.lang).catch(() => undefined)
-    setBusy(false)
     const ctx = { ...text, irregular: forms }
     const r = checkEdit(open.draft, ctx, open.was ?? undefined)
     if (!r.ok) {
+      setBusy(false)
       setOpen({ ...open, tried: true })
       setFatal(Object.keys(exerciseProblems(open.draft, ctx)).length ? null : (r.problems.prompt ?? null))
       return
     }
-    onChange(open.at === 'new' ? [...exercises, r.exercise] : exercises.map((e, j) => (j === open.at ? r.exercise : e)))
+    const saved = await onChange(open.at === 'new' ? [...exercises, r.exercise] : exercises.map((e, j) => (j === open.at ? r.exercise : e)))
+    setBusy(false)
+    if (saved === false) return
     setFatal(null)
     setOpen(null)
   }
@@ -154,10 +162,10 @@ export function ExerciseList({
             actions={
               disabled ? undefined : (
                 <>
-                  <RowAction label="Изменить" n={i + 1} onClick={() => void start({ at: i, draft: toDraft(ex), was: ex, tried: false })}>
+                  <RowAction label="Изменить" n={i + 1} disabled={busy} onClick={() => void start({ at: i, draft: toDraft(ex), was: ex, tried: false })}>
                     <IconPencil size={15} aria-hidden />
                   </RowAction>
-                  <RowAction label="Убрать" n={i + 1} quiet disabled={exercises.length <= 1} onClick={() => void remove(i)}>
+                  <RowAction label="Убрать" n={i + 1} quiet disabled={busy || exercises.length <= 1} title={exercises.length <= 1 ? 'Последнее упражнение не убрать' : undefined} onClick={() => void remove(i)}>
                     <IconTrash size={15} aria-hidden />
                   </RowAction>
                 </>
@@ -184,12 +192,12 @@ export function ExerciseList({
 }
 
 /** «✎ Изменить», «🗑 Убрать» в шапке упражнения (d17 `.ac17`); на телефоне — 44. */
-function RowAction({ label, n, quiet = false, disabled = false, onClick, children }: { label: string; n: number; quiet?: boolean; disabled?: boolean; onClick: () => void; children: React.ReactNode }) {
+function RowAction({ label, n, quiet = false, disabled = false, title, onClick, children }: { label: string; n: number; quiet?: boolean; disabled?: boolean; title?: string; onClick: () => void; children: React.ReactNode }) {
   return (
     <button
       type="button"
       aria-label={`${label} упражнение ${n}`}
-      title={disabled ? 'Последнее упражнение не убрать' : undefined}
+      title={title}
       disabled={disabled}
       onClick={onClick}
       // цель 44 и на компьютере, в раскладке — 32, как в кадре; accent-soft-fg, а не

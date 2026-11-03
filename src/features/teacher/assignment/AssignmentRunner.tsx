@@ -1,13 +1,16 @@
 // ============================================================================
 // Прохождение задания учеником: текст → упражнения → сдача (?a=<id>&stage=).
-// Ответы — черновиком (useAnswerDraft): переживают выход в список и
-// перезагрузку. Балл считает сервер (submit_material); счёт на экране — в
+// Ответы — черновиком (useAnswerDraft): переживают выход в список,
+// перезагрузку и сбой связи при сдаче (стираются после неё). Учитель
+// поправил задание (Ф2.25-3б) — черновик старой версии сброшен с подписью
+// «Учитель обновил задание», сдача старой версии — отказ сервера и новая
+// версия. Балл считает сервер (submit_material); счёт на экране — в
 // баллах (`lib/assignmentScore`: пары — по паре), тот же, что пришлёт сервер.
 // Упражнения — по макету u5: на время упражнений меню каркаса спрятано
 // (режим раунда, Esc — к заданиям), на телефоне своя шапка, на компьютере —
 // рамка раунда d5 с ходом «Упражнения» и клавишами.
 // ============================================================================
-import { useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { BackHeader } from '../../../shared/ui/BackButton'
 import { Card } from '../../../shared/ui/Card'
 import { Button } from '../../../shared/ui/Button'
@@ -27,6 +30,7 @@ import { useScrollTop } from '../../../lib/useScrollTop'
 import { TappableBody, type Row } from './TappableBody'
 import { PhoneTop, ReadAgain, ScoreCount, keysFor } from './runnerBits'
 import type { AssignmentAnswer } from '../../../types'
+import { AppError } from '../../../shared/api/errors'
 
 /**
  * Стадия прохождения задания — живёт в адресе (?stage=).
@@ -43,19 +47,27 @@ export function AssignmentRunner({
   onStage,
   onDone,
   onBack,
+  onOutdated,
 }: {
   row: Row
   stage: Stage
   onStage: (s: Stage) => void
   onDone: () => void
   onBack: () => void
+  /** Учитель поправил задание, пока ученик решал: перечитать и начать с текста. */
+  onOutdated: () => void
 }) {
   const m = row.material
   useScrollTop(stage)
   // Ответы переживают и выход в список (раньше любой выход обнулял работу —
   // главная жалоба ревью навигации), и перезагрузку (Ф1.14): useAnswerDraft.
-  const draft = useAnswerDraft(row.id)
+  const draft = useAnswerDraft(row.id, m.exercises_version)
   const { index, setIndex, answerMap, setAnswerMap } = draft
+  // учитель обновил задание — заново с текста: он мог поправить и его (решение владельца 04.11)
+  useEffect(() => {
+    if (draft.updated && stage !== 'read') onStage('read')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   // Итог раунда в адрес не пишем (см. Stage), но и залипать на нём нельзя:
   // системная кнопка «назад» меняет стадию — значит, итог надо снять.
   // (сброс — при отрисовке, а не эффектом: так React не рисует кадр со старым итогом)
@@ -103,14 +115,20 @@ export function AssignmentRunner({
 
   const finish = async () => {
     setFinished(true)
-    draft.forget()
-    if (alreadyDone) return
+    if (alreadyDone) {
+      draft.forget()
+      return
+    }
     setSaving(true)
     try {
-      await submitAssignment(row.id, answers, score.got, score.of)
+      await submitAssignment(row.id, answers, score.got, score.of, m.exercises_version)
+      // черновик — только после сдачи: моргнула связь — ответы остаются на устройстве
+      draft.forget()
       void logActivity('assignment')
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : 'Не удалось отправить работу')
+      // учитель поправил задание, пока ученик решал: новая версия, черновик старой сбросится с подписью
+      if (e instanceof AppError && e.code === 'RECALL_MATERIAL_CHANGED') onOutdated()
     } finally {
       setSaving(false)
     }
@@ -160,6 +178,14 @@ export function AssignmentRunner({
       <div className="flex flex-col gap-3">
         <BackHeader onBack={onBack} title={m.title ?? m.topic} label="К заданиям" />
 
+        {draft.updated && (
+          <Card tone="warning">
+            <p className="text-sm text-warning-soft-fg" data-teacher-updated>
+              Учитель обновил задание — прежние ответы сброшены, пройди его заново.
+            </p>
+          </Card>
+        )}
+
         {row.note && row.status === 'assigned' && (
           <Card tone="warning">
             <p className="text-sm text-warning-soft-fg">
@@ -200,6 +226,7 @@ export function AssignmentRunner({
       score={score.got}
       scoreBefore={scoreBefore}
       restored={draft.restored ? draft.clear : null}
+      updated={draft.updated}
       onRead={() => onStage('read')}
       onBack={onBack}
     >
@@ -233,6 +260,7 @@ function ExerciseStage({
   score,
   scoreBefore,
   restored,
+  updated,
   onRead,
   onBack,
   children,
@@ -244,6 +272,8 @@ function ExerciseStage({
   scoreBefore: number
   /** Черновик восстановлен — «Очистить»; null — нет. */
   restored: (() => void) | null
+  /** Учитель обновил задание — ответы начаты заново. */
+  updated: boolean
   onRead: () => void
   onBack: () => void
   children: ReactNode
@@ -277,7 +307,13 @@ function ExerciseStage({
       dense
       narrowHeader={<PhoneTop title={title} lang={m.lang} onBack={onBack} onRead={onRead} count={count} done={index} total={total} />}
     >
-      {restored && <DraftRestored onClear={restored} />}
+      {updated ? (
+        <p className="text-xs text-fg-muted" data-teacher-updated>
+          Учитель обновил задание — ответы начаты заново
+        </p>
+      ) : (
+        restored && <DraftRestored onClear={restored} />
+      )}
       {children}
     </RoundFrame>
   )

@@ -51,7 +51,7 @@
  *   guide       — методичка, прокручена до раздела 2 (d9-3), снимок окном.
  * Ф2.25 — упражнения материала: экраны и данные в `_shots-f225.mjs` (`--only material-run` — ученик по u5, `--only material-review` — проверка по d18)
  * и `_shots-f2252.mjs` (`--only exercise-plan` — упражнения плана и «Моего текста» по d16),
- * `_shots-f2253.mjs` (`--only exercise-edit` — правка упражнений руками по d17; `phone` — снимок только на 390).
+ * `_shots-f2253.mjs` (`--only exercise-edit` — правка упражнений руками по d17: мастер и библиотека, d17-4; `phone` — снимок только на 390).
  * Заходы 4г (d11–d15) — экраны и данные в `_shots-4g.mjs`: тест уровня, программа, «Моя учёба»,
  * «Пригласи коллегу», «Как оплатить», Настройки, лендинг (гость — без входа: `screen(null, …)`).
  * Аудит у них — по шторке или диалогу (`audit`), а не по <main> под
@@ -319,7 +319,8 @@ try {
     const [trip] = must(await admin.from('materials').select('id').eq('teacher_id', t.id).eq('title', 'A trip that went wrong'), 'материал')
     await screen(t.email, [
       { name: 'materials', path: '/tasks?tab=materials', expect: /На проверку[\s\S]*A trip that went wrong/ },
-      { name: 'materials-open', path: `/tasks?tab=materials&mat=${trip.id}`, expect: /Выдан:[\s\S]*Упражнения/ },
+      // «Выдан» — список со статусом (d17-4), а не строка «Выдан: …» d8-1
+      { name: 'materials-open', path: `/tasks?tab=materials&mat=${trip.id}`, expect: /Выдан[\s\S]*Упражнения/ },
     ])
   }
   if (!ONLY || ONLY === 'wizard') {
@@ -436,7 +437,7 @@ try {
   if (!ONLY || ONLY === 'material-run') await shotsMaterialRun({ screen, admin, must, t, s }) // задание: новые форматы (u5, Ф2.25-1а)
   if (!ONLY || ONLY === 'material-review') await shotsMaterialReview({ screen, admin, must, t, s }) // проверка работы в баллах (d18, Ф2.25-1б)
   if (!ONLY || ONLY === 'exercise-plan') await shotsExercisePlan({ screen, t, a, s }) // упражнения плана и «Моего текста» (d16, Ф2.25-2)
-  if (!ONLY || ONLY === 'exercise-edit') await shotsExerciseEdit({ screen, t, a, s, dir: DIR }) // правка упражнений руками (d17, Ф2.25-3а)
+  if (!ONLY || ONLY === 'exercise-edit') await shotsExerciseEdit({ screen, admin, must, t, a, s, dir: DIR }) // правка упражнений руками (d17: мастер — 3а, библиотека — 3б)
   if (!ONLY || ONLY === 'landing') await shotsLanding({ screen, t }) // лендинг (d15): гость и в рамке у репетитора
   if (!ONLY || ONLY === 'home') {
     const word = /Слово дня/

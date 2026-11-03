@@ -1,14 +1,21 @@
 /**
- * Смоук правки упражнений руками (PLAN.md Ф2.25-3а, макет d17) — шаг «Текст»
+ * Смоук правки упражнений руками (PLAN.md Ф2.25-3, макет d17) — шаг «Текст»
  * мастера: «Изменить · Убрать», ошибка у поля, «+ Упражнение → Напишу сам»,
  * «Отмена», переключение с несохранённой правкой — с вопросом, «Сохранить» с
  * правкой без «Готово» — тоже; «Сохранить» кладёт в базу поправленные
  * упражнения (их и получит ученик); на телефоне «Готово · Отмена» — в
  * конце формы, рамка цела.
  *
+ * Библиотека (3б, d17-4): «Выдан» со статусом, правка и «Убрать» сразу в
+ * базе с новой версией; ученик: черновик старой версии сброшен с «Учитель
+ * обновил задание», сдача старой версии — отказ и задание заново с текста;
+ * сданный материал — плашка, «🔒 правка закрыта», «Сделать копию и править»
+ * (копия без выдач правится); ученик сдал, пока учитель правил, — плашка, а
+ * не сырая ошибка, и правка открывается в копии.
+ *
  * Текст готов заранее — черновиком мастера (`material-flow`), AI не зовётся:
  * смоук не тратит ни генераций, ни энергии. Краснеет на коде до Ф2.25-3:
- * у упражнения нет «Изменить».
+ * у упражнения нет «Изменить» (3а) и нет его в библиотеке (3б).
  *
  * Запуск: node scripts/smoke-exercise-edit.mjs (нужен `npm run dev:test` —
  * 5174, тестовая база; аккаунты заводятся и удаляются).
@@ -102,6 +109,20 @@ async function typeInto(page, sel, value) {
   await sleep(200)
 }
 const formText = (page) => page.$eval('[data-exercise-edit]', (el) => el.innerText).catch(() => '')
+async function login(page, email) {
+  await go(page, '/login')
+  await page.evaluate(() => localStorage.setItem('recall.onboarded', '1'))
+  await page.evaluate(() => [...document.querySelectorAll('button')].find((x) => x.textContent.trim() === 'Войти')?.click())
+  await sleep(400)
+  await page.type('#f-email', email)
+  await page.type('#f-password', PASS)
+  await page.click('button[type="submit"]')
+  await page.waitForFunction(() => location.pathname !== '/login', { polling: 250, timeout: 30000 })
+  await sleep(1200)
+}
+const material = async (id) => (await admin.from('materials').select('title, exercises, exercises_version').eq('id', id).single()).data
+const status = async (id) => (await admin.from('material_assignments').select('status').eq('id', id).single()).data?.status
+const waitGone = (page, sel, timeout = 8000) => page.waitForFunction((s) => !document.querySelector(s), { polling: 200, timeout }, sel).then(() => true, () => false)
 
 let browser = null
 let tId = null
@@ -272,6 +293,91 @@ try {
   check('выдано ученице', count === 1)
   const left = await page.evaluate((uid) => Object.keys(localStorage).filter((k) => k.startsWith(`recall.draft.${uid}.material-`)).length, tId)
   check('после сохранения черновиков мастера и формы нет', left === 0, `осталось ${left}`)
+
+  // ===== 3б: библиотека (d17-4) и ученик =====
+  const m1 = mats?.[0]?.id
+  const a1 = (await admin.from('material_assignments').select('id').eq('material_id', m1).single()).data?.id
+
+  // (10) до сдачи: «Выдан» со статусом, правка и «Убрать» — сразу в базе, версия растёт
+  await go(page, `/tasks?tab=materials&mat=${m1}`)
+  check('библиотека: «Выдан» — Ученица Правка · «ещё не сдано», замка нет', (await waitText(page, /Выдан[\s\S]*Ученица Правка[\s\S]*ещё не сдано/)) && !(await has(page, '[data-material-lock]')))
+  check('до сдачи у упражнений — «Изменить»', await press(page, 'Изменить упражнение 1'))
+  await typeInto(page, '[data-exercise-edit] textarea[name="prompt"]', 'Why did Dana feel unhappy?')
+  await press(page, 'Готово', '[data-exercise-edit]')
+  await waitGone(page, '[data-exercise-edit]')
+  let row = await material(m1)
+  check('«Готово» в библиотеке — сразу в базе, версия 2', row.exercises[0]?.prompt === 'Why did Dana feel unhappy?' && row.exercises_version === 2, JSON.stringify({ v: row.exercises_version, p: row.exercises[0]?.prompt }))
+  await press(page, 'Убрать упражнение 5')
+  await page.waitForSelector('[role="alertdialog"]', { timeout: 3000 }).catch(() => {})
+  await press(page, 'Убрать', '[role="alertdialog"]')
+  await waitText(page, /Упражнения · 4/, 5000)
+  row = await material(m1)
+  check('«Убрать» в библиотеке — 4 упражнения, версия 3', row.exercises.length === 4 && row.exercises_version === 3, `${row.exercises.length} · v${row.exercises_version}`)
+
+  // (11) ученик: черновик старой версии — сброшен, «Учитель обновил задание», с текста
+  const spage = await (await browser.createBrowserContext()).newPage()
+  await spage.setViewport({ width: 1280, height: 900 })
+  await login(spage, STUDENT)
+  const stale = { answers: { 0: { index: 0, given: 'x', auto_ok: false }, 1: { index: 1, given: 'y', auto_ok: false } }, index: 2, version: 2 }
+  await spage.evaluate((key, v) => localStorage.setItem(key, JSON.stringify({ v, at: Date.now() })), `recall.draft.${sId}.assignment:${a1}`, stale)
+  await go(spage, `/assignments?a=${a1}&stage=exercises`)
+  check('ученик: черновик старой версии — «Учитель обновил задание», задание с текста', (await waitText(spage, /Учитель обновил задание — прежние ответы сброшены/)) && spage.url().includes('stage=read'), spage.url())
+  await press(spage, 'К упражнениям')
+  const fresh = await text(spage)
+  check('упражнения — с первого, без «Черновик восстановлен»', fresh.includes('Why did Dana feel unhappy?') && !fresh.includes('Черновик восстановлен'), fresh.slice(0, 200))
+
+  // (12) сдача старой версии: учитель поправил, пока ученик решал — отказ, задание заново
+  const m2 = (await admin.from('materials').insert({ teacher_id: tId, lang: 'en', level: 'A2', topic: 'Travel', format: 'рассказ', length_range: '100-140', title: 'Exedit lock', body: BODY, exercises: [EXERCISES[0]] }).select('id').single()).data?.id
+  const a2 = (await admin.from('material_assignments').insert({ material_id: m2, student_id: sId }).select('id').single()).data?.id
+  await go(spage, `/assignments?a=${a2}&stage=exercises`)
+  await waitText(spage, /Why did Dana wait near the gate/)
+  await go(page, `/tasks?tab=materials&mat=${m2}`)
+  await press(page, 'Изменить упражнение 1')
+  await typeInto(page, '[data-exercise-edit] textarea[name="prompt"]', 'Why did Dana wait so long?')
+  await press(page, 'Готово', '[data-exercise-edit]')
+  await waitGone(page, '[data-exercise-edit]')
+  await spage.keyboard.press('1')
+  await sleep(500)
+  await press(spage, 'Завершить')
+  check('сдача старой версии — «Учитель обновил задание», задание с текста, работа не сдана', (await waitText(spage, /Учитель обновил задание — прежние ответы сброшены/)) && (await status(a2)) === 'assigned')
+  await press(spage, 'К упражнениям')
+  check('ученик видит поправленный вопрос', await waitText(spage, /Why did Dana wait so long\?/, 5000))
+  await spage.keyboard.press('1')
+  await sleep(500)
+  await press(spage, 'Завершить')
+  check('новая версия сдаётся', (await waitText(spage, /Работа отправлена преподавателю/)) && (await status(a2)) === 'submitted')
+
+  // (13) сданный материал: плашка, «правка закрыта», копия без выдач — правится
+  await go(page, `/tasks?tab=materials&mat=${m2}`)
+  const lockText = await page.waitForSelector('[data-material-lock]', { timeout: 8000 }).then((h) => h.evaluate((el) => el.innerText), () => '')
+  check('сданный: «Работу уже сдали: Ученица Правка — правка изменила бы её проверку»', lockText.includes('Работу уже сдали: Ученица Правка — правка изменила бы её проверку'), lockText.slice(0, 120))
+  check('у упражнений «правка закрыта», «Изменить» нет', (await text(page)).includes('правка закрыта') && !(await has(page, 'button[aria-label="Изменить упражнение 1"]')))
+  check('«Выдан» — «сдано · ждёт проверки»', (await text(page)).includes('сдано · ждёт проверки'))
+  await press(page, 'Сделать копию и править')
+  check('копия открылась и правится', (await page.waitForFunction((id) => !location.search.includes(id), { timeout: 8000 }, m2).then(() => true, () => false)) && (await page.waitForSelector('button[aria-label="Изменить упражнение 1"]', { timeout: 8000 }).then(() => true, () => false)) && !(await has(page, '[data-material-lock]')))
+  const copyId = new URL(page.url()).searchParams.get('mat')
+  const { data: same } = await admin.from('materials').select('id').eq('teacher_id', tId).eq('title', 'Exedit lock')
+  const { count: copyIssued } = await admin.from('material_assignments').select('id', { count: 'exact', head: true }).eq('material_id', copyId)
+  check('копия — тот же заголовок, без выдач', same?.length === 2 && copyIssued === 0, `${same?.length} · ${copyIssued}`)
+
+  // (14) ученик сдал, пока учитель правил: плашка, а не сырая ошибка; правка — в копии
+  await go(page, `/tasks?tab=materials&mat=${m1}`)
+  await press(page, 'Изменить упражнение 2')
+  await typeInto(page, '[data-exercise-edit] textarea[name="prompt"]', 'What did Dana get at the desk?')
+  const sc = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_PUBLISHABLE_KEY, { auth: { persistSession: false } })
+  await sc.auth.signInWithPassword({ email: STUDENT, password: PASS })
+  const sub = await sc.rpc('submit_material', { p_id: a1, p_answers: [], p_auto_score: 0, p_auto_total: 0 })
+  check('ученик сдал материал 1 (без версии — как старое приложение)', !sub.error, sub.error?.message)
+  await press(page, 'Готово', '[data-exercise-edit]')
+  const raced = await page.waitForSelector('[data-material-lock]', { timeout: 8000 }).then((h) => h.evaluate((el) => el.innerText), () => '')
+  check('«Готово» после сдачи — плашка «правка не сохранилась — откроется в копии», без сырой ошибки', raced.includes('Твоя правка не сохранилась — она откроется в копии') && !/RECALL_|Не получилось/.test(await text(page)), raced.slice(0, 160))
+  await press(page, 'Сделать копию и править')
+  const carried = await page.waitForSelector('[data-exercise-edit] textarea[name="prompt"]', { timeout: 8000 }).then((h) => h.evaluate((el) => el.value), () => '')
+  check('в копии форма открыта с той же правкой', carried === 'What did Dana get at the desk?', carried)
+  await press(page, 'Готово', '[data-exercise-edit]')
+  await waitGone(page, '[data-exercise-edit]')
+  const copy1 = await material(new URL(page.url()).searchParams.get('mat'))
+  check('правка сохранена в копии, оригинал прежний', copy1?.exercises[1]?.prompt === 'What did Dana get at the desk?' && (await material(m1)).exercises[1]?.prompt !== 'What did Dana get at the desk?')
 } catch (e) {
   check(`без сбоя: ${e.message}`, false)
 } finally {

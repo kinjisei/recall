@@ -93,8 +93,9 @@ export function AssignmentsPage() {
     }
     return (
       <AssignmentRunner
-        // смена задания через адрес (?a=другое) обязана начинать раннер заново
-        key={active.id}
+        // смена задания через адрес (?a=другое) обязана начинать раннер заново;
+        // новая версия от учителя (Ф2.25-3б) — тоже: черновик старой сбросится
+        key={`${active.id}:${active.material.exercises_version}`}
         row={active}
         stage={stage}
         onStage={setStage}
@@ -103,6 +104,7 @@ export function AssignmentsPage() {
           reload()
         }}
         onBack={close}
+        onOutdated={reload}
       />
     )
   }

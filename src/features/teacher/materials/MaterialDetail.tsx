@@ -1,11 +1,16 @@
 // ============================================================================
-// Карточка материала (макет d8-1 `.det`, PLAN.md Ф2.17-4в-2): название,
-// «Английский · A2 · рассказ · 120 слов · 2 упражнения», «Выдан: …», текст и
-// упражнения с ответами. Ниже — «Кому выдан» (выдать, убрать, проверить,
-// разбор), печать и удаление: в кадре их не видно, карточка прокручивается.
-// На компьютере стоит справа от списка, на телефоне — экраном с «‹ Материалы».
+// Карточка материала (макеты d8-1 `.det`, d17-4; PLAN.md Ф2.17-4в-2,
+// Ф2.25-3б): название, «Английский · A2 · рассказ · 120 слов · 2
+// упражнения», работу уже сдали — плашка замка с копией, «Выдан» — ученики со
+// статусом, текст, упражнения: пока не сдали — «Изменить · Убрать» и
+// «+ Упражнение» прямо в базу, сдали — «🔒 правка закрыта». Ниже — «Кому
+// выдан» (выдать, убрать, проверить, разбор), печать и удаление: в кадре их
+// не видно, карточка прокручивается. На компьютере стоит справа от списка,
+// на телефоне — экраном с «‹ Материалы».
 // ============================================================================
 import { useState } from 'react'
+import { editLock } from '../../../domains/materials'
+import { firstName } from '../../../domains/students'
 import { assignMaterial, deleteMaterial, listMaterialAssignments, unassignMaterial } from '../../../lib/materials'
 import type { StudentInfo } from '../../../lib/teacher'
 import { plural } from '../../../shared/lib/plural'
@@ -19,8 +24,10 @@ import { LoadError } from '../../../shared/ui/LoadError'
 import { RowsSkeleton } from '../../../shared/ui/Loading'
 import type { Material, MaterialAssignment } from '../../../types'
 import { PrintSheet } from '../PrintSheet'
-import { DetailHead, IssuedLine, MaterialBody, StudentRow } from './detailParts'
+import { DetailHead, IssuedList, MaterialText, StudentRow } from './detailParts'
+import { LibraryExercises } from './LibraryExercises'
 import { materialKind, materialWords } from './LibraryList'
+import { LockNotice } from './LockNotice'
 import { ErrorText } from '../../../shared/ui/ErrorText'
 
 export function MaterialDetail({
@@ -28,6 +35,9 @@ export function MaterialDetail({
   students,
   initialError,
   onDeleted,
+  onChanged,
+  onCopied,
+  onStale,
   onBack,
   onWorksChanged,
   onCheck,
@@ -38,6 +48,12 @@ export function MaterialDetail({
   /** Только что сохранён, но кому-то не назначился — сказать в «Кому выдан». */
   initialError?: string
   onDeleted: () => void
+  /** Упражнения сохранены в базу — новая версия материала в списке. */
+  onChanged: (m: Material) => void
+  /** «Сделать копию и править»: копия открывается сразу. */
+  onCopied: (copy: Material) => void
+  /** Материал поправили в другой вкладке — перечитать список. */
+  onStale: () => void
   /** Телефон: карточка — экраном, «‹ Материалы» к списку. На компьютере список рядом. */
   onBack?: () => void
   /** Число работ «на проверку» могло измениться (снятие сданной работы). */
@@ -59,9 +75,13 @@ export function MaterialDetail({
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(initialError ?? null)
   const [printMode, setPrintMode] = useState<'student' | 'teacher' | null>(null)
+  // ученик сдал, пока учитель правил: база ответила замком — плашка, а не сырая ошибка
+  const [raced, setRaced] = useState(false)
   const { confirm, dialog } = useConfirm()
 
   const nameOf = (id: string) => students.find((s) => s.profile.id === id)?.profile.display_name ?? 'Ученик'
+  // замок — по выдачам и истории попыток, то же правило, что у базы (0018)
+  const lock = assignments ? editLock(assignments) : null
 
   const toggle = async (studentId: string) => {
     const cur = (assignments ?? []).find((a) => a.student_id === studentId)
@@ -127,12 +147,28 @@ export function MaterialDetail({
         </span>
         {loadError ? (
           <LoadError message={loadError} onRetry={reload} />
-        ) : !assignments ? (
+        ) : !assignments || !lock ? (
           <RowsSkeleton count={1} height={40} />
         ) : (
-          <IssuedLine assignments={assignments} nameOf={nameOf} />
+          <>
+            {lock.locked && (
+              // на плашке — только имя, как в кадре («Әсел»): полные имена — строкой ниже, в «Выдан»
+              <LockNotice material={material} names={lock.by.map((a) => firstName(nameOf(a.student_id)))} onlyPast={lock.onlyPast} raced={raced} onCopied={onCopied} />
+            )}
+            <IssuedList assignments={assignments} nameOf={nameOf} />
+          </>
         )}
-        <MaterialBody material={material} />
+        <MaterialText material={material} />
+        <LibraryExercises
+          material={material}
+          mode={!lock ? 'unknown' : lock.locked ? 'locked' : 'edit'}
+          onSaved={onChanged}
+          onLocked={() => {
+            setRaced(true)
+            reload()
+          }}
+          onStale={onStale}
+        />
       </article>
 
       <section aria-label="Кому выдан" className="flex flex-col rounded-card bg-surface px-5 py-4 shadow-card">
