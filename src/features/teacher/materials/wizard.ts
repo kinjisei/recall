@@ -19,8 +19,9 @@ export type Step =
   | { name: 'form' }
   // replan — право на бесплатные повторы плана, его выдал сервер (Ф2.17-4в-2б)
   | { name: 'plan'; req: MaterialRequest; plan: MaterialPlan; replan?: { id: string; left: number } }
-  // own: материал по своему тексту преподавателя (плана нет, назад — к форме)
-  | { name: 'preview'; req: MaterialRequest; plan: MaterialPlan; content: MaterialContent; own?: boolean }
+  // own: материал по своему тексту преподавателя (плана нет, назад — к форме);
+  // edited: упражнения поправлены руками (Ф2.25-3) — правка того же шага
+  | { name: 'preview'; req: MaterialRequest; plan: MaterialPlan; content: MaterialContent; own?: boolean; edited?: boolean }
 
 /** Шаги по порядку; at — где сейчас, всё после него — готовое впереди. */
 export interface Flow {

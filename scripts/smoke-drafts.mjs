@@ -6,7 +6,8 @@
  * отчёт родителям пропадали. Здесь — каждое такое место: ученик (сочинение,
  * быстрая проверка, ответы домашки, свой текст, «Диалог», квест, отзыв) и
  * учитель (сборка домашки, отчёт, программа, заявка на материал, правки к
- * плану и к тексту, разбор работы, письменное задание, разбор сочинения).
+ * плану и к тексту, правка упражнения — открытая и после «Готово», разбор
+ * работы, письменное задание, разбор сочинения).
  * Плюс: после отправки черновика нет; «Очистить» стирает; после выхода из
  * аккаунта черновиков на устройстве нет.
  *
@@ -266,9 +267,28 @@ try {
   await draftCase(te, 'правки к плану материала', { open: () => go(te, '/teacher?tab=materials'), field: 'textarea[placeholder^="Например: добавь"]', value: 'Добавь вопросов' })
   await putFlow({ name: 'preview', req, plan, content })
   await draftCase(te, 'правки к готовому материалу', { open: () => go(te, '/teacher?tab=materials'), field: 'textarea[placeholder^="Например: проще"]', value: 'Сделай текст проще' })
+  // правка упражнения руками (Ф2.25-3, d17): открытая форма — своим черновиком
+  const editField = '[data-exercise-edit] textarea[name="prompt"]'
+  await draftCase(te, 'открытая правка упражнения', {
+    open: async () => {
+      await go(te, '/teacher?tab=materials')
+      if (!(await waitSel(te, '[data-exercise-edit]', 3000))) await click(te, 'Изменить')
+    },
+    field: editField,
+    value: 'Where do we sleep at night?',
+  })
+  // «Готово» — правка ложится в шаг «Текст» (черновик мастера) и переживает перезагрузку
+  await click(te, 'Готово')
+  const closed = !(await has(te, '[data-exercise-edit]'))
+  await te.reload({ waitUntil: 'networkidle2' })
+  await waitSel(te, '[data-exercise-list]')
+  const after = await text(te)
+  check('правка упражнения после «Готово»: перезагрузил → в материале новый вопрос, форма закрыта', closed && after.includes('Where do we sleep at night?') && !(await has(te, '[data-exercise-edit]')), `закрыта: ${closed}`)
+  await click(te, 'Изменить') // открытая форма — тоже черновик: «Очистить» мастера стирает и её
   await click(te, 'Очистить')
+  const editLeft = await te.evaluate((key) => localStorage.getItem(key) !== null, `recall.draft.${tId}.material-exercise-edit`)
   await go(te, '/teacher?tab=materials')
-  check('мастер материала: «Очистить» — снова список', await click(te, 'Создать материал', 8000) && !(await text(te)).includes(NOTE))
+  check('мастер материала: «Очистить» — снова список, черновика формы упражнения нет', (await click(te, 'Создать материал', 8000)) && !(await text(te)).includes(NOTE) && !editLeft, `форма осталась: ${editLeft}`)
   await click(te, 'Отмена') // форма тоже черновик: закрываем, чтобы дальше был список
 
   await draftCase(te, 'разбор работы ученика', {

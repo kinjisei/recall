@@ -1,14 +1,15 @@
 // ============================================================================
 // Куски карточки материала (макет d8-1 `.det`): «Выдан: Әсел Жұмабаева ·
-// вчера, 9:10 · ждёт проверки», текст абзацами, упражнения с ответом, строка
-// ученика в «Кому выдан».
+// вчера, 9:10 · ждёт проверки», текст абзацами, упражнения с ответом (вид по
+// d17: шапка с видом упражнения), строка ученика в «Кому выдан».
 // ============================================================================
 import { whenDone } from '../../../domains/schedule'
 import { correctAnswerText } from '../../../lib/text'
 import { plural } from '../../../shared/lib/plural'
 import { Avatar } from '../../../shared/ui/Avatar'
 import { points, workScore } from '../../../lib/assignmentScore'
-import type { GrammarExercise, MatchExercise, Material, MaterialAssignment, MaterialExercise } from '../../../types'
+import { formatLabel } from '../../../lib/exerciseFormats'
+import type { Material, MaterialAssignment, MaterialExercise } from '../../../types'
 
 /** Подзаголовок карточки (d8-1 `.sh8`): «Текст», «Упражнения · 2». */
 export function DetailHead({ children }: { children: React.ReactNode }) {
@@ -63,44 +64,65 @@ export function MaterialBody({ material }: { material: Material }) {
       <DetailHead>
         {plural(n, 'Упражнение', 'Упражнения', 'Упражнений')} · {n}
       </DetailHead>
-      {material.exercises.map((ex, i) => (
-        <ExerciseRow key={i} n={i + 1} ex={ex} lang={material.lang} />
-      ))}
+      <div className="@container flex flex-col gap-2.5">
+        {material.exercises.map((ex, i) => (
+          <ExerciseRow key={i} n={i + 1} ex={ex} lang={material.lang} />
+        ))}
+      </div>
     </>
   )
 }
 
-/**
- * Упражнение с ответом (d8-1, d8-4 `.ex8`): «1 Why did Dana…? Ответ: Her
- * flight had a delay.»; у «Соедини пары» — слово и перевод двумя колонками,
- * перевод — цветом ответа (d8-4).
- */
-export function ExerciseRow({ n, ex, lang }: { n: number; ex: GrammarExercise | MatchExercise; lang: string }) {
+/** «Соедини слово и перевод · 5 пар», «True / False» — вид упражнения в его шапке (d17). */
+export function rowLabel(ex: MaterialExercise): string {
+  return ex.type === 'match' ? `${formatLabel(ex)} · ${ex.pairs.length} ${plural(ex.pairs.length, 'пара', 'пары', 'пар')}` : formatLabel(ex)
+}
+
+/** Шапка упражнения (d17 `.eh17`): номер и вид; на правке номер — акцентом. */
+export function ExerciseHead({ n, label, editing = false }: { n: number; label: string; editing?: boolean }) {
   return (
-    <div className="flex gap-2.5 rounded-control-sm bg-input px-3 py-2.5 text-body leading-normal">
-      <span className="flex size-6 flex-none items-center justify-center rounded-tag bg-surface text-xs font-semibold text-fg-secondary">{n}</span>
-      <span className="flex min-w-0 flex-col gap-0.5">
-        <span className="text-fg">{ex.prompt}</span>
-        {ex.type === 'match' ? (
-          <span className="mt-0.5 grid grid-cols-[max-content_minmax(0,1fr)] gap-x-6 gap-y-0.5 text-sm">
-            {ex.pairs.map((p, i) => (
-              <span key={i} className="contents">
-                <span lang={lang} className="text-fg">
-                  {p.left}
-                </span>
-                <span lang={ex.format === 'definition' ? lang : undefined} className="font-medium text-success-strong">
-                  {p.right}
-                </span>
+    <span className="flex min-h-8 items-center gap-2">
+      <span className={`flex size-6 flex-none items-center justify-center rounded-tag text-xs font-semibold ${editing ? 'bg-accent-soft text-accent-soft-fg' : 'bg-surface text-fg-secondary'}`}>{n}</span>
+      <span className="text-xs font-semibold text-fg-muted">{label}</span>
+    </span>
+  )
+}
+
+/**
+ * Упражнение с ответом (d17 `.ec17`; d8-1, d8-4): шапка — номер, вид и
+ * действия справа; ниже вопрос и «Ответ: …» цветом ответа, у пар — слово и
+ * перевод двумя колонками. Узко (телефон) — действия строкой под
+ * упражнением, цели 44 (заметка d17 «Телефон»): шапке их не уместить.
+ */
+export function ExerciseRow({ n, ex, lang, actions }: { n: number; ex: MaterialExercise; lang: string; actions?: React.ReactNode }) {
+  return (
+    <div className="grid grid-cols-1 gap-2 rounded-control bg-input py-3 pl-3.5 pr-3 @lg:grid-cols-[minmax(0,1fr)_auto]" data-exercise={n}>
+      <ExerciseHead n={n} label={rowLabel(ex)} />
+      {actions && <span className="order-last -mb-1.5 -ml-2 flex flex-wrap gap-0.5 @lg:order-none @lg:col-start-2 @lg:row-start-1 @lg:mb-0 @lg:ml-0">{actions}</span>}
+      {ex.type === 'match' ? (
+        <span className="grid grid-cols-[auto_auto] justify-start gap-x-4 gap-y-0.5 text-sm @lg:col-span-2">
+          {ex.pairs.map((p, i) => (
+            <span key={i} className="contents">
+              <span lang={lang} className="text-fg">
+                {p.left}
               </span>
-            ))}
+              <span lang={ex.format === 'definition' ? lang : undefined} className="font-medium text-success-strong">
+                {p.right}
+              </span>
+            </span>
+          ))}
+        </span>
+      ) : (
+        <span className="flex flex-col gap-2 @lg:col-span-2">
+          <span lang={lang} className="text-body leading-snug text-fg">
+            {ex.prompt}
           </span>
-        ) : (
           <span className="text-sm font-medium text-success-strong">
             <small className="text-sm font-normal text-fg-muted">Ответ: </small>
             <span lang={lang}>{correctAnswerText(ex)}</span>
           </span>
-        )}
-      </span>
+        </span>
+      )}
     </div>
   )
 }

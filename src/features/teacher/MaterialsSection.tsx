@@ -23,6 +23,7 @@ import type { Material, MaterialAssignment } from '../../types'
 import { LibraryList } from './materials/LibraryList'
 import { PendingWorks } from './materials/PendingWorks'
 import { REQUEST_DRAFT } from './materials/RequestForm'
+import { EXERCISE_EDIT_DRAFT } from './materials/edit/ExerciseList'
 import { useDraft } from '../../shared/lib/useDraft'
 import { clearDraft } from '../../shared/lib/drafts'
 import { DraftRestored } from '../../shared/ui/DraftRestored'
@@ -91,6 +92,7 @@ export function MaterialsSection({
   const discard = () => {
     flowDraft.clear()
     clearDraft(REQUEST_DRAFT)
+    clearDraft(EXERCISE_EDIT_DRAFT)
   }
   const restoredNote = flowDraft.restored && <DraftRestored onClear={discard} className="mb-3" />
   // «Собрать материал»: форма — если мастер не продолжается с прошлого раза

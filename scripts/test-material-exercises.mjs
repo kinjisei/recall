@@ -12,6 +12,8 @@
  * Запуск: node scripts/test-material-exercises.mjs
  */
 import { normalizeExercises, validExercises } from '../src/lib/materialExercises.ts'
+import { blankDraft, buildExercise, editSpec, toDraft } from '../src/domains/materials/edit.ts'
+import { checkEdit, exerciseProblems } from '../src/domains/materials/editCheck.ts'
 import { irregularFromEnglish } from '../src/lib/wordForms.ts'
 import { irregularGroups } from '../src/data/english/irregular.ts'
 import {
@@ -149,6 +151,162 @@ check('выбор и грамматика не трогаются', normalizeExe
 // ---- смесь: битые уходят, целые остаются ------------------------------------
 const mixed = validExercises([mcq, { ...order, words: ['broken'] }, fill, order])
 check('из смеси остаются только целые', mixed.length === 3, `осталось ${mixed.length}`)
+
+// ---- правка руками (Ф2.25-3, макет d17): причина — у поля -----------------
+// Форма правки проходит тот же фильтр, что ответ AI. Главное свойство: нет
+// причин по полям ⇒ фильтр пропускает упражнение без изменений. Иначе
+// учитель нажмёт «Готово», а упражнение молча потеряет пару или не
+// сохранится с непонятной ошибкой.
+console.log('')
+console.log('— правка руками —')
+// одинаковые по смыслу объекты — с любым порядком ключей
+const canon = (v) => (Array.isArray(v) ? v.map(canon) : v && typeof v === 'object' ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, canon(v[k])])) : v)
+const same = (a, b) => JSON.stringify(canon(a)) === JSON.stringify(canon(b))
+const ALL = {
+  mcq: { kind: 'comprehension', type: 'mcq', prompt: 'Why was Dana late?', options: ['Her flight had a delay.', 'She took a taxi.', 'She lost her luggage.', 'She came early.'], answer: 0 },
+  tfng: { kind: 'comprehension', type: 'mcq', format: 'tfng', prompt: 'Dana came late.', options: ['True', 'False'], answer: 1, quote: 'Dana came to the airport early', mark: 'early', why: 'В тексте — early' },
+  word_by_definition: { kind: 'vocab', type: 'mcq', prompt: 'the bags you take on a trip', options: ['luggage', 'delay', 'taxi', 'home'], answer: 0 },
+  form: { kind: 'grammar', type: 'mcq', format: 'form', prompt: 'She ___ a taxi home.', options: ['took', 'take', 'taken'], answer: 0 },
+  fill_form: { kind: 'grammar', type: 'fill', prompt: 'Dana ___ (come) to the airport early.', answer: 'came', hint: 'Past Simple от come' },
+  fill_word: { kind: 'vocab', type: 'fill', prompt: 'Her ___ was lost.', answer: 'luggage' },
+  order: { kind: 'grammar', type: 'order', prompt: 'Дана опоздала на рейс.', words: ['flight', 'her', 'missed', 'Dana'], answer: ['Dana', 'missed', 'her', 'flight'] },
+  match_translation: { ...pairsAi, pairs: pairsAi.pairs.slice(0, 4) },
+  match_definition: {
+    kind: 'vocab',
+    type: 'match',
+    format: 'definition',
+    prompt: 'Соедини слово и объяснение',
+    pairs: [
+      { left: 'delay', right: 'when something is late' },
+      { left: 'luggage', right: 'bags for a trip' },
+      { left: 'taxi', right: 'a car you pay to ride in' },
+    ],
+    extra: ['a ticket for a plane'],
+  },
+}
+const ctxEdit = ctxA2
+const edit = (ex, patch, ctx = ctxEdit) => checkEdit({ ...toDraft(ex), ...patch }, ctx, ex)
+const why = (ex, patch, ctx = ctxEdit) => exerciseProblems({ ...toDraft(ex), ...patch }, ctx)
+for (const [id, ex] of Object.entries(ALL)) {
+  check(`${id}: исходное упражнение проходит фильтр`, keep(ex) && same(one(ex, ctxEdit), ex))
+  const r = edit(ex, {})
+  check(`${id}: «Изменить» → «Готово» без правок — то же упражнение`, r.ok && same(r.exercise, ex), r.ok ? '' : JSON.stringify(r.problems))
+  check(`${id}: вид формы — тот же`, toDraft(ex).format === id)
+}
+// d17-1: верный вариант не отмечен
+check('выбор без верного — «Отметь верный вариант» у ответа', why(ALL.mcq, { answer: null }).answer === 'Отметь верный вариант')
+check('пустой вопрос — у вопроса', why(ALL.mcq, { prompt: '  ' }).prompt === 'Впиши вопрос')
+check('пустой вариант — у вариантов', /Заполни все варианты/.test(why(ALL.mcq, { options: ['a', '', 'c', 'd'] }).options ?? ''))
+check('один вариант — «хотя бы 2»', why(ALL.mcq, { options: ['a'], answer: 0 }).options === 'Нужно хотя бы 2 варианта')
+check('повтор варианта (регистр, пробелы) — у вариантов', /повторяется/.test(why(ALL.mcq, { options: ['She came early.', 'she came early. ', 'x', 'y'] }).options ?? ''))
+check('правка вопроса сохраняется, перенос строки — пробел', edit(ALL.mcq, { prompt: 'What happened\nto Dana?' }).exercise?.prompt === 'What happened to Dana?')
+check('убрать вариант до двух — можно', edit(ALL.mcq, { options: ['Her flight had a delay.', 'She came early.'], answer: 0 }).ok)
+check('«Выбери форму» из двух — «Нужно 3–4 формы»', why(ALL.form, { options: ['took', 'take'] }).options === 'Нужно 3–4 формы')
+check('«Выбери форму» из пяти — «Нужно 3–4 формы»', why(ALL.form, { options: ['took', 'take', 'taken', 'takes', 'taking'] }).options === 'Нужно 3–4 формы')
+check('выбор ответа из пяти (старый вопрос AI) — сохраняется как есть', edit({ ...ALL.mcq, options: [...ALL.mcq.options, 'She was ill.'] }, {}).ok)
+check('«Выбери форму» без ___ — у предложения', why(ALL.form, { prompt: 'She took a taxi home.' }).prompt === 'Отметь пропуск: ___')
+check('«Выбери форму» без верной — «Отметь верную форму»', why(ALL.form, { answer: null }).answer === 'Отметь верную форму')
+check('«Слово по объяснению»: слова нет в тексте — у слов', /«passport» нет в тексте/.test(why(ALL.word_by_definition, { options: ['passport', 'delay', 'taxi', 'home'] }).options ?? ''))
+check('«Слово по объяснению»: само слово в объяснении — у объяснения', /само слово/.test(why(ALL.word_by_definition, { prompt: 'luggage is the bags you take' }).prompt ?? ''))
+check('True / False: без ответа — «Отметь ответ»', why(ALL.tfng, { answer: null }).answer === 'Отметь ответ')
+check('True / False A2: «Not given» (третья кнопка) — «Отметь ответ»', why(ALL.tfng, { answer: 2 }).answer === 'Отметь ответ')
+check('True / False A2: кнопки True / False', JSON.stringify(edit(ALL.tfng, { answer: 0 }).exercise?.options) === '["True","False"]')
+check('True / False B1: три кнопки', edit(ALL.tfng, { answer: 0 }, ctxB1).exercise?.options.length === 3)
+check('True / False: «почему» правится, строка текста остаётся', (() => { const r = edit(ALL.tfng, { answer: 0, note: 'Нет, рано' }); return r.ok && r.exercise.why === 'Нет, рано' && r.exercise.quote === ALL.tfng.quote })())
+check('True / False B1: «Not given» — без строки текста', (() => { const r = edit({ ...ALL.tfng, options: ['True', 'False', 'Not given'] }, { answer: 2 }, ctxB1); return r.ok && r.exercise.quote === undefined && r.exercise.mark === undefined })())
+check('испанский: кнопки Verdadero / Falso', JSON.stringify(buildExercise({ ...toDraft(ALL.tfng), answer: 0 }, { lang: 'es', level: 'A2' }).options) === '["Verdadero","Falso"]')
+check('«Вставь»: пустой ответ — у ответа', why(ALL.fill_form, { text: ' / ' }).text === 'Впиши ответ')
+check('«Вставь»: без ___ — у предложения', why(ALL.fill_form, { prompt: 'Dana came early.' }).prompt === 'Отметь пропуск: ___')
+check('«Вставь»: варианты через «/» — можно', edit(ALL.fill_form, { text: 'came / arrived' }).ok)
+check('«Вставь»: подсказку можно стереть', (() => { const r = edit(ALL.fill_form, { note: '' }); return r.ok && !('hint' in r.exercise) })())
+check('«Вставь слово»: слова нет в тексте — у ответа', /«passport» нет в тексте/.test(why(ALL.fill_word, { text: 'passport' }).text ?? ''))
+check('«Вставь слово»: форма из текста засчитана (took ⇒ take)', edit(ALL.fill_word, { prompt: 'She ___ a taxi.', text: 'take' }).ok)
+check('«Собери»: два слова — «хотя бы 3»', why(ALL.order, { text: 'Dana missed' }).text === 'Нужно хотя бы 3 слова')
+check('«Собери»: новое предложение — банк из тех же слов', (() => { const r = edit(ALL.order, { text: 'Her luggage was lost' }); return r.ok && keep(r.exercise) && r.exercise.words.length === 4 })())
+check('«Собери»: то же предложение — банк прежний', same(edit(ALL.order, {}).exercise?.words, ALL.order.words))
+const P = ALL.match_translation.pairs
+check('пары: пустая — «Пустую пару не сохранить»', /Пустую пару не сохранить/.test(why(ALL.match_translation, { pairs: [...P, { left: 'taxi', right: '' }] }).pairs ?? ''))
+check('пары: две — «от 3 до 8»', why(ALL.match_translation, { pairs: P.slice(0, 2) }).pairs === 'Нужно от 3 до 8 пар')
+check('пары: слово дважды', /«Delay» повторяется/.test(why(ALL.match_translation, { pairs: [...P, { left: 'Delay', right: 'опоздание' }] }).pairs ?? ''))
+check('пары: перевод дважды', /повторяется/.test(why(ALL.match_translation, { pairs: [...P, { left: 'taxi', right: 'Багаж' }] }).pairs ?? ''))
+check('пары: слова нет в тексте («ticket»)', /«ticket» нет в тексте/.test(why(ALL.match_translation, { pairs: [...P, { left: 'ticket', right: 'билет' }] }).pairs ?? ''))
+check('пары: слово в форме из текста — можно (came ⇒ come)', edit(ALL.match_translation, { pairs: [P[0], P[1], P[3], { left: 'come', right: 'приходить' }] }).ok)
+check('пары: перевод не по-русски', /по-русски/.test(why(ALL.match_translation, { pairs: [...P.slice(0, 3), { left: 'luggage', right: 'bags' }] }).pairs ?? ''))
+check('пары: объяснение по-русски', /на английском/.test(why(ALL.match_definition, { pairs: [...ALL.match_definition.pairs.slice(0, 2), { left: 'taxi', right: 'машина' }] }).pairs ?? ''))
+check('пары: лишний совпал с парой — у лишнего', /уже есть в парах/.test(why(ALL.match_translation, { extra: ['багаж'] }).extra ?? ''))
+check('пары: лишний не по-русски — у лишнего', /по-русски/.test(why(ALL.match_translation, { extra: ['station'] }).extra ?? ''))
+check('пары: лишний можно стереть', (() => { const r = edit(ALL.match_translation, { extra: [''] }); return r.ok && !('extra' in r.exercise) })())
+check('пары: подпись упражнения — прежняя', edit(ALL.match_translation, {}).exercise?.prompt === ALL.match_translation.prompt)
+// d17-3б: пустая форма после «Напишу сам»
+const empty = blankDraft('form')
+check('«Напишу сам» «Выбери форму»: три пустые формы', empty.options.length === 3 && empty.options.every((o) => o === ''))
+check('пустая форма не сохраняется: причины у предложения и форм', (() => { const r = checkEdit(empty, ctxEdit); return !r.ok && !!r.problems.prompt && !!r.problems.options })())
+check('пустые пары — три пустые', blankDraft('match_definition').pairs.length === 3)
+check('новое упражнение из формы — подпись вида у пар', (() => { const r = checkEdit({ ...blankDraft('match_translation'), pairs: P.slice(0, 3) }, ctxEdit); return r.ok && r.exercise.prompt === 'Соедини слово и перевод' })())
+check('подписи формы: «Формы · 3–4, кружок — верная» и пример на языке текста', editSpec('form', ctxA2).options.label === 'Формы · 3–4, кружок — верная' && /Dana ___ to Istanbul/.test(editSpec('form', ctxA2).prompt.placeholder))
+check('подписи формы: у объяснений на испанском — «на испанском»', /на испанском/.test(editSpec('match_definition', { lang: 'es', level: 'B1' }).pairs.label))
+
+// Свойство: тысячи правок по одной и по две — нет причин ⇒ фильтр AI
+// пропускает упражнение без изменений (сбой — «проверка чего-то не знает»).
+const MUT = [
+  (d) => ({ ...d, prompt: '' }),
+  (d) => ({ ...d, prompt: 'Dana took a taxi.' }),
+  (d) => ({ ...d, prompt: 'Dana ___ a taxi.' }),
+  (d) => ({ ...d, prompt: 'luggage bags' }),
+  (d) => ({ ...d, answer: null }),
+  (d) => ({ ...d, answer: 0 }),
+  (d) => ({ ...d, answer: 1 }),
+  (d) => ({ ...d, answer: 2 }),
+  (d) => ({ ...d, answer: 5 }),
+  (d) => ({ ...d, options: d.options.slice(1) }),
+  (d) => ({ ...d, options: d.options.slice(0, -1) }),
+  (d) => ({ ...d, options: [...d.options, 'taxi'] }),
+  (d) => ({ ...d, options: [...d.options, d.options[0] ?? 'x'] }),
+  (d) => ({ ...d, options: d.options.map((o, i) => (i === 0 ? '' : o)) }),
+  (d) => ({ ...d, options: d.options.map((o, i) => (i === 0 ? 'passport' : o)) }),
+  (d) => ({ ...d, options: ['delay', 'home', 'taxi', 'early', 'lost'] }),
+  (d) => ({ ...d, text: '' }),
+  (d) => ({ ...d, text: 'passport' }),
+  (d) => ({ ...d, text: 'took a taxi' }),
+  (d) => ({ ...d, text: 'came / went' }),
+  (d) => ({ ...d, text: 'missed' }),
+  (d) => ({ ...d, note: '' }),
+  (d) => ({ ...d, pairs: d.pairs.slice(1) }),
+  (d) => ({ ...d, pairs: [...d.pairs, { left: 'taxi', right: 'такси' }] }),
+  (d) => ({ ...d, pairs: [...d.pairs, { left: 'home', right: 'a place you live' }] }),
+  (d) => ({ ...d, pairs: [...d.pairs, { left: 'passport', right: 'паспорт' }] }),
+  (d) => ({ ...d, pairs: [...d.pairs, { ...(d.pairs[0] ?? { left: 'a', right: 'b' }) }] }),
+  (d) => ({ ...d, pairs: d.pairs.map((p, i) => (i === 0 ? { ...p, right: '' } : p)) }),
+  (d) => ({ ...d, pairs: d.pairs.map((p, i) => (i === 0 ? { ...p, right: 'delay' } : p)) }),
+  (d) => ({ ...d, pairs: d.pairs.map((p, i) => (i === 0 ? { ...p, right: 'опоздание' } : p)) }),
+  (d) => ({ ...d, pairs: Array.from({ length: 9 }, (_, i) => d.pairs[i % Math.max(1, d.pairs.length)] ?? { left: 'x', right: 'y' }) }),
+  (d) => ({ ...d, extra: [] }),
+  (d) => ({ ...d, extra: [d.pairs[1]?.right ?? 'x'] }),
+  (d) => ({ ...d, extra: ['вокзал', 'поезд', 'самолёт'] }),
+  (d) => ({ ...d, extra: ['station'] }),
+]
+let tried = 0
+let passed = 0
+const leaks = []
+for (const ctx of [ctxA2, ctxB1]) {
+  for (const ex of Object.values(ALL)) {
+    const base = toDraft(ex)
+    const drafts = [base]
+    for (const a of MUT) {
+      drafts.push(a(base))
+      for (const b of MUT) drafts.push(b(a(base)))
+    }
+    for (const d of drafts) {
+      tried++
+      if (Object.keys(exerciseProblems(d, ctx)).length) continue
+      passed++
+      const built = buildExercise(d, ctx, ex)
+      const kept = validExercises(normalizeExercises([built], ctx))
+      if (kept.length !== 1 || !same(kept[0], built)) leaks.push(`${d.format}: ${JSON.stringify(d).slice(0, 160)}`)
+    }
+  }
+}
+check(`нет причин ⇒ фильтр пропускает без изменений (${tried} правок, без причин — ${passed})`, leaks.length === 0 && passed > 100, leaks.slice(0, 3).join(' | '))
 
 // ---------------------------------------------------------------------------
 // САМОКОРРЕКЦИЯ: подсказка говорит ГДЕ ошибка и НЕ выдаёт ответ.

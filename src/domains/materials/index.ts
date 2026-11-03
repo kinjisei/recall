@@ -1,0 +1,17 @@
+// Парадная дверь домена материалов (архитектура §2): экраны берут отсюда.
+// Пока здесь правка упражнений руками (Ф2.25-3); остальное про материалы —
+// в lib/materials и lib/materialExercises до переезда (PLAN.md Ф3).
+export {
+  blankDraft,
+  buildExercise,
+  editSpec,
+  optionLimits,
+  tfngButtons,
+  toDraft,
+  type EditField,
+  type EditSpec,
+  type EditTarget,
+  type ExerciseDraft,
+  type FieldText,
+} from './edit'
+export { checkEdit, exerciseProblems, type EditProblems, type EditResult } from './editCheck'

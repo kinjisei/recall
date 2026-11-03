@@ -101,6 +101,7 @@ export function MaterialWizard({
         plan={step.plan}
         content={step.content}
         own={step.own}
+        edited={step.edited}
         levels={levels}
         gens={gens}
         onBack={() => update(back)}
@@ -108,8 +109,9 @@ export function MaterialWizard({
         onExit={onExit}
         onRegenerated={(content) => {
           onSpent()
-          update((f) => replace(f, { ...step, content }))
+          update((f) => replace(f, { ...step, content, edited: undefined }))
         }}
+        onEdited={(content) => update((f) => replace(f, { ...step, content, edited: true }))}
         onSaved={onSaved}
       />
     </>

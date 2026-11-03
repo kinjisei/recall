@@ -12,6 +12,9 @@ import { fieldClass } from '../../../shared/ui/TextField'
 import { IconRefresh, IconSparkle } from '../../../shared/ui/icons'
 import { lengthLabel } from '../../../lib/materialLengths'
 import type { MaterialRequest } from '../../../lib/materials'
+import { exercisePoints } from '../../../lib/assignmentScore'
+import { plural } from '../../../shared/lib/plural'
+import type { MaterialExercise } from '../../../types'
 import { FieldLabel, LANG_NAME } from './wizardBits'
 import { markWords, paragraphs } from './markWords'
 import { useIrregular } from './useIrregular'
@@ -60,12 +63,17 @@ export function Article({ req, title, body, words }: { req: MaterialRequest; tit
   )
 }
 
-/** «Упражнения (3) с ответами» (d8-4 `.exs`). */
-export function ExercisesCard({ count, children }: { count: number; children: ReactNode }) {
+/** «Упражнения (5) с ответами · до 9 баллов» (d17 `.ex17`; пары — балл за пару). */
+export function ExercisesCard({ exercises, children }: { exercises: number | MaterialExercise[]; children: ReactNode }) {
+  const count = typeof exercises === 'number' ? exercises : exercises.length
+  const max = typeof exercises === 'number' ? null : exercises.reduce((sum, ex) => sum + exercisePoints(ex), 0)
   return (
-    <section aria-label="Упражнения" className="flex flex-col gap-2.5 rounded-card bg-surface px-5.5 py-5 shadow-card">
-      <h3 className="mb-1 flex items-baseline gap-2 text-lg font-semibold">
-        Упражнения ({count})<small className="text-note font-normal text-fg-muted">с ответами</small>
+    <section aria-label="Упражнения" className="flex flex-col gap-3 rounded-card bg-surface px-5 py-4.5 shadow-card">
+      <h3 className="flex flex-wrap items-baseline gap-x-2 text-lg font-semibold">
+        Упражнения ({count})
+        <small className="text-note font-normal text-fg-muted">
+          с ответами{max !== null && ` · до ${max} ${plural(max, 'балла', 'баллов', 'баллов')}`}
+        </small>
       </h3>
       {children}
     </section>
@@ -96,7 +104,7 @@ export function TextSkeleton({ req, exercises }: { req: MaterialRequest; exercis
           </span>
         ))}
       </article>
-      <ExercisesCard count={exercises}>
+      <ExercisesCard exercises={exercises}>
         {Array.from({ length: Math.min(exercises, 6) }, (_, i) => (
           <div key={i} className="flex gap-2.5 rounded-control-sm bg-input px-3 py-2.5">
             <span className="flex size-6 flex-none items-center justify-center rounded-tag bg-surface text-xs font-semibold text-fg-secondary">{i + 1}</span>
