@@ -41,9 +41,9 @@ export const MODEL_LIMITS: Record<string, ModelLimit> = {
   'gemini-3.1-flash-lite': { rpd: null, rpm: null, source: NOT_CHECKED },
   'gemma-4-31b-it': { rpd: 14_400, rpm: 30, source: AI_STUDIO_JULY },
   'gemini-2.5-flash-lite': { rpd: null, rpm: null, source: NOT_CHECKED },
-  // max — материалы и программы учителя
-  'gemini-2.5-pro': { rpd: null, rpm: null, source: NOT_CHECKED },
-  'gemini-3.1-pro-preview': { rpd: null, rpm: null, source: NOT_CHECKED },
+  // max — материалы и программы учителя; 2.5-pro убрана 04.11.2026 (Google: «не для
+  // новых пользователей»), у 3.1-pro-preview на бесплатном тарифе — 0 (шкалы нет)
+  'gemini-3.1-pro-preview': { rpd: null, rpm: null, source: 'бесплатно — 0 (проверено запросом 04.11.2026), число — после платного Gemini' },
   // Groq: первая модель лёгких задач, последний рубеж обычных, речь
   'openai/gpt-oss-20b': { rpd: 1_000, rpm: 30, source: GROQ },
   'openai/gpt-oss-120b': { rpd: 1_000, rpm: 30, source: GROQ },

@@ -85,8 +85,12 @@ export const GEMINI_TIER_CHAINS: Record<AiTier, string[]> = {
       ? ['gemini-2.5-flash', 'gemini-3.6-flash', 'gemini-3.5-flash']
       : ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-2.5-flash'],
   // материалы и программа обучения генерируются единицами в день — здесь
-  // не жалеем самых умных моделей с их крошечными бесплатными квотами
-  max: ['gemini-2.5-pro', 'gemini-3.1-pro-preview', 'gemini-3.6-flash', 'gemini-2.5-flash'],
+  // не жалеем самых умных моделей с их крошечными бесплатными квотами.
+  // ⚠️ 04.11.2026: gemini-2.5-pro убрана — Google отвечает 404 «больше не
+  // доступна новым пользователям» и в боевом проекте; у 3.1-pro-preview
+  // бесплатный лимит 0 (её место — платный Gemini, журнал п.53), поэтому
+  // на бесплатной квоте материалы пишет 3.6-flash (журнал п.76 (24)).
+  max: ['gemini-3.1-pro-preview', 'gemini-3.6-flash', 'gemini-2.5-flash'],
 }
 
 const FALLBACK_MODELS = GEMINI_TIER_CHAINS.standard.slice(1)

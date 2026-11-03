@@ -67,7 +67,7 @@
 | `word`, `definition`, `batch`* | lite | light | 0 | — | — | Groq `llama-3.1-8b-instant` → `gemini-3.5-flash-lite` → `3.1-flash-lite` → `gemma-4-31b-it` → `2.0-flash-lite` |
 | `dialog`, `quest`, `analyze` | standard | heavy | 1 | — | — | (free) `3.6-flash`→`3.5-flash`→`2.5-flash`; (`RECALL_CHEAP_MODELS=1`) `2.5-flash`→`3.6-flash`→`3.5-flash`; терминально Groq-70b |
 | `writing`, `review` | standard | heavy | 2 | — | — | та же standard-цепочка |
-| `material`, `program` | max | heavy | 0 | да (месячный) | да | `2.5-pro`→`3-pro-preview`→`3.6-flash`→`2.5-flash` |
+| `material`, `program` | max | heavy | 0 | да (месячный) | да | `3.1-pro-preview` (на бесплатном — лимит 0)→`3.6-flash`→`2.5-flash`; `2.5-pro` убрана 04.11.2026 |
 | `homework` | standard | heavy | 0 | да (месячный) | да | standard-цепочка |
 | `self_material` | standard | heavy | 0 | да (свой лимит) | нет | standard-цепочка |
 
