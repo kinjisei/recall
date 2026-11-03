@@ -1,5 +1,5 @@
 // ============================================================================
-// Фирменный icon-набор Recall (100 шт.), сгенерирован из handoff/icons/*.svg
+// Фирменный icon-набор Recall (103 шт.), сгенерирован из handoff/icons/*.svg
 // (Claude Design). Единый стиль: viewBox 0 0 24 24, stroke 1.75px, currentColor;
 // *-fill (активная вкладка) залиты целиком, вырезы — цветом подложки вкладки
 // (--icon-cut, по умолчанию accent-soft; лист s4). Меняем весь набор здесь.
@@ -90,6 +90,9 @@ export const IconCaretDown = icon(
 )
 export const IconChart = icon(
   '<path d="M4 4.5v14A1.5 1.5 0 0 0 5.5 20H20"></path><path d="M7.5 15.5 11.5 11l2.8 2.8 5.2-5.3"></path><path d="M15.5 8.5h4v4"></path>',
+)
+export const IconCheckCircle = icon(
+  '<circle cx="12" cy="12" r="8.5"></circle><path d="m8.5 12.3 2.4 2.4 4.6-4.9"></path>',
 )
 export const IconCheck = icon(
   '<path d="m5 12.5 4.5 4.5L19 7.5"></path>',
@@ -187,6 +190,9 @@ export const IconLink = icon(
 export const IconList = icon(
   '<path d="M9.5 7h10M9.5 12h10M9.5 17h10"></path><path d="M4.8 7h.01M4.8 12h.01M4.8 17h.01" stroke-width="2.8"></path>',
 )
+export const IconLock = icon(
+  '<rect x="5.5" y="10.5" width="13" height="9" rx="2"></rect><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"></path>',
+)
 export const IconMail = icon(
   '<path d="M6.5 5.5h11a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-11a3 3 0 0 1-3-3v-7a3 3 0 0 1 3-3Z"></path><path d="m4.5 8 7.5 5.2L19.5 8"></path>',
 )
@@ -220,7 +226,9 @@ export const IconPencil = icon(
 export const IconPhone = icon(
   '<path d="M5.5 4h3l1.5 4-2 1.3a10 10 0 0 0 6.7 6.7l1.3-2 4 1.5v3a1.5 1.5 0 0 1-1.6 1.5A15.5 15.5 0 0 1 4 5.6 1.5 1.5 0 0 1 5.5 4Z"></path>',
 )
-export const IconPlay = icon('<path d="M8 5.5v13l10.5-6.5z"></path>')
+export const IconPlay = icon(
+  '<path d="M8 5.5v13l10.5-6.5z"></path>',
+)
 export const IconPlus = icon(
   '<path d="M12 5v14M5 12h14"></path>',
 )
@@ -340,10 +348,6 @@ export const IconVideo = icon(
 )
 export const IconWarning = icon(
   '<path d="M10.7 5.2 3.6 17.6a1.5 1.5 0 0 0 1.3 2.2h14.2a1.5 1.5 0 0 0 1.3-2.2L13.3 5.2a1.5 1.5 0 0 0-2.6 0Z"></path><path d="M12 9.5V14"></path><path d="M12 16.9v.2"></path>',
-)
-/** Верный ответ в круге — пара к IconXCircle (итог ответа в раунде, d5). */
-export const IconCheckCircle = icon(
-  '<circle cx="12" cy="12" r="8.5"></circle><path d="m8.5 12.3 2.4 2.4 4.6-4.9"></path>',
 )
 export const IconXCircle = icon(
   '<circle cx="12" cy="12" r="8.5"></circle><path d="m9 9 6 6M15 9l-6 6"></path>',
