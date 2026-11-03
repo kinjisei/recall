@@ -5,7 +5,9 @@
  * Ловим: (1) код узнаётся целым словом — `RECALL_BAD_PLAN` не съедает
  * `RECALL_BAD_PLAN_ITEM` (было: ученик, отметивший пункт программы, видел
  * «Такого тарифа нет»); и так для любой пары кодов, где один — начало
- * другого.
+ * другого; (2) у каждого кода правки материала (0018) есть текст, а экран
+ * узнаёт его по `AppError.code` — плашка замка и «Учитель обновил задание»
+ * держатся на коде, а не на русском тексте.
  *
  * Запуск: node scripts/test-db-errors.mjs
  */
@@ -42,7 +44,17 @@ for (const [short, long] of prefixPairs) {
   check(`${long} — свой код`, quiet(() => dbError(pg(long), 'x')).code === long)
 }
 check('RECALL_BAD_PLAN_ITEM — про программу, а не про тариф', /программ/.test(describeDbError(pg('RECALL_BAD_PLAN_ITEM'), 'x')))
-check('код внутри текста Postgres узнаётся', describeDbError({ message: 'ERROR: RECALL_BAD_PLAN_ITEM (P0001)' }, 'x').includes('программ'))
+check('код внутри текста Postgres узнаётся', describeDbError({ message: 'ERROR: RECALL_MATERIAL_LOCKED (P0001)' }, 'x').includes('копию'))
+
+// (2) коды правки материала: текст есть, экран узнаёт по коду
+const sql = readFileSync(new URL('../supabase/migrations/0018_material_lock.sql', import.meta.url), 'utf8')
+const raised = [...new Set([...sql.matchAll(/raise exception '(RECALL_[A-Z_]+)'/g)].map((m) => m[1]))]
+check('коды 0018 найдены', raised.length >= 5, raised.join(', '))
+for (const c of raised) {
+  check(`${c}: есть текст`, codes.includes(c))
+  check(`${c}: AppError.code = ${c}`, quiet(() => dbError(pg(c), 'x')).code === c)
+}
+check('«Учитель обновил задание» — ученику', describeDbError(pg('RECALL_MATERIAL_CHANGED'), 'x').startsWith('Учитель обновил задание'))
 
 console.log(`\nИтог: ${ok}/${ok + failed}`)
 process.exit(failed ? 1 : 0)

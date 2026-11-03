@@ -86,6 +86,12 @@ export interface Material {
   exercises: MaterialExercise[]
   plan: MaterialPlan | null
   created_at: string
+  /**
+   * Номер версии упражнений и текста (миграция 0018): растёт при каждой
+   * правке, ставит только база. Ученик сдаёт с ним — учитель уже поправил,
+   * сдача отказывает «Учитель обновил задание».
+   */
+  exercises_version: number
 }
 
 export type AssignmentStatus = 'assigned' | 'submitted' | 'reviewed'

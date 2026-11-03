@@ -882,6 +882,7 @@ export type Database = {
           body: string
           created_at: string | null
           exercises: Json
+          exercises_version: number
           format: string
           id: string
           lang: string
@@ -896,6 +897,7 @@ export type Database = {
           body: string
           created_at?: string | null
           exercises: Json
+          exercises_version?: number
           format: string
           id?: string
           lang?: string
@@ -910,6 +912,7 @@ export type Database = {
           body?: string
           created_at?: string | null
           exercises?: Json
+          exercises_version?: number
           format?: string
           id?: string
           lang?: string
@@ -2236,6 +2239,7 @@ export type Database = {
           starts_at: string
         }[]
       }
+      copy_material: { Args: { p_id: string }; Returns: string }
       covering_teacher: {
         Args: { p_paid_only?: boolean; p_student: string }
         Returns: string
@@ -2639,6 +2643,10 @@ export type Database = {
         Args: { p_id: string; p_review: Json }
         Returns: undefined
       }
+      save_material_exercises: {
+        Args: { p_exercises: Json; p_id: string; p_version: number }
+        Returns: number
+      }
       save_push_subscription: {
         Args: { p_auth: string; p_endpoint: string; p_p256dh: string }
         Returns: undefined
@@ -2760,6 +2768,7 @@ export type Database = {
           p_auto_score: number
           p_auto_total: number
           p_id: string
+          p_version?: number
         }
         Returns: undefined
       }
