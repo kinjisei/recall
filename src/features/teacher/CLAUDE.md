@@ -99,7 +99,7 @@
 | `src/lib/materialExercises.ts` | приведение ответа AI к нашему виду (`normalizeExercises`: «True / False» — кнопки на языке текста, у A1–A2 две, ответ по подписи; словарь — только слова текста; перевод — по-русски, объяснение — на языке текста) и отсев несобираемых упражнений: «собери» не из своих слов, пары не 3–8 / пустые / повторы / лишний вариант совпал с парой, «True / False» не 2–3 кнопки, «Выбери форму» не 3–4, одинаковые варианты выбора |
 | `src/lib/materialPrompts.ts` | промпты материала: заявка учителя (`MaterialRequest`), план, текст с упражнениями, «Мой текст», AI-разбор сданной работы; виды упражнений и их правила — одним блоком на «Новый текст» и «Мой текст» (`exerciseSpec`); вызовы и фильтры — `lib/materials.ts` |
 | `src/lib/materialAssignments.ts` | задания ученика: список с материалами и сдача — отдельно от генерации: их зовут Главная и «Учёба», и с генерацией в стартовую загрузку ехали все промпты |
-| `src/lib/wordForms.ts` | «слово есть в тексте» по начальной форме и с разрывами: «missed her flight» ⇒ miss a flight, took ⇒ take, esperó ⇒ esperar; кусок слова — нет; справочники неправильных форм (`data/english/irregular`, `data/spanish/conjugation`) — лениво (`loadIrregular`) |
+| `src/lib/wordForms.ts` | «слово есть в тексте» по начальной форме и с разрывами: «missed her flight» ⇒ miss a flight, took ⇒ take, esperó ⇒ esperar; у испанского — смена написания (busqué ⇒ buscar, empecé ⇒ empezar, cojo ⇒ coger) и местоимение на конце (equivocarse, comprarlo); кусок слова — нет; справочники неправильных форм (`data/english/irregular`, `data/spanish/conjugation`) — лениво (`loadIrregular`) |
 | `src/lib/exerciseFormats.ts` | каталог видов упражнений (Ф2.25-2): группа, название, что делает ученик, пределы; строка плана к виду каталога (`normalizeRows`, старые планы — по kind/type), подписи строк и итог «4 вида · 11 заданий · до 15 баллов», сверка «AI сделал не всё по плану» (`planShortfall`); названия для проверки, итога и печати |
 | `src/lib/assignmentScore.ts` | балл работы в баллах — один на все экраны (`workScore`, `exercisePoints`, `verdictPoints`), черновик проверки по авто-проверке с отметками у пар (`autoVerdict`), вердикт AI-разбора поверх авто (`aiVerdict`: у пар AI только добавляет зачёт), процент для диагностики и динамики |
 
@@ -438,7 +438,9 @@
 - `node scripts/test-mark-words.mjs` (чистый, в CI) — слова плана в тексте:
   регистр, окончания, длинное раньше короткого, кусок слова не метится; с
   Ф2.25 — начальная форма и разрывы (missed her flight ⇒ miss a flight,
-  took ⇒ take по справочнику, stopped, carried; esperó ⇒ esperar, fue ⇒ ir).
+  took ⇒ take по справочнику, stopped, carried; esperó ⇒ esperar, fue ⇒ ir;
+  смена написания c→qu, g→gu, z→c, g→j, c→z, gu→g и -se / -lo на конце:
+  equivoqué ⇒ equivocarse, cojo ⇒ coger, comprarlo ⇒ comprar).
 - `node scripts/test-material-audience.mjs` (чистый, в CI) — «Для кого»:
   уровень слабого, группы, предупреждение, подпись уровня в итоге.
 - `node scripts/shots-screens.mjs --only wizard` — мастер по d8-2…d8-5:

@@ -70,6 +70,26 @@ const esHits = (t, w) => markWords(t, w, 'es', ES_IRR).filter((p) => p.hit).map(
 check('испанский: esperó, esperamos ⇒ esperar', eq(esHits('Lucía esperó. Esperamos el tren.', ['esperar']), ['esperó', 'Esperamos']))
 check('испанский: perdió el vuelo ⇒ perder un vuelo', eq(esHits('Marta perdió el vuelo.', ['perder un vuelo']), ['perdió el vuelo']))
 check('испанский: fue ⇒ ir (неправильный)', eq(esHits('Ayer fue a Valencia.', ['ir']), ['fue']))
+// смена написания перед e / o (Ф2.25-4а: пара «equivocarse» молча выбрасывалась): c→qu,
+// g→gu, z→c, g→j, c→z, gu→g; возвратное -se и местоимения на конце инфинитива и герундия
+const esCases = [
+  ['me equivoqué con el cambio', 'equivocarse', 'equivoqué'],
+  ['me equivoqué con el cambio', 'equivocar', 'equivoqué'],
+  ['Busqué las llaves.', 'buscar', 'Busqué'],
+  ['Quiero que busquemos otro hotel.', 'buscar', 'busquemos'],
+  ['Llegué tarde.', 'llegar', 'Llegué'],
+  ['Empecé a trabajar en junio.', 'empezar', 'Empecé'],
+  ['Cojo el autobús.', 'coger', 'Cojo'],
+  ['Siempre venzo el miedo.', 'vencer', 'venzo'],
+  ['No distingo los colores.', 'distinguir', 'distingo'],
+  ['Se levantó temprano.', 'levantarse', 'levantó'],
+  ['Estaba levantándose.', 'levantar', 'levantándose'],
+  ['Quiero comprarlo.', 'comprar', 'comprarlo'],
+]
+for (const [text, word, form] of esCases) check(`испанский: ${form} ⇒ ${word}`, eq(esHits(text, [word]), [form]), JSON.stringify(esHits(text, [word])))
+// чужое слово по новым правилам не притягивается
+check('испанский: «queso» — не casar и не cocer', eq(esHits('Compré queso.', ['casar', 'cocer']), []))
+check('испанский: «pague» — pagar, а не pagir', inText('Quiero que pague hoy.', 'pagar', 'es', ES_IRR))
 
 // 6. абзацы
 check('абзацы по пустой строке', eq(paragraphs('One.\n\nTwo\nlines.\n \n\nThree.'), ['One.', 'Two\nlines.', 'Three.']))

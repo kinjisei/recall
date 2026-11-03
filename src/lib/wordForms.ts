@@ -91,9 +91,36 @@ const ES_ENDINGS = [
 ].sort((a, b) => b.length - a.length)
 const ES_FUTURE = /^(.{2,}?[aei]r)(e|as|a|emos|eis|an|ia|ias|iamos|iais|ian)$/
 
+// Местоимение на конце инфинитива и герундия: equivocarse → equivocar,
+// comprarlo → comprar, levantándose → levantando.
+const ES_CLITIC = /^(.{2,}?(?:[aei]r|ando|iendo))(me|te|se|nos|os|lo|la|le|los|las|les)$/
+
+/**
+ * Смена написания перед окончанием (правильные глаголы): перед e — qu ← c
+ * (busqué → buscar), gu ← g (llegué → llegar), c ← z (empecé → empezar);
+ * перед o и a — j ← g (cojo → coger), z ← c (venzo → vencer), g ← gu
+ * (distingo → distinguir). Без них пара «equivocarse» к тексту «me
+ * equivoqué» молча выбрасывалась (Ф2.25-4а).
+ */
+function esSpelling(stem: string, ending: string): string[] {
+  const head = (n: number) => stem.slice(0, -n)
+  if (ending.startsWith('e')) {
+    if (stem.endsWith('qu') && head(2).length >= 2) return [head(2) + 'car']
+    if (stem.endsWith('gu') && head(2).length >= 2) return [head(2) + 'gar']
+    if (stem.endsWith('c') && head(1).length >= 2) return [head(1) + 'zar']
+  } else if (ending.startsWith('o') || ending.startsWith('a')) {
+    if (stem.endsWith('j') && head(1).length >= 2) return [head(1) + 'ger', head(1) + 'gir']
+    if (stem.endsWith('z') && head(1).length >= 2) return [head(1) + 'cer', head(1) + 'cir']
+    if (stem.endsWith('g') && !stem.endsWith('gu') && stem.length >= 3) return [stem + 'uir']
+  }
+  return []
+}
+
 /** Начальные формы испанского слова: maletas → maleta, esperó → esperar, esperaré → esperar. */
 function esBases(w: string): string[] {
   const out = [w]
+  const clitic = ES_CLITIC.exec(w)
+  if (clitic?.[1]) out.push(...esBases(clitic[1]))
   if (w.endsWith('es') && w.length > 4) out.push(w.slice(0, -2))
   if (w.endsWith('s') && w.length > 3) out.push(w.slice(0, -1))
   const fut = ES_FUTURE.exec(w)
@@ -101,7 +128,7 @@ function esBases(w: string): string[] {
   for (const e of ES_ENDINGS) {
     if (!w.endsWith(e)) continue
     const stem = w.slice(0, -e.length)
-    if (stem.length >= 2) out.push(stem + 'ar', stem + 'er', stem + 'ir')
+    if (stem.length >= 2) out.push(stem + 'ar', stem + 'er', stem + 'ir', ...esSpelling(stem, e))
   }
   return out
 }
