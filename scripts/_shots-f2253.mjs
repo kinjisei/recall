@@ -9,8 +9,8 @@
  *   edit-pick   — d17-3 без AI-кнопки (Ф2.25-4): «+ Упражнение» открыт,
  *                 выбрана «Выбери правильную форму», «Напишу сам»;
  *   edit-new    — d17-3б: пустая форма «Выбери правильную форму · новое»;
- *   edit-phone  — только 390, окном: форма открыта, «Готово · Отмена»
- *                 закреплены внизу над меню (заметка d17 «Телефон»).
+ *   edit-phone  — только 390, окном: форма от верха экрана, «Готово · Отмена»
+ *                 сразу после вариантов, рамка цела (решение владельца 04.11).
  * Рамка формы на снимке (для пары с фрагментом d17-3б) пишется в
  * `<папка>/boxes.json`: { "<снимок>": { x, y, w, h } }.
  */
@@ -113,12 +113,12 @@ export async function shotsExerciseEdit({ screen, t, a, s, dir }) {
     await page.evaluate(() => document.querySelector('[data-pick="Выбери правильную форму"]')?.click())
     await sleep(300)
   }
-  // телефон окном: форма начинается в середине экрана, низ её — под меню; кнопки закреплены над меню
+  // телефон окном: форма от верха экрана — видна целиком, кнопки после вариантов
   const phone = async (page) => {
     await fresh(page)
     await page.evaluate(() => {
       const r = document.querySelector('[data-exercise-edit]')?.getBoundingClientRect()
-      if (r) window.scrollBy(0, r.top - 330)
+      if (r) window.scrollBy(0, r.top - 72)
     })
     await sleep(400)
   }

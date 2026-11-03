@@ -11,6 +11,8 @@
 // всех анимаций — ноль, после снимка стиль убирается: тосты с полоской
 // времени и переходы на следующих шагах смоука работают как обычно.
 
+import { writeFileSync } from 'node:fs'
+
 const NO_MOTION = '*,*::before,*::after{animation-delay:0s!important;animation-duration:0s!important;transition-duration:0s!important;transition-delay:0s!important}'
 
 /**
@@ -42,13 +44,35 @@ export async function waitForData(page, ms = 10_000) {
     .then(() => true, () => false)
 }
 
+/**
+ * Записать снимок с повтором. Windows на миг держит только что записанную
+ * картинку (её открыл просмотр в VS Code или проверил антивирус) — запись
+ * падала с «UNKNOWN: unknown error, open …» и роняла весь прогон снимков
+ * (04.11.2026, shots-f2253: каждый раз другой файл).
+ */
+async function writeShot(path, data) {
+  for (let i = 0; ; i++) {
+    try {
+      return writeFileSync(path, data)
+    } catch (e) {
+      if (i >= 5) throw e
+      await new Promise((r) => setTimeout(r, 400 * (i + 1)))
+    }
+  }
+}
+
 /** page.screenshot(options), но экран — в конечном виде: данные пришли, надписи проявились. */
-export async function settledScreenshot(page, options) {
-  if (!(await waitForData(page))) console.log(`⚠ заглушка загрузки не ушла за 10 с — снимок с ней: ${options?.path ?? '(без файла)'}`)
+export async function settledScreenshot(page, options = {}) {
+  if (!(await waitForData(page))) console.log(`⚠ заглушка загрузки не ушла за 10 с — снимок с ней: ${options.path ?? '(без файла)'}`)
   const style = await page.addStyleTag({ content: NO_MOTION })
   try {
     await settleAnimations(page)
-    return await page.screenshot(options)
+    const { path, ...rest } = options
+    // вид картинки puppeteer брал из расширения пути — без пути говорим сами
+    const ext = path?.match(/\.(jpe?g|webp)$/i)?.[1]?.toLowerCase()
+    const data = await page.screenshot(ext && !rest.type ? { ...rest, type: ext === 'webp' ? 'webp' : 'jpeg' } : rest)
+    if (path) await writeShot(path, data)
+    return data
   } finally {
     await style.evaluate((el) => el.remove()).catch(() => {})
   }

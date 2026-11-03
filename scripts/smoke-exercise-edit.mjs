@@ -3,8 +3,8 @@
  * мастера: «Изменить · Убрать», ошибка у поля, «+ Упражнение → Напишу сам»,
  * «Отмена», переключение с несохранённой правкой — с вопросом, «Сохранить» с
  * правкой без «Готово» — тоже; «Сохранить» кладёт в базу поправленные
- * упражнения (их и получит ученик); на телефоне
- * «Готово · Отмена» закреплены внизу над меню (заметка d17 «Телефон»).
+ * упражнения (их и получит ученик); на телефоне «Готово · Отмена» — в
+ * конце формы, рамка цела.
  *
  * Текст готов заранее — черновиком мастера (`material-flow`), AI не зовётся:
  * смоук не тратит ни генераций, ни энергии. Краснеет на коде до Ф2.25-3:
@@ -208,7 +208,8 @@ try {
   await press(page, 'Готово', '[data-exercise-edit]')
   check('новое упражнение — пятым: «Упражнения (5)»', !(await has(page, '[data-exercise-edit]')) && (await waitText(page, /Упражнения \(5\)/, 3000)))
 
-  // (7) телефон: кнопки формы закреплены внизу, над меню
+  // (7) телефон: «Готово · Отмена» — в конце формы, после вариантов, не закреплены
+  // (решение владельца 04.11: закреплённая полоса закрывала последний вариант и резала рамку)
   // только ширина: смена isMobile в puppeteer перезагружает страницу
   await page.setViewport({ width: 390, height: 844 })
   await page.waitForSelector('[data-exercise-list]', { timeout: 15000 }).catch(() => {})
@@ -222,9 +223,26 @@ try {
   const pin = await page.evaluate(() => {
     const f = document.querySelector('[data-edit-footer]')?.getBoundingClientRect()
     const card = document.querySelector('[data-exercise-edit]')?.getBoundingClientRect()
-    return f && card && { bottom: Math.round(f.bottom), vh: innerHeight, cardBottom: Math.round(card.bottom) }
+    const last = [...document.querySelectorAll('[data-exercise-edit] textarea')].at(-1)?.getBoundingClientRect()
+    return f && card && last && { footerTop: Math.round(f.top), lastBottom: Math.round(last.bottom), gap: Math.round(card.bottom - f.bottom), vh: innerHeight, cardBottom: Math.round(card.bottom) }
   })
-  check('телефон: «Готово · Отмена» над меню, пока низ формы под ним', !!pin && pin.cardBottom > pin.vh && pin.bottom <= pin.vh - 80 && pin.bottom >= pin.vh - 140, JSON.stringify(pin))
+  check('телефон: «Готово · Отмена» после полей, у низа формы, а не поверх неё', !!pin && pin.cardBottom > pin.vh && pin.footerTop > pin.lastBottom && pin.gap >= 4 && pin.gap <= 20, JSON.stringify(pin))
+  // рамка формы цела: подвал кончается выше её нижней линии — раньше закреплённая
+  // полоса со своим фоном доходила до края и закрашивала её (замечание владельца 04.11);
+  // форма покороче (True / False) — целиком на экране
+  await press(page, 'Отмена', '[data-exercise-edit]')
+  await press(page, 'Изменить упражнение 3')
+  await page.evaluate(() => {
+    const r = document.querySelector('[data-exercise-edit]')?.getBoundingClientRect()
+    if (r) window.scrollBy(0, r.top - 120)
+  })
+  await sleep(400)
+  const frame = await page.evaluate(() => {
+    const f = document.querySelector('[data-edit-footer]')?.getBoundingClientRect()
+    const card = document.querySelector('[data-exercise-edit]')?.getBoundingClientRect()
+    return f && card && { gap: Math.round(card.bottom - f.bottom), left: Math.round(f.left - card.left), right: Math.round(card.right - f.right), fits: card.bottom < innerHeight - 88 }
+  })
+  check('телефон: подвал формы внутри рамки — нижняя линия не закрашена', !!frame && frame.fits && frame.gap >= 4 && frame.left >= 4 && frame.right >= 4, JSON.stringify(frame))
   await press(page, 'Отмена', '[data-exercise-edit]')
   await page.setViewport({ width: 1280, height: 900 })
   await page.waitForSelector('[data-exercise-list]', { timeout: 15000 }).catch(() => {})

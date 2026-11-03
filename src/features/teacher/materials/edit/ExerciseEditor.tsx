@@ -5,13 +5,11 @@
 // вида («Без верного варианта не сохранить»). Поля по виду задаёт
 // `editSpec` (domains/materials), проверку делает тот, кто открыл форму.
 //
-// Телефон (заметка d17): «Готово» и «Отмена» закреплены внизу экрана, пока
-// форма открыта, — над клавиатурой (`useKeyboardInset`), без неё — над
-// нижним меню.
+// Телефон: «Готово · Отмена» — сразу после полей, как на компьютере, без
+// своего фона. Закреплённая внизу полоса (заметка d17) закрывала последний
+// вариант и резала рамку — решение владельца 04.11, журнал п.76 (21).
 // ============================================================================
 import { editSpec, type EditProblems, type EditTarget, type ExerciseDraft } from '../../../../domains/materials'
-import { useKeyboardInset } from '../../../../lib/useKeyboardInset'
-import { useShellInsets } from '../../../../shared/lib/shellInsets'
 import { ErrorText } from '../../../../shared/ui/ErrorText'
 import { ExerciseHead } from '../detailParts'
 import { AddButton, ChoiceRow, Field, OptionList, PairList, TextBox } from './editFields'
@@ -45,8 +43,6 @@ export function ExerciseEditor({
   onCancel: () => void
 }) {
   const spec = editSpec(draft.format, target)
-  const kb = useKeyboardInset()
-  const { bottom } = useShellInsets()
   const set = (patch: Partial<ExerciseDraft>) => onChange({ ...draft, ...patch })
   const lang = target.lang
   const rightLang = draft.format === 'match_definition' ? lang : undefined
@@ -119,7 +115,7 @@ export function ExerciseEditor({
         </Field>
       )}
       {fatal && <ErrorText>{fatal}</ErrorText>}
-      <div style={{ bottom: kb > 0 ? `${kb}px` : bottom }} className="flex flex-wrap items-center gap-2 bg-surface pt-1 max-rail:sticky max-rail:z-10 max-rail:-mb-3 max-rail:pb-3" data-edit-footer>
+      <div className="flex flex-wrap items-center gap-2 pt-1" data-edit-footer>
         <button
           type="button"
           onClick={onDone}
