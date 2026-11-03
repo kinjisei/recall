@@ -213,16 +213,21 @@ export function MaterialDetail({
         {error && <ErrorText className="mt-2">{error}</ErrorText>}
       </section>
 
-      <div className="flex flex-wrap gap-2">
-        <Button size="sm" variant="outline" onClick={() => setPrintMode('student')}>
-          <IconPrinter size={16} aria-hidden /> Для ученика
-        </Button>
-        <Button size="sm" variant="outline" onClick={() => setPrintMode('teacher')}>
-          <IconPrinter size={16} aria-hidden /> С ответами
-        </Button>
-        <Button size="sm" variant="danger" className="ml-auto" onClick={remove} loading={deleting}>
-          <IconTrash size={16} aria-hidden /> Удалить материал
-        </Button>
+      {/* узко (телефон): печать — двумя половинами в ряд, «Удалить» — ниже во всю
+          ширину (правка владельца 04.11: три кнопки разной ширины прижимались в
+          разные стороны); шире — одной строкой, «Удалить» справа */}
+      <div className="@container" data-material-actions>
+        <div className="grid grid-cols-2 gap-2 @lg:flex @lg:flex-wrap">
+          <Button size="sm" variant="outline" onClick={() => setPrintMode('student')}>
+            <IconPrinter size={16} aria-hidden /> Для ученика
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => setPrintMode('teacher')}>
+            <IconPrinter size={16} aria-hidden /> С ответами
+          </Button>
+          <Button size="sm" variant="danger" className="col-span-2 @lg:ml-auto" onClick={remove} loading={deleting}>
+            <IconTrash size={16} aria-hidden /> Удалить материал
+          </Button>
+        </div>
       </div>
 
       {printMode && <PrintSheet material={material} withAnswers={printMode === 'teacher'} onClose={() => setPrintMode(null)} />}

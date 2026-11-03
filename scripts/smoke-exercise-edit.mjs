@@ -314,6 +314,32 @@ try {
   row = await material(m1)
   check('«Убрать» в библиотеке — 4 упражнения, версия 3', row.exercises.length === 4 && row.exercises_version === 3, `${row.exercises.length} · v${row.exercises_version}`)
 
+  // кнопки под карточкой (правка владельца 04.11): на компьютере — одной строкой; на телефоне —
+  // печать двумя равными половинами в ряд, «Удалить материал» — ниже во всю ширину
+  const actions = () =>
+    page.evaluate(() => {
+      const box = document.querySelector('[data-material-actions]')?.getBoundingClientRect()
+      const bs = [...document.querySelectorAll('[data-material-actions] button')].map((b) => {
+        const r = b.getBoundingClientRect()
+        return { top: Math.round(r.top), bottom: Math.round(r.bottom), left: Math.round(r.left), w: Math.round(r.width) }
+      })
+      return box && bs.length === 3 ? { w: Math.round(box.width), left: Math.round(box.left), bs } : null
+    })
+  const wide = await actions()
+  check('компьютер: «Для ученика · С ответами · Удалить материал» — одной строкой', !!wide && wide.bs.every((b) => b.top === wide.bs[0].top), JSON.stringify(wide))
+  await page.setViewport({ width: 390, height: 844 })
+  await page.waitForSelector('[data-material-actions]', { timeout: 15000 }).catch(() => {})
+  await sleep(600)
+  const narrow = await actions()
+  const [pa, pb, del] = narrow?.bs ?? []
+  check(
+    'телефон: печать — две равные половины в ряд, «Удалить материал» — ниже во всю ширину',
+    !!narrow && pa.top === pb.top && Math.abs(pa.w - pb.w) <= 1 && pa.left === narrow.left && pb.left + pb.w >= narrow.left + narrow.w - 1 && del.top >= pa.bottom && Math.abs(del.w - narrow.w) <= 1,
+    JSON.stringify(narrow),
+  )
+  await page.setViewport({ width: 1280, height: 900 })
+  await sleep(600)
+
   // (11) ученик: черновик старой версии — сброшен, «Учитель обновил задание», с текста
   const spage = await (await browser.createBrowserContext()).newPage()
   await spage.setViewport({ width: 1280, height: 900 })
@@ -350,7 +376,8 @@ try {
   // (13) сданный материал: плашка, «правка закрыта», копия без выдач — правится
   await go(page, `/tasks?tab=materials&mat=${m2}`)
   const lockText = await page.waitForSelector('[data-material-lock]', { timeout: 8000 }).then((h) => h.evaluate((el) => el.innerText), () => '')
-  check('сданный: «Работу уже сдали: Ученица Правка — правка изменила бы её проверку»', lockText.includes('Работу уже сдали: Ученица Правка — правка изменила бы её проверку'), lockText.slice(0, 120))
+  // на плашке — только имя, как в кадре d17-4 («Әсел»); полное — в «Выдан»
+  check('сданный: «Работу уже сдали: Ученица — правка изменила бы её проверку»', lockText.includes('Работу уже сдали: Ученица — правка изменила бы её проверку'), lockText.slice(0, 120))
   check('у упражнений «правка закрыта», «Изменить» нет', (await text(page)).includes('правка закрыта') && !(await has(page, 'button[aria-label="Изменить упражнение 1"]')))
   check('«Выдан» — «сдано · ждёт проверки»', (await text(page)).includes('сдано · ждёт проверки'))
   await press(page, 'Сделать копию и править')
