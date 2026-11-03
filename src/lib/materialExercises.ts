@@ -17,13 +17,13 @@ const MATCH_EXTRA_MAX = 2
 
 const filled = (v: unknown): v is string => typeof v === 'string' && v.trim().length > 0
 
-/** Кнопки «Верно / Неверно / Не сказано» — на языке текста (журнал п.76 (18)). */
+/** Кнопки «True / False / Not given» — на языке текста (журнал п.76 (18)). */
 export const TFNG_OPTIONS: Record<AppLang, readonly [string, string, string]> = {
   en: ['True', 'False', 'Not given'],
   es: ['Verdadero', 'Falso', 'No se dice'],
 }
 
-/** «Не сказано» — с B1: у текста A1–A2 только «Верно / Неверно» (журнал п.76 (8)). */
+/** «Not given» — с B1: у текста A1–A2 только «True / False» (журнал п.76 (8)). */
 export const allowsNotGiven = (level: string): boolean => !/^A[12]$/i.test(level.trim())
 
 // какую кнопку модель имела в виду: подпись на любом из языков
@@ -40,7 +40,7 @@ const CYRILLIC = /[а-яё]/i
 export interface ExerciseContext {
   body: string
   lang: AppLang
-  /** CEFR текста: у A1–A2 — без «Не сказано». */
+  /** CEFR текста: у A1–A2 — без «Not given». */
   level: string
   /** Неправильные формы (`lib/wordForms` `loadIrregular`): took ⇒ take. */
   irregular?: IrregularForms
@@ -48,7 +48,7 @@ export interface ExerciseContext {
 
 /**
  * Ответ модели → упражнения нашего вида (Ф2.25-1б), до `validExercises`:
- * • «Верно / Неверно»: кнопки — на языке текста, у A1–A2 — две (ответ «Не
+ * • «True / False»: кнопки — на языке текста, у A1–A2 — две (ответ «Не
  *   сказано» у такого текста — упражнение выбрасывается), ответ — по
  *   подписи, а не по месту: модель путает порядок;
  * • словарное — только слова, которые есть в тексте (в любой форме):
@@ -107,7 +107,7 @@ export function validExercises(list: MaterialExercise[]): MaterialExercise[] {
       ) {
         return false
       }
-      // «Верно / Неверно (/ Не сказано)» — 2–3 кнопки; «Выбери форму» — 3–4 формы
+      // «True / False (/ Not given)» — 2–3 кнопки; «Выбери форму» — 3–4 формы
       if (e.format === 'tfng') return e.options.length <= 3 && e.options.length >= 2
       if (e.format === 'form') return e.options.length >= 3 && e.options.length <= 4
       return e.options.length >= 2

@@ -190,8 +190,10 @@ export function MatchExercise({ exercise, lang, onAnswered, onPairs, onGiven, on
       : paired
         ? 'bg-accent-soft text-accent-soft-fg'
         : 'bg-surface text-fg shadow-card inset-ring inset-ring-line hover:bg-row-press active:scale-[0.99]'
+    // одна сетка на обе колонки: ряды равной высоты — все кнопки высотой с
+    // самую высокую, слово и вариант в ряду вровень (разная высота смотрелась криво)
     return (
-      <li key={i}>
+      <li key={`${side}${i}`} className="flex" style={{ gridColumn: side === 'L' ? 1 : 2, gridRow: i + 1 }}>
         <button
           type="button"
           data-pair-side={side}
@@ -199,7 +201,7 @@ export function MatchExercise({ exercise, lang, onAnswered, onPairs, onGiven, on
           aria-pressed={selected}
           aria-label={paired ? `${label}, пара ${no}` : undefined}
           onClick={() => tap({ side, i })}
-          className={`flex min-h-14 w-full items-center gap-2.5 rounded-control px-3 py-2 text-left text-base leading-snug font-medium transition-[transform,background-color,color,box-shadow] duration-150 ${look}`}
+          className={`flex h-full min-h-14 w-full items-center gap-2.5 rounded-control px-3 py-2 text-left text-base leading-snug font-medium transition-[transform,background-color,color,box-shadow] duration-150 ${look}`}
         >
           {paired ? (
             <span aria-hidden className="flex size-6 flex-none items-center justify-center rounded-full bg-surface text-xs font-bold text-accent-soft-fg inset-ring-2 inset-ring-focus">
@@ -213,10 +215,13 @@ export function MatchExercise({ exercise, lang, onAnswered, onPairs, onGiven, on
               {key}
             </span>
           )}
-          <span lang={side === 'L' || exercise.format === 'definition' ? lang : undefined} className="min-w-0">
-            {label}
+          {/* «ждёт пару» — справа, а не влезает — под словом: иначе узкая колонка рвала слово («lugg-age») */}
+          <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2.5 gap-y-0.5">
+            <span lang={side === 'L' || exercise.format === 'definition' ? lang : undefined} className="min-w-0">
+              {label}
+            </span>
+            {selected && <small className="ml-auto flex-none text-xs font-medium">ждёт пару</small>}
           </span>
-          {selected && <small className="ml-auto flex-none text-xs font-medium">ждёт пару</small>}
         </button>
       </li>
     )
@@ -233,14 +238,17 @@ export function MatchExercise({ exercise, lang, onAnswered, onPairs, onGiven, on
           </>
         }
       />
-      <div className="grid grid-cols-[minmax(0,0.85fr)_minmax(0,1fr)] items-start gap-2.5 @xl/round:grid-cols-[12.5rem_minmax(0,1fr)]">
-        <ul aria-label="Слова" className="flex flex-col gap-2">
-          {exercise.pairs.map((p, i) => cell('L', i, p.left))}
-        </ul>
-        <ul aria-label={text.list} className="flex flex-col gap-2">
-          {rights.map((r, i) => cell('R', i, r))}
-        </ul>
-      </div>
+      <ul
+        aria-label={`Слова и ${text.list.toLowerCase()}`}
+        // у объяснений колонка слов на телефоне уже: строки объяснения короче —
+        // и все кнопки ниже (высота ряда — по самой высокой кнопке)
+        className={`grid auto-rows-fr gap-x-2.5 gap-y-2 @xl/round:grid-cols-[12.5rem_minmax(0,1fr)] ${
+          exercise.format === 'definition' ? 'grid-cols-[minmax(0,0.6fr)_minmax(0,1fr)]' : 'grid-cols-[minmax(0,0.85fr)_minmax(0,1fr)]'
+        }`}
+      >
+        {exercise.pairs.map((p, i) => cell('L', i, p.left))}
+        {rights.map((r, i) => cell('R', i, r))}
+      </ul>
       <p className="mt-3.5 flex items-center gap-2 text-sm text-fg-secondary @xl/round:hidden">
         <IconInfo size={18} aria-hidden className="flex-none text-fg-muted" />
         Нажми на соединённую пару, чтобы её разъединить

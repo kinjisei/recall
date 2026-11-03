@@ -20,7 +20,7 @@ const IRREGULAR = {
   en: irregularFromEnglish(irregularGroups),
   es: irregularFromSpanish(JSON.parse(readFileSync(new URL('../../src/data/spanish/conjugation_reference.json', import.meta.url), 'utf8'))),
 }
-// кнопки «Верно / Неверно / Не сказано» на языке текста (журнал п.76 (18)) — литералами
+// кнопки «True / False / Not given» на языке текста (журнал п.76 (18)) — литералами
 const TFNG = { en: ['True', 'False', 'Not given'], es: ['Verdadero', 'Falso', 'No se dice'] }
 const lowLevel = (level) => /^A[12]$/i.test(String(level).trim())
 
@@ -30,7 +30,7 @@ const planType = (x) => (x.type === 'mcq' && x.format ? x.format : x.type === 'm
 /**
  * Новые форматы Ф2.25 — по сырому ответу модели (приложение потом приводит его
  * к своему виду, и по итогу брака не видно):
- * М13 «Верно / Неверно» — кнопки на языке текста, у A1–A2 две, quote — из текста, mark — в quote;
+ * М13 «True / False» — кнопки на языке текста, у A1–A2 две, quote — из текста, mark — в quote;
  * М14 «Соедини пары» — 3–8 пар, слова из текста, перевод — по-русски, объяснение — на языке текста
  *     без самого слова, лишний вариант — ровно один и не совпадает с парой;
  * М16 нет вопросов с открытым ответом — только наши виды.

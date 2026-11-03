@@ -1,7 +1,7 @@
 // ============================================================================
 // Описание: src/features/teacher/CLAUDE.md
 // Названия видов упражнений материала — одни на проверку работы (d18),
-// библиотеку и печать: «Выбери ответ», «Верно / Неверно», «Соедини слово и
+// библиотеку и печать: «Выбери ответ», «True / False», «Соедини слово и
 // перевод»… Каталог форматов с группами и пределами — Ф2.25-2 (этот модуль).
 // ============================================================================
 import type { MaterialExercise } from '../types'
@@ -10,7 +10,7 @@ import type { MaterialExercise } from '../types'
 export function formatLabel(ex: MaterialExercise): string {
   if (ex.type === 'match') return ex.format === 'definition' ? 'Соедини слово и объяснение' : 'Соедини слово и перевод'
   if (ex.type === 'mcq') {
-    if (ex.format === 'tfng') return ex.options.length > 2 ? 'Верно / Неверно / Не сказано' : 'Верно / Неверно'
+    if (ex.format === 'tfng') return ex.options.length > 2 ? 'True / False / Not given' : 'True / False'
     if (ex.format === 'form') return 'Выбери правильную форму'
     return ex.kind === 'vocab' ? 'Слово по объяснению' : 'Выбери ответ'
   }
@@ -18,9 +18,9 @@ export function formatLabel(ex: MaterialExercise): string {
   return 'Собери предложение'
 }
 
-/** Короткое название — строка итога проверки (d18: «Соедини пары», «Верно / Неверно»). */
+/** Короткое название — строка итога проверки (d18: «Соедини пары», «True / False»). */
 export function shortLabel(ex: MaterialExercise): string {
   if (ex.type === 'match') return 'Соедини пары'
-  if (ex.type === 'mcq' && ex.format === 'tfng') return 'Верно / Неверно'
+  if (ex.type === 'mcq' && ex.format === 'tfng') return 'True / False'
   return formatLabel(ex)
 }

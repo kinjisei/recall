@@ -113,7 +113,7 @@ export function PointsPill({ got, of }: { got: number; of: number }) {
   )
 }
 
-/** Карточка упражнения (d18 `.exc`): номер, вид («Верно / Неверно · текст A2»), счёт, задание, ответ. */
+/** Карточка упражнения (d18 `.exc`): номер, вид («True / False · текст A2»), счёт, задание, ответ. */
 export function ExerciseCard({ n, label, pill, prompt, lang, children }: { n: number; label: string; pill: ReactNode; prompt?: string; lang: string; children: ReactNode }) {
   return (
     <Card className="flex flex-col gap-3 p-4.5!">

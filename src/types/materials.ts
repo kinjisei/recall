@@ -10,18 +10,18 @@ import type { AppLang, GrammarExercise } from './base'
 export type MaterialExerciseKind = 'comprehension' | 'grammar' | 'vocab'
 
 /**
- * Выбор ответа в материале (Ф2.25): обычный вопрос, «Верно / Неверно / Не
- * сказано» (`tfng`: варианты на языке текста — True / False / Not given,
+ * Выбор ответа в материале (Ф2.25): обычный вопрос, «True / False / Not
+ * given» (`tfng`: варианты на языке текста — True / False / Not given,
  * Verdadero / Falso / No se dice; у текста A1–A2 — без третьего) или «Выбери
  * правильную форму» (`form`). Сервер считает все три одной веткой `mcq` —
  * по тексту выбранного варианта.
  */
 export type MaterialMcq = Extract<GrammarExercise, { type: 'mcq' }> & {
   format?: 'tfng' | 'form'
-  /** «Верно / Неверно»: строка текста, где это видно (u5-3), и что в ней выделить. */
+  /** «True / False»: строка текста, где это видно (u5-3), и что в ней выделить. */
   quote?: string
   mark?: string
-  /** «Верно / Неверно»: коротко, почему так, — после ответа (u5-3). */
+  /** «True / False»: коротко, почему так, — после ответа (u5-3). */
   why?: string
 }
 

@@ -1,9 +1,10 @@
 // ============================================================================
-// «Верно / Неверно / Не сказано» в задании по материалу (Ф2.25-1, макет u5-3):
+// «True / False / Not given» в задании по материалу (Ф2.25-1, макет u5-3):
 // утверждение о тексте карточкой, внизу — две кнопки (у текста A1–A2) или
 // три (с B1). Подписи — на языке текста: True / False / Not given,
 // Verdadero / Falso / No se dice (журнал п.76 (18)); их кладёт в варианты
-// упражнения генерация, экран показывает как есть.
+// упражнения генерация, экран показывает как есть. Заголовок — тоже на
+// языке текста: «True or false?», «¿Verdadero o falso?» (п.76 (19)).
 //
 // После ответа — сразу итог, без второй попытки: из двух кнопок вторая
 // попытка — это готовый ответ. Итог — «Правильно — False», коротко почему,
@@ -66,7 +67,7 @@ export function TrueFalseExercise({ exercise, lang, score, onAnswered, onGiven, 
 
   return (
     <div className="flex flex-1 flex-col">
-      <RoundHead title="Верно или неверно?" sub="По тексту — прочитай внимательно" />
+      <RoundHead title={lang === 'es' ? '¿Verdadero o falso?' : 'True or false?'} sub="По тексту — прочитай внимательно" />
       <p lang={lang} className="mt-1.5 rounded-row bg-surface p-4.5 text-xl leading-normal font-medium text-fg shadow-card">
         {exercise.prompt}
       </p>

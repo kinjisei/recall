@@ -80,7 +80,7 @@ export const MATCH_CASES = [
     expect: { got: 0, of: 4 },
   },
   {
-    name: 'работа целиком: выбор, «Верно / Неверно», пары, вписать, собрать — 6 из 9',
+    name: 'работа целиком: выбор, «True / False», пары, вписать, собрать — 6 из 9',
     exercises: [MCQ, MCQ, TFNG, AIRPORT, FILL, ORDER],
     answers: [
       { index: 0, given: 'Her flight had a delay.', auto_ok: true },

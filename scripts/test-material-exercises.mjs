@@ -106,9 +106,9 @@ check('лишний вариант совпадает с парой — не п�
 check('три лишних — не проходит', !keep({ ...match, extra: ['a', 'b', 'c'] }))
 check('неизвестный вид пар не проходит', !keep({ ...match, format: 'picture' }))
 const tf = { kind: 'comprehension', type: 'mcq', format: 'tfng', prompt: 'Dana came late.', options: ['True', 'False'], answer: 1 }
-check('«Верно / Неверно» проходит', keep(tf))
-check('«Верно / Неверно / Не сказано» проходит', keep({ ...tf, options: ['True', 'False', 'Not given'], answer: 2 }))
-check('«Верно / Неверно» с четырьмя кнопками не проходит', !keep({ ...tf, options: ['True', 'False', 'Not given', 'Maybe'] }))
+check('«True / False» проходит', keep(tf))
+check('«True / False / Not given» проходит', keep({ ...tf, options: ['True', 'False', 'Not given'], answer: 2 }))
+check('«True / False» с четырьмя кнопками не проходит', !keep({ ...tf, options: ['True', 'False', 'Not given', 'Maybe'] }))
 const form = { kind: 'grammar', type: 'mcq', format: 'form', prompt: 'She ___ late.', options: ['came', 'come', 'comes'], answer: 0 }
 check('«Выбери форму» из 3 проходит', keep(form))
 check('«Выбери форму» из 2 не проходит', !keep({ ...form, options: ['came', 'come'] }))
@@ -121,7 +121,7 @@ const ctxA2 = { body: BODY, lang: 'en', level: 'A2', irregular: irregularFromEng
 const ctxB1 = { ...ctxA2, level: 'B1' }
 const one = (e, ctx) => normalizeExercises([e], ctx)[0]
 const tfAi = { kind: 'comprehension', type: 'mcq', format: 'tfng', prompt: 'Dana came late.', options: ['Верно', 'Неверно'], answer: 1 }
-check('«Верно / Неверно» — кнопки на языке текста: True / False', JSON.stringify(one(tfAi, ctxA2)?.options) === '["True","False"]' && one(tfAi, ctxA2)?.answer === 1)
+check('«True / False» — кнопки на языке текста: True / False', JSON.stringify(one(tfAi, ctxA2)?.options) === '["True","False"]' && one(tfAi, ctxA2)?.answer === 1)
 check('ответ — по подписи, а не по месту: [False, True] и answer 1 → True', one({ ...tfAi, options: ['False', 'True'], answer: 1 }, ctxA2)?.answer === 0)
 check('A2: «Not given» среди кнопок убран', one({ ...tfAi, options: ['True', 'False', 'Not given'] }, ctxA2)?.options.length === 2)
 check('A2: ответ «Not given» — упражнение выброшено', normalizeExercises([{ ...tfAi, options: ['True', 'False', 'Not given'], answer: 2 }], ctxA2).length === 0)

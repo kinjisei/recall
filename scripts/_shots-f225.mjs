@@ -3,13 +3,13 @@
  *
  * Ф2.25-1а — ученик решает новые форматы (макет u5). Материал «A long day at
  * the airport» (A2) у Әсел: два «Выбери ответ», «Соедини слово и перевод»,
- * «Верно / Неверно», «Соедини слово и объяснение», «Вставь форму» — шесть
+ * «True / False», «Соедини слово и объяснение», «Вставь форму» — шесть
  * упражнений, как в кадрах («3 / 6»). Пройденное — черновиком ответов (как
  * после перезагрузки; строку «Черновик восстановлен» перед снимком убираем —
  * в кадре задание идёт без перерыва), дальше — нажатия, как в кадре:
  *   material-match         — u5-1: delay и luggage соединены, gate ждёт пару;
  *   material-match-checked — u5-2: после «Проверить» 3 из 4 пар;
- *   material-tf            — u5-3: «Верно или неверно?» до ответа;
+ *   material-tf            — u5-3: «True or false?» до ответа;
  *   material-tf-answered   — u5-3, мини-кадр: ответ False — верно, строка из текста;
  *   material-define        — u5-4: «Соедини слово и объяснение» на компьютере.
  * Сверх кадров — что задето тем же заходом:
@@ -19,7 +19,7 @@
  *
  * Ф2.25-1б — проверка работы учителем (макет d18), `--only material-review`:
  * Әсел сдала «A long day at the airport» (текст кадра d8-4): два «Выбери
- * ответ» верно, «Верно / Неверно» — «True» вместо «False», пары — 3 из 4
+ * ответ» верно, «True / False» — «True» вместо «False», пары — 3 из 4
  * (delay → «опоздать на рейс»), «Вставь форму» — верно; авто 6 из 8, разбор
  * AI лежит готовым (AI не зовётся):
  *   material-review          — d18-1: проверка, итог справа (1280 во всю высоту);
@@ -128,7 +128,7 @@ export async function shotsMaterialRun({ screen, admin, must, t, s }) {
       `recall.draft.${s.id}.assignment:${asg.id}`,
       { answers: answersBefore(index), index },
     )
-  const expect = /Соедини слово|Верно или неверно/
+  const expect = /Соедини слово|True or false/
 
   await screen(s.email, [
     { name: 'material-match', path, expect, before: draftAt(2), prepare: steps(pair('L', 'delay'), pair('R', 'опоздать на рейс'), pair('L', 'luggage'), pair('R', 'багаж'), pair('L', 'gate')) },
