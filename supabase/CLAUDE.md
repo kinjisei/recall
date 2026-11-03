@@ -251,7 +251,9 @@
   (миграция 0017): те же случаи, что у клиента (`test-match-score`), через
   `submit_material` от имени ученика; баллы от клиента сервер не берёт
   (краснеет 2/11 на функции до 0017).
-- `node scripts/check-answermatches-sql.mjs` (вне CI, живая база) — сверка
+- `node scripts/check-answermatches-sql.mjs` (вне CI, тестовая база: на живой
+  `norm_typed` закрыта даже для чтения, а что она та же — держит
+  `check-db-equal`) — сверка
   ответов в SQL (`norm_typed`) совпадает с клиентом (`lib/text.ts`).
 
 ## Решения и почему
