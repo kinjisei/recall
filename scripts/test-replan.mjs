@@ -141,6 +141,9 @@ check('8. длинный комментарий — нет', !isPlanShaped(JSON.
 check('8. упражнение с текстом задания — нет', !isPlanShaped(JSON.stringify({ ...JSON.parse(PLAN), exercise_plan: [{ kind: 'grammar', type: 'fill', count: 2, note: 'n', prompt: 'I ___ go' }] })), null)
 check('8. слова не строками — нет', !isPlanShaped(JSON.stringify({ ...JSON.parse(PLAN), vocabulary: [{ w: 'gate' }] })), null)
 check('8. без упражнений — нет', !isPlanShaped(JSON.stringify({ ...JSON.parse(PLAN), exercise_plan: [] })), null)
+check('8. вид из каталога и «каверзные» (Ф2.25-2) — да', isPlanShaped(JSON.stringify({ ...JSON.parse(PLAN), exercise_plan: [{ format: 'tfng', kind: 'comprehension', type: 'mcq', count: 3, note: '', tricky: true }, { format: 'match_translation', kind: 'vocab', type: 'match', count: 5, note: '' }] })), null)
+check('8. «каверзные» не флагом — нет', !isPlanShaped(JSON.stringify({ ...JSON.parse(PLAN), exercise_plan: [{ format: 'tfng', kind: 'comprehension', type: 'mcq', count: 3, note: '', tricky: 'да' }] })), null)
+check('8. вид длиннее 30 знаков (текст в поле вида) — нет', !isPlanShaped(JSON.stringify({ ...JSON.parse(PLAN), exercise_plan: [{ format: 'x'.repeat(40), kind: 'comprehension', type: 'mcq', count: 3, note: '' }] })), null)
 
 console.log(`\n${pass}/${pass + fail}`)
 process.exit(fail ? 1 : 0)

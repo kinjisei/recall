@@ -20,13 +20,14 @@ export const FAKE = {
         'Грамматика — Present Simple с -s для he/she, тема A1, оставил.',
       vocabulary: ['mother', 'brother', 'kitchen', 'every day', 'also', 'father'],
       grammar_focus: 'Present Simple: he/she + -s',
+      // вид — id каталога (Ф2.25-2), у пар count — число пар
       exercise_plan: [
-        { kind: 'comprehension', type: 'mcq', count: 3, note: 'вопросы по смыслу текста' },
-        { kind: 'comprehension', type: 'tfng', count: 1, note: 'верно / неверно по тексту' },
-        { kind: 'grammar', type: 'fill', count: 2, note: 'he/she + -s' },
-        { kind: 'grammar', type: 'order', count: 2, note: 'собрать предложение из слов' },
-        { kind: 'vocab', type: 'match_translation', count: 1, note: 'соедини слово и перевод' },
-        { kind: 'vocab', type: 'mcq', count: 2, note: 'определение → слово' },
+        { format: 'mcq', count: 3, note: 'вопросы по смыслу текста' },
+        { format: 'tfng', count: 1, note: 'утверждение по тексту', tricky: false },
+        { format: 'fill_form', count: 2, note: 'he/she + -s' },
+        { format: 'order', count: 2, note: 'собрать предложение из слов' },
+        { format: 'match_translation', count: 4, note: 'соедини слово и перевод' },
+        { format: 'word_by_definition', count: 2, note: 'определение → слово' },
       ],
     }),
     json({

@@ -11,6 +11,12 @@
  * обоих, уровень — самого слабого с предупреждением, в промпте — общие слабые
  * места, слова плана правятся руками, «Сохранить» назначает материал обоим.
  *
+ * И упражнения плана (Ф2.25-2, макет d16): учитель добавляет вид, меняет
+ * количество, включает «Каверзные» и убирает вид — без запроса к AI; текст
+ * просит ровно выбранное; AI сделал меньше — учитель видит, чего не хватает;
+ * в сохранённом материале — план учителя. У «Моего текста» шага «План» нет —
+ * виды выбираются прямо в заявке (d16-3), и промпт просит ровно их.
+ *
  * ⚠️ Запрос к AI ПЕРЕХВАТЫВАЕТСЯ: смотрим тело и не даём ему уйти — сначала
  * отменяем, потом отвечаем правдоподобной заготовкой. Значит проверка ничего
  * не стоит — ни энергии ученика, ни месячных генераций преподавателя, ни
@@ -46,9 +52,10 @@ const AI_PLAN = JSON.stringify({
   comments: 'Рассказ про поход в горы для B1. Общее слабое место группы — whisper: слово в тексте и в упражнении.',
   vocabulary: ['whisper', 'trail', 'campfire', 'borrow'],
   grammar_focus: null,
+  // вид — id каталога упражнений (Ф2.25-2), как просит промпт плана
   exercise_plan: [
-    { kind: 'comprehension', type: 'mcq', count: 2, note: 'вопросы по смыслу текста' },
-    { kind: 'vocab', type: 'mcq', count: 1, note: 'слово по определению' },
+    { format: 'mcq', count: 2, note: 'вопросы по смыслу текста' },
+    { format: 'word_by_definition', count: 1, note: 'слово по определению' },
   ],
 })
 const AI_CONTENT = JSON.stringify({
@@ -377,10 +384,47 @@ async function main() {
   const words = await page.$eval('[data-plan-words]', (el) => el.innerText).catch(() => 'нет правки слов')
   check('слово убрано и добавлено руками', /lantern/.test(words) && !/campfire/.test(words), words.replace(/\n/g, ' '))
   check('…без запроса к AI', (await readCalls()).length === 1, `запросов: ${(await readCalls()).length}`)
+
+  // упражнения плана (d16): виды и сколько — руками, без генерации
+  const planBlock = () => page.$eval('[data-exercise-plan]', (el) => el.innerText.replace(/\s+/g, ' ')).catch(() => 'нет блока')
+  const before = await planBlock()
+  check('упражнения плана: «2 вида», «3 задания · до 3 баллов»', /Упражнения · 2 вида/.test(before) && /3 задания · до 3 баллов/.test(before), before.slice(0, 160))
+  await tap(page, 'Добавить упражнения')
+  const picked3 = await page.evaluate(() => {
+    const b = document.querySelector('[data-pick="True / False / Not given"]')
+    b?.click()
+    return !!b
+  })
+  await sleep(300)
+  const inPlan = await page.evaluate(() => /в плане/.test(document.querySelector('[data-pick="Выбери ответ"]')?.textContent ?? ''))
+  check('выбор видов: True / False добавлен, «Выбери ответ» — «в плане»', picked3 && inPlan)
+  const click = (sel) => page.evaluate((s) => document.querySelector(s)?.click(), sel)
+  await click('[data-plan-row="mcq"] button[aria-label="Больше"]')
+  await click('[data-plan-row="tfng"] [role=switch]')
+  await click('button[aria-label="Убрать Слово по объяснению"]')
+  await sleep(400)
+  // строки плана, без открытого выбора видов: в нём «Слово по объяснению» есть всегда
+  const after = await page.$$eval('[data-plan-row]', (els) => els.map((el) => el.innerText.replace(/\s+/g, ' ')).join(' | '))
+  check(
+    'после правок: вопросов 3, True / False 3, слово по объяснению убрано',
+    /Выбери ответ.*3 вопр\./.test(after) && /True \/ False \/ Not given.*3 утв\./.test(after) && !/Слово по объяснению/.test(after) && /6 заданий · до 6 баллов/.test(await planBlock()),
+    after.slice(0, 260),
+  )
+  const tricky = await page.evaluate(() => document.querySelector('[data-plan-row="tfng"] [role=switch]')?.getAttribute('aria-checked'))
+  check('«Каверзные вопросы» включены', tricky === 'true', `aria-checked: ${tricky}`)
+  const sumAfter = await page.$eval('section[aria-label="Итог"]', (el) => el.innerText.replace(/\s+/g, ' ')).catch(() => '')
+  check('итог плана: «2 вида · 6 заданий · до 6 баллов», упражнения бесплатно', /2 вида · 6 заданий · до 6 баллов/.test(sumAfter) && /Упражнения меняются бесплатно/.test(sumAfter), sumAfter.slice(0, 200))
+  check('…и всё это без запроса к AI', (await readCalls()).length === 1, `запросов: ${(await readCalls()).length}`)
   await tap(page, 'Новый текст')
   check('шаг «Текст»: готовый текст', await waitText(page, /A Night on the Trail/))
   const contentBody = (await readCalls())[1] ?? ''
   check('текст собран по поправленным словам', contentBody.includes('lantern') && !contentBody.includes('campfire'))
+  check(
+    'промпт текста: ровно выбранные виды, каверзные — у True / False',
+    contentBody.includes('РОВНО эти виды') && contentBody.includes('- «Выбери ответ» (') && contentBody.includes('- «True / False / Not given» (') && /КАВЕРЗНЫЕ/.test(contentBody) && !contentBody.includes('- «Слово по объяснению» ('),
+  )
+  const short = await page.$eval('[data-shortfall]', (el) => el.innerText.replace(/\s+/g, ' ')).catch(() => 'нет предупреждения')
+  check('AI сделал меньше — учитель видит, чего не хватает', /Выбери ответ — 2 из 3 вопр\./.test(short) && /True \/ False \/ Not given — 0 из 3 утв\./.test(short) && !/\.\./.test(short), short)
   const toLine = await page.$eval('section[aria-label="Сохранение"]', (el) => el.innerText).catch(() => 'нет блока')
   check('текст: кому назначится', /Назначится при сохранении/i.test(toLine) && toLine.includes(STUDENT_NAME) && toLine.includes(SECOND_NAME), toLine.replace(/\n/g, ' ').slice(0, 200))
   check('…кнопка «Сохранить и выдать двоим»', /Сохранить и выдать двоим/.test(toLine))
@@ -390,15 +434,47 @@ async function main() {
     .then(() => true, () => false)
   check('«Сохранить» → карточка материала', savedOpen)
   await sleep(1500)
-  const { data: mats } = await admin.from('materials').select('id, level').eq('teacher_id', teacherId)
+  const { data: mats } = await admin.from('materials').select('id, level, plan').eq('teacher_id', teacherId)
   const mat = (mats ?? [])[0]
   const { data: asg } = await admin.from('material_assignments').select('student_id').eq('material_id', mat?.id ?? '')
   const got = new Set((asg ?? []).map((a) => a.student_id))
   check('материал на двух учеников назначен обоим', got.size === 2 && got.has(studentId) && got.has(student2Id), `назначено: ${got.size}`)
   check('…уровень материала — самого слабого (B1)', mat?.level === 'B1', `уровень: ${mat?.level}`)
+  const saved = (mat?.plan?.exercise_plan ?? []).map((r) => `${r.format}:${r.count}${r.tricky ? '!' : ''}`).join(' ')
+  check('…в материале — план учителя (вопросы 3, каверзные True / False 3)', saved === 'mcq:3 tfng:3!', saved)
   // «Кому выдан» карточки материала (d8-1): у выданного — «Убрать», у остальных — «Выдать»
   const marked = await page.evaluate(() => [...document.querySelectorAll('button')].filter((b) => b.textContent.trim() === 'Убрать').length)
   check('«Кому выдан»: оба ученика с материалом', marked === 2, `выдано: ${marked}`)
+
+  // ---- «Мой текст» (d16-3): виды упражнений прямо в заявке -----------------
+  await clearCalls()
+  await page.goto(`${BASE}/teacher?tab=materials`, { waitUntil: 'networkidle2' })
+  await sleep(2000)
+  await tap(page, 'Создать')
+  await waitText(page, /Источник текста/)
+  await tap(page, 'Мой текст', '[role=radio]', true)
+  await sleep(300)
+  await page.type('textarea[placeholder*="Вставь сюда текст"]', JSON.parse(AI_CONTENT).body)
+  await sleep(300)
+  const ownBlock = await planBlock()
+  check('«Мой текст»: упражнения в заявке — 4 вида · 11 заданий · до 15 баллов', /Упражнения · 4 вида/.test(ownBlock) && /11 заданий · до 15 баллов/.test(ownBlock), ownBlock.slice(0, 160))
+  await click('button[aria-label="Убрать Вставь форму"]')
+  await sleep(300)
+  const ownSum = await page.$eval('section[aria-label="Итог"]', (el) => el.innerText.replace(/\s+/g, ' ')).catch(() => '')
+  check(
+    '…итог: «Свой текст, 57 слов», «3 вида · 7 заданий · до 11 баллов», шага «План» нет',
+    /Свой текст, 57 слов/.test(ownSum) && /3 вида · 7 заданий · до 11 баллов/.test(ownSum) && /Шага «План» нет/.test(ownSum),
+    ownSum.slice(0, 220),
+  )
+  await tap(page, 'Составить упражнения')
+  check('«Мой текст»: упражнения готовы', await waitText(page, /Упражнения \(3\)/))
+  const ownCall = (await readCalls())[0] ?? ''
+  check(
+    '…промпт: ровно выбранные виды, без «Вставь форму»',
+    ownCall.includes('РОВНО эти виды') && ownCall.includes('- «Соедини слово и перевод» (') && /КАВЕРЗНЫЕ/.test(ownCall) && !ownCall.includes('- «Вставь форму» ('),
+  )
+  const ownShort = await page.$eval('[data-shortfall]', (el) => el.innerText.replace(/\s+/g, ' ')).catch(() => 'нет предупреждения')
+  check('…AI сделал меньше — видно, чего не хватает', /Соедини слово и перевод — 0 из 5 пар/.test(ownShort) && /True \/ False — 0 из 3 утв\./.test(ownShort), ownShort)
   await page.evaluate(() => localStorage.removeItem('smoke.aiAnswer'))
 
   check('JS-ошибок за прогон нет', jsErrors.length === 0, jsErrors[0] ?? '')

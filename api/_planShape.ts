@@ -39,7 +39,15 @@ export function isPlanShaped(raw: string): boolean {
   return ex.every((x) => {
     if (!x || typeof x !== 'object' || Array.isArray(x)) return false
     const it = x as Record<string, unknown>
-    if (Object.keys(it).some((k) => !['kind', 'type', 'count', 'note'].includes(k))) return false
-    return str(it.kind, 30) && str(it.type ?? '', 30) && (it.count == null || (typeof it.count === 'number' && it.count <= 20)) && str(it.note ?? '', 200)
+    // вид из каталога и «каверзные» у True / False (Ф2.25-2: учитель выбирает упражнения в плане)
+    if (Object.keys(it).some((k) => !['kind', 'type', 'count', 'note', 'format', 'tricky'].includes(k))) return false
+    if (it.tricky != null && typeof it.tricky !== 'boolean') return false
+    return (
+      str(it.kind ?? '', 30) &&
+      str(it.type ?? '', 30) &&
+      str(it.format ?? '', 30) &&
+      (it.count == null || (typeof it.count === 'number' && it.count <= 20)) &&
+      str(it.note ?? '', 200)
+    )
   })
 }

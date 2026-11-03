@@ -8,7 +8,43 @@
 import { comprehensionRange } from './materialLengths'
 import type { MaterialLength } from './materialLengths'
 import { TFNG_OPTIONS, allowsNotGiven } from './materialExercises'
-import type { AppLang, CEFRLevel } from '../types'
+import { FORMATS, GROUPS, formatById, formatDoes, formatTitle, rowFormat } from './exerciseFormats'
+import type { AppLang, CEFRLevel, PlanExercise } from '../types'
+
+/** Виды упражнений для модели: id, название, группа, что делает ученик, сколько можно (каталог `lib/exerciseFormats`). */
+function formatsList(lang: AppLang, level: string): string[] {
+  return FORMATS.map((f) => {
+    const group = GROUPS.find((g) => g.id === f.group)?.label ?? ''
+    const count = f.type === 'match' ? `count — пар в ОДНОМ упражнении, ${f.min}-${f.max}` : `count ${f.min}-${f.max}`
+    return `- ${f.id} — «${formatTitle(f, level)}» (${group}): ${formatDoes(f, lang, level)}; ${count}`
+  })
+}
+
+/**
+ * План упражнений строками для модели (Ф2.25-2): ровно эти виды и столько —
+ * учитель выбрал их на шаге «План» или в заявке «Моего текста».
+ */
+export function planBrief(rows: readonly PlanExercise[], ctx: { words: readonly string[]; grammar: string; level: string }): string[] {
+  return rows.flatMap((p) => {
+    const id = rowFormat(p)
+    if (!id) return []
+    const f = formatById(id)
+    const n = p.count
+    const shape = f.type === 'match' ? `type "match", format "${id === 'match_definition' ? 'definition' : 'translation'}"` : f.type === 'mcq' && (id === 'tfng' || id === 'form') ? `type "mcq", format "${id}", kind "${f.kind}"` : `type "${f.type}", kind "${f.kind}"`
+    let line = `- «${formatTitle(f, ctx.level)}» (${shape}): `
+    if (f.type === 'match') {
+      const words = ctx.words.slice(0, n)
+      const more = n - words.length
+      line += `ОДНО упражнение на ${n} пар; слова — ${words.length ? `целевые: ${words.join(', ')}${more > 0 ? ` и ещё ${more} из текста` : ''}` : 'из текста'}`
+    } else {
+      line += `ровно ${n}`
+      if (id === 'tfng' && p.tricky) line += '; КАВЕРЗНЫЕ: ответ есть в тексте, но его легко пропустить — ловушка во внимательности (в тексте сказано иначе или позже), а не в двусмысленности; ответ однозначен по тексту'
+      if (f.kind === 'grammar' && ctx.grammar) line += `; конструкция — ${ctx.grammar} (она есть в тексте)`
+    }
+    if (p.note && p.note.trim()) line += `; ${p.note.trim()}`
+    return [line]
+  })
+}
 
 /**
  * Виды упражнений и их правила — один блок на «Новый текст» и «Мой текст»
@@ -33,6 +69,7 @@ export function exerciseSpec(lang: AppLang, level: string): { shapes: string[]; 
       '    {"kind":"grammar","type":"order","prompt":"перевод предложения по-русски","words":["слова","в","любом","порядке"],"answer":["слова","в","правильном","порядке"]},',
       '    {"kind":"vocab","type":"match","format":"translation","prompt":"Соедини слово и перевод","pairs":[{"left":"слово из текста в начальной форме","right":"перевод на русский"}],"extra":["ещё один перевод на русский — не подходит ни к одному слову"]},',
       `    {"kind":"vocab","type":"match","format":"definition","prompt":"Соедини слово и объяснение","pairs":[{"left":"слово из текста в начальной форме","right":"объяснение на ${L} уровня ${level}, без самого слова"}],"extra":["одно лишнее объяснение того же уровня"]},`,
+      '    {"kind":"vocab","type":"fill","prompt":"предложение ИЗ текста с пропуском ___ на месте словарного слова","answer":"пропущенное слово в форме из текста"},',
       '    {"kind":"vocab","type":"mcq","prompt":"определение слова НА ЦЕЛЕВОМ ЯЗЫКЕ (само слово не называть!)","options":["слово1","слово2","слово3","слово4"],"answer":0}',
     ],
     rules: [
@@ -42,7 +79,7 @@ export function exerciseSpec(lang: AppLang, level: string): { shapes: string[]; 
         three ? `«${tf[2]}» — только если в тексте об этом нет ничего, тогда quote — пустая строка` : `у текста ${level} третьей кнопки нет`
       }; часть утверждений — неверные: ловушка во внимательности (в тексте сказано иначе), а не в двусмысленности; ответ однозначен по тексту; quote — предложение из текста дословно.`,
       'Словарь — только слова и выражения, которые есть в тексте (в любой форме); в паре и в вариантах пиши начальную форму: «missed her flight» → «miss a flight», «took» → «take». Слово, которого нет в тексте, приложение выбросит.',
-      '«Соедини пары» (match): 4-6 пар, слова разные, переводы (объяснения) разные; extra — ровно один лишний вариант того же вида, не подходящий ни к одному слову. Перевод — только на русский; объяснение — на языке текста, без самого слова.',
+      '«Соедини пары» (match): пар — сколько сказано в плане (3-8), без плана — 4-6; слова разные, переводы (объяснения) разные; extra — ровно один лишний вариант того же вида, не подходящий ни к одному слову. Перевод — только на русский; объяснение — на языке текста, без самого слова.',
       'Грамматика — конструкции, которые есть в тексте (тема из заявки — первой). «Выбери форму» (format "form"): 3-4 формы одного слова, верна одна.',
     ],
   }
@@ -110,21 +147,17 @@ export function planSystem(req: MaterialRequest): string {
     '  "vocabulary": ["6-10 целевых слов на целевом языке, скорректированных под уровень"],',
     '  "grammar_focus": "итоговая грамматическая тема" | null,',
     '  "exercise_plan": [',
-    '    {"kind":"comprehension","type":"mcq","count":N,"note":"вопросы по смыслу текста"},',
-    '    {"kind":"comprehension","type":"tfng","count":N,"note":"верно / неверно по тексту"},',
-    '    {"kind":"grammar","type":"fill","count":N,"note":"что именно тренируем"},',
-    '    {"kind":"grammar","type":"form","count":N,"note":"выбери правильную форму из 3-4"},',
-    '    {"kind":"grammar","type":"order","count":N,"note":"собрать предложение из слов"},',
-    '    {"kind":"vocab","type":"match_translation","count":1,"note":"соедини слово и перевод: 4-6 пар"},',
-    '    {"kind":"vocab","type":"match_definition","count":N,"note":"соедини слово и объяснение: 4-6 пар"},',
-    '    {"kind":"vocab","type":"mcq","count":N,"note":"матч: определение слова → выбор из 4 слов"}',
+    '    {"format":"id вида из списка ниже","count":N,"note":"коротко, что именно тренируем","tricky":false}',
     '  ]',
     '}',
     '',
-    `Правила: вопросов на понимание (comprehension) — ${comprehensionRange(req.lengthRange)} (длина текста ${req.lengthRange} слов): часть mcq, часть tfng.`,
-    'Грамматических и словарных упражнений — по 4-6, если тема/слова заданы; kind "grammar" пропусти, если грамматика не задана. «Соедини пары» (match_translation или match_definition) — одно упражнение и засчитывается по паре.',
-    'Грамматику ОБЯЗАТЕЛЬНО раздели на разные виды: fill (вписать), form (выбрать форму), order (собрать предложение из слов). ' +
-      'Одинаковые упражнения подряд превращают задание в механическую работу; ученик должен и вписывать, и строить фразу целиком.',
+    'Виды упражнений (format — id; у «Соедини пары» count — число пар в одном упражнении):',
+    ...formatsList(req.lang, req.level),
+    '',
+    `Правила плана: 3-6 видов, каждый вид — одной строкой, не больше 8; вопросов на понимание — ${comprehensionRange(req.lengthRange)} (длина текста ${req.lengthRange} слов): часть mcq, часть tfng.`,
+    'Грамматика: 4-6 заданий разных видов (fill_form, form, order), если тема задана, иначе без грамматики. Одинаковые упражнения подряд превращают задание в механическую работу.',
+    'Словарь: одно «Соедини пары» (match_translation или match_definition) на 4-6 пар из целевых слов и 2-4 других словарных задания.',
+    'tricky: true — только у tfng и только если уместно внимательное чтение: ответ есть в тексте, но его легко пропустить.',
     'Всё на уровне заявки: вопросы и объяснения не сложнее текста. Словарь — слова, которые будут в тексте; грамматика — конструкции текста.',
     '',
     USE_DIAGNOSTICS,
@@ -132,10 +165,11 @@ export function planSystem(req: MaterialRequest): string {
   ].join('\n')
 }
 
-/** Системный промпт текста и упражнений по утверждённому плану (шаг 2). */
-export function contentSystem(req: MaterialRequest): string {
+/** Системный промпт текста и упражнений по утверждённому плану (шаг 2): упражнения — ровно строки плана. */
+export function contentSystem(req: MaterialRequest, plan: { exercise_plan: readonly PlanExercise[]; vocabulary: readonly string[]; grammar_focus: string | null }): string {
   const langName = req.lang === 'es' ? 'испанском' : 'английском'
   const spec = exerciseSpec(req.lang, req.level)
+  const brief = planBrief(plan.exercise_plan, { words: plan.vocabulary, grammar: plan.grammar_focus ?? req.grammar.trim(), level: req.level })
   return [
     'Ты — автор учебных материалов по иностранным языкам.',
     'Создай текст и упражнения по заявке и утверждённому плану.',
@@ -155,11 +189,12 @@ export function contentSystem(req: MaterialRequest): string {
     '2. Все целевые слова из плана должны встретиться в тексте.',
     '3. Если задана грамматическая тема — конструкция используется в тексте несколько раз.',
     '4. ВСЕ упражнения строго по содержанию текста. Вопросы comprehension (mcq без format) — смысловые (не «какое слово было в тексте»), неправильные варианты правдоподобны, ровно 4 options, answer — индекс 0-3.',
-    '5. Количество упражнений каждого вида — по плану. Вид из плана → упражнение: tfng — mcq с format "tfng"; form — mcq с format "form"; match_translation — match с format "translation"; match_definition — match с format "definition".',
+    '5. Упражнения — РОВНО эти виды и столько, сколько выбрал преподаватель (других не добавляй, меньше тоже нельзя):',
+    ...brief,
     '6. В fill ответ (answer) — ровно то, что пропущено в prompt на месте ___. ' +
       'Символ «/» в answer используй ТОЛЬКО чтобы перечислить равноправные варианты (например was/were); ' +
       'не ставь «/» как часть самого ответа (даты, дроби) — иначе он не засчитается.',
-    '7. Словарные (vocab) — матч по определению: prompt — простое определение слова на целевом языке (уровня ученика, БЕЗ самого слова), options — 4 слова: правильное + 3 других слова из текста или того же уровня, answer — индекс правильного.',
+    '7. «Слово по объяснению» (vocab mcq): prompt — простое определение слова на целевом языке (уровня ученика, БЕЗ самого слова), options — 4 слова: правильное + 3 других слова из текста или того же уровня, answer — индекс правильного. «Вставь слово из текста» (vocab fill): prompt — предложение из текста с ___ на месте словарного слова, answer — это слово в форме из текста.',
     '8. Порядок упражнений: сначала comprehension, потом grammar, потом vocab.',
     '9. В order: answer — предложение из текста, разбитое на слова В ПРАВИЛЬНОМ ПОРЯДКЕ (3-10 слов); words — РОВНО ТЕ ЖЕ слова, ничего не добавляя и не убирая (порядок неважен, приложение перемешает). prompt — перевод этого предложения на русский. Если состав words и answer разойдётся, упражнение станет несобираемым и будет выброшено.',
     ...spec.rules.map((r, i) => `${10 + i}. ${r}`),
@@ -169,9 +204,16 @@ export function contentSystem(req: MaterialRequest): string {
 }
 
 /** Системный промпт «Моего текста»: упражнения строго по готовому тексту преподавателя. */
-export function ownTextSystem(lang: AppLang, level: CEFRLevel, compr: string, opts?: { vocabulary?: string; grammar?: string }): string {
+export function ownTextSystem(
+  lang: AppLang,
+  level: CEFRLevel,
+  compr: string,
+  opts?: { vocabulary?: string; grammar?: string; rows?: readonly PlanExercise[] },
+): string {
   const langName = lang === 'es' ? 'испанском' : 'английском'
   const spec = exerciseSpec(lang, level)
+  const words = (opts?.vocabulary ?? '').split(',').map((w) => w.trim()).filter(Boolean)
+  const brief = opts?.rows?.length ? planBrief(opts.rows, { words, grammar: opts.grammar?.trim() ?? '', level }) : []
   return [
     'Ты — автор учебных упражнений по иностранным языкам.',
     `Дан ГОТОВЫЙ текст на ${langName} (уровень ученика — ${level}). Составь упражнения СТРОГО по этому тексту.`,
@@ -187,11 +229,16 @@ export function ownTextSystem(lang: AppLang, level: CEFRLevel, compr: string, op
     '',
     'Жёсткие требования:',
     '1. ВСЕ упражнения строго по содержанию ДАННОГО текста. Не выдумывай фактов, которых в тексте нет.',
-    `2. Вопросов на понимание (comprehension) — ${compr}: часть mcq, часть «верно / неверно»; грамматических — 3-6 (fill, form и order вперемешку, чтобы задание не было однообразным); словарных (vocab) — 3-6, из них одно «Соедини пары» (match).`,
+    // учитель выбрал виды в заявке (d16-3) — ровно их; иначе — как раньше, на выбор модели
+    ...(brief.length
+      ? ['2. Упражнения — РОВНО эти виды и столько (других не добавляй, меньше тоже нельзя):', ...brief]
+      : [
+          `2. Вопросов на понимание (comprehension) — ${compr}: часть mcq, часть «верно / неверно»; грамматических — 3-6 (fill, form и order вперемешку, чтобы задание не было однообразным); словарных (vocab) — 3-6, из них одно «Соедини пары» (match).`,
+        ]),
     opts?.grammar?.trim() ? `3. Сделай акцент на грамматике: ${opts.grammar.trim()}.` : '',
     opts?.vocabulary?.trim() ? `4. В словарных упражнениях приоритет словам: ${opts.vocabulary.trim()}.` : '',
     'В fill ответ (answer) — ровно то, что пропущено на месте ___; «/» только для равноправных вариантов (was/were), не как часть самого ответа.',
-    'В vocab prompt — простое определение слова уровня ученика БЕЗ самого слова; options — 4 слова (правильное + 3 из текста/того же уровня); answer — индекс правильного.',
+    'В vocab mcq prompt — простое определение слова уровня ученика БЕЗ самого слова; options — 4 слова (правильное + 3 из текста/того же уровня); answer — индекс правильного. В vocab fill — предложение из текста с ___ на месте слова, answer — слово в форме из текста.',
     'В order: answer — предложение ИЗ текста, разбитое на слова в правильном порядке (3-10 слов); ' +
       'words — РОВНО ТЕ ЖЕ слова (порядок неважен, приложение перемешает); prompt — перевод предложения на русский. ' +
       'Разошёлся состав words и answer — упражнение несобираемое, оно будет выброшено.',

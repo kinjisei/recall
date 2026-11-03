@@ -1,4 +1,5 @@
 // ============================================================================
+// Описание: src/features/teacher/CLAUDE.md
 // Материалы преподавателя: сгенерированный текст + упражнения, назначение
 // ученику и его работа (таблицы materials, material_assignments). Вынесены из
 // types/index.ts (Ф2.25-1): файл в списке больших и расти не должен;
@@ -45,12 +46,30 @@ export type MaterialExercise = (MaterialMcq | Exclude<GrammarExercise, { type: '
   kind: MaterialExerciseKind
 }
 
+/** Вид упражнения материала — id каталога `lib/exerciseFormats` (Ф2.25-2). */
+export type ExerciseFormatId = 'mcq' | 'tfng' | 'match_translation' | 'match_definition' | 'word_by_definition' | 'fill_word' | 'fill_form' | 'order' | 'form'
+
+/**
+ * Строка плана упражнений: вид (`format`), сколько (у «Соедини пары» — пар в
+ * одном упражнении), пометка. `kind` и `type` — для планов до Ф2.25-2 и для
+ * модели; учитель правит план без генерации (макет d16). `tricky` — у True /
+ * False: каверзные утверждения.
+ */
+export interface PlanExercise {
+  kind: MaterialExerciseKind
+  type: string
+  count: number
+  note: string
+  format?: ExerciseFormatId
+  tricky?: boolean
+}
+
 /** План будущего материала (шаг 1 генерации, ответ AI). */
 export interface MaterialPlan {
   comments: string
   vocabulary: string[]
   grammar_focus: string | null
-  exercise_plan: { kind: MaterialExerciseKind; type: string; count: number; note: string }[]
+  exercise_plan: PlanExercise[]
 }
 
 /** Сохранённый материал (таблица materials). */

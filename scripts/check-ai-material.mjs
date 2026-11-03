@@ -31,11 +31,11 @@ try {
   for (const ex of examples) {
     const es = ex.req?.lang === 'es' || ex.ownText?.lang === 'es'
     if (ex.ownText) {
-      const { body, lang, level, accent } = ex.ownText
+      const { body, lang, level, accent, rows } = ex.ownText
       await run.example(
         ex,
         async (last) => {
-          const content = await generateExercisesForText(body, lang, level, accent)
+          const content = await generateExercisesForText(body, lang, level, { ...accent, rows })
           return {
             content,
             raw: { exercises: rawJson(last().text)?.exercises ?? [] },

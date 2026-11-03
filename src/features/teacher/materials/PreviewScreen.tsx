@@ -4,7 +4,9 @@
 // тексту и «Назначится при сохранении»: кто, с уровнем, «Сохранить и выдать
 // двоим», «↻ Перегенерировать» и сколько это стоит. «Сохранить» сразу
 // назначает тем, для кого материал (Ф2.11б-3). «Мой текст» — без плана:
-// перегенерируются только упражнения, текст остаётся.
+// перегенерируются только упражнения, текст остаётся. AI сделал меньше, чем
+// выбрал учитель (Ф2.25-2), — над упражнениями сказано, чего и сколько не
+// хватает: молча меньше учитель не получает.
 // ============================================================================
 import { useState } from 'react'
 import { Button } from '../../../shared/ui/Button'
@@ -24,7 +26,8 @@ import {
 } from '../../../lib/materials'
 import type { Material, MaterialPlan } from '../../../types'
 import type { StudentLevels } from './useStudentLevels'
-import { WizardTop, gensAfter } from './wizardBits'
+import { Hint, WizardTop, gensAfter } from './wizardBits'
+import { planShortfall } from '../../../lib/exerciseFormats'
 import { ExerciseRow } from './detailParts'
 import { Article, AssignCard, ExercisesCard, TextFeedback, assignRows, saveLabel } from './textBits'
 import { ErrorText } from '../../../shared/ui/ErrorText'
@@ -79,7 +82,7 @@ export function PreviewScreen({
     try {
       const fb = feedback.trim() || undefined
       const next = own
-        ? await generateExercisesForText(content.body, req.lang, req.level, { vocabulary: req.vocabulary, grammar: req.grammar, feedback: fb })
+        ? await generateExercisesForText(content.body, req.lang, req.level, { vocabulary: req.vocabulary, grammar: req.grammar, feedback: fb, rows: plan.exercise_plan })
         : await generateMaterialContent(req, plan, fb)
       onRegenerated(next)
       setFeedback('')
@@ -110,10 +113,18 @@ export function PreviewScreen({
     onSaved(material, failed.length ? `Не назначено: ${failed.join(', ')} — назначь ниже ещё раз.` : undefined)
   }
 
+  const short = planShortfall(plan.exercise_plan, content.exercises, req.level)
   const main = (
     <div className="flex flex-col gap-3.5">
       <Article req={req} title={content.title} body={content.body} words={plan.vocabulary} />
       <ExercisesCard count={content.exercises.length}>
+        {short.length > 0 && (
+          <div className="-mx-1 -mt-2 mb-1" data-shortfall>
+            <Hint warn>
+              AI сделал не всё, что выбрано в плане, — перегенерируй или сохрани как есть: {short.map((x) => `${x.label} — ${x.got} из ${x.want} ${x.unit}`).join('; ')}
+            </Hint>
+          </div>
+        )}
         {content.exercises.map((ex, i) => (
           <ExerciseRow key={i} n={i + 1} ex={ex} lang={req.lang} />
         ))}

@@ -1,8 +1,10 @@
 // ============================================================================
 // Шаг 2 мастера: план от AI (макет d8-3, PLAN.md Ф2.17-4в-2б). Слева — что
 // задумал AI, целевые слова чипами (со звёздочкой — добавил AI; убрать и
-// дописать можно без генерации), упражнения, правки и «↻ Пересоставить план».
-// Справа «Итог» и «Новый текст →». Пока AI пишет текст — скелетон шага
+// дописать можно без генерации), упражнения — виды и сколько, правятся без
+// генерации (d16, Ф2.25-2: ExercisePlan), правки и «↻ Пересоставить план».
+// Справа «Итог» и «Новый текст →»; на телефоне «Новый текст →» — в полосе
+// внизу с итогом упражнений (d16-4). Пока AI пишет текст — скелетон шага
 // «Текст» (d8-5); «План» в шагах возвращает к плану, текст тогда ляжет
 // готовым шагом впереди («Вернуться к готовому тексту»).
 //
@@ -16,22 +18,22 @@ import { Button } from '../../../shared/ui/Button'
 import { useConfirm } from '../../../shared/ui/ConfirmDialog'
 import { fieldClass } from '../../../shared/ui/TextField'
 import { IconRefresh, IconSparkle } from '../../../shared/ui/icons'
-import { MainAside } from '../../../shared/ui/layouts'
+import { MainAside, useAsideSplit } from '../../../shared/ui/layouts'
 import { AppError } from '../../../shared/api/errors'
 import type { ReplanGrant } from '../../../shared/api/ai'
-import { plural } from '../../../shared/lib/plural'
 import { useDraft } from '../../../shared/lib/useDraft'
 import { DraftRestored } from '../../../shared/ui/DraftRestored'
 import { audienceOf, generateMaterialContent, generateMaterialPlan, type MaterialContent, type MaterialRequest } from '../../../lib/materials'
+import { normalizeRows, planTotals, totalsText } from '../../../lib/exerciseFormats'
 import type { MaterialPlan } from '../../../types'
 import { levelSummary } from './audience'
 import type { StudentLevels } from './useStudentLevels'
 import { FieldLabel, FormCard, Summary, WizardTop, audienceItems, gensAfter, materialLine } from './wizardBits'
 import { WordChips, splitWords } from './WordChips'
 import { TextSkeleton, WritingAside } from './textBits'
+import { ExercisePlan, PlanBar } from './ExercisePlan'
 import { ErrorText } from '../../../shared/ui/ErrorText'
 
-const KIND: Record<string, string> = { comprehension: 'Понимание текста', grammar: 'Грамматика', vocab: 'Словарь' }
 const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase()
 
 export function PlanScreen({
@@ -58,7 +60,7 @@ export function PlanScreen({
   onForward?: () => void
   /** «‹ Материалы»: выйти из мастера (с вопросом — план стоил генерации). */
   onExit: () => void
-  /** Слова поправлены руками — без генерации; свои слова уходят и в заявку. */
+  /** Слова или упражнения поправлены руками — без генерации; свои слова уходят и в заявку. */
   onEdited: (req: MaterialRequest, plan: MaterialPlan) => void
   onReplanned: (plan: MaterialPlan, grant?: ReplanGrant) => void
   /** Текст готов; stay — учитель вернулся к плану, пока AI писал: текст — шагом впереди. */
@@ -133,7 +135,10 @@ export function PlanScreen({
     onEdited({ ...req, vocabulary }, { ...plan, vocabulary: words })
   }
   const ids = audienceOf(req)
-  const exTotal = plan.exercise_plan.reduce((n, p) => n + (p.count || 0), 0)
+  // план из черновика до Ф2.25-2 — по kind/type; виды и пределы — из каталога
+  const rows = normalizeRows(plan.exercise_plan)
+  const totals = totalsText(rows)
+  const split = useAsideSplit()
   const generating = busy === 'generate'
   const top = (
     <WizardTop
@@ -148,13 +153,18 @@ export function PlanScreen({
     return (
       <div className="flex flex-col gap-4">
         {top}
-        <MainAside size="work" label="Сохранение" main={<TextSkeleton req={req} exercises={exTotal} />} aside={<WritingAside ids={ids} req={req} levels={levels} />} />
+        <MainAside size="work" label="Сохранение" main={<TextSkeleton req={req} exercises={planTotals(rows).tasks} />} aside={<WritingAside ids={ids} req={req} levels={levels} />} />
         {dialog}
       </div>
     )
   }
 
   const words = plan.vocabulary.length
+  const write = (
+    <Button className="w-full" onClick={() => void generate()} loading={generating} disabled={busy !== null || rows.length === 0}>
+      Новый текст →
+    </Button>
+  )
   const aside = (
     <Summary
       items={[
@@ -162,11 +172,13 @@ export function PlanScreen({
         {
           label: 'Что получится',
           value: materialLine(req.format, req.lengthRange, req.lang),
-          note: `${words} ${plural(words, 'целевое слово', 'целевых слова', 'целевых слов')} · ${exTotal} ${plural(exTotal, 'упражнение', 'упражнения', 'упражнений')}`,
+          note: `${totals.kinds} · ${totals.tasks} · ${totals.points}`,
         },
       ]}
       gen={
         <>
+          Упражнения меняются бесплатно
+          <br />
           {freeLeft > 0 ? (
             <>Пересоставить план — бесплатно{freeLeft === 1 && ', последний раз'}</>
           ) : (
@@ -175,15 +187,13 @@ export function PlanScreen({
             </>
           )}
           <br />
-          Текст спишет <b className="font-semibold text-fg">1 генерацию</b>
+          Новый текст спишет <b className="font-semibold text-fg">1 генерацию</b>
           {gens && ` · ${gensAfter(gens, 1)}`}
         </>
       }
     >
-      {error && <ErrorText>{error}</ErrorText>}
-      <Button className="w-full" onClick={() => void generate()} loading={generating} disabled={busy !== null}>
-        Новый текст →
-      </Button>
+      {split && error && <ErrorText>{error}</ErrorText>}
+      {split && write}
       {onForward && (
         <Button variant="secondary" className="w-full" onClick={onForward} disabled={busy !== null}>
           Вернуться к готовому тексту →
@@ -212,20 +222,13 @@ export function PlanScreen({
           disabled={busy !== null}
         />
       </div>
-      <div>
-        <FieldLabel>Упражнения · {exTotal}</FieldLabel>
-        <div className="flex flex-col gap-2">
-          {plan.exercise_plan.map((p, i) => (
-            <div key={i} className="flex items-start gap-3 rounded-control-sm bg-input px-3.5 py-3">
-              <span className="flex h-7 min-w-8 flex-none items-center justify-center rounded-tag bg-surface px-2 text-sm font-bold text-fg tabular-nums">{p.count}</span>
-              <span className="flex flex-col gap-0.5 text-sm leading-snug text-fg-secondary">
-                <b className="text-body font-semibold text-fg">{KIND[p.kind] ?? p.kind}</b>
-                {p.note}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
+      <ExercisePlan
+        rows={rows}
+        onChange={(next) => onEdited(req, { ...plan, exercise_plan: next })}
+        lang={req.lang}
+        ctx={{ level: req.level, words: plan.vocabulary, grammar: plan.grammar_focus ?? '', grammarAsked: !!req.grammar.trim() }}
+        disabled={busy !== null}
+      />
       <div>
         <label className="block">
           <FieldLabel opt>Правки к плану</FieldLabel>
@@ -251,6 +254,11 @@ export function PlanScreen({
     <div className="flex flex-col gap-4">
       {top}
       <MainAside size="work" label="Итог" main={main} aside={aside} />
+      {!split && (
+        <PlanBar rows={rows} error={error && <ErrorText>{error}</ErrorText>}>
+          {write}
+        </PlanBar>
+      )}
       {dialog}
     </div>
   )

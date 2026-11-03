@@ -12,6 +12,7 @@
 import { readFileSync } from 'node:fs'
 import { inText, irregularFromEnglish, irregularFromSpanish } from '../../src/lib/wordForms.ts'
 import { irregularGroups } from '../../src/data/english/irregular.ts'
+import { formatById, formatOf, normalizeRows } from '../../src/lib/exerciseFormats.ts'
 
 const CYR = /[а-яё]/i
 
@@ -24,8 +25,24 @@ const IRREGULAR = {
 const TFNG = { en: ['True', 'False', 'Not given'], es: ['Verdadero', 'Falso', 'No se dice'] }
 const lowLevel = (level) => /^A[12]$/i.test(String(level).trim())
 
-/** Вид упражнения так, как его пишет план: tfng, form, match_translation… */
-const planType = (x) => (x.type === 'mcq' && x.format ? x.format : x.type === 'match' ? `match_${x.format}` : x.type)
+/**
+ * Упражнения против плана (Ф2.25-2): виды и сколько выбрал учитель — ровно,
+ * у «Соедини пары» — одно упражнение на столько пар; вида не из плана нет.
+ * Пусто — всё по плану.
+ */
+function planOff(rows, raw) {
+  const want = normalizeRows(rows)
+  if (!want.length) return []
+  const known = raw.filter((x) => ['mcq', 'fill', 'order', 'match'].includes(x?.type))
+  const off = want.flatMap((p) => {
+    const mine = known.filter((x) => formatOf(x) === p.format)
+    const pairs = formatById(p.format).type === 'match'
+    const got = pairs ? (mine.length === 1 ? (mine[0].pairs ?? []).length : `${mine.length} упр.`) : mine.length
+    return got === p.count ? [] : [`${p.format}: по плану ${p.count}${pairs ? ' пар' : ''}, есть ${got}${pairs && mine.length === 1 ? ' пар' : ''}`]
+  })
+  const extra = [...new Set(known.map(formatOf))].filter((id) => !want.some((p) => p.format === id))
+  return [...off, ...(extra.length ? [`не из плана: ${list(extra)}`] : [])]
+}
 
 /**
  * Новые форматы Ф2.25 — по сырому ответу модели (приложение потом приводит его
@@ -191,20 +208,8 @@ export function materialRules(ex, out) {
   rows.push(row('М5', missing.length === 0, `слов плана нет в тексте: ${list(missing)}`))
   const exr = exerciseRows(content.body, raw, content.exercises, { fromText: true })
   rows.push(...exr.rows)
-  const planned = (plan.exercise_plan ?? []).filter((p) => p.count > 0)
-  const off = planned.filter((p) => raw.filter((x) => x.kind === p.kind && planType(x) === p.type).length !== p.count)
-  rows.push(
-    row(
-      'М11',
-      off.length === 0 && exr.ordered,
-      [
-        ...off.map((p) => `${p.kind}/${p.type}: по плану ${p.count}, есть ${raw.filter((x) => x.kind === p.kind && planType(x) === p.type).length}`),
-        exr.ordered ? '' : 'порядок не «понимание → грамматика → слова»',
-      ]
-        .filter(Boolean)
-        .join('; '),
-    ),
-  )
+  const off = planOff(plan.exercise_plan ?? [], raw)
+  rows.push(row('М11', off.length === 0 && exr.ordered, [...off, exr.ordered ? '' : 'порядок не «понимание → грамматика → слова»'].filter(Boolean).join('; ')))
   if (e.dialog) {
     const lines = content.body.split('\n').map((l) => l.trim()).filter(Boolean)
     const ok = lines.filter((l) => SPEAKER.test(l)).length
@@ -240,10 +245,14 @@ export function ownTextRules(ex, out) {
   const words = textWords(content.body)
   const compr = words < 100 ? [3, 5] : words <= 250 ? [5, 10] : [7, 12]
   const count = (k) => raw.filter((x) => x.kind === k).length
+  // виды выбраны в заявке (d16-3) — ровно они; нет — сколько просит промпт сам
+  const byPlan = ex.ownText.rows?.length ? planOff(ex.ownText.rows, raw) : null
   const bad = [
-    count('comprehension') < compr[0] || count('comprehension') > compr[1] ? `понимание ${count('comprehension')}, нужно ${compr.join('–')}` : '',
-    count('grammar') < 3 || count('grammar') > 6 ? `грамматика ${count('grammar')}, нужно 3–6` : '',
-    count('vocab') < 3 || count('vocab') > 6 ? `слова ${count('vocab')}, нужно 3–6` : '',
+    ...(byPlan ?? [
+      count('comprehension') < compr[0] || count('comprehension') > compr[1] ? `понимание ${count('comprehension')}, нужно ${compr.join('–')}` : '',
+      count('grammar') < 3 || count('grammar') > 6 ? `грамматика ${count('grammar')}, нужно 3–6` : '',
+      count('vocab') < 3 || count('vocab') > 6 ? `слова ${count('vocab')}, нужно 3–6` : '',
+    ]),
     exr.ordered ? '' : 'порядок не «понимание → грамматика → слова»',
   ].filter(Boolean)
   return [...exr.rows, row('М11', bad.length === 0, bad.join('; ')), ...formatRows(content.body, raw, ex.ownText.lang, ex.ownText.level), materialLanguage(content.body, content.exercises)]

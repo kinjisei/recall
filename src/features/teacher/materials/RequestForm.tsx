@@ -3,7 +3,9 @@
 // три карточки — источник и язык; для кого и уровень; тема, формат, длина,
 // слова и грамматика (или свой текст). Справа «Итог»: для кого, уровень, что
 // получится, сколько генераций уйдёт, «Новый план →» и «Отмена». Заявка —
-// черновик (Ф1.14): переживает перезагрузку и «назад» из плана.
+// черновик (Ф1.14): переживает перезагрузку и «назад» из плана. У «Моего
+// текста» шага «План» нет — виды упражнений учитель выбирает прямо здесь
+// (d16-3, Ф2.25-2); поля акцента на словах и грамматике остаются (журнал п.76 (20)).
 // ============================================================================
 import { useState } from 'react'
 import { Button } from '../../../shared/ui/Button'
@@ -21,9 +23,11 @@ import {
   type MaterialContent,
   type MaterialRequest,
 } from '../../../lib/materials'
-import { LENGTH_LABEL, MATERIAL_LENGTHS } from '../../../lib/materialLengths'
+import { LENGTH_LABEL, MATERIAL_LENGTHS, wordCount } from '../../../lib/materialLengths'
+import { OWN_TEXT_ROWS, totalsText } from '../../../lib/exerciseFormats'
+import { plural } from '../../../shared/lib/plural'
 import { MY_TEXT_LIMIT } from '../../../lib/myTexts'
-import type { AppLang, CEFRLevel, MaterialPlan } from '../../../types'
+import type { AppLang, CEFRLevel, MaterialPlan, PlanExercise } from '../../../types'
 import type { StudentInfo } from '../../../lib/teacher'
 import { LEVELS } from './shared'
 import { levelSummary, pickedIds } from './audience'
@@ -34,6 +38,7 @@ import { DraftRestored } from '../../../shared/ui/DraftRestored'
 import { FieldLabel, FormCard, Hint, LANG_NAME, Summary, WizardTop, audienceItems, gensAfter, materialLine } from './wizardBits'
 import type { StudentLevels } from './useStudentLevels'
 import { WordChips, splitWords } from './WordChips'
+import { ExercisePlan } from './ExercisePlan'
 import { ErrorText } from '../../../shared/ui/ErrorText'
 
 /** Черновик заявки — его стирает и MaterialsSection, когда материал сохранён. */
@@ -78,12 +83,15 @@ export function RequestForm({
     body: '',
     // Для кого (Ф2.11б-3): несколько учеников, им же назначится. Пусто — материал общий.
     studentIds: [] as string[],
+    // «Мой текст»: виды упражнений (d16-3); черновик до Ф2.25-2 их не знает
+    rows: OWN_TEXT_ROWS as PlanExercise[],
   })
   const { source, lang, level, topic, format, lengthRange, vocabulary, grammar, body } = form
   const picked = pickedIds(form) // черновик до Ф2.11б-3 хранил одного ученика
   const [setSource, setLang, setLevel, setTopic] = [field('source'), field('lang'), field('level'), field('topic')]
   const [setFormat, setLengthRange, setVocabulary] = [field('format'), field('lengthRange'), field('vocabulary')]
-  const [setGrammar, setBody, setStudentIds] = [field('grammar'), field('body'), field('studentIds')]
+  const [setGrammar, setBody, setStudentIds, setRows] = [field('grammar'), field('body'), field('studentIds'), field('rows')]
+  const rows = form.rows ?? OWN_TEXT_ROWS
   const own = source === 'own'
   const hints = FORM_HINTS[lang]
   const { confirm, dialog } = useConfirm()
@@ -118,8 +126,8 @@ export function RequestForm({
     setBusy(true)
     setError(null)
     try {
-      const content = await generateExercisesForText(text, lang, level, { vocabulary, grammar })
-      onOwnGenerated({ ...ownTextRequest(lang, level, text, { vocabulary, grammar }), studentIds: picked }, ownTextPlan(), content)
+      const content = await generateExercisesForText(text, lang, level, { vocabulary, grammar, rows })
+      onOwnGenerated({ ...ownTextRequest(lang, level, text, { vocabulary, grammar }), studentIds: picked }, ownTextPlan(rows), content)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Ошибка генерации упражнений')
     } finally {
@@ -128,15 +136,17 @@ export function RequestForm({
   }
 
   const names = picked.map(levels.nameOf)
-  const ready = own ? body.trim().length >= 40 : !!topic.trim()
+  const ready = own ? body.trim().length >= 40 && rows.length > 0 : !!topic.trim()
   const levelOptions = LEVELS.filter((l) => l !== 'C2' || level === 'C2')
   const words = splitWords(vocabulary)
+  const totals = totalsText(rows)
+  const n = wordCount(body)
   const aside = (
     <Summary
       items={[
         ...audienceItems(names, level, levels.known(lang) ? levelSummary(levels.picked(picked, lang), level) : undefined),
         own
-          ? { label: 'Что получится', value: `Свой текст, ${LANG_NAME[lang]}`, note: 'упражнения соберёт AI строго по тексту' }
+          ? { label: 'Что получится', value: `Свой текст, ${n} ${plural(n, 'слово', 'слова', 'слов')}, ${LANG_NAME[lang]}`, note: `${totals.kinds} · ${totals.tasks} · ${totals.points}` }
           : {
               label: 'Что получится',
               value: materialLine(format, lengthRange, lang),
@@ -145,6 +155,12 @@ export function RequestForm({
       ]}
       gen={
         <>
+          {own && (
+            <>
+              Шага «План» нет: текст твой, AI составит только упражнения
+              <br />
+            </>
+          )}
           Уйдёт <b className="font-semibold text-fg">1 генерация</b>
           {gens && (
             <>
@@ -236,6 +252,17 @@ export function RequestForm({
           <input lang={lang} className={fieldClass()} placeholder={hints.grammar} value={grammar} onChange={(e) => setGrammar(e.target.value)} />
         </label>
       </FormCard>
+      {own && (
+        <FormCard>
+          <ExercisePlan
+            rows={rows}
+            onChange={setRows}
+            lang={lang}
+            ctx={{ level, words, grammar, grammarAsked: !!grammar.trim(), own: true }}
+            disabled={busy}
+          />
+        </FormCard>
+      )}
     </div>
   )
 

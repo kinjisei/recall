@@ -93,6 +93,18 @@ check('пропуск не из текста — нет', !fillFromText('There w
   p11.content.exercises.reverse()
   onlyRed('М11: порядок упражнений перевёрнут', materialRules(ex, p11), 'М11')
 
+  // учитель выбрал виды и сколько (Ф2.25-2): у пар — пар, вида не из плана нет
+  const match0 = at(good.raw.exercises, (e) => e.type === 'match')
+  const p11p = clone(good)
+  p11p.raw.exercises[match0].pairs.pop()
+  onlyRed('М11: пар меньше, чем выбрал учитель', materialRules(ex, p11p), 'М11')
+  const p11x = clone(good)
+  p11x.plan.exercise_plan = p11x.plan.exercise_plan.filter((r) => r.format !== 'word_by_definition')
+  onlyRed('М11: вид не из плана', materialRules(ex, p11x), 'М11')
+  const p11o = clone(good)
+  p11o.plan.exercise_plan = [{ kind: 'comprehension', type: 'mcq', count: 3 }, { kind: 'comprehension', type: 'tfng', count: 1 }, { kind: 'grammar', type: 'fill', count: 2 }, { kind: 'grammar', type: 'order', count: 2 }, { kind: 'vocab', type: 'match_translation', count: 4 }, { kind: 'vocab', type: 'mcq', count: 2 }]
+  check('М11: план старого вида (kind/type) узнаётся', !red(materialRules(ex, p11o)).includes('М11'), red(materialRules(ex, p11o)).join(', '))
+
   const pO2 = clone(good)
   pO2.content.exercises[fill0].hint = 'add -s'
   pO2.raw.exercises[fill0].hint = 'add -s'

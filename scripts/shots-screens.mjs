@@ -49,7 +49,8 @@
  *   writing-new — «Новое письмо» панелью, вопрос придумал AI (d9-2; вопрос —
  *                 черновиком, AI не зовётся);
  *   guide       — методичка, прокручена до раздела 2 (d9-3), снимок окном.
- * Ф2.25 — упражнения материала: экраны и данные в `_shots-f225.mjs` (`--only material-run` — ученик по u5, `--only material-review` — проверка по d18).
+ * Ф2.25 — упражнения материала: экраны и данные в `_shots-f225.mjs` (`--only material-run` — ученик по u5, `--only material-review` — проверка по d18)
+ * и `_shots-f2252.mjs` (`--only exercise-plan` — упражнения плана и «Моего текста» по d16).
  * Заходы 4г (d11–d15) — экраны и данные в `_shots-4g.mjs`: тест уровня, программа, «Моя учёба»,
  * «Пригласи коллегу», «Как оплатить», Настройки, лендинг (гость — без входа: `screen(null, …)`).
  * Аудит у них — по шторке или диалогу (`audit`), а не по <main> под
@@ -61,7 +62,7 @@
  * красная строка в итоге. Телефон снимается окном во всю высоту страницы.
  *
  * Запуск: npm run dev:test, затем node scripts/shots-screens.mjs [папка]
- * [--only home|students|schedule|exercise|reading|material-run|material-review|cancel|tasks|materials|wizard|writing|program|learn|invite|settings|landing] [--name экран,экран] (по умолчанию shots-screens/,
+ * [--only home|students|schedule|exercise|reading|material-run|material-review|exercise-plan|cancel|tasks|materials|wizard|writing|program|learn|invite|settings|landing] [--name экран,экран] (по умолчанию shots-screens/,
  * все экраны; --name — только эти снимки, для быстрой сверки). ~10 мин.
  */
 import { spawn } from 'node:child_process'
@@ -75,6 +76,7 @@ import { auditPage } from './_ux-audit-page.mjs'
 import { shotsInvitePay, shotsLanding, shotsLearn, shotsProgram, shotsSettings } from './_shots-4g.mjs'
 import { shotsExercise, shotsReading, shotsSchedule } from './_shots-4d.mjs'
 import { shotsMaterialReview, shotsMaterialRun } from './_shots-f225.mjs'
+import { shotsExercisePlan } from './_shots-f2252.mjs'
 
 if (process.argv.includes('--prod')) {
   console.error('Снимки заводят аккаунты — только тестовая база (npm run dev:test).')
@@ -325,17 +327,19 @@ try {
       comments: 'Рассказ: Дана летит из Алматы в Стамбул — рейс задерживают, она опаздывает на пересадку, а багаж теряется. Короткие предложения в Past Simple, слова — на уровне A2.',
       vocabulary: ['delay', 'luggage', 'boarding pass', 'gate', 'miss a flight'],
       grammar_focus: 'Past Simple',
+      // виды — из каталога (Ф2.25-2); правка видов — `--only exercise-plan`
       exercise_plan: [
-        { kind: 'comprehension', type: 'fill', count: 2, note: 'Вопросы по сюжету: почему Дана ждала у выхода, что случилось в Стамбуле' },
-        { kind: 'vocab', type: 'mcq', count: 1, note: 'Сопоставить 4 целевых слова с переводом' },
+        { format: 'mcq', kind: 'comprehension', type: 'mcq', count: 2, note: '' },
+        { format: 'word_by_definition', kind: 'vocab', type: 'mcq', count: 1, note: '' },
       ],
     }
     const content = {
       title: 'A long day at the airport',
       body: 'Last summer Dana flew from Almaty to Istanbul. She came to the airport early, but the screen said: “Delay — 3 hours”. Dana was not happy. She bought a coffee and waited near the gate.\n\nThe plane left very late, and in Istanbul Dana had only forty minutes for her next flight. She ran through the airport with her boarding pass in her hand. But the gate was already closed. She missed her flight!\n\nA woman at the desk was very kind. She gave Dana a ticket for the evening flight. Then Dana went to get her luggage, but her bag was not there. “Don’t worry,” the woman said. “It is on the next plane.” Dana laughed. What a day!',
       exercises: [
-        { kind: 'comprehension', type: 'fill', prompt: 'Why did Dana wait near the gate for three hours?', answer: 'Her flight had a delay.' },
-        { kind: 'comprehension', type: 'fill', prompt: 'What happened when Dana got to the gate in Istanbul?', answer: 'It was closed — she missed her flight.' },
+        // вопросов с открытым ответом нет с Ф2.25-1 — «Выбери ответ», как в плане
+        { kind: 'comprehension', type: 'mcq', prompt: 'Why did Dana wait near the gate for three hours?', options: ['Her flight had a delay.', 'She lost her boarding pass.', 'She came late.', 'The gate was closed.'], answer: 0 },
+        { kind: 'comprehension', type: 'mcq', prompt: 'What happened when Dana got to the gate in Istanbul?', options: ['It was closed — she missed her flight.', 'She met her brother.', 'She lost her bag.', 'Nothing happened.'], answer: 0 },
         { kind: 'vocab', type: 'mcq', prompt: 'luggage — это…', options: ['багаж', 'выход на посадку', 'задержка', 'посадочный талон'], answer: 0 },
       ],
     }
@@ -429,6 +433,7 @@ try {
   if (!ONLY || ONLY === 'reading') await shotsReading({ screen, admin, must, a }) // чтение (d6, 4д-4в)
   if (!ONLY || ONLY === 'material-run') await shotsMaterialRun({ screen, admin, must, t, s }) // задание: новые форматы (u5, Ф2.25-1а)
   if (!ONLY || ONLY === 'material-review') await shotsMaterialReview({ screen, admin, must, t, s }) // проверка работы в баллах (d18, Ф2.25-1б)
+  if (!ONLY || ONLY === 'exercise-plan') await shotsExercisePlan({ screen, t, a, s }) // упражнения плана и «Моего текста» (d16, Ф2.25-2)
   if (!ONLY || ONLY === 'landing') await shotsLanding({ screen, t }) // лендинг (d15): гость и в рамке у репетитора
   if (!ONLY || ONLY === 'home') {
     const word = /Слово дня/

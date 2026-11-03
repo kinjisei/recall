@@ -1,4 +1,5 @@
 // ============================================================================
+// Описание: src/features/teacher/CLAUDE.md
 // Материалы преподавателя: генерация текста с упражнениями через Gemini
 // (двухшаговая: план → материал) + хранение и назначение (Supabase).
 // Таблицы materials / material_assignments, RLS — supabase/migrations.
@@ -10,6 +11,7 @@ import { comprehensionRange, lengthRangeOf } from './materialLengths'
 import { correctAnswerText } from './text'
 import { normalizeExercises, validExercises } from './materialExercises'
 import { loadIrregular } from './wordForms'
+import { normalizeRows } from './exerciseFormats'
 import { REVIEW_SYSTEM, contentSystem, ownTextSystem, planSystem, requestDescription, type MaterialRequest } from './materialPrompts'
 import { aiVerdict } from './assignmentScore'
 import { groupBriefBlock } from './diagnosticsBrief'
@@ -21,6 +23,7 @@ import type {
   MaterialAssignment,
   MaterialExercise,
   MaterialPlan,
+  PlanExercise,
   ReviewItem,
 } from '../types'
 
@@ -90,7 +93,10 @@ export async function generateMaterialPlan(
   if (!Array.isArray(plan.exercise_plan) || !Array.isArray(plan.vocabulary)) {
     throw new Error('AI вернул неполный план. Попробуй ещё раз.')
   }
-  return plan
+  // виды — из каталога (Ф2.25-2): учитель правит их на шаге «План» без генерации
+  const rows = normalizeRows(plan.exercise_plan)
+  if (!rows.length) throw new Error('AI вернул план без упражнений. Попробуй ещё раз.')
+  return { ...plan, exercise_plan: rows }
 }
 
 export interface MaterialContent {
@@ -108,7 +114,7 @@ export async function generateMaterialContent(
   // предпоследний шаг воронки преподавателя: материал сгенерирован
   void track('material_generated', { lang: req.lang, level: req.level })
 
-  const system = contentSystem(req)
+  const system = contentSystem(req, { ...plan, exercise_plan: normalizeRows(plan.exercise_plan) })
 
   const userMsg = [
     'Заявка:',
@@ -149,7 +155,7 @@ export async function generateExercisesForText(
   body: string,
   lang: AppLang,
   level: CEFRLevel,
-  opts?: { vocabulary?: string; grammar?: string; feedback?: string },
+  opts?: { vocabulary?: string; grammar?: string; feedback?: string; rows?: readonly PlanExercise[] },
 ): Promise<MaterialContent> {
   const system = ownTextSystem(lang, level, comprehensionRange(lengthRangeOf(body)), opts)
 
@@ -187,9 +193,9 @@ export function ownTextRequest(
   }
 }
 
-/** Минимальный план для «своего текста» (генерации плана не было). */
-export function ownTextPlan(): MaterialPlan {
-  return { comments: 'Материал по своему тексту преподавателя.', vocabulary: [], grammar_focus: null, exercise_plan: [] }
+/** План «своего текста»: генерации плана не было, упражнения — выбранные в заявке (d16-3). */
+export function ownTextPlan(rows: readonly PlanExercise[] = []): MaterialPlan {
+  return { comments: 'Материал по своему тексту преподавателя.', vocabulary: [], grammar_focus: null, exercise_plan: normalizeRows(rows) }
 }
 
 // ---------------------------------------------------------------------------

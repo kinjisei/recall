@@ -33,8 +33,11 @@ export function comprehensionRange(range: string): string {
   return '7-12'
 }
 
+/** Сколько слов в тексте — итог «Моего текста» и его длина-корзина. */
+export const wordCount = (body: string): number => body.split(/\s+/).filter(Boolean).length
+
 /** Длина-корзина по числу слов в своём тексте («Мой текст»). */
 export function lengthRangeOf(body: string): MaterialLength {
-  const n = body.split(/\s+/).filter(Boolean).length
+  const n = wordCount(body)
   return n < 160 ? '100-140' : n <= 250 ? '180-220' : '270-330'
 }

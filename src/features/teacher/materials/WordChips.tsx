@@ -76,19 +76,22 @@ export function WordChips({
           </span>
         )
       })}
-      {words.length < max && add && <IconPlus size={16} aria-hidden className="-mr-1.5 ml-1 flex-none text-accent-soft-fg" />}
+      {/* «+ Слово» — одной парой: на телефоне «+» оставался в конце строки, а поле уезжало на следующую */}
       {words.length < max && (
-        <input
-          lang={lang}
-          aria-label={inputLabel}
-          placeholder={placeholder}
-          value={typed}
-          disabled={disabled}
-          onChange={(e) => setTyped(e.target.value)}
-          onKeyDown={onKey}
-          onBlur={commit}
-          className={`min-h-11 min-w-30 flex-1 bg-transparent px-2 text-sm text-fg outline-none ${add ? 'font-medium placeholder:text-accent-soft-fg' : 'placeholder:text-fg-muted'}`}
-        />
+        <span className="flex min-w-30 flex-1 items-center">
+          {add && <IconPlus size={16} aria-hidden className="ml-1 mr-0.5 flex-none text-accent-soft-fg" />}
+          <input
+            lang={lang}
+            aria-label={inputLabel}
+            placeholder={placeholder}
+            value={typed}
+            disabled={disabled}
+            onChange={(e) => setTyped(e.target.value)}
+            onKeyDown={onKey}
+            onBlur={commit}
+            className={`min-h-11 w-full min-w-0 flex-1 bg-transparent px-2 text-sm text-fg outline-none ${add ? 'font-medium placeholder:text-accent-soft-fg' : 'placeholder:text-fg-muted'}`}
+          />
+        </span>
       )}
     </div>
   )

@@ -11,7 +11,9 @@
  *      впереди убирается;
  *   4. «Мой текст»: заявка → упражнения, «назад» — к форме, упражнения впереди;
  *   5. черновик прежнего вида (один шаг, до Ф2.11) восстанавливается с шагами
- *      позади; мусор — «мастер не начат».
+ *      позади; мусор — «мастер не начат»;
+ *   6. упражнения, поправленные в плане (Ф2.25-2, d16), переживают «назад» к
+ *      заявке, «вперёд» и черновик; готовый текст впереди хранит свой план.
  *
  * ⚠️ Ожидания — литералами (тексты 'C1', 'P2'…), а не из тех же функций.
  *
@@ -100,6 +102,20 @@ check('прежний «Мой текст» — позади форма', where(
 check('прежний «форма» — форма', where(fromDraft({ name: 'form' })) === 'form')
 check('пусто и мусор — мастер не начат', [null, undefined, 'x', 7, {}, { name: 'list' }, { steps: [{ name: 'zzz' }], at: 0 }].every((v) => fromDraft(v) === null))
 check('указатель за краем — на последнем шаге', where(fromDraft({ ...written, at: 9 })) === 'preview:C1')
+
+// 6. упражнения плана правятся без генерации (Ф2.25-2)
+const rows = (n) => [
+  { format: 'mcq', kind: 'comprehension', type: 'mcq', count: n, note: '' },
+  { format: 'tfng', kind: 'comprehension', type: 'mcq', count: 3, note: '', tricky: true },
+]
+const withRows = advance(advance(START, { name: 'plan', req, plan: { ...plan('E1'), exercise_plan: rows(3) } }), { name: 'preview', req, plan: { ...plan('E1'), exercise_plan: rows(3) }, content: content('EC') })
+const atPlan = back(withRows)
+const tuned = replace(atPlan, { ...current(atPlan), plan: { ...current(atPlan).plan, exercise_plan: rows(5) } })
+const count = (f) => current(f).plan?.exercise_plan?.[0]?.count
+check('поправили упражнения — на плане 5 вопросов', count(tuned) === 5, String(count(tuned)))
+check('…«назад» к заявке и «вперёд» — правка на месте', count(forward(back(tuned))) === 5)
+check('…переживает черновик (каверзные — тоже)', count(fromDraft(JSON.parse(JSON.stringify(tuned)))) === 5 && current(fromDraft(JSON.parse(JSON.stringify(tuned)))).plan.exercise_plan[1].tricky === true)
+check('…готовый текст впереди — со своим планом (3 вопроса)', ahead(tuned)?.plan.exercise_plan[0].count === 3)
 
 console.log(`\nИтог: ${pass}/${pass + fail}`)
 process.exitCode = fail === 0 ? 0 : 1

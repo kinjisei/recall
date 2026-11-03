@@ -170,6 +170,14 @@ export const MATERIAL = [
       lang: 'en',
       level: 'B1',
       accent: { vocabulary: 'recently, already, manage', grammar: 'Present Perfect' },
+      // виды выбраны в заявке (d16-3, Ф2.25-2): ровно они, М11 сверяет
+      rows: [
+        { format: 'mcq', count: 4 },
+        { format: 'tfng', count: 3, tricky: true },
+        { format: 'match_definition', count: 5 },
+        { format: 'fill_word', count: 2 },
+        { format: 'fill_form', count: 4 },
+      ],
       body: [
         'Moving to a New City',
         '',
