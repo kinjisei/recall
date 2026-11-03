@@ -99,6 +99,15 @@ const RECALL_TEXTS: Record<string, (action: string) => string> = {
 }
 
 /**
+ * Наш код в тексте ошибки — целым словом: `RECALL_BAD_PLAN` не должен
+ * узнаваться в `RECALL_BAD_PLAN_ITEM` (было: ученик, отметивший пункт
+ * программы, видел «Такого тарифа нет»). Подчёркивание — часть слова.
+ */
+function hasCode(message: string, marker: string): boolean {
+  return new RegExp(`(^|[^A-Z0-9_])${marker}($|[^A-Z0-9_])`).test(message)
+}
+
+/**
  * Похоже ли, что текст написан нами для человека. Многие наши RPC поднимают
  * исключения по-русски и по делу («Код не найден. Проверь код у преподавателя.»,
  * «Работа не найдена или уже сдана.») — такой текст полезнее любого общего,
@@ -132,7 +141,7 @@ export function describeDbError(error: unknown, action: string): string {
 
   // 1. Наши коды — они точнее всех остальных признаков
   for (const [marker, text] of Object.entries(RECALL_TEXTS)) {
-    if (message.includes(marker)) return text(action)
+    if (hasCode(message, marker)) return text(action)
   }
 
   // 2. Наш же русский текст из RPC — отдаём как есть, он точнее общего
@@ -214,7 +223,7 @@ export class AppError extends Error {
  */
 function errorCode(error: unknown): string | undefined {
   const message = readMessage(error)
-  const ours = Object.keys(RECALL_TEXTS).find((marker) => message.includes(marker))
+  const ours = Object.keys(RECALL_TEXTS).find((marker) => hasCode(message, marker))
   if (ours) return ours
   if (NETWORK_MESSAGE.test(message)) return NETWORK_CODE
   return readCode(error) || undefined
