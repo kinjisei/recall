@@ -9,9 +9,9 @@ import { dbError } from '../shared/api/errors'
 import { chat, chatReply, type ReplanGrant } from '../shared/api/ai'
 import { comprehensionRange, lengthRangeOf } from './materialLengths'
 import { correctAnswerText } from './text'
-import { normalizeExercises, validExercises } from './materialExercises'
 import { loadIrregular } from './wordForms'
 import { normalizeRows } from './exerciseFormats'
+import { contentSchema, ownTextSchema, parseJson, planSchema, readContent, readOwnText, readPlan, type MaterialContent } from '../domains/materials'
 import { contentSystem, ownTextSystem, planSystem, requestDescription, reviewSystem, type MaterialRequest } from './materialPrompts'
 import { aiVerdict } from './assignmentScore'
 import { groupBriefBlock } from './diagnosticsBrief'
@@ -21,13 +21,13 @@ import type {
   CEFRLevel,
   Material,
   MaterialAssignment,
-  MaterialExercise,
   MaterialPlan,
   PlanExercise,
   ReviewItem,
 } from '../types'
 
 export type { MaterialRequest } from './materialPrompts'
+export type { MaterialContent } from '../domains/materials'
 
 /** Какой задачей генерить: сам себе (self_material) или учитель (material). */
 const genTask = (req: MaterialRequest): 'self_material' | 'material' =>
@@ -44,20 +44,6 @@ export const MATERIAL_FORMATS = [
 ] as const
 
 export { MATERIAL_LENGTHS, lengthRangeOf } from './materialLengths'
-
-/** Достаёт JSON из ответа модели (терпит ```-обёртки и болтовню вокруг). */
-function parseJson<T>(raw: string): T {
-  const start = raw.indexOf('{')
-  const end = raw.lastIndexOf('}')
-  if (start === -1 || end <= start) {
-    throw new Error('AI вернул не-JSON. Попробуй ещё раз.')
-  }
-  try {
-    return JSON.parse(raw.slice(start, end + 1)) as T
-  } catch {
-    throw new Error('AI вернул повреждённый JSON. Попробуй ещё раз.')
-  }
-}
 
 /** Для кого материал — им же он назначится при сохранении. */
 export const audienceOf = (req: MaterialRequest): string[] => req.studentIds ?? (req.studentId ? [req.studentId] : [])
@@ -87,22 +73,10 @@ export async function generateMaterialPlan(
   ].join('\n')
 
   const task = req.self ? 'self_material' : opts.replan ? 'material_replan' : 'material_plan'
-  const { text: raw, replan } = await chatReply([{ role: 'user', content: userMsg }], { system, task, json: true, replan: opts.replan })
+  // ответ — по схеме (domains/materials/schema.ts), разбор — readPlan
+  const { text: raw, replan } = await chatReply([{ role: 'user', content: userMsg }], { system, task, json: planSchema(), replan: opts.replan })
   if (replan) opts.onReplan?.(replan)
-  const plan = parseJson<MaterialPlan>(raw)
-  if (!Array.isArray(plan.exercise_plan) || !Array.isArray(plan.vocabulary)) {
-    throw new Error('AI вернул неполный план. Попробуй ещё раз.')
-  }
-  // виды — из каталога (Ф2.25-2): учитель правит их на шаге «План» без генерации
-  const rows = normalizeRows(plan.exercise_plan)
-  if (!rows.length) throw new Error('AI вернул план без упражнений. Попробуй ещё раз.')
-  return { ...plan, exercise_plan: rows }
-}
-
-export interface MaterialContent {
-  title: string
-  body: string
-  exercises: MaterialExercise[]
+  return readPlan(raw)
 }
 
 /** Шаг 2: полная генерация текста и упражнений по утверждённому плану. */
@@ -114,7 +88,8 @@ export async function generateMaterialContent(
   // предпоследний шаг воронки преподавателя: материал сгенерирован
   void track('material_generated', { lang: req.lang, level: req.level })
 
-  const system = contentSystem(req, { ...plan, exercise_plan: normalizeRows(plan.exercise_plan) })
+  const rows = normalizeRows(plan.exercise_plan)
+  const system = contentSystem(req, { ...plan, exercise_plan: rows })
 
   const userMsg = [
     'Заявка:',
@@ -126,16 +101,10 @@ export async function generateMaterialContent(
     feedback ? `\nПравки преподавателя: ${feedback}` : '',
   ].join('\n')
 
-  const raw = await chat([{ role: 'user', content: userMsg }], { system, task: genTask(req), json: true })
-  const content = parseJson<MaterialContent>(raw)
-
-  // Валидация: выбрасываем битые упражнения, требуем минимум приличный набор.
-  const irregular = await loadIrregular(req.lang).catch(() => undefined) // к нашему виду (Ф2.25): normalizeExercises
-  const valid = validExercises(normalizeExercises(content.exercises ?? [], { body: content.body ?? '', lang: req.lang, level: req.level, irregular }))
-  if (!content.title || !content.body || valid.length < 3) {
-    throw new Error('AI вернул неполный материал. Нажми «Генерировать» ещё раз.')
-  }
-  return { title: content.title, body: content.body, exercises: valid }
+  const raw = await chat([{ role: 'user', content: userMsg }], { system, task: genTask(req), json: contentSchema(req.lang, req.level, rows) })
+  // битые упражнения выбрасывает readContent; неправильные формы — для «слово из текста» (Ф2.25)
+  const irregular = await loadIrregular(req.lang).catch(() => undefined)
+  return readContent(raw, { lang: req.lang, level: req.level, irregular })
 }
 
 /** Первая строка/предложение текста — запасной заголовок для «Мой текст». */
@@ -164,14 +133,9 @@ export async function generateExercisesForText(
     .join('\n')
 
   // «Свой текст» — путь преподавателя, задача material (в 3b не входит).
-  const raw = await chat([{ role: 'user', content: userMsg }], { system, task: 'material', json: true })
-  const content = parseJson<{ title?: string; exercises?: MaterialExercise[] }>(raw)
-  const valid = validExercises(normalizeExercises(content.exercises ?? [], { body, lang, level, irregular: await loadIrregular(lang).catch(() => undefined) }))
-  if (valid.length < 3) {
-    throw new Error('AI не собрал упражнения по тексту. Попробуй ещё раз.')
-  }
-  const title = (typeof content.title === 'string' && content.title.trim()) || firstLine(body)
-  return { title, body, exercises: valid }
+  const raw = await chat([{ role: 'user', content: userMsg }], { system, task: 'material', json: ownTextSchema(lang, level, opts?.rows) })
+  const content = readOwnText(raw, { body, lang, level, irregular: await loadIrregular(lang).catch(() => undefined) })
+  return { title: content.title || firstLine(body), body, exercises: content.exercises }
 }
 
 /** Синтетическая заявка для сохранения «своего текста» (saveMaterial ждёт req+plan). */

@@ -4,13 +4,15 @@
  *     варианта есть в каждом промпте, где AI пишет или правит испанский;
  *   • режим JSON (журнал п.77, api/_geminiBody.ts): там, где ответ
  *     разбирается как JSON, вызов просит `json: true` — модель не теряет
- *     скобок, и человек не получает «AI вернул не-JSON» за списанную энергию.
+ *     скобок, и человек не получает «AI вернул не-JSON» за списанную энергию;
+ *     письмо и материалы — схему ответа (`json: …Schema(…)`, Ф2.20-3): режим
+ *     без схемы у слабой модели всё равно ломался.
  *
  * Держит:
  *   1. каждый файл с вызовом AI (`chat(` / `chatStream(` / `chatReply(`) — в
  *      списке ниже; новый файл без решения — красный;
  *   2. промпт берёт `variantRule` (или записана причина, почему не нужно);
- *   3. число вызовов с `json: true` в файле — как записано; где AI пишет
+ *   3. число вызовов с JSON в файле и из них со схемой — как записано; где AI пишет
  *      человеку по-русски — правило «ты» (журнал п.71);
  *   4. у промптов материала правило есть у испанского и нет у английского;
  *      разбор работ не прощает опечатку (журнал п.74);
@@ -28,14 +30,16 @@ const ROOT = new URL('../', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, 
 
 /**
  * Файл с вызовом AI → где его промпт (берёт variantRule) или почему правило
- * не нужно; `json` — сколько вызовов в файле разбирают ответ как JSON;
+ * не нужно; `json` — сколько вызовов в файле разбирают ответ как JSON,
+ * `schema` — сколько из них шлют схему ответа;
  * `ty` — AI пишет человеку по-русски: промпт обращается на «ты»
  * (ADDRESS_RULE или своя строка про «ты», как в Диалоге).
  */
 const CALLS = {
-  'src/lib/materials.ts': { prompt: 'src/lib/materialPrompts.ts', json: 4, ty: true },
-  'src/domains/materials/api.ts': { prompt: 'src/lib/materialPrompts.ts', json: 1, ty: true },
-  'src/lib/writingGrade.ts': { prompt: 'src/lib/writingGrade.ts', json: 2, ty: true },
+  // план, текст, «Мой текст» — по схеме (domains/materials/schema.ts), AI-разбор работы — режим JSON
+  'src/lib/materials.ts': { prompt: 'src/lib/materialPrompts.ts', json: 4, schema: 3, ty: true },
+  'src/domains/materials/api.ts': { prompt: 'src/lib/materialPrompts.ts', json: 1, schema: 1, ty: true },
+  'src/lib/writingGrade.ts': { prompt: 'src/lib/writingGrade.ts', json: 2, schema: 2, ty: true },
   'src/lib/studyPlan.ts': { prompt: 'src/lib/studyPlan.ts', json: 1, ty: true },
   'src/lib/explain.ts': { prompt: 'src/lib/explain.ts', json: 0, ty: true },
   'src/features/conversation/ConversationPage.tsx': { prompt: 'src/features/conversation/ConversationPage.tsx', json: 0, ty: true },
@@ -83,6 +87,8 @@ for (const [file, d] of Object.entries(CALLS)) {
   // `json: true` — режим JSON, `json: ieltsSchema(…)` — схема ответа
   const n = (src(file).match(/\bjson: (true\b|\w+Schema\()/g) ?? []).length
   check(`${file}: вызовов с json — ${d.json}`, n === d.json, `найдено ${n}`)
+  const sch = (src(file).match(/\bjson: \w+Schema\(/g) ?? []).length
+  check(`${file}: из них со схемой ответа — ${d.schema ?? 0}`, sch === (d.schema ?? 0), `найдено ${sch}`)
 }
 
 // 4. промпты материала: у испанского правило есть, у английского — нет
