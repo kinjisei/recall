@@ -6,12 +6,12 @@ let body = ''
 const names = []
 for (const f of files) {
   const svg = readFileSync(`${dir}/${f}`, 'utf8').trim()
-  const sw = (svg.match(/stroke-width="([^"]+)"/) || [,'1.75'])[1]
-  const inner = (svg.match(/<svg[^>]*>([\s\S]*)<\/svg>/) || [,''])[1].trim()
+  const sw = svg.match(/stroke-width="([^"]+)"/)?.[1] ?? '1.75'
+  const inner = (svg.match(/<svg[^>]*>([\s\S]*)<\/svg>/)?.[1] ?? '').trim()
   const name = pascal(f.replace('.svg',''))
   names.push(name)
   const swArg = sw === '1.75' ? '' : `, '${sw}'`
-  body += `export const ${name} = icon(\n  '${inner.replace(/'/g, "\'")}'${swArg},\n)\n`
+  body += `export const ${name} = icon(\n  '${inner.replace(/'/g, "\\'")}'${swArg},\n)\n`
 }
 const header = `// ============================================================================
 // Фирменный icon-набор Recall (${files.length} шт.), сгенерирован из handoff/icons/*.svg

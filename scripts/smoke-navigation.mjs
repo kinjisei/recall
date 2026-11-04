@@ -116,7 +116,7 @@ const onHome = async (page) => {
 }
 
 async function main() {
-  let userId = null
+  let userId
   await admin.from('allowed_emails').upsert({ email: EMAIL, note: 'nav-smoke (временный)' })
   const { data: cu, error: cuErr } = await admin.auth.admin.createUser({
     email: EMAIL,

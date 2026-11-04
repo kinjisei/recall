@@ -6,7 +6,6 @@
  */
 import { createClient } from '@supabase/supabase-js'
 import { spawn } from 'node:child_process'
-import { tmpdir } from 'node:os'
 import puppeteer from 'puppeteer-core'
 import { profileDir } from './_profile.mjs'
 import { APP_URL, scriptEnv } from './_env.mjs'
@@ -72,7 +71,9 @@ try {
       try {
         localStorage.setItem('recall.onboarded', '1')
         localStorage.setItem('recall.lang', 'en')
-      } catch {}
+      } catch {
+        // на about:blank localStorage закрыт — там он и не нужен
+      }
     })
 
     // вход

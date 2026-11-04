@@ -92,7 +92,9 @@ try {
   await page.evaluateOnNewDocument(() => {
     try {
       localStorage.setItem('recall.onboarded', '1')
-    } catch {}
+    } catch {
+      // на about:blank localStorage закрыт — там он и не нужен
+    }
   })
 
   // вход преподавателем
@@ -404,7 +406,9 @@ try {
   await page.evaluateOnNewDocument(() => {
     try {
       localStorage.setItem('recall.onboarded', '1')
-    } catch {}
+    } catch {
+      // на about:blank localStorage закрыт — там он и не нужен
+    }
   })
   await page.goto(`${BASE}/login`, { waitUntil: 'networkidle2', timeout: 30000 })
   await tap(page, 'Войти')

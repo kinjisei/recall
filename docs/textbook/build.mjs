@@ -84,13 +84,13 @@ function mdToHtml(md, chFile) {
   };
 
   // Разбить строку таблицы на ячейки. Защищаем «|» внутри глоссария [[id|текст]]
-  // (иначе он рвал бы ячейку) сентинелом  на время split.
+  // (иначе он рвал бы ячейку) сентинелом \u0001 на время split.
   const cells = (row) =>
     row
-      .replace(/\[\[([^\]|]*)\|([^\]]*)\]\]/g, '[[$1$2]]')
+      .replace(/\[\[([^\]|]*)\|([^\]]*)\]\]/g, '[[$1\u0001$2]]')
       .replace(/^\||\|$/g, '')
       .split('|')
-      .map((c) => c.trim().replace(//g, '|'));
+      .map((c) => c.trim().replaceAll('\u0001', '|'));
 
   for (let li = 0; li < lines.length; li++) {
     const line = lines[li].trimEnd();

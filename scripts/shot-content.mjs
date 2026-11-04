@@ -4,7 +4,6 @@
  */
 import { createClient } from '@supabase/supabase-js'
 import { spawn } from 'node:child_process'
-import { tmpdir } from 'node:os'
 import puppeteer from 'puppeteer-core'
 import { profileDir } from './_profile.mjs'
 import { APP_URL, scriptEnv } from './_env.mjs'
@@ -47,7 +46,7 @@ try {
   const page = await browser.newPage()
   await page.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true })
   await page.evaluateOnNewDocument(() => {
-    try { localStorage.setItem('recall.onboarded', '1'); localStorage.setItem('recall.lang', 'en') } catch {}
+    try { localStorage.setItem('recall.onboarded', '1'); localStorage.setItem('recall.lang', 'en') } catch { /* на about:blank localStorage закрыт — там он и не нужен */ }
   })
 
   await page.goto(BASE + '/login', { waitUntil: 'networkidle2' })
@@ -107,5 +106,5 @@ try {
   console.log('скриншоты готовы')
 } finally {
   if (userId) await admin.auth.admin.deleteUser(userId).catch(() => {})
-  try { await admin.from('allowed_emails').delete().eq('email', EMAIL) } catch {}
+  try { await admin.from('allowed_emails').delete().eq('email', EMAIL) } catch { /* уборка: сбой здесь не должен ронять отчёт */ }
 }

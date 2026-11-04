@@ -11,7 +11,6 @@
  */
 import { createClient } from '@supabase/supabase-js'
 import { spawn } from 'node:child_process'
-import { tmpdir } from 'node:os'
 import puppeteer from 'puppeteer-core'
 import { profileDir } from './_profile.mjs'
 import { APP_URL, scriptEnv } from './_env.mjs'
@@ -85,7 +84,9 @@ async function run(browser, lang) {
         try {
           localStorage.setItem('recall.lang', l)
           localStorage.setItem(`sb-${ref}-auth-token`, JSON.stringify(sess))
-        } catch {}
+        } catch {
+          // на about:blank localStorage закрыт — там он и не нужен
+        }
       },
       lang,
       REF,

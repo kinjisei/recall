@@ -135,7 +135,9 @@ try {
     await page.evaluateOnNewDocument(() => {
       try {
         localStorage.setItem('recall.onboarded', '1')
-      } catch {}
+      } catch {
+        // на about:blank localStorage закрыт — там он и не нужен
+      }
     })
 
     // вход учителем

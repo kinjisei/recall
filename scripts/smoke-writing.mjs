@@ -136,7 +136,7 @@ try {
   console.log('ОШИБКА:', String(e).slice(0, 200)); fail++
 } finally {
   for (const id of Object.values(ids)) if (id) await admin.auth.admin.deleteUser(id).catch(() => {})
-  for (const e of [T.email, S.email, O.email]) { try { await admin.from('allowed_emails').delete().eq('email', e) } catch {} }
+  for (const e of [T.email, S.email, O.email]) { try { await admin.from('allowed_emails').delete().eq('email', e) } catch { /* уборка: сбой здесь не должен ронять отчёт */ } }
 }
 console.log(`\n${pass}/${pass + fail} ок`)
 process.exit(fail ? 1 : 0)

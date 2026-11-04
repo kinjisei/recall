@@ -144,6 +144,6 @@ export async function analyzeText(
   const levelStr = range.level ? (range.note ? `${range.level}, ${range.note}` : range.level) : ''
 
   const syn = await synthesize(range.level, items, lang).catch(() => ({ why: '', takeaway: '' }))
-  onProgress?.(++done, total)
+  onProgress?.(done + 1, total)
   return { level: levelStr, why: syn.why, takeaway: syn.takeaway, items }
 }

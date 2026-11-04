@@ -11,7 +11,6 @@
  */
 import { createClient } from '@supabase/supabase-js'
 import { spawn } from 'node:child_process'
-import { tmpdir } from 'node:os'
 import puppeteer from 'puppeteer-core'
 import { profileDir } from './_profile.mjs'
 import { APP_URL, scriptEnv } from './_env.mjs'
@@ -93,7 +92,7 @@ async function clickByText(page, selector, text) {
 }
 
 async function main() {
-  let userId = null
+  let userId
   // тестовый аккаунт
   await admin.from('allowed_emails').upsert({ email: EMAIL, note: 'ux-smoke (временный)' })
   const { data: cu, error: cuErr } = await admin.auth.admin.createUser({
@@ -133,7 +132,9 @@ async function main() {
       try {
         localStorage.setItem('recall.onboarded', '1')
         localStorage.setItem('recall.deck_tutorial_seen', '1')
-      } catch {}
+      } catch {
+        // на about:blank localStorage закрыт — там он и не нужен
+      }
     })
 
     // логин

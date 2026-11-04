@@ -5,7 +5,6 @@
  */
 import { createClient } from '@supabase/supabase-js'
 import { spawn } from 'node:child_process'
-import { tmpdir } from 'node:os'
 import puppeteer from 'puppeteer-core'
 import { profileDir } from './_profile.mjs'
 import { APP_URL, scriptEnv } from './_env.mjs'
@@ -14,7 +13,6 @@ const EDGE = 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'
 const BASE = process.env.AUDIT_BASE_URL || APP_URL
 const EMAIL = 'markwords-smoke@recall.test'
 const PASSWORD = 'MyTexts!2026'
-const PDF = 'C:/Users/77762/AppData/Local/Temp/claude/d--projects-recall-app/184b1f89-6960-471c-8fae-2cfaf0a9097b/scratchpad/test-text.pdf'
 
 const env = scriptEnv()
 const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SECRET_KEY, {
@@ -61,7 +59,9 @@ try {
       try {
         localStorage.setItem('recall.onboarded', '1')
         localStorage.setItem('recall.lang', 'en')
-      } catch {}
+      } catch {
+        // на about:blank localStorage закрыт — там он и не нужен
+      }
     })
 
     await page.goto(BASE + '/login', { waitUntil: 'networkidle2', timeout: 30000 })
@@ -185,7 +185,9 @@ try {
   if (userId) await admin.auth.admin.deleteUser(userId).catch(() => {})
   try {
     await admin.from('allowed_emails').delete().eq('email', EMAIL)
-  } catch {}
+  } catch {
+    // уборка: сбой здесь не должен ронять отчёт
+  }
   console.log('Тестовый аккаунт удалён.')
 }
 

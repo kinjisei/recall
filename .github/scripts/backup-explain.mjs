@@ -209,7 +209,7 @@ export function buildSummary({ stderr, code, stage = 'dump', secrets = [] }) {
 const isMain = !!process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])
 if (isMain) {
   const [, , file, code = '1', stage = 'dump'] = process.argv
-  let stderr = ''
+  let stderr
   try {
     stderr = readFileSync(file, 'utf8')
   } catch {
