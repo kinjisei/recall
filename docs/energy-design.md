@@ -238,8 +238,8 @@ A2) — 1.30–1.94 ₸ = 2.2–3.2 ⚡, длинная (401 слово) — 2.0
 **Не замерено на живой модели:** точный вход (`promptTokenCount`), размышления
 (`thoughtsTokenCount`) и обрезка длинной работы (`finishReason`) — по одному
 запросу на работу тестовым ключом на 3.6-flash и 3.5-flash-lite; сервер
-`usageMetadata` не сохраняет, скрипт — в описании PR ветки
-`cloud/f220-4-writing-cost`.
+`usageMetadata` не сохраняет, скрипт замера — в описании PR
+https://github.com/kinjisei/recall/pull/3 (п.4).
 
 ---
 
