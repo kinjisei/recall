@@ -14,7 +14,10 @@
  *
  * Запуск: node scripts/test-essay-marks.mjs
  */
-import { essayParagraphs, locateFixes, wordCount } from '../src/features/writing/essayMarks.ts'
+// поиск цитат живёт в domains/writing (импорт папки): загрузчик проверок AI его понимает
+import './ai-quality/loader.mjs'
+
+const { essayParagraphs, locateFixes, wordCount } = await import('../src/features/writing/essayMarks.ts')
 
 let pass = 0
 let fail = 0

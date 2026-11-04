@@ -140,6 +140,8 @@ export async function callGemini(
   time: ChainTime = chainTime(TIMEOUTS, tier),
   /** Журнал попыток (api/_usage.ts): каждая модель и каждый повтор. */
   trace?: Attempt[],
+  /** Клиент разбирает ответ как JSON: режим JSON или схема ответа (см. geminiBody). */
+  json: boolean | Record<string, unknown> = false,
 ): Promise<string> {
   const { systemText, contents } = splitMessages(messages, system)
 
@@ -160,7 +162,7 @@ export async function callGemini(
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-            body: geminiBody(m, systemText, contents, tier),
+            body: geminiBody(m, systemText, contents, tier, json),
           },
           ms,
           async (r) => ({ ok: r.ok, status: r.status, text: await r.text() }),

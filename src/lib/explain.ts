@@ -5,6 +5,7 @@
 // ============================================================================
 import { chat } from '../shared/api/ai'
 import type { AppLang } from '../types'
+import { ADDRESS_RULE, variantRule } from './promptRules'
 
 const cache = new Map<string, string>()
 
@@ -26,6 +27,8 @@ export async function explainMistake(
     '— Устойчивое выражение или фразовый глагол: НЕ разбирай слова по отдельности буквально — скажи, что это устойчивая фраза и что она целиком значит.',
     '— Грамматика: назови простое правило, из-за которого нужен верный вариант.',
     'НЕ пересказывай задание и НЕ пиши «верно, потому что верно». Дай именно причину. Без лингвистических терминов, без кавычек.',
+    ADDRESS_RULE,
+    variantRule(lang),
   ].join(' ')
   const user = `Вопрос: «${prompt}»\nОтвет ученика: «${given}»\nВерный ответ: «${correct}»`
   const raw = await chat([{ role: 'user', content: user }], { system, task: 'word' })

@@ -43,6 +43,7 @@ import {
   type TextCandidate,
 } from './homeworkRules'
 import type { AppLang } from '../types'
+import { ADDRESS_RULE } from './promptRules'
 
 export type { SuggestFacts, SuggestedItem } from './homeworkRules'
 
@@ -227,6 +228,7 @@ export function suggestPrompt(
     `3. Числа из заголовков НЕ меняй: они посчитаны по правилам (не больше 10 новых слов в день, ${sessions} коротких захода за срок).`,
     '4. Пункты с пометкой «на выбор» — равноценные альтернативы, ученик сделает ОДИН. Не превращай их в «сначала одно, потом другое».',
     '5. В заметке НЕ пересказывай диагностику: ученик не должен читать про свои слабые места.',
+    ADDRESS_RULE,
   ].join('\n')
 
   const user = [
@@ -275,7 +277,7 @@ export async function suggestHomework(
   const { system, user } = suggestPrompt(facts, baseline, brief)
   let raw: string
   try {
-    raw = await chat([{ role: 'user', content: user }], { system, task: 'homework' })
+    raw = await chat([{ role: 'user', content: user }], { system, task: 'homework', json: true })
   } catch {
     return { items: baseline, note: fallbackNote, facts, fromAi: false }
   }

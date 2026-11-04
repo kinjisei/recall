@@ -53,6 +53,7 @@ export async function swapExercise(input: SwapInput): Promise<{ result: SwapResu
   const reply = await chatReply([{ role: 'user', content: user }], {
     system,
     task: 'exercise_swap',
+    json: true,
     swap: { format: input.format, tricky: input.tricky === true },
   })
   const irregular = await loadIrregular(input.lang).catch(() => undefined)

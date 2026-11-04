@@ -15,6 +15,7 @@ import { almatyToday } from '../shared/lib/almaty'
 import { daysBetween } from '../shared/lib/days'
 import { readRaw, writeRaw } from '../shared/lib/storage'
 import type { AppLang, PlanItem, PlanWeek, StudyPlan } from '../types'
+import { ADDRESS_RULE, variantRule } from './promptRules'
 
 // Флаг «ученик открывал программу» — карточка «Тебе назначили программу» на
 // Главной гаснет после захода на /program. Ключ был продублирован в двух
@@ -130,6 +131,8 @@ export async function generateStudyPlan(
     '',
     `Каталог уроков грамматики (id · уровень · название), ${langName}:`,
     catalog,
+    ADDRESS_RULE,
+    variantRule(req.lang),
   ].join('\n')
 
   const userMsg = [
@@ -140,7 +143,7 @@ export async function generateStudyPlan(
     feedback ? `\nПравки преподавателя к прошлой версии программы: ${feedback}` : '',
   ].join('\n')
 
-  const raw = await chat([{ role: 'user', content: userMsg }], { system, task: 'program' })
+  const raw = await chat([{ role: 'user', content: userMsg }], { system, task: 'program', json: true })
   const parsed = parseJson<GeneratedPlan>(raw)
   if (!Array.isArray(parsed.weeks)) throw new Error('AI вернул неполную программу. Попробуй ещё раз.')
   return {

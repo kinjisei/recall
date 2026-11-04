@@ -99,7 +99,13 @@ export const FAKE = {
 
   'en-b1-work': [
     json({
-      level: 'B1',
+      // лист CEFR (журнал п.77): уровень считает код — вторая снизу сторона текста
+      aspects: {
+        task: { level: 'B1', fits: 'Все пункты задания раскрыты связным текстом', next: { need: 'Подкрепи мнение примером: что именно нравится и почему', was: '', fix: '' } },
+        range: { level: 'B1', fits: 'Хватает слов о работе', next: { need: 'Бери точные слова вместо общих: вместо «prepare documents» можно «draw up documents»', was: '', fix: '' } },
+        accuracy: { level: 'A2', fits: 'Повторяются ошибки в предлогах', next: { need: 'Предлоги после глаголов и прилагательных: interested in, depend on', was: 'interested on', fix: 'interested in' } },
+        coherence: { level: 'B1', fits: 'Мысли идут по порядку', next: { need: 'Связывай абзацы: However, Also', was: '', fix: '' } },
+      },
       targetWords: [
         { w: 'deadline', used: true },
         { w: 'colleague', used: true },
@@ -137,8 +143,14 @@ export const FAKE = {
 
   'ielts-t2-55': [
     json({
-      band: 5.5,
-      criteria: { task: 6, coherence: 6, lexis: 5, grammar: 5 },
+      // лист экзаменатора (журнал п.77): итог 5,5 считает код из 6/6/5/5
+      criteria: {
+        task: { band: 6, fits: 'Обе точки зрения и своё мнение есть', next: { need: 'Раскрой каждую идею примером', was: '', fix: '' } },
+        coherence: { band: 6, fits: 'Абзацы и связки есть, местами механически', next: { need: 'Связывай мысли внутри абзаца, а не только началом абзаца', was: '', fix: '' } },
+        lexis: { band: 5, fits: 'Ошибки в формах слов заметны', next: { need: 'Неисчисляемые и степени сравнения: information, easier', was: 'wrong informations', fix: 'wrong information' } },
+        grammar: { band: 5, fits: 'Частые ошибки в артиклях и согласовании', next: { need: 'Артикли перед исчисляемыми в единственном числе', was: 'If child starts', fix: 'If a child starts' } },
+      },
+      limits: [],
       focus: [
         {
           type: 'Артикли перед исчисляемыми существительными',

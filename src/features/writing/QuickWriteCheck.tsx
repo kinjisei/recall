@@ -21,6 +21,7 @@ import { chat } from '../../shared/api/ai'
 import { supabase } from '../../shared/api/supabase'
 import { logActivity } from '../../lib/activity'
 import type { AppLang, CEFRLevel } from '../../types'
+import { ADDRESS_RULE, variantRule } from '../../lib/promptRules'
 import { ErrorText } from '../../shared/ui/ErrorText'
 
 function writingSystemPrompt(level: CEFRLevel, lang: AppLang): string {
@@ -54,6 +55,8 @@ function writingSystemPrompt(level: CEFRLevel, lang: AppLang): string {
     '',
     'ОЦЕНКА',
     `одной строкой, например: «уверенный ${level}».`,
+    ADDRESS_RULE,
+    variantRule(lang),
   ].join('\n')
 }
 

@@ -257,6 +257,7 @@ export async function generateChartTask(
   const raw = await chat([{ role: 'user', content: 'Сгенерируй задание с данными.' }], {
     system,
     task: 'material',
+    json: true,
   })
   const s = raw.indexOf('{')
   const e = raw.lastIndexOf('}')

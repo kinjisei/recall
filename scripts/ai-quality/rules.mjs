@@ -286,6 +286,7 @@ export function reviewRules(ex, out) {
   rows.push(row('Р4', unexplained.length === 0, `у неверного нет правильного ответа: ${unexplained.join(', ')}`))
   const latin = out.review.filter((r) => r.comment && !CYR.test(r.comment))
   rows.push(row('О2', latin.length === 0, `комментарий не по-русски: ${list(latin.map((r) => r.comment))}`))
+  rows.push(tyRow(out.review.map((r) => r.comment)))
   return rows
 }
 
@@ -312,6 +313,27 @@ const overlaps = (a, b) => {
 }
 
 /** Разбор письма. `out` = { grade, raw } — grade после `parseGrade` приложения. */
+/** «Напишите», «Используйте», «Постарайтесь» — к человеку на «вы». */
+const VY = /(^|[^а-яё])(напиш|добав|использу|обрат|попроб|избега|провер|замен|перепиш|раскро|убер|пиш|след|сдела|повтор|постара|учит|запомн|выуч|подумай|разде|соедин|раздел)[а-яё]*(ите|йте)(сь)?(?![а-яё])/i
+
+/** О6: по-русски к человеку — на «ты», как всё приложение (журнал п.71, lib/promptRules). */
+export function tyRow(texts) {
+  const bad = texts.filter((s) => typeof s === 'string' && VY.test(s))
+  return row('О6', bad.length === 0, `на «вы»: ${list(bad.slice(0, 3))}`)
+}
+
+/** П6: балл IELTS в коридоре эталона и согласован с четырьмя критериями (±0,5). */
+export function bandRow(corridor, grade) {
+  const c = grade.criteria ?? {}
+  const mean = (c.task + c.coherence + c.lexis + c.grammar) / 4
+  const inBand = typeof grade.band === 'number' && grade.band >= corridor[0] && grade.band <= corridor[1]
+  return row(
+    'П6',
+    inBand && Math.abs(grade.band - mean) <= 0.5,
+    `балл ${grade.band}, эталон ${corridor.join('–')}; критерии ${[c.task, c.coherence, c.lexis, c.grammar].join('/')} (среднее ${mean})`,
+  )
+}
+
 export function writingRules(ex, out) {
   const { grade } = out
   const e = ex.expect
@@ -338,18 +360,7 @@ export function writingRules(ex, out) {
   }
   const rawFocus = Array.isArray(out.raw?.focus) ? out.raw.focus.length : 0
   rows.push(row('П5', rawFocus >= 1 && rawFocus <= 3 && (grade.focus ?? []).length >= 1, `типов в фокусе: ${rawFocus} (нужно 1–3)`))
-  if (e.band) {
-    const c = grade.criteria ?? {}
-    const mean = (c.task + c.coherence + c.lexis + c.grammar) / 4
-    const inBand = typeof grade.band === 'number' && grade.band >= e.band[0] && grade.band <= e.band[1]
-    rows.push(
-      row(
-        'П6',
-        inBand && Math.abs(grade.band - mean) <= 0.5,
-        `балл ${grade.band}, эталон ${e.band.join('–')}; критерии ${[c.task, c.coherence, c.lexis, c.grammar].join('/')} (среднее ${mean})`,
-      ),
-    )
-  }
+  if (e.band) rows.push(bandRow(e.band, grade))
   if (e.taskMax !== undefined) rows.push(row('П7', (grade.criteria?.task ?? 9) <= e.taskMax, `Task Achievement ${grade.criteria?.task} при неверных данных, потолок ${e.taskMax}`))
   if (e.words || e.level) {
     const bad = []
@@ -364,6 +375,7 @@ export function writingRules(ex, out) {
   }
   const ru = [...(grade.focus ?? []).map((f) => f.why), ...(grade.strengths ?? []), ...(grade.improve ?? [])].filter((s) => !CYR.test(s))
   rows.push(row('О2', ru.length === 0, `пояснение не по-русски: ${list(ru)}`))
+  rows.push(tyRow([...(grade.focus ?? []).flatMap((f) => [f.type, f.why]), ...(grade.strengths ?? []), ...(grade.improve ?? [])]))
   return rows
 }
 
@@ -420,5 +432,6 @@ export function programRules(ex, out, catalog) {
   }
   const notes = (out.plan.weeks ?? []).flatMap((w) => w.items.map((it) => it.note)).filter((n) => !CYR.test(n))
   rows.push(row('О2', CYR.test(out.plan.summary) && notes.length === 0, `не по-русски: ${list([CYR.test(out.plan.summary) ? '' : 'summary', ...notes].filter(Boolean))}`))
+  rows.push(tyRow([out.plan.summary, ...(out.plan.weeks ?? []).flatMap((w) => w.items.flatMap((it) => [it.title, it.note]))]))
   return rows
 }

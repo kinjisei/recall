@@ -12,7 +12,7 @@ import { correctAnswerText } from './text'
 import { normalizeExercises, validExercises } from './materialExercises'
 import { loadIrregular } from './wordForms'
 import { normalizeRows } from './exerciseFormats'
-import { REVIEW_SYSTEM, contentSystem, ownTextSystem, planSystem, requestDescription, type MaterialRequest } from './materialPrompts'
+import { contentSystem, ownTextSystem, planSystem, requestDescription, reviewSystem, type MaterialRequest } from './materialPrompts'
 import { aiVerdict } from './assignmentScore'
 import { groupBriefBlock } from './diagnosticsBrief'
 import { track } from './analytics'
@@ -87,7 +87,7 @@ export async function generateMaterialPlan(
   ].join('\n')
 
   const task = req.self ? 'self_material' : opts.replan ? 'material_replan' : 'material_plan'
-  const { text: raw, replan } = await chatReply([{ role: 'user', content: userMsg }], { system, task, replan: opts.replan })
+  const { text: raw, replan } = await chatReply([{ role: 'user', content: userMsg }], { system, task, json: true, replan: opts.replan })
   if (replan) opts.onReplan?.(replan)
   const plan = parseJson<MaterialPlan>(raw)
   if (!Array.isArray(plan.exercise_plan) || !Array.isArray(plan.vocabulary)) {
@@ -126,7 +126,7 @@ export async function generateMaterialContent(
     feedback ? `\nПравки преподавателя: ${feedback}` : '',
   ].join('\n')
 
-  const raw = await chat([{ role: 'user', content: userMsg }], { system, task: genTask(req) })
+  const raw = await chat([{ role: 'user', content: userMsg }], { system, task: genTask(req), json: true })
   const content = parseJson<MaterialContent>(raw)
 
   // Валидация: выбрасываем битые упражнения, требуем минимум приличный набор.
@@ -164,7 +164,7 @@ export async function generateExercisesForText(
     .join('\n')
 
   // «Свой текст» — путь преподавателя, задача material (в 3b не входит).
-  const raw = await chat([{ role: 'user', content: userMsg }], { system, task: 'material' })
+  const raw = await chat([{ role: 'user', content: userMsg }], { system, task: 'material', json: true })
   const content = parseJson<{ title?: string; exercises?: MaterialExercise[] }>(raw)
   const valid = validExercises(normalizeExercises(content.exercises ?? [], { body, lang, level, irregular: await loadIrregular(lang).catch(() => undefined) }))
   if (valid.length < 3) {
@@ -327,7 +327,7 @@ export async function generateAiReview(
     }
   })
 
-  const system = REVIEW_SYSTEM
+  const system = reviewSystem(material.lang)
 
   const userMsg = [
     'Текст материала:',
@@ -338,7 +338,7 @@ export async function generateAiReview(
   ].join('\n')
 
   // разбор работы — не «мелочь», но и не генерация: средний уровень
-  const raw = await chat([{ role: 'user', content: userMsg }], { system, task: 'review' })
+  const raw = await chat([{ role: 'user', content: userMsg }], { system, task: 'review', json: true })
   const parsed = parseJson<{ items: ReviewItem[] }>(raw)
   if (!Array.isArray(parsed.items)) throw new Error('AI вернул неполный разбор.')
   // страховка: вердикт на каждое упражнение (чего нет — авто), у пар AI только добавляет зачёт

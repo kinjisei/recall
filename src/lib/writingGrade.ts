@@ -1,31 +1,59 @@
 // ============================================================================
 // Описание: src/features/writing/CLAUDE.md
-// AI-оценка письма (Заход 5b): структурный JSON (для показа ученику и по-строчной
-// проверки учителем в 5c). Два режима — IELTS (band + 4 критерия) и обычный
-// (уровень + чек-листы целевых слов/грамматики). Оба: список ошибок (было→стало),
-// сильные стороны, что подтянуть, 1-2 rewrites. task 'writing' (heavy).
+// AI-оценка письма: «свой экзаменатор» (журнал п.77). Модель заполняет лист
+// экзаменатора по официальной шкале — IELTS (4 критерия) или CEFR (4 стороны
+// текста) — с цитатами; балл, потолки и порядок советов считает домен
+// `domains/writing` (examiner.ts). Оба режима: список ошибок (было → стало),
+// сильные стороны, повторяющиеся ошибки, 1–2 переписанных фразы.
+// task 'writing' (heavy).
 // ============================================================================
 import { chat } from '../shared/api/ai'
+import {
+  ASPECTS,
+  cefrLevel,
+  cefrScale,
+  cefrSchema,
+  CRITERIA,
+  ieltsScale,
+  ieltsSchema,
+  MIN_WORDS,
+  modelLimits,
+  paragraphCount,
+  scoreCefr,
+  scoreIelts,
+  textFacts,
+  wordCount,
+  type AspectKey,
+  type CefrMark,
+  type CritKey,
+  type FocusItem,
+  type IeltsKind,
+  type IeltsMark,
+  type NextStep,
+} from '../domains/writing'
 import type { AppLang, WritingGrade, WritingTask } from '../types'
 import { CORRECTION_RULES } from './correctionRules'
+import { ADDRESS_RULE, variantRule } from './promptRules'
 
 /**
- * Сколько типов ошибок выносим в фокус.
+ * Сколько пунктов в фокусе.
  *
  * ⚠️ Направленная правка работает лучше сплошной: список из двадцати пометок
  * не говорит, за что взяться, и вдобавок учит писать проще — безопаснее не
  * рисковать сложной конструкцией, чем получить очередную россыпь красного.
- * Три — потолок: больше уже неотличимо от «исправь всё».
+ * Три — потолок: больше уже неотличимо от «исправь всё». Первыми — то, что
+ * сильнее поднимет балл (журнал п.77), потом повторяющиеся ошибки.
  */
 export const MAX_FOCUS = 3
+/** «Что подтянуть» у учителя (d7-3) — тот же порядок, длиннее. */
+const MAX_IMPROVE = 6
 
-/** Одна и та же инструкция про фокус для обоих режимов — чтобы не разошлись. */
+/** Одна и та же инструкция про повторяющиеся ошибки для обоих режимов — чтобы не разошлись. */
 const FOCUS_RULE = [
-  `focus — САМОЕ ВАЖНОЕ в ответе: 2-3 ПОВТОРЯЮЩИХСЯ типа ошибок, над которыми ученику стоит работать в этот раз.`,
+  'focus — 1-3 ПОВТОРЯЮЩИХСЯ типа ошибок, над которыми ученику стоит работать.',
   'Тип — это закономерность («артикли перед исчисляемыми», «времена в придаточных»), а НЕ отдельная опечатка.',
-  'Бери только то, что встретилось НЕ МЕНЕЕ двух раз; если повторов нет — верни один-два самых мешающих понимаю типа.',
+  'Бери только то, что встретилось НЕ МЕНЕЕ двух раз; если повторов нет — верни один-два самых мешающих пониманию типа.',
   'why — одно предложение по-русски: чем это мешает читателю. examples — до трёх пар was/fix из текста ученика.',
-  'Остальные ошибки всё равно перечисли в errors — но фокус не раздувай: больше трёх типов не возвращай.',
 ].join('\n')
 
 /**
@@ -57,11 +85,25 @@ export function errorKind(type: string | undefined): ErrorKind | null {
 
 /** Одна инструкция про правки для обоих режимов — «почему» и виды не разойдутся. */
 const ERRORS_RULE = [
-  'errors — каждая правка: was — точная цитата из текста ученика (ровно как написано, чтобы её можно было найти в тексте), fix — исправление,',
+  'errors — КАЖДАЯ ошибка текста, даже мелкая: was — точная цитата из текста ученика (ровно как написано, чтобы её можно было найти в тексте), fix — исправление,',
   'type — grammar (грамматика, артикли, предлоги), coherence (связки и логика между предложениями: «On the other hand», «However»), vocab (слово или сочетание), spelling (орфография, пунктуация);',
   'why — 2-6 слов по-русски: правило или подсказка, а не пересказ правки («Предлог: at home», «Согласование: it — gives», «Устойчивая связка»).',
 ].join('\n')
 const ERRORS_SHAPE = '"errors":[{"was":"цитата из текста","fix":"исправление","type":"grammar|coherence|vocab|spelling","why":"почему, 2-6 слов"}],'
+const TAIL_SHAPE =
+  '"focus":[{"type":"тип повторяющейся ошибки","why":"чем мешает, по-русски","examples":[{"was":"цитата","fix":"как надо"}]}],' +
+  '"strengths":["сильная сторона"],"topics":["тема грамматики для повторения"],"words":["полезное слово"],' +
+  '"rewrites":[{"was":"слабое предложение","better":"улучшенный вариант"}]}'
+const MARK_SHAPE = '{"band":6,"fits":"почему эта ступень","next":{"need":"что нужно для следующей","was":"цитата","fix":"как переписать"}}'
+
+/** Как ставится ступень — одно правило на оба режима (правило самой шкалы IELTS). */
+const FIT_RULE = [
+  'КАК СТАВИТСЯ СТУПЕНЬ (правило официальной шкалы): по каждому критерию (в CEFR — по каждой стороне текста) — ВЫСШАЯ ступень, ВСЕМ признакам которой работа соответствует ПОЛНОСТЬЮ. Не хватает хотя бы одного признака — ступень ниже.',
+  'Не снижай за то, что описание этой ступени допускает (несколько ошибок, которые не мешают пониманию, у сильной работы — норма).',
+  'ПОРЯДОК: 1) выпиши все ошибки в errors; 2) по каждому критерию сравни работу со шкалой снизу вверх; 3) только потом ставь ступени.',
+  'fits — одно предложение по-русски: какой признак шкалы держит работу на этой ступени, с опорой на текст.',
+  'next — чего не хватает до следующей ступени: need — признак следующей ступени простыми словами по-русски и что сделать (1-2 предложения, для ученика); was — точная цитата из текста с ОШИБКОЙ или явно слабым местом, где это видно лучше всего (пусто, если признак про весь текст); fix — как переписать это место (пусто, если was пустое). Верную фразу в was не ставь — ученик увидит её зачёркнутой как ошибку: совет взять слово богаче пиши в need («вместо prepare можно draw up»). У высшей ступени next — null.',
+].join('\n')
 
 function asStr(v: unknown): string {
   return typeof v === 'string' ? v : ''
@@ -72,17 +114,29 @@ function asStrArr(v: unknown): string[] {
 function num(v: unknown): number | undefined {
   return typeof v === 'number' && isFinite(v) ? v : undefined
 }
+function obj(v: unknown): Record<string, unknown> {
+  return v && typeof v === 'object' ? (v as Record<string, unknown>) : {}
+}
+function nextStep(v: unknown): NextStep | null {
+  const n = obj(v)
+  const need = asStr(n.need).trim()
+  return need ? { need, was: asStr(n.was).trim(), fix: asStr(n.fix).trim() } : null
+}
+const INCOMPLETE = 'AI вернул неполную оценку. Попробуй ещё раз.'
 
-/** Санитайз ответа модели в WritingGrade (не доверяем форме). */
-function parseGrade(raw: string, mode: 'ielts' | 'regular'): WritingGrade {
+/** JSON из ответа модели — от первой «{» до последней «}». */
+function readJson(raw: string): Record<string, unknown> {
   const s = raw.indexOf('{')
   const e = raw.lastIndexOf('}')
   if (s === -1 || e <= s) throw new Error('AI вернул не-JSON. Попробуй ещё раз.')
-  const o = JSON.parse(raw.slice(s, e + 1)) as Record<string, unknown>
+  return JSON.parse(raw.slice(s, e + 1)) as Record<string, unknown>
+}
 
+/** Общая часть разбора: правки, переписанные фразы, повторяющиеся ошибки (не доверяем форме). */
+function readCommon(o: Record<string, unknown>) {
   const errors = (Array.isArray(o.errors) ? o.errors : [])
     .map((x) => {
-      const it = (x ?? {}) as Record<string, unknown>
+      const it = obj(x)
       return {
         was: asStr(it.was),
         fix: asStr(it.fix),
@@ -93,69 +147,91 @@ function parseGrade(raw: string, mode: 'ielts' | 'regular'): WritingGrade {
     .filter((x) => x.was && x.fix)
     .slice(0, 30)
   const rewrites = (Array.isArray(o.rewrites) ? o.rewrites : [])
-    .map((x) => {
-      const it = (x ?? {}) as Record<string, unknown>
-      return { was: asStr(it.was), better: asStr(it.better) }
-    })
+    .map((x) => ({ was: asStr(obj(x).was), better: asStr(obj(x).better) }))
     .filter((x) => x.was && x.better)
     .slice(0, 3)
-
-  // ⚠️ Не больше трёх фокусов и не больше трёх примеров в каждом. Модель охотно
-  // вернёт «восемь главных проблем» — а это снова сплошная разметка, только с
-  // заголовками: чинить всё сразу человек не станет.
-  const focus = (Array.isArray(o.focus) ? o.focus : [])
+  // ⚠️ Не больше трёх типов и трёх примеров в каждом: «восемь главных проблем» —
+  // снова сплошная разметка, только с заголовками.
+  const recurring: FocusItem[] = (Array.isArray(o.focus) ? o.focus : [])
     .map((x) => {
-      const it = (x ?? {}) as Record<string, unknown>
+      const it = obj(x)
       return {
         type: asStr(it.type),
         why: asStr(it.why),
         examples: (Array.isArray(it.examples) ? it.examples : [])
-          .map((e) => {
-            const ex = (e ?? {}) as Record<string, unknown>
-            return { was: asStr(ex.was), fix: asStr(ex.fix) }
-          })
+          .map((e) => ({ was: asStr(obj(e).was), fix: asStr(obj(e).fix) }))
           .filter((e) => e.was && e.fix)
           .slice(0, 3),
       }
     })
     .filter((f) => f.type && f.examples.length > 0)
     .slice(0, MAX_FOCUS)
+  return { errors, rewrites, recurring }
+}
 
-  const grade: WritingGrade = {
+/** Советы по влиянию на балл, потом повторяющиеся ошибки: фокус ученику и «Что подтянуть» учителю. */
+function adviceFields(advice: FocusItem[], recurring: FocusItem[]): Pick<WritingGrade, 'focus' | 'improve'> {
+  const all = [...advice, ...recurring]
+  return {
+    focus: all.slice(0, MAX_FOCUS),
+    improve: all.slice(0, MAX_IMPROVE).map((f) => (f.why ? `${f.type} — ${f.why}` : f.type)),
+  }
+}
+
+/** Разбор листа экзаменатора IELTS → балл по нашим правилам. Экспорт — для проверок. */
+export function parseIelts(raw: string, essay: string, kind: IeltsKind): WritingGrade {
+  const o = readJson(raw)
+  const { errors, rewrites, recurring } = readCommon(o)
+  const c = obj(o.criteria)
+  const marks = {} as Record<CritKey, IeltsMark>
+  for (const { key } of CRITERIA) {
+    const m = c[key]
+    const band = typeof m === 'number' ? m : num(obj(m).band)
+    if (band === undefined) throw new Error(INCOMPLETE)
+    marks[key] = { band, next: nextStep(obj(m).next) }
+  }
+  const facts = textFacts(essay, errors.filter((e) => e.type === 'grammar').map((e) => e.was))
+  const r = scoreIelts(kind, marks, asStrArr(o.limits), facts)
+  return {
+    band: r.band,
+    criteria: r.criteria,
     errors,
     rewrites,
-    focus,
+    ...adviceFields(r.advice, recurring),
     strengths: asStrArr(o.strengths).slice(0, 6),
-    improve: asStrArr(o.improve).slice(0, 6),
     topics: asStrArr(o.topics).slice(0, 8),
     words: asStrArr(o.words).slice(0, 12),
   }
+}
 
-  if (mode === 'ielts') {
-    grade.band = num(o.band)
-    const c = (o.criteria ?? {}) as Record<string, unknown>
-    grade.criteria = {
-      task: num(c.task) ?? 0,
-      coherence: num(c.coherence) ?? 0,
-      lexis: num(c.lexis) ?? 0,
-      grammar: num(c.grammar) ?? 0,
-    }
-  } else {
-    grade.level = asStr(o.level)
-    grade.targetWords = (Array.isArray(o.targetWords) ? o.targetWords : [])
-      .map((x) => {
-        const it = (x ?? {}) as Record<string, unknown>
-        return { w: asStr(it.w), used: Boolean(it.used) }
-      })
-      .filter((x) => x.w)
-    grade.targetGrammar = (Array.isArray(o.targetGrammar) ? o.targetGrammar : [])
-      .map((x) => {
-        const it = (x ?? {}) as Record<string, unknown>
-        return { t: asStr(it.t), used: Boolean(it.used) }
-      })
-      .filter((x) => x.t)
+/** Разбор листа CEFR → уровень по нашим правилам. Экспорт — для проверок. */
+export function parseCefr(raw: string, essay: string, minWords?: number): WritingGrade {
+  const o = readJson(raw)
+  const { errors, rewrites, recurring } = readCommon(o)
+  const a = obj(o.aspects)
+  const marks = {} as Record<AspectKey, CefrMark>
+  for (const { key } of ASPECTS) {
+    const level = cefrLevel(obj(a[key]).level)
+    if (!level) throw new Error(INCOMPLETE)
+    marks[key] = { level, next: nextStep(obj(a[key]).next) }
   }
-  return grade
+  const facts = textFacts(essay, errors.filter((e) => e.type === 'grammar').map((e) => e.was))
+  const r = scoreCefr(marks, facts, minWords)
+  return {
+    level: r.level,
+    targetWords: (Array.isArray(o.targetWords) ? o.targetWords : [])
+      .map((x) => ({ w: asStr(obj(x).w), used: Boolean(obj(x).used) }))
+      .filter((x) => x.w),
+    targetGrammar: (Array.isArray(o.targetGrammar) ? o.targetGrammar : [])
+      .map((x) => ({ t: asStr(obj(x).t), used: Boolean(obj(x).used) }))
+      .filter((x) => x.t),
+    errors,
+    rewrites,
+    ...adviceFields(r.advice, recurring),
+    strengths: asStrArr(o.strengths).slice(0, 6),
+    topics: asStrArr(o.topics).slice(0, 8),
+    words: asStrArr(o.words).slice(0, 12),
+  }
 }
 
 /** Итоговая метка для колонки band: IELTS — число, обычный — уровень. */
@@ -164,74 +240,100 @@ export function bandLabel(mode: 'ielts' | 'regular', grade: WritingGrade): strin
   return grade.level ?? ''
 }
 
-export async function gradeWriting(
-  task: WritingTask,
-  essay: string,
-  lang: AppLang,
-): Promise<WritingGrade> {
-  if (task.mode === 'ielts') {
-    const chart = task.settings?.chart
-    const academic = task.settings?.ieltsTask === 'academic1' && chart
-    const kind = academic
-      ? 'Academic Task 1 (описание графика/данных)'
-      : task.settings?.ieltsTask === 'gt1'
-        ? 'General Training Task 1 (письмо)'
-        : 'Task 2 (эссе)'
-    const system = [
-      `Ты — экзаменатор IELTS. Оцени работу ученика (${kind}).`,
-      academic
-        ? 'Это Academic Task 1: ученик описывает данные графика. Данные графика даны тебе НИЖЕ в JSON — сверяй по ним факты. Оценивай: есть ли обзор (overview) главных тенденций, выделены ли ключевые особенности, ТОЧНЫ ли числа и сравнения, нет ли лишних мнений/причин. Ошибка в данных (неверная цифра/тренд) — это ошибка Task Achievement.'
-        : '',
-      'Верни ТОЛЬКО валидный JSON без markdown:',
-      '{"band":0-9,"criteria":{"task":0-9,"coherence":0-9,"lexis":0-9,"grammar":0-9},' +
-        '"focus":[{"type":"тип повторяющейся ошибки","why":"чем мешает, по-русски","examples":[{"was":"цитата","fix":"как надо"}]}],' +
-        ERRORS_SHAPE +
-        '"strengths":["сильная сторона"],"improve":["что подтянуть"],' +
-        '"topics":["тема грамматики для повторения"],"words":["полезное слово"],' +
-        '"rewrites":[{"was":"слабое предложение","better":"улучшенный вариант"}]}',
-      'band и criteria — по шкале 0-9 (допускается .5). Считай РЕАЛЬНЫЕ ошибки, не выдумывай.',
-      FOCUS_RULE,
-      ERRORS_RULE,
-      // те же правила, что в «Диалоге» (lib/correctionRules): не сдвигать время
-      // в исправлении и не выдумывать ошибок — здесь тот же разбор чужого текста
-      ...CORRECTION_RULES,
-      'errors — конкретные цитаты из текста ученика и их исправления. strengths/improve/topics/words/rewrites — по-русски там, где это пояснение; сами английские слова/фразы — на английском.',
-    ]
-      .filter(Boolean)
-      .join('\n')
-    const user = [
-      `Вопрос задания:\n${task.prompt}`,
-      academic ? `\nДанные графика (JSON):\n${JSON.stringify(chart)}` : '',
-      `\nОтвет ученика:\n${essay}`,
-    ].join('\n')
-    const raw = await chat([{ role: 'user', content: user }], { system, task: 'writing' })
-    return parseGrade(raw, 'ielts')
-  }
+/** Вид задания IELTS по настройкам: Academic Task 1 — и без данных графика (тогда цифры не сверяем). */
+export function ieltsKind(task: WritingTask): IeltsKind {
+  const t = task.settings?.ieltsTask
+  return t === 'academic1' ? 'academic1' : t === 'gt1' ? 'gt1' : 'task2'
+}
 
-  // обычный режим
+const KIND_NAME: Record<IeltsKind, string> = {
+  task2: 'Task 2 (эссе)',
+  academic1: 'Academic Task 1 (описание графика или данных)',
+  gt1: 'General Training Task 1 (письмо)',
+}
+
+export function ieltsPrompt(task: WritingTask, essay: string): { system: string; user: string } {
+  const kind = ieltsKind(task)
+  const chart = task.settings?.chart
+  const words = wordCount(essay)
+  const min = MIN_WORDS[kind]
+  const paragraphs = paragraphCount(essay)
+  const system = [
+    'Ты — сертифицированный экзаменатор IELTS Writing. Оцениваешь так же строго, как на экзамене: не завышаешь слабым работам и не занижаешь сильным.',
+    `Работа: ${KIND_NAME[kind]}.`,
+    kind === 'academic1'
+      ? chart
+        ? 'Данные графика даны НИЖЕ в JSON — сверяй по ним каждую цифру и тенденцию: неверная цифра или тренд, причины и мнения вне данных — ошибки Task Achievement.'
+        : 'Данных графика нет — точность цифр не проверяй, оценивай обзор, отбор главного и сравнения.'
+      : '',
+    `Факты о работе (посчитала программа — им верь): слов ${words}, минимум ${min}${words < min ? ' — работа короче минимума, идеи недоразвиты: учитывай это в критерии task' : ''}; абзацев ${paragraphs}.`,
+    FIT_RULE,
+    'Ступени — только целые числа от 0 до 9. Общий балл НЕ ставь — его посчитает программа по правилам IELTS.',
+    `limits — коды ⛔-признаков шкалы, которые ЕСТЬ в работе, из списка: ${modelLimits(kind).join(', ')}; нет — пустой список.`,
+    `ШКАЛА (официальные band descriptors IELTS; ⛔ — признак, ограничивающий ступень; [limit: код] — его код для limits):\n${ieltsScale(kind)}`,
+    'Верни ТОЛЬКО валидный JSON без markdown, ключи — в этом порядке:',
+    '{' + ERRORS_SHAPE + `"criteria":{"task":${MARK_SHAPE},"coherence":{…},"lexis":{…},"grammar":{…}},"limits":[],` + TAIL_SHAPE,
+    ERRORS_RULE,
+    FOCUS_RULE,
+    // те же правила, что в «Диалоге» (lib/correctionRules): не сдвигать время
+    // в исправлении и не выдумывать ошибок — здесь тот же разбор чужого текста
+    ...CORRECTION_RULES,
+    'Пояснения (fits, need, why, strengths, topics) — по-русски; английские слова и фразы — на английском.',
+    ADDRESS_RULE,
+  ]
+    .filter(Boolean)
+    .join('\n')
+  const user = [
+    `Вопрос задания:\n${task.prompt}`,
+    kind === 'academic1' && chart ? `\nДанные графика (JSON):\n${JSON.stringify(chart)}` : '',
+    `\nОтвет ученика:\n${essay}`,
+  ].join('\n')
+  return { system, user }
+}
+
+export function cefrPrompt(task: WritingTask, essay: string, lang: AppLang): { system: string; user: string } {
   const subject = lang === 'es' ? 'испанского' : 'английского'
   const words = task.settings?.targetWords ?? []
   const grammar = task.settings?.targetGrammar ?? []
+  const min = task.settings?.minWords
+  const count = wordCount(essay)
   const system = [
-    `Ты — преподаватель ${subject}. Оцени письменную работу ученика (уровень ${task.level}).`,
+    `Ты — экзаменатор письма по шкале CEFR, преподаватель ${subject}. Оцениваешь строго, как на экзамене: не завышаешь и не занижаешь.`,
+    `Задание рассчитано на уровень ${task.level}, но уровень ставь по ТЕКСТУ, а не по заданию.`,
+    `Факты о тексте (посчитала программа — им верь): слов ${count}${min ? `, минимум ${min}` : ''}.`,
     words.length ? `Целевые слова, которые ученик должен был употребить: ${words.join(', ')}.` : 'Целевые слова не заданы.',
     grammar.length ? `Целевая грамматика: ${grammar.join(', ')}.` : 'Целевая грамматика не задана.',
-    'Верни ТОЛЬКО валидный JSON без markdown:',
-    '{"level":"A1..C1 — уровень текста","targetWords":[{"w":"слово","used":true|false}],' +
-      '"targetGrammar":[{"t":"структура","used":true|false}],' +
-      '"focus":[{"type":"тип повторяющейся ошибки","why":"чем мешает, по-русски","examples":[{"was":"цитата","fix":"как надо"}]}],' +
+    FIT_RULE,
+    'Уровень — A1, A2, B1, B2, C1 или C2. Общий уровень НЕ ставь — его посчитает программа.',
+    `ШКАЛА (CEFR, письменная речь):\n${cefrScale()}`,
+    'Верни ТОЛЬКО валидный JSON без markdown, ключи — в этом порядке:',
+    '{' +
       ERRORS_SHAPE +
-      '"strengths":["сильная сторона"],"improve":["что подтянуть"],' +
-      '"topics":["тема для повторения"],"words":["полезное слово"],' +
-      '"rewrites":[{"was":"слабое предложение","better":"лучше"}]}',
-    'targetWords/targetGrammar — по КАЖДОМУ целевому слову/структуре из списков выше: реально ли ученик его употребил (used). Ошибки реальные, не выдумывай. Пояснения по-русски, целевые слова/фразы — на изучаемом языке.',
-    FOCUS_RULE,
+      `"aspects":{"task":${MARK_SHAPE.replace('"band":6', '"level":"B1"')},"range":{…},"accuracy":{…},"coherence":{…}},` +
+      '"targetWords":[{"w":"слово","used":true}],"targetGrammar":[{"t":"структура","used":true}],' +
+      TAIL_SHAPE,
+    'targetWords/targetGrammar — по КАЖДОМУ целевому слову и структуре из списков выше: правда ли ученик их употребил (used).',
     ERRORS_RULE,
+    FOCUS_RULE,
     ...CORRECTION_RULES,
-  ].join('\n')
-  const raw = await chat([{ role: 'user', content: `Задание:\n${task.prompt}\n\nТекст ученика:\n${essay}` }], {
-    system,
-    task: 'writing',
-  })
-  return parseGrade(raw, 'regular')
+    ADDRESS_RULE,
+    variantRule(lang),
+    'Пояснения (fits, need, why, strengths, topics) — по-русски; слова и фразы изучаемого языка — на нём самом.',
+  ]
+    .filter(Boolean)
+    .join('\n')
+  return { system, user: `Задание:\n${task.prompt}\n\nТекст ученика:\n${essay}` }
+}
+
+export async function gradeWriting(task: WritingTask, essay: string, lang: AppLang): Promise<WritingGrade> {
+  // схема ответа: длинный лист экзаменатора не ломается (api/_geminiBody.ts)
+  if (task.mode === 'ielts') {
+    const kind = ieltsKind(task)
+    const { system, user } = ieltsPrompt(task, essay)
+    const raw = await chat([{ role: 'user', content: user }], { system, task: 'writing', json: ieltsSchema(kind) })
+    return parseIelts(raw, essay, kind)
+  }
+  const { system, user } = cefrPrompt(task, essay, lang)
+  const raw = await chat([{ role: 'user', content: user }], { system, task: 'writing', json: cefrSchema() })
+  return parseCefr(raw, essay, task.settings?.minWords)
 }

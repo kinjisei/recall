@@ -45,8 +45,14 @@ export function isNetworkError(e: unknown): boolean {
  * сам по этому типу — карта в api/_tasks.ts. Клиент уровень модели НЕ задаёт:
  * пока он слал tier, любой вошедший мог отправить обычную реплику Диалога с
  * tier:'max' и жечь дефицитные Pro-модели (пентест, заход 18).
+ *
+ * json — ответ разбирается как JSON (Ф2.20, журнал п.77): `true` — режим JSON
+ * у модели, схема (JSON Schema) — ответ строится по ней и не ломается. Для
+ * обычного текста — не ставить.
  */
-export async function chat(messages: ChatTurn[], opts: { task: AiTask; system?: string }): Promise<string> {
+export type AiJson = true | Record<string, unknown>
+
+export async function chat(messages: ChatTurn[], opts: { task: AiTask; system?: string; json?: AiJson }): Promise<string> {
   return (await chatReply(messages, opts)).text
 }
 
@@ -73,7 +79,7 @@ export interface SwapCounters {
  */
 export async function chatReply(
   messages: ChatTurn[],
-  opts: { task: AiTask; system?: string; replan?: string; swap?: { format: string; tricky: boolean } },
+  opts: { task: AiTask; system?: string; json?: AiJson; replan?: string; swap?: { format: string; tricky: boolean } },
 ): Promise<{ text: string; replan?: ReplanGrant; swaps?: SwapCounters }> {
   // одна точка на все AI-механики: любой экран, зовущий AI, попадает в воронку
   notifyRequest(opts.task)
@@ -96,6 +102,7 @@ export async function chatReply(
         system: opts.system,
         // модель и лимиты сервер подбирает сам по типу задачи
         task: opts.task,
+        ...(opts.json ? { json: opts.json } : {}),
         ...(opts.replan ? { replan: opts.replan } : {}),
         ...(opts.swap ? { swap: opts.swap } : {}),
       }),

@@ -24,6 +24,7 @@ Vercel (504), запасные модели остались не спрошен
 | `gemini.ts`, `transcribe.ts`, `notify.ts` | функции Vercel (`maxDuration` 60 / 30 / 60 с; `notify` — вход по секрету, `src/domains/notifications/CLAUDE.md`) |
 | `_tasks.ts` | карта «задача → модель, карман квоты, требуемые права» |
 | `_core.ts`, `_geminiBody.ts`, `_groq.ts`, `_stt.ts` | вызовы Gemini (обычный и поток), Groq, Whisper |
+| `_jsonMode.ts` | что клиент просит про JSON: `json: true` — режим JSON, схема — ответ по схеме (`responseJsonSchema`), не больше 8 КБ |
 | `_auth.ts` | вход, проверка роли, списание и возврат ⚡ (`spend_energy`, `refund_ai_call`) |
 | `_replan.ts`, `_planShape.ts` | бесплатный «Пересоставить план» материала (Ф2.17-4в-2б, миграция 0014): право за оплаченный план, трата права вместо генерации, ответ повтора — только план; строка плана — с видом каталога `format` и «каверзными» `tricky` (Ф2.25-2) |
 | `_swap.ts`, `_exerciseShape.ts` | замена упражнения через AI (Ф2.25-4, миграция 0019): виды и модели двух ступеней — одно место (`SWAP_CHAINS`, `isStrongSwap`), лимит замен вместо энергии (`spend_exercise_swap`), ответ — только одно упражнение нужного вида |
@@ -44,6 +45,15 @@ Vercel (504), запасные модели остались не спрошен
 - Тип `AiTask` и карта совпадают в обе стороны, и каждую задачу шлёт хотя бы
   один экран — `test-aitasks.mjs` (мёртвая задача `batch` жила в карте с
   июля).
+- **JSON — по просьбе клиента, а не по задаче** (Ф2.20, журнал п.77): одна
+  задача отдаёт и JSON, и текст (`writing` — разбор письма и быстрая
+  проверка). `json: true` — режим JSON у Gemini, объект — схема ответа: по
+  ней модель не ломает JSON (режим без схемы у слабой модели ломался). На
+  модель, цену и квоту не влияет; Gemma и Groq его не получают. Какой вызов
+  что просит — `test-ai-prompts.mjs`.
+- **Инструкция модели — до 16 000 знаков** (`MAX_SYSTEM_CHARS`): разбор
+  письма со шкалой экзаменатора ~11 тыс., его запас держит
+  `test-writing-examiner`.
 - **Нет функции списания — AI закрыт** (503), а не открыт по одной
   валидности токена. Прежний «пропуск, пока миграция не залита» с порядком
   «миграция, потом код» стал бы безлимитным AI при первой же поломке.
@@ -218,7 +228,7 @@ Vercel (504), запасные модели остались не спрошен
 <!-- Пишет `npm run gen:docs` (scripts/gen/module-docs.mjs) по коду — руками не править. -->
 ## Из кода (сгенерировано)
 
-- **Файлы:** `_auth.ts`, `_channels.ts`, `_core.ts`, `_exerciseShape.ts`, `_geminiBody.ts`, `_groq.ts`, `_planShape.ts`, `_push.ts`, `_replan.ts`, `_stt.ts`, `_swap.ts`, `_tasks.ts`, `_timeouts.ts`, `_usage.ts`, `gemini.ts`, `notify.ts`, `transcribe.ts`
+- **Файлы:** `_auth.ts`, `_channels.ts`, `_core.ts`, `_exerciseShape.ts`, `_geminiBody.ts`, `_groq.ts`, `_jsonMode.ts`, `_planShape.ts`, `_push.ts`, `_replan.ts`, `_stt.ts`, `_swap.ts`, `_tasks.ts`, `_timeouts.ts`, `_usage.ts`, `gemini.ts`, `notify.ts`, `transcribe.ts`
 - **Адреса сервера:** `/api/gemini`, `/api/notify`, `/api/transcribe`
 - **Таблицы:** `profiles`
 - **RPC:** `grant_material_replans`, `log_ai_call`, `refund_ai_call`, `spend_energy`, `spend_exercise_swap`, `spend_replan`

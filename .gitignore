@@ -37,3 +37,6 @@ docs/architecture/code-map.json
 
 # ответы прогонов проверки качества AI (scripts/check-ai-*.mjs, PLAN.md Ф2.20)
 scripts/ai-quality/runs/
+
+# официальные работы IELTS — чужие тексты, в открытый репозиторий не кладём (scripts/ai-quality/official/README.md)
+scripts/ai-quality/official/*.json

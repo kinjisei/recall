@@ -26,6 +26,8 @@ import { STUDENTS } from './examples/students.mjs'
 
 const HERE = new URL('./', import.meta.url)
 export const DEFAULT_LIMIT = 20
+/** Между запросами к AI: 5 в минуту у первой модели цепочки. */
+const MIN_GAP_MS = 12_500
 const EMAIL = 'ai-quality@recall.test'
 const PASSWORD = 'AiQuality!2026'
 
@@ -114,6 +116,7 @@ export async function openRun(task, opts = {}) {
   const run = { task, args, results: [], calls: 0, cur: null, uid: null, token: null, spoilHits: 0 }
   let gemini = null
   let lastModel = null
+  let lastStart = 0
   let cleanup = async () => {}
 
   if (!args.dry) {
@@ -178,6 +181,10 @@ export async function openRun(task, opts = {}) {
       run.cur.calls.push(call)
       if (args.dry) throw new Stop('dry', 'сухой прогон')
       if (run.calls >= args.limit) throw new Stop('limit', `лимит ${args.limit} запросов`)
+      // У первой модели цепочки 5 запросов в минуту (domains/ai/limits.ts): без
+      // паузы прогон уходит на запасные, и меряется не та модель, что на проде.
+      if (!args.fake && lastStart) await new Promise((r) => setTimeout(r, Math.max(0, lastStart + MIN_GAP_MS - Date.now())))
+      lastStart = Date.now()
       run.calls++
       if (args.spoil && opts.spoil) {
         call.system = `${call.system}\n\n${opts.spoil}`
@@ -187,7 +194,7 @@ export async function openRun(task, opts = {}) {
       const res = makeRes()
       const t0 = Date.now()
       await gemini.handle(
-        { method: 'POST', headers: { authorization: `Bearer ${run.token}` }, body: { messages, system: call.system, task: o.task } },
+        { method: 'POST', headers: { authorization: `Bearer ${run.token}` }, body: { messages, system: call.system, task: o.task, ...(o.json ? { json: o.json } : {}) } },
         res,
       )
       Object.assign(call, { ms: Date.now() - t0, model: lastModel, status: res.code })
@@ -236,6 +243,15 @@ export async function openRun(task, opts = {}) {
       }
       run.results.push(run.cur)
       printExample(run.cur)
+    },
+    /**
+     * Итог по набору примеров (П11 — сдвиг балла по официальным работам):
+     * строка-«пример» без запроса к AI, в отчёте — как любая другая.
+     */
+    summary(id, title, rows) {
+      const r = { id, title, note: '', calls: [], judge: [], status: 'ok', rows, output: null }
+      run.results.push(r)
+      printExample(r)
     },
     async finish(input) {
       try {

@@ -10,6 +10,7 @@ import type { ChatTurn } from '../src/shared/api/aiTypes.js'
 // не находит модуль без расширения (FUNCTION_INVOCATION_FAILED при старте)
 import { callGemini, streamGemini, GEMINI_TIER_CHAINS } from './_core.js'
 import { groqChat, GROQ_MODELS } from './_groq.js'
+import { jsonMode } from './_jsonMode.js'
 import { authorize, applyCors, authDenied, isTeacher, UNAVAILABLE, type AuthResult } from './_auth.js'
 import { isPlanShaped } from './_planShape.js'
 import { REPLANS_PER_PLAN, authorizeReplan, grantReplans } from './_replan.js'
@@ -33,7 +34,9 @@ const LIMITS: Timeouts = { ...TIMEOUTS, functionMs: config.maxDuration * 1000 }
 // Лимиты на вход — отсекают злоупотребление токенами (сжигание бесплатной квоты).
 const MAX_MESSAGES = 50
 const MAX_TOTAL_CHARS = 40_000
-const MAX_SYSTEM_CHARS = 12_000
+// разбор письма со шкалой экзаменатора IELTS — ~11 тыс. (Ф2.20, журнал п.77);
+// что промпты письма помещаются, держит test-writing-examiner
+const MAX_SYSTEM_CHARS = 16_000
 
 // Лёгкие задачи (перевод слова, определение) — ВСЕГДА один короткий запрос.
 // Жёсткий потолок для них закрывает подмену кармана квоты: без него можно было
@@ -53,12 +56,18 @@ export async function handle(req: VercelRequest, res: VercelResponse, t: Timeout
   if (applyCors(req, res)) return
   if (req.method !== 'POST') return res.status(405).json({ error: 'Только POST' })
 
-  const { messages, system, task, stream, replan, swap } = (req.body ?? {}) as {
+  const { messages, system, task, stream, replan, swap, json } = (req.body ?? {}) as {
     messages?: ChatTurn[]
     system?: string
     task?: string
     /** Клиент просит потоковый ответ (пока только «Диалог»). */
     stream?: boolean
+    /**
+     * Клиент разбирает ответ как JSON: `true` — режим JSON, объект — схема
+     * ответа (api/_geminiBody.ts, api/_jsonMode.ts). На цену и модель не влияет; схема больше
+     * SCHEMA_MAX — просто режим JSON.
+     */
+    json?: unknown
     /** Право на бесплатный повтор плана (задача material_replan, api/_replan.ts). */
     replan?: string
     /** Замена упражнения: вид из каталога и «каверзные» (задача exercise_swap, api/_swap.ts). */
@@ -73,6 +82,7 @@ export async function handle(req: VercelRequest, res: VercelResponse, t: Timeout
   // Ф1.6: такой запрос — просто неизвестная задача.
   const spec = taskSpec(task)
   if (!spec) return res.status(400).json({ error: 'Неизвестная задача для AI' })
+  const wantsJson = jsonMode(json)
   const tier = spec.tier
 
   // Валидация входа ДО списания квоты: иначе кривой/пустой запрос (баг клиента,
@@ -203,7 +213,7 @@ export async function handle(req: VercelRequest, res: VercelResponse, t: Timeout
       if (!apiKey) return await unavailable()
       const chain = GEMINI_TIER_CHAINS.lite
       const time = chainTime(t, 'lite', endBy)
-      return await answer(await callGemini(messages, system, apiKey, chain[0], chain.slice(1), 'lite', time, trace))
+      return await answer(await callGemini(messages, system, apiKey, chain[0], chain.slice(1), 'lite', time, trace, wantsJson))
     }
 
     // Потоковый «Диалог»: ответ льётся кусками по мере генерации — начинает
@@ -253,7 +263,7 @@ export async function handle(req: VercelRequest, res: VercelResponse, t: Timeout
       if (!apiKey) return await unavailable()
       const chain = SWAP_CHAINS[strong ? 'strong' : 'light']
       const time = chainTime(t, 'standard', endBy)
-      return await answer(await callGemini(messages, system, apiKey, chain[0], [...chain], 'standard', time, trace))
+      return await answer(await callGemini(messages, system, apiKey, chain[0], [...chain], 'standard', time, trace, wantsJson))
     }
 
     // standard/max: Gemini-цепочка уровня, терминальный фолбэк — Groq.
@@ -261,7 +271,7 @@ export async function handle(req: VercelRequest, res: VercelResponse, t: Timeout
     if (apiKey) {
       try {
         const time = chainTime(t, tier, geminiBy)
-        return await answer(await callGemini(messages, system, apiKey, chain[0], chain, tier, time, trace))
+        return await answer(await callGemini(messages, system, apiKey, chain[0], chain, tier, time, trace, wantsJson))
       } catch (e) {
         if (!groqKey) return await fail(e, 'Ошибка Gemini')
         /* вся Gemini-цепочка легла или не успела — последний рубеж Groq */

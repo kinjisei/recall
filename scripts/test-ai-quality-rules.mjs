@@ -10,13 +10,19 @@
  *
  * Запуск: node scripts/test-ai-quality-rules.mjs
  */
+// разбор письма приложения (импорты без расширения) — через загрузчик проверок AI
+import './ai-quality/loader.mjs'
 import { FAKE } from './ai-quality/fake-answers.mjs'
 import { MATERIAL } from './ai-quality/examples/material.mjs'
 import { REVIEW } from './ai-quality/examples/review.mjs'
 import { WRITING, WRITING_TASKS } from './ai-quality/examples/writing.mjs'
 import { PROGRAM } from './ai-quality/examples/program.mjs'
 import { materialRules, reviewRules, writingRules, writingTaskRules, programRules, hasWord, isQuote, fillFromText } from './ai-quality/rules.mjs'
+import { officialRules, biasRow } from './ai-quality/rules-official.mjs'
 import { validExercises } from '../src/lib/materialExercises.ts'
+
+// заготовка письма — ответ модели (лист экзаменатора), оценку собирает код приложения (журнал п.77)
+const G = await import('../src/lib/writingGrade.ts')
 
 let pass = 0
 let fail = 0
@@ -175,13 +181,16 @@ check('пропуск не из текста — нет', !fillFromText('There w
   const rO2 = clone(good)
   rO2.review[1].comment = 'Wrong: she drank orange juice.'
   check('О2: комментарий по-английски', red(reviewRules(ex, rO2)).includes('О2'))
+  const rO6 = clone(good)
+  rO6.review[1].comment = 'Перепишите: в тексте she drank orange juice.'
+  check('О6: комментарий на «вы»', red(reviewRules(ex, rO6)).includes('О6'), red(reviewRules(ex, rO6)).join(', '))
 }
 
 // ── письмо ──────────────────────────────────────────────────────────────────
 {
   const ex = byId(WRITING, 'en-b1-work')
-  const grade = JSON.parse(FAKE['en-b1-work'][0])
-  const good = { grade, raw: grade }
+  const grade = G.parseCefr(FAKE['en-b1-work'][0], ex.essay, ex.task.settings?.minWords)
+  const good = { grade, raw: JSON.parse(FAKE['en-b1-work'][0]) }
   check('письмо: хороший разбор — всё зелёное', red(writingRules(ex, good)).length === 0, red(writingRules(ex, good)).join(', '))
 
   const w = (mut) => {
@@ -198,14 +207,30 @@ check('пропуск не из текста — нет', !fillFromText('There w
   onlyRed('П8: «употребил» не совпадает с текстом', w((g) => { g.targetWords[0].used = false }), 'П8')
   onlyRed('П8: уровень вне коридора', w((g) => { g.level = 'C1' }), 'П8')
   onlyRed('О2: пояснение по-английски', w((g) => { g.improve = ['Revise prepositions'] }), 'О2')
+  onlyRed('О6: «Используйте» — на «вы»', w((g) => { g.improve = ['Используйте больше примеров'] }), 'О6')
+  check('О6: «Напиши», «Используй связки», «Повтори» — на «ты», зелёное', !red(w((g) => { g.improve = ['Напиши больше примеров', 'Используй связки', 'Повтори артикли'] })).includes('О6'))
 
   const ielts = byId(WRITING, 'ielts-t2-55')
-  const ig = JSON.parse(FAKE['ielts-t2-55'][0])
-  check('IELTS: хороший разбор — всё зелёное', red(writingRules(ielts, { grade: ig, raw: ig })).length === 0, red(writingRules(ielts, { grade: ig, raw: ig })).join(', '))
+  const ig = G.parseIelts(FAKE['ielts-t2-55'][0], ielts.essay, 'task2')
+  const igRaw = JSON.parse(FAKE['ielts-t2-55'][0])
+  check('IELTS: хороший разбор — всё зелёное', red(writingRules(ielts, { grade: ig, raw: igRaw })).length === 0, red(writingRules(ielts, { grade: ig, raw: igRaw })).join(', '))
+  check('IELTS: итог 5,5 посчитан кодом из 6/6/5/5', ig.band === 5.5, String(ig.band))
   const hi = { ...clone(ig), band: 7 }
   onlyRed('П6: балл 7 при эталоне 5–6', writingRules(ielts, { grade: hi, raw: hi }), 'П6')
   const skew = { ...clone(ig), criteria: { task: 8, coherence: 8, lexis: 7, grammar: 7 } }
   onlyRed('П6: балл не сходится с критериями', writingRules(ielts, { grade: skew, raw: skew }), 'П6')
+
+  // официальные работы IELTS (журнал п.77): П1 и П6 по каждой, П11 по набору
+  const off = { id: 'off-x', essay: 'Many cars are on British roads. The government should act.', expect: { band: [5.5, 6.5] } }
+  const og = (band, c, errors = []) => ({ grade: { band, criteria: { task: c, coherence: c, lexis: c, grammar: c }, errors, focus: [] } })
+  check('официальная: 6 при экзаменаторе 6 — зелёное', red(officialRules(off, og(6, 6))).length === 0, red(officialRules(off, og(6, 6))).join(', '))
+  onlyRed('П6: 7,5 при экзаменаторе 6', officialRules(off, og(7.5, 7.5)), 'П6')
+  onlyRed('П1: выдуманная цитата в официальной', officialRules(off, og(6, 6, [{ was: 'I goed', fix: 'I went' }])), 'П1')
+  check('П11: без сдвига — зелёное', biasRow([{ official: 5, band: 5 }, { official: 7, band: 7 }]).ok)
+  check('П11: +0,25 — на границе, зелёное', biasRow([{ official: 6, band: 6.5 }, { official: 6, band: 6 }]).ok)
+  check('П11: завышает на +0,75 — красное', !biasRow([{ official: 4, band: 5 }, { official: 5, band: 5.5 }, { official: 6, band: 6.75 }]).ok)
+  check('П11: занижает на −0,5 — красное', !biasRow([{ official: 8, band: 7 }, { official: 7, band: 7 }]).ok)
+  check('П11: ни одного ответа — не зелёное', !biasRow([]).ok)
 
   const pie = byId(WRITING_TASKS, 'gen-chart-pie')
   const chart = (values) => ({ prompt: 'The pie chart shows … Summarise the information by selecting and reporting the main features.', chart: { kind: 'pie', series: [{ name: 'Share', points: values.map((v, i) => ({ label: `S${i}`, value: v })) }] } })
@@ -235,6 +260,7 @@ check('пропуск не из текста — нет', !fillFromText('There w
   onlyRed('Пр3: слабые темы не в первых неделях', p((r) => { r.weeks[0].items[0].topicId = 18; r.weeks[1].items[0].topicId = 19 }), 'Пр3')
   onlyRed('Пр4: урок C1 ученику A2', p((r) => { r.weeks[3].items[0].topicId = 52 }), 'Пр4')
   onlyRed('О2: пояснение по-английски', p((r) => { r.weeks[0].items[1].note = 'Learn 5 words a day.' }), 'О2')
+  onlyRed('О6: «Выучите» в программе', p((r) => { r.weeks[0].items[1].note = 'Выучите по 5 слов в день.' }), 'О6')
 }
 
 console.log(`\nИтог: ${pass}/${pass + fail}`)

@@ -67,6 +67,15 @@ export function geminiBody(
   systemText: string,
   contents: { role: string; parts: { text: string }[] }[],
   tier: AiTier,
+  /**
+   * Ответ — JSON (клиент разбирает его как JSON). `true` — режим JSON: модель
+   * отвечает JSON, но слабая всё равно изредка ломает его (замер 04.11.2026:
+   * 3.5-flash-lite — лишний символ, кавычка внутри ключа). Схема (объект JSON
+   * Schema) — ответ строится по ней и не ломается: так у разбора письма, где
+   * битый JSON стоил человеку энергии без ответа (Ф2.20, журнал п.77). У Gemma
+   * этих режимов нет — ей не ставим.
+   */
+  json: boolean | Record<string, unknown> = false,
 ): string {
   const isGemma = model.startsWith('gemma')
   const isThinkingModel = model.startsWith('gemini-2.5')
@@ -81,6 +90,10 @@ export function geminiBody(
           temperature: 0.7,
           maxOutputTokens: tier === 'max' ? 8192 : 4096,
         }
+  if (json && !isGemma) {
+    gen.responseMimeType = 'application/json'
+    if (typeof json === 'object') gen.responseJsonSchema = json
+  }
   const body: Record<string, unknown> = {
     contents:
       isGemma && systemText && contents.length > 0

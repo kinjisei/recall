@@ -98,7 +98,7 @@ export async function analyzeSelection(
     .join('\n')
 
   const user = JSON.stringify({ fragment, sentence })
-  const raw = await chat([{ role: 'user', content: user }], { system, task: 'analyze' })
+  const raw = await chat([{ role: 'user', content: user }], { system, task: 'analyze', json: true })
 
   const s = raw.indexOf('{')
   const e = raw.lastIndexOf('}')

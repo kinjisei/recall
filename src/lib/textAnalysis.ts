@@ -12,6 +12,7 @@ import { loadGrammarCatalog, parseAnalyzedItems, type AnalyzedItem } from './ana
 import { splitChunks } from './textChunks'
 import { levelRange } from './cefr'
 import type { AppLang } from '../types'
+import { ADDRESS_RULE } from './promptRules'
 
 export interface TextAnalysis {
   /** Уровень текста для показа: «B1» или «B1–B2, сложнее к концу». */
@@ -57,7 +58,7 @@ async function analyzeChunk(
   ]
     .filter(Boolean)
     .join('\n')
-  const raw = await chat([{ role: 'user', content: chunk }], { system, task: 'analyze' })
+  const raw = await chat([{ role: 'user', content: chunk }], { system, task: 'analyze', json: true })
   const s = raw.indexOf('{')
   const e = raw.lastIndexOf('}')
   if (s === -1 || e <= s) return { level: '', items: [] }
@@ -78,9 +79,10 @@ async function synthesize(
   const system = [
     `Ты помогаешь ученику ${dict}. Уровень текста уже определён: ${level || '—'}. Дан список того, что в тексте найдено.`,
     'Верни ТОЛЬКО JSON: {"why":"почему у текста такой уровень — 1 короткая строка, назови конкретные структуры или лексику","takeaway":"что ученик отсюда возьмёт — 1-2 строки"}. По-русски, просто, без терминов.',
+    ADDRESS_RULE,
   ].join('\n')
   const user = JSON.stringify({ level, found: items.slice(0, 15).map((i) => i.base) })
-  const raw = await chat([{ role: 'user', content: user }], { system, task: 'analyze' })
+  const raw = await chat([{ role: 'user', content: user }], { system, task: 'analyze', json: true })
   const s = raw.indexOf('{')
   const e = raw.lastIndexOf('}')
   if (s === -1 || e <= s) return { why: '', takeaway: '' }

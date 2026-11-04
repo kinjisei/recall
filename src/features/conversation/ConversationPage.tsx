@@ -19,6 +19,7 @@ import { useDraft } from '../../shared/lib/useDraft'
 import { Loading } from '../../shared/ui/Loading'
 import { useLanguage } from '../../context/LanguageContext'
 import { getEsLevel } from '../../lib/esLevel'
+import { variantRule } from '../../lib/promptRules'
 import type { AppLang, CEFRLevel, ChatTurn, LearningGoal } from '../../types'
 import { Thinking } from '../../shared/ui/Thinking'
 import { HowItWorks } from '../../shared/ui/HowItWorks'
@@ -151,6 +152,7 @@ function chatSystemPrompt(level: CEFRLevel, lang: AppLang, goal: LearningGoal | 
     `- ALL explanations (in Russian) must match a ${level} learner: short, simple everyday words, no linguistic or academic jargon. Explain the way you would to a school student, e.g. chair = «стул — то, на чём сидят», NOT a dictionary-style scientific definition. In Russian always address the learner as «ты» (never «вы») — the whole app speaks «ты».`,
     '- Plain text only, no markdown formatting. Never skip part 1.',
     '- Service lines MUST start with the EXACT text tags [fix], [ok], [topic] (in square brackets, lowercase). Do NOT use emoji anywhere in your reply.',
+    variantRule(lang),
   ].join('\n')
 }
 
