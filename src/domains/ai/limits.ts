@@ -28,7 +28,8 @@ export interface ModelLimit {
 // Free tier, проект «Default Gemini Project»: Rate Limit → «Rate limits by model»
 const AI_STUDIO = 'AI Studio владельца (Rate Limit, Free tier), 28.09.2026'
 const AI_STUDIO_JULY = 'AI Studio владельца, 24.07.2026'
-const NOT_CHECKED = 'не сверено — AI Studio → Rate limits → See more'
+// скриншоты владельца 04.11.2026: боевой «Default Gemini Project» и тестовый «recall test» (лимиты Free tier у них одни)
+const AI_STUDIO_NOV = 'AI Studio владельца (Rate Limit, Free tier), 04.11.2026'
 const GROQ = 'console.groq.com/docs/rate-limits, 28.09.2026'
 
 export const MODEL_LIMITS: Record<string, ModelLimit> = {
@@ -38,9 +39,9 @@ export const MODEL_LIMITS: Record<string, ModelLimit> = {
   'gemini-2.5-flash': { rpd: 20, rpm: 5, source: AI_STUDIO },
   // lite — перевод слова и определения (после Groq)
   'gemini-3.5-flash-lite': { rpd: 500, rpm: 15, source: AI_STUDIO },
-  'gemini-3.1-flash-lite': { rpd: null, rpm: null, source: NOT_CHECKED },
+  'gemini-3.1-flash-lite': { rpd: 500, rpm: 15, source: AI_STUDIO_NOV },
   'gemma-4-31b-it': { rpd: 14_400, rpm: 30, source: AI_STUDIO_JULY },
-  'gemini-2.5-flash-lite': { rpd: null, rpm: null, source: NOT_CHECKED },
+  'gemini-2.5-flash-lite': { rpd: 20, rpm: 10, source: AI_STUDIO_NOV },
   // max — материалы и программы учителя; 2.5-pro убрана 04.11.2026 (Google: «не для
   // новых пользователей»), у 3.1-pro-preview на бесплатном тарифе — 0 (шкалы нет)
   'gemini-3.1-pro-preview': { rpd: null, rpm: null, source: 'бесплатно — 0 (проверено запросом 04.11.2026), число — после платного Gemini' },

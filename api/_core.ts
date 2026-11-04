@@ -80,6 +80,11 @@ export const GEMINI_TIER_CHAINS: Record<AiTier, string[]> = {
   //     3.5 уходят в хвост «на случай, если дешёвая упрётся». Именно это делает
   //     энергетические пулы прибыльными.
   // Терминальный фолбэк (Groq gpt-oss-120b, ещё дешевле) добавляет api/gemini.ts.
+  //
+  // 04.11.2026 (PLAN.md Ф2.20-5): 2.5-flash у новых проектов Google выключил
+  // (тестовый — 404), боевому отвечает. gemini-3.8-flash (своя квота 20/сут)
+  // в цепочку НЕ взята: на замере все 12 запросов — 503 «high demand», а
+  // попытки с 503 Google засчитывает в дневную квоту.
   standard:
     process.env.RECALL_CHEAP_MODELS === '1'
       ? ['gemini-2.5-flash', 'gemini-3.6-flash', 'gemini-3.5-flash']
