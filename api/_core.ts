@@ -104,9 +104,22 @@ interface GeminiResponse {
   candidates?: { content?: { parts?: { text?: string }[] }; finishReason?: string }[]
 }
 
-/** Коды, при которых имеет смысл повторить: модель перегружена или сбой у Google. */
+/** Коды «модель перегружена или сбой у Google»: временно, есть смысл спросить снова. */
 const RETRIABLE = [500, 502, 503, 504]
 const RETRY_DELAYS_MS = [900, 2500]
+
+/**
+ * Повторять ли ту же модель на 5xx. Попытку с ответом 503 Google тоже
+ * списывает с дневной квоты (замер 04.11.2026, PLAN.md Ф2.20-6, журнал
+ * п.78): на бесплатной квоте (20 в сутки у модели) повтор той же модели
+ * сжигал до 3 из 20 на один вопрос — там сразу следующая модель цепочки, у
+ * каждой своя квота. Повтор остаётся у последней Gemini-модели цепочки (иначе
+ * человек получил бы отказ, не дойдя до ответа) и на платном Gemini
+ * (`RECALL_CHEAP_MODELS=1`): там квота не 20.
+ */
+export function retrySameModel(isLastInChain: boolean, paid = process.env.RECALL_CHEAP_MODELS === '1'): boolean {
+  return paid || isLastInChain
+}
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
@@ -129,8 +142,9 @@ const whyFailed = (e: unknown) => (e instanceof TimeoutError ? e.message : 'сб
  * Вызывает Gemini и возвращает текст ответа. Бросает Error с понятным сообщением.
  *
  * На бесплатном тарифе Gemini регулярно отвечает 503 «model is overloaded» —
- * это временно, поэтому такие ответы повторяем с нарастающей паузой, а не
- * показываем пользователю ошибку с первого раза.
+ * это временно, поэтому ошибку человеку с первого раза не показываем: сразу
+ * следующая модель цепочки, а повтор с нарастающей паузой — у последней и на
+ * платном (`retrySameModel`).
  */
 export async function callGemini(
   messages: ChatTurn[],
@@ -151,7 +165,8 @@ export async function callGemini(
   const { systemText, contents } = splitMessages(messages, system)
 
   // Цепочка моделей: выбранная + фолбэки. 429 (квота) и 404 (модель пропала) —
-  // сразу пробуем следующую модель; 5xx — повторяем эту же с паузой.
+  // сразу следующая модель; 5xx — следующая, повтор этой же с паузой — только
+  // у последней и на платном (retrySameModel); прочий отказ (400) — конец.
   const chain = [model, ...fallbacks.filter((m) => m !== model)]
   let got: { ok: boolean; status: number; text: string } | null = null
   let lastStatus = 0
@@ -188,12 +203,19 @@ export async function callGemini(
         console.warn(`Gemini ${m}: ${got.status} — пробуем следующую модель цепочки`)
         continue outer
       }
+      if (!RETRIABLE.includes(got.status)) break outer // отказ в самом запросе — другая модель не поможет
       const canRetry =
-        RETRIABLE.includes(got.status) &&
+        retrySameModel(m === chain[chain.length - 1]) &&
         attempt < RETRY_DELAYS_MS.length &&
         // пауза не должна съесть окно самого повтора
         time.deadline - Date.now() - RETRY_DELAYS_MS[attempt] >= time.minAttemptMs
-      if (!canRetry) break outer
+      if (!canRetry) {
+        // повторы этой модели кончились или не положены — следующая модель цепочки
+        // (до 04.11.2026 здесь обрывалась вся цепочка: на 503 первой модели
+        // запасные Gemini не спрашивались, ответ сразу уходил в Groq)
+        console.warn(`Gemini ${m}: ${got.status} — следующая модель цепочки`)
+        continue outer
+      }
       console.warn(`Gemini ${m} ${got.status}, повтор ${attempt + 1}/${RETRY_DELAYS_MS.length}`)
       await sleep(RETRY_DELAYS_MS[attempt])
     }

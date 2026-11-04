@@ -398,9 +398,28 @@ console.log('\n— без зависаний всё как раньше (сро�
     s.res.payload?.text === answerOf(STD[1]) && countCalls(new RegExp(`models/${STD[0]}:`)) === 1,
     describe(s))
 }
+// 503 Google тоже списывает с дневной квоты (PLAN.md Ф2.20-6, журнал п.78):
+// на бесплатной — сразу следующая модель, повтор — у последней и на платном
+{
+  const s = await scenario(aiApi, { task: 'dialog', messages: M }, { gemini: (m) => (m === STD[0] ? 503 : 'ok') }, PROD)
+  check('503 у первой → сразу следующая модель, без повтора (бесплатная квота)',
+    s.res.payload?.text === answerOf(STD[1]) && countCalls(new RegExp(`models/${STD[0]}:`)) === 1,
+    describe(s))
+}
 {
   const s = await scenario(aiApi, { task: 'dialog', messages: M }, { gemini: (m, n) => (n === 0 ? 503 : 'ok') }, PROD)
-  check('503 → повтор той же модели после паузы',
+  const last = STD[STD.length - 1]
+  check('503 у всех → вся цепочка, повтор только у последней (а не обрыв на первой)',
+    s.res.payload?.text === answerOf(last) &&
+      STD.slice(0, -1).every((m) => countCalls(new RegExp(`models/${m}:`)) === 1) &&
+      countCalls(new RegExp(`models/${last}:`)) === 2,
+    describe(s))
+}
+{
+  process.env.RECALL_CHEAP_MODELS = '1' // платный Gemini: цепочка та же (собрана при загрузке), повторы — как раньше
+  const s = await scenario(aiApi, { task: 'dialog', messages: M }, { gemini: (m, n) => (n === 0 ? 503 : 'ok') }, PROD)
+  delete process.env.RECALL_CHEAP_MODELS
+  check('платный: 503 → повтор той же модели после паузы',
     s.res.payload?.text === answerOf(STD[0]) && countCalls(new RegExp(`models/${STD[0]}:`)) === 2,
     describe(s))
 }
