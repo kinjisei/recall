@@ -413,7 +413,7 @@ async function main() {
   const tricky = await page.evaluate(() => document.querySelector('[data-plan-row="tfng"] [role=switch]')?.getAttribute('aria-checked'))
   check('«Каверзные вопросы» включены', tricky === 'true', `aria-checked: ${tricky}`)
   const sumAfter = await page.$eval('section[aria-label="Итог"]', (el) => el.innerText.replace(/\s+/g, ' ')).catch(() => '')
-  check('итог плана: «2 вида · 6 заданий · до 6 баллов», упражнения бесплатно', /2 вида · 6 заданий · до 6 баллов/.test(sumAfter) && /Упражнения меняются бесплатно/.test(sumAfter), sumAfter.slice(0, 200))
+  check('итог плана: «2 вида · 6 заданий · до 6 баллов», упражнения без генерации', /2 вида · 6 заданий · до 6 баллов/.test(sumAfter) && /Упражнения в плане меняются без генерации/.test(sumAfter), sumAfter.slice(0, 200))
   check('…и всё это без запроса к AI', (await readCalls()).length === 1, `запросов: ${(await readCalls()).length}`)
   await tap(page, 'Новый текст')
   check('шаг «Текст»: готовый текст', await waitText(page, /A Night on the Trail/))
@@ -442,8 +442,8 @@ async function main() {
   check('…уровень материала — самого слабого (B1)', mat?.level === 'B1', `уровень: ${mat?.level}`)
   const saved = (mat?.plan?.exercise_plan ?? []).map((r) => `${r.format}:${r.count}${r.tricky ? '!' : ''}`).join(' ')
   check('…в материале — план учителя (вопросы 3, каверзные True / False 3)', saved === 'mcq:3 tfng:3!', saved)
-  // «Кому выдан» карточки материала (d8-1): у выданного — «Убрать», у остальных — «Выдать»
-  const marked = await page.evaluate(() => [...document.querySelectorAll('button')].filter((b) => b.textContent.trim() === 'Убрать').length)
+  // «Кому выдан» карточки материала (d8-1): у выданного — «Убрать», у остальных — «Выдать» (только в «Кому выдан»: у упражнений с 3б тоже «Убрать»)
+  const marked = await page.evaluate(() => [...document.querySelectorAll('section[aria-label="Кому выдан"] button')].filter((b) => b.textContent.trim() === 'Убрать').length)
   check('«Кому выдан»: оба ученика с материалом', marked === 2, `выдано: ${marked}`)
 
   // ---- «Мой текст» (d16-3): виды упражнений прямо в заявке -----------------

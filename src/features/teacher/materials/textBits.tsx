@@ -159,8 +159,8 @@ export interface AssignRow {
   level: string | null
 }
 
-/** «Назначится при сохранении»: кто с уровнем, кнопки и строка о генерациях (d8-4 `.sum8`). */
-export function AssignCard({ rows, info, children }: { rows: AssignRow[]; info: ReactNode; children: ReactNode }) {
+/** «Назначится при сохранении»: кто с уровнем, кнопки, остаток замен (d17) и строка о генерациях (d8-4 `.sum8`). */
+export function AssignCard({ rows, info, extra, children }: { rows: AssignRow[]; info: ReactNode; extra?: ReactNode; children: ReactNode }) {
   return (
     <section aria-label="Сохранение" className="flex flex-col gap-3.5 rounded-card bg-surface p-4.5 shadow-card">
       <h2 className="text-note font-semibold text-fg-muted">{rows.length ? 'Назначится при сохранении' : 'Общий материал'}</h2>
@@ -173,6 +173,7 @@ export function AssignCard({ rows, info, children }: { rows: AssignRow[]; info: 
         </div>
       ))}
       <div className="flex flex-col gap-2 pt-1">{children}</div>
+      {extra}
       <p className="rounded-control-sm bg-input px-3 py-2.5 text-sm leading-snug text-fg-secondary tabular-nums">{info}</p>
     </section>
   )

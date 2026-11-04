@@ -1,14 +1,20 @@
 /**
- * Снимки Ф2.25-3а — правка упражнений руками на шаге «Текст» мастера (макет
- * d17) для `shots-screens.mjs --only exercise-edit`. Мастер открывается
- * черновиком (как после перезагрузки; строку «Черновик восстановлен» перед
- * снимком убираем — в кадре мастер открыт впервые), открытая форма — своим
- * черновиком `material-exercise-edit`; AI не зовётся (`shots.aiHang`):
+ * Снимки Ф2.25-3 и -4б — правка упражнений руками и замена через AI на шаге
+ * «Текст» мастера (макет d17) для `shots-screens.mjs --only exercise-edit`.
+ * Мастер открывается черновиком (как после перезагрузки; строку «Черновик
+ * восстановлен» перед снимком убираем — в кадре мастер открыт впервые),
+ * открытая форма — своим черновиком `material-exercise-edit`; AI не зовётся
+ * (`shots.aiHang`: запрос висит — «AI пишет» не кончается). Остаток замен —
+ * как в кадре: строки `ai_calls` со `swap` на сегодня (`swapsUsed`):
  *   edit-mcq    — d17-1: упражнение 2 на правке, четвёртый вариант набран,
  *                 верный не отмечен — «Отметь верный вариант» у вариантов;
- *   edit-pick   — d17-3 без AI-кнопки (Ф2.25-4): «+ Упражнение» открыт,
- *                 выбрана «Выбери правильную форму», «Напишу сам»;
+ *                 «Замен через AI сегодня: 24 из 25»;
+ *   swap-run    — d17-2: пары на правке (пятая без перевода), упражнение 1
+ *                 заменяется — скелетон «AI пишет…», «23 из 25»;
+ *   edit-pick   — d17-3: «+ Упражнение» открыт, выбрана «Выбери правильную
+ *                 форму», «Составит AI · ещё 23 сегодня» и «Напишу сам»;
  *   edit-new    — d17-3б: пустая форма «Выбери правильную форму · новое»;
+ *   swaps-out   — d17-3в: замены кончились — плашка, «Заменить» выключен;
  *   edit-phone  — только 390, окном: форма от верха экрана, «Готово · Отмена»
  *                 сразу после вариантов, рамка цела (решение владельца 04.11).
  * Библиотека (Ф2.25-3б):
@@ -54,7 +60,7 @@ const EXERCISES = [
 
 const draft = (format, patch) => ({ format, prompt: '', options: [], answer: null, text: '', note: '', pairs: [], extra: [], ...patch })
 
-export async function shotsExerciseEdit({ screen, admin, must, t, a, s, dir }) {
+export async function shotsExerciseEdit({ screen, admin, must, sql, t, a, s, dir }) {
   console.log('── правка упражнений (d17)')
   const req = { lang: 'en', level: 'A2', topic: 'Travel problems', format: 'рассказ', lengthRange: '100-140', vocabulary: 'delay, luggage, boarding pass', grammar: 'Past Simple', studentIds: [a.id, s.id] }
   const plan = {
@@ -97,6 +103,21 @@ export async function shotsExerciseEdit({ screen, admin, must, t, a, s, dir }) {
     tried: true,
   }
   const newOpen = { at: 'new', draft: draft('form', { options: ['', '', ''] }), was: null, count: EXERCISES.length, tried: false }
+  // d17-2: пары на правке, пятая — «ticket» без перевода
+  const pairsOpen = {
+    at: 3,
+    draft: draft('match_translation', { pairs: [...EXERCISES[3].pairs.slice(0, 4), { left: 'ticket', right: '' }], extra: [...EXERCISES[3].extra] }),
+    was: EXERCISES[3],
+    tried: false,
+  }
+  /** Сколько замен учитель уже потратил сегодня — остаток как в кадре (25 − n). */
+  const swapsUsed = (n) => async () => {
+    await sql(`delete from public.ai_calls where user_id = '${t.id}' and swap is not null`)
+    if (n > 0) await sql(`insert into public.ai_calls (user_id, kind, cost_energy, is_generation, swap, called_at) select '${t.id}', 'heavy', 0, false, 'light', now() from generate_series(1, ${n})`)
+  }
+  const both = (...fns) => async (page) => {
+    for (const f of fns) await f(page)
+  }
   const boxes = existsSync(`${dir}/boxes.json`) ? JSON.parse(readFileSync(`${dir}/boxes.json`, 'utf8')) : {}
   /** Рамка формы — для пары с фрагментом кадра; фокус — как в кадре. */
   const focus = (name, sel) => async (page) => {
@@ -128,14 +149,38 @@ export async function shotsExerciseEdit({ screen, admin, must, t, a, s, dir }) {
     })
     await sleep(400)
   }
+  // d17-2: фокус на пустом переводе, затем «↻ Заменить» у упражнения 1 — запрос висит, строка «AI пишет»
+  const swapRun = async (page) => {
+    await focus('swap-run', 'textarea[aria-label="перевод 5"]')(page)
+    await page.evaluate(() => document.querySelector('button[aria-label="Заменить упражнение 1"]')?.click())
+    await page.waitForSelector('[data-swapping]', { timeout: 5000 }).catch(() => {})
+    await page.focus('textarea[aria-label="перевод 5"]').catch(() => {})
+    await sleep(300)
+  }
+  // d17-3в: рамка от упражнения 1 до плашки — для пары с фрагментом кадра
+  const outBox = async (page) => {
+    await fresh(page)
+    const box = await page.evaluate(() => {
+      const a = document.querySelector('[data-exercise="1"]')?.getBoundingClientRect()
+      const b = document.querySelector('[data-swaps-out]')?.getBoundingClientRect()
+      return a && b && { x: Math.round(a.x + scrollX), y: Math.round(a.y + scrollY), w: Math.round(a.width), h: Math.round(b.bottom - a.top), vw: innerWidth }
+    })
+    if (box) {
+      boxes[`swaps-out-${box.vw}`] = box
+      writeFileSync(`${dir}/boxes.json`, JSON.stringify(boxes, null, 2))
+    }
+  }
   const path = '/tasks?tab=materials'
   await screen(t.email, [
-    { name: 'edit-mcq', path, before: drafts(mcqOpen), prepare: focus('edit-mcq', 'textarea[aria-label="вариант 4"]'), tall: 1900, expect: /Отметь верный вариант/ },
+    { name: 'edit-mcq', path, before: both(swapsUsed(1), drafts(mcqOpen)), prepare: focus('edit-mcq', 'textarea[aria-label="вариант 4"]'), tall: 1900, expect: /Отметь верный вариант/ },
+    { name: 'swap-run', path, before: both(swapsUsed(1), drafts(pairsOpen)), prepare: swapRun, tall: 1900, expect: /Соедини слово и перевод · правка/, skeleton: true },
     // окно выше страницы с открытым выбором: снимок «во всю страницу» не меняет окно, и выбор не закрывается
-    { name: 'edit-pick', path, before: drafts(null), prepare: pick, tall: 2500, expect: /Упражнения \(5\)/ },
-    { name: 'edit-new', path, before: drafts(newOpen), prepare: focus('edit-new', '[data-exercise-edit] textarea[name="prompt"]'), tall: 1900, expect: /Выбери правильную форму · новое/ },
-    { name: 'edit-phone', path, before: drafts(mcqOpen), prepare: phone, overlay: true, phone: true, expect: /Отметь верный вариант/ },
+    { name: 'edit-pick', path, before: both(swapsUsed(2), drafts(null)), prepare: pick, tall: 2500, expect: /Упражнения \(5\)/, wait: /23 из 25/ },
+    { name: 'edit-new', path, before: both(swapsUsed(2), drafts(newOpen)), prepare: focus('edit-new', '[data-exercise-edit] textarea[name="prompt"]'), tall: 1900, expect: /Выбери правильную форму · новое/ },
+    { name: 'swaps-out', path, before: both(swapsUsed(25), drafts(null)), prepare: outBox, tall: 1900, expect: /Упражнения \(5\)/, wait: /Замены кончились/ },
+    { name: 'edit-phone', path, before: both(swapsUsed(1), drafts(mcqOpen)), prepare: phone, overlay: true, phone: true, expect: /Отметь верный вариант/ },
   ])
+  await swapsUsed(0)()
 
   // ---- библиотека (3б): d17-4 и правка до сдачи ----
   const day = (h) => new Date(Date.now() - h * 3600_000).toISOString()

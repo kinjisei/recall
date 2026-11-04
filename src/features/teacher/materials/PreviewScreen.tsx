@@ -9,6 +9,9 @@
 // хватает: молча меньше учитель не получает. Упражнения правятся руками
 // (d17, Ф2.25-3): «Изменить · Убрать», «+ Упражнение → Напишу сам»; правка
 // меняет этот шаг (черновик мастера), открытая форма — свой черновик.
+// Замена через AI (Ф2.25-4б): «↻ Заменить», «Составит AI» и остаток замен
+// карточкой у «Сохранить» (d17-1…d17-3); пока AI пишет, с шага не уходим и
+// не перегенерируем — ответ лёг бы не в тот текст, «Сохранить» спросит.
 // ============================================================================
 import { useState } from 'react'
 import { Button } from '../../../shared/ui/Button'
@@ -32,6 +35,9 @@ import { Hint, WizardTop } from './wizardBits'
 import { planShortfall } from '../../../lib/exerciseFormats'
 import { clearDraft } from '../../../shared/lib/drafts'
 import { EXERCISE_EDIT_DRAFT, ExerciseList } from './edit/ExerciseList'
+import { SwapCard } from './edit/swapParts'
+import { hasStrong, swapPlanOf } from './edit/swapPlan'
+import { useSwapBudget } from './edit/useSwapBudget'
 import { Article, AssignCard, ExercisesCard, TextFeedback, assignRows, saveLabel } from './textBits'
 import { ErrorText } from '../../../shared/ui/ErrorText'
 
@@ -78,6 +84,10 @@ export function PreviewScreen({
   const [error, setError] = useState<string | null>(null)
   // упражнение на правке без «Готово»: сохранение спросит, а не потеряет правку молча
   const [pending, setPending] = useState<number | null>(null)
+  // упражнение, которое пишет AI (Ф2.25-4б), и остаток замен на сегодня
+  const [swapping, setSwapping] = useState<number | null>(null)
+  const budget = useSwapBudget()
+  const swapPlan = swapPlanOf(plan)
   const { confirm, dialog } = useConfirm()
   const leave = (to: () => void) => () => {
     draft.forget()
@@ -107,6 +117,17 @@ export function PreviewScreen({
   }
 
   const save = async () => {
+    if (
+      swapping !== null &&
+      !(await confirm({
+        title: `AI ещё пишет упражнение ${swapping}`,
+        body: 'Сохранить материал без него? Замена уже потрачена.',
+        action: 'Сохранить без него',
+        cancel: 'Подождать',
+      }))
+    ) {
+      return
+    }
     if (
       pending !== null &&
       !(await confirm({
@@ -157,6 +178,8 @@ export function PreviewScreen({
           draftScope={EXERCISE_EDIT_DRAFT}
           disabled={busy !== null}
           onPending={setPending}
+          ai={{ budget, plan: swapPlan }}
+          onSwapping={setSwapping}
         />
       </ExercisesCard>
     </div>
@@ -167,6 +190,7 @@ export function PreviewScreen({
       {draft.restored && <DraftRestored onClear={draft.clear} className="-mt-1.5 px-1" />}
       <AssignCard
         rows={assignRows(ids, req.lang, levels)}
+        extra={<SwapCard budget={budget} strong={hasStrong(swapPlan, content.exercises)} />}
         info={
           <>
             {own ? 'Перегенерировать упражнения' : 'Перегенерировать весь текст'} — <b className="font-semibold text-fg">1 генерация</b>
@@ -178,7 +202,7 @@ export function PreviewScreen({
         <Button className="w-full" onClick={() => void save()} loading={busy === 'save'} disabled={busy !== null}>
           {saveLabel(ids.length)}
         </Button>
-        <Button variant="outline" size="sm" className="w-full" onClick={() => void regen()} loading={busy === 'regen'} disabled={busy !== null}>
+        <Button variant="outline" size="sm" className="w-full" onClick={() => void regen()} loading={busy === 'regen'} disabled={busy !== null || swapping !== null}>
           <IconRefresh size={16} aria-hidden /> {own ? 'Перегенерировать упражнения' : 'Перегенерировать всё'}
         </Button>
       </AssignCard>
@@ -190,8 +214,8 @@ export function PreviewScreen({
       <WizardTop
         current="text"
         own={own}
-        // пока сохраняем или пишем заново — с шага не уходим: ответ лёг бы мимо
-        go={busy ? {} : { form: leave(own ? onBack : onToForm), plan: own ? null : leave(onBack) }}
+        // пока сохраняем, пишем заново или AI заменяет упражнение — с шага не уходим: ответ лёг бы мимо
+        go={busy || swapping !== null ? {} : { form: leave(own ? onBack : onToForm), plan: own ? null : leave(onBack) }}
         onExit={() => void exit()}
       />
       <MainAside size="work" label="Сохранение" main={main} aside={aside} />

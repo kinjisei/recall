@@ -219,7 +219,7 @@ try {
   const chosen = await text(page)
   await press(page, 'Напишу сам')
   check('«Выбрано: Грамматика · Выбери правильную форму» → пустая форма «· новое»', chosen.includes('Выбрано: Грамматика · Выбери правильную форму') && (await formText(page)).includes('Выбери правильную форму · новое'))
-  check('AI-кнопок нет (Ф2.25-4): ни «Заменить», ни «Составит AI»', !/Заменить|Составит AI/.test(await text(page)))
+  check('рядом с «Напишу сам» — «Составит AI», у упражнений — «Заменить» (Ф2.25-4б; сама замена — smoke-exercise-swap)', /Составит AI/.test(chosen) && /Заменить/.test(await text(page)))
   await press(page, 'Готово', '[data-exercise-edit]')
   const empty = await formText(page)
   check('пустая форма: причины у предложения и форм', empty.includes('Впиши предложение') && empty.includes('Заполни все формы'), empty.slice(0, 200))

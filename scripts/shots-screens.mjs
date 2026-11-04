@@ -51,7 +51,7 @@
  *   guide       — методичка, прокручена до раздела 2 (d9-3), снимок окном.
  * Ф2.25 — упражнения материала: экраны и данные в `_shots-f225.mjs` (`--only material-run` — ученик по u5, `--only material-review` — проверка по d18)
  * и `_shots-f2252.mjs` (`--only exercise-plan` — упражнения плана и «Моего текста» по d16),
- * `_shots-f2253.mjs` (`--only exercise-edit` — правка упражнений руками по d17: мастер и библиотека, d17-4; `phone` — снимок только на 390).
+ * `_shots-f2253.mjs` (`--only exercise-edit` — правка упражнений руками и замена через AI по d17: мастер и библиотека, d17-2, d17-3в, d17-4; `phone` — снимок только на 390).
  * Заходы 4г (d11–d15) — экраны и данные в `_shots-4g.mjs`: тест уровня, программа, «Моя учёба»,
  * «Пригласи коллегу», «Как оплатить», Настройки, лендинг (гость — без входа: `screen(null, …)`).
  * Аудит у них — по шторке или диалогу (`audit`), а не по <main> под
@@ -146,9 +146,11 @@ async function signIn(page, email) {
  * высоту»: панель раздела прокручивается внутри, снимок страницы её не
  * удлинит); audit — где искать замечания (по умолчанию <main>); overlay —
  * шторка или диалог поверх экрана: снимок ровно окном, как кадр макета (на
- * всю страницу закреплённая шторка висела бы вверху длинной картинки).
+ * всю страницу закреплённая шторка висела бы вверху длинной картинки);
+ * skeleton — скелетон и есть кадр («AI пишет» d8-5, d17-2): запрос висит
+ * нарочно, ждать его ухода незачем.
  */
-async function shoot(page, name, path, width, expect, looks, { before, prepare, wait, tall, audit = 'main', overlay = false } = {}) {
+async function shoot(page, name, path, width, expect, looks, { before, prepare, wait, tall, audit = 'main', overlay = false, skeleton = false } = {}) {
   const base = page.viewport()
   if (tall && width >= 600) await page.setViewport({ ...base, height: tall })
   for (const [palette, theme] of looks) {
@@ -169,7 +171,7 @@ async function shoot(page, name, path, width, expect, looks, { before, prepare, 
     // перезапускает появление, и аудит ловил полупрозрачный текст («Войти в
     // урок» 3,3 : 1 вместо 5 : 1 — прогон 20.10.2026)
     // заглушка не ушла за 10 с — снимок не годится для приёмки: ✗ в итоге, а не тихий ✓
-    const loaded = await waitForData(page)
+    const loaded = skeleton || (await waitForData(page))
     await settleAnimations(page)
     const issues = await page.evaluate(auditPage, audit)
     const file = `${DIR}/${name}-${palette}-${theme}-${width}.png`
@@ -370,7 +372,7 @@ try {
     await screen(t.email, [
       { name: 'wizard-form', path: '/tasks?tab=materials', before: drafts(0), prepare: fresh, expect: /Новый материал[\s\S]*Итог/ },
       { name: 'wizard-plan', path: '/tasks?tab=materials', before: drafts(1), prepare: fresh, expect: /План от AI[\s\S]*Итог/ },
-      { name: 'wizard-writing', path: '/tasks?tab=materials', before: drafts(1), prepare: writing, expect: /План от AI/ },
+      { name: 'wizard-writing', path: '/tasks?tab=materials', before: drafts(1), prepare: writing, expect: /План от AI/, skeleton: true },
       { name: 'wizard-text', path: '/tasks?tab=materials', before: drafts(2), prepare: fresh, expect: /A long day at the airport/ },
     ])
   }
@@ -437,7 +439,7 @@ try {
   if (!ONLY || ONLY === 'material-run') await shotsMaterialRun({ screen, admin, must, t, s }) // задание: новые форматы (u5, Ф2.25-1а)
   if (!ONLY || ONLY === 'material-review') await shotsMaterialReview({ screen, admin, must, t, s }) // проверка работы в баллах (d18, Ф2.25-1б)
   if (!ONLY || ONLY === 'exercise-plan') await shotsExercisePlan({ screen, t, a, s }) // упражнения плана и «Моего текста» (d16, Ф2.25-2)
-  if (!ONLY || ONLY === 'exercise-edit') await shotsExerciseEdit({ screen, admin, must, t, a, s, dir: DIR }) // правка упражнений руками (d17: мастер — 3а, библиотека — 3б)
+  if (!ONLY || ONLY === 'exercise-edit') await shotsExerciseEdit({ screen, admin, must, sql, t, a, s, dir: DIR }) // правка упражнений руками и замена через AI (d17: мастер — 3а, библиотека — 3б, AI — 4б)
   if (!ONLY || ONLY === 'landing') await shotsLanding({ screen, t }) // лендинг (d15): гость и в рамке у репетитора
   if (!ONLY || ONLY === 'home') {
     const word = /Слово дня/

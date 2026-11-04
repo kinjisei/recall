@@ -1,8 +1,9 @@
 // ============================================================================
-// Упражнения с правкой руками (макет d17, PLAN.md Ф2.25-3): у каждого
-// «Изменить · Убрать», форма открывается на месте упражнения; «+ Упражнение»
-// — выбор вида тремя группами (d17-3) и «Напишу сам» — пустая форма в конце
-// (d17-3б). «↻ Заменить» и «Составит AI» — Ф2.25-4: их здесь нет.
+// Упражнения с правкой (макет d17, PLAN.md Ф2.25-3, -4б): у каждого
+// «Изменить · ↻ Заменить · Убрать», форма открывается на месте упражнения;
+// «+ Упражнение» — выбор вида тремя группами (d17-3), «Составит AI» и
+// «Напишу сам» — пустая форма в конце (d17-3б). Замена через AI — пока AI
+// пишет, скелетон строки (d17-2); кончились — плашка (d17-3в).
 //
 // «Готово» проверяет форму тем же фильтром, что ответ AI (`checkEdit`,
 // domains/materials): причина — у поля, после первого нажатия обновляется
@@ -10,26 +11,31 @@
 // перезагрузку; черновик чужого упражнения (текст перегенерирован) забыт.
 // Мастер меняет шаг «Текст» сразу; библиотека пишет в базу (Ф2.25-3б) —
 // `onChange` ждём, и не сохранилось — форма остаётся открытой.
+//
+// Правки ложатся ПО ОЧЕРЕДИ и в список на момент записи (`commit`): ответ AI
+// приходит позже нажатия, учитель тем временем правит другое упражнение, —
+// иначе одна запись затёрла бы другую (а в библиотеке — устаревшая версия).
 // ============================================================================
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { blankDraft, checkEdit, exerciseProblems, toDraft, type ExerciseDraft } from '../../../../domains/materials'
-import { formatById, formatOf, formatTitle, GROUPS } from '../../../../lib/exerciseFormats'
+import { formatById, formatOf, formatTitle } from '../../../../lib/exerciseFormats'
 import { loadIrregular } from '../../../../lib/wordForms'
 import { useDraft } from '../../../../shared/lib/useDraft'
 import { useConfirm } from '../../../../shared/ui/ConfirmDialog'
-import { IconPencil, IconPlus, IconTrash } from '../../../../shared/ui/icons'
-import type { AppLang, ExerciseFormatId, MaterialExercise } from '../../../../types'
-import { ExerciseRow } from '../detailParts'
-import { FormatPicker } from '../FormatPicker'
+import { ErrorText } from '../../../../shared/ui/ErrorText'
+import { IconPencil, IconRefresh, IconTrash } from '../../../../shared/ui/icons'
+import type { ExerciseFormatId, MaterialExercise } from '../../../../types'
+import type { EditText } from './editText'
+import { ExerciseRow, rowLabel } from '../detailParts'
 import { useIrregular } from '../useIrregular'
 import { ExerciseEditor } from './ExerciseEditor'
+import { AddExercise, RowAction } from './listParts'
+import { SwapSkeleton, SwapsOut } from './swapParts'
+import { aiButtonNote, canSwap, hasStrong, keyOf, strongOf, type SwapPlan } from './swapPlan'
+import { NEW, useExerciseSwap, type CommitResult } from './useExerciseSwap'
+import type { SwapBudget } from './useSwapBudget'
 
-/** Текст, к которому упражнения: слова «из текста», кнопки True / False по языку и уровню. */
-export interface EditText {
-  body: string
-  lang: AppLang
-  level: string
-}
+export type { EditText } from './editText'
 
 /** Черновик открытой формы на шаге «Текст» мастера; «Очистить» мастера стирает и его. */
 export const EXERCISE_EDIT_DRAFT = 'material-exercise-edit'
@@ -56,6 +62,8 @@ export function ExerciseList({
   draftScope,
   disabled = false,
   onPending,
+  ai,
+  onSwapping,
 }: {
   exercises: MaterialExercise[]
   /** Новые упражнения. Библиотека пишет в базу: `false` — не сохранилось, форма остаётся (причину показывает экран). */
@@ -66,6 +74,10 @@ export function ExerciseList({
   disabled?: boolean
   /** Номер упражнения с правкой без «Готово» (null — такой нет): «Сохранить» спросит, а не потеряет её молча. */
   onPending?: (n: number | null) => void
+  /** Замена через AI: остаток и план материала; нет — только правка руками. */
+  ai?: { budget: SwapBudget; plan: SwapPlan }
+  /** Номер упражнения, которое пишет AI (null — никакое): мастер не уходит с шага, «Сохранить» спросит. */
+  onSwapping?: (n: number | null) => void
 }) {
   const [stored, setOpen] = useDraft<Open | null>(draftScope, null)
   const open = stored && fits(stored, exercises) ? stored : null
@@ -75,9 +87,59 @@ export function ExerciseList({
   const [adding, setAdding] = useState(false)
   const [picked, setPicked] = useState<ExerciseFormatId | null>(null)
   const { confirm, dialog } = useConfirm()
-  const n = (o: Open) => (o.at === 'new' ? exercises.length + 1 : o.at + 1)
+
+  // список и запись — на момент записи, а не отрисовки; правки — по очереди
+  const latest = useRef(exercises)
+  const write = useRef(onChange)
+  useLayoutEffect(() => {
+    latest.current = exercises
+    write.current = onChange
+  })
+  const queue = useRef<Promise<unknown>>(Promise.resolve())
+  const commit = (make: (list: MaterialExercise[]) => MaterialExercise[] | null): Promise<CommitResult> => {
+    const run = queue.current.then(async (): Promise<CommitResult> => {
+      const before = latest.current.length
+      const next = make(latest.current)
+      if (!next) return 'missing'
+      if ((await write.current(next)) === false) return 'failed'
+      latest.current = next
+      // AI добавил упражнение, а форма «Напишу сам» открыта — она остаётся своей
+      if (next.length > before) setOpen((o) => (o?.at === 'new' && o.count === before ? { ...o, count: next.length } : o))
+      return 'saved'
+    })
+    queue.current = run.catch(() => {})
+    return run
+  }
+
+  const plan = ai?.plan ?? { words: [], grammar: '', rows: [] }
+  const swap = useExerciseSwap({
+    text,
+    plan,
+    budget: ai?.budget as SwapBudget,
+    latest: () => latest.current,
+    commit,
+    // библиотека не сохранила ответ AI — он открывается формой и не пропадает (не сохранилось — форма остаётся)
+    onUnsaved: (ex, key) =>
+      setOpen((cur) => {
+        const list = latest.current
+        if (cur && fits(cur, list)) return cur
+        if (!key) return { at: 'new', draft: toDraft(ex), was: null, count: list.length, tried: false }
+        const i = list.findIndex((e) => keyOf(e) === key)
+        return i < 0 ? cur : { at: i, draft: toDraft(ex), was: list[i] ?? null, tried: false }
+      }),
+  })
+  const newRuns = swap.running.filter((r) => r.key === null)
+  const n = (o: Open) => (o.at === 'new' ? exercises.length + newRuns.length + 1 : o.at + 1)
   const pending = open && changed(open) ? n(open) : null
   useEffect(() => onPending?.(pending), [pending, onPending])
+  const keys = exercises.map(keyOf)
+  const first = swap.running[0]
+  const swapping = !first ? null : first.key === null ? exercises.length + 1 : keys.indexOf(first.key) + 1 || null
+  useEffect(() => onSwapping?.(swapping), [swapping, onSwapping])
+
+  const c = ai?.budget.counters ?? null
+  const strongHere = !!ai && (hasStrong(plan, exercises) || (adding && picked !== null && strongOf(plan, picked)))
+  const out = !c ? null : c.left === 0 ? 'all' : c.strongLeft === 0 && strongHere ? 'strong' : null
 
   /** Открыта другая форма с правками — спросить, бросить ли их. */
   const leave = async () =>
@@ -96,12 +158,16 @@ export function ExerciseList({
   const remove = async (i: number) => {
     const ok = await confirm({ title: `Убрать упражнение ${i + 1}?`, body: 'Его не будет в материале.', action: 'Убрать', cancel: 'Оставить', danger: true })
     if (!ok) return
+    const key = keys[i]
     setBusy(true)
-    const saved = await onChange(exercises.filter((_, j) => j !== i))
+    const saved = await commit((list) => {
+      const j = list.findIndex((e) => keyOf(e) === key)
+      return j < 0 ? null : list.filter((_, x) => x !== j)
+    })
     setBusy(false)
-    if (saved === false) return
+    if (saved !== 'saved') return
     // открытая форма ниже убранного — съезжает на одно место; новая — помнит, что упражнений стало меньше
-    if (open?.at === 'new') setOpen({ ...open, count: exercises.length - 1 })
+    if (open?.at === 'new') setOpen({ ...open, count: latest.current.length })
     else if (open && open.at >= i) setOpen(open.at === i ? null : { ...open, at: open.at - 1 })
   }
 
@@ -118,9 +184,10 @@ export function ExerciseList({
       setFatal(Object.keys(exerciseProblems(open.draft, ctx)).length ? null : (r.problems.prompt ?? null))
       return
     }
-    const saved = await onChange(open.at === 'new' ? [...exercises, r.exercise] : exercises.map((e, j) => (j === open.at ? r.exercise : e)))
+    const at = open.at
+    const saved = await commit((list) => (at === 'new' ? [...list, r.exercise] : list.map((e, j) => (j === at ? r.exercise : e))))
     setBusy(false)
-    if (saved === false) return
+    if (saved !== 'saved') return
     setFatal(null)
     setOpen(null)
   }
@@ -148,33 +215,56 @@ export function ExerciseList({
     />
   )
 
+  const note = (key: string) => swap.notes.find((x) => x.key === key)
   return (
     <div className="@container flex flex-col gap-3" data-exercise-list>
-      {exercises.map((ex, i) =>
-        open?.at === i ? (
-          editor(open)
-        ) : (
-          <ExerciseRow
-            key={i}
-            n={i + 1}
-            ex={ex}
-            lang={text.lang}
-            actions={
-              disabled ? undefined : (
-                <>
-                  <RowAction label="Изменить" n={i + 1} disabled={busy} onClick={() => void start({ at: i, draft: toDraft(ex), was: ex, tried: false })}>
-                    <IconPencil size={15} aria-hidden />
-                  </RowAction>
-                  <RowAction label="Убрать" n={i + 1} quiet disabled={busy || exercises.length <= 1} title={exercises.length <= 1 ? 'Последнее упражнение не убрать' : undefined} onClick={() => void remove(i)}>
-                    <IconTrash size={15} aria-hidden />
-                  </RowAction>
-                </>
-              )
-            }
-          />
-        ),
-      )}
+      {exercises.map((ex, i) => {
+        if (open?.at === i) return editor(open)
+        const key = keys[i] ?? ''
+        const running = swap.running.some((r) => r.key === key)
+        const strong = strongOf(plan, formatOf(ex))
+        const actions = disabled ? undefined : (
+          <>
+            <RowAction label="Изменить" n={i + 1} disabled={busy || running} onClick={() => void start({ at: i, draft: toDraft(ex), was: ex, tried: false })}>
+              <IconPencil size={15} aria-hidden />
+            </RowAction>
+            {ai && (
+              <RowAction
+                label="Заменить"
+                n={i + 1}
+                disabled={busy || running || !canSwap(c, strong)}
+                title={canSwap(c, strong) ? undefined : strong && c && c.left > 0 ? 'Сложные замены кончились — снова завтра с 00:00' : 'Замены кончились — снова завтра с 00:00'}
+                onClick={() => swap.start({ replacing: ex })}
+              >
+                <IconRefresh size={15} aria-hidden />
+              </RowAction>
+            )}
+            <RowAction
+              label="Убрать"
+              n={i + 1}
+              quiet
+              disabled={busy || running || exercises.length <= 1}
+              title={exercises.length <= 1 ? 'Последнее упражнение не убрать' : undefined}
+              onClick={() => void remove(i)}
+            >
+              <IconTrash size={15} aria-hidden />
+            </RowAction>
+          </>
+        )
+        const why = note(key)
+        return (
+          <Fragment key={i}>
+            {running ? <SwapSkeleton n={i + 1} label={rowLabel(ex)} isNew={false} actions={actions} /> : <ExerciseRow n={i + 1} ex={ex} lang={text.lang} actions={actions} />}
+            {why && <ErrorText className="-mt-1 px-1">{why.text}</ErrorText>}
+          </Fragment>
+        )
+      })}
+      {newRuns.map((r, k) => (
+        <SwapSkeleton key={r.id} n={exercises.length + k + 1} label={formatTitle(formatById(r.format), text.level)} isNew />
+      ))}
       {open?.at === 'new' && editor(open)}
+      {note(NEW) && <ErrorText className="px-1">{note(NEW)?.text}</ErrorText>}
+      {out && <SwapsOut strongOnly={out === 'strong'} left={c?.left ?? 0} />}
       {!disabled && (
         <AddExercise
           open={adding}
@@ -182,79 +272,23 @@ export function ExerciseList({
           picked={picked}
           onPick={setPicked}
           onWrite={(format) => void start({ at: 'new', draft: blankDraft(format), was: null, count: exercises.length, tried: false })}
+          ai={
+            ai &&
+            ((id) => {
+              const strong = strongOf(plan, id)
+              return { note: aiButtonNote(c, strong), can: !busy && canSwap(c, strong) }
+            })
+          }
+          onAi={(format) => {
+            setAdding(false)
+            setPicked(null)
+            swap.start({ format })
+          }}
           text={text}
           has={new Set(exercises.map(formatOf))}
         />
       )}
       {dialog}
-    </div>
-  )
-}
-
-/** «✎ Изменить», «🗑 Убрать» в шапке упражнения (d17 `.ac17`); на телефоне — 44. */
-function RowAction({ label, n, quiet = false, disabled = false, title, onClick, children }: { label: string; n: number; quiet?: boolean; disabled?: boolean; title?: string; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      type="button"
-      aria-label={`${label} упражнение ${n}`}
-      title={title}
-      disabled={disabled}
-      onClick={onClick}
-      // цель 44 и на компьютере, в раскладке — 32, как в кадре; accent-soft-fg, а не
-      // accent-strong кадра: на подложке input у «Заката» светлой тот — 4,47 : 1 (п.76 (20))
-      className={`inline-flex h-11 items-center gap-1.5 whitespace-nowrap rounded-tag px-2.5 text-note font-medium active:bg-ghost-press disabled:text-fg-faint rail:-my-1.5 ${quiet ? 'text-fg-secondary' : 'text-accent-soft-fg'}`}
-    >
-      {children}
-      {label}
-    </button>
-  )
-}
-
-/** «+ Упражнение» (d17-3): вид тремя группами, «Выбрано: Грамматика · …» и «Напишу сам». */
-function AddExercise({
-  open,
-  onToggle,
-  picked,
-  onPick,
-  onWrite,
-  text,
-  has,
-}: {
-  open: boolean
-  onToggle: () => void
-  picked: ExerciseFormatId | null
-  onPick: (id: ExerciseFormatId) => void
-  onWrite: (id: ExerciseFormatId) => void
-  text: EditText
-  has: ReadonlySet<ExerciseFormatId>
-}) {
-  const f = picked ? formatById(picked) : null
-  return (
-    <div className="flex flex-col gap-2.5" data-add-exercise>
-      <button
-        type="button"
-        aria-expanded={open}
-        onClick={onToggle}
-        className={`inline-flex h-11 items-center gap-1.5 self-start rounded-control-sm pl-2.5 pr-3.5 text-body font-semibold ${
-          open ? 'bg-accent-soft text-accent-soft-fg inset-ring-2 inset-ring-focus' : 'text-accent-strong inset-ring-2 inset-ring-line active:bg-ghost-press'
-        }`}
-      >
-        <IconPlus size={18} aria-hidden /> Упражнение
-      </button>
-      {open && <FormatPicker label="Новое упражнение" lang={text.lang} level={text.level} inPlan={has} tag="уже есть" again selected={picked} onPick={onPick} />}
-      {open && f && (
-        <div className="flex flex-wrap items-center gap-2 rounded-control bg-surface p-3 inset-ring-1 inset-ring-line">
-          <span className="grow text-sm text-fg-secondary">
-            Выбрано:{' '}
-            <b className="font-semibold text-fg">
-              {GROUPS.find((g) => g.id === f.group)?.label} · {formatTitle(f, text.level)}
-            </b>
-          </span>
-          <button type="button" onClick={() => onWrite(f.id)} className="inline-flex h-11 items-center gap-1.5 rounded-tile bg-surface px-3.5 text-sm font-semibold text-fg inset-ring-1 inset-ring-line active:bg-ghost-press">
-            <IconPencil size={16} aria-hidden /> Напишу сам
-          </button>
-        </div>
-      )}
     </div>
   )
 }
