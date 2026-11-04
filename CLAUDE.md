@@ -59,6 +59,7 @@ VS Code, где у Claude есть файлы и терминал: фичи со
 | Закон о персональных данных: перечень ПД, внутренний порядок, план на утечку, обращение в министерство | `docs/legal/` (Ф2.22; меняешь, какие данные берёт приложение, — правь `pd-list.md`) |
 | Экономика и лимиты | `docs/costs.md`; чертёж энергии от 03.08 — `docs/energy-design.md` (живые числа — `api/_tasks.ts`, `spend_energy`) |
 | Дизайн: опись интерфейса, промпты Claude Design, макеты | `docs/design/` (`ui-inventory.md`, `prompts.md`), `design/mockups/` |
+| Облачная сессия (claude.ai/code): ветка, чего там нет, отчёт | `docs/cloud.md` |
 | История и причины решений | `git log`, `docs/changelog.md` (до 26.07.2026) |
 | Устаревшее: старые планы, `ARCHITECTURE.md`, находки | `docs/archive/` — не правится |
 
