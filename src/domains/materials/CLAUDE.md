@@ -68,6 +68,12 @@
 
 ## Как проверить
 
+- `node scripts/test-exercise-swap.mjs` (чистый, в CI) — замена через AI:
+  правило сильных и лимиты 25 / 5 у клиента = у сервера = в базе, разбор
+  ответа (`readSwap`: одно, нужного вида, прошло фильтр), путь сервера.
+- `node scripts/check-ai-swap.mjs --model=…` (вне CI, тестовый ключ) —
+  качество замены по видам, таблица — `scripts/ai-quality/criteria.md`.
+
 - `node scripts/check-material-lock.mjs` (тестовая база) — замок, версия,
   копия и гонки сдачи с правкой (`supabase/CLAUDE.md`); случаи правила
   экрана `editLock` — там же, против базы.
