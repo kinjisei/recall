@@ -37,6 +37,13 @@ Council, IDP, Cambridge), а репозиторий открытый. Здесь
 `gt-task1` · `gt-task2`), `band`, `prompt`, `promptSource`, `essay`,
 `words`, `examinerComment`, `notes`, `skip`.
 
+## Калибровка без квоты
+
+Пороги доли предложений без ошибок и округление итога подбираются на уже
+сделанном прогоне, без запросов к AI: `node scripts/check-ai-writing.mjs
+--rescore=<папка прогона> [--t7=…] [--t8=…] [--round=down,half]`
+(`criteria.md`, «Порядок прогона»).
+
 ## Чего в наборе нет
 
 Academic Task 1 (графики): данные графиков в PDF — картинкой, а
