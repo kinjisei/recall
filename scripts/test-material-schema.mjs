@@ -23,7 +23,8 @@
  *      ним сервер или фильтр отказывает;
  *   6. поля схемы — те же, что в образце ответа в промпте (`exerciseSpec`,
  *      план, текст, «Мой текст», замена);
- *   7. вызовы материала шлют схему, сервер кладёт её в responseJsonSchema.
+ *   7. вызовы материала (и замер замены `check-ai-swap`) шлют схему,
+ *      сервер кладёт её в responseJsonSchema.
  * Без сети, базы и ключей. Запуск: node scripts/test-material-schema.mjs
  */
 // клиентский код (промпты, каталог) — импорты без расширения: загрузчик проверок AI их понимает
@@ -409,6 +410,7 @@ for (const id of IDS) {
   check('текст шлёт contentSchema по строкам плана', /json: contentSchema\(req\.lang, req\.level, rows\)/.test(lib))
   check('«Мой текст» шлёт ownTextSchema по выбранным видам', /json: ownTextSchema\(lang, level, opts\?\.rows\)/.test(lib))
   check('замена шлёт swapSchema своего вида', /json: swapSchema\(input\.lang, input\.level, input\.format\)/.test(src('src/domains/materials/api.ts')))
+  check('замер замены (check-ai-swap) шлёт ту же схему, что кнопка', /swapSchema\(c\.lang, c\.level, c\.format\)\)/.test(src('scripts/check-ai-swap.mjs')))
   check('разбор — общий с тестом (readPlan, readContent, readOwnText)', ['readPlan(raw)', 'readContent(raw,', 'readOwnText(raw,'].every((s) => lib.includes(s)))
 }
 
