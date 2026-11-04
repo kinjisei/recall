@@ -267,7 +267,7 @@ export async function suggestHomework(
     `Делай короткими заходами — ${n} ${plural(n, 'раз', 'раза', 'раз')} за срок лучше, ` +
     'чем всё в один вечер. Из двух заданий «на выбор» сделай одно.'
 
-  let brief = ''
+  let brief: string
   try {
     brief = await studentBriefBlock(studentId, lang)
   } catch {

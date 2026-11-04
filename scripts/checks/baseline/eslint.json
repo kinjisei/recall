@@ -138,26 +138,6 @@
       "count": 1
     }
   },
-  "src/lib/aiHealth.ts": {
-    "no-useless-assignment": {
-      "count": 1
-    }
-  },
-  "src/lib/fsrs.ts": {
-    "@typescript-eslint/no-unused-vars": {
-      "count": 1
-    }
-  },
-  "src/lib/homeworkSuggest.ts": {
-    "no-useless-assignment": {
-      "count": 1
-    }
-  },
-  "src/lib/textAnalysis.ts": {
-    "no-useless-assignment": {
-      "count": 1
-    }
-  },
   "src/lib/useCountUp.ts": {
     "react-hooks/set-state-in-effect": {
       "count": 1

@@ -137,6 +137,7 @@ export async function getDueCards(limit = 50, lang?: AppLang): Promise<DueCard[]
   // Новые — на оставшиеся места лимита.
   for (const row of newRes.data ?? []) {
     if (due.length >= limit) break
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- review_states нужен только фильтру запроса; из карточки его выкидываем
     const { review_states: _rs, ...card } = row as Card & { review_states: unknown }
     due.push({ card: card as Card, state: null })
   }

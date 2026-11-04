@@ -21,7 +21,7 @@ const LIMIT = 3
 /** Отметки серверных сбоёв за последний час (старые отсеиваем). */
 function recent(): number[] {
   const cutoff = Date.now() - WINDOW_MS
-  let times: unknown = []
+  let times: unknown
   try {
     times = JSON.parse(localStorage.getItem(KEY) || '[]')
   } catch {
