@@ -34,7 +34,7 @@ function alive(pid) {
 }
 
 function sweepStale() {
-  let entries = []
+  let entries
   try {
     entries = readdirSync(ROOT)
   } catch {

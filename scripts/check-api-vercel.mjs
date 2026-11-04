@@ -53,7 +53,7 @@ writeFileSync(
 // несэкранированные аргументы, а путь у нас во временной папке.
 const tsc = join(ROOT, 'node_modules', 'typescript', 'bin', 'tsc')
 
-let out = ''
+let out
 let failed = false
 try {
   out = execFileSync(process.execPath, [tsc, '-p', cfg], {

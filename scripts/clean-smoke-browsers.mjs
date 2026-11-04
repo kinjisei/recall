@@ -69,7 +69,7 @@ if (before > 0) {
 }
 
 // 2. Профили: те, что освободились, удаляем
-let dirs = []
+let dirs
 try {
   dirs = readdirSync(ROOT)
 } catch {

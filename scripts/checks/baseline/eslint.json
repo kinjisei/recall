@@ -9,29 +9,6 @@
       "count": 1
     }
   },
-  "scripts/_profile.mjs": {
-    "no-useless-assignment": {
-      "count": 1
-    }
-  },
-  "scripts/check-api-vercel.mjs": {
-    "no-useless-assignment": {
-      "count": 1
-    }
-  },
-  "scripts/clean-smoke-browsers.mjs": {
-    "no-useless-assignment": {
-      "count": 1
-    }
-  },
-  "scripts/gen-icons.mjs": {
-    "no-sparse-arrays": {
-      "count": 2
-    },
-    "no-useless-escape": {
-      "count": 1
-    }
-  },
   "src/app/ProtectedRoute.tsx": {
     "react-hooks/exhaustive-deps": {
       "count": 2
