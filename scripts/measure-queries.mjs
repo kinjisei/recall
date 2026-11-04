@@ -6,7 +6,6 @@
  */
 import { createClient } from '@supabase/supabase-js'
 import { spawn } from 'node:child_process'
-import { tmpdir } from 'node:os'
 import puppeteer from 'puppeteer-core'
 import { profileDir } from './_profile.mjs'
 import { PROD_SITE, assertSiteMatchesDb, firstArg, scriptEnv } from './_env.mjs'
@@ -85,7 +84,9 @@ const main = async () => {
         localStorage.setItem('recall.onboarded', '1')
         localStorage.setItem('recall.deck_tutorial_seen', '1')
         localStorage.setItem(`sb-${ref}-auth-token`, JSON.stringify(s))
-      } catch {}
+      } catch {
+        // на about:blank localStorage закрыт — там он и не нужен
+      }
     }, REF, sess)
 
     let bucket = []

@@ -180,7 +180,7 @@ try {
   console.log('ОШИБКА:', String(e).slice(0, 200)); fail++
 } finally {
   for (const v of Object.values(ids)) if (v?.id) await admin.auth.admin.deleteUser(v.id).catch(() => {})
-  for (const v of Object.values(ids)) if (v?.email) { try { await admin.from('allowed_emails').delete().eq('email', v.email) } catch {} }
+  for (const v of Object.values(ids)) if (v?.email) { try { await admin.from('allowed_emails').delete().eq('email', v.email) } catch { /* уборка: сбой здесь не должен ронять отчёт */ } }
 }
 console.log(`\n${pass}/${pass + fail} ок`)
 process.exit(fail ? 1 : 0)

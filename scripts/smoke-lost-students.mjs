@@ -15,8 +15,6 @@
  */
 import { createClient } from '@supabase/supabase-js'
 import { spawn } from 'node:child_process'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
 import puppeteer from 'puppeteer-core'
 import { profileDir } from './_profile.mjs'
 import { APP_URL, scriptEnv } from './_env.mjs'

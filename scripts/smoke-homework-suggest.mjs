@@ -217,7 +217,9 @@ try {
   let task = ''
   try {
     task = JSON.parse(calls[0]).task
-  } catch {}
+  } catch {
+    // вызова не было или тело не JSON — task пустой, проверка ниже покраснеет
+  }
   check('задача помечена как homework, а не material/program', task === 'homework', task || '—')
 
   check(

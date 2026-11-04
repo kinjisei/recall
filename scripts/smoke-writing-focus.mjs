@@ -36,7 +36,6 @@ const check = (n, ok, extra = '') => {
   console.log(`${ok ? '✓' : '✗'} ${n}${extra ? ' — ' + extra : ''}`)
 }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
-const seen = (page, t) => page.evaluate((x) => (document.body.innerText || '').includes(x), t)
 const waitText = (page, t, ms = 20000) =>
   page
     .waitForFunction((x) => document.body.innerText.includes(x), { timeout: ms, polling: 250 }, t)
@@ -137,7 +136,9 @@ try {
     (fake) => {
       try {
         localStorage.setItem('recall.onboarded', '1')
-      } catch {}
+      } catch {
+        // на about:blank localStorage закрыт — там он и не нужен
+      }
       window.__aiCalls = []
       const orig = window.fetch.bind(window)
       window.fetch = (input, init) => {

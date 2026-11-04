@@ -8,7 +8,6 @@
  */
 import { createClient } from '@supabase/supabase-js'
 import { spawn } from 'node:child_process'
-import { tmpdir } from 'node:os'
 import puppeteer from 'puppeteer-core'
 import { profileDir } from './_profile.mjs'
 import { APP_URL, scriptEnv } from './_env.mjs'
@@ -113,7 +112,9 @@ const main = async () => {
       try {
         localStorage.setItem('recall.onboarded', '1')
         localStorage.setItem('recall.deck_tutorial_seen', '1')
-      } catch {}
+      } catch {
+        // на about:blank localStorage закрыт — там он и не нужен
+      }
     })
 
     // вход
@@ -146,7 +147,7 @@ const main = async () => {
     for (const vh of [844, 700, 640]) {
       await page.setViewport({ width: 390, height: vh, isMobile: true, hasTouch: true })
       console.log(`\n=== Экран 390×${vh} ===`)
-      await measureAll(page, vh)
+      await measureAll(page)
     }
   } finally {
     if (userId) await admin.auth.admin.deleteUser(userId).catch(() => {})
@@ -157,7 +158,7 @@ const main = async () => {
   }
 }
 
-async function measureAll(page, vh) {
+async function measureAll(page) {
   {
     for (const s of SCREENS) {
       await page.goto(BASE + s.path, { waitUntil: 'networkidle2', timeout: 30000 })

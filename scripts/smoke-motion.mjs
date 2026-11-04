@@ -402,7 +402,7 @@ async function main() {
     check('вкладка упражнений открылась', toExercises && ready)
 
     const verdict = await page.evaluate(
-      async ([right, wrong]) => {
+      async ([, wrong]) => {
         const wait = (ms) => new Promise((r) => setTimeout(r, ms))
         const find = (t) =>
           [...document.querySelectorAll('button')].find((b) => (b.textContent || '').trim() === t)

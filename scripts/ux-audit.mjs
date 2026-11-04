@@ -13,7 +13,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { spawn } from 'node:child_process'
 import { writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
 import puppeteer from 'puppeteer-core'
 import { profileDir } from './_profile.mjs'
 import { APP_URL, scriptEnv } from './_env.mjs'
@@ -124,7 +123,9 @@ const main = async () => {
           localStorage.setItem('recall.deck_tutorial_seen', '1')
           localStorage.setItem('recall.theme', theme)
           localStorage.setItem('recall.palette', palette)
-        } catch {}
+        } catch {
+          // на about:blank localStorage закрыт — там он и не нужен
+        }
       },
       THEME,
       PALETTE,
