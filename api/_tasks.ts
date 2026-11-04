@@ -33,6 +33,8 @@ export interface TaskSpec {
   grantsReplans?: boolean
   /** Повтор плана: вместо генерации тратит право (spend_replan), ответ — только план. */
   replan?: boolean
+  /** Замена упражнения: вместо энергии и генерации — лимит замен (spend_exercise_swap), модели — по виду (api/_swap.ts), ответ — одно упражнение. */
+  swap?: boolean
 }
 
 export const AI_TASKS: Record<AiTask, TaskSpec> = {
@@ -56,6 +58,10 @@ export const AI_TASKS: Record<AiTask, TaskSpec> = {
   material_plan: { tier: 'max', quota: 'heavy', energyCost: 0, generation: true, teacherOnly: true, grantsReplans: true },
   material_replan: { tier: 'max', quota: 'heavy', energyCost: 0, teacherOnly: true, replan: true },
   program: { tier: 'max', quota: 'heavy', energyCost: 0, generation: true, teacherOnly: true },
+  // замена одного упражнения (Ф2.25-4): генерацию не тратит, но 25 в сутки на
+  // учителя, из них сильных до 5; модели — по виду упражнения (api/_swap.ts),
+  // tier здесь — только окно ожидания и настройки ответа
+  exercise_swap: { tier: 'standard', quota: 'heavy', energyCost: 0, teacherOnly: true, swap: true },
   // Сборка домашки: состав набора считают ДАННЫЕ (lib/homeworkRules), модель
   // только переписывает заголовки и заметку — на это хватает обычной, а
   // дефицитные Pro-модели остаются материалам и программам. Списание всё равно

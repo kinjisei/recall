@@ -16,4 +16,5 @@ export {
 } from './edit'
 export { checkEdit, exerciseProblems, type EditProblems, type EditResult } from './editCheck'
 export { editLock, lockText, locksMaterial, namesList, type EditLock, type LockRow } from './lock'
-export { copyMaterial, saveMaterialExercises } from './api'
+export { copyMaterial, loadSwapCounters, saveMaterialExercises, swapExercise, type SwapCounters } from './api'
+export { isStrongSwap, readSwap, STRONG_PER_DAY, SWAPS_PER_DAY, swapMessages, swapRow, type SwapInput, type SwapResult } from './swap'

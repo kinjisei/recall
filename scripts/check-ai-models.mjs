@@ -28,6 +28,7 @@ const LIST = process.argv.includes('--list')
 const { GEMINI_TIER_CHAINS, DEFAULT_GEMINI_MODEL } = await import('../api/_core.ts')
 const { GROQ_MODELS, groqChat } = await import('../api/_groq.ts')
 const { STT_MODEL } = await import('../api/_stt.ts')
+const { SWAP_CHAINS } = await import('../api/_swap.ts')
 
 let failed = 0
 const check = (name, ok, extra = '') => {
@@ -60,7 +61,7 @@ if (!env.GEMINI_API_KEY) {
       if (methods.includes('generateContent')) console.log(`  · ${name}`)
     }
   }
-  const wanted = new Set([DEFAULT_GEMINI_MODEL, ...Object.values(GEMINI_TIER_CHAINS).flat()])
+  const wanted = new Set([DEFAULT_GEMINI_MODEL, ...Object.values(GEMINI_TIER_CHAINS).flat(), ...Object.values(SWAP_CHAINS).flat()])
   for (const model of wanted) {
     const methods = listed.get(model)
     check(

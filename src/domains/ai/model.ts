@@ -153,6 +153,7 @@ export const TASK_LABELS: Record<string, string> = {
   material: 'Материал ученику',
   material_plan: 'План материала',
   material_replan: 'План материала, повтор',
+  exercise_swap: 'Замена упражнения',
   program: 'Программа',
   homework: 'Домашка',
   self_material: 'Материал себе',

@@ -59,15 +59,22 @@ export interface ReplanGrant {
   left: number
 }
 
+/** Сколько замен упражнений осталось сегодня (PLAN.md Ф2.25-4): всего и сильных. */
+export interface SwapCounters {
+  left: number
+  strongLeft: number
+}
+
 /**
- * Как chat(), но целиком: текст и право на повторы плана (`replan`). Отказ
- * сервера с кодом (`RECALL_REPLAN_LIMIT` — повторы кончились) — AppError с
- * этим кодом: экран отличит его от сбоя.
+ * Как chat(), но целиком: текст, право на повторы плана (`replan`) и
+ * остаток замен упражнений (`swaps`). Отказ сервера с кодом
+ * (`RECALL_REPLAN_LIMIT` — повторы кончились, `RECALL_SWAP_LIMIT` — замены)
+ * — AppError с этим кодом: экран отличит его от сбоя.
  */
 export async function chatReply(
   messages: ChatTurn[],
-  opts: { task: AiTask; system?: string; replan?: string },
-): Promise<{ text: string; replan?: ReplanGrant }> {
+  opts: { task: AiTask; system?: string; replan?: string; swap?: { format: string; tricky: boolean } },
+): Promise<{ text: string; replan?: ReplanGrant; swaps?: SwapCounters }> {
   // одна точка на все AI-механики: любой экран, зовущий AI, попадает в воронку
   notifyRequest(opts.task)
 
@@ -90,13 +97,14 @@ export async function chatReply(
         // модель и лимиты сервер подбирает сам по типу задачи
         task: opts.task,
         ...(opts.replan ? { replan: opts.replan } : {}),
+        ...(opts.swap ? { swap: opts.swap } : {}),
       }),
     })
   } catch {
     throw netError()
   }
 
-  type Reply = { text?: string; error?: string; code?: string; replan?: ReplanGrant }
+  type Reply = { text?: string; error?: string; code?: string; replan?: ReplanGrant; swaps?: SwapCounters }
   let data: Reply | null = null
   try {
     data = (await res.json()) as Reply
@@ -110,7 +118,12 @@ export async function chatReply(
   }
   if (!data?.text) throw new Error('Пустой ответ от AI')
   const grant = data.replan
-  return { text: data.text, ...(grant && typeof grant.id === 'string' && typeof grant.left === 'number' ? { replan: grant } : {}) }
+  const swaps = data.swaps
+  return {
+    text: data.text,
+    ...(grant && typeof grant.id === 'string' && typeof grant.left === 'number' ? { replan: grant } : {}),
+    ...(swaps && typeof swaps.left === 'number' && typeof swaps.strongLeft === 'number' ? { swaps } : {}),
+  }
 }
 
 /**

@@ -13,6 +13,8 @@ import { groqChat, GROQ_MODELS } from './_groq.js'
 import { authorize, applyCors, authDenied, isTeacher, UNAVAILABLE, type AuthResult } from './_auth.js'
 import { isPlanShaped } from './_planShape.js'
 import { REPLANS_PER_PLAN, authorizeReplan, grantReplans } from './_replan.js'
+import { isExerciseShaped } from './_exerciseShape.js'
+import { SWAP_CHAINS, authorizeSwap, isStrongSwap, swapRequest, type SwapCounters } from './_swap.js'
 import { taskSpec } from './_tasks.js'
 import { startCall } from './_usage.js'
 import { TIMEOUTS, chainTime, windowUntil, workDeadline, type Timeouts } from './_timeouts.js'
@@ -51,7 +53,7 @@ export async function handle(req: VercelRequest, res: VercelResponse, t: Timeout
   if (applyCors(req, res)) return
   if (req.method !== 'POST') return res.status(405).json({ error: 'Только POST' })
 
-  const { messages, system, task, stream, replan } = (req.body ?? {}) as {
+  const { messages, system, task, stream, replan, swap } = (req.body ?? {}) as {
     messages?: ChatTurn[]
     system?: string
     task?: string
@@ -59,6 +61,8 @@ export async function handle(req: VercelRequest, res: VercelResponse, t: Timeout
     stream?: boolean
     /** Право на бесплатный повтор плана (задача material_replan, api/_replan.ts). */
     replan?: string
+    /** Замена упражнения: вид из каталога и «каверзные» (задача exercise_swap, api/_swap.ts). */
+    swap?: unknown
   }
 
   // Модель выбирает СЕРВЕР по типу задачи (карта — api/_tasks.ts). Клиент
@@ -92,6 +96,9 @@ export async function handle(req: VercelRequest, res: VercelResponse, t: Timeout
   if (typeof system === 'string' && system.length > MAX_SYSTEM_CHARS) {
     return res.status(400).json({ error: 'Слишком большая системная инструкция' })
   }
+  // замене нужен вид упражнения — от него ступень моделей и форма ответа; до списания
+  const swapReq = spec.swap ? swapRequest(swap) : null
+  if (spec.swap && !swapReq) return res.status(400).json({ error: 'Неизвестный вид упражнения' })
 
   // Задачи преподавателя — только ему. Проверяем ДО списания: это задачи-
   // генерации, и для не-учителя лимит генераций пула = 0, то есть authorize
@@ -103,12 +110,19 @@ export async function handle(req: VercelRequest, res: VercelResponse, t: Timeout
     if (!teacher) return res.status(403).json({ error: 'Эта функция доступна только преподавателю.' })
   }
 
-  // повтор плана тратит не генерацию, а право на повтор (миграция 0014)
+  // повтор плана тратит не генерацию, а право на повтор (миграция 0014);
+  // замена упражнения — одну замену из суточного лимита (миграция 0019)
   let access: AuthResult
   let replansLeft = 0
+  let swaps: SwapCounters | null = null
+  const strong = swapReq ? isStrongSwap(swapReq.format, swapReq.tricky) : false
   if (spec.replan) {
     const r = await authorizeReplan(req, replan, t.supabaseMs)
     if (!authDenied(r)) replansLeft = r.left
+    access = r
+  } else if (swapReq) {
+    const r = await authorizeSwap(req, strong, t.supabaseMs)
+    if (!authDenied(r)) swaps = { left: r.left, strongLeft: r.strongLeft }
     access = r
   } else access = await authorize(req, spec.quota, spec.energyCost, spec.generation ?? false, t.supabaseMs)
   if (authDenied(access)) {
@@ -147,6 +161,11 @@ export async function handle(req: VercelRequest, res: VercelResponse, t: Timeout
       // неплан повтор не возвращает: иначе бесплатно гоняли бы что угодно (_planShape.ts)
       if (!isPlanShaped(text)) return res.status(422).json({ error: 'AI ответил не планом. Пересоставь ещё раз или поправь заявку.' })
       return res.status(200).json({ text, replan: { id: replan, left: replansLeft } })
+    }
+    if (swapReq) {
+      // не упражнение — замена не возвращается: иначе AI на любой текст по кругу (_exerciseShape.ts)
+      if (!isExerciseShaped(text, swapReq.format)) return res.status(422).json({ error: 'AI ответил не упражнением. Попробуй заменить ещё раз или поправь руками.', code: 'RECALL_SWAP_SHAPE', swaps })
+      return res.status(200).json({ text, swaps })
     }
     if (spec.grantsReplans && isPlanShaped(text)) {
       const id = await grantReplans(req, access.refundToken, t.supabaseMs)
@@ -226,6 +245,15 @@ export async function handle(req: VercelRequest, res: VercelResponse, t: Timeout
       await call.finish('ok')
       res.end()
       return
+    }
+
+    // Замена упражнения: модели ступени по виду (api/_swap.ts), без Groq — его
+    // на упражнениях не мерили; цепочка легла — отказ и замена возвращается.
+    if (swapReq) {
+      if (!apiKey) return await unavailable()
+      const chain = SWAP_CHAINS[strong ? 'strong' : 'light']
+      const time = chainTime(t, 'standard', endBy)
+      return await answer(await callGemini(messages, system, apiKey, chain[0], [...chain], 'standard', time, trace))
     }
 
     // standard/max: Gemini-цепочка уровня, терминальный фолбэк — Groq.

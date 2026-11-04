@@ -26,6 +26,7 @@ Vercel (504), запасные модели остались не спрошен
 | `_core.ts`, `_geminiBody.ts`, `_groq.ts`, `_stt.ts` | вызовы Gemini (обычный и поток), Groq, Whisper |
 | `_auth.ts` | вход, проверка роли, списание и возврат ⚡ (`spend_energy`, `refund_ai_call`) |
 | `_replan.ts`, `_planShape.ts` | бесплатный «Пересоставить план» материала (Ф2.17-4в-2б, миграция 0014): право за оплаченный план, трата права вместо генерации, ответ повтора — только план; строка плана — с видом каталога `format` и «каверзными» `tricky` (Ф2.25-2) |
+| `_swap.ts`, `_exerciseShape.ts` | замена упражнения через AI (Ф2.25-4, миграция 0019): виды и модели двух ступеней — одно место (`SWAP_CHAINS`, `isStrongSwap`), лимит замен вместо энергии (`spend_exercise_swap`), ответ — только одно упражнение нужного вида |
 | `_timeouts.ts` | все сроки ожидания и запрос со сроком (`timedFetch`, `openStream`) |
 | `_usage.ts` | журнал вызовов AI (`log_ai_call`) |
 | `_channels.ts` | каналы доставки уведомлений: форма уведомления от базы (с подписками push), итог канала (`gone`, `retry`); Telegram — Ф4.3 |
@@ -61,6 +62,22 @@ Vercel (504), запасные модели остались не спрошен
   короткие строки, 1–10 упражнений). Иначе «бесплатный повтор» с подменённым
   промптом — бесплатный AI на любой текст. Не план — 422, и право за него не
   возвращается.
+
+**Замена упражнения — лимит замен и только одно упражнение** (журнал п.76 (22), (24))
+
+- `exercise_swap` генерацию не тратит, но 25 замен в сутки на учителя, из
+  них сильных — до 5; сутки — по Алматы. Считает база
+  (`spend_exercise_swap`, миграция 0019); кончились — 409 с кодом
+  `RECALL_SWAP_LIMIT` / `RECALL_SWAP_STRONG_LIMIT`, нет тарифа — 403.
+- Модели — по виду (`api/_swap.ts`): лёгкая ступень `3.5-flash-lite`
+  (500 в сутки на проект); сильная — `3.5-flash` → `3.6-flash` для
+  каверзных True / False и «Собери предложение» (лёгкая их портила, замер —
+  `scripts/ai-quality/criteria.md`). Pro бесплатно нет; после платного
+  Gemini сильная ступень — Pro одной строкой. Groq у замены нет.
+- **Ответ обязан быть одним упражнением нужного вида** (`isExerciseShaped`):
+  иначе замена — AI на любой текст. Не упражнение — 422 (`RECALL_SWAP_SHAPE`),
+  и замена не возвращается; модель не ответила — возвращается
+  (`refund_ai_call`). Ответ — `{ text, swaps: { left, strongLeft } }`.
 
 **У каждого запроса наружу есть срок**
 
@@ -188,10 +205,10 @@ Vercel (504), запасные модели остались не спрошен
 <!-- Пишет `npm run gen:docs` (scripts/gen/module-docs.mjs) по коду — руками не править. -->
 ## Из кода (сгенерировано)
 
-- **Файлы:** `_auth.ts`, `_channels.ts`, `_core.ts`, `_geminiBody.ts`, `_groq.ts`, `_planShape.ts`, `_push.ts`, `_replan.ts`, `_stt.ts`, `_tasks.ts`, `_timeouts.ts`, `_usage.ts`, `gemini.ts`, `notify.ts`, `transcribe.ts`
+- **Файлы:** `_auth.ts`, `_channels.ts`, `_core.ts`, `_exerciseShape.ts`, `_geminiBody.ts`, `_groq.ts`, `_planShape.ts`, `_push.ts`, `_replan.ts`, `_stt.ts`, `_swap.ts`, `_tasks.ts`, `_timeouts.ts`, `_usage.ts`, `gemini.ts`, `notify.ts`, `transcribe.ts`
 - **Адреса сервера:** `/api/gemini`, `/api/notify`, `/api/transcribe`
 - **Таблицы:** `profiles`
-- **RPC:** `grant_material_replans`, `log_ai_call`, `refund_ai_call`, `spend_energy`, `spend_replan`
+- **RPC:** `grant_material_replans`, `log_ai_call`, `refund_ai_call`, `spend_energy`, `spend_exercise_swap`, `spend_replan`
 - **AI-задачи:** `speech`
 - **Кто использует (импортом):** никто
 <!-- generated:end -->

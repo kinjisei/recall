@@ -207,6 +207,15 @@
   строку материала держит `for share`, правка и сдача не проскакивают друг
   мимо друга. Правила — `src/domains/materials/CLAUDE.md`, проверка —
   `check-material-lock.mjs`.
+- **Замены упражнений через AI** (миграция 0019, Ф2.25-4а): строка в
+  `ai_calls` с пометкой `swap` (`light` | `strong`), без энергии и
+  генерации. `spend_exercise_swap(p_nonce, p_strong)` — учитель с тарифом
+  или пробным (`teacher_can_write`), часовой потолок как у `spend_energy`,
+  в сутки по Алматы не больше 25, сильных — 5 (`RECALL_SWAP_LIMIT`,
+  `RECALL_SWAP_STRONG_LIMIT`); ответ — `swaps_left`, `strong_left`.
+  `my_exercise_swaps()` — то же без списания (счётчик экрана). Возврат —
+  `refund_ai_call`. Правила — `api/CLAUDE.md`, проверка —
+  `check-exercise-swaps.mjs`.
 - **Ответ RPC — таблицей (`returns table`), а не `json`**, если его читает
   клиент: тогда `database.types.ts` даёт точный тип строки, и приведение
   `as unknown as` не нужно (архитектура §8). В `plpgsql` с `returns table`

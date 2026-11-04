@@ -19,6 +19,7 @@ const { GEMINI_TIER_CHAINS, DEFAULT_GEMINI_MODEL } = await import('../api/_core.
 const { GROQ_MODELS } = await import('../api/_groq.ts')
 const { STT_MODEL } = await import('../api/_stt.ts')
 const { AI_TASKS } = await import('../api/_tasks.ts')
+const { SWAP_CHAINS } = await import('../api/_swap.ts')
 const { MODEL_LIMITS } = await import('../src/domains/ai/limits.ts')
 const { modelsOnDay, dayTotals, googleDay, quotaReset, untilLabel, secondsLabel, TASK_LABELS } =
   await import('../src/domains/ai/model.ts')
@@ -36,6 +37,7 @@ console.log('\n— лимиты: у каждой модели сервера е�
 const served = new Set([
   DEFAULT_GEMINI_MODEL,
   ...Object.values(GEMINI_TIER_CHAINS).flat(),
+  ...Object.values(SWAP_CHAINS).flat(),
   ...Object.values(GROQ_MODELS),
   STT_MODEL,
 ])

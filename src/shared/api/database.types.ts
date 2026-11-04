@@ -109,6 +109,7 @@ export type Database = {
           pool_owner: string | null
           refund_token: string | null
           replan_of: string | null
+          swap: string | null
           user_id: string
         }
         Insert: {
@@ -120,6 +121,7 @@ export type Database = {
           pool_owner?: string | null
           refund_token?: string | null
           replan_of?: string | null
+          swap?: string | null
           user_id: string
         }
         Update: {
@@ -131,6 +133,7 @@ export type Database = {
           pool_owner?: string | null
           refund_token?: string | null
           replan_of?: string | null
+          swap?: string | null
           user_id?: string
         }
         Relationships: [
@@ -2549,6 +2552,13 @@ export type Database = {
         Args: { m_id: string; u_id: string }
         Returns: boolean
       }
+      my_exercise_swaps: {
+        Args: never
+        Returns: {
+          strong_left: number
+          swaps_left: number
+        }[]
+      }
       new_invite_code: { Args: never; Returns: string }
       norm_answer: { Args: { s: string }; Returns: string }
       norm_typed: { Args: { s: string }; Returns: string }
@@ -2745,6 +2755,13 @@ export type Database = {
           p_nonce?: string
         }
         Returns: undefined
+      }
+      spend_exercise_swap: {
+        Args: { p_nonce: string; p_strong: boolean }
+        Returns: {
+          strong_left: number
+          swaps_left: number
+        }[]
       }
       spend_replan: {
         Args: { p_nonce?: string; p_replan: string }

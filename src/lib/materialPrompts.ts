@@ -9,7 +9,7 @@ import { comprehensionRange } from './materialLengths'
 import type { MaterialLength } from './materialLengths'
 import { TFNG_OPTIONS, allowsNotGiven } from './materialExercises'
 import { FORMATS, GROUPS, formatById, formatDoes, formatTitle, rowFormat } from './exerciseFormats'
-import type { AppLang, CEFRLevel, PlanExercise } from '../types'
+import type { AppLang, CEFRLevel, MaterialExercise, PlanExercise } from '../types'
 
 /** Виды упражнений для модели: id, название, группа, что делает ученик, сколько можно (каталог `lib/exerciseFormats`). */
 function formatsList(lang: AppLang, level: string): string[] {
@@ -247,6 +247,51 @@ export function ownTextSystem(
   ]
     .filter(Boolean)
     .join('\n')
+}
+
+/**
+ * Замена одного упражнения (Ф2.25-4, журнал п.76 (8), (22)): ровно одно
+ * упражнение выбранного вида по готовому тексту — вместо того, что не
+ * понравилось учителю, и не похожее на остальные. Правила видов — те же,
+ * что у «Нового» и «Моего текста» (`exerciseSpec`, `planBrief`). Ответ
+ * сервер пропускает, только если это одно упражнение (`api/_exerciseShape`).
+ */
+export function swapPrompt(
+  lang: AppLang,
+  level: string,
+  row: PlanExercise,
+  ctx: { body: string; words: readonly string[]; grammar: string; replacing: MaterialExercise | null; others: readonly MaterialExercise[] },
+): { system: string; user: string } {
+  // остальные — коротко: вопрос или предложение, у пар — слова
+  const brief = (e: MaterialExercise) => (e.type === 'match' ? `пары: ${e.pairs.map((p) => p.left).join(', ')}` : e.prompt)
+  const user = [
+    'Текст:',
+    ctx.body,
+    '',
+    ctx.replacing ? `Заменяемое упражнение (новое — другое):\n${JSON.stringify(ctx.replacing)}` : 'Новое упражнение — в дополнение к остальным.',
+    ...(ctx.others.length ? ['', 'Остальные упражнения материала (не повторяй):', ...ctx.others.map((e, i) => `${i + 1}. ${brief(e)}`)] : []),
+  ].join('\n')
+  return { system: swapSystem(lang, level, row, ctx), user }
+}
+
+function swapSystem(lang: AppLang, level: string, row: PlanExercise, ctx: { words: readonly string[]; grammar: string }): string {
+  const langName = lang === 'es' ? 'испанском' : 'английском'
+  const spec = exerciseSpec(lang, level)
+  return [
+    'Ты — автор учебных упражнений по иностранным языкам.',
+    `Дан ГОТОВЫЙ текст на ${langName} (уровень ученика — ${level}) и упражнения к нему. Составь ОДНО новое упражнение СТРОГО по этому тексту: оно заменит упражнение, которое не понравилось преподавателю.`,
+    'Отвечай ТОЛЬКО валидным JSON без markdown.',
+    '',
+    'Формат ответа: {"exercises": [одно упражнение]}, упражнение — по образцу своего вида:',
+    ...spec.shapes,
+    '',
+    'Жёсткие требования:',
+    '1. В exercises — РОВНО одно упражнение, и ровно этого вида:',
+    ...planBrief([row], { words: ctx.words, grammar: ctx.grammar, level }),
+    '2. Строго по содержанию текста: ни одного факта, которого в тексте нет.',
+    '3. Не повторяй заменяемое упражнение и остальные упражнения материала: другой вопрос, другое утверждение, другое предложение из текста; у пар — где можно, другие слова.',
+    ...spec.rules,
+  ].join('\n')
 }
 
 /** Системный промпт AI-разбора сданной работы: вердикт и комментарий по каждому упражнению. */
