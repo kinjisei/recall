@@ -13,6 +13,7 @@ import { chatReply, type SwapCounters } from '../../shared/api/ai'
 import { loadIrregular } from '../../lib/wordForms'
 import type { MaterialExercise } from '../../types'
 import { readSwap, swapMessages, type SwapInput, type SwapResult } from './swap'
+import { swapSchema } from './schema'
 
 export type { SwapCounters }
 
@@ -41,7 +42,8 @@ export async function copyMaterial(id: string): Promise<string> {
 /**
  * «↻ Заменить» и «+ Упражнение → Составит AI»: одно упражнение вида
  * `input.format` у модели, которую по виду выбирает сервер (`api/_swap.ts`).
- * Ответ — упражнение или причина (`readSwap`: не прошло фильтр приложения —
+ * Ответ модели — по схеме одного упражнения этого вида (`swapSchema`), разбор —
+ * упражнение или причина (`readSwap`: не прошло фильтр приложения —
  * упражнение прежнее, а замена уже потрачена) и остаток замен на сегодня.
  * Отказы — AppError с кодом: RECALL_SWAP_LIMIT (замены кончились),
  * RECALL_SWAP_STRONG_LIMIT (кончились сильные), RECALL_PLAN_REQUIRED (нет
@@ -53,7 +55,7 @@ export async function swapExercise(input: SwapInput): Promise<{ result: SwapResu
   const reply = await chatReply([{ role: 'user', content: user }], {
     system,
     task: 'exercise_swap',
-    json: true,
+    json: swapSchema(input.lang, input.level, input.format),
     swap: { format: input.format, tricky: input.tricky === true },
   })
   const irregular = await loadIrregular(input.lang).catch(() => undefined)

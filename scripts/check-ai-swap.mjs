@@ -3,8 +3,10 @@
  * одна модель — по одному упражнению каждого вида каталога, A2 и B1, EN и ES
  * (`ai-quality/examples/swap.mjs`). Промпт и разбор ответа — те же, что у
  * кнопки «↻ Заменить» (`domains/materials/swap.ts`); запрос — тот же
- * `callGemini`, что на сервере, только одной моделью, без запасных (видно,
- * что умеет ИМЕННО она) и на ключе `TEST_GEMINI_API_KEY`.
+ * `callGemini`, что на сервере, со схемой ответа, как у кнопки (`swapSchema`,
+ * Ф2.20-3), только одной моделью, без запасных (видно, что умеет ИМЕННО она)
+ * и на ключе `TEST_GEMINI_API_KEY`. Схему модель не приняла — «нет ответа»,
+ * причина (400) — в выводе.
  *
  * Что считает сам (🤖, критерии «З*» в criteria.md): ответ разобран, вид тот,
  * упражнение прошло фильтр приложения, не повторяет заменяемое, время. Уровень,
@@ -20,6 +22,7 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 const { readEnv } = await import('./_env.mjs')
 const { SWAP } = await import('./ai-quality/examples/swap.mjs')
 const { swapMessages, readSwap } = await import('../src/domains/materials/swap.ts')
+const { swapSchema } = await import('../src/domains/materials/schema.ts')
 const { loadIrregular } = await import('../src/lib/wordForms.ts')
 const { callGemini } = await import('../api/_core.ts')
 const { TIMEOUTS, chainTime } = await import('../api/_timeouts.ts')
@@ -51,7 +54,7 @@ for (const [i, c] of cases.entries()) {
   let raw = ''
   let error = null
   try {
-    raw = await callGemini([{ role: 'user', content: user }], system, key, model, [], 'standard', chainTime(TIMEOUTS, 'standard'))
+    raw = await callGemini([{ role: 'user', content: user }], system, key, model, [], 'standard', chainTime(TIMEOUTS, 'standard'), undefined, swapSchema(c.lang, c.level, c.format))
   } catch (e) {
     error = e instanceof Error ? e.message : String(e)
   }

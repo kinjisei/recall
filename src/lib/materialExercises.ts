@@ -13,7 +13,7 @@ import type { AppLang, MaterialExercise } from '../types'
 
 /** «Соедини пары»: 3–8 пар (журнал п.76 (8)); лишних справа — не больше двух. */
 export const MATCH_PAIRS = { min: 3, max: 8 } as const
-const MATCH_EXTRA_MAX = 2
+export const MATCH_EXTRA_MAX = 2
 
 const filled = (v: unknown): v is string => typeof v === 'string' && v.trim().length > 0
 
