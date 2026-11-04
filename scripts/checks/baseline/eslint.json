@@ -43,14 +43,6 @@
   "src/context/AuthContext.tsx": {
     "react-hooks/exhaustive-deps": {
       "count": 1
-    },
-    "react-refresh/only-export-components": {
-      "count": 1
-    }
-  },
-  "src/context/LanguageContext.tsx": {
-    "react-refresh/only-export-components": {
-      "count": 1
     }
   },
   "src/features/auth/ResetPasswordPage.tsx": {
