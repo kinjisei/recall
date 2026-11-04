@@ -12,7 +12,9 @@
  */
 import { compare, plural, pruned } from './checks/_baseline.mjs'
 import { docFor, hasReason, isCode, pointerIn, touchedByHand, verdict } from './checks/docs.mjs'
+import { createHash } from 'node:crypto'
 import { parsePlan, problems } from './checks/plan.mjs'
+import { fileProblems, findSecrets, looksRandom, pathProblem } from './checks/secrets.mjs'
 import { componentsIn } from './checks/size.mjs'
 import { countIn } from './checks/tokens.mjs'
 
@@ -155,6 +157,100 @@ both('hasReason: причина перенесена на вторую стро�
 both('hasReason: фраза без причины', 'Правка\n\nописание не меняется, потому что\n', hasReason, false)
 both('hasReason: фраза в комментарии git', 'Правка\n# описание не меняется, потому что перенос файлов\n', hasReason, false)
 both('hasReason: фразы нет', 'Правка сверки ответов\n', hasReason, false)
+
+// ── секреты. Выдуманные ключи собираются при запуске — из хеша и по частям:
+// целый ключ в этом файле поймал бы сторож секретов на самом тесте.
+{
+  const noise = (seed, n, only = /[A-Za-z0-9_-]/, enc = 'base64url') => {
+    let s = ''
+    for (let i = 0; s.length < n; i++) s += [...createHash('sha256').update(`${seed}:${i}`).digest(enc)].filter((c) => only.test(c)).join('')
+    return s.slice(0, n)
+  }
+  const sbSecret = ['sb', 'secret', noise('sb', 22)].join('_') + '_' + noise('sb-sum', 8)
+  const sbPublishable = ['sb', 'publishable', noise('pub', 22)].join('_') + '_' + noise('pub-sum', 8)
+  const google = 'AI' + 'za' + 'Sy' + noise('g', 33)
+  const groq = 'gs' + 'k_' + noise('q', 52, /[A-Za-z0-9]/)
+  const sbp = 'sb' + 'p_' + noise('p', 40, /[a-f0-9]/, 'hex')
+  const vapid = noise('vapid', 43)
+  const jwt = (role) =>
+    ['eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9', Buffer.from(JSON.stringify({ iss: 'supabase', role, exp: 2000000000 })).toString('base64url'), noise('sig', 43)].join('.')
+  const pemBody = [0, 1, 2].map((i) => noise(`pem${i}`, 64, /[A-Za-z0-9+/]/, 'base64')).join('\n')
+  const pem = (body, nl = '\n') => ['-----BEGIN', 'PRIVATE KEY-----'].join(' ') + nl + body + nl + ['-----END', 'PRIVATE KEY-----'].join(' ')
+  const short = (f) => `${f.line} ${f.what.split(' (')[0]}`
+  const secrets = (t) => findSecrets(t).map(short)
+
+  const env = [
+    '# ключи тестовой базы',
+    `TEST_SUPABASE_SECRET_KEY=${sbSecret}`,
+    `GEMINI_API_KEY=${google}`,
+    `GROQ_API_KEY="${groq}"`,
+    `SUPABASE_ACCESS_TOKEN=${sbp}`,
+    `VAPID_PRIVATE_KEY=${vapid}`,
+    `export NOTIFY_SECRET=${noise('notify', 32)}`,
+    `TEST_SUPABASE_DB_PASSWORD=${noise('db', 16)}`,
+    `BACKUP_DB_URL=postgresql://postgres.${noise('ref', 20, /[a-z]/)}:${noise('pw', 16)}@aws-0-eu-central-1.pooler.supabase.com:5432/postgres`,
+    `SERVICE_KEY=${jwt('service_role')}`,
+    '',
+  ].join('\n')
+  both('секреты: выдуманный файл .env — каждый ключ', env, secrets, [
+    '2 секретный ключ Supabase', '3 ключ Google AI', '4 ключ Groq', '5 токен Management API Supabase',
+    '6 значение у переменной VAPID_PRIVATE_KEY', '7 значение у переменной NOTIFY_SECRET',
+    '8 значение у переменной TEST_SUPABASE_DB_PASSWORD', '9 адрес базы postgres:// с паролем', '10 старый ключ Supabase service_role',
+  ])
+  both('секреты: значение в кавычках в коде, JSON и YAML', [
+    `const VAPID_PRIVATE_KEY = '${vapid}'`,
+    `{ "NOTIFY_SECRET": "${noise('notify', 32)}" }`,
+    'env:',
+    `  VAPID_PRIVATE_KEY: ${vapid}`,
+    `const k = createClient(url, '${sbSecret}')`,
+    '',
+  ].join('\n'), secrets, [
+    '1 значение у переменной VAPID_PRIVATE_KEY', '2 значение у переменной NOTIFY_SECRET', '4 значение у переменной VAPID_PRIVATE_KEY', '5 секретный ключ Supabase',
+  ])
+  both('секреты: приватный ключ PEM — файлом и внутри JSON', `x\n${pem(pemBody)}\n{"private_key": "${pem(pemBody.replace(/\n/g, '\\n'), '\\n')}\\n"}\n`, secrets, [
+    '2 приватный ключ PEM', '7 приватный ключ PEM',
+  ])
+  const doc = [
+    'Ключи — только новые `sb_publishable_`/`sb_secret_` (Ф1.9).',
+    '`TEST_SUPABASE_SECRET_KEY` (`sb_secret_…`) — из Settings → API Keys, ключ Google — AIza…, Groq — gsk_…, токен — sbp_…',
+    `VITE_SUPABASE_PUBLISHABLE_KEY=${sbPublishable}`,
+    `ANON_KEY=${jwt('anon')}`,
+    'grant execute on function public.spend_energy(int) to service_role;',
+    'Старые JWT-ключи anon/service_role Supabase выключает к концу 2026.',
+    'GEMINI_API_KEY=AIzaSy' + 'X'.repeat(33),
+    'GROQ_API_KEY=gsk_' + 'abcdefghijklmnopqrstuvwxyz'.repeat(2),
+    'SUPABASE_SECRET_KEY=sb_secret_your_secret_key_here_123456',
+    'VAPID_PRIVATE_KEY=',
+    'VAPID_PRIVATE_KEY=<приватный ключ>',
+    'VAPID_PRIVATE_KEY=…',
+    '  VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}',
+    'const key = process.env.VAPID_PRIVATE_KEY',
+    '  NOTIFY_SECRET: env.TEST_NOTIFY_SECRET,',
+    "process.env.NOTIFY_SECRET = 'test-secret-123'",
+    "const SEC = 'sb_secret_ZyXwVu987'",
+    "export const SECRET = 'sb_secret_'",
+    'const MIN_PASSWORD = 8',
+    'postgresql://postgres:[YOUR-PASSWORD]@db.abcdefghijklmnop.supabase.co:5432/postgres',
+    `const u = \`postgresql://postgres.\${ref}:\${encoded}@host/postgres\``,
+    'Строка `' + ['-----BEGIN', 'PRIVATE KEY-----'].join(' ') + '` начинает ключ, а `' + ['-----END', 'PRIVATE KEY-----'].join(' ') + '` — заканчивает.',
+    `"data":"H4sIAAAAAAAACry8${google}Kj3"`,
+    '',
+  ].join('\n')
+  both('секреты: примеры в документах и коде, publishable и anon — не тревога', doc, secrets, [])
+  check('секреты: значение ключа в отчёт не попадает', [sbSecret, google, groq, sbp, vapid].some((k) => JSON.stringify(findSecrets(env)).includes(k.slice(6))), false)
+
+  check('looksRandom: случайное — да; слово, ряд, повтор, один вид знаков — нет',
+    [noise('r', 31), 'your_api_key_goes_here_12', 'Qw' + 'abcdef' + '93Kd8sLm2', 'Zp4' + 'xxxx' + 'Lm29Qa7Rt', 'abcdqwertyuiopzxcvbnm', noise('r', 6)].map((s) => looksRandom(s)),
+    [true, false, false, false, false, false])
+  check('pathProblem: .env* — да, кроме .env.example; файлы ключей — да; похожие имена — нет',
+    ['.env', '.env.local', 'app/.env.production.local', '.envrc', '.env.example', 'twa/android.keystore', 'certs/server.key', 'id_ed25519', 'id_ed25519.pub', 'src/env.ts', 'docs/.environment.md', 'scripts/_keys.mjs']
+      .map((p) => pathProblem(p) !== null),
+    [true, true, true, true, false, true, true, true, false, false, false, false])
+  const binary = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0]), Buffer.from(google)])
+  check('fileProblems: двоичный файл — только по имени; .env.example — по содержимому',
+    [fileProblems('public/icon.png', binary).length, fileProblems('.env.local', Buffer.from('A=1\n')).length, fileProblems('.env.example', Buffer.from(`GEMINI_API_KEY=${google}\n`))],
+    [0, 1, ['.env.example:1 — ключ Google AI (AIza…, 39 знаков)']])
+}
 
 console.log(`\nИтог: ${pass}/${pass + fail}`)
 process.exitCode = fail ? 1 : 0

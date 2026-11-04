@@ -44,7 +44,7 @@ jobs:
         if: ${{ !cancelled() }}
         run: node scripts/check-api-vercel.mjs
 
-      # Линтер, границы, токены, размер, план, описания — scripts/checks/README.md.
+      # Линтер, границы, токены, размер, план, секреты, описания — scripts/checks/README.md.
       # Описания проверяются для каждого коммита этого пуша (или pull request).
       - name: Сторожа
         if: ${{ !cancelled() }}
