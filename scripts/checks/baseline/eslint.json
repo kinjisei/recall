@@ -1,14 +1,4 @@
 {
-  ".github/scripts/backup-explain.mjs": {
-    "no-useless-assignment": {
-      "count": 1
-    }
-  },
-  "docs/textbook/build.mjs": {
-    "no-control-regex": {
-      "count": 1
-    }
-  },
   "src/app/ProtectedRoute.tsx": {
     "react-hooks/exhaustive-deps": {
       "count": 2
